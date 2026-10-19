@@ -1,85 +1,106 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792433466;
-	b=N05puqvU4U42eZLLaTQYaE8AoTJs3cJ89yTwk588PcvUjcqZLPu0DHcSdVHXuBoEQBgy
-	 X3zubDNR35Nw4V6MJziPJOxZWpaiBqihzHcMKV0UihYLWkB4tWEqpl7FUttNcoOEUIAc1
-	 nlOM9QiPw7OozB6UOwNbTUsCVfDdacfJCRd4TOxv3r/Q52yUy6lEIvaWksSUwxeKLl68Z
-	 FRZuNvJBqEEwlpRpt4RZnzr2OlEkhuqldKpxKbdvBj5+Gr3QIbWqnPJr16q364D1MH4nS
-	 tz3TKPbImxyaP9/tM94dhu8WswPdR6V7NXYlq8GVFhU26ha3iH6gtgJt+QLi9cwmQvQ==
+	t=1792433777;
+	b=Dhw7uvIXy5WLuM5lEF6/Vy9VM9w+0P5dza5DAUmfXSDaJ82T2kMRbZZP0QhpAsjb9lLh
+	 49ofQHRDdD60Otc9+ka6Ze91zjpTYOUa2GOGOO7HQv2Yvjj5qPm0mRKZAkpbcUJCOBVIt
+	 o1NdiepU/H5cBVITLV8LnpOVDoleXUd4+GcL/j2MIg4QbGALLSmX6nS0Jgi8r7sUeq5u6
+	 pK+44NijSfzNtdyRRz15G3clNux8oh/g1RMxwgHd5Zm1Bes2aeUEZxSE5moWy0x6NvUoM
+	 GXf5lgTE0XHYbLeLRKbyTooq09WYZdmjcPFdWV9h/gUrKaRzSwDGPdPXyeXUt4dgk+A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792433466;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=oGAwyQN0n84ky1lWzEw+Vsol6hjFQW4kazC/RDKa14E=;
-	b=AbpUm8CIwJSQEtZjiI9+o4i+dlgbwoPr/skZIZw6l03W4f6wRctOb295Sxm3K0PTlkOm
-	 s7h6Y6kEwpOxtWcec5cUON7zrtFnJ5vAaaOsEogPMlxzZqDC5fs/krl2Yqr/Qegzl6kUB
-	 rXOB0vhAcNBRvAdUWHslEnj4v1O9kRWyOrqXCA4OjhYuxtMSbCaBsv2d3TbGsApA84JXw
-	 sejemPgiv1iI81GJF+BzR7HxpGBu1SWgxKZ8Ea23Okjcfq+1ujO0CaGSWfK99sKzfFtJ3
-	 CcHL4hJdbZjsUeZ95RTilNgvuAeZ87ip+dPXr8US/Zelt9VEybMb1TEE/XIC12RJOKw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792433777;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=O0/TE8eMqHolOOyHMRR0hwR2h8un8krdiW92QaauaW4=;
+	b=jC2mX3PplWP7qUbMR9xgP9VKcqI4wvUFuqbh6U/WLaGY3AXmOj0M3Oh5W567hy3sYy0o
+	 VCcfPwm49p0/OPlWtREAdVlIhqNmk8mHTve4oUW4JaUN0N8x81Paq7OG4IUkjQ3tlYc20
+	 QW4UWx8eU2kZedWEIebHa7pysWnAuR9CRW7CXJCdiYX9KH0XWkh3PoX6qkoqdbkQz93mM
+	 eQLUgDBmUpqBF8MrsK9QyFnbSBAyIeNaTiIfpKoHaGjC4X2mYrez5EDmrq0VgaQX6Kzyk
+	 7GY+Kx1uW3IvuTWjwHpm/+l771IDoWq0dyYhSxslcP+Rl0jrRwsjKXxybMxgx0GQstQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=KHpSBfBK;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linaro.org;
+	spf=pass smtp.mailfrom=linaro.org;
+	dkim=pass header.d=linaro.org header.i=@linaro.org header.a=rsa-sha256 header.s=google header.b=P15o8bhX;
+	arc=none smtp.remote-ip=209.85.128.50
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C47CF60A4AD5
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 18:11:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C47CF60A4AD5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5743606A32E
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 18:16:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5743606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=KHpSBfBK
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792433464;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oGAwyQN0n84ky1lWzEw+Vsol6hjFQW4kazC/RDKa14E=;
-	b=KHpSBfBKpEo/zWgjVokf/azRyxCohy9G1W+YRv/RuOtrurGTGy9OUTWV+cF79U62m0jVVc
-	xliXffz6tuD1i7aqj6kYniroWqhdQw1rdxcvJstAvpSBTZSSsAWO3cVjEePvNiYzXTEdCN
-	Q7NyIQMI8cmajtksGYxik3diW/kycJw=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-592-PCCM2deGNaav_nKsyT2vLA-1; Mon,
- 19 Oct 2026 18:10:55 +0000
-X-MC-Unique: PCCM2deGNaav_nKsyT2vLA-1
-X-Mimecast-MFC-AGG-ID: PCCM2deGNaav_nKsyT2vLA_1792433453
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7E5D51955F40;
-	Mon, 19 Oct 2026 18:10:53 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.rmtusnh.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 85DE3418;
-	Mon, 19 Oct 2026 18:10:51 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Ridong Chen <ridong.chen@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Randy Dunlap <rdunlap@infradead.org>
-Cc: cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
+	dkim=pass (2048-bit key, unprotected) header.d=linaro.org header.i=@linaro.org header.a=rsa-sha256 header.s=google header.b=P15o8bhX
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4a1ddc7c9beso11121895e9.1
+        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 11:16:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1792433775; x=1793038575; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=O0/TE8eMqHolOOyHMRR0hwR2h8un8krdiW92QaauaW4=;
+        b=P15o8bhXD4fPfV9e2fC6vwKj/u9yl33N9jQBVq19hy7lOtzsmmrE0D0d9WvRm30g4U
+         vm+ECkG0c/IjwrYJTa34UaPEVAzlJU2dgfrjlytZQluoWrzIPZW9NNkQBHc7pcoa/wfz
+         kp48qjd+08KE7Y0P64BBu9GPRRd7DmjV7U0VekgjFAEMsRAMwEQf2qgApuhsaGNQQmyN
+         NoE1wQb+OIMT5OZIX0j9ekCoUTvHeYTWMlGQaVmboKoZ3MI6oF3c8lE6+ZhY0764l5vQ
+         jMFK6fidrFhwkGT/EmhTLfe62z64j8EA0iB0QLkkZ8tjeZv3w8w7wQ37LTWJAJHARFl8
+         Z13Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792433775; x=1793038575;
+        h=content-transfer-encoding:content-type:mime-version:message-id:date
+         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=O0/TE8eMqHolOOyHMRR0hwR2h8un8krdiW92QaauaW4=;
+        b=MTjL8GzIi8PO5J5hFgiBtHvu0xhsGIrmu0Te1URfZIHQtqwaUZaYN0w9kLTm8L6E5Q
+         y9HkMRq3tI3z9r4lR5O6a1R0Vqr9XMrSbygEp6aFgXnhD/PvK0pbSEdsRiv/FavV3myE
+         I5zJDi5jZ+grTAfjB2Xj8UQJbgbRJacby62cpD/1SnmVvqlL2nHewnX5EFgSQrtgQjBd
+         wAse6e7+mCpkTbUQOUUzTivb5JxrMWhOJge1VnibEPlw/BVSx4uCbOsLgSPSpqIinUxZ
+         vmiDLhoZkvmNEB+/10I0ru3HDzK/lHgbPYJ44o3r1Vmm0cBISKWoDyxbLeugxCbgKa7D
+         oasg==
+X-Forwarded-Encrypted: i=1; AKwUvBxo7RwJ5yv2u29X0KKlRDKfXUgCJY9OQYnNBrSeHb17h1EGCHf76qIjpJT43SjeS6QKztQPod4Q@vger.kernel.org
+X-Gm-Message-State: AFq9FYKm6BpOr3ynTcD2xGUsgqaXMdS8eII1sOAW/HWC6is/1Tp0LnFd
+	eEmppDr7OBED2nuv4zimQwMdNzOfvs3gaUTL0CdMnLEUON8H7slsEFvC/Uny/El0HsE=
+X-Gm-Gg: AYBFou2pi0hwYJBDjZjyfGpkMgSdGNZMv3r9y9BAeZDo28S5IHbuGzJQMFqsFOMw8p8
+	flVGijcRW0EJwyW3cdjuhVWGVXXQH+0csELL5KRi8cbdWKoLMOR0RhtvVBb3/Hv2U/PMOfVRWap
+	d4dRZAP4oo4xavDLfQG00t4CnwgmSPMYxLjG6t0Z+1znNyTSCBENu8C3LG5rd2ZwCAtLV9gM7rO
+	J4Rh9KJrU9IOo/3n0iJyskNMpzw/Q/njC1WLcLUcgWHQvufb6gCVqYfQJB9oMzRPuRDKM0u+R33
+	RFtdiWN6LMPY0EgH9C4D1bO/3nYwDlnyhAxabjkGigpuUNWU4Zo4m/Hu4qnZm9tybgwCt0RE3+C
+	j33YgovloCLmC51Df7/B3/74jaqtVBQ8PJwvqFu/gykiUcZaKOM/5mA/aZSEnvDA8Pk3MxK5c3G
+	8l/+mr+C6WxbMw9O3ZCaptVZLFy9KoE2W2cogJ6i+kHZVYQ7OA4k16zaJv+VCoF8PxDNIqhfZhi
+	R6TkWhGqDPSsyc=
+X-Received: by 2002:a05:600c:c0c7:b0:4a1:d743:77f1 with SMTP id 5b1f17b1804b1-4a1d7bc2e33mr120421865e9.24.1792433775118;
+        Mon, 19 Oct 2026 11:16:15 -0700 (PDT)
+Received: from vingu-cube.home ([2a01:e0a:11f4:3020:aea:8007:d7bd:c2c7])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a1f2cb8d5csm10596675e9.6.2026.10.19.11.16.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 11:16:14 -0700 (PDT)
+From: Vincent Guittot <vincent.guittot@linaro.org>
+To: mingo@redhat.com,
+	peterz@infradead.org,
+	juri.lelli@redhat.com,
+	dietmar.eggemann@arm.com,
+	rostedt@goodmis.org,
+	bsegall@google.com,
+	mgorman@suse.de,
+	vschneid@redhat.com,
+	kprateek.nayak@amd.com,
 	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Hui Peng <benquike@gmail.com>,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next v4 8/9] selftests/cgroup: Add tests for nohz_full housekeeping check
-Date: Mon, 19 Oct 2026 14:10:19 -0400
-Message-ID: <20261019181020.1069325-9-longman@redhat.com>
-In-Reply-To: <20261019181020.1069325-1-longman@redhat.com>
-References: <20261019181020.1069325-1-longman@redhat.com>
+	jakub@okonski.org
+Cc: longman@redhat.com,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	cgroups@vger.kernel.org,
+	jstultz@google.com,
+	qyousef@layalina.io,
+	Vincent Guittot <vincent.guittot@linaro.org>
+Subject: [PATCH] sched/eevdf: Fix sched idle task group preemption
+Date: Mon, 19 Oct 2026 20:16:11 +0200
+Message-ID: <20261019181611.1461433-1-vincent.guittot@linaro.org>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -89,84 +110,138 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-When a boot time nohz_full CPUs are present and they cover CPUs 0-7,
-some of the test cases may fail.  So the test run will be skipped with
-a warning message in this case. On the other hand, if the boot time
-nohz_full CPUs cover all the CPUs except 0-7, a special set of nohz_full
-specific housekeeping check related tests could be run to make sure the
-housekeeping check are behaving properly. The test_cpuset_prs.sh test
-script is now updated to do exactly that.
+Even with flat hierarchy which puts all runnable tasks in the same cfs rq,
+we need to parse the hierarchy to check for sched_idle task group.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
+Reported-by: Jakub Okoński <jakub@okonski.org>
+Link: https://lore.kernel.org/all/58dc8e8a-7260-43ce-aebb-8d9c29a6afc9@okonski.org/
+Fixes: 85570f10a4c6 ("sched/eevdf: Move to a single runqueue")
+Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
 ---
- .../selftests/cgroup/test_cpuset_prs.sh       | 37 +++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ kernel/sched/fair.c | 81 ++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 69 insertions(+), 12 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index cd179854ecd5..7639e9f11cf9 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -84,6 +84,31 @@ echo member > test/cpuset.cpus.partition
- echo "" > test/cpuset.cpus
- [[ $RESULT -eq 0 ]] && skip_test "Child cgroups are using cpuset!"
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 0f2364479f9d..20c33d13a5e7 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -433,6 +433,38 @@ static inline struct sched_entity *parent_entity(const struct sched_entity *se)
+ 	return se->parent;
+ }
  
-+#
-+# If nohz_full CPUs have been reserved at boot time, they should not include
-+# CPUs 0-7 as that may fail some of the test cases. On the other hand if the
-+# set of nohz_full CPUs includes all the CPUs except 0-7, we can run a special
-+# set of housekeeping CPUs exhaustion tests to see if the cpuset code will
-+# reject them.
-+#
-+FIRST_NOHZ_FULL_CPU=
-+LAST_NOHZ_FULL_CPU=
-+RUN_NOHZ_FULL_TESTS=
-+NOHZ_FULL_CPUS=
-+[[ -f /sys/devices/system/cpu/nohz_full ]] &&
-+	NOHZ_FULL_CPUS=$(cat /sys/devices/system/cpu/nohz_full)
-+LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
-+[[ -n "$NOHZ_FULL_CPUS" ]] && {
-+	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/[,-].*//")
-+	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/.*[,-]//")
-+	echo "Boot nohz_full CPUs: $NOHZ_FULL_CPUS"
++static void
++find_matching_se(struct sched_entity **se, struct sched_entity **pse)
++{
++	int se_depth, pse_depth;
++
++	/*
++	 * preemption test can be made between sibling entities who are in the
++	 * same cfs_rq i.e who have a common parent. Walk up the hierarchy of
++	 * both tasks until we find their ancestors who are siblings of common
++	 * parent.
++	 */
++
++	/* First walk up until both entities are at same depth */
++	se_depth = (*se)->depth;
++	pse_depth = (*pse)->depth;
++
++	while (se_depth > pse_depth) {
++		se_depth--;
++		*se = parent_entity(*se);
++	}
++
++	while (pse_depth > se_depth) {
++		pse_depth--;
++		*pse = parent_entity(*pse);
++	}
++
++	while (!is_same_group(*se, *pse)) {
++		*se = parent_entity(*se);
++		*pse = parent_entity(*pse);
++	}
 +}
-+[[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" -le 7 ]] &&
-+	skip_test "Boot NOHZ_FULL CPUs overlap CPUs to be tested!"
 +
-+[[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" = 8 &&
-+   "$LAST_NOHZ_FULL_CPU" = $LAST_PRESENT_CPU ]] && RUN_NOHZ_FULL_TESTS=1
-+
- #
- # If isolated CPUs have been reserved at boot time (as shown in
- # /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
-@@ -500,6 +525,17 @@ ISOLCPUS_TEST_MATRIX=(
- 	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
- )
+ static int tg_is_idle(struct task_group *tg)
+ {
+ 	return tg->idle > 0;
+@@ -476,6 +508,11 @@ static inline struct sched_entity *parent_entity(struct sched_entity *se)
+ 	return NULL;
+ }
  
-+# Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
-+NOHZ_FULL_TEST_MATRIX=(
-+	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
-+	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-+	# Using all the nohz_full HK CPUs 0-7 in isolated partition is not allowed
-+	" C0-7       .      .      .      P2     .      .      .     0 A1:0-7 A1:P-2 ."
-+	" C2-7:P2    .      .      .     C0-4    .      .      .     0 A1:0-4 A1:P2 0-4"
-+	" C1-7:P2 C5-7:P2   .      .       .     .      .    C0:P2   0 A1:1-4|A2:5-7|B1:0
-+								       A1:P2|A2:P2|B1:P-2 1-7"
-+)
++static inline void
++find_matching_se(struct sched_entity **se, struct sched_entity **pse)
++{
++}
 +
- #
- # Cpuset controller remote partition test matrix.
- #
-@@ -1365,6 +1401,7 @@ trap cleanup 0 2 3 6
- run_state_test TEST_MATRIX
- run_remote_state_test REMOTE_TEST_MATRIX
- TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
-+[[ -n "$RUN_NOHZ_FULL_TESTS" ]] && run_state_test NOHZ_FULL_TEST_MATRIX
- test_isolated
- test_boot_isolated
- test_inotify
+ static inline int tg_is_idle(struct task_group *tg)
+ {
+ 	return 0;
+@@ -10129,7 +10166,35 @@ preempt_sync(struct rq *rq, int wake_flags,
+ }
+ 
+ /*
+- * Preempt the current task with a newly woken task if needed:
++ * Preempt an idle entity in favor of a non-idle entity (and don't preempt
++ * in the inverse case).
++ */
++static inline preempt_wakeup_action
++wakeup_preempt_sched_idle(struct sched_entity *cse, struct sched_entity *pse)
++{
++	int cse_is_idle, pse_is_idle;
++
++	find_matching_se(&cse, &pse);
++	WARN_ON_ONCE(!pse);
++
++	cse_is_idle = se_is_idle(cse);
++	pse_is_idle = se_is_idle(pse);
++
++	/*
++	 * Preempt an idle entity in favor of a non-idle entity (and don't preempt
++	 * in the inverse case).
++	 */
++	if (cse_is_idle && !pse_is_idle)
++		return PREEMPT_WAKEUP_RESCHED;
++
++	if (cse_is_idle != pse_is_idle)
++		return PREEMPT_WAKEUP_NONE;
++
++	return PREEMPT_WAKEUP_PICK;
++}
++
++/*
++ * Preempt the current task with a newly woken task if needed.
+  */
+ static void wakeup_preempt_fair(struct rq *rq, struct task_struct *p, int wake_flags)
+ {
+@@ -10174,22 +10239,14 @@ static void wakeup_preempt_fair(struct rq *rq, struct task_struct *p, int wake_f
+ 	if (!sched_feat(WAKEUP_PREEMPTION))
+ 		return;
+ 
+-	WARN_ON_ONCE(!pse);
+-
+-	cse_is_idle = se_is_idle(se);
+-	pse_is_idle = se_is_idle(pse);
++	preempt_action = wakeup_preempt_sched_idle(se, pse);
+ 
+-	nse = se;
+-	/*
+-	 * Preempt an idle entity in favor of a non-idle entity (and don't preempt
+-	 * in the inverse case).
+-	 */
+-	if (cse_is_idle && !pse_is_idle)
++	if (preempt_action == PREEMPT_WAKEUP_RESCHED)
+ 		goto preempt;
+ 
+ 	update_curr_fair(rq);
+ 
+-	if (cse_is_idle != pse_is_idle)
++	if (preempt_action == PREEMPT_WAKEUP_NONE)
+ 		goto update;
+ 
+ 	/*
 -- 
-2.55.0
+2.53.0
 
