@@ -1,89 +1,139 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-alma10-1.taild15c8.ts.net [100.103.45.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-115.ptr.blmpb.com (va-2-115.ptr.blmpb.com [209.127.231.115])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDAC4552EDA;
-	Mon, 19 Oct 2026 14:14:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=100.103.45.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED17C519DEB
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 14:14:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.115
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792419267; cv=none; b=JnlH2SyNCf2dNSQ2A67dAzGePC9XqFwAXIIaOXKK5C70/bAv3akDqWrMK6ho2VFdfhhDa3HIkN8DJSVOMTmVI/B4zf/5yHOI7/P6ZFyteAJGDlwnf9nq5Tczk6sQAO56tc0W84dLL9VpenD5Xq0ejNR6mC5QzN6xOath+4wIBQ0=
+	t=1792419282; cv=none; b=lU/P7wvv72Nwh8S5GDsoSAFJZVfvUtZHMUEtraXGkgjTEgHhij5UiShyh616Z4YPdVP7xOruh5BCNIunB+8+MicWvJpnWsnkgTA0+tQv2Mo6Sk6NNWiMdAmuinBpb4a3ishqLEE1k7s/38cjndm/lJzLIBmTORtilciW8+7IDkw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792419267; c=relaxed/simple;
-	bh=Ch7QAVs8y9P8kRkbNHCRoG1DNBpeV7Gdzcud7UUXypM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NH8tBZjKVRRnKEqXWfDl0jlNvZGAMXLh0QY+ul2iEixfFyr7zFMjOX9A0EScP+S+z2lKSs5M3ngUScPDxXKqO6jSWTqTXZcRsRUhjXDWmQUNNTQxA/zvbvCz2mli1/0SLpYRQC5MncIKgNcAFfTfjTN2vP76BnmZwaquphkCF30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mkgx2V7u; arc=none smtp.client-ip=100.103.45.18
+	s=arc-20240116; t=1792419282; c=relaxed/simple;
+	bh=YjfefJJvAYRwzQCu02KQ/kD9JBVwvA3WGC1yZzhSfYE=;
+	h=Content-Type:Subject:Message-Id:To:From:Cc:Mime-Version:Date; b=HLaRvyKmVKGsX3WWfUAwmcWLK5ztMClWlAvTHptjeqWLleGTOsUwf354/We+8YMv4hCdW1KoDxGaRTPwNiDcFixIlqjh0tbuU3XLBppd3Lafz2H7kYktuA+SBmUmWYnh2RSKA7GXZLAcOeM+v3/esnd8RTqGySN3zMxKVWmjPeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=pkCr5SgV; arc=none smtp.client-ip=209.127.231.115
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mkgx2V7u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AE961F000C5;
-	Mon, 19 Oct 2026 14:14:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792419266;
-	bh=7796Na8Lv8R+oexI0qKXaPmDdfsdOtZrwkjrcnP6R9E=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=mkgx2V7ufsKA0GuRgq4ukenZFT+R1sPN2WiOnCwsZ/VP3g3lmzZfDm00z3z2CAUIe
-	 bTsfFvc2uuNXx8Vn8tZJie9CLGIPGzCOdZESkWLvl+e9muw7OpPOneBngK77eyLYhh
-	 iJW5czRYIGrxsC3vz8IKHLDEW/zhdxem0GA/fbsfloeVeOgdG55um9Cwciq0sFqLzF
-	 oeHvQaHqwL3bkMdwFC0FWUFJPwB7NXmAjV3n9cdCvXGe7NRh0XNwytR8/Y98qnyWsT
-	 xEhkC6KUJ3LZWsgzN0j+/pK+hjnDgOLp+be77PjVvfihIacChpxEfBApH6ELx+aVCG
-	 UbzM5bsEfOTzw==
-Date: Mon, 19 Oct 2026 15:14:24 +0100
-From: Harry Yoo <harry@kernel.org>
-To: Kairui Song <ryncsn@gmail.com>
-Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, 
-	SJ Park <sj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
-	Hugh Dickins <hughd@google.com>, David Rientjes <rientjes@google.com>, 
-	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
-	Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>, 
-	Tal Zussman <tz2294@columbia.edu>, Xiang Liu <liuxiang.277@bytedance.com>, 
-	Ehab Ababneh <ehab.ababneh@intel.com>, zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, 
-	Lian Wang <lianux.mm@gmail.com>, Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev
-Subject: Re: [PATCH v4 03/17] mm/memcg: add folio-based lruvec live helper
-Message-ID: <atYgxto1RXZyZtLB@thinkstation>
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016-mglru-fg-v4-3-2106750c0bfa@tencent.com>
- <atEkfmRFgXJCbJuK@thinkstation>
- <CAMgjq7A6Yom=dHDMXk+mpYm3dotgOaVRjPHgUsOryjJ1VjPC6Q@mail.gmail.com>
- <atYdi3O77m6XzaKu@thinkstation>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="pkCr5SgV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1792419274; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=NEJJZ34u4qlgZ0S11fm90eLB3kl92LQqge8z3SZGpCM=;
+ b=pkCr5SgVpY/fkEsaSTxA1aExg629LbsxsWL7xtWlLYD0CZzDQYSgfjSwZpQWL3NtonnSeA
+ QohqjsMml6fyi7jjmkJfTCp41NUSmff9WOsUACribH49LNTUcnuaZIKAtxlr6KpLRq8c/G
+ 1zrA4EO6tqW2UOi3LMLFJPyP7tnSrqddCNdb7RXcZ5q3j5RX4u7LZs77f+yocKmxooC/tR
+ psYFsaXVYAXhtGBKBRPw2UrxVkCAtMKxEukvimqUos1xbR7xvCgHObekHGZo5iV3K/N4j2
+ k2jEEUMExr3e0ozf69DoSaMZL3Sb8jA38tpu/wgpcwJb80VR01GgCxGllOKQhg==
+Content-Type: text/plain; charset=UTF-8
+Subject: [RFC 0/2] mm: add source selectors to memory.reclaim
+Message-Id: <20261019141401.11927-1-lizhe.67@bytedance.com>
+X-Mailer: git-send-email 2.45.2
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
+To: <akpm@linux-foundation.org>, <david@kernel.org>, <gourry@gourry.net>, 
+	<ziy@nvidia.com>, <joshua.hahnjy@gmail.com>, <rakie.kim@sk.com>, 
+	<ying.huang@linux.alibaba.com>, <ljs@kernel.org>, <mhocko@suse.com>, 
+	<muchun.song@linux.dev>, <roman.gushchin@linux.dev>, 
+	<shakeel.butt@linux.dev>, <weixugc@google.com>
+From: "Li Zhe" <lizhe.67@bytedance.com>
+Content-Transfer-Encoding: 7bit
+X-Lms-Return-Path: <lba+26ad625c7+e7ed1e+vger.kernel.org+lizhe.67@bytedance.com>
+Cc: <cgroups@vger.kernel.org>, <linux-doc@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>, 
+	"Li Zhe" <lizhe.67@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <atYdi3O77m6XzaKu@thinkstation>
+Mime-Version: 1.0
+Date: Mon, 19 Oct 2026 22:13:59 +0800
 
-On Mon, Oct 19, 2026 at 02:46:37PM +0100, Harry Yoo wrote:
-> In the function, RCU is the only mechanism that prevents release of
-> the memcg
+memory.reclaim is a useful proactive reclaim interface for memcgs, but
+tiered memory makes "reclaim N bytes from this memcg" underspecified for
+userspace controllers that manage memory placement across tiers. The
+kernel's reclaim policy is aging-based, and on tiered systems aging may
+demote folios before they are eventually evicted. Without a way to
+declare where reclaim pressure should start, userspace can only reclaim
+from the memcg as a whole and observe one aggregate progress value.
 
-Uh, no. looking at the code again I might have been confused!
+There is prior history here [1]. The old nodes= proposal tried to let
+memory.reclaim scan selected NUMA nodes, but the discussion left several
+ABI questions unresolved:
 
-The caller is expected to have either 1) acquired RCU read lock,
-or 2) have a reference to the cgroup.
+- nodes= did not clearly say whether the mask was a source selector, a
+  reclaim domain, or a demotion-target constraint.
+- The implementation did not apply the mask to the whole reclaim path,
+  so demotion could allocate outside the mask. If userspace interpreted
+  the mask as a domain or target constraint, the ABI did not provide
+  that.
+- Selecting top-tier nodes could become an implicit way to request
+  demotion without uncharge. That would make userspace depend on a
+  particular reclaim policy and could make future policy changes hard.
+- The separate completion-accounting question remained: demotion can
+  count as reclaim progress even though memory.current is not reduced.
 
-I see a bunch of callers that acquires rcu_read_lock() before reading
-memcg/lruvec from folio and passing it to mod_lruvec_state() (and then
-get_non_dying_memcg_start()/end().
+This series takes a narrower approach. It adds a typed source= key which
+declares only the source on which the existing memory.reclaim aging
+pipeline should be applied. It is not a demotion target selector, not a
+demotion-only goal, not an eviction-only goal, and not a change to the
+existing completion accounting. Leaving source unspecified preserves the
+existing memory.reclaim behavior.
 
-Callers like reclaim e.g.) mem_cgroup_iter() hold a reference to the
-cgroup...
+In that sense, this series extends node-scoped reclaim pressure to the
+memcg memory.reclaim interface. The existing node memory_reclaim
+interface can apply pressure to a node, but it is not scoped to a
+particular memcg. This series lets userspace apply the same kind of
+source-scoped pressure to a cgroup's resident memory on selected nodes
+or tiers, while still using the normal memcg reclaim path.
+
+The main benefit of this series is to give userspace a steering knob
+for per-node and per-tier memory placement control. A tiering controller
+can observe the resident memory distribution across nodes or memory
+tiers, and then apply reclaim pressure to the source that should be
+relieved. For example, it can apply pressure to top-tier nodes so that,
+under the existing tiering policy, cold folios can be aged and usually
+demoted to lower tiers, or reclaim from a terminal tier when it needs
+actual charge reduction.
+
+The existing memory.reclaim interface cannot express this. It applies
+pressure to the memcg as a whole, so on a multi-tier system the kernel
+may make progress in a tier different from the one userspace is trying
+to control. That makes feedback control of tier ratios ineffective: the
+controller can observe that a specific tier is over its desired resident
+footprint, but it cannot direct the next reclaim request to that tier.
+
+Patch 1 adds source=nodes:<nodelist>, which is the basic source
+selector. Patch 2 adds source=tier:<N>, where N is the memory_tierN id
+exposed by /sys/devices/virtual/memory_tiering/. The tier selector is
+only a convenience layer over the same source semantics: it resolves the
+current tier nodelist at write time and then uses the same source-scoped
+reclaim path as source=nodes:<nodelist>.
+
+The remaining issues from the old discussion are intentionally left out
+of this series. If userspace needs to control demotion targets, that
+should be a separate target/demotion-policy ABI rather than folded into
+source=. If userspace needs a strict "bytes actually uncharged"
+completion mode, that should be discussed as a separate accounting or
+goal extension because it would change the observable meaning of
+memory.reclaim progress. This series only adds source selection for the
+existing reclaim policy.
+
+References:
+[1] https://lore.kernel.org/all/Y5bsmpCyeryu3Zz1@dhcp22.suse.cz/
+
+Li Zhe (2):
+  mm: add source selector to memory.reclaim
+  mm: add tier source selector to memory.reclaim
+
+ Documentation/admin-guide/cgroup-v2.rst | 29 +++++++++++
+ include/linux/memory-tiers.h            |  6 +++
+ mm/internal.h                           |  3 +-
+ mm/memcontrol-v1.c                      |  6 ++-
+ mm/memcontrol.c                         | 11 +++--
+ mm/memory-tiers.c                       | 24 ++++++++++
+ mm/vmscan.c                             | 64 +++++++++++++++++++++++--
+ 7 files changed, 133 insertions(+), 10 deletions(-)
 
 -- 
-Cheers,
-Harry / Hyeonggon
+2.20.1
