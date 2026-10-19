@@ -1,55 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=130.117.225.111
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792426323;
-	b=33bunp8BZUeskxhi3q8wsf3Gg1kR2F4fO6xavCHKQ/VY70OcUi15bvL/zCD9ipcTSdCH
-	 RCtlUAJup98BxABdvxQgIsVsaBNedpnxDoj69UvhaLypEiokf+51ItNfw9d3/6x8yZ7aA
-	 pGO1Kw28bYX2oMBQTNDZJZCPFrq/TEIhCopWVnPZqzW25TkgYTlkmH6q99e+jD/9nlVoM
-	 BmliEAhzSwLq3aLaQG53NeunmBvXpQYUlfs6+9HhBRT6FniAgXBrgWxOnG8kuvwGceFoS
-	 SGvb+4gMn/vvFD5bJdDrhJHkSYaAJ7E+82tu+oqP6seHrOIvFgh5sUEA+3zpOZnANGA==
+	t=1792426904;
+	b=BHbQBiH0FJwTz3MzWSSEV0FkmhIUHiPJB/orkwgacIgaTjhPhQh96VmIromCXWFIFrCI
+	 itspsR6ZAtPPqaWChn1fhkEgxic2yu9C2egkxdhwKpjwYbKkPblNlnXOkFKt/406cgGMX
+	 DiXek3NAnarFj7SdaeLvUnA0aN7PWli0rqxNLYdKsjvesAAjFddNnWKIIqXJrBn3gOIDw
+	 ikZekyzgJnK2SSCyxrOMr6Vu8FCr/RfRiYOhot2aU0QxKyQNkB7DrlHnyxYnQk6MSBDma
+	 CaDm0mnXkEOL1igo4ii9WAA+2W2Um4zinqJYYLdNi4CePGyCQ7G/JM/zVgsWL4vm29w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792426323;
-	h=DMARC-Filter:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key;
-	bh=CDrohwjJTpsso8SgDTwYh9k//AsOTFOPCFpSoWxu9xY=;
-	b=jcoxuzoOjIEShOZ/lJq6yKA7wGGRtMmX68XCAhTmAqcT28pmPl3TN+CfVhsosa9AyPAb
-	 faueIlRHbMK0ZgymxK294/ggX4hqv/GX3yZAVSUd85WXvuVfO1+Dpo/LyZVFfGzgLPuQR
-	 CcB8YseOuFikI5w6zC6h3io6WyCNFMCiTU66jatNspx07354kkeH5vhh0rzz/v05hPbKV
-	 aB5XjheRQEiVrOLV51Lh94iGr/6/xENKp0/XZJgIVYGMLeayE8rPWnS9V1BSvOPy9dBM3
-	 nbL9hZ4VgtH3EEIfZtXdP6YLR2OcdpEjMscV9o6O9s1WOKoRZcwk25Aro2ao2UiYSHA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792426904;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=AXALzYiDlqNLgw2O3tAb14ubqs9EH5rpsxDv02Io52g=;
+	b=Xo+Paq2oZFoDwQx6w75C33TxYW0i9wIsopLXhD2C1t0/wIepXTIlO9KDd6y0rjxjSzZH
+	 y4zJFPECC8v2Bg2v3m+Snfcgn2b4BB6KD0vkkq4ZoWjjGYUnPD5tNgHqBWqUyqokTagxg
+	 hX/ebQzWyu86yDDkSsChtEttEIMIUH7RLAtUmEkT0YpXa2P7d9iyETSQ2waDCUn4IF98b
+	 d5FUdxIC7ItYNjNz2nomdPEOuMn8ZfI6/k1MrleqNIxLUiq0ej9cVAh3I4Pk5KEJfuu0R
+	 8zfJgxmhoPwY/e5JzjZwTgBaTpih43WEeuYIU30Z3/ROQ3LRZ0QVjr5KS0Btqd3J/Vw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=virtuozzo.com;
-	spf=pass smtp.mailfrom=virtuozzo.com;
-	dkim=pass header.d=virtuozzo.com header.i=@virtuozzo.com header.a=rsa-sha256 header.s=relay header.b=mrUcQDHo;
-	arc=none smtp.remote-ip=130.117.225.111
-Received: from relay.virtuozzo.com (relay.virtuozzo.com [130.117.225.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=H5phoMDY;
+	arc=none smtp.remote-ip=209.85.222.172
+Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6578B606AF8C;
-	Mon, 19 Oct 2026 16:12:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6578B606AF8C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=virtuozzo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=virtuozzo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3C0F606A31B
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 16:21:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3C0F606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=virtuozzo.com header.i=@virtuozzo.com header.a=rsa-sha256 header.s=relay header.b=mrUcQDHo
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=virtuozzo.com; s=relay; h=Message-Id:Content-Type:MIME-Version:Subject:Date
-	:From; bh=CDrohwjJTpsso8SgDTwYh9k//AsOTFOPCFpSoWxu9xY=; b=mrUcQDHoDdhAxO5d5pT
-	N4DrI8T/1uGOrNTpfFOL6qpIFU404DQlweHurDW2pcJAEdzNbVT3XmuZYqgyGk9k3tzucoNhFnkR1
-	cDMY2lBcoNwmwHkL92bYBomIt0sogQPMK8FFVQkzcPjUqB17qAfI2dk3uWWcTgcA23XMBzh/u1klD
-	ALJXOji8fYkLa4oXelQgS9QMxeN8icD0IyDmZt9nrUGdiibupnCJEX1dJAfIdiUfmVQsSFiV3Tf55
-	yXdhB4OazT0t/Osbr+2qqrk4iOmOPOGyIYgy+iiz5FS9kKHgqQi6E8mEwSqtPKm3USDDCQLaB4Wc0
-	2wFgFSsPILVIrig==;
-Received: from ch-demo-asa.virtuozzo.com ([130.117.225.8] helo=f0.sw.ru)
-	by relay.virtuozzo.com with esmtp (Exim 4.96)
-	(envelope-from <khorenko@virtuozzo.com>)
-	id 1xIpuE-005W7Y-2G;
-	Mon, 19 Oct 2026 18:11:42 +0200
-From: Konstantin Khorenko <khorenko@virtuozzo.com>
-Date: Mon, 19 Oct 2026 18:11:44 +0200
-Subject: [PATCH v3] mm/shrinker: allocate shrinker_info_unit from a
- dedicated kmem_cache
+	dkim=pass (2048-bit key, unprotected) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=H5phoMDY
+Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-93ead211f14so257989385a.1
+        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 09:21:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1792426903; x=1793031703; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=AXALzYiDlqNLgw2O3tAb14ubqs9EH5rpsxDv02Io52g=;
+        b=H5phoMDYTzRbKT2WQq6v53aaHIsZvm1oxzEgECPunKwtKkbsSkCE4MZxkn3xcEJxR0
+         fiG9OVJ7vkjQVXNajJY0aqT84jQrovr8c6S0wljKhLKPpFPb0SyY0/vyWAGnU8G5moAx
+         8fvA/aKfZSXKPjrxjGyt91Wl+Gu7f33xJtLuX2g/ZpAMYM0JxV5M0346QUsIK67D7i5K
+         vnUOI7rghz/gEcqY2A0ZS8nVFU9w3I85sbau0/gmmL4PH4CTRs8XX/nc2A5uTm6Q8Ux7
+         VNWBxxiDeYkDZjlZIt7Aap2r7budsQqPO9TLhv4BjSi/UeAk2pYZ/cSEMPZBa0r5V/Wd
+         XsEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792426903; x=1793031703;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=AXALzYiDlqNLgw2O3tAb14ubqs9EH5rpsxDv02Io52g=;
+        b=KxLu8If7eCswRsLGozoJBYqrteWj6T1KdEF1aLl+/rlfjtKkSy9hzgynkWSbFfmaHj
+         QZbgRGYK318aXzV+oy8k38+OdPVGgEH332RVMsFGXEHCuBzFez4liLERaOuKfcCxIa+4
+         vqTel1lbEPy0L+1f9LNq2s+Aq/UumaRXe4tjCOpy+mLuR6IrnljucbnGbVV6S7yOPyat
+         w8h8F0l6hB+r1kk6o2Lv0JsZuAm3QVNvkuC8wcSBKjMeRoLJEvs97H4bNlKGoYUU3xkb
+         0TNyCGix5PWd5rAyiTH+IIFYJP91g5/kY0FKk2aiEN01YNCawl4mWOZfXP+QOVauL3e9
+         hNjA==
+X-Forwarded-Encrypted: i=1; AKwUvBxSWWuZBTzn4DdVRcIO0JWjGivYWr/Y/MS2GMRCkOPpfDBtAQYJnJFa4F8Qo9Cf/ueg4fBoAFTo@vger.kernel.org
+X-Gm-Message-State: AFq9FYLjgwF63yBfQMAKCMvKS7KWyOKKEFsZ6hK2f4Ss6LK6rnYk1DY+
+	BQwi/B4TjbVP4Az9WfEaZNIcl4d+MIoQj3/mmYZuPxMOpQ9GNVyt7Oro2amtXtlU/gc=
+X-Gm-Gg: AYBFou2m8DmXwUklvQ4nxVu+LBGSBaO8yO71nNAqI48FJse6wtL+6bNScz/Z9lA+0Ep
+	bPJmqj7VOfTldmtW+jNsknDZX69o6iLF+99ACZo59FYlaPkiEK6aETaIJvgoUTcGsxzFhKuXuHS
+	xE3iTvzRxEZKhvaDpUGRQn/e3Z8h4sYWbMmVRFSL1X+DZjMkALciqtDdsx4H8OzOf4dXIHHoyZk
+	ELVmztvPatd3PjacHbMz3bKbCyvMt35iVlU5A7RdX1FsVIMAwUgS1UznywjE4D/OwDKQFSL8SZx
+	qvRI5PXQt7PysBM0FKAr7IIJQ6VU9COxykLbUj9tJ6pugMYdrQGJBeA2DUhLjQFT1MDMHGmV6Pj
+	gM64FPCJFvG+z6EkrXSm21780lsO9El0qNr83EOglkAW3gocSgnk1XLSZ284yn9xU3l4Yr0Z04y
+	PQNL2M/RJAmr1slaA+FahyC0zYTLCrZ+khzMV/aPHhc+ECsy4AFCTcir3AdzYo+TxvFDAnUgYaH
+	TSAtH7On2IwQZ2xNLyCglZa7V/XQ2x+1Uvx76zjlUs2BrCD5MR+tP7FCQCIGtfrK2RAlxI=
+X-Received: by 2002:a05:620a:6cc4:b0:93f:2b65:593b with SMTP id af79cd13be357-93f2b655ed6mr1165985985a.38.1792426902714;
+        Mon, 19 Oct 2026 09:21:42 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F.lan (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91bcba4b9e1sm102394026d6.14.2026.10.19.09.21.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Oct 2026 09:21:42 -0700 (PDT)
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: linux-mm@kvack.org,
+	cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	kernel-team@meta.com,
+	longman@redhat.com,
+	ridong.chen@linux.dev,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	akpm@linux-foundation.org,
+	mgorman@suse.de,
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Subject: [PATCH v2] cgroup/cpuset: use mems_allowed_seq when checking a policy nodemask
+Date: Mon, 19 Oct 2026 12:21:38 -0400
+Message-ID: <20261019162138.3271947-1-gourry@gourry.net>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,158 +102,67 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261019-vstor-144715-shrinker_info_unit-kmem_cache-v3-1-0fb061e09bf4@virtuozzo.com>
-X-B4-Tracking: v=1; b=H4sIAD9B1moC/yXNQQ6CMBBA0auQWduEUijqVYxpoE7tSGjJtBATw
- t2tunyb/3dIyIQJrtUOjBsliqFAnSqwfghPFPQohqZutKylFlvKkYVs2152InmmMCEbCi6aNVA
- W04yzsYP1KPQFB+X686hVByW4MDp6/2a3+99pHV9o8/cAx/EBwWIgko4AAAA=
-X-Change-ID: 20261016-vstor-144715-shrinker_info_unit-kmem_cache-69ea3f78b635
-To: Andrew Morton <akpm@linux-foundation.org>, 
- Dave Chinner <david@fromorbit.com>, Qi Zheng <qi.zheng@linux.dev>, 
- Roman Gushchin <roman.gushchin@linux.dev>, 
- Muchun Song <muchun.song@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
- Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
- cgroups@vger.kernel.org, Konstantin Khorenko <khorenko@virtuozzo.com>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4716;
- i=khorenko@virtuozzo.com; h=from:subject:message-id;
- bh=A02/K9KBXa2vsDlxYeUgtKBEVpOgUV2FhLca4x06Ks0=;
- b=owEBbQKS/ZANAwAKAVGWCkf5YVwqAcsmYgBq1kFGx9BvQsfXRTLTJ30NLwN8MLEz/PrdwIfXC
- y763+LJIu+JAjMEAAEKAB0WIQRWD23IPcXT0GO9CCxRlgpH+WFcKgUCatZBRgAKCRBRlgpH+WFc
- Kr/6D/9d6PZqCp6vtGcQOvsbJvB0d6vZcjylCrCPwKSyjLvdu765yH5uakjNmj/1qF5YqbqczOR
- TZcjSs6xzH2nMcbs6PN3ShXsWKlOSl8Ywx6H2aWBIRTefbXQ0YW2nec6HdwO9nyivcNiuXEith8
- ZRjj8Xwa475s/DLxl5fYjUdpEXP1hZHzYFFpWH819GkOm9Xm5rHGQJRVySQcCaHdOx48IkjV9mf
- rbXX8XTSoF6h2qdi7SircBvupck0IFXvWPFLHWu3Dp8S2XkYVFqjhYigMZ27hYTQPLdeh5acjFu
- EM1L/pNePbFrTxdMX0/y7gnyZAPnn9ARrpHF3Wfk++0hXw7g765IVtGCA5CZge8M+tWn14Dmj6f
- FNAvs5aSV4lUYXwICfDS9dxS7aaAcaUyIhUWKK+e5oDAgB2qAyH9Wn76UwWGqtLX3A9qLN06YGS
- /63yQ/H6jkyJyWqH070a/9olC0rci2uLoJQr/yPp+6dxj5jrdB7BrsIGHd85FlzF1mvZfUDAw4s
- VsqmSxt9pmKt1q3NjEoOislEo1E0eTVVJsMqIx0r0FQJJP4rbfBCqNPVgL5jBQ7yTJ+jymuIcDF
- pEE5SENtgRRV6/wo4cTqoMi2Tl80hHEfQXzdL5ipXabRqeKvoPTANdbUFm/PM+xZInWFNDrzLVz
- WKWuizsDy8Zoezw==
-X-Developer-Key: i=khorenko@virtuozzo.com; a=openpgp;
- fpr=560F6DC83DC5D3D063BD082C51960A47F9615C2A
+Content-Transfer-Encoding: 8bit
 
-shrinker_info_unit holds BITS_PER_LONG atomic_long_t of deferred work
-plus a one-word bitmap, 520 bytes on 64-bit. kzalloc_node() takes it
-from kmalloc-1k, so almost half of every unit is padding.
+A cpuset update changes the task's mems_allowed and rebinds its
+mempolicy in separate steps under mems_allowed_seq, but the check
+reads both without it.  This can cause a spurious numa placement
+miss under some cpuset/mempolicy combinations.
 
-Allocate the units from a cache of their own, sized to the unit. The
-cache is not cache-line aligned: the counters of a unit already share
-cache lines between shrinkers, and aligning the unit would only keep
-neighbouring units off each other's boundary line, at the cost of part
-of the saving.
+A reader that loads one mask before the update and the other after
+it can see a spurious empty intersection and drop the nodemask.
 
-Suggested-by: Andrew Morton <akpm@linux-foundation.org>
-Assisted-by: LLM
-Signed-off-by: Konstantin Khorenko <khorenko@virtuozzo.com>
+For example, a task with cpuset.mems={0} and MPOL_BIND={0}.  If the
+cpuset moves to mems={1,2}, the policy is rebound to {1}.
+
+The allocator can race and compare the old mems_allowed {0} against
+the new policy {1} - which will result in a dropped nodemask and a
+misplaced allocation on node 2.
+
+Simply retry the intersection until mems_allowed_seq is stable.
+
+This covers the task policy, which is rebound under mems_allowed_seq.
+VMA policies are rebound afterwards by mpol_rebind_mm(), outside
+mems_allowed_seq, and are not covered by this change.
+
+Fixes: cc9a6c877661 ("cpuset: mm: reduce large amounts of memory barrier related damage v3")
+Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Reviewed-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
-This is v3 of patch 1/2 of "mm/shrinker: make per-memcg shrinker units
-cheaper", sent on its own as Andrew asked in the v2 thread.
+v2: there is no real update here, i'm breaking it off of the page_alloc
+    series so the page_alloc fixes backport collectively cleaner.
 
-Patch 2/2 of v1-v2, "mm/shrinker: allocate the per-memcg shrinker units
-on demand", is not part of this posting. It is the change that makes a
-memcg pay only for the shrinkers it uses, and it is discussed separately
-in the v2 thread.
+ kernel/cgroup/cpuset.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-Tested on a 4-CPU, single-node VM with the test from the earlier cover
-letters: 8000 tmpfs mounts, then 2000 empty memory cgroups. The units
-move from kmalloc-1k to the new cache, 31 per order-2 slab, and the
-unreclaimable slab per cgroup goes from 144 KB to 87 KB. Removing the
-cgroups and dropping the caches returns the cache to its earlier size.
-
-memory.reclaim on a cgroup still frees its objects on 140 ext4
-superblocks, and cgroups making their first objects while mounts keep
-raising shrinker_nr_max leave nothing in dmesg, also with
-slub_debug=FZPU on the cache. selftests/cgroup test_memcontrol passes.
-test_kmem_memcg_deletion also fails without the patch, by a similar
-margin.
-
-Changes in v3:
-- Allocate the unit from a dedicated kmem_cache instead of shrinking it
-  to 63 ids so that it fits kmalloc-512 (Andrew Morton, Muchun Song).
-  New subject, since the unit keeps its size.
-- Link to v2: https://patch.msgid.link/20261014-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v2-0-51af2aedbe6c@virtuozzo.com
-
-Changes in v2:
-- Patch 1: check the unit size with BUILD_BUG_ON(!is_power_of_2())
-  in shrinker_unit_alloc() instead of an open-coded static_assert()
-  in the header (Muchun Song).
-- Link to v1: https://patch.msgid.link/20261012-b4-prep-vstor-144715-size-shrinker_info_unit-to-a-power-of-two-v1-0-5a7608393b7a@virtuozzo.com
----
- include/linux/memcontrol.h |  1 +
- mm/memcontrol.c            |  2 ++
- mm/shrinker.c              | 11 +++++++++--
- 3 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7d1c0ce189a88..b5a89594c263c 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1675,6 +1675,7 @@ static inline u64 mem_cgroup_get_socket_pressure(struct mem_cgroup *memcg)
- }
- #endif
- 
-+void shrinker_unit_cache_init(void);
- int alloc_shrinker_info(struct mem_cgroup *memcg);
- void free_shrinker_info(struct mem_cgroup *memcg);
- void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 856a7d07586cc..7a817181168ed 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5717,6 +5717,8 @@ int __init mem_cgroup_init(void)
- 	memcg_pn_cachep = KMEM_CACHE(mem_cgroup_per_node,
- 				     SLAB_PANIC | SLAB_HWCACHE_ALIGN);
- 
-+	shrinker_unit_cache_init();
-+
- 	return 0;
- }
- 
-diff --git a/mm/shrinker.c b/mm/shrinker.c
-index 7ec2a9704f6f2..4fb424e721bca 100644
---- a/mm/shrinker.c
-+++ b/mm/shrinker.c
-@@ -12,6 +12,12 @@ DEFINE_MUTEX(shrinker_mutex);
- 
- #ifdef CONFIG_MEMCG
- static int shrinker_nr_max;
-+static struct kmem_cache *shrinker_unit_cachep;
-+
-+void __init shrinker_unit_cache_init(void)
-+{
-+	shrinker_unit_cachep = KMEM_CACHE(shrinker_info_unit, SLAB_PANIC);
-+}
- 
- static inline int shrinker_unit_size(int nr_items)
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 3f52717c19654..8ee239d5c6b48 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -4354,10 +4354,21 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
+  * @nodemask: the nodemask to be checked
+  *
+  * Are any of the nodes in the nodemask allowed in current->mems_allowed?
++ *
++ * A cpuset update rebinds the task's mempolicy and changes mems_allowed in
++ * separate steps, so retry if an update raced with the check.
+  */
+ int cpuset_nodemask_valid_mems_allowed(const nodemask_t *nodemask)
  {
-@@ -33,7 +39,7 @@ static inline void shrinker_unit_free(struct shrinker_info *info, int start)
- 		if (!unit[i])
- 			break;
- 
--		kfree(unit[i]);
-+		kmem_cache_free(shrinker_unit_cachep, unit[i]);
- 		unit[i] = NULL;
- 	}
+-	return nodes_intersects(*nodemask, current->mems_allowed);
++	unsigned int seq;
++	int ret;
++
++	do {
++		seq = read_mems_allowed_begin();
++		ret = nodes_intersects(*nodemask, current->mems_allowed);
++	} while (read_mems_allowed_retry(seq));
++
++	return ret;
  }
-@@ -47,7 +53,8 @@ static inline int shrinker_unit_alloc(struct shrinker_info *new,
- 	int i;
  
- 	for (i = start; i < nr; i++) {
--		unit = kzalloc_node(sizeof(*unit), GFP_KERNEL, nid);
-+		unit = kmem_cache_alloc_node(shrinker_unit_cachep,
-+					     GFP_KERNEL | __GFP_ZERO, nid);
- 		if (!unit) {
- 			shrinker_unit_free(new, start);
- 			return -ENOMEM;
-
----
-base-commit: a5ebb76233b79db01e82e061173cb73c6d2b5c6b
-change-id: 20261016-vstor-144715-shrinker_info_unit-kmem_cache-69ea3f78b635
-
-Best regards,
---  
-Konstantin Khorenko <khorenko@virtuozzo.com>
+ /*
+-- 
+2.53.0-Meta
 
