@@ -1,66 +1,65 @@
 Received: from mail-vk1-f169.google.com (mail-vk1-f169.google.com [209.85.221.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4CA631282F
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 01:14:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB94330F7E8
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 01:14:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1792372498; cv=none; b=KSnOrtmpSP+wCure1Ut5WJlGGuqmXd9XxMdWJS83Kt9WO/getpGz99Vc6NtYrTFyFq+Z3Oiq3RwF7jt8/h6thDoyB/pUFA4VPE+IflrY7Fi0oXKn2/4auHhmATiP16WQEbP01UoijKXK8Qn6Ku6OsdYCSaphOMPNPYTpc08N58Y=
+	t=1792372501; cv=none; b=u4w18R/8aWkJz05CH9j2pMmywphx7Y4RRusiJY+bz3LzIlvFfHnR0MQ2r7JCiaeOuwxZej8ZdbXKwJOcJYCvSDPZXH8ZCHbytmWlntQIqwS4Br4ZQ5FTUajUmg58NeMApJ/153muYoOcrRyGvzpAn32zoyjh0JLBaKypBBI30Vg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1792372498; c=relaxed/simple;
-	bh=fBWRLRNFXx1jULKjcR84Zfp5/L4R5O4BrM1N22Cd79c=;
+	s=arc-20240116; t=1792372501; c=relaxed/simple;
+	bh=b/d6EMWrCn0T5QVqLEzN9+sowVmf1Ha6Ji1SgmKaaz4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EjSRrCCnReI5xC6FNvW/nH4s4rMpdtqlo7tVPo69/L/+phQrag1VeyQbN3a1z6FjCtPT3aHkjkNlizbynV+foRMAQM4XxnmgiOq4lWuia+uUsecFX6FvjHL21i2CvSk9d5WTra/ZDj9eA5GMHCYvy5Q0K170SAY8hTWQ50+GBIE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=TtiyUY+W; arc=none smtp.client-ip=209.85.221.169
+	 MIME-Version; b=Gm/KPVhBuf+o5veHfdyrYCz3zPiW/ntr2jB9P5jbrBnPZalqKvYgcqNgz7Mrv1K9tXhikwlHUsQnv8m5gqsL6tVD6NBRzm0qDvu5WrCSn/y1F80hxXaO9NimJH7yoISt3GopUsOttzLSO522oyOAj19VwKpTKMQmRmr2H3nFng4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=QCpAC4kX; arc=none smtp.client-ip=209.85.221.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="TtiyUY+W"
-Received: by mail-vk1-f169.google.com with SMTP id 71dfb90a1353d-5eabf243d05so321380e0c.2
-        for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 18:14:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="QCpAC4kX"
+Received: by mail-vk1-f169.google.com with SMTP id 71dfb90a1353d-5e930a11148so1115098e0c.2
+        for <cgroups@vger.kernel.org>; Sun, 18 Oct 2026 18:14:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1792372495; x=1792977295; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=r5Uh0UovwmV8EFz8GLwox5sAAEwyuEzq/FgIh/SpVjc=;
-        b=TtiyUY+W3wKdAl1zxH7RF3/wmZikaG7G3SqMM10WVJqn++e5zRQ+cV6W/VAzLtJez/
-         cYxrDo7k1/fiqUG06SZZKTQ+GTRcas650A8MqFOjxqjaXnT4OCPKTN3QeSvy8WJRgA8T
-         RiCvxZghTE6hgczYvffYnj+h6LotNFwEyO597c4Ep5rlSItA7eKkIa3/aJOcY/vamIM6
-         JtnyONA8lcZpjzG7C9TkbVPl63JCN+QU9vkpjJX3jk2gKgOPj/+RGRluhPj1vLA8bL4g
-         SmvOMwDA2u2QaI9aw7PW/AMDLFTTU0l1ucT+tlPOzDRcHnh9kT9s6TiaYfBg8rkyVbxA
-         r8ZQ==
+        d=soleen.com; s=google; t=1792372498; x=1792977298; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=AG4iCQmCtWMmOqYT8IYP5jpAChTLSZorOObJHVgwpSM=;
+        b=QCpAC4kX6onPlv8oJEKXQihNV0//1YQmxuEVtIP7VNFmUVCZIzxXmlHn2IHiTCJYOr
+         2UEp0G4C1HZSKpS5pZJlWsSp28lWCTxHliLZf+aYlM4toewhjWAEnnylsZ4iWwyyfnWM
+         RANRWmZPp1sYU5Cr8Q9vRswPqnfpt5rrdX2GFeR0HA/tO1SiJAMC0Mc94o+5YNM5bVBT
+         UqkjaWP3+X61hoynwuNtd3fyx2tBza8L3JSjNCpcCswwTmtIM4Bhn4zy0f1gVoWlNFfF
+         Fjk5dHMb+No3mG7rBr0BExkQFA3W6OLXB3WumpSHkbiA6IkX+i1yGxn1/BnuYtmhGG17
+         YTuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792372495; x=1792977295;
-        h=content-transfer-encoding:content-type:mime-version:references
-         :in-reply-to:message-id:date:subject:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=r5Uh0UovwmV8EFz8GLwox5sAAEwyuEzq/FgIh/SpVjc=;
-        b=IvrXcu5PGLsytpBYIHXuSK4H82EgW8xfWyMnouC5aUJ0EZ+SGtDkeFBLRyRTpy4meJ
-         jVe67v59hkFM1AhhYv9E0i75l5Nw+zdW6GxjaWC1Au1AZKcNJLvNgNnSy8qP30VBhuc5
-         kgQJ9eBdd2k8068fZKu4cAl2j37yBiCq9IEByysAc2M+Dtl/51iDH8Uf5MZm8IdxfcWg
-         u5MLGLBP3HaaOV+exgfqhYY/YHr3ahKwGCFI+NO4TWkoBwCRPVxwX5HE6krWrwKKUrzL
-         VcatT7cEWFw7i3zVWYtGeh0OZ4apbFzAxQcwlrtL1lyuWCO6X6AeGFNQ4qYSLD5VDT9P
-         +uMQ==
-X-Forwarded-Encrypted: i=1; AKwUvBw78iM6HQ8JkGIZc5bTYLYSOhXtoe883ciueNz41GyoFFLFZaZl98YZjEEvikpt0HjCf7llyfxr@vger.kernel.org
-X-Gm-Message-State: AFq9FYIOroGX0OU+mym5NhzXuZQRrmHCxRvWXx3TrMU2/w4nxI6E2mdK
-	vng3O3ukC3Ee2oTVY7xrJ+EF+Bjaovct/Wpm2btxELuRHKZPAjsshOb49f9Lueoa7Pw=
-X-Gm-Gg: AYBFou1n/iVfH42t4H97qEQ1YF+nd0XwBccBGdZuAEuMNt+7fu/3DXbj1+p8RJt8hZa
-	qJ5xr5i9ZcaKS+JumzxQPP6L3OinVwgZiwPHJFDoOVN3ZAbfZ2UU0CWpHXjUttIrlwSMiaoPqqE
-	7wikBNlg9D02idBPeoiNp5gi+hqZXpIS9/EAhjXeFD2fc0IGkxcWEZRYM4V+14nX8FeaiM+4yKf
-	ygMHndymZpYoAz4hKcQwYltXJImxT4+xrdaf8o0fEVQmzP/01U5LNEOeaIVn12sC5a3p5/MfLOr
-	9CtO5UD8XtRDhor1kEbMgYUOHGr5ypRxXLEiZh/FST7SBMSDT1Kl02qc8WJxcpe7L1f+vtEcXks
-	r6e9aLTtCI+3e/t68nbLOLEdXSrdA3zE7mskdoyFBXc9aQdIFpcyImsjzUgCh5byxgr9AVMaz/x
-	r0AYeUiEqGFHdI2dgN7R4rBo9KbOwgX7KPTrLJR0JlEQgjsxd5reF5Sh2dRnRtCyX6PxRrT4fX4
-	im4hRpmcDGnSmyHVX07zVUe5In+nIW4Tymt53QKYuTYGQLfzKTIV4/xu8M8DLOzxQfT/uPq+oiK
-	GHrMCoiJ0R9IqyZWKM8=
-X-Received: by 2002:a05:6122:10e7:b0:5e7:e3f9:1322 with SMTP id 71dfb90a1353d-5eaaa4183dbmr1605940e0c.9.1792372495503;
-        Sun, 18 Oct 2026 18:14:55 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792372498; x=1792977298;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-gg:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to:content-type;
+        bh=AG4iCQmCtWMmOqYT8IYP5jpAChTLSZorOObJHVgwpSM=;
+        b=aPyB+q7UCVBlxQMCJkgNaQO6HbZgkKUDnrZ4ak2zvko/sIItiVuiSkDBsFdt03sUKm
+         TbayHuZBAysrW1LIJDMwMbbCNB3bm0mvCMUi3eBcL43CGail7EvlYc3kQhwM4qRGNiFk
+         nQOxkMr7zoPW7jrjkSJZAOWwBBUs1nhX6L91BQhviKFV5IVD8kruFiEa82FAMTJLoZUV
+         /28+sEKwtTEiZJe99RBsRlSkx1ZFLMGvYXwpaG7Ou1TodxEwfxw5BwUU4cW4Tiuq/CsO
+         uP5xZpaFwKcVbekFkb9O4A9g5KWDW5DE+zlHOX4cG9DPgEzkML4iLuJDgWuPr5YcNMdQ
+         3S0Q==
+X-Forwarded-Encrypted: i=1; AKwUvBx1fBk3UOst2yryQmFCxm+dwJcJC+dqE72RXjpMW/B7oJmp1MQC9YXEP90VbtUN/OmCpCrAWqcA@vger.kernel.org
+X-Gm-Message-State: AFq9FYL6xhcT+XaQsfL+vR1OebqeBcM0NP+1xhjH140kPqhXE47NcCwH
+	HHLSxw6GL2RGcJUVZejHt4fXUiR4U2QZLWc8v5ZzUUGoQ0d1k5Arl6Gij9hjuX129jE=
+X-Gm-Gg: AYBFou2drqHxwm4htO/zdCjf30TuIwAk+9jwHPSPt9iQuPYKz095/Cgvh6EkInzju63
+	4yRgUuWpPbOOGACwHl+6fsxyn5xA6EH26yVODW0Bs5XkvG9fU9HLtJgo3d6lKzXYTjYlkxYgltA
+	AED0CahVOzEeDQrSQNT9vpiEy6tVJC7WM0xKCyZZHcyifbC+4JX47MNm1/yv41jCGIaNoTxVQ58
+	T50pYvgLyZ/7HSfZbAxUZjXGlXf8CcmMFaZShkEBC/75B/X+ULC99hn2KzsTwmdnHkurJ7XSDCY
+	J4hb+vNslXiUvkIJ5F/eK8YfBZA9toCqBLB5ktUCTXJyXA6no51Hqq0k+5fMN/5tFbBL8yJxi0Z
+	kap7FYUg98cSQaaOhxWA+KO/jUWhQUUEWzokg6BFvSytc1recXHcW40+bYtwzhQWUZA/OCltrej
+	gAYknD+wykXwTRyuRfYOjzJOF2u2hJdpZstvnHiYxfQFr2cM6KpxW5vMpRp9io60zNNeJVfN/Jz
+	kjI5Iu9v7VSpkGFo2lsaoXcqARMvOQOkHqPmnV9FqFR6qpUzun3nFq7TdjlXCuIWt5bNLSoalJr
+	wvHAJkiODjHoiTMcGXY=
+X-Received: by 2002:a05:6122:d19:b0:5ea:c90d:d1b2 with SMTP id 71dfb90a1353d-5eac90dd9bfmr454444e0c.13.1792372497778;
+        Sun, 18 Oct 2026 18:14:57 -0700 (PDT)
 Received: from soleen.c.googlers.com.com (16.49.199.35.bc.googleusercontent.com. [35.199.49.16])
-        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ea9b474b2asm8039142e0c.4.2026.10.18.18.14.53
+        by smtp.gmail.com with ESMTPSA id 71dfb90a1353d-5ea9b474b2asm8039142e0c.4.2026.10.18.18.14.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2026 18:14:54 -0700 (PDT)
+        Sun, 18 Oct 2026 18:14:56 -0700 (PDT)
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
 To: kees@kernel.org,
 	rppt@kernel.org,
@@ -107,9 +106,9 @@ To: kees@kernel.org,
 	blum@kernel.org,
 	longman@redhat.com,
 	bsegall@google.com
-Subject: [PATCH v2 2/8] x86/smp: Remove unnecessary WBINVD from mwait_play_dead()
-Date: Sun, 18 Oct 2026 21:14:40 -0400
-Message-ID: <20261019011446.834487-3-pasha.tatashin@soleen.com>
+Subject: [PATCH v2 3/8] x86/mce/intel: Bound cmci_rediscover() to a single topology peer
+Date: Sun, 18 Oct 2026 21:14:41 -0400
+Message-ID: <20261019011446.834487-4-pasha.tatashin@soleen.com>
 X-Mailer: git-send-email 2.56.0.176.g3575e65682-goog
 In-Reply-To: <20261019011446.834487-1-pasha.tatashin@soleen.com>
 References: <20261019011446.834487-1-pasha.tatashin@soleen.com>
@@ -119,115 +118,165 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-When a logical CPU goes offline via mwait_play_dead(), it executes
-WBINVD before entering the MWAIT loop. On processors with large shared
-last-level caches (such as Intel Xeon 6985P-C with 504 MB L3 per
-socket), each WBINVD takes ~85-115 ms, flushes and invalidates the
-entire socket's shared caches, and stalls the physical core (including
-any online SMT sibling on that core) for the duration of the flush.
+When a CPU goes offline, cmci_clear() disables CMCI on any MCA banks
+owned by that CPU, and mce_cpu_dead() calls cmci_rediscover(). Currently
+cmci_rediscover() invokes on_each_cpu(cmci_rediscover_work_func, NULL, 1),
+sending a synchronous broadcast IPI to every online CPU in the system,
+all of which contend on the global cmci_discover_lock while reading up
+to 32 MSR_IA32_MCx_CTL2 MSRs.
 
-mwait_play_dead() places the logical processor into an architectural
-MWAIT C-state—the same hardware C-states entered by intel_idle during
-normal idle without executing WBINVD—where C-states deeper than C1/C1E
-flush core-private L1/L2 caches to the coherent LLC on C-state entry
-and maintain cache coherency while the package remains powered.
+Any bank disabled by cmci_clear() is either thread-private, core-scoped
+(shared between SMT threads of the same physical core), L2-cluster-scoped,
+die-scoped, or package-scoped:
+1. Any bank index that is already owned by the target peer in its own
+   mce_banks_owned bitmap is private to a narrower scope than the shared
+   level and will be skipped by cmci_skip_bank() on the target anyway.
+2. Core- or cluster-shared MCA banks can only be claimed by an online
+   SMT sibling or L2 cluster peer.
+3. Shared die-scoped or package-scoped uncore banks can be claimed in a
+   single pass by one online peer on the same die or package.
 
-As long as at least one CPU sharing the same LLC on the package remains
-online, system-wide cache flushes (wbinvd_on_all_cpus()), system sleep,
-and kexec will still flush that shared LLC via the online CPU(s).
-However, when the last online CPU in an LLC goes offline, no online CPU
-remains to service wbinvd_on_all_cpus() or flush the package before
-S3/S4 power removal. Similarly, if the target MWAIT state is C1/C1E
-(which does not flush core-private caches) or cache_state_incoherent is
-set (e.g., SME), the CPU must flush its caches before entering MWAIT.
-
-Skip WBINVD in mwait_play_dead() when entering a C-state deeper than
-C1/C1E while another CPU sharing the same package and LLC remains
-online (unless cache_state_incoherent is set).
+Record the bitmap of banks disabled by __cmci_disable_bank() in
+cmci_orphaned_banks, select a single online topology peer
+cmci_orphaned_target (SMT sibling, L2 cluster peer, die peer, or package
+peer) in cmci_clear(), and mask out any bank indices already owned by
+that target peer. In cmci_rediscover(), return immediately when
+cmci_orphaned_banks is empty; otherwise probe only cmci_orphaned_target
+via a single smp_call_function_single() call.
 
 2-socket, 480-CPU Intel Xeon 6985P-C (N=479, mean of 10 runs):
-  Offline:  40.46 s -> 11.42 s (-71.8%)
-  Online:   11.14 s -> 11.08 s (-0.5%)
-  Total:    51.60 s -> 22.50 s (-56.4%)
+  Offline:  11.42 s ->  9.63 s (-15.7%)
+  Online:   11.08 s -> 11.11 s
+  Total:    22.50 s -> 20.74 s (-7.8%)
+  cmci_rediscover() (cpu479 offline):
+    7,720.6 us -> 0.6 us (-99.99%)
 
 Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
 ---
- arch/x86/kernel/smpboot.c | 46 +++++++++++++++++++++++++++++++++------
- 1 file changed, 39 insertions(+), 7 deletions(-)
+ arch/x86/kernel/cpu/mce/intel.c | 57 +++++++++++++++++++++++++++++++--
+ 1 file changed, 55 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/kernel/smpboot.c b/arch/x86/kernel/smpboot.c
-index ba01a9e919b7..0dccd2f927bb 100644
---- a/arch/x86/kernel/smpboot.c
-+++ b/arch/x86/kernel/smpboot.c
-@@ -1414,10 +1414,28 @@ void play_dead_common(void)
- 	local_irq_disable();
+diff --git a/arch/x86/kernel/cpu/mce/intel.c b/arch/x86/kernel/cpu/mce/intel.c
+index 4655223ba560..f57718b097d9 100644
+--- a/arch/x86/kernel/cpu/mce/intel.c
++++ b/arch/x86/kernel/cpu/mce/intel.c
+@@ -11,6 +11,7 @@
+ #include <linux/percpu.h>
+ #include <linux/sched.h>
+ #include <linux/cpumask.h>
++#include <linux/topology.h>
+ #include <asm/apic.h>
+ #include <asm/cpufeature.h>
+ #include <asm/cpu_device_id.h>
+@@ -40,6 +41,8 @@
+  * owned by the offlined cpu.
+  */
+ static DEFINE_PER_CPU(mce_banks_t, mce_banks_owned);
++static mce_banks_t cmci_orphaned_banks;
++static unsigned int cmci_orphaned_target;
+ 
+ /*
+  * cmci_discover_lock protects against parallel discovery attempts
+@@ -244,6 +247,7 @@ static void cmci_claim_bank(int bank, u64 val, int bios_zero_thresh, int *bios_w
+ 
+ 	/* This CPU successfully set the enable bit. */
+ 	set_bit(bank, (void *)this_cpu_ptr(&mce_banks_owned));
++	__clear_bit(bank, cmci_orphaned_banks);
+ 
+ 	if ((val & MCI_CTL2_CMCI_THRESHOLD_MASK) == CMCI_STORM_THRESHOLD) {
+ 		pr_notice("CPU%d BANK%d CMCI inherited storm\n", smp_processor_id(), bank);
+@@ -328,6 +332,7 @@ static void __cmci_disable_bank(int bank)
+ 	val &= ~MCI_CTL2_CMCI_EN;
+ 	wrmsrq(MSR_IA32_MCx_CTL2(bank), val);
+ 	__clear_bit(bank, this_cpu_ptr(mce_banks_owned));
++	__set_bit(bank, cmci_orphaned_banks);
+ 
+ 	if ((val & MCI_CTL2_CMCI_THRESHOLD_MASK) == CMCI_STORM_THRESHOLD)
+ 		cmci_storm_end(bank);
+@@ -339,6 +344,8 @@ static void __cmci_disable_bank(int bank)
+  */
+ void cmci_clear(void)
+ {
++	unsigned int cpu = smp_processor_id();
++	unsigned int target;
+ 	unsigned long flags;
+ 	int i;
+ 	int banks;
+@@ -346,8 +353,31 @@ void cmci_clear(void)
+ 	if (!cmci_supported(&banks))
+ 		return;
+ 	raw_spin_lock_irqsave(&cmci_discover_lock, flags);
++	bitmap_zero(cmci_orphaned_banks, MAX_NR_BANKS);
++	/*
++	 * A bank is shared by the CPUs of one SMT core, L2 cluster, die or
++	 * package, and these scopes nest. The first online peer found from
++	 * the innermost scope outwards is therefore part of every sharing
++	 * scope that still has an online CPU, so it alone can claim every
++	 * orphaned bank that is still claimable. If it already owns an index,
++	 * the instance released here is not shared with it, hence not with
++	 * any online CPU, and that index can be dropped from the rediscovery.
++	 */
++	target = cpumask_any_but(topology_sibling_cpumask(cpu), cpu);
++	if (target >= nr_cpu_ids)
++		target = cpumask_any_but(topology_cluster_cpumask(cpu), cpu);
++	if (target >= nr_cpu_ids)
++		target = cpumask_any_but(topology_die_cpumask(cpu), cpu);
++	if (target >= nr_cpu_ids)
++		target = cpumask_any_but(topology_core_cpumask(cpu), cpu);
++	cmci_orphaned_target = target;
+ 	for (i = 0; i < banks; i++)
+ 		__cmci_disable_bank(i);
++	if (target < nr_cpu_ids)
++		bitmap_andnot(cmci_orphaned_banks, cmci_orphaned_banks,
++			      per_cpu(mce_banks_owned, target), MAX_NR_BANKS);
++	else
++		bitmap_zero(cmci_orphaned_banks, MAX_NR_BANKS);
+ 	raw_spin_unlock_irqrestore(&cmci_discover_lock, flags);
  }
  
--/*
-- * We need to flush the caches before going to sleep, lest we have
-- * dirty data in our caches when we come back up.
-- */
-+static bool mwait_play_dead_needs_wbinvd(unsigned int eax_hint)
-+{
-+	unsigned int cpu = smp_processor_id();
-+	u32 pkg_id = topology_physical_package_id(cpu);
-+	u32 llc_id = per_cpu_llc_id(cpu);
-+	unsigned int i;
-+
-+	if (cpuhp_tasks_frozen || MWAIT_HINT2CSTATE(eax_hint) < 2 ||
-+	    llc_id == BAD_APICID || this_cpu_read(cache_state_incoherent)) {
-+		return true;
-+	}
-+
-+	for_each_online_cpu(i) {
-+		if (topology_physical_package_id(i) == pkg_id &&
-+		    per_cpu_llc_id(i) == llc_id) {
-+			return false;
-+		}
-+	}
-+
-+	return true;
-+}
-+
- void __noreturn mwait_play_dead(unsigned int eax_hint)
+@@ -360,15 +390,38 @@ static void cmci_rediscover_work_func(void *arg)
+ 		cmci_discover(banks);
+ }
+ 
+-/* After a CPU went down cycle through all the others and rediscover */
++/*
++ * After a CPU went down, rediscover orphaned shared banks on a single
++ * topology peer (SMT sibling, L2 cluster peer, die peer, or package peer)
++ * selected in cmci_clear(). Core-private banks whose core is now completely
++ * offline cannot be claimed by any other core, so probing more than one
++ * peer is redundant.
++ */
+ void cmci_rediscover(void)
  {
- 	struct mwait_cpu_dead *md = this_cpu_ptr(&mwait_cpu_dead);
-@@ -1426,15 +1444,29 @@ void __noreturn mwait_play_dead(unsigned int eax_hint)
- 	md->status = CPUDEAD_MWAIT_WAIT;
- 	md->control = CPUDEAD_MWAIT_WAIT;
++	unsigned int target;
++	unsigned long flags;
++	bool orphaned;
+ 	int banks;
  
--	wbinvd();
-+	/*
-+	 * Entering MWAIT C-states deeper than C1/C1E/C2 writes back and
-+	 * invalidates core-private L1/L2 caches into the shared LLC before
-+	 * power-gating the core. While the CPU is still in C0 prior to MWAIT,
-+	 * its L1/L2 caches remain coherent and snoop external cache flushes,
-+	 * and once in MWAIT its L1/L2 caches are empty and all dirty lines
-+	 * reside in the shared LLC. Thus, as long as at least one CPU sharing
-+	 * this LLC remains online, any concurrent or subsequent
-+	 * wbinvd_on_all_cpus(), system sleep, or kexec will flush the shared
-+	 * LLC to memory.
-+	 *
-+	 * Only flush here during system sleep (cpuhp_tasks_frozen), when
-+	 * entering C1/C1E/C2, when the last online CPU in the LLC goes
-+	 * offline, or if the CPU's cache state is marked incoherent (e.g. SME).
-+	 */
-+	if (mwait_play_dead_needs_wbinvd(eax_hint))
-+		wbinvd();
+ 	if (!cmci_supported(&banks))
+ 		return;
  
- 	while (1) {
- 		/*
- 		 * The CLFLUSH is a workaround for erratum AAI65 for
- 		 * the Xeon 7400 series.  It's not clear it is actually
- 		 * needed, but it should be harmless in either case.
--		 * The WBINVD is insufficient due to the spurious-wakeup
--		 * case where we return around the loop.
- 		 */
- 		mb();
- 		clflush(md);
+-	on_each_cpu(cmci_rediscover_work_func, NULL, 1);
++	raw_spin_lock_irqsave(&cmci_discover_lock, flags);
++	orphaned = !bitmap_empty(cmci_orphaned_banks, MAX_NR_BANKS);
++	target = cmci_orphaned_target;
++	raw_spin_unlock_irqrestore(&cmci_discover_lock, flags);
++
++	if (!orphaned)
++		return;
++
++	if (target < nr_cpu_ids && cpu_online(target))
++		smp_call_function_single(target, cmci_rediscover_work_func,
++					 NULL, 1);
++
++	raw_spin_lock_irqsave(&cmci_discover_lock, flags);
++	bitmap_zero(cmci_orphaned_banks, MAX_NR_BANKS);
++	raw_spin_unlock_irqrestore(&cmci_discover_lock, flags);
+ }
+ 
+ /*
 -- 
 2.56.0.176.g3575e65682-goog
 
