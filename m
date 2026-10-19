@@ -1,65 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792433453;
-	b=VAQT/7Z+7J3R5lAAM68HROQFtq2sM3rzWSSnE4Oj80P4DRoeoTuQqeEOujzROw/5ORdb
-	 8RM6Wq9xNTzs7V05pAB1aEMIF86Laa8a2hLsirvasm8f2x+u868rneTwm5ZZK5bLuhPQ3
-	 WXSikKZWofEhn4WUuZA0PUIgp5pHyReKd28HccfE0p0YmkdKOPA5ciuuBmspqg/t0pSCh
-	 +cQbrOTzfErr0tfXNrduDbVUuTrJgbatg+SJ6wQSlJEdA9lfNTzLfuYv6EE2GkavF/GHd
-	 1j7QjJAtIshb11LA2mj5ZygZlnmUToJ3HTrNJilBD0RJIxu2RP8D1mYdrSmS7AKkMSg==
+	t=1792433458;
+	b=pdmfv9V+6xrSF6EJcVkDLCLsZsBnwx/JOFHrrxJEISxDKDnPJlzy94Tyg2NZGjSqr7b+
+	 jc16Bp3ip8fCCpm3B/EZhY9PGyMlH1hM8E/Xkq7mcwrKXRDIakmzNyd0aQuIvCVB+u06h
+	 8XmXSNed9ScBOegWZYiqgBsSJizkb4dGIA3l3usI65YQLQ0uCDCHlEORAY/fMtpEnRcOf
+	 zVUc43LpM2sAa8D4gu7NGL//L6BXZKyhfEKFn0Q8QTo9IQ8cKhWv1sJwl/v1d1o5ge1FL
+	 5/dXac0+iqHJH81Jij9EXJc+eM42xm/+CxNXwP+xn1DsER3eXIikk7eNdPYQdITDuVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792433453;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792433458;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=ZyfpykCvInVMKic3t98t/CnToCYK32/Po5GGPUhKuaE=;
-	b=UArkZ9atPvfTa8Zb+mBna5fF7wpuHVFR0ZVUweROfplCwO1kwn8vBe+t0+VjbHNJ9B2x
-	 vApQ/W3HB5zWOaWmqJh7PspJJP4hTI6fCRm0T4Osq0Vgpmnclcw6AdyqcbTFtWdQamIAW
-	 dh9jnrioGxJq+vdWsG2mOZLyz1UvyJIjvaZM6NbInz0Voc2XBYvQcMbbjfHwMphj0U7F4
-	 d86Mr63QRH0cpNJFWdzNtCGw42+VbBhpZkC1Y8ukVGH5laBE9sY0HqdalHbLhyn4ASVZx
-	 acHT4+JS3/aqLNseL1KJtt4w5i3Kpm2VEMARopEdpoEhetb03EOBPpstCV9+pO5c9Vg==
+	bh=rju7YgeOYN/NQ6KpMbe2QFdhMbXjSfwWgukqgXq7KGk=;
+	b=RhK2rIODWX5ZWvE/+r7cxhlUsLaNsojuig3LYZYQH7x7P4ux/30R2lzU9nIiUCvvXco5
+	 KI74DZYSCanFf/jqv9eVs+JoXB7A1+exL9WqTr8FUPUweX0YJghvJbH/QIqx1vyftgNG3
+	 h3lOoCpzCN7h18yjH7R5KbGNCuBcuNhMm5rpv6KVRksifzsUHMRhaZYkfLTHpZpCcCkAP
+	 uJCwsmoh3wT6LEY+028HlBDB3WjhtukGJBXoCtstz2o5Kw2EQ8WP7E+UBbOvEKsH+QvYC
+	 nLr+Dmt5yWvM3Pal3kO+dyUaQulzsm6zrOgGJy63aLnO3lIHoRL+vLv/mDFWOvnzL0w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=DLX1Utpc;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=J94pZJth;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9317460A2636
-	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 18:10:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9317460A2636
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3888E60A381F
+	for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 18:10:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3888E60A381F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=DLX1Utpc
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=J94pZJth
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792433451;
+	s=mimecast20190719; t=1792433457;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZyfpykCvInVMKic3t98t/CnToCYK32/Po5GGPUhKuaE=;
-	b=DLX1Utpc2D1eeCYDl01odvdj5VcJ/M0WzaNEAq29OHnjft0Ih0qpkOb3GyCIDC+O4pyZZX
-	nZyYUn88dquq+tA/pDyRu9Y8L47p+NIKQzr3NYRTA+AzspbKIYRVB429rTRiurGpYX8RES
-	ISnkI8+lU0R7z2p6eLPsJToJ0SNfmYM=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=rju7YgeOYN/NQ6KpMbe2QFdhMbXjSfwWgukqgXq7KGk=;
+	b=J94pZJthilRa5w1V24T51LWc1neK/PSWC+mOFMHKE8O7F441S5ZTBUYsbER5uqsnuFQVvM
+	+r81TGIepE/+CryejiBQPoFCEXfyGxlmyurwKpjAuE0fUNOflr6q6LlMMaLr9LCzsdz25O
+	wSFzRuucK4jkdSiZQ5qi6rTiHwiEDT0=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-629-aA_X-Xz1MyGs8CJnOCVWUw-1; Mon,
- 19 Oct 2026 18:10:48 +0000
-X-MC-Unique: aA_X-Xz1MyGs8CJnOCVWUw-1
-X-Mimecast-MFC-AGG-ID: aA_X-Xz1MyGs8CJnOCVWUw_1792433446
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-322-irAsxZ41OICZQtyc0mmxtQ-1; Mon,
+ 19 Oct 2026 18:10:53 +0000
+X-MC-Unique: irAsxZ41OICZQtyc0mmxtQ-1
+X-Mimecast-MFC-AGG-ID: irAsxZ41OICZQtyc0mmxtQ_1792433451
 Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 53DEA1956072;
-	Mon, 19 Oct 2026 18:10:46 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4EE791800593;
+	Mon, 19 Oct 2026 18:10:51 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.rmtusnh.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C5EB6418;
-	Mon, 19 Oct 2026 18:10:43 +0000 (UTC)
+	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D893A418;
+	Mon, 19 Oct 2026 18:10:48 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Ridong Chen <ridong.chen@linux.dev>,
 	Tejun Heo <tj@kernel.org>,
@@ -76,9 +76,9 @@ Cc: cgroups@vger.kernel.org,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	Waiman Long <longman@redhat.com>,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH-next v4 5/9] cgroup/cpuset: Properly disabling partition when partition state switching fails
-Date: Mon, 19 Oct 2026 14:10:16 -0400
-Message-ID: <20261019181020.1069325-6-longman@redhat.com>
+Subject: [PATCH-next v4 7/9] selftests/cgroup: Add tests for isolcpus housekeeping check
+Date: Mon, 19 Oct 2026 14:10:18 -0400
+Message-ID: <20261019181020.1069325-8-longman@redhat.com>
 In-Reply-To: <20261019181020.1069325-1-longman@redhat.com>
 References: <20261019181020.1069325-1-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -93,119 +93,229 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
 
-Before commit 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full
-don't leave any housekeeping"), the partition state can be freely switched
-from "root" to "isolated" and vice versa. After that commit, the switch
-from "root" to "isolated" can fail if it exhausts all the housekeeping
-CPUs. Later on, the switch from "isolated" to "root" can also fail if
-some of the partition CPUs are boot-time isolated by "isolcpus".
+Whenever a partition is enabled or the cpumask of a valid partition
+changes, a housekeeping check will be performed to ensure that the
+change won't violate the imposed housekeeping constraints. One of the
+constraints is that a boot-time isolated CPU will not be used to form
+a non-isolated root partition. This requires the presence of boot-time
+isolated CPUs when a test is run.
 
-A local or remote partition is made invalid when the switch fails.
-However there are 2 problems with the existing invalidation code.
+The test_cpuset_prs.sh test script is now updated to run a set a
+special housekeeping check tests that will only be run if a suitable
+boot-time isolated CPU is present. This will enable us to detect bugs
+or regressions in the housekeeping checking code though a "isolcpus="
+boot parameter with CPUs beyond CPU 8 must be present.
 
- 1) Both the subpartitions_cpus and isolated_cpus are not properly
-    updated.
- 2) In the case of remote partition with remote_partition flag set, it
-    is not cleared.
+This patch also includes a minor fix to the REMOTE_TEST_MATRIX to avoid
+test failure when the -v option is used.
 
-Fix this by calling the proper partition disabling function in this case.
-
-On an x86 test system with boot option "isolcpus=10 cgroup_debug" set
-and more than 16 cores, the following commands were executed after boot.
-
-  # cd /sys/fs/cgroup
-  # echo +cpuset > cgroup.subtree_control
-  # cat cpuset.cpus.isolated
-  10
-  # mkdir A
-  # echo 10-12 > A/cpuset.cpus
-  # echo isolated > A/cpuset.cpus.partition
-  # cat A/cpuset.cpus.partition
-  isolated
-
-Before the patch:
-
-  # echo root > A/cpuset.cpus.partition
-  # cat A/cpuset.cpus.partition
-  root invalid (partition config conflicts with housekeeping setup)
-  # cat cpuset.cpus.isolated .__DEBUG__.cpuset.cpus.subpartitions
-  10-12
-  10-12
-
-After the patch:
-
-  # echo root > A/cpuset.cpus.partition
-  # cat A/cpuset.cpus.partition
-  root invalid (partition config conflicts with housekeeping setup)
-  # cat cpuset.cpus.isolated .__DEBUG__.cpuset.cpus.subpartitions
-  10
-
-Reported-by: Tejun Heo <tj@kernel.org>
-Link: https://lore.kernel.org/lkml/7f4c57b26ad120ab30adf35653f1dd94@kernel.org/
-Fixes: 4a74e418881f ("cgroup/cpuset: Check partition conflict with housekeeping setup")
-Fixes: 103b08709e8a ("cgroup/cpuset: Fail if isolated and nohz_full don't leave any housekeeping")
 Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ .../selftests/cgroup/test_cpuset_prs.sh       | 120 ++++++++++++++----
+ 1 file changed, 98 insertions(+), 22 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 046c7ce5a037..5a0a4269e7c0 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2928,6 +2928,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	struct cpuset *parent = parent_cs(cs);
- 	struct tmpmasks tmpmask;
- 	bool isolcpus_updated = false;
-+	bool disable_partition = false;
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index 872a9988e4c4..cd179854ecd5 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -86,26 +86,37 @@ echo "" > test/cpuset.cpus
  
- 	if (old_prs == new_prs)
- 		return 0;
-@@ -2984,15 +2985,21 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		 * Need to update isolated_cpus.
- 		 */
- 		if (prstate_housekeeping_conflict(new_prs, parent_prs,
--						  cs->effective_xcpus, NULL))
-+						  cs->effective_xcpus, NULL)) {
-+			disable_partition = true;
- 			err = PERR_HKEEPING;
--		else
-+		} else {
- 			isolcpus_updated = true;
-+		}
- 	} else {
- 		/*
- 		 * Switching back to member is always allowed even if it
- 		 * disables child partitions.
- 		 */
-+		disable_partition = true;
-+	}
+ #
+ # If isolated CPUs have been reserved at boot time (as shown in
+-# cpuset.cpus.isolated), these isolated CPUs should be outside of CPUs 0-8
+-# that will be used by this script for testing purpose. If not, some of
+-# the tests may fail incorrectly. Wait a bit and retry again just in case
+-# these isolated CPUs are leftover from previous run and have just been
+-# cleaned up earlier in this script.
++# /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
++# CPUs 0-8 that will be used by this script for testing purpose. If not, some
++# of the tests may fail incorrectly.
+ #
+-# These pre-isolated CPUs should stay in an isolated state throughout the
++# The current set of isolated CPUs (as shown in cpuset.cpus.isolated) should
++# be the same as the boot value. If not, wait a bit and retry again just in
++# case these isolated CPUs are leftover from previous run and have just been
++# cleaned up earlier in this script. If they still don't match, we report an
++# warning and skip the test.
++#
++# These boot isolated CPUs should stay in an isolated state throughout the
+ # testing process for now.
+ #
+-BOOT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
++BOOT_ISOLCPUS=$(cat /sys/devices/system/cpu/isolated)
++CURRENT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
++FIRST_ISOLCPUS=
++TEST_ISOLCPUS=
 +
-+	if (disable_partition) {
- 		if (is_remote_partition(cs))
- 			remote_partition_disable(cs, &tmpmask);
- 		else
-@@ -3001,7 +3008,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ [[ -n "$BOOT_ISOLCPUS" ]] && {
++	FIRST_ISOLCPUS=$(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//")
++	echo "Boot isolated CPUs: $BOOT_ISOLCPUS"
++	[[ $FIRST_ISOLCPUS -le 8 ]] &&
++		skip_test "Boot isolated CPUs overlap CPUs to be tested"
++}
++
++[[ "$BOOT_ISOLCPUS" != "$CURRENT_ISOLCPUS" ]] && {
+ 	sleep 0.5
+-	BOOT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
++	CURRENT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
++	[[ "$BOOT_ISOLCPUS" != "$CURRENT_ISOLCPUS" ]] &&
++		skip_test "Current isolated CPUs ($CURRENT_ISOLCPUS) don't match boot isolated CPUs!"
+ }
+-if [[ -n "$BOOT_ISOLCPUS" ]]
+-then
+-	[[ $(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//") -le 8 ]] &&
+-		skip_test "Pre-isolated CPUs ($BOOT_ISOLCPUS) overlap CPUs to be tested"
+-	echo "Pre-isolated CPUs: $BOOT_ISOLCPUS"
+-fi
  
- 		/*
- 		 * Invalidation of child partitions will be done in
--		 * update_cpumasks_hier().
-+		 * update_cpumasks_hier() below.
- 		 */
- 	}
- out:
-@@ -3020,8 +3027,8 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
- 	spin_unlock_irq(&callback_lock);
+ cleanup()
+ {
+@@ -202,7 +213,7 @@ test_add_proc()
+ #
+ # ECPUs    - effective CPUs of cpusets
+ # Pstate   - partition root state
+-# ISOLCPUS - isolated CPUs (<icpus>[,<icpus2>])
++# ISOLCPUS - isolated CPUs (<icpus>[,<icpus2>] or .)
+ #
+ # Note that if there are 2 fields in ISOLCPUS, the first one is for
+ # sched-debug matching which includes offline CPUs and single-CPU partitions
+@@ -449,6 +460,46 @@ TEST_MATRIX=(
+ 	"   C0-3     .      .    C4-5   X3-5     .      .      .     1 A1:0-3|B1:4-5"
+ )
  
--	/* Force update if switching back to member & update effective_xcpus */
--	update_cpumasks_hier(cs, &tmpmask, !new_prs);
-+	/* Force update if partition is disabled & update effective_xcpus */
-+	update_cpumasks_hier(cs, &tmpmask, disable_partition);
++# Test matrix with boot time isolated CPUs present for housekeeping check testing
++ISOLCPUS_TEST_MATRIX=(
++	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
++	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
++	# A local isolated partition containing boot isolated CPU cannot be
++	# switched to root partition.
++	" C1-2,I:P2  .      .      .      P1     .      .      .     0 A1:1-2,I A1:P-1 ."
++
++	# A remote isolated partition containing boot isolated CPU cannot be
++	# switched to root partition.
++	" X1-2,I CX1-2,I:P2 .      .       .    P1      .      .     0 A2:1-2,I A2:P-1 ."
++
++	# A local isolated partition with a boot isolated CPU distributed to a
++	# child isolated partition also cannot be switched to a root partition.
++	" C1-3,I:P2 C1,I:P2 .      .      P1     .      .      .     0 A1:1-3,I|A2:1,I A1:P-1|A2:P-2 ."
++
++	# A remote isolated partition with a boot isolated CPU distributed to a
++	# child isolated partition also cannot be switched to a root partition.
++	" X1-3,I C1-3,I:P2 C1,I:P2 .       .    P1      .      .     0 A2:1-3,I|A3:1,I A2:P-1|A3:P-2 ."
++
++	# The cpumask of a local root partition cannot be changed to include a
++	# boot isolated CPU.
++	" C1-2:P1    .      .      .     C2,I    .      .      .     0 A1:2,I A1:P-1 ."
++
++	# The cpumask of a remote root partition cannot be changed to include a
++	# boot isolated CPU.
++	" CX1-2,I  CX1-2:P1 .      .       .   CX2,I    .      .     0 A1:1-2,I|A2:2,I A2:P-1 ."
++
++	# Passing an boot isolated CPU down to a child root partition will invalidate it
++	" C2-3,I:X2-3 CX2-3,I .    .       .    P1      .      .     0 A1:I|A2:2-3 A2:P1 ."
++	" C2-3,I:X2-3 CX2-3,I:P1 . .     X2-3,I  .      .      .     0 A1:2-3,I|A2:2-3,I A2:P-1 ."
++
++	# An invalidated root partition must stay invalid when cpus grows but
++	# effective xcpus still contains a boot isolated CPU.
++	" CX1,I:P1   .      .      .     C1,2,I  .      .      .     0 A1:1-2,I|XA1:1,I A1:P-1 ."
++
++	# Growing cpus.exclusive must not revive it either
++	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
++)
++
+ #
+ # Cpuset controller remote partition test matrix.
+ #
+@@ -501,8 +552,8 @@ REMOTE_TEST_MATRIX=(
+ 							 p1:P1|c11:P1|c12:P-1"
+ 	# Narrowing cpuset.cpus to previously sibling-excluded CPUs should
+ 	# not return CPUs that were never actually owned.
+-	"  C1-4:P1   .   C1-2:P1  C1-3:P2  .       .  \
+-	      .      .     .       C3      .       .     p1:4|c11:1-2|c12:3 \
++	"  C1-5:P1   .   C1-2:P1  C1-3:P2  .       .  \
++	      .      .     .       C3      .       .     p1:4-5|c11:1-2|c12:3 \
+ 							 p1:P1|c11:P1|c12:P2 3"
+ 	# Expanding cpuset.cpus to include a previously sibling-excluded CPU
+ 	# after the sibling has become a member should correctly request it.
+@@ -546,6 +597,27 @@ write_cpu_online()
+ 	pause 0.05
+ }
  
- 	/* A newly created partition must have effective_xcpus set */
- 	WARN_ON_ONCE(!old_prs && (new_prs > 0)
++#
++# Set the CPUS variable
++#  $1 - the passed in cpu parameter
++#
++# The special "I" CPU if present is being replaced by the first boot CPU
++# and assigned to the "CPUS" variable when the TEST_ISOLCPUS flag is set.
++# If not, the program will exit with an error.
++#
++set_cpus()
++{
++	local cpus=$1
++	if [[ $(expr "$cpus" : ".*I") -gt 0 ]]
++	then
++		[[ -z "$TEST_ISOLCPUS" ]] &&
++			skip_test "Special 'I' CPU added to non-isolcpus testing matrix!"
++		CPUS=$(echo $cpus | sed -e "s/I/$FIRST_ISOLCPUS/")
++	else
++		CPUS=$cpus
++	fi
++}
++
+ #
+ # Set controller state
+ #  $1 - cgroup directory
+@@ -580,16 +652,16 @@ set_ctrl_state()
+ 		}
+ 		case $CMD in
+ 		    X*)
+-			CPUS=${CMD#?}
++			set_cpus ${CMD#?}
+ 			COMM="echo $CPUS > $XFILE"
+ 			eval $COMM $REDIRECT
+ 			;;
+ 		    CX*)
+-			CPUS=${CMD#??}
++			set_cpus ${CMD#??}
+ 			COMM="echo $CPUS > $CFILE; echo $CPUS > $XFILE"
+ 			eval $COMM $REDIRECT
+ 			;;
+-		    C*) CPUS=${CMD#?}
++		    C*) set_cpus ${CMD#?}
+ 			COMM="echo $CPUS > $CFILE"
+ 			eval $COMM $REDIRECT
+ 			;;
+@@ -983,8 +1055,11 @@ run_state_test()
+ 	I=0
+ 	eval CNT="\${#$TEST[@]}"
+ 
++	# Skip isolcpus specific test matrix if FIRST_ISOLCPUS not defined
++	[[ -n "$TEST_ISOLCPUS" && -z "$FIRST_ISOLCPUS" ]] && return
++
+ 	reset_cgroup_states
+-	console_msg "Running state transition test ..."
++	console_msg "Running state transition test for $TEST ..."
+ 
+ 	while [[ $I -lt $CNT ]]
+ 	do
+@@ -1003,7 +1078,7 @@ run_state_test()
+ 		NEW_A3=$7
+ 		NEW_B1=$8
+ 		RESULT=$9
+-		ECPUS=${10}
++		ECPUS=$(echo ${10} | sed -e "s/I/${FIRST_ISOLCPUS}/g")
+ 		STATES=${11}
+ 		ICPUS=${12}
+ 
+@@ -1289,6 +1364,7 @@ test_inotify()
+ trap cleanup 0 2 3 6
+ run_state_test TEST_MATRIX
+ run_remote_state_test REMOTE_TEST_MATRIX
++TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
+ test_isolated
+ test_boot_isolated
+ test_inotify
 -- 
 2.55.0
 
