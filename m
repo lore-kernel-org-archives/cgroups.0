@@ -1,54 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792486361;
-	b=Jm+pi9FCXVNKmruXA5HL7Gm53b3bKKelpqs29wJijVszxBoo2lg62ogAWKknTlAwA7zN
-	 ebNM8xnK50vX337jQJ+b+l+a87otHX1k1rGqWeAmMY2VyiOxlZ2DM2sWKRKCCTBSW+yL+
-	 TUOARZDxonPGrLaZgkXiG8/meK5MCjoWkwJK0dEBuJXP9mUbKsfjfIxgwKSlUQZXTqDMr
-	 hhGG2vOHlkEa7EqsDJ770Xd1kSaOA6jeC+Rtdiv1mCaJJR1dUhF44r6dHiDVIjCH6fXcL
-	 vb/FjgYB+SSOkeqIWUqBecZ6HImM3LdESRxkaZgMzWHSm+AOeNPOS7jCCPE22p1sRUA==
+	t=1792487226;
+	b=mlCLwayvEq6RsbsMH6ahPORvYQb/S4rHnZwo7DWkpri3BsiZvIk9QEYKPzQEsoamMvNh
+	 Pbdl6u5eror2K6lFi+p8Ta+ZSSwVPDdBBi6useE5QOJfM6XTmI0LC2nJzNKUV2eiBvBlE
+	 yAG/f40/j3z0Cxwzs+Ek7FZhsyQYmDssq8HxJTOgGk57PKUJiAtIqzli8q16sW3edd8BI
+	 YjyxV054IRIWXL6vsWS0P6VJyiF15H3Cj8ChKsFAUw+DMd/VVie1pmlWt8HBglpJYrOh7
+	 7bHUMJveIb4jZ38dzZU2OJSac5Fh4vc0cpqDrx7f9/y76zsnxVDge7w4FuNoSkwey8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792486361;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=60SG9yPxKAKDWYj+IMKT9vxqjHJEKGItNB5I5v16LVY=;
-	b=naTr92pZ7wkRxMAXzYcBv0fcuLcINZQfJP8VFY/fxjB93/ReqFeOwDDdKKtYwfMQ+oKU
-	 U7Y3W++d49O35ri46/dg/AQQ9IrAiR1vWsi4FiaA0vdlWp3pjo5XZ6zO2UnHQero+5iqn
-	 5eAv1pC1DMcgHvQ764E98cv1J//poQECq13B1x+UO/OFeX7sr4IlhP5w+XsaQZsKTO1On
-	 Zk/fyE9ka3nW3ZShQuklL+gwCcGfxwjgkWeyIuDDUso6jIBlP1Z5UnTYmbwbvGjTMxM2G
-	 gBS/lFeRRg57mmiR1JcAI6QjmBSUMKSAPAnG502ue7CDkLdMveAIOZDdiOsVwtkbQ+A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792487226;
+	h=DMARC-Filter:DKIM-Signature:Message-Id:Content-Transfer-Encoding:
+	 Content-Type:Cc:X-Lms-Return-Path:Mime-Version:From:References:To:
+	 Date:User-Agent:X-Original-From:In-Reply-To:Subject;
+	bh=17hQliTTVycNMjFjUeYlptDj5DXt5fa/p+ydi6udKSU=;
+	b=HlxLqIsrPhDja4uBABBTElrTPMEPndnusqya26HkT9OxgN6In1fvyOv6qRvl9TTUzIHT
+	 3m1kqJh9zN2dt8F28VFOFw3NdEBArNcJlQsKLrMVVcmV6i3osKGpN/lPYfQNwmOC7BI1i
+	 9FBhlo71yySdaWAcE1ryZXebYPUbS0cbp2nOF7isMiCCd149o2g92/FphLh9z5hEZRWSz
+	 wDhHLZyQ98+i7Q/D75s930SS6HypUjG0V0E7ssY68XKdeRXj2Dxhf/AqwGPQgDiTscy8s
+	 1fFHZkZyeS2WS4FKxNeMvxGOcSoqp3ygcnz6Ga6YWHPcfA2v5kpZhfqcFCdhjsAs6zw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=n8uGU4oN;
-	arc=none smtp.remote-ip=91.218.175.172
-Received: from mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=CbcdiNbd;
+	arc=none smtp.remote-ip=209.127.230.112
+Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C67E606A31B
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 08:52:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C67E606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E3E6606A328
+	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 09:07:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9E3E6606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=n8uGU4oN
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=T28oLKR7Bmt9aigMF3ryHlZCm3wf13JNKWFADPyXE8A=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792486357; v=1; x=1793091157;
- b=n8uGU4oNLh50LGXaswrwXaoInYwjlO2+BdZQFkJzMQHUNMm00CbFXIaAwTdrNgXAHSwuRreH
- cL5UWGsUWmt3MKBAncKo0rHJjB51dPPUZ2MXHKFWujC6MhYIvgLUgOFXqjLkhbYsoXNC607T8GS
- wytRRIBtB3E7WP2bbYPf0AFw=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 3400e678eb2d8255;
-	Tue, 20 Oct 2026 08:52:36 +0000
-X-Mizu-Trace-ID: 3400e678eb2d8255
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <0ae3790c-ba72-4061-9a2a-81be1279a579@linux.dev>
-Date: Tue, 20 Oct 2026 16:52:29 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=CbcdiNbd
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1792487215; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=17hQliTTVycNMjFjUeYlptDj5DXt5fa/p+ydi6udKSU=;
+ b=CbcdiNbdjdxNlHE2TRUMEGqzC5RJRVr30/A6wobowz6vKXEVnXa4SmsZ8TWT1Wsl3vzZop
+ bXko9wLjVyhUlGJlq8uS9of643SAwcApwV/2kUYaSCFAjaVIAK9roqwziVo4VOYDWJbBZv
+ tY1Ypng3AsUEYoRzV1GI/Um7ztcVpZ/LmNAyJuLiUaF4GIPKYs+vKXo+KeaQC3UQGP+iXY
+ FIIYKUpSeGNL1CSBMSPJ1BWpZoRZCfcwlY2mSLZMjy/J0hvq1BnIXnKnMMd8vUcreHECMT
+ OIQKkUXy5DuqQFb45s5m4PjKlvGyW9LAVgtscobAiBAT+1h8Y3Kti+YratReDw==
+Message-Id: <6b0a2dba-6096-432d-bc1a-251343dd1e74@bytedance.com>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Cc: <akpm@linux-foundation.org>, <david@kernel.org>, <gourry@gourry.net>, 
+	<ziy@nvidia.com>, <rakie.kim@sk.com>, <ying.huang@linux.alibaba.com>, 
+	<ljs@kernel.org>, <mhocko@suse.com>, <muchun.song@linux.dev>, 
+	<roman.gushchin@linux.dev>, <shakeel.butt@linux.dev>, 
+	<weixugc@google.com>, <cgroups@vger.kernel.org>, 
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-mm@kvack.org>
+X-Lms-Return-Path: <lba+26ad72f2d+2a4662+vger.kernel.org+lizhe.67@bytedance.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,426 +62,199 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Betterbird (macOS/Intel)
-Subject: Re: [RFC PATCH 3/4] memcg_ext: allow BPF to defer memory.high
- enforcement
-To: Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Alexei Starovoitov <ast@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>,
- Michal Koutny <mkoutny@suse.com>, Amery Hung <ameryhung@gmail.com>,
- Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>,
- Eduard Zingerman <eddyz87@gmail.com>,
- Kumar Kartikeya Dwivedi <memxor@gmail.com>,
- Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>,
- Yonghong Song <yonghong.song@linux.dev>,
- Emil Tsalapatis <emil@etsalapatis.com>, Jiri Olsa <jolsa@kernel.org>,
- Ihor Solodrai <ihor.solodrai@linux.dev>,
- John Fastabend <john.fastabend@gmail.com>,
- Jiayuan Chen <jiayuan.chen@linux.dev>, Donet Tom <donettom@linux.ibm.com>,
- Greg Thelen <gthelen@google.com>, Meta kernel team <kernel-team@meta.com>,
- linux-mm@kvack.org, bpf@vger.kernel.org, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20260921192559.2619635-1-shakeel.butt@linux.dev>
- <20260921192559.2619635-4-shakeel.butt@linux.dev>
-Content-Language: en-US
-From: Hui Zhu <hui.zhu@linux.dev>
-In-Reply-To: <20260921192559.2619635-4-shakeel.butt@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+From: "Li Zhe" <lizhe.67@bytedance.com>
+References: <20261019152148.3330024-1-joshua.hahnjy@gmail.com>
+To: "Joshua Hahn" <joshua.hahnjy@gmail.com>
+Date: Tue, 20 Oct 2026 17:06:28 +0800
+User-Agent: Mozilla Thunderbird
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
+In-Reply-To: <20261019152148.3330024-1-joshua.hahnjy@gmail.com>
+Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
 
-
-2026/9/22 03:25, Shakeel Butt :
-
-Hi Shakeel,
-
-The series looks great to me. I added a prog_tests runner for the sample
-on top of it and ran the test:
-selftests/bpf: add a prog_tests runner for memcg_ops_lockholder
-https://github.com/teawater/linux/commit/d726b0d59081ace49e4e41cb0c91f813fd137d46
-
-I have 2 suggestions for bpf_memcg_high_policy().
-
-> Before it returns, try_charge_memcg() calls __mem_cgroup_handle_over_high(),
-> which reclaims and can throttle the task.  That happens wherever the charge
-> happens, so a task holding a kernel lock can be stuck there, and everything
-> waiting on the lock is stuck behind it.
+On 10/19/26 11:21 PM, Joshua Hahn wrote:
+> On Mon, 19 Oct 2026 22:13:59 +0800 "Li Zhe" <lizhe.67@bytedance.com> wrote:
 >
-> Let's add high_policy ops through which a program gets a read-only snapshot
-> of the charge and returns a request.  There is one so far:
-> BPF_MEMCG_HIGH_DEFER_INLINE skips the inline call.
+>> memory.reclaim is a useful proactive reclaim interface for memcgs, but
+>> tiered memory makes "reclaim N bytes from this memcg" underspecified for
+>> userspace controllers that manage memory placement across tiers. The
+>> kernel's reclaim policy is aging-based, and on tiered systems aging may
+>> demote folios before they are eventually evicted. Without a way to
+>> declare where reclaim pressure should start, userspace can only reclaim
+>> from the memcg as a whole and observe one aggregate progress value.
+> Hi Li,
 >
-> A charge runs the policies of its cgroup and of every ancestor.
-> task_struct::in_bpf_memcg stops a program that allocates from re-entering
-> the charge path and the dispatcher with it.
+> Thank you for working on this patch. I think it's quite interesting.
+> I have many comments about implementation detials but for now let's
+> discuss the direction of this series first.
 >
-> A memcg outlives its cgroup while it has charges, and cgroup_bpf_release()
-> frees the arrays when the cgroup goes. Take the reference for the walk.
+>> There is prior history here [1]. The old nodes= proposal tried to let
+>> memory.reclaim scan selected NUMA nodes, but the discussion left several
+>> ABI questions unresolved:
+>>
+>> - nodes= did not clearly say whether the mask was a source selector, a
+>>    reclaim domain, or a demotion-target constraint.
+>> - The implementation did not apply the mask to the whole reclaim path,
+>>    so demotion could allocate outside the mask. If userspace interpreted
+>>    the mask as a domain or target constraint, the ABI did not provide
+>>    that.
+>> - Selecting top-tier nodes could become an implicit way to request
+>>    demotion without uncharge. That would make userspace depend on a
+>>    particular reclaim policy and could make future policy changes hard.
+>> - The separate completion-accounting question remained: demotion can
+>>    count as reclaim progress even though memory.current is not reduced.
+>>
+>> This series takes a narrower approach.
+> I think this is the way to go.
+
+
+Thanks for taking a look.
+
 >
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> ---
->   MAINTAINERS                    |  1 +
->   include/linux/bpf-cgroup.h     |  3 ++
->   include/linux/bpf_memcontrol.h | 53 +++++++++++++++++++++-
->   include/linux/cgroup.h         |  7 +++
->   include/linux/sched.h          |  4 ++
->   mm/bpf_memcontrol.c            | 82 +++++++++++++++++++++++++++++++++-
->   mm/memcontrol.c                | 31 ++++++++++++-
->   7 files changed, 176 insertions(+), 5 deletions(-)
+>> It adds a typed source= key which
+>> declares only the source on which the existing memory.reclaim aging
+>> pipeline should be applied.
+> Calling it an "aging pipeline" is a big confusing to me. Maybe just call
+> it eviction targets or reclaim targets?
+
+Thanks. By "aging pipeline" I meant the combined reclaim behavior that
+may demote some folios and evict others, depending on the existing
+reclaim policy. But this wording is confusing here. I will use "reclaim
+targets" in v2.
 >
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 6215fcb07770..0c84beab396f 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -5032,6 +5032,7 @@ L:	bpf@vger.kernel.org
->   L:	linux-mm@kvack.org
->   S:	Maintained
->   F:	mm/bpf_memcontrol.c
-> +F:	include/linux/bpf_memcontrol.h
->   
->   BPF [MISC]
->   L:	bpf@vger.kernel.org
-> diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-> index 4e8150848bd2..e19cf83e58f3 100644
-> --- a/include/linux/bpf-cgroup.h
-> +++ b/include/linux/bpf-cgroup.h
-> @@ -517,6 +517,9 @@ static inline int cgroup_bpf_struct_ops_attach(struct bpf_map *map,
->   
->   #define cgroup_bpf_enabled(atype) (0)
->   #define cgroup_bpf_enabled_runtime(atype) (0)
-> +/* Nothing can be attached, so the walk has nothing to walk. */
-> +#define bpf_cgroup_struct_ops_foreach(var, item, cgrp, atype)		\
-> +	for ((void)(cgrp), (item) = NULL, (var) = NULL; 0; )
->   #define BPF_CGROUP_RUN_SA_PROG_LOCK(sk, uaddr, uaddrlen, atype, t_ctx) ({ 0; })
->   #define BPF_CGROUP_RUN_SA_PROG(sk, uaddr, uaddrlen, atype) ({ 0; })
->   #define BPF_CGROUP_PRE_CONNECT_ENABLED(sk) (0)
-> diff --git a/include/linux/bpf_memcontrol.h b/include/linux/bpf_memcontrol.h
-> index 8204d894761e..76ea5d1c3d32 100644
-> --- a/include/linux/bpf_memcontrol.h
-> +++ b/include/linux/bpf_memcontrol.h
-> @@ -5,13 +5,62 @@
->    * A bpf_memcg_ops is attached to a cgroup.  A charge runs the policies of
->    * that cgroup and of every ancestor, and the kernel combines what they
->    * return.  BPF only picks between things the kernel already does.
-> - *
-> - * The type has no members yet; they come with the policies that use them.
->    */
->   #ifndef _LINUX_BPF_MEMCONTROL_H
->   #define _LINUX_BPF_MEMCONTROL_H
->   
-> +#include <linux/types.h>
-> +#include <linux/gfp_types.h>
-> +
-> +struct mem_cgroup;
-> +struct task_struct;
-> +
-> +/*
-> + * What a policy can ask for when a cgroup is over memory.high.  The kernel
-> + * ORs them, so one policy cannot undo another.
-> + */
-> +enum bpf_memcg_high_request {
-> +	BPF_MEMCG_HIGH_NO_OPINION	= 0,
-> +	/*
-> +	 * Skip the inline reclaim and throttle.  The debt is kept and paid on
-> +	 * the way back to userspace, where no kernel locks are held.
-> +	 */
-> +	BPF_MEMCG_HIGH_DEFER_INLINE	= 1U << 0,
-> +};
-> +
-> +#define BPF_MEMCG_HIGH_VALID_MASK	BPF_MEMCG_HIGH_DEFER_INLINE
-> +
-> +/* Read-only snapshot.  Only values the caller already has. */
-> +struct bpf_memcg_ctx {
-> +	struct mem_cgroup	*memcg;			/* charged memcg */
-> +	struct mem_cgroup	*memcg_over_limit;	/* NULL if none found */
-> +	struct task_struct	*task;			/* current */
-> +	u64			cgroup_id;
-> +	u64			over_limit_cgroup_id;	/* 0 if none */
-> +	u64			nr_pages_over_high;
-> +	u32			gfp_flags;
-> +};
-> +
->   struct bpf_memcg_ops {
-> +	/**
-> +	 * high_policy - say where memory.high should be enforced
-> +	 * @ctx: snapshot of the charge
-> +	 *
-> +	 * Return: bits from enum bpf_memcg_high_request, or 0.  Other bits
-> +	 * are dropped.
-> +	 */
-> +	u32 (*high_policy)(const struct bpf_memcg_ctx *ctx);
->   };
->   
-> +/*
-> + * Run every high_policy on @memcg's cgroup and its ancestors, and return the
-> + * combined request for the caller to act on.
-> + *
-> + * @memcg:	the memcg being charged, never NULL
-> + * @over_limit:	first memcg found over memory.high or swap.high, or NULL
-> + * @gfp_mask:	the charge's gfp mask
-> + */
-> +u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
-> +			  struct mem_cgroup *over_limit, gfp_t gfp_mask);
-> +
->   #endif /* _LINUX_BPF_MEMCONTROL_H */
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 5dfa915a630e..cf92b6cec819 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -959,10 +959,17 @@ static inline void cgroup_bpf_put(struct cgroup *cgrp)
->   	percpu_ref_put(&cgrp->bpf.refcnt);
->   }
->   
-> +/* Fails once the cgroup is gone and its bpf state has been freed. */
-> +static inline bool cgroup_bpf_tryget_live(struct cgroup *cgrp)
-> +{
-> +	return percpu_ref_tryget_live_rcu(&cgrp->bpf.refcnt);
-> +}
-> +
->   #else /* CONFIG_CGROUP_BPF */
->   
->   static inline void cgroup_bpf_get(struct cgroup *cgrp) {}
->   static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
-> +static inline bool cgroup_bpf_tryget_live(struct cgroup *cgrp) { return false; }
->   
->   #endif /* CONFIG_CGROUP_BPF */
->   
-> diff --git a/include/linux/sched.h b/include/linux/sched.h
-> index 8b3d47a325cc..4b20a346aaa8 100644
-> --- a/include/linux/sched.h
-> +++ b/include/linux/sched.h
-> @@ -1031,6 +1031,10 @@ struct task_struct {
->   #ifdef CONFIG_MEMCG_V1
->   	unsigned			in_user_fault:1;
->   #endif
-> +#ifdef CONFIG_MEMCG
-> +	/* A bpf_memcg_ops program is running; do not recurse into policy */
-> +	unsigned			in_bpf_memcg:1;
-> +#endif
->   #ifdef CONFIG_LRU_GEN
->   	/* whether the LRU algorithm may apply to this access */
->   	unsigned			in_lru_fault:1;
-> diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
-> index fd6dff150f01..cfd0f1d443c9 100644
-> --- a/mm/bpf_memcontrol.c
-> +++ b/mm/bpf_memcontrol.c
-> @@ -246,8 +246,17 @@ static const struct btf_kfunc_id_set bpf_memcontrol_reclaim_kfunc_set = {
->    * request and the kernel acts on it.  Nothing here reclaims or sleeps.
->    */
->   
-> -/* CFI stubs.  A slot points at these while its policy is being detached. */
-> +/*
-> + * CFI stubs.  These really run: a slot points at them while its policy is
-> + * being detached.  Return 0, the identity for the kernel's OR.
-> + */
-> +static u32 high_policy_stub(const struct bpf_memcg_ctx *ctx)
-> +{
-> +	return BPF_MEMCG_HIGH_NO_OPINION;
-> +}
-> +
->   static struct bpf_memcg_ops __bpf_memcg_ops = {
-> +	.high_policy = high_policy_stub,
->   };
->   
->   static const struct bpf_func_proto *
-> @@ -326,6 +335,77 @@ static struct bpf_struct_ops bpf_memcg_ops_desc = {
->   	 */
->   };
->   
-> +static void bpf_memcg_ctx_init(struct bpf_memcg_ctx *ctx,
-> +			       struct mem_cgroup *memcg,
-> +			       struct mem_cgroup *over_limit, gfp_t gfp_mask)
-> +{
-> +	ctx->memcg = memcg;
-> +	ctx->memcg_over_limit = over_limit;
-> +	ctx->task = current;
-> +	ctx->cgroup_id = cgroup_id(memcg->css.cgroup);
-> +	ctx->over_limit_cgroup_id = over_limit ?
-> +		cgroup_id(over_limit->css.cgroup) : 0;
-> +	ctx->nr_pages_over_high = current->memcg_nr_pages_over_high;
-> +	ctx->gfp_flags = (__force u32)gfp_mask;
-> +}
-> +
-> +u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
-> +			  struct mem_cgroup *over_limit, gfp_t gfp_mask)
-> +{
-> +	const struct bpf_prog_array_item *item;
-> +	const struct bpf_memcg_ops *ops;
-> +	struct bpf_memcg_ctx ctx;
-> +	u32 acc = BPF_MEMCG_HIGH_NO_OPINION;
-> +	struct cgroup *cgrp;
-> +
-> +	if (!cgroup_bpf_enabled(CGROUP_MEMCG_OPS))
-> +		return acc;
-> +
-> +	/*
-> +	 * Only the default hierarchy has a cgroup_bpf, and the static key is
-> +	 * global, so one policy anywhere turns this on for v1 memcgs too.  A
-> +	 * v1 memcg still cannot get here, because memory.high and swap.high
-> +	 * are both v2-only and so it never builds the debt that leads to this
-> +	 * call.  A hook on a path v1 can reach needs its own cgroup_on_dfl()
-> +	 * test: a v1 cgroup has no effective array and an uninitialised
-> +	 * cgrp->bpf.refcnt.
-> +	 */
-> +	cgrp = memcg->css.cgroup;
-> +
-> +	/*
-> +	 * A program can allocate and re-enter the charge path.  Skip the
-> +	 * nested call.  This guards the callbacks only.
-> +	 */
-> +	if (current->in_bpf_memcg)
-> +		return acc;
-> +	current->in_bpf_memcg = 1;
-> +
-> +	rcu_read_lock_dont_migrate();
-> +
-
-The guard stops nested dispatch, but not the nested charge itself: an
-allocation made by a policy program re-enters try_charge_memcg(), the
-task's debt is still over MEMCG_CHARGE_BATCH at that point, and if that
-allocation's gfp ever allowed blocking, the fallback would run
-__mem_cgroup_handle_over_high() — reclaim, and schedule_timeout_killable()
-when the penalty is large — inside rcu_read_lock_dont_migrate().
-
-Today this is unreachable: bpf_base_func_proto() helpers only allocate
-atomically and check_member() rejects sleepable programs, so the
-gfpflags_allow_blocking() gate stays false. So this is not a problem
-with the current code — more a worry about how easily a future change
-could break it without anyone noticing. The invariant is written down
-nowhere, it spans two files, and the planned "kernel reclaims on the
-policy's behalf" extension is exactly the kind of change that would
-stress it.
-
-If you agree, would you consider making it explicit: a comment on
-bpf_memcg_high_policy()/bpf_memcg_get_func_proto() stating that
-everything reachable from a policy program must be non-blocking, and a
-WARN_ON_ONCE(current->in_bpf_memcg) at the fallback site so a future
-violation trips in testing instead of surfacing as an RCU stall? For the
-reclaim-on-behalf work itself, keeping the current "BPF picks, the
-caller acts after dispatch returns" pattern (or a workqueue) would
-sidestep the issue entirely.
+>> It is not a demotion target selector, not a
+>> demotion-only goal, not an eviction-only goal, and not a change to the
+>> existing completion accounting. Leaving source unspecified preserves the
+>> existing memory.reclaim behavior.
+>>
+>> In that sense, this series extends node-scoped reclaim pressure to the
+>> memcg memory.reclaim interface. The existing node memory_reclaim
+>> interface can apply pressure to a node, but it is not scoped to a
+>> particular memcg. This series lets userspace apply the same kind of
+>> source-scoped pressure to a cgroup's resident memory on selected nodes
+>> or tiers, while still using the normal memcg reclaim path.
+>>
+>> The main benefit of this series is to give userspace a steering knob
+>> for per-node and per-tier memory placement control. A tiering controller
+>> can observe the resident memory distribution across nodes or memory
+>> tiers, and then apply reclaim pressure to the source that should be
+>> relieved. For example, it can apply pressure to top-tier nodes so that,
+>> under the existing tiering policy, cold folios can be aged and usually
+>> demoted to lower tiers, or reclaim from a terminal tier when it needs
+>> actual charge reduction.
+> To me I think the other interesting aspect is being able to evict memory
+> from lower tiers out to swap so that toptier always has room for
+> demotions, preventing swapouts from higher tiers. In fact I think for
+> my interests this is the more important use case.
 
 
-> +	/*
-> +	 * A memcg outlives its cgroup while it has charges, and
-> +	 * cgroup_bpf_release() frees the arrays when the cgroup goes.
-> +	 */
-> +	if (!cgroup_bpf_tryget_live(cgrp))
-> +		goto out;
-> +
-> +	bpf_memcg_ctx_init(&ctx, memcg, over_limit, gfp_mask);
-> +
-> +	bpf_cgroup_struct_ops_foreach(ops, item, cgrp, CGROUP_MEMCG_OPS) {
+Thanks for pointing this out. This is indeed another important use
+case. I will add this use case to the cover letter in v2.
 
-cgroup_bpf_enabled(CGROUP_MEMCG_OPS) is a global static key, so with one
-policy attached anywhere, every over-high fallback in the system —
-including cgroups whose effective array is empty — pays the tryget/put
-plus bpf_memcg_ctx_init() (two cgroup_id() dereferences and the snapshot
-stores) before the foreach finds nothing to run.
-
-Could we bail before building the context by peeking at the first
-effective item right after cgroup_bpf_tryget_live()? It has to be after
-the tryget, since cgroup_bpf_release() frees the effective arrays
-without NULLing the slots:
-
-     if (!READ_ONCE(rcu_dereference(cgrp->bpf.effective[CGROUP_MEMCG_OPS])
-                ->items[0].kdata)) {
-         cgroup_bpf_put(cgrp);
-         goto out;
-     }
-
-Since attach forces ALLOW_MULTI and compute_effective_progs() folds
-ancestors into this cgroup's array, a NULL first item really does mean
-"nothing to run" for the whole walk. To keep mm/ config-agnostic, the
-test probably wants to be a small inline next to
-bpf_cgroup_struct_ops_foreach() in bpf-cgroup.h, with a stub for
-!CONFIG_CGROUP_BPF like the foreach macro has.
-
-This is on the slow path that is about to reclaim or throttle, so the
-win is small — mainly keeping the unrelated-cgroup case O(1) instead of
-building a ctx that gets thrown away. Fine to drop if you prefer the
-walk uniform.
-
-Best,
-Hui
+>
+>> The existing memory.reclaim interface cannot express this. It applies
+>> pressure to the memcg as a whole, so on a multi-tier system the kernel
+>> may make progress in a tier different from the one userspace is trying
+>> to control. That makes feedback control of tier ratios ineffective: the
+>> controller can observe that a specific tier is over its desired resident
+>> footprint, but it cannot direct the next reclaim request to that tier.
+> This part is confusing to me. The kernel curently doesn't observe
+> per-tier-memcg memory footprint and try to manage it, does it?
+> ( that is what I'm trying to solve currently in my tiered memcg series ; -)
+>    but as it stands right now, I don't think there is any feedback loop )
 
 
-> +		if (ops->high_policy)
-> +			acc |= ops->high_policy(&ctx) &
-> +			       BPF_MEMCG_HIGH_VALID_MASK;
-> +	}
-> +
-> +	cgroup_bpf_put(cgrp);
-> +out:
-> +	rcu_read_unlock_migrate();
-> +
-> +	current->in_bpf_memcg = 0;
-> +
-> +	return acc;
-> +}
-> +
->   static int __init bpf_memcg_ops_register(void)
->   {
->   	/*
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1271d390b617..bc283680640b 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -28,6 +28,7 @@
->   #include <linux/cgroup-defs.h>
->   #include <linux/page_counter.h>
->   #include <linux/memcontrol.h>
-> +#include <linux/bpf_memcontrol.h>
->   #include <linux/cgroup.h>
->   #include <linux/cpuset.h>
->   #include <linux/sched/mm.h>
-> @@ -2642,9 +2643,26 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
->   	css_put(&memcg->css);
->   }
+Right, I did not mean that the kernel has such a feedback loop today.
+The feedback loop I had in mind is a userspace controller loop: userspace
+observes the memcg's resident distribution, for example from per-node
+memcg stats, maps nodes to tiers, and then issues memory.reclaim against
+the source it wants to relieve.
+
+The wording is confusing because it can sound like an existing kernel
+policy. I will reword this in v2.
+
+I have also looked at your tiered memcg series. If it is merged, I think
+it will be very useful for tiering use cases. I hope that work can move
+forward as well.
+
+>
+>> Patch 1 adds source=nodes:<nodelist>, which is the basic source
+>> selector.
+> In general I agree with Lorenzo, it took me a second to realize that the
+> bulk of this series is just adding a nodemask to
+> try_to_free_mem_cgroup_pages. It might be helpful to just call it
+> "reclaim" instead of calling it an aging pipeline.
+
+
+Agreed. I will simplify both the cover letter and the documentation in v2.
+
+>
+>> Patch 2 adds source=tier:<N>, where N is the memory_tierN id
+>> exposed by /sys/devices/virtual/memory_tiering/. The tier selector is
+>> only a convenience layer over the same source semantics: it resolves the
+>> current tier nodelist at write time and then uses the same source-scoped
+>> reclaim path as source=nodes:<nodelist>.
+> Personally I think that it makes more sense to just start with a
+> node-based reclaim interface, and then extending it to tiers. It seems
+> like the tier usecase is entirely doable with just a nodemask interface.
+
+
+That is reasonable. source=tier is only a convenience wrapper around the
+same node mask semantics. It is not required for the core ABI.
+
+I can drop patch 2 in v2 and start with source=nodes only.
+
+>
+> And in this case, since we're just selecting the sources of reclaim,
+> tiers don't really matter, right? That is, we don't care if the memory
+> gets demoted or swapped out, we just care that the footprint for the
+> tier memcg goes down.
+
+
+Yes, that matches the intended semantics. source= selects the resident
+source to apply reclaim pressure to. It does not choose whether progress
+comes from demotion or eviction.
+
+So for source=tier, the tier only provides a convenient way to resolve a
+set of source nodes. The actual reclaim semantics are still the same as
+source=nodes.
+
+>
+>> The remaining issues from the old discussion are intentionally left out
+>> of this series. If userspace needs to control demotion targets, that
+>> should be a separate target/demotion-policy ABI rather than folded into
+>> source=. If userspace needs a strict "bytes actually uncharged"
+>> completion mode, that should be discussed as a separate accounting or
+>> goal extension because it would change the observable meaning of
+>> memory.reclaim progress. This series only adds source selection for the
+>> existing reclaim policy.
+> 100% agree.
+>
+> Thanks Li, I hope you have a great day!
+> Joshua
+
+
+Thanks for taking a look.
+
+Thanks,
+Zhe
+
 >   
-> +/*
-> + * Ask the attached bpf_memcg_ops whether to skip the inline memory.high
-> + * reclaim and throttle.
-> + *
-> + * @memcg:	the memcg being charged
-> + * @over_limit:	first memcg found over memory.high or swap.high, starting at
-> + *		the charged one, or NULL if the walk found none
-> + */
-> +static bool bpf_memcg_high_defer(struct mem_cgroup *memcg,
-> +				 struct mem_cgroup *over_limit, gfp_t gfp_mask)
-> +{
-> +	u32 req = bpf_memcg_high_policy(memcg, over_limit, gfp_mask);
-> +
-> +	return req & BPF_MEMCG_HIGH_DEFER_INLINE;
-> +}
-> +
->   static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->   			    unsigned int nr_pages)
->   {
-> +	struct mem_cgroup *leaf_memcg = memcg;
->   	unsigned int batch = max(MEMCG_CHARGE_BATCH, nr_pages);
->   	int nr_retries = MAX_RECLAIM_RETRIES;
->   	struct mem_cgroup *mem_over_limit;
-> @@ -2846,8 +2864,17 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->   	 */
->   	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
->   	    !(current->flags & PF_MEMALLOC) &&
-> -	    gfpflags_allow_blocking(gfp_mask))
-> -		__mem_cgroup_handle_over_high(gfp_mask);
-> +	    gfpflags_allow_blocking(gfp_mask)) {
-> +		/*
-> +		 * The loop above left @memcg as the first memcg it found over
-> +		 * memory.high or swap.high -- possibly the charged one itself
-> +		 * -- or NULL if it found none.  Note the debt can be left over
-> +		 * from an earlier charge, so NULL does not mean no pressure.
-> +		 * The policy wants the memcg we charged.
-> +		 */
-> +		if (!bpf_memcg_high_defer(leaf_memcg, memcg, gfp_mask))
-> +			__mem_cgroup_handle_over_high(gfp_mask);
-> +	}
->   	return 0;
->   }
->   
+>> References:
+>> [1] https://lore.kernel.org/all/Y5bsmpCyeryu3Zz1@dhcp22.suse.cz/
+>>
+>> Li Zhe (2):
+>>    mm: add source selector to memory.reclaim
+>>    mm: add tier source selector to memory.reclaim
+>>
+>>   Documentation/admin-guide/cgroup-v2.rst | 29 +++++++++++
+>>   include/linux/memory-tiers.h            |  6 +++
+>>   mm/internal.h                           |  3 +-
+>>   mm/memcontrol-v1.c                      |  6 ++-
+>>   mm/memcontrol.c                         | 11 +++--
+>>   mm/memory-tiers.c                       | 24 ++++++++++
+>>   mm/vmscan.c                             | 64 +++++++++++++++++++++++--
+>>   7 files changed, 133 insertions(+), 10 deletions(-)
+>>
+>> -- 
+>> 2.20.1
