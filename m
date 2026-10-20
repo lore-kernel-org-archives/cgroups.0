@@ -1,55 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.26
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792529255;
-	b=tR7X2pB8f6eGMtzYO6dTwTSLZmO59w2IvK1kxxasTAmJ+9IVZF9fU4ziU12hZbprcUUx
-	 4/X6CXkMX28el3CrQTHGJmDvnY2fEVOdE7mVb6qYitn9bBQDG/hPbdnjwa+6A/RwG8yXQ
-	 FvUlJzJ021sFXrEBZGWuiiEJnNObX9JW4K16VUUsz80XEO4dnaW8Dfel9vNbr3HXp2h3V
-	 DotzO7RcxPJO0NYc8ib5LB4h3MmscsWUIa1ObhvTE5FGohIDGyE8ickMev7HJtHYI+hc4
-	 gWS29HNZfUnsjHTEuhHWm+qqVxKIrnr/tfWsMeHrrAw65RV/3H1nUtP1dmGyDclr0+A==
+	t=1792531287;
+	b=lQLMXQ0gXhu2uO5WjigSsu3Sd1M1+ITbzLJb1GyKsh3NRsgEvDVXiXK3ynXIRtWHiWCj
+	 /7jf2SM8oTIOerX+sQ/8aLm1T600kpgV4LDXda4hPt7e+T2L9QonGh3MAr9bfqlJGbDsz
+	 CPIfYV/4yx2DjnTm9/3usv5jsMcUPz2di04SmseAVVC2n9b0RvZdyVbLnJU+/sppvDpZy
+	 R4mrQ/1Otb4dY1KMwTjITD37ITIJyOdSONTDimR0kVwC4tpwrADONs3m4syODb1W0tvgo
+	 K6WRM6gXMCMi/pp75t2B8k0/3z1S+LX50ty8rUBdvkkol5Tx1I34k2YhvgpuAMRbfKQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792529255;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=xQwGSvzYOohT9kUoKDV9cqE99QB5OZ5zFZdvCKpT658=;
-	b=ZvHWsgS+YNYb7QblAgKaJRnNzEqudkHe/fQyLxMDGlv4i7Kzd9EDn/r9HGSC7RmxfSpN
-	 YJL65DFboNMoZr9mFuWjxBZtOD2NaAc1MbgoxeUwriJ93LNSjhEbHo6PltJNpRs4bXhrQ
-	 XTdg+7ZS/h+XoOwoqzhkCe/ca7iKjIJrXhRJbM6BQDWsZkagF6nKQDrqgXxVeW38E5Ncq
-	 PDjn6ZPxldcxqlyr5W/+3ubuLDnChfLt7qkip6yEsFhs8ubz0Cs302KHSlVjTuikIL3AB
-	 adzd5JoyzTGgQqRiagq8Ds+wsuy7a02R2YPBFA9XX/LEZs4HlawMkUxzZV0kETPIaaw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792531287;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=kfPFN6p3dzzyhZDI8mEIySVXtBWL1/DWlxavyXB3fN4=;
+	b=U979/U+pNZ4SI8qspfqo0doIHz5JmqLJkpQ4zYf3COTPCcoFsKa2sWC0+KuF0r0H7x2E
+	 3Qh1YDJh0z/0RXbvRq3hq5Z/bPAxKbLEd+HZyFtJnytMvjsRPEqZgNMswZ+ozQ7Awx0Ke
+	 10BXgdO2O/lcZYgfG2l3o3qSrXy9u8YpPCLMh328IxqAOn5IJonYAqRdHCDsgtHd2cxiT
+	 kdYqN04VI4OxPWdQV8KepDT1FmZuf7nTg6yIKv6h5BMcH6IXYCFEfnl4sbGW1EdbeOKVi
+	 5g4pSAvyrhYQgpY5mlSpq/PIze+ojWDP1Oz4Ulh9JquYbDil1WQujlnCH8kPcFEOLXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xj2fn2QS;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=evLX7g7p;
+	arc=none smtp.remote-ip=91.218.175.26
+Received: from mta0.migadu.com (out-26.mta0.migadu.com [91.218.175.26])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32622606A324
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 20:47:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F015F606A31D
+	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 21:21:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F015F606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Xj2fn2QS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1C681F000D4
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 20:47:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792529254;
-	bh=xQwGSvzYOohT9kUoKDV9cqE99QB5OZ5zFZdvCKpT658=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=Xj2fn2QSUsd3OjHYm/1+rgnXOAHv7xBHE3IKCkZqzhdINB+vGHm2pUA4F8ecuXlYY
-	 9rHyVTyncZhGFlKa5RvjkcK3qLBneqh3II3wzP2mPNIl3r6hCzGiTzao8SgHiCKqbR
-	 1FF19NuXUouvIRZk+yqVXPHBi00M5JhuNxd11TDUakBI4yYbuUeBXG5U3QM1W3IsOZ
-	 IZwkN2da3O3H+R50saEji0NLEWI3diDQPe66t8eDEeMHwUmd2tLocrAeUMAR/QTMUZ
-	 CAnVBvJEDpWveBianxlbKxFgqxZdowZ71ZF1oek21powMPHi1vTFMh24XjiIc0qfdZ
-	 Y/ziQjMnJf0Sg==
-Received: by mail-qt1-f170.google.com with SMTP id d75a77b69052e-5365b48238dso812341cf.0
-        for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 13:47:34 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBz1ZF3PkFhsAEpFy8vXOFtxB6tmmf5aY/WpB0/jVpAS7QVn1InhP1rYcJKSzAmv5gcYBP2hGEe/@vger.kernel.org
-X-Gm-Message-State: AFq9FYJQ2Q+LHUgEZwzIBRXRG9Pbk2oHq/MruAYyK7zPJ/kSBwjtHMNZ
-	T9GY5MhAW+oh19xF7VOqgePcC9/bnUBQ8GRhvx5Ny1/GFp3brUz28c6WNqUG4j4PiOaa2FT7jp2
-	oC8k3tgBBLwg1js3G2ANU4ReMRyqsPYs=
-X-Received: by 2002:a05:620a:171e:b0:93e:c12c:9dd2 with SMTP id
- af79cd13be357-93f57f7a370mr81878885a.82.1792529254015; Tue, 20 Oct 2026
- 13:47:34 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=evLX7g7p
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=XQAWskVKn7U7xT+2zsWfc+G6Pi9IJ2IbzAXQD5zOloc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792531283; v=1; x=1793136083;
+ b=evLX7g7pVPpCVP6R/sCEfJSjsP25ftzprt/nwJJYw5GG+vYMZ9ce6hIm6VDHJ5yaGkh2iuyZ
+ 68JdfilehvAXJsdFoMf3PKq9ip5bW7+Cqdx4AukYcpWz13NTekhMxEC06CNpCXiAB3zkXBMF7AZ
+ Sbu3kX0k+JVYsupwIzvUqJ7Q=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id bdf38585b1173da1;
+	Tue, 20 Oct 2026 21:21:23 +0000
+X-Mizu-Trace-ID: bdf38585b1173da1
+X-Migadu-Flow: FLOW_OUT
+Date: Tue, 20 Oct 2026 14:21:22 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH] mm/memcontrol: publish null pointer before dropping css
+ reference
+Message-ID: <atfMngq7nyZpt4u-@linux.dev>
+References: <20261020190336.3754557-1-joshua.hahnjy@gmail.com>
+ <20261020193531.181318-1-joshua.hahnjy@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,86 +68,79 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016084256.12955-1-baohua@kernel.org> <CAMgjq7AtuK22FsuqvGRLVZ2eWrp-N4qQ_MHoXsXDkVBprekdDA@mail.gmail.com>
-In-Reply-To: <CAMgjq7AtuK22FsuqvGRLVZ2eWrp-N4qQ_MHoXsXDkVBprekdDA@mail.gmail.com>
-From: Barry Song <baohua@kernel.org>
-Date: Wed, 21 Oct 2026 04:47:21 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4yfX-__y0f5_od7r+j=Hqz2YAGzFDRyVP4s-6t8dh0_rA@mail.gmail.com>
-X-Gm-Features: AclHuK_6OQJo2WkKc2jeoR4HdJ1oLezMrDS6BoCD9oiiIL1tyFrKMHixg8usnik
-Message-ID: <CAGsJ_4yfX-__y0f5_od7r+j=Hqz2YAGzFDRyVP4s-6t8dh0_rA@mail.gmail.com>
-Subject: Re: [PATCH v4 00/17] mm/mglru: frequency guided promotion (MGLRU-FG)
- and flag cleanup
-To: Kairui Song <ryncsn@gmail.com>
-Cc: devnull+kasong.tencent.com@kernel.org, akpm@linux-foundation.org, 
-	axelrasmussen@google.com, baolin.wang@linux.alibaba.com, baoquan.he@linux.dev, 
-	cgroups@vger.kernel.org, chenridong@xiaomi.com, chrisl@kernel.org, 
-	damon@lists.linux.dev, david@kernel.org, dev.jain@arm.com, 
-	ehab.ababneh@intel.com, gourry@gourry.net, hannes@cmpxchg.org, 
-	hughd@google.com, kunwu.chan@gmail.com, lance.yang@linux.dev, 
-	liam@infradead.org, lianux.mm@gmail.com, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, liuxiang.277@bytedance.com, ljs@kernel.org, 
-	mhocko@kernel.org, muchun.song@linux.dev, nico.pache@linux.dev, 
-	nphamcs@gmail.com, qi.zheng@linux.dev, rientjes@google.com, 
-	roman.gushchin@linux.dev, ryan.roberts@arm.com, shakeel.butt@linux.dev, 
-	shikemeng@huaweicloud.com, sj@kernel.org, surenb@google.com, 
-	tz2294@columbia.edu, usama.arif@linux.dev, vbabka@kernel.org, 
-	vernon2gm@gmail.com, wangzicheng@honor.com, weixugc@google.com, 
-	willy@infradead.org, ying.huang@linux.alibaba.com, youngjun.park@lge.com, 
-	yuanchu@google.com, yuzhao@google.com, zhaozhengzhuo@uniontech.com, 
-	ziy@nvidia.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261020193531.181318-1-joshua.hahnjy@gmail.com>
 
-On Fri, Oct 16, 2026 at 7:44=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrot=
-e:
->
-> On Fri, Oct 16, 2026 at 4:43=E2=80=AFPM Barry Song (Xiaomi) <baohua@kerne=
-l.org> wrote:
-> >
-> > On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay <devnu=
-ll+kasong.tencent.com@kernel.org> wrote:
-> > [...]
-> This is a nice change, but meanwhile the LevelDB and cerain workload
-> gain are gone too, we will again have a ~40% regression for similiar
-> workloads, I just double checked it. But that's fine, though, it was
-> never meant to be optimized that way, and the long-term fix can be
-> done later.
->
-> A quick test on another of my test machine using Tal's LevelDB test case:
->
-> CLRU: 3098 ops/s
-> MGLRU mainline: 3035 ops/s
-> MGLRU-FG: 3233 ops/s
-> MGLRU with this patch: 2194 ops/sec (should be same result with
-> reverting 6cbdd9726fb5)
+On Tue, Oct 20, 2026 at 12:35:31PM -0700, Joshua Hahn wrote:
+> On Tue, 20 Oct 2026 12:03:38 -0700 Joshua Hahn <joshua.hahnjy@gmail.com> wrote:
+> 
 
-Sashiko is raising serious concerns about this approach, so I'm
-really considering reverting the commit. The downside is that
-the revert would also regress some workloads, such as kernel
-builds and LevelDB Scan/Get.
+[...]
 
-Before we have to revert it, I'm wondering if the one-line
-change below could fix the SQLite scan and lookup regressions:
+> > 
+> > So for drain_local_memcg_stock I agree, since FLUSHING_CACHED_CHARGE
+> > is set, so you can't have it concurrent with drain_all_stock since it
+> > will skip that stock. But refill_stock also calls drain_stock when
+> > it evicts the slot but the flag isn't set, so is_memcg_drain_needed
+> > can read it at the same time.
+> > 
+> > What do you think I should do? I think reordering makes the intent more
+> > obvious and maybe it's just me but I did find it a bit misleading at
+> > first that we were dropping the reference and then publishing. 
+> 
+> Oh and just for clarification, my page_counter_stock series actually
+> gets rid of this codepath and switches the order when moving it anyways.
 
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index ab69b9930893..a3a894aae10b 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -327,7 +327,7 @@ static inline unsigned long
-lru_gen_folio_seq(const struct lruvec *lruvec,
-                  (folio_test_dirty(folio) || folio_test_writeback(folio)))=
-)
-                gen =3D MIN_NR_GENS;
-        else
--               gen =3D MAX_NR_GENS - (folio_test_workingset(folio) ||
-folio_test_referenced(folio));
-+               gen =3D MAX_NR_GENS - (folio_test_workingset(folio) ||
-folio_lru_refs(folio) > 1);
+Yes but this patch has fixes and might get backported, so we need to be use it
+is fixing an issue which is real.
 
-        return max(READ_ONCE(lrugen->max_seq) - gen + 1,
-READ_ONCE(lrugen->min_seq[type]));
- }
+Let's try to reason how the race can happen between is_memcg_drain_needed and
+drain_stock:
 
-If it works, It should be entirely thanks to the inspiration from your MGLR=
-U-FG.
+CPU 1						CPU 2
+
+drain_stock
+  WRITE_ONCE(stock->nr_pages[i], 0);		is_memcg_drain_needed
+  css_put(&old->css);
+  /* assume full grace period */
+  						  rcu_read_lock()
+  						  memcg = READ_ONCE(stock->cached[i]);
+  						  if(READ_ONCE(stock->nr_pages[i])
+  							mem_cgroup_is_descendant(memcg);
+
+  WRITE_ONCE(stock->cached[i], NULL);
+
+
+Do you think there is possible race condition in above? I couldn't see.
+
+However I ran this through AI and it has convinced me that on PREEMPT_RT, this
+is indeed racy access.
+
+AI reasoning:
+-------------
+
+How it breaks on PREEMPT_RT
+
+On RT, local_trylock() takes a per-CPU spinlock_t (an rtmutex). That is
+rcu_read_lock() plus migrate_disable(), but the task can still be preempted
+inside it.
+
+1. CPU A, refill_stock(X): there is no free slot, so it calls drain_stock(i) on
+   old. It sets nr_pages[i] = 0, then css_put(old) drops the last reference and
+   queues the release work on CPU A.
+2. The refill task is preempted (by a tick or a threaded IRQ) before it clears
+   cached[i]. CPU A's kworker runs css_release_work_fn(), which calls call_rcu(),
+   and grace period G starts. G will wait for the refill task, because that task is
+   inside an RCU reader.
+3. CPU B, drain_all_stock() → is_memcg_drain_needed(): B has already passed a
+   quiescent state for G. It enters rcu_read_lock() and loads cached[i] == old. G
+   does not wait for this reader, because it started after G did.
+4. B is preempted right after that load (RT readers can be preempted).
+5. A resumes. It clears cached[i], puts X in slot i with a non-zero nr_pages[i],
+   and unlocks. G ends, and old is freed.
+6. B resumes. It reads X's non-zero count and calls
+   mem_cgroup_is_descendant(old, root). That reads old->css.cgroup from freed
+   memory.
+
