@@ -1,54 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.113
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.123
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792501298;
-	b=HmKSo1ZN4utpiGkBoAuUyfrETh2JFl85+Msr4cAIIPDGma7DV1DERT3KiHKr48FW+2VX
-	 2QVQ/Nyu8AN5GnAACvJ7MXqiJS7hnQzvJkFGmVhnddcz/Sdrl9kYcelFYtPd5ubOe1wEt
-	 rJ/tVD4CEUbYt6Kqumo+0IStT4i2wqZUbX6fJZzKG7r/aL8wG9jldTHxMAy4+sCyz5MM1
-	 wQ6AJ8knUxDCtO87+Bmz/8AiEGioam69W8EhgVPP0jondLQaj9+hTyLxi+/ASsJ3T7KAW
-	 WZLdw+OcDPlo9aFFRZjVIV3pnxqe6FaWxnKW/8134Qq2d/ZNGveWEasTm+OfqEfPNSg==
+	t=1792503207;
+	b=Ktle+44ntcBHDf+rEYM4+LWIzlDQySCMfGiKxgH74RHzPcfG7fQyS6Dzo+h71i/Ysh/h
+	 gSQJlyuH6INsmVJWkR54L6aOzYrH4bgruLeb5U04R8pztK+/qD532wqr7lcfQQpZ0Rqbf
+	 EWuXyqpBsu2hTizA7R7hTj4TaulQBU2griX54ixQCnlv9RS24f/9qC1lV9Of1eQhtKjTF
+	 xCngH1eJGHB7UB1v4DKWvfn0OULKbH380vVsY1vhtwU6UpxwEUktZrqMPOOjqAWFcaTI1
+	 C7okcVRL+vsmUrELFG4LW6EFO7inO3ak1nMeLcj3E2/3p1MgAwAZraZ25YLAVc6i5rg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792501298;
-	h=DMARC-Filter:DKIM-Signature:References:X-Original-From:In-Reply-To:
-	 To:From:Message-Id:Mime-Version:Cc:Subject:User-Agent:Date:
-	 Content-Transfer-Encoding:Content-Type:X-Lms-Return-Path;
-	bh=YWKyDgPAMwPA3qrc0lPHDPftrnHIF8SWtFJgxMOACtU=;
-	b=Mdg+wVsbkP9CR9RjCuRlrI8Z44gzN1gZaVn0cxBctdyFCOsrRzbew4KS91u54q/XKY2P
-	 lz/jD7MnelQbyucoYcnvNy3ZOKNYCHTZRxEIsUa0tWha8XIrPi03/ODOZ/VRdYKJyClAK
-	 9wVvGsSByCAclyvXgk+VIXZnMpQJ9SYc84UrWeDX+Lja6qiJWBzUBPW7LfvHnchlX2Amx
-	 aqIbP4exj30r4M/4/5SF30goTLWjC8H2Yig2zVap5Kpdy3aTAw/4vVIVz6bERGy4D5TY7
-	 vY6/z30OwfMT9U02pMhNV09XR79MMPrA+cAHQEO5jmB7jPvrknMiWpDPVGL7xfGGw4w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792503207;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=CmgxYFLM8qJUWvWVc5vYTJVXqVY4Hx6nTGQxyWlnrto=;
+	b=oVWY3KJh/5GGSNx8aAExO9G7lYAe9a8t1dTXAWKI8vSP/CNWglWV96ZEF7C56+uE6kQb
+	 VgKTs+j32uy4oeGtlglmPs7A16Qlwfneha8cXxm8S/ifv/hT/5woNggzBUal2p4ACPxob
+	 wFPsL63YTGn1DkSenyCSIO1MZObBApSpVO2J8MZoVFHhvoTmuDgWM/poOJCRl0J/Qq/lM
+	 5IIVbnDSqqkFY5Jo/ZO+OwE7oJwindjrsflyiqzMokkjxH0WO8CwzJKz+KkuWfX0uOIjn
+	 HvipuboLK0DATX0Stw960RiVy4Wft/0na57k1vU7CkDpqLbLCMuiYQUMCFZxwwNrrog==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=bwugqmLO;
-	arc=none smtp.remote-ip=209.127.230.113
-Received: from va-1-113.ptr.blmpb.com (va-1-113.ptr.blmpb.com [209.127.230.113])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wZNdtbkh;
+	arc=none smtp.remote-ip=95.215.58.123
+Received: from mta1.migadu.com (out-123.mta1.migadu.com [95.215.58.123])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDB56606A323
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 13:01:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDB56606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8CBB606A31D
+	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 13:33:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D8CBB606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=bwugqmLO
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1792501290; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=YWKyDgPAMwPA3qrc0lPHDPftrnHIF8SWtFJgxMOACtU=;
- b=bwugqmLOLdiFHmYmSEl6RQMWsQ4Mr9t+ZBHggzzq4k9/88vKu9+6LX3K7gsS6KLSnJ4ZBl
- pv3m/P3pjdhySwAbenbLDzpgGw6tbp5VAIlL0YQGYuWsVpzkm/es4MExa08lhDlnUFUSZ7
- TnEKNU9UVPt2nB3zM8nHvVk2EuiQz2gyPGNeWXgmUdXFkmpurAyKkzlIQTMPucvmgErpww
- OHLNfP7JyhZHGzDu6qzOUUNtXWHTdO/DbvBb4MSM6ouE8Egh7xcpneypxWNsjGNiFztVvi
- avxVbeN7qsjXeew3+hlYAHUSuBrJ8ib3RLHS1C5Qwy1GalLfhyryjJNbbo9nMw==
-References: <20261019141401.11927-1-lizhe.67@bytedance.com> <atY-LD2AzCYATRii@gourry-fedora-PF4VCD3F>
-X-Original-From: Li Zhe <lizhe.67@bytedance.com>
-In-Reply-To: <atY-LD2AzCYATRii@gourry-fedora-PF4VCD3F>
-To: "Gregory Price" <gourry@gourry.net>
-From: "Li Zhe" <lizhe.67@bytedance.com>
-Message-Id: <30457046-a662-4ff7-a6a8-100398d7a806@bytedance.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wZNdtbkh
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=AcUqUaao/jqaBmXmcRy6oGKOshGqT8aN/yaRUiJYB6k=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792503204; v=1; x=1793108004;
+ b=wZNdtbkhXwUOeneyfOhn8NIG6Tkyr8jPfZyJx9gZXIN8QKYCMb2GqftN/7tYRJlZfVJSQh0C
+ 19KBpFiE6NrzROAHxHYpsRpA1UvdrAoFFJbWj84PdZ8U7STzsyo9cN2cxiv1PmFxmQscE8Pd7rO
+ nj8ubX9Zfjl5Z3Pedu/m7rDY=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id fb1a7d32086cf4bb;
+	Tue, 20 Oct 2026 13:33:24 +0000
+X-Mizu-Trace-ID: fb1a7d32086cf4bb
+X-Migadu-Flow: FLOW_OUT
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: longman@redhat.com,
+	tj@kernel.org
+Cc: ridong.chen@linux.dev,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: [PATCH] cgroup/cpuset: Fix partition recovery with unavailable CPUs
+Date: Tue, 20 Oct 2026 21:33:15 +0800
+Message-ID: <20261020133315.123890-1-guopeng.zhang@linux.dev>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,95 +69,96 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Cc: <akpm@linux-foundation.org>, <david@kernel.org>, <ziy@nvidia.com>, 
-	<joshua.hahnjy@gmail.com>, <rakie.kim@sk.com>, 
-	<ying.huang@linux.alibaba.com>, <ljs@kernel.org>, <mhocko@suse.com>, 
-	<muchun.song@linux.dev>, <roman.gushchin@linux.dev>, 
-	<shakeel.butt@linux.dev>, <weixugc@google.com>, 
-	<cgroups@vger.kernel.org>, <linux-doc@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>
-Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
-User-Agent: Mozilla Thunderbird
-Date: Tue, 20 Oct 2026 21:01:03 +0800
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26ad76628+84a851+vger.kernel.org+lizhe.67@bytedance.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On 10/20/26 12:10 AM, Gregory Price wrote:
-> On Mon, Oct 19, 2026 at 10:13:59PM +0800, Li Zhe wrote:
->> memory.reclaim is a useful proactive reclaim interface for memcgs, but
->> tiered memory makes "reclaim N bytes from this memcg" underspecified for
->> userspace controllers that manage memory placement across tiers. The
->> kernel's reclaim policy is aging-based, and on tiered systems aging may
->> demote folios before they are eventually evicted. Without a way to
->> declare where reclaim pressure should start, userspace can only reclaim
->> from the memcg as a whole and observe one aggregate progress value.
-> This is not a good argument for pushing the complexity of managing tiers
-> into userspace - it is an argument for fixing the reclaim interface to
-> handle demotion and eviction sanely - which presently we do not do.
->
-> My best examples:
->    1) the watermarks don't make sense for lower tiers that need to absorb
->       large amounts of demotions from upper tiers.  It's likely lower
->       tiers need larger WMARK_PROMO to let low-tier kswapd run longer.
->
->    2) proactive and async reclaim current reclaim top-down, which results
->       in swapping directly from top-tiers because lower tiers don't have
->       space to absorb demotions.  We should experiment with async /
->       proactive reclaim applying bottom-up (lowest tier first) so aging
->       the top-tiers demotes into lower tiers more successfully.
->
->       direct reclaim should stay top-down because we want the best page
->       with the least work to minimize stalls.
->
-> I have a strong suspicion if we made these change, then memcg.reclaim
-> would work more or less the way you'd want - and anything else can be
-> managed more directly with madvise/process_madvise.
->
-> I also have concerns with extending memory.reclaim this way permanently
-> locking in reclaim implementation details that prevent us from making
-> changes like this in the future.
->
-> ~Gregory
+From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
+An invalid local partition can become valid again even when its
+exclusive CPUs are no longer available from its parent.
 
-Thanks for the feedback.
+This can be reproduced on a cgroup v2 system with CPUs 0-7 online:
 
-I agree that the kernel reclaim and demotion behavior still has room for
-improvement, and the watermark changes and the bottom-up proactive/async
-reclaim idea you mentioned may be useful to explore for some tiering
-scenarios. But I think there is also an unavoidable userspace policy
-component here. The kernel can improve whole-cgroup reclaim, but it
-cannot know every controller's placement goal.
+    cd /sys/fs/cgroup
+    echo +cpuset > cgroup.subtree_control
+    mkdir A
+    echo 1-4 > A/cpuset.cpus
+    echo 1-4 > A/cpuset.cpus.exclusive
+    echo root > A/cpuset.cpus.partition
+    echo +cpuset > A/cgroup.subtree_control
+    mkdir A/B
+    echo 3-4 > A/B/cpuset.cpus
+    echo 3-4 > A/B/cpuset.cpus.exclusive
+    echo root > A/B/cpuset.cpus.partition
+    echo 1-2 > A/cpuset.cpus.exclusive
+    cat A/B/cpuset.cpus.partition
+    root
+    cat A/B/cpuset.cpus.exclusive.effective
+    cat A/cpuset.cpus.effective
+    1-2
+    cat A/B/cpuset.cpus.effective
+    1-2
 
-For example, one controller may want to keep a specific per-tier
-resident ratio for a cgroup. Another use case, as Joshua pointed out in
-another reply, is reclaiming from a lower tier first so that later
-top-tier reclaim has room for demotion. A single default memory.reclaim
-algorithm cannot express these per-cgroup policy choices.
+B is changed back to a valid root even though its exclusive CPUs are
+no longer available and cpuset.cpus.exclusive.effective is empty. B
+should remain invalid until A can provide its exclusive CPUs again.
 
-I am not sure whether changing the default whole-cgroup reclaim behavior
-in this direction could affect existing userspace dependencies. In the
-old nodes= discussion, Mina mentioned that Meta's reclaim stack relied on
-memory.reclaim triggering demotion [1].
+Shrinking A's exclusive CPUs invalidates B in
+compute_partition_effective_cpumask(). The subsequent walk in
+update_cpumasks_hier() tries to recover B, but
+update_parent_effective_cpumask() skips the recovery checks when xcpus
+is not a subset of parent->effective_xcpus. Since part_error is still
+zero, B is changed back to a valid partition.
 
-I also do not intend source= to lock in current reclaim implementation
-details. It should stay consistent with the current design: source= only
-selects the resident source to which reclaim pressure is applied, while
-the kernel remains free to change the reclaim policy.
+Set PERR_INVCPUS when the subset check fails so that the partition stays
+invalid. New test cases are added to test_cpuset_prs.sh for removing and
+restoring the parent's exclusive CPUs.
 
-The typed source= form also leaves room for future source selectors
-without changing the meaning of source=nodes.
+Fixes: 0c7f293efc87 ("cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2")
+Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+---
+ kernel/cgroup/cpuset.c                            | 8 ++++++--
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 4 ++++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-madvise and process_madvise are useful when userspace knows the target
-virtual ranges or processes, but they are not a memcg-level interface
-for applying reclaim pressure to a selected resident source.
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 585a982249ad..be80763953ed 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1986,12 +1986,16 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+ 				cpumask_copy(tmp->addmask, cs->effective_xcpus);
+ 				adding = true;
+ 			}
+-		} else if (is_partition_invalid(cs) && !cpumask_empty(xcpus) &&
+-			   cpumask_subset(xcpus, parent->effective_xcpus)) {
++		} else if (is_partition_invalid(cs) && !cpumask_empty(xcpus)) {
+ 			struct cgroup_subsys_state *css;
+ 			struct cpuset *child;
+ 			bool exclusive = true;
+ 
++			if (!cpumask_subset(xcpus, parent->effective_xcpus)) {
++				part_error = PERR_INVCPUS;
++				goto write_error;
++			}
++
+ 			/*
+ 			 * Convert invalid partition to valid has to pass the
+ 			 * cpu exclusivity test as well as the housekeeping
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index d04aad697b96..f1d517647ade 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -427,6 +427,10 @@ TEST_MATRIX=(
+ 	# cpuset.cpus is allowed, but those extra CPUs are ignored.
+ 	"  C2-3:P1   C3:P1  .      .      .     C2-4    .      .     0 A1:|A2:2-3 A1:P1|A2:P1"
+ 
++	# A child cannot recover until its exclusive CPUs are available again.
++	" CX1-4:P1 CX3-4:P1 .     .     X1-2    .      .      .     0 A1:1-2|A2:1-2|XA2: A1:P1|A2:P-1"
++	" CX1-4:P1 CX3-4:P1 .     .  X1-2:X1-4 .      .      .     0 A1:1-2|A2:3-4|XA2:3-4 A1:P1|A2:P1"
++
+ 	# Taking away all CPUs from parent or itself if there are tasks
+ 	# will make the partition invalid.
+ 	"  C2-3:P1   C3:P1  .      .      T     C2-3    .      .     0 A1:2-3|A2:2-3 A1:P1|A2:P-1"
+-- 
+2.43.0
 
-So I tend to prefer the more conservative opt-in approach in this
-patchset.
-
-[1] https://lkml.org/lkml/2022/12/13/79
-
-Thanks,
-Zhe
