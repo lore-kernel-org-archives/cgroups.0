@@ -1,50 +1,50 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.123
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.245
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792503207;
-	b=Ktle+44ntcBHDf+rEYM4+LWIzlDQySCMfGiKxgH74RHzPcfG7fQyS6Dzo+h71i/Ysh/h
-	 gSQJlyuH6INsmVJWkR54L6aOzYrH4bgruLeb5U04R8pztK+/qD532wqr7lcfQQpZ0Rqbf
-	 EWuXyqpBsu2hTizA7R7hTj4TaulQBU2griX54ixQCnlv9RS24f/9qC1lV9Of1eQhtKjTF
-	 xCngH1eJGHB7UB1v4DKWvfn0OULKbH380vVsY1vhtwU6UpxwEUktZrqMPOOjqAWFcaTI1
-	 C7okcVRL+vsmUrELFG4LW6EFO7inO3ak1nMeLcj3E2/3p1MgAwAZraZ25YLAVc6i5rg==
+	t=1792503390;
+	b=fXLy78DJBlC2UnpUvrquiDP3de2a34EyHTaHRjxtb99PGTiP0K0HfcZmX8D+iBPT8U6O
+	 /EbHNKz4ET940fcoViQBhYqWDmH0y0MkCWjmRYywA1eKFpP13mTM1rKI2dmoudOC2B6Rh
+	 Uepbp5Gm3ulYkLV0tE8bGbCvPlQuCJbOZps307EfD1NJXUniqoSUYtEs817SJUvptsC4C
+	 2XcawyY+jal/HQCMXGyQToYUWFxAdEAN7k4SUk5H5c74lsMVgmv0b5lx8WeIvgcIsmbJY
+	 tvpQ0brzf+uW+APq2Jy/hvn8maypz/4XwciShOu4hXGV7qGeCln6jhcsHUjw5DyJ+0w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792503207;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792503390;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=CmgxYFLM8qJUWvWVc5vYTJVXqVY4Hx6nTGQxyWlnrto=;
-	b=oVWY3KJh/5GGSNx8aAExO9G7lYAe9a8t1dTXAWKI8vSP/CNWglWV96ZEF7C56+uE6kQb
-	 VgKTs+j32uy4oeGtlglmPs7A16Qlwfneha8cXxm8S/ifv/hT/5woNggzBUal2p4ACPxob
-	 wFPsL63YTGn1DkSenyCSIO1MZObBApSpVO2J8MZoVFHhvoTmuDgWM/poOJCRl0J/Qq/lM
-	 5IIVbnDSqqkFY5Jo/ZO+OwE7oJwindjrsflyiqzMokkjxH0WO8CwzJKz+KkuWfX0uOIjn
-	 HvipuboLK0DATX0Stw960RiVy4Wft/0na57k1vU7CkDpqLbLCMuiYQUMCFZxwwNrrog==
+	bh=mf8k7XTI/zTxzeprUjIQpoEOfwu4NGyWtykxH2O6lr0=;
+	b=jUtJuYlmgD5xDccjbT+2kOnXXUCMTvuj8EQzyYp30QSltYrHF9CZgfUzkANMnSKoE8x0
+	 YfT8Tny716o+d6/ZGlV/Bp4Mrxe8m1r0zjzJH9ie33bkdshfVsxqgYAvv87xg79vkCymJ
+	 mFO7CmKvnBUrq1qAM2Y7nh/jvgAuUt1YuLdjXgTQ6Af8mj2bGa3iK+MeEzf1B1C70Tbds
+	 vAaZeg1fpJ4nV9D3pQ4QfCFm/uSNDxlxrLYIv5RFsmjArDHoCoPeG2XfTD8ynXhyB6Rfo
+	 qYg3y/vFHvIDkeM4O5pXYXe9go68Mjw6Z24dlARoVHij1NsOCXk3xCJsSwt9gbeEgXw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wZNdtbkh;
-	arc=none smtp.remote-ip=95.215.58.123
-Received: from mta1.migadu.com (out-123.mta1.migadu.com [95.215.58.123])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=nXYALqhI;
+	arc=none smtp.remote-ip=95.215.58.245
+Received: from mta1.migadu.com (out-245.mta1.migadu.com [95.215.58.245])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8CBB606A31D
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 13:33:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D8CBB606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B721A60A2629
+	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 13:36:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B721A60A2629
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wZNdtbkh
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=nXYALqhI
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=AcUqUaao/jqaBmXmcRy6oGKOshGqT8aN/yaRUiJYB6k=;
+DKIM-Signature: a=rsa-sha256; bh=mqlNuzWiK+UMeR8XNNFBfexTXPgP+qQFSEcNjwZbRo8=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792503204; v=1; x=1793108004;
- b=wZNdtbkhXwUOeneyfOhn8NIG6Tkyr8jPfZyJx9gZXIN8QKYCMb2GqftN/7tYRJlZfVJSQh0C
- 19KBpFiE6NrzROAHxHYpsRpA1UvdrAoFFJbWj84PdZ8U7STzsyo9cN2cxiv1PmFxmQscE8Pd7rO
- nj8ubX9Zfjl5Z3Pedu/m7rDY=
+ t=1792503387; v=1; x=1793108187;
+ b=nXYALqhIsk/+8IQpcxem6LS7uYF43CkJc8z9FwTDZuyD19wC/UyAN/vafAGO+fCE0t3XjaFY
+ +ITlMB4v/t5fiXpvDs/1xfChD3K+7BuBLaU3IH5SFwAKVU+RX/7PNzHqWPFEJElsFyhpEx+nN0o
+ RNdaHk3gjXZYDk+TqTLJZRL4=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id fb1a7d32086cf4bb;
-	Tue, 20 Oct 2026 13:33:24 +0000
-X-Mizu-Trace-ID: fb1a7d32086cf4bb
+Received: by smtp.migadu.com with ESMTPS id 3c43797985b64205;
+	Tue, 20 Oct 2026 13:36:26 +0000
+X-Mizu-Trace-ID: 3c43797985b64205
 X-Migadu-Flow: FLOW_OUT
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
 To: longman@redhat.com,
@@ -57,9 +57,9 @@ Cc: ridong.chen@linux.dev,
 	linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH] cgroup/cpuset: Fix partition recovery with unavailable CPUs
-Date: Tue, 20 Oct 2026 21:33:15 +0800
-Message-ID: <20261020133315.123890-1-guopeng.zhang@linux.dev>
+Subject: [PATCH] cgroup/cpuset: Fix task checking when enabling a partition
+Date: Tue, 20 Oct 2026 21:36:15 +0800
+Message-ID: <20261020133615.124373-1-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -74,91 +74,79 @@ Content-Transfer-Encoding: 8bit
 
 From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-An invalid local partition can become valid again even when its
-exclusive CPUs are no longer available from its parent.
+Creating a child partition can fail when tasks are present in its
+descendants, even though the parent has no tasks of its own.
 
-This can be reproduced on a cgroup v2 system with CPUs 0-7 online:
+On a cgroup v2 system with CPUs 0-7 online:
 
     cd /sys/fs/cgroup
     echo +cpuset > cgroup.subtree_control
     mkdir A
-    echo 1-4 > A/cpuset.cpus
-    echo 1-4 > A/cpuset.cpus.exclusive
+    echo 1-2 > A/cpuset.cpus
     echo root > A/cpuset.cpus.partition
     echo +cpuset > A/cgroup.subtree_control
     mkdir A/B
-    echo 3-4 > A/B/cpuset.cpus
-    echo 3-4 > A/B/cpuset.cpus.exclusive
+    echo 1-2 > A/B/cpuset.cpus
+    echo +cpuset > A/B/cgroup.subtree_control
+    mkdir A/B/C
+    echo 1-2 > A/B/C/cpuset.cpus
+    echo $$ > A/B/C/cgroup.procs
     echo root > A/B/cpuset.cpus.partition
-    echo 1-2 > A/cpuset.cpus.exclusive
     cat A/B/cpuset.cpus.partition
-    root
-    cat A/B/cpuset.cpus.exclusive.effective
+    root invalid (Parent unable to distribute cpu downstream)
     cat A/cpuset.cpus.effective
     1-2
-    cat A/B/cpuset.cpus.effective
-    1-2
 
-B is changed back to a valid root even though its exclusive CPUs are
-no longer available and cpuset.cpus.exclusive.effective is empty. B
-should remain invalid until A can provide its exclusive CPUs again.
+B should be a valid root, leaving A with an empty effective CPU list.
+The task in C belongs to B's partition and does not need CPUs in A.
 
-Shrinking A's exclusive CPUs invalidates B in
-compute_partition_effective_cpumask(). The subsequent walk in
-update_cpumasks_hier() tries to recover B, but
-update_parent_effective_cpumask() skips the recovery checks when xcpus
-is not a subset of parent->effective_xcpus. Since part_error is still
-zero, B is changed back to a valid partition.
+partition_is_populated() is called with B as excluded_child, but
+continue only skips B in the pre-order walk. The walk still visits C
+and finds the task there, so A is considered populated.
 
-Set PERR_INVCPUS when the subset check fails so that the partition stays
-invalid. New test cases are added to test_cpuset_prs.sh for removing and
-restoring the parent's exclusive CPUs.
+Fix this by skipping the whole excluded subtree with
+css_rightmost_descendant(), as is already done for valid child
+partitions. Also add a test case to test_cpuset_prs.sh with a task in
+a grandchild cpuset.
 
-Fixes: 0c7f293efc87 ("cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2")
+Fixes: b1bcaed1e39a ("cpuset: Treat cpusets in attaching as populated")
 Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
- kernel/cgroup/cpuset.c                            | 8 ++++++--
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 4 ++++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ kernel/cgroup/cpuset.c                            | 4 ++--
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 585a982249ad..be80763953ed 100644
+index 585a982249ad..71644482faa7 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1986,12 +1986,16 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 				cpumask_copy(tmp->addmask, cs->effective_xcpus);
- 				adding = true;
- 			}
--		} else if (is_partition_invalid(cs) && !cpumask_empty(xcpus) &&
--			   cpumask_subset(xcpus, parent->effective_xcpus)) {
-+		} else if (is_partition_invalid(cs) && !cpumask_empty(xcpus)) {
- 			struct cgroup_subsys_state *css;
- 			struct cpuset *child;
- 			bool exclusive = true;
+@@ -478,10 +478,10 @@ static inline bool partition_is_populated(struct cpuset *cs,
  
-+			if (!cpumask_subset(xcpus, parent->effective_xcpus)) {
-+				part_error = PERR_INVCPUS;
-+				goto write_error;
-+			}
-+
- 			/*
- 			 * Convert invalid partition to valid has to pass the
- 			 * cpu exclusivity test as well as the housekeeping
+ 	rcu_read_lock();
+ 	cpuset_for_each_descendant_pre(cp, pos_css, cs) {
+-		if (cp == cs || cp == excluded_child)
++		if (cp == cs)
+ 			continue;
+ 
+-		if (is_partition_valid(cp)) {
++		if (cp == excluded_child || is_partition_valid(cp)) {
+ 			pos_css = css_rightmost_descendant(pos_css);
+ 			continue;
+ 		}
 diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index d04aad697b96..f1d517647ade 100755
+index d04aad697b96..9978c560b398 100755
 --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
 +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -427,6 +427,10 @@ TEST_MATRIX=(
- 	# cpuset.cpus is allowed, but those extra CPUs are ignored.
- 	"  C2-3:P1   C3:P1  .      .      .     C2-4    .      .     0 A1:|A2:2-3 A1:P1|A2:P1"
+@@ -452,6 +452,9 @@ TEST_MATRIX=(
+ 	# Enabling partition with child cpusets is allowed
+ 	"   C0-1    C1      .    C2-3    P1      .      .      .     0 A1:0-1|A2:1 A1:P1"
  
-+	# A child cannot recover until its exclusive CPUs are available again.
-+	" CX1-4:P1 CX3-4:P1 .     .     X1-2    .      .      .     0 A1:1-2|A2:1-2|XA2: A1:P1|A2:P-1"
-+	" CX1-4:P1 CX3-4:P1 .     .  X1-2:X1-4 .      .      .     0 A1:1-2|A2:3-4|XA2:3-4 A1:P1|A2:P1"
++	# Tasks below a new partition belong to it, not to its parent.
++	" C1-2:P1 C1-2 C1-2:T    .      .      P1     .      .     0 A1:|A2:1-2|A3:1-2 A1:P1|A2:P1"
 +
- 	# Taking away all CPUs from parent or itself if there are tasks
- 	# will make the partition invalid.
- 	"  C2-3:P1   C3:P1  .      .      T     C2-3    .      .     0 A1:2-3|A2:2-3 A1:P1|A2:P-1"
+ 	# A partition root with non-partition root parent is invalid| but it
+ 	# can be made valid if its parent becomes a partition root too.
+ 	"   C0-1    C1      .    C2-3     .      P2     .      .     0 A1:0-1|A2:1 A1:P0|A2:P-2"
 -- 
 2.43.0
 
