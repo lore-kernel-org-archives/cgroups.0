@@ -1,96 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792515389;
-	b=JB6xoi2BpJxL/PzB8wg3gnZ6U0VMKmnyP6tkj+BiBCqOSlim3GrxGl8q7D3TsOmMmZyP
-	 13V9Dle03gFB4KCJwHMTf9y4ferODuIqBHRBMRdPGRyztYJ8g8Fu9h/YbmKgPg45kCqWP
-	 EpBYX4SMtlyyl2eWEjzDum+G+CiS1UwLlCwdqoZF1gYO5YHuB9dpyMH+KF6LQfMwFV6V8
-	 LM/K9ihzx2nXZpJa2y0pS+ovOMygGHl2SyKc3ERUgWMMQcNSblUH5PK8yvrJwu+2OKyuj
-	 HOIawbeRUdyz3QorzPGyS6bYHlR3q6ix9eOXKwYg3UibPOKvCfMtBHcqio9Fm8zGvRA==
+	t=1792517465;
+	b=Q4mM2irgbiNRIBbPIDyqVvKBVnU1DT9MIEwSj3NhqDh7wQ9B5tj1et2rXzs+Cw16tyzB
+	 ITKHv+d+xz3fq82Dt2P2VuxkfQpol2p9/U05tU7Ql7KjTBi4qzUTf8tsAMfGgoG0ZM6qR
+	 xf4nF+JOheom3EMk5biQ6hCFNgKowgAc5MgKZSaRrbaKtQg/Yu9bqkkG+t+l7YZkio22W
+	 DcGcibTFNwPb+xBWBN9WwWA+WAERgmLHQltDveSne1TqvfUxSFFYevDnyyxr8zORGgGQ5
+	 9mrUlAZ66q2E2UvrA5ElHMX/YZJ8yQnfO2jbVFQ81tTFprtClIjegYuYMRJ6VxCS+Rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792515389;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	a=rsa-sha256; c=relaxed/relaxed; t=1792517465;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
+	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=lJA6tKVLSd/rks8VATU4AwzUzgulNjgUJQKYEzoQbI0=;
-	b=wuja9w9fLvaz9CX9wykvAzONb8pKWQrHIgT0lwWcP6ijj7sSyT3x5kQC5EoM7bPPeyfy
-	 M5nOvt4peFjoQ6SRhumVptdbaqEhovonLu/XgAr+eFGhMKqiux75e9fbrlXG1OrUZFilb
-	 6DCrc3QmRMdgLwxt1OwB43sa8UAvV6ojZXE6TJLAHMZBUfn3f5AkuQx9C+k8Vv5/vl4HA
-	 upkldcYQDG+S9FA1R32iWnMy47Ca4QhOWawcgxBi6tL9OD2IpQs3S5n7nO4A301qhHwbg
-	 QEHKn0Jj4qvC5HBzKfk7UvA5l22S7O0+2MpqxtMRusSPxQ2yqQo7DMjzPAqJm+JHwKg==
+	bh=j+gbm0Z15tp8VKniuyUyyrqMzdRSHHdEh41Xgir5bIc=;
+	b=Q7YUgUrzKmOUyT65fUkz0/Xb/YWwkWk6coBbnM8bt+hVVBFsK3p/wqvx/AWNZ05FNg6g
+	 bmRIMyKfQwYS2LXtiR2aNz+Hxuro5+Mjgn8j3wCfqG2oi66rq9BV4BbXrpZ6nLyW/aAVi
+	 8EhZcxI5isVTBgYfjN9ECQjvgwsHwL1sze83tGEGTHD82CXtr6y6mMdAJuwvuQIG3UWFz
+	 FBHyF+XqozXKHn9VO1QEFIAqs8iRf7pW99+421piROvAo3lh2O/1yoN6EI0qX5kXYsRY8
+	 21kHy4vQbrv9nswN2BRhY/srDXpZLGfP3VTwvxGS+0Ee5XpQhhWXQ44QVelprMiZq9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rPcumr3h;
-	arc=none smtp.remote-ip=209.85.128.177
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b="M2ANc/UE";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83C21606A31D
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 16:56:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 83C21606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85B56606A32E;
+	Tue, 20 Oct 2026 17:31:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=rPcumr3h
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-8b05bf699easo30738747b3.2
-        for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 09:56:29 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=M2ANc/UE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC97E1F000C9;
+	Tue, 20 Oct 2026 17:31:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792515388; x=1793120188; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lJA6tKVLSd/rks8VATU4AwzUzgulNjgUJQKYEzoQbI0=;
-        b=rPcumr3hk92ul3zXknSP9ezvJXtbsOjBFUcexwd+d06SRbxRqchUGHCasG/ZKBsC8r
-         P+2in+A40BsBSmqyMsQKCF6Bg+UMhT1YHmuHxJ0ddDno/m4YI/1irGtzS5vbhx8R8BH8
-         j53tCE5oLzFxDGzTMIa58F/nuA/rP/QVeEua2FoCQrRTbwUgNKzyLLWncQtP6my2gAaw
-         D5uLE4WBc4k0qv9zL5RG2PC4zlFRWmUD7Ter0xbpFYV67h+g0scghhUVrHo1Y6Syl6fA
-         XLYiYPxE3TKTjcSdX42jVrkALtgMtAirKZHLx7YgKJYCHN81dZDenyXt+tXOq9K20SDG
-         BrJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792515388; x=1793120188;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=lJA6tKVLSd/rks8VATU4AwzUzgulNjgUJQKYEzoQbI0=;
-        b=rt+MzPRpmaJs0Ce5ylY6MbfpuMvJUonkSrnr/BkSfT22HQ+rVE3nxq+NZ2gZchFF89
-         H8D3Z0AqUzizn06nso2uXp3nP2+YZkNpseGEqzxtd9NnaX9BTSp5k9hGzpLrWeNM14xx
-         rP4b7b+3O5KqppMbIOYX2Tn4GdO6CIIHuJMNVOfJWEbA1YOTYLlJoW/chiPnzjFTssBJ
-         YaRs9OcDaFI9Lepfd4SiChpLE92FtJ5ADsit9V3V6trWohxYP9QEkVtC1qSXeG4Xb2HC
-         WHVw2ampLfvmRj9m+hrECMbEhVbIheBLGi+6q6EWKu7+Q0I38okMyEFVWdVU7Bbueat8
-         8W5g==
-X-Forwarded-Encrypted: i=1; AKwUvBxamDWd1uXCTSZssMOQR/c3onwaUSosYRoou6UzXYxKjpK6HzmRsRgnQVSiMHy6yhcz27LzY93B@vger.kernel.org
-X-Gm-Message-State: AFq9FYJfPad0F7r5MXKesqP1lyPlE0G8EqTCCng2jrNQ0tR43FzDReqW
-	P+GtRaQPWWay4zd/CCm9q3vCFxAev77SqSoxUiZlS00WUbDF4/J25DiD
-X-Gm-Gg: AYBFou0r/ROr3re4LWbTqYKtZaWtjvT9EUb3iHqSq/Nc33hok79TJimt01sJD4tzSd+
-	A36M6vYaoFhGyu3KHYcn0lkqxlEVW+3Q9mXg7raXIZ7zNlCpHJDPnar9xJa+K2Q7Nv33oLzBLw7
-	yzSjGKWKz5ZipzOySTsjLA3b0gYNpraGSjL4io3B/JxCBSULBrZcZzZMmrlORB0p3eMwvknRMC+
-	Dw9EU16AoLrZ7vedvd19XI1RU3RVnUAeIcJhS4NGKJIVLD8Xoqf5JU850jJ70itlKGJQPoNyqFn
-	39ejqIaRlnHCPoV0PhcPCxiD2wSauuwHGOkx8ttZJsbXH9m0eGM0QAgPaSzT0tQr0VkcXZ9+vkX
-	aZU84m/5I8T0H6INA5RUDXRem4M+C0JDB07NMlwtLw+O8VtriRNPxR+hVKWRMWXdsuP9GM/gbqa
-	GO44Gj3wqhRruzLib7ryfHfbaws+7vuQA6rTvfoannFqyCgqxbDwvVUR4Ue4vg9oJtDUACCRGYk
-	blpy/KF9msDcXaBIkAhRkfEvhQ3
-X-Received: by 2002:a05:690c:888:b0:873:17c9:b054 with SMTP id 00721157ae682-8b0f21690aemr36925147b3.21.1792515388537;
-        Tue, 20 Oct 2026 09:56:28 -0700 (PDT)
-Received: from localhost ([2a03:2880:10ff:8::])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b1300715cfsm549777b3.14.2026.10.20.09.56.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Oct 2026 09:56:28 -0700 (PDT)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: [PATCH] mm/memcontrol: publish null pointer before dropping css reference
-Date: Tue, 20 Oct 2026 09:56:26 -0700
-Message-ID: <20261020165627.1599959-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
+	d=linux-foundation.org; s=korg; t=1792517464;
+	bh=j+gbm0Z15tp8VKniuyUyyrqMzdRSHHdEh41Xgir5bIc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=M2ANc/UEwP+2XoIwwV7civxb/e+s55KN4SazeS3hJt7uXujlnErwVMFFF7GG0xfkU
+	 pNOkQVehGnI9FjPiObPRMlruDigQp2Mlh7g3ZLbaDjE3SMSDzzvMGSRCInsf3nDc7v
+	 3RIFNVjJVJwqb3nKKb6Xb7IH2DPm9Uz7GJ2vtYmg=
+Date: Tue, 20 Oct 2026 10:30:57 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Daehyeon Ko <4ncienth@gmail.com>
+Cc: muchun.song@linux.dev, osalvador@suse.de, david@kernel.org,
+ tj@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] mm/hugetlb_cgroup: prevent use-after-free during cgroup
+ offlining
+Message-Id: <20261020103057.8066217f6f6fc5b3ed84c90b@linux-foundation.org>
+In-Reply-To: <20261020100345.1677643-1-4ncienth@gmail.com>
+References: <20261020100345.1677643-1-4ncienth@gmail.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -99,62 +57,84 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-struct memcg_stock_pcp hold references to cgroups that it tracks to make
-sure that the memcg never gets freed with unaccounted charges still
-living in the stock. The cached stock can be cleared either via
-drain_stock() or consume_stock(), which drop the reference if the
-stock goes to 0, and then clears the pointer from the stock.
+On Tue, 20 Oct 2026 19:03:45 +0900 Daehyeon Ko <4ncienth@gmail.com> wrote:
 
-If that was the last reference, the memcg is freed after an RCU grace
-period, but this can happen while the pointer still points to the
-to-be-freed memcg. Then a reader that enters its read-side critical
-section after the grace period has started is not waited for, and then
-can dereference it after the memcg gets freed.
+> A normal hugetlb charge obtains the current task's hugetlb cgroup with
+> css_tryget(), charges its page counter, and drops the CSS reference before
+> the folio is committed under hugetlb_lock.
+> 
+> The task can be migrated while the allocation is in progress.  If the old
+> CSS is then offlined, its final active-folio scan can finish before the
+> charge becomes visible.  The allocation can subsequently charge that dying
+> CSS and commit its pointer to the folio.  Once the CSS is freed, uncharging
+> the folio accesses the freed hugetlb_cgroup, including its page counter and
+> per-node usage.
+> 
+> Keep the reference acquired by the charge until commit or cancellation.  At
+> commit time, while holding hugetlb_lock, move an uncommitted charge out of
+> each dying CSS to the first live ancestor.  The hierarchical charge already
+> includes every ancestor, so moving it only requires canceling each dying
+> CSS's local count.
+> 
+> This orders commit against the offline active-folio scan: either the scan
+> runs after commit and reparents the folio, or commit observes the dying CSS
+> after the scan and selects a live ancestor.  The retained reference also
+> keeps the originally selected hugetlb_cgroup alive through this decision.
+> Reservation charges retain their existing CSS lifetime and are not
+> reparented.
+> 
+> On an unmodified v7.3 kernel with a 128-page 2 MiB pool, a
+> capability-free uid 1000 allocator racing administrator rmdir reproduced
+> KASAN writes to a freed hugetlb_cgroup in three of three boots.  Controller
+> disable reproduced the same fault.  With this change, 5,000 rmdir rounds
+> with 1,075,055 successful faults and 2,000 controller-disable rounds with
+> 1,707,348 successful faults completed without KASAN, LOCKDEP, page-counter,
+> or refcount reports.
+> 
+> AI-assisted source review was used to identify the race and to help draft
+> the reproducer and fix.  The interleaving and the resulting allocation,
+> free, and use-after-free stacks were verified with tracefs and KASAN.
 
-In practice, this is very rare and I have not been able to reproduce
-the issue in my own testing.
+Thanks.  I ran this through my evolving reviewbot.  It liked the change
+and agreed with it.
 
-Switch the order of the reference drop and the publishing so that
-we first publish the NULL pointer, then drop the reference.
+One claim:
 
-This is based on a report from Sashiko, who found this pre-existing
-issue in my page_counter_stock series [1].
+>
+> ...
+>
+> @@ -419,15 +438,17 @@ static void __hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+>  					     struct hugetlb_cgroup *h_cg,
+>  					     bool rsvd)
+>  {
+> -	if (hugetlb_cgroup_disabled() || !h_cg)
+> +	if (!h_cg)
+>  		return;
+>  
+> -	page_counter_uncharge(__hugetlb_cgroup_counter_from_cgroup(h_cg, idx,
+> -								   rsvd),
+> -			      nr_pages);
+> +	if (!hugetlb_cgroup_disabled()) {
 
-[1] https://sashiko.dev/#/patchset/20260928192349.3432886-1-joshua.hahnjy%40gmail.com
+This test is unnecessary.  Once h_cg is non-NULL, a successful charge
+necessarily came from an enabled controller, and cgroup_disable= is a
+boot-time static-key setting.  Please just unconditionally call
+page_counter_uncharge() after the existing !h_cg check, followed by
+css_put().
 
-Fixes: e1a366be5cb4 ("mm: memcontrol: switch to rcu protection in drain_all_stock()")
-Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e7d7db5718f9a..a05d9a8baa1b6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2172,8 +2172,8 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 			stock_pages -= nr_pages;
- 			WRITE_ONCE(stock->nr_pages[i], stock_pages);
- 			if (!stock_pages) {
--				css_put(&memcg->css);
- 				WRITE_ONCE(stock->cached[i], NULL);
-+				css_put(&memcg->css);
- 			}
- 			ret = true;
- 		}
-@@ -2209,8 +2209,8 @@ static void drain_stock(struct memcg_stock_pcp *stock, int i)
- 		WRITE_ONCE(stock->nr_pages[i], 0);
- 	}
- 
--	css_put(&old->css);
- 	WRITE_ONCE(stock->cached[i], NULL);
-+	css_put(&old->css);
- }
- 
- static void drain_stock_fully(struct memcg_stock_pcp *stock)
--- 
-2.53.0-Meta
-
+> +		struct page_counter *counter;
+>  
+> -	if (rsvd)
+> -		css_put(&h_cg->css);
+> +		counter = __hugetlb_cgroup_counter_from_cgroup(h_cg, idx, rsvd);
+> +		page_counter_uncharge(counter, nr_pages);
+> +	}
+> +
+> +	css_put(&h_cg->css);
+>  }
+>  
+>  void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
