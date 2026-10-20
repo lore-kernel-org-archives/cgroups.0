@@ -1,92 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.44
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792468687;
-	b=3EEibH38m85yPDxLge091rVyTGtYtmlmyMVAyzKqJIdOYgBjn8fd7PeXX7vSwnPYdzp7
-	 3MLdXnyza+reoIPlwSih97XDLKYc54G3lzbOaHVVdl5ch54RDMdKfUn+9mIMDuKUjCeeZ
-	 kjf1pXUzkMuZO6fps5GhkViS78wlm2wCNEvz52KfDNMhDvKqpp3M8JC6gxN+FHmFM9cgK
-	 85Iu8Al0kLRRFapcnlvdCxPoP3LLmpaNdLFItI1Of2zt3gDz71CDsWMIXRdB+RpCCZJQW
-	 hS/o7Qw8TNPaXqOBW3ZQPHr364MJs3FS/xXNjj9vwFlkJyw7lZt3cabV8GBKk3o8Hmw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792468687;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.171
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792477341;
+	b=2w4Z//aoGzB5df58jV1nmTsMFayem20E3wTIhNjSV+XFvsZhwf1UJmmDpI4KQ10IHQJH
+	 Bpv+lYKeZ+N65dg7LwbUNEk+Ys+q9Pbk/Ls6lYxW/+22gQiYNr8hsov/F33m6rI0/GXjl
+	 SH3mvxbXNgIc7vKEdusPWj4TarW1auBKSY69N6jiJ+QnCS2SN2piyNh2qdPCrwAY0CezC
+	 AyPNn1kGFHDCuDUA/3FrLfgaBxZZlGcx2cqYoWTprLc1UyEQjBYsW7N97e8FQSXTyLGUf
+	 /AxyetZlX+Qs9tVHXbU570pZcKqlbcQNi8Cz4lbRM10t6ZS4FCShFwZI46DocwOJ/Eg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792477341;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=n7phiI5MOCuSreoAbHviRAlrFOddERLDGFoxihWgBaM=;
-	b=tmU7eS6axhocol/W45bqv8wL0f794muxgwhAfGCV6+JWVc8uS7dHhnY0qa0HuyI3IgOq
-	 dv29RXUfDSiXXy098gKuiliwsECFSXWO/Z3G+9ME1gq324340ymSuDs3hVu0PUWGkJHky
-	 1Wki3bV4hulKC4PP1jfkoAzWltg/tbyEuT2N6nbJbYmL7Yc6zBOvJhxruYZbnRG24Ho52
-	 3GuUnsGVnApatot7MMLpA1TeLy9U35r2+AJxt9Tmo/1SvceLFXFqMNhNO33Jg8jcKZvXu
-	 4ygradSSCPNaIjOIX8CxJGtMi3XtJWOX90WenFnK/ZbwFHk2Sz1KAWRvgXmuIhv0qxA==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=kf8/+k3Jjj7ru8eZKZwxf7K+ABa74mbZZPeMICUo+Y4=;
+	b=H+KrtDvLh43acQ17mJnyvRm/13bht9SdeP9wy/8tq7voFQkOs+iObgLnfWh6rMKxOi7H
+	 TPEYkSOwYxU31D+YffLNj60PIeqKUjFIvDd0YSSzCqYNXP4s/Wym4egWj8VAT4wCfvOEF
+	 8UmERQwAZuhtADPhAvQRi+lKNGTs8xHjLJRC77LEmxirja/p6Lqt6XOKH8ChZV7TC0Nme
+	 smufnnqTlng77Ie1HFfL1yfeCCCuX0JNnvGcl9EI/CAEfLn4AUJu9hzIDTffAoKCUB84V
+	 LDm7XzcwjtGWaeAl1UzOcOknnzXrqyruxSvD4cxXEJlZpRZGFeJZgz9MpRBOt2MdpRg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b="Qhed/2Do";
-	arc=none smtp.remote-ip=209.85.216.44
-Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=lKX2o7+H;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.214.171
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 378B9606A319
-	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 03:58:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 378B9606A319
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 884B4606A31D
+	for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 06:22:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 884B4606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Qhed/2Do
-Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3ab4178ee33so2100318a91.3
-        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 20:58:07 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=lKX2o7+H
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-2e98798cbddso11185865ad.0
+        for <cgroups@vger.kernel.org>; Mon, 19 Oct 2026 23:22:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792477341; cv=none;
+        d=google.com; s=arc-20260327;
+        b=NazGaDpDJ0lZlxOWWjTSS5jCEWI3IMD9jZQdhVfqJhMIsBQlEwPrswHTlr/Vta3JT+
+         NUNIbEbBYoSty/R5hriy7c4CAGWLI5lRZ1ZwcXRj0VuQe7PC2V01Xm7v421IJfQS492z
+         1+l2Z3NHH9IbDZqEXNys5vxaY2xi3t3AMSt3bnvKoymM6a/bEa/GrjVW4bGJPn6qOxuA
+         IeTlVRr5QxkfVEexRDIZGKLL2DsquGOkQUkJeuwBhpuJ2ZRVQIOHl1488OH7YB4d0/7C
+         ZE0/FL7jeZq3S8CxyYqtNBEwCUcHUSazMM/PfF7Qk9+GfPg7ONaL+nVvYIDaH0dq/xre
+         t+2Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=kf8/+k3Jjj7ru8eZKZwxf7K+ABa74mbZZPeMICUo+Y4=;
+        fh=J7lAvmWg220VPleO3xg6E7FIWfSUeibZh6Pgl+b+dJE=;
+        b=pScf2jvDC22lmrnyAaARqEx02ebRqcU3KIE8B6iKVMypGSsgqMVqCDLWvIOl5NwE+g
+         1aha3I8wVjbqToYZ7KbRspIVaMLQBNM01erCybskRck2fweISI9lqjSi38ong6PeejOD
+         VMQy2plaEUvVm487GXVrRmkJcsLkm0YrtqGsPwL/jsAZ8SyQL3iBy86zn0iYedvJbnns
+         JoHvwy2/xlmAe6QEOy2gtuIp9o068DOSY7ZGYw4faMI7CyNQVqBuVY5k2IlRSUS/ZvOk
+         l5d7EwCBNFt+CKLi0UAauanlDnv+WOt/SSgzIxYAtQ17iT1TlbSteWo+6zuoFxuWDkfY
+         DXfQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792468686; x=1793073486; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=n7phiI5MOCuSreoAbHviRAlrFOddERLDGFoxihWgBaM=;
-        b=Qhed/2Do9ugJEXNgKxu7Hm7bSamTvJz1kIX3kAef0kC0/YZommCRdCUhZToELUbO/f
-         ucrsQ0yUiKJEgRCaU6Pke3dG34JJRow44MW8fsJwSheyZaryevUqMtTxnmmZHN9a0ZfK
-         N0eco8ilLEaD22+U0FCGYmonSHUBCHQ9/Zp22T1R3OiUWm9Y3wFZIPE/wPGMty6vgSZf
-         tI4hCx4RsoyDbPQ3H6xO6Xv/IdMhHNsGLe4j8HM7Fr8GbeUFotxZTyahIxMxBR3HtMsw
-         2AOy1KQvS2BTF4jLAiRXcHigfhu+rpaGQDFVJUxohIzoHOhRJAAgXP7gjcfLhlqWC/L0
-         nARw==
+        d=gmail.com; s=20251104; t=1792477341; x=1793082141; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=kf8/+k3Jjj7ru8eZKZwxf7K+ABa74mbZZPeMICUo+Y4=;
+        b=lKX2o7+HuD5fpQzZNTLEVq9KL1e8Mg8z16cabHaSJ/2C7LS6z3N6JJwzDTah6U7qBI
+         0Lj4Nw1Z6+fnib8fx9+Q7HnXTwIWwK9PuO4Ap4RAkWDiDNOrml42b3GiPpLZ7uqQbsYm
+         2CWHNx7TTHt2PQdvvmwyLu6JL14GB2SIAM3kcTBbj7gXgc9FNj5+tctXSfSLVQhuQ8Av
+         Wjt1JUWa7uWleeCanSskhVMMuuU0Gpu544YbSCxqAF1tJH5nTQd2lquAcOtWdgTEpbL3
+         rWxG3PRAJVitBBMaUDBkGgKW7mWpMCzCIfVJDBTZ/TtIQUwdIa9PTmGbyArlFuSM8Yai
+         Zzmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792468686; x=1793073486;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=n7phiI5MOCuSreoAbHviRAlrFOddERLDGFoxihWgBaM=;
-        b=i+78JeIq3eyyTCOpuuxnYT588PF07hSlWM/A5i9DZ5804GdzalzZMYID8sSFXBKPGp
-         91ES578jwkWbv47Vd+iw+lVAhdvkfv35HzLTmOAjDQPDnP5ETnPWALN0JvYmdeVPkVi4
-         A9DwmI+TFrfER8KDCpj6erGJID+68iReI2bmZcpmHN3NK25A/n09C2iwaDz3ZvZkr5rt
-         H9AvUCS05IMNqXgrZJG+G6WsGk62l/fQJQW2bd176MKZH7mnxdA3cx007gZfeuWX3enY
-         Y6+Q+hm27spAoUvMUywkMVcURNEWnKGvaTAW+lxmGVshXvFsnKJ3Y7fuM5LhNuHdlV94
-         2shw==
-X-Forwarded-Encrypted: i=1; AKwUvBzBSViidV8Fu7lQHW9oAtiA8lZ/bEDvMr81WiqQbLkPAVGu8y83WSRLl8ewuLYk/BhqRnN0ZR0w@vger.kernel.org
-X-Gm-Message-State: AFq9FYIU2A6BKhOsAd2kNlgyskn9XTK80+0HotEZRxwUnoW5758pMn+M
-	qV6aJyCAqLYXDcx6VSekLqOrFIX9jwHtEDmFODyMriRnmowD7j7biZCN
-X-Gm-Gg: AYBFou2viD02/kl8cM+f7+ibGcQOdtOkGVv5N/1vzzpgaHbUxuo3mJaJPtPujTI9cTx
-	NLGgXfSMXfIn1gVkZZhhbzqYEpqfkW0oMfW1JasvZnE4D+grM/EeMy0Mw99B4OMMsT9j5ZFVoMh
-	zE/ehAO8F1nkmj5rKbLQOBoB8mAmLS95VI58apBjr5ezF0RC2uAD0C+lV7+RkOtLA2AdTvtIkRm
-	cWxE4ifUDDUqkcgv2uIo0/7YmrRiGOFJtAE7CtU2+2tlgahZrBtl0DxfYuTtVEPVI0uVlhvxBOy
-	4rHBBpErpjHkdTRaU+g8xhPDGO2EUox3sZVfAnCrRfn1ZcbWf9mtnZU0ZiU4OS1a5bRO3L0dKbL
-	mUBdOrkw2WiLqQRwLm+f6MQWgpAS3ud1NgWYVUnwJe3GJnwQUyBosZYN5vtpWIsa0dbyNYlSiqN
-	JcMMjt9icZ72MSnKed4sFrkhPOufLgfa2lRV4qr7QzwaZhbFmy2gIJNUstVFk/uI/jgEorAaDvl
-	GdAbnOv2ls=
-X-Received: by 2002:a17:90b:3b91:b0:3ac:8897:7ba3 with SMTP id 98e67ed59e1d1-3acef5dcc29mr7504914a91.62.1792468686375;
-        Mon, 19 Oct 2026 20:58:06 -0700 (PDT)
-Received: from ancienth-X870E-Nova-WiFi ([125.186.72.2])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ad60f90a6bsm1863509a91.13.2026.10.19.20.58.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Oct 2026 20:58:05 -0700 (PDT)
-From: Daehyeon Ko <4ncienth@gmail.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Koutny <mkoutny@suse.com>
-Cc: Yi Tao <escape@linux.alibaba.com>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] cgroup: serialize migrations of newly forked processes
-Date: Tue, 20 Oct 2026 12:57:59 +0900
-Message-ID: <20261020035759.3110170-1-4ncienth@gmail.com>
-X-Mailer: git-send-email 2.55.0
+        d=1e100.net; s=20260707; t=1792477341; x=1793082141;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=kf8/+k3Jjj7ru8eZKZwxf7K+ABa74mbZZPeMICUo+Y4=;
+        b=x7sX75/sO7CSjWAUqXmq0aE3lY3FfibxhxvvAv1EM3UPUXxIR+pzuQ0nmBowl6rmnQ
+         atId/yRorBSAwdArn4pDVnnA8s7EvNZuhUOkCBEgZiI7nGX3Gs6UCTM5n47rrQzJFSUf
+         6vhz6s8XK++fuWG6toqHFJ50BBLKPcvSL8mAEw8GadNxUtIVAQtjyrDVZFxjMato419A
+         UNzzXlShHSHZxFIDJT7YpvNqVyg8xWUt4uRFmEsGvcW1gi5pfnIv+n036bOWmJG5pzF2
+         +GfGhHquXvd9vnuxYWjLt/hGJEOEjcdzMr2xrixtUsep6dWUaE275GyjEgUte5p0h7NQ
+         k0LA==
+X-Forwarded-Encrypted: i=1; AKwUvByYbZQHgYNGHYTB4SRrjDOLq9SNDLBumaXYN78pBSpGB8ob1Yv3NiSkpvDCjB9q7qaLjdbsPn+S@vger.kernel.org
+X-Gm-Message-State: AFq9FYI5fqJXT8oSNDL91fNuGOMcArHr7T9+b2hF03mYxjOU08ZQ4Thp
+	gc+4HX8fD8Ik54SJo80z4twQxyQhSZ7T7CM3luShVTLYtU3sGp7WF7rYLlCA6RWgerL/MX3Qxwx
+	A2LE/eCBjaZvxlgtlo2EWeQ308INwQxA=
+X-Gm-Gg: AYBFou2dqpo8G6JXzltx6JTN7FXBg1RVY/Ts3g1Y35r2bZH2aGYOT4VGO3DiCIuUkeb
+	YcmBSIatv7S6TRNSQ/ubbrxm/DRxkwGL+ZpvWKgNJBTydLghbPxnS5kr6P7Uxm7qvXpO9FOLbNi
+	PzVj+QhXGR8E5huVQvMU4nTIEumjp4WOn2t98icZxaPSVt0yohsOED+cS1z+sjlyF/ixE43+n77
+	72B48Wfnxhz5/0+L14om0KY42OMKkEVgSn+4L0xQ/gDUGY10Lar2ttz9minxFR1eN9zbteBJFT5
+	8clMjRyeDLJJgmNv12UWhxYnSORAknhRhBJA/rSu48M8TGmkmPN3fKA=
+X-Received: by 2002:a17:902:ce81:b0:2e5:334f:f47e with SMTP id
+ d9443c01a7336-2e9a69ea07fmr86514295ad.21.1792477340861; Mon, 19 Oct 2026
+ 23:22:20 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -96,102 +103,101 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20261018-cgroup-kill-exited-leader-v1-0-c71ad94c20cc@gmail.com>
+ <20261018-cgroup-kill-exited-leader-v1-1-c71ad94c20cc@gmail.com> <atYTukAn0-7CAXmp@redhat.com>
+In-Reply-To: <atYTukAn0-7CAXmp@redhat.com>
+From: Kirill Kolyshkin <kolyshkin@gmail.com>
+Date: Mon, 19 Oct 2026 23:22:09 -0700
+X-Gm-Features: AclHuK9ygSdoDJEA1JRd9ZHGPjt0wCVb9_5HzGSf6_SYCV4LA_12hP3cAjxp2vw
+Message-ID: <CAGmPdrypQQnmE1iCTWS46c47P0puRsA0Z4jYnXFFnZ0Um7KJOQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] cgroup: fix cgroup.kill for exited thread group leader
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Serge Hallyn <serge@hallyn.com>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Christian Brauner <brauner@kernel.org>, 
+	Shuah Khan <shuah@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-With favordynmods enabled, a cgroup.procs migration takes the target
-threadgroup's cgroup_threadgroup_rwsem for writing. A process fork holds
-the forking threadgroup's semaphore for reading. These are different
-semaphores when fork creates a new process.
+On Mon, Oct 19, 2026 at 5:57=E2=80=AFAM Oleg Nesterov <oleg@redhat.com> wro=
+te:
+>
+> On 10/18, Kir Kolyshkin wrote:
+> >
+> > cgroup.kill does not work in case a process' thread group leader is gon=
+e
+> > but other threads are still running. This is because __cgroup_kill()
+> > only walks the thread group leaders and sends SIGKILL to each of them
+> > with send_sig(), which uses PIDTYPE_PID:
+> >
+> > 1. The exited leader is still listed by CSS_TASK_ITER_PROCS as long as
+> >    the process has live threads, but a signal directed at a single
+> >    exiting task never takes effect: complete_signal() does not look for
+> >    another thread to deliver it to, and __send_signal_locked() now drop=
+s
+> >    it altogether.  The process keeps running.
+> >
+> > 2. The live threads of such a process can be migrated to another cgroup
+> >    by writing any of their IDs to cgroup.procs, while the exited leader
+> >    stays behind.  The destination cgroup has no thread group leader to
+> >    iterate, so writing to its cgroup.kill does nothing at all.
+>
+> ...
+>
+> > Case 1 can be fixed by using do_send_sig_info(..., PIDTYPE_TGID) instea=
+d
+> > of send_sig(), so that the signal is taken by a live thread even if the
+> > task found by the iterator is exiting. Note it was pointed out by Eric
+> > in [1] while reviewing v2 of cgroup.kill patchset, and v3 was meant to
+> > switch to it, but the change was only made in cgroup_post_fork(),
+> > leaving __cgroup_kill() with send_sig().
+> >
+> > Case 2 can only be fixed by iterating over all threads, so this is what
+> > the fix also does. Once a thread group is being killed, its other
+> > threads are skipped since they already have a fatal signal pending.
+>
+> ...
+>
+> > --- a/kernel/cgroup/cgroup.c
+> > +++ b/kernel/cgroup/cgroup.c
+> > @@ -4289,7 +4289,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
+> >       cgrp->kill_seq++;
+> >       spin_unlock_irq(&css_set_lock);
+> >
+> > -     css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS | CSS_TASK_I=
+TER_THREADED, &it);
+> > +     css_task_iter_start(&cgrp->self, CSS_TASK_ITER_THREADED, &it);
+>
+> I guess this change alone is enough to fix both problems?
 
-copy_process() publishes the child's PID before cgroup_post_fork() links
-the child to its css_set. A writer can find the child in that interval,
-take its uncontended semaphore, and migrate it while child->cgroups still
-points to init_css_set and child->cg_list is empty. Migration links the
-node into init_css_set.mg_tasks. cgroup_post_fork() then adds the same
-node to the intended css_set as though it were unlinked, corrupting both
-task lists and their css_set ownership.
+Correct; my initial version only had this change, and it fixes
+both issues.
 
-This regresses the fork/migration race fixed by commit b12b533fa523
-("cgroups: add lock for child->cgroups in cgroup_post_fork()") and
-restored again in 2012 after the lock had been removed. The old task_lock
-protection was later superseded by global css_set and cgroup threadgroup
-locking. The change identified by the Fixes tag narrowed only the migration
-side back to a per-threadgroup lock, recreating the different-process
-exclusion failure.
+>
+> But even if I am right,
+>
+> > @@ -4299,7 +4299,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
+> >               if (__fatal_signal_pending(task))
+> >                       continue;
+> >
+> > -             send_sig(SIGKILL, task, 0);
+> > +             do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, task, PIDTYPE_=
+TGID);
+>
+> I agree that do_send_sig_info(PIDTYPE_TGID) makes more sense.
 
-Take the new threadgroup's semaphore for reading before the child becomes
-visible and hold it through cgroup_post_fork(). Use a nested lock subclass
-because fork already holds the parent's semaphore. CLONE_THREAD children
-share the parent's signal_struct and remain covered by the existing lock.
-Migrations of unrelated, fully initialized threadgroups remain concurrent.
+Indeed, I added it for "making sense" (rather than for fixing the
+issue) after reading through the initial cgroup.kill patchset reviews.
+Eric flagged both places in v2, but only one was fixed in v3.
 
-An AI coding assistant was used to identify and reproduce the regression
-and to develop and test this fix.
-
-Fixes: 0568f89d4fb8 ("cgroup: replace global percpu_rwsem with per threadgroup resem when writing to cgroup.procs")
-Cc: stable@vger.kernel.org # 6.18+
-Signed-off-by: Daehyeon Ko <4ncienth@gmail.com>
----
- kernel/cgroup/cgroup.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index f534c0473a469..faccc793325e5 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6880,6 +6880,31 @@ static struct cgroup *cgroup_get_from_file(struct file *f)
- 	return cgrp;
- }
- 
-+/*
-+ * A new threadgroup gets its own cgroup_threadgroup_rwsem.  Once its PID is
-+ * visible, a cgroup.procs writer can find the child and lock that rwsem even
-+ * though cgroup_post_fork() has not linked the child to its css_set yet.
-+ *
-+ * cgroup_can_fork() already holds the global read lock, which keeps
-+ * cgroup_enable_per_threadgroup_rwsem stable.  Lock the child's rwsem as a
-+ * nested instance until cgroup_post_fork() finishes.  Threads share their
-+ * parent's signal_struct and are covered by the existing read lock.
-+ */
-+static void cgroup_fork_child_lock(struct task_struct *child)
-+{
-+	if (cgroup_enable_per_threadgroup_rwsem &&
-+	    child->signal != current->signal)
-+		down_read_nested(&child->signal->cgroup_threadgroup_rwsem,
-+				 SINGLE_DEPTH_NESTING);
-+}
-+
-+static void cgroup_fork_child_unlock(struct task_struct *child)
-+{
-+	if (cgroup_enable_per_threadgroup_rwsem &&
-+	    child->signal != current->signal)
-+		up_read(&child->signal->cgroup_threadgroup_rwsem);
-+}
-+
- /**
-  * cgroup_css_set_fork - find or create a css_set for a child process
-  * @kargs: the arguments passed to create the child process
-@@ -7045,6 +7070,7 @@ int cgroup_can_fork(struct task_struct *child, struct kernel_clone_args *kargs)
- 			goto out_revert;
- 	} while_each_subsys_mask();
- 
-+	cgroup_fork_child_lock(child);
- 	return 0;
- 
- out_revert:
-@@ -7079,6 +7105,7 @@ void cgroup_cancel_fork(struct task_struct *child,
- 		if (ss->cancel_fork)
- 			ss->cancel_fork(child, kargs->cset);
- 
-+	cgroup_fork_child_unlock(child);
- 	cgroup_css_set_put_fork(kargs);
- }
- 
-@@ -7176,6 +7203,7 @@ void cgroup_post_fork(struct task_struct *child,
- 	if (unlikely(kill))
- 		do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, child, PIDTYPE_TGID);
- 
-+	cgroup_fork_child_unlock(child);
- 	cgroup_css_set_put_fork(kargs);
- }
- 
+>
+> Acked-by: Oleg Nesterov <oleg@redhat.com>
+>
+>
+> Either way, I am not sure about SEND_SIG_NOINFO. Perhaps __cgroup_kill()
+> should use SEND_SIG_PRIV? I dunno.
+>
+> Oleg.
+>
