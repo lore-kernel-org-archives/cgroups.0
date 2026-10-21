@@ -1,70 +1,70 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792597436;
-	b=nzaF+AknaMQvpBDhFUF1C/L/FxOGNRRudSuQkOrcs9RW87UoVqO0oLqPFQ/6/VmGzwr4
-	 pUS7FcZAq9K7LpEjaEifCibkQAba6Oth/pYJllJnLPVZF4VXA38IhweBfONC7i5GOy77q
-	 jbCrm3bByaAaOUxR3PdYarZOIjRUK3gHkS6+R0UikXbjNslIR1kirB1sRrsAUsbbwSSBg
-	 YVuyv2EBU7wJ4XDLMotwGsBDRqB1eK+hHf/AsQtD/sOlWunSrJ38WeLqNV8mZfTiZUoWD
-	 2v8GeIaE57dMDnOIm05L9NKlBxn1g8wkjorcunA/76tubiA8r98j+pPUpFl563hNt5Q==
+	t=1792597443;
+	b=NO2a09+rtA0bnRamI35SYNsozD4VJrR+Af0EWqHN0uQZRYjJlMv49ghr0mNpFb+jwpEG
+	 OvOP5WM5+AQW+WoRZy7/5HWeAblKmxhxg1WVERNaAfD9c5R4NsqS+DdqTQUt1CCDpdHfz
+	 OWlcHKwGeLkKZhpiZYgpnNfZyKBJcV/whXu0LivK5jfe0edX4NiCXYKPur/TH0OIz/QWe
+	 8PE9z6eH/rrs0P2a4gG5Eh8215hFtYOUKvb4E3xmztvxT8vj7pXyg6VwUfKOgQ/8tSSE3
+	 zAoFgIJrmEUn6baQHk/5HKSGSSB+jKWeYUMmwGfXw/16lBS1u8uexLzNeDXsNZpIOKA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792597436;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792597443;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:From:Date:Subject:
 	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
 	 References:In-Reply-To:To:Cc:X-Developer-Signature:X-Developer-Key:
 	 X-Scanned-By;
-	bh=yivnWKlz59x6cs0+Psl8GkA/e2tPRya8pm53pLnt02s=;
-	b=0Fbe0PrIzlqT5I7VRzaU7XXkdDCNhlN6qG9FCM4q1wYNiPwCkQ7vBhR8cmobjIT05lYl
-	 LYkBzN0Cs5kQw2Brbnfwh5DMy8odrmsiuz6wi9K69uOXv0P2rjnvRDuyTY1DUnxgiK042
-	 DdB7s3d1Xymx9DvrM1vUw4VZSrMjn/bvpp81dlWNAZDxaQ7Yt3+2zOXa7rYbKqlDvPcY+
-	 qY+aOH7/kOeoIR6q1Es8ZTHnGDcSbRmMkTBXOanSQH3KCYMhU3ir8oVQQlea0mW2KQ13I
-	 np9P9aUpUUKrS3YjIh1SOISZ50MuqGwcWynNz8YF/1reeFj12xpWROZIxSBVfPY5GUQ==
+	bh=RjGOYRUf0Y+B9ZDhIJSD2m7RsQOzRHJCpxoMzZ6vguY=;
+	b=tdZ7ZzWUQTWvKMmd94ILK+39XY/kJHjgBHWFWzKsoHyglecpKO1ZvFKN0YSTf5M8fBAc
+	 TJuE80Z2uqiQ5gUkWxk3e8VYAEgAs1QSvnU2JIdOSqm8AZ0Vh9Owb/6nSEgKVLvyq8CUB
+	 JR7eF4/q7lelvXoxNMHgV5Tmou/fls78xVMiTIMCFFVp1/+oYmzy20BXtK4QWHYRmQUZb
+	 /uLBLs+fcM/5OdqW75j6620k3eY/jX8j76hwYApyiuw4kE8FWe93plTEZSIMwDLD295K4
+	 OjwFk1qb/8WeyavSaXT9CG1Pw1TkhEzfhtC4OI4jcji9i+rjhkxAhF3qhPCSDdx9kVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="YEZX/mNK";
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="Pa/FqvJB";
 	arc=none smtp.remote-ip=170.10.133.124
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E8E1606C076
-	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 15:43:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0E8E1606C076
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3693D606ACA6
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 15:44:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3693D606ACA6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YEZX/mNK
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Pa/FqvJB
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792597434;
+	s=mimecast20190719; t=1792597441;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=yivnWKlz59x6cs0+Psl8GkA/e2tPRya8pm53pLnt02s=;
-	b=YEZX/mNKSXPsGNta53DSfuv7Lyloe1DmndwbjsWXeGo3Tdsb+YMtSGcxacWmYFPHH8S3vt
-	tEzASiPlzu3IXxyXKhymn9RyPS35PZkxeLP8K75AG77D53gofuOFvNmiAhBQVFVksbpChL
-	ZwNqmwrGRwoPGalo8Rm97hU+U37/pvQ=
+	bh=RjGOYRUf0Y+B9ZDhIJSD2m7RsQOzRHJCpxoMzZ6vguY=;
+	b=Pa/FqvJB8rsZrZt3VRN2pYAlgB8sSuIrwYCD1LjJf4x4lN6yj4sM6AjcwJQWiNWQrMTlCW
+	jTS19tEXhlL9Bgu15E6ehiKdKRkb/t3IAkC2udZJrQXV7FPPYqQgFSyEdShLWbzuaCFNfb
+	juE14W/RqHBx/CLCZvYz/vvbzFAtNiQ=
 Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-278-kFgZa8WqNu6UlFh5OXytVA-1; Wed,
- 21 Oct 2026 15:43:49 +0000
-X-MC-Unique: kFgZa8WqNu6UlFh5OXytVA-1
-X-Mimecast-MFC-AGG-ID: kFgZa8WqNu6UlFh5OXytVA_1792597425
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-82-UOqZC02GNeeaQLFHj3gErg-1; Wed,
+ 21 Oct 2026 11:43:57 -0400
+X-MC-Unique: UOqZC02GNeeaQLFHj3gErg-1
+X-Mimecast-MFC-AGG-ID: UOqZC02GNeeaQLFHj3gErg_1792597433
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B4A6D18007EA;
-	Wed, 21 Oct 2026 15:43:45 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 619E8180034A;
+	Wed, 21 Oct 2026 15:43:53 +0000 (UTC)
 Received: from aesteve-thinkpadp1gen8.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8CD0F1800480;
-	Wed, 21 Oct 2026 15:43:38 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1DADB18005B7;
+	Wed, 21 Oct 2026 15:43:45 +0000 (UTC)
 From: Albert Esteve <aesteve@redhat.com>
-Date: Wed, 21 Oct 2026 17:42:28 +0200
-Subject: [PATCH RFC v2 7/8] dma-buf: transfer memcg charges via
- DMA_BUF_IOCTL_XFER_CHARGE
+Date: Wed, 21 Oct 2026 17:42:29 +0200
+Subject: [PATCH RFC v2 8/8] selftests/dmabuf-heaps: Add dma-buf memcg
+ accounting tests
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -76,7 +76,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261021-v2_20230123_tjmercier_google_com-v2-7-ef6ee2dd8c5c@redhat.com>
+Message-Id: <20261021-v2_20230123_tjmercier_google_com-v2-8-ef6ee2dd8c5c@redhat.com>
 References: <20261021-v2_20230123_tjmercier_google_com-v2-0-ef6ee2dd8c5c@redhat.com>
 In-Reply-To: <20261021-v2_20230123_tjmercier_google_com-v2-0-ef6ee2dd8c5c@redhat.com>
 To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
@@ -102,262 +102,743 @@ Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
  linux-mm@kvack.org, linux-security-module@vger.kernel.org, 
  selinux@vger.kernel.org, linux-kselftest@vger.kernel.org, 
  Albert Esteve <aesteve@redhat.com>, mripard@kernel.org, echanude@redhat.com
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1792597359; l=7983;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1792597359; l=19784;
  i=aesteve@redhat.com; s=20260827; h=from:subject:message-id;
- bh=6CVz6Ypa61I1rY340Fklr//PmqMfRi7+C2jjYxF6gY4=;
- b=5jqGdMgXXWqMcs84v94MWLjq/VK0w+y7HvI2vV7AByEIyiHBgGR61ui54Jcdd6u2wNeats76b
- zslGecqIybaAJNM8Xuzx48/EdDpTKdieuKEF5K10zuBd3tPe/bjDXB7
+ bh=HxfkVP8GLBe8y0t/RSIZ/YKMr+ptfQb+slP9wFk4nRc=;
+ b=Rd/cbLytLGJKMcguCwfcVrN8HGihF0MnFMVhe64tLoTz646HHpwwc+j3ahMYE3sbWz9vyzXKo
+ l5vN8irFBYKCk2ZZiEqLTOTch2WrEpXxsSL+COTqcemYgiXdn857+nq
 X-Developer-Key: i=aesteve@redhat.com; a=ed25519;
  pk=zI2RBeZgocwYm3AkJW4CtjoJnKoDZrfBl1xe5Ed6h+U=
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-dma-heap already supports charging a specific cgroup at allocation
-time via charge_fd in DMA_HEAP_IOCTL_ALLOC. However, dma-bufs can
-originate from any exporter (DRM, V4L2, etc.), and the allocator may
-not know the final owner at allocation time.
+Add tests for the new charge_fd field in struct
+dma_heap_allocation_data.
 
-Add DMA_BUF_IOCTL_XFER_CHARGE to transfer a dma-buf's memcg charge
-to a different cgroup after allocation. The target is identified by
-charge_fd, which may be a cgroupfd or a pidfd.
+When the charge_fd feature is absent (unpatched kernel),
+the probe in pidfd_alloc_supported() detects this and the
+tests are skipped gracefully.
 
-The transfer charges the new cgroup before uncharging the old one,
-preserving the original charge on failure. An atomic cmpxchg on
-dmabuf->memcg prevents races with concurrent transfers.
+Add vmtest.sh similar to other subsystem suites, to orchestrate
+building the selftests (optionally with a freshly compiled kernel)
+inside a virtme-ng VM, so the tests can be run without modifying
+the host system. Add a config fragment with required Kconfig symbols.
 
-Usage example:
-  int cg_fd = open("/sys/fs/cgroup/clients/app1", O_RDONLY | O_DIRECTORY);
+Also add test_memcg_dmabuf() to the existing test_memcontrol suite
+to verify end-to-end cross-cgroup accounting: a parent process opens
+a pidfd for a child in a separate cgroup, allocates a dma-buf via
+DMA_HEAP_IOCTL_ALLOC with that pidfd, and asserts that memory.stat
+dmabuf in the child's cgroup reflects the allocation. If the dmabuf
+key is missing (unpatched kernel) or /dev/dma_heap/system is absent,
+the test is skipped.
 
-  struct dma_buf_transfer_charge xfer = {
-      .charge_fd = cg_fd,
-  };
-  ioctl(dmabuf_fd, DMA_BUF_IOCTL_XFER_CHARGE, &xfer);
-  /* charge now on app1's cgroup */
-  close(cg_fd);
-
+Assisted-by: LLM
 Signed-off-by: Albert Esteve <aesteve@redhat.com>
 ---
- drivers/dma-buf/dma-buf.c    | 77 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/memcontrol.h   |  9 ++++++
- include/uapi/linux/dma-buf.h | 26 +++++++++++++++
- mm/memcontrol.c              | 40 +++++++++++++++++++++++
- 4 files changed, 152 insertions(+)
+ tools/testing/selftests/cgroup/Makefile            |   2 +-
+ tools/testing/selftests/cgroup/test_memcontrol.c   | 145 +++++++++++++-
+ tools/testing/selftests/dmabuf-heaps/config        |   1 +
+ tools/testing/selftests/dmabuf-heaps/dmabuf-heap.c | 222 ++++++++++++++++++++-
+ tools/testing/selftests/dmabuf-heaps/vmtest.sh     | 205 +++++++++++++++++++
+ 5 files changed, 571 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-index f31f49ebd0af..7fa607d9bf65 100644
---- a/drivers/dma-buf/dma-buf.c
-+++ b/drivers/dma-buf/dma-buf.c
-@@ -540,6 +540,80 @@ static long dma_buf_import_sync_file(struct dma_buf *dmabuf,
- }
- #endif
+diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+index e01584c2189a..9edfc9f1de5c 100644
+--- a/tools/testing/selftests/cgroup/Makefile
++++ b/tools/testing/selftests/cgroup/Makefile
+@@ -1,5 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0
+-CFLAGS += -Wall -pthread
++CFLAGS += -Wall -pthread $(KHDR_INCLUDES)
  
-+static long dma_buf_xfer_charge(struct dma_buf *dmabuf,
-+				const void __user *user_data)
+ all: ${HELPER_PROGS}
+ 
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 0ed82347044e..51eb60e7cdd4 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -19,9 +19,17 @@
+ #include <errno.h>
+ #include <sys/mman.h>
+ 
++#include <linux/dma-heap.h>
++#include <signal.h>
++#include <sys/ioctl.h>
++
++#include "../pidfd/pidfd.h"
+ #include "kselftest.h"
+ #include "cgroup_util.h"
+ 
++#define DMA_HEAP_SYSTEM		"/dev/dma_heap/system"
++#define ONE_MEG			(1024 * 1024)
++
+ #define MEMCG_SOCKSTAT_WAIT_RETRIES        30
+ 
+ static bool has_localevents;
+@@ -1764,6 +1772,125 @@ static int test_memcg_inotify_delete_dir(const char *root)
+ 	return ret;
+ }
+ 
++static int memcg_dmabuf_child(const char *cgroup, void *arg)
 +{
-+	struct cgroup *cgrp;
-+	struct cgroup_subsys_state *css;
-+	struct dma_buf_transfer_charge arg;
-+	struct mem_cgroup *memcg;
-+	struct task_struct *task;
-+	const struct cred *tcred;
-+	unsigned int pidfd_flags;
-+	int ret = 0;
-+
-+	if (copy_from_user(&arg, user_data, sizeof(arg)))
-+		return -EFAULT;
-+
-+	if (!IS_ENABLED(CONFIG_MEMCG))
-+		return 0;
-+
-+	if (arg.__padding != 0)
-+		return -EINVAL;
-+
-+	cgrp = cgroup_get_from_fd(arg.charge_fd);
-+	if (!IS_ERR(cgrp)) {
-+		/* charge_fd is a cgroupfd */
-+		rcu_read_lock();
-+		css = cgroup_css(cgrp, &memory_cgrp_subsys);
-+		if (!css || !css_tryget_online(css)) {
-+			rcu_read_unlock();
-+			cgroup_put(cgrp);
-+			return -ENOENT;
-+		}
-+
-+		memcg = mem_cgroup_from_css(css);
-+		rcu_read_unlock();
-+
-+		ret = security_dma_buf_charge_cgroup(current_cred(), cgrp);
-+		cgroup_put(cgrp);
-+		if (ret) {
-+			mem_cgroup_put(memcg);
-+			return ret;
-+		}
-+	} else {
-+		/* charge_fd is a pidfd  */
-+		task = pidfd_get_task(arg.charge_fd, &pidfd_flags);
-+		if (IS_ERR(task))
-+			return PTR_ERR(task);
-+
-+		tcred = get_task_cred(task);
-+		ret = security_dma_buf_charge_task(current_cred(), tcred);
-+		put_cred(tcred);
-+		if (ret) {
-+			put_task_struct(task);
-+			return ret;
-+		}
-+
-+		memcg = get_mem_cgroup_from_mm(task->mm);
-+		put_task_struct(task);
-+	}
-+
-+	if (dmabuf->memcg == memcg)
-+		goto skip_transfer;
-+
-+	if (!mem_cgroup_transfer_dmabuf_charge(dmabuf, memcg)) {
-+		ret = -ENOMEM;
-+		goto skip_transfer;
-+	}
-+
++	pause();
 +	return 0;
++}
 +
-+skip_transfer:
-+	mem_cgroup_put(memcg);
++/*
++ * This test allocates a dma-buf via DMA_HEAP_IOCTL_ALLOC with a pidfd
++ * pointing to a child process in a separate cgroup, then checks that
++ * memory.stat[dmabuf] in the child's cgroup rises by the allocation size
++ * and returns to zero after the buffer fd is closed.
++ */
++static int test_memcg_dmabuf(const char *root)
++{
++	char *parent = NULL, *child_cg = NULL;
++	int ret = KSFT_FAIL;
++	int heap_fd = -1, dmabuf_fd = -1, pidfd = -1;
++	pid_t child_pid;
++	int child_status;
++	long dmabuf_stat;
++	struct dma_heap_allocation_data alloc = {
++		.len      = ONE_MEG,
++		.fd_flags = O_RDWR | O_CLOEXEC,
++	};
++
++	if (access(DMA_HEAP_SYSTEM, R_OK | W_OK)) {
++		ret = KSFT_SKIP;
++		goto cleanup;
++	}
++
++	parent = cg_name(root, "dmabuf_memcg_test");
++	if (!parent)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup_parent;
++
++	if (cg_write(parent, "cgroup.subtree_control", "+memory"))
++		goto cleanup_parent;
++
++	child_cg = cg_name(parent, "child");
++	if (!child_cg)
++		goto cleanup_parent;
++
++	if (cg_create(child_cg))
++		goto cleanup_parent;
++
++	child_pid = cg_run_nowait(child_cg, memcg_dmabuf_child, NULL);
++	if (child_pid < 0)
++		goto cleanup_child;
++
++	if (cg_wait_for_proc_count(child_cg, 1))
++		goto cleanup_kill;
++
++	pidfd = sys_pidfd_open(child_pid, 0);
++	if (pidfd < 0) {
++		ret = KSFT_SKIP;
++		goto cleanup_kill;
++	}
++
++	heap_fd = open(DMA_HEAP_SYSTEM, O_RDWR);
++	if (heap_fd < 0) {
++		ret = KSFT_SKIP;
++		goto cleanup_pidfd;
++	}
++
++	alloc.charge_fd = (__u32)pidfd;
++	if (ioctl(heap_fd, DMA_HEAP_IOCTL_ALLOC, &alloc) < 0)
++		goto cleanup_heap;
++	dmabuf_fd = (int)alloc.fd;
++
++	dmabuf_stat = cg_read_key_long(child_cg, "memory.stat", "dmabuf ");
++	if (dmabuf_stat == -1) {
++		ret = KSFT_SKIP;
++		goto cleanup_dmabuf;
++	}
++	if (dmabuf_stat != ONE_MEG)
++		dmabuf_stat = cg_read_key_long_poll(child_cg, "memory.stat",
++						    "dmabuf ", ONE_MEG,
++						    15, 200000);
++	if (dmabuf_stat != ONE_MEG) {
++		fprintf(stderr, "Expected dmabuf stat %d, got %ld\n",
++			ONE_MEG, dmabuf_stat);
++		goto cleanup_dmabuf;
++	}
++
++	close(dmabuf_fd);
++	dmabuf_fd = -1;
++
++	dmabuf_stat = cg_read_key_long_poll(child_cg, "memory.stat",
++					    "dmabuf ", 0, 15, 200000);
++	if (dmabuf_stat != 0) {
++		fprintf(stderr, "Expected dmabuf stat 0 after close, got %ld\n",
++			dmabuf_stat);
++		goto cleanup_heap;
++	}
++
++	ret = KSFT_PASS;
++
++cleanup_dmabuf:
++	if (dmabuf_fd >= 0)
++		close(dmabuf_fd);
++cleanup_heap:
++	close(heap_fd);
++cleanup_pidfd:
++	close(pidfd);
++cleanup_kill:
++	kill(child_pid, SIGTERM);
++	waitpid(child_pid, &child_status, 0);
++cleanup_child:
++	cg_destroy(child_cg);
++	free(child_cg);
++cleanup_parent:
++	cg_destroy(parent);
++	free(parent);
++cleanup:
 +	return ret;
 +}
 +
- static long dma_buf_ioctl(struct file *file,
- 			  unsigned int cmd, unsigned long arg)
- {
-@@ -590,6 +664,9 @@ static long dma_buf_ioctl(struct file *file,
- 		return dma_buf_import_sync_file(dmabuf, (const void __user *)arg);
- #endif
- 
-+	case DMA_BUF_IOCTL_XFER_CHARGE:
-+		return dma_buf_xfer_charge(dmabuf, (const void __user *)arg);
-+
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index aa08fbb0c26c..3a6acfda1423 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -674,6 +674,9 @@ int mem_cgroup_swapin_charge_folio(struct folio *folio, unsigned short id,
- bool mem_cgroup_charge_dmabuf(struct dma_buf *dmabuf, struct mem_cgroup *memcg,
- 			      gfp_t gfp_mask);
- 
-+bool mem_cgroup_transfer_dmabuf_charge(struct dma_buf *dmabuf,
-+				       struct mem_cgroup *new_memcg);
-+
- void __mem_cgroup_uncharge(struct folio *folio);
- 
- /**
-@@ -1183,6 +1186,12 @@ static inline bool mem_cgroup_charge_dmabuf(struct dma_buf *dmabuf,
- 	return true;
- }
- 
-+static inline bool mem_cgroup_transfer_dmabuf_charge(struct dma_buf *dmabuf,
-+						     struct mem_cgroup *new_memcg)
-+{
-+	return true;
-+}
-+
- static inline void mem_cgroup_uncharge(struct folio *folio)
- {
- }
-diff --git a/include/uapi/linux/dma-buf.h b/include/uapi/linux/dma-buf.h
-index e827c9d20c5d..4970a7b8e08e 100644
---- a/include/uapi/linux/dma-buf.h
-+++ b/include/uapi/linux/dma-buf.h
-@@ -168,6 +168,31 @@ struct dma_buf_import_sync_file {
- 	__s32 fd;
+ #define T(x) { x, #x }
+ struct memcg_test {
+ 	int (*fn)(const char *root);
+@@ -1785,13 +1912,18 @@ struct memcg_test {
+ 	T(test_memcg_oom_group_score_events),
+ 	T(test_memcg_inotify_delete_file),
+ 	T(test_memcg_inotify_delete_dir),
++	T(test_memcg_dmabuf),
  };
+ #undef T
  
-+/**
-+ * struct dma_buf_transfer_charge - Transfer a dma-buf's memcg charge
-+ *
-+ * Any holder of a dma-buf file descriptor can perform a
-+ * DMA_BUF_IOCTL_XFER_CHARGE to attribute the buffer's memory
-+ * cost to a specific cgroup, or move it from one cgroup to
-+ * another.  The ioctl charges the new cgroup before uncharging
-+ * the old one atomically.  On failure the original charge is
-+ * preserved.  If the buffer has no existing charge, a new
-+ * charge is established.
-+ */
-+struct dma_buf_transfer_charge {
-+	/**
-+	 * @charge_fd: File descriptor identifying the target cgroup.
-+	 *
-+	 * May be either a pidfd, in which case the charge moves to the
-+	 * memory cgroup of the referenced process, or a cgroupfd obtained
-+	 * by opening a cgroup v2 directory, in which case the charge moves
-+	 * directly to that cgroup's memory controller.
-+	 */
-+	__u32 charge_fd;
-+	/** @__padding: Reserved, must be zero */
-+	__u32 __padding;
-+};
+ int main(int argc, char **argv)
+ {
+ 	char root[PATH_MAX];
+-	int i, proc_status;
++	int i, proc_status, count = ARRAY_SIZE(tests);
++	const char *filter = NULL;
 +
- #define DMA_BUF_BASE		'b'
- #define DMA_BUF_IOCTL_SYNC	_IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
++	if (argc > 1)
++		filter = argv[1];
  
-@@ -179,5 +204,6 @@ struct dma_buf_import_sync_file {
- #define DMA_BUF_SET_NAME_B	_IOW(DMA_BUF_BASE, 1, __u64)
- #define DMA_BUF_IOCTL_EXPORT_SYNC_FILE	_IOWR(DMA_BUF_BASE, 2, struct dma_buf_export_sync_file)
- #define DMA_BUF_IOCTL_IMPORT_SYNC_FILE	_IOW(DMA_BUF_BASE, 3, struct dma_buf_import_sync_file)
-+#define DMA_BUF_IOCTL_XFER_CHARGE	_IOW(DMA_BUF_BASE, 4, struct dma_buf_transfer_charge)
+ 	page_size = sysconf(_SC_PAGE_SIZE);
+ 	if (page_size <= 0)
+@@ -1822,8 +1954,17 @@ int main(int argc, char **argv)
+ 		ksft_exit_skip("Failed to query cgroup mount option\n");
+ 	has_localevents = proc_status;
  
- #endif
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e94222237d31..d994a4b2d35e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5688,6 +5688,46 @@ bool mem_cgroup_charge_dmabuf(struct dma_buf *dmabuf, struct mem_cgroup *memcg,
- 	return true;
- }
- 
-+/**
-+ * mem_cgroup_transfer_dmabuf_charge - move a dma-buf charge
-+ * @dmabuf: buffer to transfer charge
-+ * @new_memcg: target memcg; caller must hold a reference
-+ *
-+ * Transfers the charge for @dmabuf to @new_memcg and, on
-+ * success, stores @new_memcg in @dmabuf->memcg.
-+ * Returns %true on success, %false if the charge against @new_memcg
-+ * failed or a concurrent transfer raced on @dmabuf->memcg.
-+ * On failure the caller retains its reference to @new_memcg.
-+ */
-+bool mem_cgroup_transfer_dmabuf_charge(struct dma_buf *dmabuf,
-+				       struct mem_cgroup *new_memcg)
-+{
-+	struct mem_cgroup *old_memcg = READ_ONCE(dmabuf->memcg);
-+	unsigned int nr_pages = PAGE_ALIGN(dmabuf->size) >> PAGE_SHIFT;
-+
-+	if (!mem_cgroup_disabled() && try_charge(new_memcg, GFP_KERNEL, nr_pages))
-+		return false;
-+
-+	if (cmpxchg(&dmabuf->memcg, old_memcg, new_memcg) != old_memcg) {
-+		if (!mem_cgroup_is_root(new_memcg))
-+			refill_stock(new_memcg, nr_pages);
-+		return false;
+-	ksft_set_plan(ARRAY_SIZE(tests));
++	if (filter) {
++		count = 0;
++		for (i = 0; i < ARRAY_SIZE(tests); i++) {
++			if (!strcmp(tests[i].name, filter))
++				count++;
++		}
 +	}
++	ksft_set_plan(count);
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
++		if (filter && strcmp(tests[i].name, filter))
++			continue;
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+ 			ksft_test_result_pass("%s\n", tests[i].name);
+diff --git a/tools/testing/selftests/dmabuf-heaps/config b/tools/testing/selftests/dmabuf-heaps/config
+index be091f1cdfa0..94c8f33b71a2 100644
+--- a/tools/testing/selftests/dmabuf-heaps/config
++++ b/tools/testing/selftests/dmabuf-heaps/config
+@@ -1,3 +1,4 @@
++CONFIG_MEMCG=y
+ CONFIG_DMABUF_HEAPS=y
+ CONFIG_DMABUF_HEAPS_SYSTEM=y
+ CONFIG_DRM_VGEM=y
+diff --git a/tools/testing/selftests/dmabuf-heaps/dmabuf-heap.c b/tools/testing/selftests/dmabuf-heaps/dmabuf-heap.c
+index 1d49df671919..b1c58e5883f6 100644
+--- a/tools/testing/selftests/dmabuf-heaps/dmabuf-heap.c
++++ b/tools/testing/selftests/dmabuf-heaps/dmabuf-heap.c
+@@ -3,6 +3,7 @@
+ #include <dirent.h>
+ #include <errno.h>
+ #include <fcntl.h>
++#include <signal.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <stdint.h>
+@@ -10,11 +11,15 @@
+ #include <unistd.h>
+ #include <sys/ioctl.h>
+ #include <sys/mman.h>
++#include <sys/syscall.h>
+ #include <sys/types.h>
++#include <sys/wait.h>
+ 
+ #include <linux/dma-buf.h>
+ #include <linux/dma-heap.h>
++#include <linux/limits.h>
+ #include <drm/drm.h>
++#include "../pidfd/pidfd.h"
+ #include "kselftest.h"
+ 
+ #define DEVPATH "/dev/dma_heap"
+@@ -320,6 +325,8 @@ static int dmabuf_heap_alloc_newer(int fd, size_t len, unsigned int flags,
+ 		__u32 fd;
+ 		__u32 fd_flags;
+ 		__u64 heap_flags;
++		__u32 charge_fd;
++		__u32 __padding;
+ 		__u64 garbage1;
+ 		__u64 garbage2;
+ 		__u64 garbage3;
+@@ -328,6 +335,8 @@ static int dmabuf_heap_alloc_newer(int fd, size_t len, unsigned int flags,
+ 		.fd = 0,
+ 		.fd_flags = O_RDWR | O_CLOEXEC,
+ 		.heap_flags = flags,
++		.charge_fd = 0,
++		.__padding = 0,
+ 		.garbage1 = 0xffffffff,
+ 		.garbage2 = 0x88888888,
+ 		.garbage3 = 0x11111111,
+@@ -496,6 +505,213 @@ static void test_alloc_no_fd_leak_on_efault(char *heap_name)
+ 	ksft_test_result(fd_before == fd_after,
+ 			 "fd leak on EFAULT: before=%d after=%d\n",
+ 			 fd_before, fd_after);
 +
-+	mod_memcg_state(new_memcg, MEMCG_DMABUF, nr_pages);
-+
-+	if (old_memcg) {
-+		/* Uncharge old cgroup */
-+		mod_memcg_state(old_memcg, MEMCG_DMABUF, -nr_pages);
-+		if (!mem_cgroup_is_root(old_memcg))
-+			refill_stock(old_memcg, nr_pages);
-+		/* unref from buffer - buffer keeps new ref to new_memcg */
-+		mem_cgroup_put(old_memcg);
-+	}
-+
-+	return true;
++out:
++	close(heap_fd);
 +}
 +
- /**
-  * mem_cgroup_uncharge_dmabuf - uncharge a dma-buf from its memcg
-  * @dmabuf: buffer to uncharge
++static int dmabuf_heap_alloc_pidfd(int fd, size_t len, unsigned int heap_flags,
++				   unsigned int charge_fd, int *dmabuf_fd)
++{
++	struct dma_heap_allocation_data data = {
++		.len = len,
++		.fd = 0,
++		.fd_flags = O_RDWR | O_CLOEXEC,
++		.heap_flags = heap_flags,
++		.charge_fd = charge_fd,
++	};
++	int ret;
++
++	if (!dmabuf_fd)
++		return -EINVAL;
++
++	ret = ioctl(fd, DMA_HEAP_IOCTL_ALLOC, &data);
++	if (ret < 0)
++		return ret;
++	*dmabuf_fd = (int)data.fd;
++	return ret;
++}
++
++/*
++ * Probe whether the kernel honours charge_fd in DMA_HEAP_IOCTL_ALLOC.
++ */
++static bool pidfd_alloc_supported(int heap_fd)
++{
++	int devnull_fd, dmabuf_fd = -1, ret;
++
++	devnull_fd = open("/dev/null", O_RDONLY);
++	if (devnull_fd < 0)
++		return false;
++
++	ret = dmabuf_heap_alloc_pidfd(heap_fd, ONE_MEG, 0, devnull_fd, &dmabuf_fd);
++	if (dmabuf_fd >= 0) {
++		close(dmabuf_fd);
++		dmabuf_fd = -1;
++	}
++	close(devnull_fd);
++	return ret < 0;
++}
++
++/*
++ * Test: allocate charging the calling process's own cgroup via a self pidfd.
++ */
++static void test_alloc_pidfd_self(char *heap_name)
++{
++	int heap_fd = -1, pidfd = -1, dmabuf_fd = -1, ret;
++
++	heap_fd = dmabuf_heap_open(heap_name);
++
++	if (!pidfd_alloc_supported(heap_fd)) {
++		ksft_test_result_skip("charge_fd not supported by this kernel\n");
++		goto out;
++	}
++
++	pidfd = sys_pidfd_open(getpid(), 0);
++	if (pidfd < 0) {
++		ksft_test_result_skip("pidfd_open not available\n");
++		goto out;
++	}
++
++	ret = dmabuf_heap_alloc_pidfd(heap_fd, ONE_MEG, 0, pidfd, &dmabuf_fd);
++	ksft_test_result(!ret, "Allocation with self pidfd %d\n", ret);
++	if (dmabuf_fd >= 0)
++		close(dmabuf_fd);
++	close(pidfd);
++out:
++	close(heap_fd);
++}
++
++/*
++ * Test: allocate charging a child process's cgroup via a child pidfd.
++ */
++static void test_alloc_pidfd_child(char *heap_name)
++{
++	int heap_fd = -1, pidfd = -1, dmabuf_fd = -1;
++	pid_t child_pid;
++	int status, ret;
++
++	heap_fd = dmabuf_heap_open(heap_name);
++
++	if (!pidfd_alloc_supported(heap_fd)) {
++		ksft_test_result_skip("charge_fd not supported by this kernel\n");
++		goto out;
++	}
++
++	child_pid = fork();
++	if (child_pid == 0) {
++		pause();
++		_exit(0);
++	}
++	if (child_pid < 0)
++		ksft_exit_fail_msg("fork failed: %s\n", strerror(errno));
++
++	pidfd = sys_pidfd_open(child_pid, 0);
++	if (pidfd < 0) {
++		kill(child_pid, SIGTERM);
++		waitpid(child_pid, &status, 0);
++		ksft_test_result_skip("pidfd_open for child failed\n");
++		goto out;
++	}
++
++	ret = dmabuf_heap_alloc_pidfd(heap_fd, ONE_MEG, 0, pidfd, &dmabuf_fd);
++	ksft_test_result(!ret, "Allocation with child pidfd %d\n", ret);
++	if (dmabuf_fd >= 0)
++		close(dmabuf_fd);
++	close(pidfd);
++	kill(child_pid, SIGTERM);
++	waitpid(child_pid, &status, 0);
++out:
++	close(heap_fd);
++}
++
++static int open_self_cgroupfd(void)
++{
++	char cgroup_path[PATH_MAX];
++	char buf[PATH_MAX];
++	FILE *f;
++
++	f = fopen("/proc/self/cgroup", "r");
++	if (!f)
++		return -1;
++
++	cgroup_path[0] = '\0';
++	while (fgets(buf, sizeof(buf), f)) {
++		char *p = buf;
++
++		if (strncmp(p, "0::", 3) == 0) {
++			p += 3;
++			p[strcspn(p, "\n")] = '\0';
++			snprintf(cgroup_path, sizeof(cgroup_path),
++				 "/sys/fs/cgroup%s", p);
++			break;
++		}
++	}
++	fclose(f);
++
++	if (!cgroup_path[0])
++		return -1;
++
++	return open(cgroup_path, O_RDONLY | O_DIRECTORY);
++}
++
++/*
++ * Test: allocate charging the calling process's own cgroup via a cgroupfd.
++ */
++static void test_alloc_cgroupfd_self(char *heap_name)
++{
++	int heap_fd = -1, cgroup_fd = -1, dmabuf_fd = -1, ret;
++
++	heap_fd = dmabuf_heap_open(heap_name);
++
++	if (!pidfd_alloc_supported(heap_fd)) {
++		ksft_test_result_skip("charge_fd not supported by this kernel\n");
++		goto out;
++	}
++
++	cgroup_fd = open_self_cgroupfd();
++	if (cgroup_fd < 0) {
++		ksft_test_result_skip("cannot open self cgroupfd\n");
++		goto out;
++	}
++
++	ret = dmabuf_heap_alloc_pidfd(heap_fd, ONE_MEG, 0, cgroup_fd, &dmabuf_fd);
++	ksft_test_result(!ret, "Allocation with cgroupfd %d\n", ret);
++	if (dmabuf_fd >= 0)
++		close(dmabuf_fd);
++	close(cgroup_fd);
++out:
++	close(heap_fd);
++}
++
++/*
++ * Test: transfer a dma-buf's charge to self cgroup via DMA_BUF_IOCTL_XFER_CHARGE.
++ */
++static void test_xfer_charge_cgroupfd_self(char *heap_name)
++{
++	int heap_fd = -1, cgroup_fd = -1, dmabuf_fd = -1, ret;
++	struct dma_buf_transfer_charge xfer = { 0 };
++
++	heap_fd = dmabuf_heap_open(heap_name);
++
++	ret = dmabuf_heap_alloc(heap_fd, ONE_MEG, 0, &dmabuf_fd);
++	if (ret) {
++		ksft_test_result_fail("Allocation failed %d\n", ret);
++		goto out;
++	}
++
++	cgroup_fd = open_self_cgroupfd();
++	if (cgroup_fd < 0) {
++		ksft_test_result_skip("cannot open self cgroupfd\n");
++		close(dmabuf_fd);
++		goto out;
++	}
++
++	xfer.charge_fd = cgroup_fd;
++	ret = ioctl(dmabuf_fd, DMA_BUF_IOCTL_XFER_CHARGE, &xfer);
++	ksft_test_result(!ret, "XFER_CHARGE to self cgroupfd %d\n", ret);
++
++	close(cgroup_fd);
++	close(dmabuf_fd);
+ out:
+ 	close(heap_fd);
+ }
+@@ -530,7 +746,7 @@ int main(void)
+ 		return KSFT_SKIP;
+ 	}
+ 
+-	ksft_set_plan(12 * numer_of_heaps());
++	ksft_set_plan(16 * numer_of_heaps());
+ 
+ 	while ((dir = readdir(d))) {
+ 		if (!strncmp(dir->d_name, ".", 2))
+@@ -546,6 +762,10 @@ int main(void)
+ 		test_alloc_compat(dir->d_name);
+ 		test_alloc_errors(dir->d_name);
+ 		test_alloc_no_fd_leak_on_efault(dir->d_name);
++		test_alloc_pidfd_self(dir->d_name);
++		test_alloc_pidfd_child(dir->d_name);
++		test_alloc_cgroupfd_self(dir->d_name);
++		test_xfer_charge_cgroupfd_self(dir->d_name);
+ 	}
+ 	closedir(d);
+ 
+diff --git a/tools/testing/selftests/dmabuf-heaps/vmtest.sh b/tools/testing/selftests/dmabuf-heaps/vmtest.sh
+new file mode 100755
+index 000000000000..434857b765b8
+--- /dev/null
++++ b/tools/testing/selftests/dmabuf-heaps/vmtest.sh
+@@ -0,0 +1,205 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++#
++# Copyright (c) 2026 Red Hat
++#
++# Dependencies:
++#		* virtme-ng
++#		* qemu	(used by virtme-ng)
++
++readonly SCRIPT_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
++readonly KERNEL_CHECKOUT=$(realpath "${SCRIPT_DIR}"/../../../../)
++readonly CGROUP_DIR="${KERNEL_CHECKOUT}/tools/testing/selftests/cgroup"
++
++source "${SCRIPT_DIR}"/../kselftest/ktap_helpers.sh
++
++readonly DMABUF_HEAP_TEST="${SCRIPT_DIR}"/dmabuf-heap
++readonly MEMCONTROL_TEST="${CGROUP_DIR}"/test_memcontrol
++readonly TMP_DIR=$(mktemp -d /tmp/dmabuf-vmtest.XXXXXXXX)
++
++VERBOSE=false
++BUILD=false
++BUILD_HOST=""
++BUILD_HOST_PODMAN_CONTAINER_NAME=""
++
++usage() {
++	echo
++	echo "$0 [OPTIONS]"
++	echo
++	echo "Options"
++	echo "  -b: build the kernel from the current source tree and use it for the VM"
++	echo "  -H: hostname for remote build host (used with -b)"
++	echo "  -p: podman container name for remote build host (used with -b)"
++	echo "      Example: -H beefyserver -p vng"
++
++	echo "  -v: enable verbose vng/qemu output"
++	echo
++
++	exit 1
++}
++
++die() {
++	echo "$*" >&2
++	exit "${KSFT_FAIL}"
++}
++
++cleanup() {
++	rm -rf "${TMP_DIR}"
++}
++
++check_deps() {
++	for dep in vng make; do
++		if [[ ! -x $(command -v "${dep}") ]]; then
++			echo -e "skip:    dependency ${dep} not found!\n"
++			exit "${KSFT_SKIP}"
++		fi
++	done
++
++	if [[ ! -x "${DMABUF_HEAP_TEST}" ]]; then
++		printf "skip:    %s not found!" "${DMABUF_HEAP_TEST}"
++		printf " Please build the kselftest dmabuf-heaps target (or use -b).\n"
++		exit "${KSFT_SKIP}"
++	fi
++
++	if [[ ! -x "${MEMCONTROL_TEST}" ]]; then
++		printf "skip:    %s not found!" "${MEMCONTROL_TEST}"
++		printf " Please build the kselftest cgroup target (or use -b).\n"
++		exit "${KSFT_SKIP}"
++	fi
++}
++
++check_vng() {
++	local tested_versions=("1.36" "1.37")
++	local version
++	local ok=0
++
++	version="$(vng --version)"
++	for tv in "${tested_versions[@]}"; do
++		if [[ "${version}" == *"${tv}"* ]]; then
++			ok=1
++			break
++		fi
++	done
++
++	if [[ "${ok}" -eq 0 ]]; then
++		printf "warning: vng version '%s' has not been tested and may " "${version}" >&2
++		printf "not function properly.\n\tThe following versions have been tested: " >&2
++		echo "${tested_versions[@]}" >&2
++	fi
++}
++
++build_selftests() {
++	make -C "${KERNEL_CHECKOUT}" headers_install \
++		INSTALL_HDR_PATH="${TMP_DIR}/usr" -j"$(nproc)"
++
++	local khdr="-isystem ${TMP_DIR}/usr/include"
++
++	if ! make -C "${SCRIPT_DIR}" KHDR_INCLUDES="${khdr}" -j"$(nproc)"; then
++		die "failed to build dmabuf-heaps selftests"
++	fi
++
++	if ! make -C "${CGROUP_DIR}" KHDR_INCLUDES="${khdr}" \
++		"${MEMCONTROL_TEST}" -j"$(nproc)"; then
++		die "failed to build cgroup/test_memcontrol selftest"
++	fi
++}
++
++handle_build() {
++	if ! ${BUILD}; then
++		return
++	fi
++
++	if [[ ! -d "${KERNEL_CHECKOUT}" ]]; then
++		echo "-b requires vmtest.sh called from the kernel source tree" >&2
++		exit 1
++	fi
++
++	pushd "${KERNEL_CHECKOUT}" &>/dev/null
++
++	if ! vng --kconfig --config "${SCRIPT_DIR}/config"; then
++		die "failed to generate .config for kernel source tree (${KERNEL_CHECKOUT})"
++	fi
++
++	local vng_args=("-v" "--config" "${SCRIPT_DIR}/config" "--build")
++
++	if [[ -n "${BUILD_HOST}" ]]; then
++		vng_args+=("--build-host" "${BUILD_HOST}")
++	fi
++
++	if [[ -n "${BUILD_HOST_PODMAN_CONTAINER_NAME}" ]]; then
++		vng_args+=("--build-host-exec-prefix" \
++			   "podman exec -ti ${BUILD_HOST_PODMAN_CONTAINER_NAME}")
++	fi
++
++	if ! vng "${vng_args[@]}"; then
++		die "failed to build kernel from source tree (${KERNEL_CHECKOUT})"
++	fi
++
++	build_selftests
++
++	popd &>/dev/null
++}
++
++make_runner() {
++	# virtme-ng shares the host filesystem, so TMP_DIR is accessible
++	# inside the VM at the same absolute path.
++	cat > "${TMP_DIR}/run_tests.sh" <<-EOF
++	#!/bin/sh
++	set -u
++	PASS=0; FAIL=0; SKIP=0; N=0
++
++	run() {
++		name="\$1"; shift
++		N=\$((N+1))
++		"\$@"; rc=\$?
++		if   [ \$rc -eq 0 ]; then echo "ok \$N \$name";        PASS=\$((PASS+1))
++		elif [ \$rc -eq 4 ]; then echo "ok \$N \$name # SKIP"; SKIP=\$((SKIP+1))
++		else                      echo "not ok \$N \$name";    FAIL=\$((FAIL+1))
++		fi
++	}
++
++	run "dmabuf-heap charge_fd ioctl"	${DMABUF_HEAP_TEST}
++	run "memcontrol dma-buf memcg"	${MEMCONTROL_TEST} test_memcg_dmabuf
++	echo "# PASS=\$PASS SKIP=\$SKIP FAIL=\$FAIL"
++	[ \$FAIL -eq 0 ]
++	EOF
++	chmod +x "${TMP_DIR}/run_tests.sh"
++}
++
++run_vm() {
++	local verbose_opt=""
++	local kernel_opt=""
++
++	${VERBOSE} && verbose_opt="--verbose"
++
++	# If we are running from within the kernel source tree, use the kernel
++	# source tree as the kernel to boot, otherwise use the running kernel.
++	if [[ "$(realpath "$(pwd)")" == "${KERNEL_CHECKOUT}"* ]]; then
++		kernel_opt="${KERNEL_CHECKOUT}"
++	fi
++
++	vng --run ${kernel_opt} ${verbose_opt} --user root --memory 512M \
++		--exec "${TMP_DIR}/run_tests.sh"
++}
++
++while getopts :hvbH:p: o
++do
++	case $o in
++	v) VERBOSE=true;;
++	b) BUILD=true;;
++	H) BUILD_HOST=$OPTARG;;
++	p) BUILD_HOST_PODMAN_CONTAINER_NAME=$OPTARG;;
++	h|*) usage;;
++	esac
++done
++shift $((OPTIND-1))
++
++trap cleanup EXIT
++
++check_vng
++handle_build
++check_deps
++make_runner
++
++echo "Booting VM and running tests..."
++run_vm
 
 -- 
 2.55.0
