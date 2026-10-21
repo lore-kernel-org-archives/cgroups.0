@@ -1,94 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.43
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792605050;
-	b=Ij/0zj5YJlDrCtKog8gFprDxDBsjc3P8PCKgaN9YbOrNtTi2XN7TAOuZ8GfeUTU/r40/
-	 XBz0BOjYCHnRSLDU8CHmihA3tmMY8xGEmUBw859h8P1wiVU0QlJJL7+8NCG66/Bmt4Xv/
-	 a5GfWtOCBZfab8Nb8coEb4xqeEFsVyczgadxT5UXSXizytxG0MhP/Vda6TzxsDhRZj1Yw
-	 TtMANoWyVXTEPn+/tjs7pozX7p88kA4qefpU1o4FHve3bQ5maQSoWATjO4SfA7LMwymgD
-	 JL67HJOPO4zi8lFKrF7i/1N4fGaYV57Yc3kGC74o1D1Npj6oRqez0gph660M4EZHloA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792605050;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.48
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792613090;
+	b=bBelb/FmG9vSLxsgMrVkE4A9oqE5uci0sfJh4ymjGCkustxCLCgEkCSx9T6vWAlpYHMm
+	 7ig0r5kOYYrqZdyFFORHasgsHmRZQjiID+CQWtJuuDDd5vLA2i5xpPa97KONfKukOTeg/
+	 OqpzAfeCy3sTURqjY/t9YIjTHUwXfI7HfQ475A/yl/JyljsxgmOgUm+cipGUI5VvKAyF3
+	 dsq8byaFE6ynKdQBIIt2krmjo5mMySvQOfmem9Gcl2jr46qGdOIRB8FhbGu4fBTvbM8AR
+	 +f+6UiW7hoKRmgJYqem1c1JbdQNYFBaeuC9utkdw6zfvMycun+0DDWcB+FlkonrRbHg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792613090;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
-	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=mE9Ag/gCpQwpic9Sbpc9hGK5nNJZ45oi/KyynO+C5Ws=;
-	b=wMWkKfwUIJzLfzOV2OaIlfvzI/tsUj8LKG4NByCq9JfdtHTtoGvM4Rz5u/7D2NzrYxo6
-	 jzb8EKUICvukgZu2p7fjB8Wc8daEYBAitFQLsgRyxtSZT9si/KCyKJj3mmoCVVJdCttp4
-	 246GlK5HEw2zqvrikKIqVK6YFF7XiNV1G6qtDiaUlYozEc6y5ppbjL7K9f349m67fcvKW
-	 lgH8jTQKFaIUox8kUOmxHmSCfRXp+/o3+1cIFzPshysQmwHIxnOX7FuWSno4DOoCQkKec
-	 UDXVAfWjMX6ilJusthwWBoy4XVLnbftYFAnY5q1rhxUobVb0IX2UdLmrFsY+sOnb2wg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=trailofbits.com;
-	spf=pass smtp.mailfrom=trailofbits.com;
-	dkim=pass header.d=trailofbits.com header.i=@trailofbits.com header.a=rsa-sha256 header.s=google header.b=AcdzYn+x;
-	arc=none smtp.remote-ip=74.125.82.43
-Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=j1fxjuCDrdT5GfjnmUrHWkbOyMdCUNguBpXdd1GdKyo=;
+	b=vkcY//u1sm7iNJ4hCspK7uKTxvhUmILed6uM2A5c0M59xVi4LV1TbosF4ISV73rryxRO
+	 zYtEpFvpA/Y5cusmPqEC2hyNG/VWFeB6c8loX7zEzflRKGYf5AhQoy7WOvu5cYJFj0Jko
+	 LpL85SFXZBoHeaaj1hlbWBMJt6anft0sIfVk+IfzLzJ88ZIfFgMyeXzKShJsHayAwT8uE
+	 +RG03yisrL91WpIyjTKDUj2iUK2WsPL8wVoo+JOjhvuu6tav6i3wlQcMShkdU1GTrW2Rz
+	 xZp0ha/eQP+zkcMqoBEIlov1Sg5NlfVgQ3qYYROYFfiCZ5mGnWZdRijwQNkg62wPjxw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=OYWKgxfB;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.48
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5624B606A31B
-	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 17:50:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5624B606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BA32606A31A
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 20:04:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BA32606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=trailofbits.com header.i=@trailofbits.com header.a=rsa-sha256 header.s=google header.b=AcdzYn+x
-Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-192faaff686so17865c88.1
-        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 10:50:50 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=OYWKgxfB
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-4a140e7405dso9410905e9.3
+        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 13:04:49 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792613088; cv=none;
+        d=google.com; s=arc-20260327;
+        b=kjVmj4CdRaFAV2+WZP/lX4jTmzW2eOtclRDTDBlrTN1Wkl/OGcUth/A64809JR16m4
+         uUpHCavNuAGy5QMNPowFfR0FZwAF7MUxAJ4SQAukOAduSWZhnMBIhxUlZUsUxNf9i85C
+         8NOts65m4SN704jg+sH+QWYjK6XyUY1cjgrcxqW6VMsbaYMPP6T35F0JxS9OwlncVSe1
+         I6IqSHjkHiBVAtwbo+MyoLe7YKvDplnxTcAFhx0UX5ioM5BnLbzqrLvEn1ngO6Gpm2CJ
+         0kkwM8gLluvm0IUBA2MWB++wRqFWZCddYnfeLM1kkTtkTawm/zZ3Pjui1woJT8cocwb1
+         UHAg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=j1fxjuCDrdT5GfjnmUrHWkbOyMdCUNguBpXdd1GdKyo=;
+        fh=XBuYIib52MLtC7wsquamVokn4Zk43tP5L/1WduPzi3w=;
+        b=Kxjth0YthyboLKWCBGlVpjcAMALJEjl9ilIHsLnGlOCIWH+ZrNgVjUDlmglyCy3P5L
+         2FQBFpTygfBZ+lS6MyNmPR3WbXW8OJT2Kvl9fs3DySlhwphOtHT4KtAYGqrCBbJz/QIh
+         MiqdtHzikIkDZ5/NK0hokZ+1RjkhFhYJPQRKQ6/7X462UEWMZ4hYvch5P8sRhOuuvdZv
+         r1Q6vRZPwZ/2UJAwRw68ZH2ceJqNLO3ujKZhZyWEmArRPtRF/fXvjb8rzD4C9z+FQwUX
+         f8Gj+Dtyn0FBIFMTbp7NPE3SJVH25TsYP+8CFxfTwJtrpf0qtaVUlXt0d8HVQKU2AKma
+         EUTg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=trailofbits.com; s=google; t=1792605049; x=1793209849; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=mE9Ag/gCpQwpic9Sbpc9hGK5nNJZ45oi/KyynO+C5Ws=;
-        b=AcdzYn+xJgZ24qhdgNzJ+znHcPBAcXz72e9f4fQNiIdR9DHJ88983AMvTE3ngzyFC7
-         SDCp43YiGEg2N4XU5y9IxSku8AVhcBQifpG6b+xFWQnuaUlWF9eKV6mIv1RvQan4ZlRi
-         A9tHlhTbISYlznruJmqYxa1i5DlWZ1i41oAkZUkiMLDZRtM51ZkD4+XEWQBcQnhAHTow
-         3uG185oH+MfhXlZiE12QtsqR6cagzCQoEmcGwZ9t3m3bGudFO8B9vNQh02gnj6beJXsG
-         HBNvvitmYn6+WQzRXLedcKF7QS4HnyyjH8bwxj1aB5uT88pEdpQBBl5Ih/61fj7fuIIF
-         Trxw==
+        d=gmail.com; s=20251104; t=1792613088; x=1793217888; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=j1fxjuCDrdT5GfjnmUrHWkbOyMdCUNguBpXdd1GdKyo=;
+        b=OYWKgxfBB8ccYN3iVS4vgNZXyHDbjpy4wpoWSDHqHHzqdhA43sO0NhK1EMf89LG1pM
+         3eBqgp7t1E2mYgPc/IuwWkETxUHq/YsaKxy5G5DQiOodPCxAV84LmaDv33ewkxwyRgzs
+         dDNqfmMnfGLAkfvGkoPpTpC1p8HdlsMyBZGoMg1Nufvlme/K1jEPmMx8NxOw9xlNhP/A
+         B9TqYzq/tF680frs3jyfje6nMFcyI0IDyA1Q2yEK2BsuRbLaYIjhPMBk5njkoThulfls
+         bggUwaJq3ATD92W+781cUFR1X8wh4jP+oZp+X5XBGBwoEJTrcBaEFuWkKjahMOzYvDAu
+         guXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792605049; x=1793209849;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=mE9Ag/gCpQwpic9Sbpc9hGK5nNJZ45oi/KyynO+C5Ws=;
-        b=AXL6lOmByYL9v+C8lUshDb/IzCWW+7vuAGueX3XPfxHgOyrkjjHqSe0O6FBmOq6G+t
-         1TVpgUHvdQO/L1n7b+yQaGx+3PEvlCvYo27LkU5tx8QHwyF+GyEpi9ICxWuhx4xuEUOx
-         ppNG1WS08RIVweIi5SiEATl+xtzO9/Ep40xfQh2Nf5Uf1XDgh+h/dqH1WM1MNAyx0v/D
-         EZXjY2Lr4vUch8g/d+owTBZseK6Yf42g5CKgPTqpNf7k3ladRe0gw1u9L1Z3XwCEg5/9
-         9/hrLzghpvB9smILVNQLBVM2Ic67uFp+Sa9MJyboYqmTs4WtZBlCRl7+I6cB9THbhu7k
-         bXxw==
-X-Gm-Message-State: AFq9FYLm3whU50vWbl3JOTyNhilWXuzPWBNOiuGAjrHjWqstSh5DRmW/
-	luL2bhSEIaJYQyhSu7n+G1HtgYmVXcRgbwm/tTEVMpev8buc150m/W3cUrLJ5WeQ2jx+e5Cv7Fl
-	6T+5eXGTkhg==
-X-Gm-Gg: AYBFou2Ct1BRz0V5wcWs5y8xsGacZc8j4B9cX+qLoIpd0t1+chi9lS8m6kPkCfMhf/G
-	sUywP1dBhq6usNlmLP00gvzEG7+NX5B8FpGNHJqJjexg2MWmFxaBaCVkwRSVeC+PxteUoIkxhnU
-	nOkg7o4zWlDHgkk+kYNj+DqpzFS9pMI+FKoro2+r3R11aaroGcpY+R+QyxYG/ML5UlADLE+96dm
-	hArGXvyVdZcK/Me3uLctHw0qT3M9YKcjTzXFMABEvawZI4LRJAs2jxRskDST47nq1RaCgu39EmL
-	3yrm2XmNT9CMuVkR2cj/Zjuonh832JnywwTEuvFmFUSDfUHjMuA4Ib7jh+UtIBbTjI6FsH80CiV
-	611VXKfihzl01MwiX74OU+zh4XlSBGqoOXuH5gg6dzoMqUXj7kbo7yllQCBmXWTQp8iZ8yoi2RT
-	dXGFq71wu3lFH0u1qNkwH3GGNH4gGZwhriNDZWlpqeyI5u+QjdtZrqcAIv7iPy9Sw4PukEfeWop
-	rAT5cmxKOoFlnfmMvvPDOdK3wEMujHWlQZ8cpgBFwBq9xsGAXwPXEF9H63EPqtL5XrRe1pvW+CO
-	Y6TRSvvKEVCOoaeeITeljpUuIq4QuSq6eefXNSy9A57qv2W3rB3v
-X-Received: by 2002:a05:701b:424e:20b0:143:298f:33b8 with SMTP id a92af1059eb24-190a7756cafmr3521892c88.44.1792605049249;
-        Wed, 21 Oct 2026 10:50:49 -0700 (PDT)
-Received: from localhost.localdomain ([2603:8001:5f01:8bab:d059:e601:becb:a5ad])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1903ca044d4sm8229754c88.17.2026.10.21.10.50.48
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 21 Oct 2026 10:50:48 -0700 (PDT)
-From: Artem Dinaburg <artem@trailofbits.com>
-To: stable@vger.kernel.org
-Cc: cgroups@vger.kernel.org,
-	hannes@cmpxchg.org,
-	linux-kernel@vger.kernel.org,
-	longman@redhat.com,
-	mkoutny@suse.com,
-	ridong.chen@linux.dev,
-	tj@kernel.org
-Subject: [PATCH 6.6.y] cgroup/cpuset: Make nr_deadline_tasks an atomic_t
-Date: Wed, 21 Oct 2026 13:50:45 -0400
-Message-ID: <20261021175045.1443-1-artem@trailofbits.com>
-X-Mailer: git-send-email 2.55.0
+        d=1e100.net; s=20260707; t=1792613088; x=1793217888;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=j1fxjuCDrdT5GfjnmUrHWkbOyMdCUNguBpXdd1GdKyo=;
+        b=m/ZIGty4AI8mg3Mf9Zvjb3Z+Nwl9Y/x46/3Fh1Fsh6ysCpHWtjgm5CqCbHL/GUKNCT
+         ycnuGiYnHNMaepXo0ZYMZwh11Bh3gNnazdoFoKE0EmlpaFC76t1C7CRnhfRjg03j3ua9
+         h585ex+aWRcxYkPLayzpN81EOHOxB+ZFumJJKXbnvcEOG8yNomIRQ33Mdz7TA+PrpzJy
+         mmdjayCnGs9oAiiiU/ebhvuMLPw17etx7/9tM7+g8hR2CzfbSPLm1XPRo1v3grEKT2Jg
+         KZllZ21i68t/4m66ACp6GQ4vOw2g7vDrOomPFNI7fhe1yZTxC02JCwkSZW2yGnjH3lKM
+         qrXw==
+X-Forwarded-Encrypted: i=1; AKwUvBxbHUn2i1xcvqmOeSJ3nbZb69NA1B6wMOpx0dGxkjV/nCSHu5h2Xil1931HydbNmw39t6v1s+rq@vger.kernel.org
+X-Gm-Message-State: AFq9FYIDm6Ez3j3hI9GLPeEZ2fciBGClL/jQEuKHrAdIcLTsDTsmChey
+	/5u/CDcP/w1mSzRBpFoukJ/8D9qRUEbWZgyNh++8ek8ur5XZeRppCev8/W6wGaDTSR67MuvNMdw
+	TosyepEahVAGJSVL1fCjxC/G/rtX1DX8=
+X-Gm-Gg: AYBFou0mbK72qyCKtU2tOH00oj4qgDHmjH17P5AOxtpkDEHqHvTBBkLr+PWG7ez93SY
+	R/Y4VpqfRdmAHIEYkmY+zQQaoG98Iyr7janjLgQjp0GD9y5H/SyLWd2/hwRLT4d55hUF5iIHY9a
+	AF5rStSECsUXE5rII78ffanvCBbpX+RMLzmQp1tMR2Q5K88koKOoH3Rqw+xLvU9ASCf71ClDlw9
+	HxHHuyo/h1B1HHlzF/yO7WPLVKsiPhQEW61Ek5PY4kq+7AioQMtO3nW7Kz7Pz07p1dGrlWa5akP
+	mY0+rrUL4YEk7DIxFMNF+OJBLj49DpBtOuTs5fk2VYy0r4sTKWhSJXv3RNJf6cOBoK+TNjakJzt
+	Xsv8y2NK6JXETEemUGEPeUzfg+Cr66pVuJtfncQX0leImd/BnT+p3XIq22uArDHjHl5BTb7W7ft
+	juP9d3WfKg6q0wPeqYUHnVIjeXWgzChTE5SA==
+X-Received: by 2002:a05:600c:a11b:b0:4a2:5db:1f35 with SMTP id
+ 5b1f17b1804b1-4a205db30famr3506195e9.11.1792613088329; Wed, 21 Oct 2026
+ 13:04:48 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -98,105 +105,84 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20261020200730.250189-1-joannelkoong@gmail.com>
+ <atfrhsr6bft4t7SI@linux.dev> <atjhiAxEyoP48e0X@linux.dev>
+In-Reply-To: <atjhiAxEyoP48e0X@linux.dev>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 21 Oct 2026 13:04:36 -0700
+X-Gm-Features: AclHuK-XJg9p2pKQVLaqzPUQYnGGSxOsrQ6EL7MNtlukpZPxKO3UA7_Kxk1IV7I
+Message-ID: <CAJnrk1Z=ZqTvfO_VYjG=KnHRvwmhNBfYfxpiZiKWPdMYnsA2qg@mail.gmail.com>
+Subject: Re: [PATCH v1] memcg: fix cacheline contention between lruvec stat
+ updates and LRU lists
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Yosry Ahmed <yosry@kernel.org>, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Waiman Long <longman@redhat.com>
+On Wed, Oct 21, 2026 at 9:12=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.de=
+v> wrote:
+>
+> On Tue, Oct 20, 2026 at 03:35:59PM -0700, Shakeel Butt wrote:
+> > On Tue, Oct 20, 2026 at 01:07:30PM -0700, Joanne Koong wrote:
+> > > Every memcg lruvec (per-node) stat update reads the memcg and
+> > > lruvec_stats_percpu pointers in the first 64 bytes of struct
+> > > mem_cgroup_per_node, and the ones that go through mod_lruvec_state()
+> > > (such as lruvec_stat_mod_folio()) also read lruvec->pgdat. These upda=
+tes
+> > > are extremely frequent (eg these updates happen several times for eve=
+ry
+> > > page that's faulted in, freed, dirtied, or written back).
+> > >
+> > > The memcg_pn_read_mostly cacheline group keeps those read-mostly fiel=
+ds
+> > > on a different cacheline from the lruvec, but on CPUs that do spatial
+> > > prefetching [1] (which is most Intel CPUs / modern CPUs), cachelines =
+are
+> > > fetched in 128-byte aligned pairs. Depending on where struct
+> > > mem_cgroup_per_node lands in its slab, that cacheline can be paired w=
+ith
+> > > the cacheline holding the LRU list heads, and the lruvec->pgdat
+> > > cacheline with the one holding lru_lock.
+> > >
+> > > When this happens, every stat update also pulls in a copy of the LRU
+> > > list heads and lru_lock cachelines, which are written to constantly b=
+y
+> > > other CPUs under the lru_lock. The stat update has to fetch them from
+> > > another CPU, which is unnecessary overhead since the stat update does=
+n't
+> > > use the LRU list heads or lru_lock at all. But even worse, the lru_lo=
+ck
+> > > holder then has to invalidate those copies and wait for the
+> > > acknowledgements to come back before it can do its next write, which
+> > > makes the lru_lock critical section longer for everyone waiting on th=
+e
+> > > lock.
+> >
+> > Can you please reproduce on a non-intel machine?
 
-[ Upstream commit 95220e1f18f6321008f021abc7d6f581f64bcb82 ]
+I ran this on an arm64 machine but the results don't reproduce, so
+this looks specific to intel's prefetcher.
 
-The nr_deadline_tasks variable in the cpuset structure was introduced by
-commit 6c24849f5515 ("sched/cpuset: Keep track of SCHED_DEADLINE task
-in cpusets"). It is reported by sashiko [1] that nr_deadline_tasks
-can currently be modified by inc_dl_tasks_cs() under rq->lock and
-by cpuset_attach() under cpuset_mutex. So if both updates happen
-simultaneously, the nr_deadline_tasks variable can be corrupted leading
-to incorrect operations down the road.
+> >
+> > Second, can you try the following patch instead of your on the intel
+> > machine?
+>
+> I see there is also removal of access of lruvec->pgdat from stats update
+> function. Let's break up the patch into two. One will remove lruvec->pgda=
+t
+> access and the other one rearrange the fields in mem_cgroup_per_node (I p=
+refer
+> rearraging than removing the lruvec stat pointer).
+>
 
-Fix that by changing its type to atomic_t so that nr_deadline_tasks
-are always atomically updated. This fix patch is a low hanging fruit.
-It can handle some of the races between a concurrent sched_setscheduler()
-and cpuset_can_attach()/cpuset_attach() calls, but not all of them like
-the other issue raised by sashiko [2]. This will be handled hopefully
-in a future follow up patch.
-
-[1] https://sashiko.dev/#/patchset/20260626181923.133658-1-longman%40redhat.com
-[2] https://sashiko.dev/#/patchset/20260630033344.352702-1-longman%40redhat.com
-
-Fixes: 6c24849f5515 ("sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets")
-Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
-Signed-off-by: Waiman Long <longman@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Assisted-by: LLM
-[ Backport to 6.6.y: Apply the declaration change in
-  kernel/cgroup/cpuset.c; struct cpuset has not moved to
-  cpuset-internal.h. ]
-Signed-off-by: Artem Dinaburg <artem@trailofbits.com>
----
-Hi,
-
-Please consider this backport of the fix for CVE-2026-93150 to 6.6.y.
-
-The code changes are identical to upstream, with the field declaration
-applied in cpuset.c. See the bracketed backport note above.
-
-The complete fix is already present in 6.12.y, 6.18.y and 7.2.y.
-
-Build-tested only as part of a cumulative 6.6.y series on x86_64
-(allmodconfig, CONFIG_WERROR=y); no runtime testing.
+Sounds good, I'll go the layout rearranging route then. I verified on
+the Intel machine that rearranging + the pgdat change gives the same
+results as this v1. Do you want me to include your rearrange patch in
+v2 (with your authorship and signed-off-by) or do you prefer to post
+it yourself and I'll send the pgdat change on top?
 
 Thanks,
-Artem Dinaburg
-
- kernel/cgroup/cpuset.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index bb413045d174469d9f5f8187af2de50d3c4076fd..4dc4b326781a8ffb93f503255eb5a026180adb23 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -175,7 +175,7 @@ struct cpuset {
- 	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
- 	 * know when to rebuild associated root domain bandwidth information.
- 	 */
--	int nr_deadline_tasks;
-+	atomic_t nr_deadline_tasks;
- 	int nr_migrate_dl_tasks;
- 	u64 sum_migrate_dl_bw;
- 
-@@ -235,14 +235,14 @@ void inc_dl_tasks_cs(struct task_struct *p)
- {
- 	struct cpuset *cs = task_cs(p);
- 
--	cs->nr_deadline_tasks++;
-+	atomic_inc(&cs->nr_deadline_tasks);
- }
- 
- void dec_dl_tasks_cs(struct task_struct *p)
- {
- 	struct cpuset *cs = task_cs(p);
- 
--	cs->nr_deadline_tasks--;
-+	atomic_dec(&cs->nr_deadline_tasks);
- }
- 
- /* bits in struct cpuset flags field */
-@@ -1091,7 +1091,7 @@ static void dl_update_tasks_root_domain(struct cpuset *cs)
- 	struct css_task_iter it;
- 	struct task_struct *task;
- 
--	if (cs->nr_deadline_tasks == 0)
-+	if (atomic_read(&cs->nr_deadline_tasks) == 0)
- 		return;
- 
- 	css_task_iter_start(&cs->css, 0, &it);
-@@ -2757,8 +2757,8 @@ out:
- 	cs->old_mems_allowed = cpuset_attach_nodemask_to;
- 
- 	if (cs->nr_migrate_dl_tasks) {
--		cs->nr_deadline_tasks += cs->nr_migrate_dl_tasks;
--		oldcs->nr_deadline_tasks -= cs->nr_migrate_dl_tasks;
-+		atomic_add(cs->nr_migrate_dl_tasks, &cs->nr_deadline_tasks);
-+		atomic_sub(cs->nr_migrate_dl_tasks, &oldcs->nr_deadline_tasks);
- 		reset_migrate_dl_data(cs);
- 	}
- 
+Joanne
