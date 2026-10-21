@@ -1,101 +1,129 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.41
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792561626;
-	b=dcKOH40MPqkMTz1b/q/Z3R80lruHhyXKi+iUQTMC93z4UZ8DImzWoqBLd9mrWce/dAhB
-	 wpDSGkzW+weT+1hOlg1I+0cwm4YVayJD0O4ZQRwUfXC1DWK8t3mvKFToQBTZ9lbHPUwqq
-	 03jtqRkusOXQvAqXR/0HDCD9kT9MJDDSyoCRia/bxMKKnAocLXkRGKW2tTrqJmDaPpExF
-	 nFdOdVRyZctYU3MQfhQSlYANowiLL5GZYdSsYpM7H+W0Mz7aYzcku/vBQSIo+jSTfMEF6
-	 UJi3mp5A/udWO6q7EmV9KbmcYJr5MqaokjUndkNX69tAeXa7nPSMAncC49F9AYRn+lA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792561626;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.49
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792562609;
+	b=je6Es1DFMJETAC+iV+ze7KE0TdP4IAofsGlTsaQs3MVdqFYZ/TgNWW/Fg+TGcoSu4Ti7
+	 buLh648lLlakN+atHFc5bacV9D7Vfo7BgNMlLIUQxZbrcpfcCPPbQxqaMTI+ij43YiYBN
+	 V/d5euXs5kAl3u42+GpvBtAsAiNVRWhTTA/g1kR/t30wtjR9l6fj2CB5RKUQ6s1DoDM2+
+	 wKn3YAPjWIWAmREsqHyDw5FhR2Cq0wZgrXtS0htCnvjBuikEptLPIaVVHm2AaezTstJmU
+	 +h91fEkrjK5dnzcKweNJLZv9gIGPMtTOdYdLfkUUVbvHkOqnoW8QrpNt/iksbF9EIHQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792562609;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=tSn2dX29VgDqk2hgfuzvCjkC5Mz2yIfzdQjrFRKGhV0=;
-	b=3fzGx6XloThKfAqVwDLP/B7T4OGsrPCrVZKve7jRoPzdZp8XSDy9G0jG1fdlkxtxIoTW
-	 WD2hFUBX3l6lbZGLjKZAnZzYnSuD9r+qxL00g7YD1ZQ8MA1zdpsunc87K9tqpJ1wZ9pZo
-	 a8Qu8yLbGgccudgp/w8XfCnLHfWqLxjfMW0ISfOduGRD/yqPtTYrlO2/m3Xq3DCVBFywx
-	 w3j8n16pb8SWmC2rEu5/XTuvC8CxOeS7io/jT4JiLjPffEQnElFhVmKs/UYnEYQ6hTFIQ
-	 mI40zubZr5O+V/z+i2YHTXU1cOjhgHRJylYRjhA1c4syhV+j21cHRjRSCv907oma7ow==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=ziPSCJtGYqR9EgWBDjP1J8OHI+3Z8WTF74NVvp9jgKA=;
+	b=QxMw/RAWNMKJZhOL/AE60TUHqsVCSeBw8xuj84EGq3e0bQM1lepas+M/y3M6licz6ti/
+	 tpLloVQ57wRoYlqvLFdremxOy4oMh077G8mU6mzULuSM3ZT/Fz0px2dL3l6BmYiWozUmV
+	 opG3eRFddXTBSBLjXFg4rIiHLXctgYHFwmhCWThbDfmFpnYNldW9/RgnCgWLtrhLgw1bt
+	 lATJ8EwxAHHwzSgw3/dqHpRW7FWLvE6pHa2n/3F6sC3FOzEL315EKOz+tyAxPSTEQIpKV
+	 zHgBhIV2NxDPRI2lGbzUvgJv4mRhdGM3yzsEVzvbZdsR2iPPLR+mKUrDL+kc64JWkfw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=PPORQrRF;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.41
-Received: from mail-yx1-f41.google.com (mail-yx1-f41.google.com [74.125.224.41])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LrvdmUVf;
+	arc=none smtp.remote-ip=74.125.224.49
+Received: from mail-yx1-f49.google.com (mail-yx1-f49.google.com [74.125.224.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27B95606A31B
-	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 05:47:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 27B95606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB2CC606A31D
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 06:03:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB2CC606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=PPORQrRF
-Received: by mail-yx1-f41.google.com with SMTP id 956f58d0204a3-679a420b5afso304495d50.3
-        for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 22:47:05 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792561625; cv=none;
-        d=google.com; s=arc-20260327;
-        b=NRz8AEdRRBJpZz8FiJ2evGQdPq1tA1XafwrK2N3Ul4sZ08FMN6AWN0z+TFxFIR/I3V
-         jTMLGwinr/w47gGvIzacmiaav6Lag1e/zH3WSWUf/ObpBVb5Ha0MRBytD/F2w42j5LFB
-         Jw4LKVODzZb6FVgMA6GpGcrNT5/W2NbrESKpC6XrtZYF3Kf/q9p3Mbl9aF7Da17pNawn
-         3rQMBhLFJaAYz/Fe1L1qrDTSPj+F4YH1+zFlccWCsISDVFLpJvoY0r6/bdP+38EvNd9i
-         OLdzXV6TX+5TDC94oyA9FqOzCsGrBJOs8vzSFaiqNrzEhO192k2kvg2lYMegrW1zXnjq
-         JMUw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=tSn2dX29VgDqk2hgfuzvCjkC5Mz2yIfzdQjrFRKGhV0=;
-        fh=OHiKHIptb/8HxxtRu9LmhevalQZWT+NT3Apa+Wg7iLA=;
-        b=GJUBzV00I8Gkt5ewsp5N79uuGc+7a/oSpp3MRi6VGLK4DVr4eDqQY1bblWaqDqclmN
-         98zQhlxOiTQnKxyUqV3oVPNVzUkPYsAuecZ1Gz2pA/w/J+sFJXRjwCQCMhP4BiWqx25w
-         19W9FqtTQwTOmMjo9g/pvIrSRMRE56CRB2qoOsUGlWK9KUIHjwE/ifbkrbuVmLCXFOtM
-         A8oL88vw1lDnvvcPxfTtKZvolsSxEmwxrxIwBS9CPw+ujp4o8/sRtB8ivZfvCM44RkBu
-         +zOA+lwrmddeiUjeQQESU8eV/yJIIU9tlVZVxuUxtSOz163yibgXVirmGBotxa1H8CvH
-         vVXg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=LrvdmUVf
+Received: by mail-yx1-f49.google.com with SMTP id 956f58d0204a3-677bc4704cbso274115d50.0
+        for <cgroups@vger.kernel.org>; Tue, 20 Oct 2026 23:03:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792561625; x=1793166425; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=tSn2dX29VgDqk2hgfuzvCjkC5Mz2yIfzdQjrFRKGhV0=;
-        b=PPORQrRFn7tZ3dUbqNotr7EMNnlKNVNCXlWCGZrOyaBVAF9EWlt496mVN9F89V7iIW
-         Dgvr1ssi7Vixkf1DCoN0fOT8+ZVAK9fR5LesXxVuAcuXDQAjK40EmYAPUVU/21thJ4AU
-         qvkAx7aSPuCZk8yRSQLOl1PS3sGcsFbyuZ1+JqblSWUrGt76EBa4/gW6XVdzBs7oqjam
-         CbJzFige92dXRxMnPYrygO/mjvUjCCb1CYDB44/oE7PwgidEFUdRT2fzOfYRRdzwIMxR
-         gsWyk0zV1rZLN5BHtIbO3EH+G5c0ZH/VtiIdvXbunKzIW3vbDrZ108f0vlFgOnu9AJXw
-         c6QA==
+        d=gmail.com; s=20251104; t=1792562607; x=1793167407; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=ziPSCJtGYqR9EgWBDjP1J8OHI+3Z8WTF74NVvp9jgKA=;
+        b=LrvdmUVfW1qEvam1JJoeT3fu8PTPq3DaAljPEZFPlE3MRXBXsmch/zKXBcZnNMgllo
+         CmoFyBcdcgrI3zCs2dja20lo352F86G8A84/Pp3ccKcccjcmQ7DnJAKDDLJQq6e6nwKg
+         VUmDbBki7vzJbWGx4Q+Ah1Cw3QRWf0YPPV2UtKozRJ3m7Ob94ianxdJAj0Z2aOOX2qio
+         57SIMcaNnnxjflnWHZ63OnVXSXfkKzmKOCXOtUsg7SQJzgMEZKcn2U9m5Sxd1BV27m8v
+         RIIwrpKPDCUBC8mZgihU14GMPr4nrWTzsu7b4/ID6SmrywG12aCbvzL1Lac06d5AhBWo
+         hFiQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792561625; x=1793166425;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=tSn2dX29VgDqk2hgfuzvCjkC5Mz2yIfzdQjrFRKGhV0=;
-        b=I7Ni1HORa0B131eLLvR7tnVbeqRpXu9mEPN0Fjn8VG3USOsxwc6fkVTKUrcNDnzeeC
-         OyjWQOGt2rgdA7Cq+7LqhgfxxwLGczMC1yraRnV4sIl4ANzvHbjfkKpLRDWEw7zzNBz6
-         XMQ1GokU4um5NruibN9D+N5QxRh37LcmvQvNbpWX9cAPGzWXW106IkbUskIa/crgkUaP
-         tUx3sVaxr6OBpiLvzFYlSqKlmD9Ccpy3rdl4lxeF7R/x0yFYQ/cAAxWuRh5qlOCdY3X8
-         nm1hQ3BdbJPgm69kdhBpsPsp8Fpby3hoonjxm6dvKEIwSPOlrv2w/J/QJXAD3Cn8d3N5
-         mxTw==
-X-Forwarded-Encrypted: i=1; AKwUvBza9CRTdzr2Ba6WmqMTtyMpYqfmWVaMbAVZelrphQW4B15sye3RbAYU54UVlN0v+nKtYRj7cEzy@vger.kernel.org
-X-Gm-Message-State: AFq9FYLINmbYqYCad31/mkI1f/3oY0Wwmud0Z//IhW1F4F4o/HyEptH3
-	T/d04itwhXPhHChpmFNLvvLaXLnxXmXEjA0GAM+4W2YL5tl/Q/7O/b0rccxJWp3Y2k2v4mrmDdb
-	JmG47jEGFXPMGwLA5ACJV3g++ZSFfI3I=
-X-Gm-Gg: AYBFou3Ch/TIou6E4r2VA146ZUlvt4ko9CjElI7EkShc0a2rrXmWyXlpIbDtYf4ul1N
-	X45hnohDHYJipxKXdfeUi3e21JvyDYzkE8o/dUkli67VMSmn3BCoqyp7ut5QL8jRQhwgy8+oQpd
-	YJqrGGsWs1mgHAqG0mpcEajX0rWhH92F1n8K7tPwMI1MYAnmUeknEajMQ/ClsdG/dL9DjsWQzh5
-	Iadr1FAFXFToklJAJQlPhVGVPBh1GqMdT29SblmeYJPUWMtZnsR4i1KPHx/QDVnHeLGNYGIXgB1
-	bW5aeLmG4Yr54E6xQapbDBCsILUuUbQCYCVE8Vxz3za/+szA/WXkAuI3nEWSLAuaGJCoTLCCNGP
-	4AtU90Q+i39270vNjZl7/RuOBlQL4RwKzlLXpXgLkCEHVW8rGVGbofeLEf/ZoWXWKwV18OH2Lev
-	kk2Xt0FMjbD/mk
-X-Received: by 2002:a05:690e:4390:b0:677:a7ac:5624 with SMTP id
- 956f58d0204a3-67a0e4bbea1mr386088d50.44.1792561625107; Tue, 20 Oct 2026
- 22:47:05 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792562607; x=1793167407;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=ziPSCJtGYqR9EgWBDjP1J8OHI+3Z8WTF74NVvp9jgKA=;
+        b=tMuTr9AKH+xK8U+mOX5oEMJPECNgDD8DXlAjiVvTCYGYXBU+/E+0JOJguYxgZ12YGz
+         uBhPN/l+wNMzuYWT+SVL8S/B2jg8iBbLUR8a7+HASEEpsk55NqH1I5YHGo6XiC+JpQ+w
+         S6thEaKt9OQUBYzew+UVfIB5dQ5mA9uB/dNdKBUOJXQ2pQ9993e1g4wbJDzj2M/yqbJE
+         tmFTxt2zFTbHQlP2v0MuzLzdXf21Z09l6wfz948PuODXmXeprCWu/GqKKQgXYgMooLQq
+         E4bXfBc8Xb9kblzIKHaDgFxXlfXRAmcuFLSsHokN1BwFpvkHvWTqJirzvIIPTJ3xb/St
+         vMXA==
+X-Forwarded-Encrypted: i=1; AKwUvBzHaBx1n3dKZZ/wvkEcUsTWiL2yXiGxkvfNcvvGchgok1QFJfCK4rKzs8ahp6DHkRnCZx6jEa88@vger.kernel.org
+X-Gm-Message-State: AFq9FYJXVGuSAkj7XsWCMQ+VIuf5asb9etCkzN1DYlISM1GJV93+toCZ
+	Rz3jy9/HZbnxQCqPmMlTfywjfZ8dshJdcnUMqTVdMT2ASXaYU5W76qgs
+X-Gm-Gg: AYBFou1/1LoPEzoJ6bvsQZJms4AKu0WYdB/WYMRDq+Vv9UNThmhMlaUNYXxv23gE6QQ
+	kBBk2ITi8ADXU9HF7VfjXB6tdnUY7I0ee+T2gW9HIy1ICU86g52+Jnj2iM55Yu+9Rsqm8SQcyPQ
+	VYgqP4musBwX7ZLPoZWdbfDkGJaWKvzzAZfdlXDI01ORA1G28FruE8g/rwEZRXPObj9mN8cIj8d
+	uZNjzWoUnyk5/8BdXTSmQWFmY53F7CdajmB/rvtWYknzyLZllnMncGps6cOCKFOPJ9h3e5aygaU
+	lkdq0LI0BN0BGxTvCMnzAA8RYuqAyVHkTIVy5nhw38Z2sR3KD3ymLAtQ0kZMUW1SCXBCnsvDN+v
+	D8X8Eo9OhBq0S+flTfeTFeRSNIR5gE5l2XhPQFcCXRGSzWc3ippQ5jeMJPuAbMgxVq+YFGqaDhl
+	l5nv+oNRlN5ZfEC5Sb6GJMN6Srz5HPkAcEZREL2YhVBJOt01x0SUAJlDW0yeI0+rgM3bKD4mfRI
+	piVr90X750OtQodKFiLMgDWs1B4nxN2mVIrBj98s3Y2LCPdDqiHqc7HbXiru/bFCcBauWVW1t5v
+	KlSPYY5b/aDAKRs0T3zIIGcKtOVCabDHNL6jjrfMlobzz3mBeAYkRmYS9zLP1roQ7DK+2+cELCf
+	WR34Kh3KHfA==
+X-Received: by 2002:a05:690e:458a:10b0:677:d3fb:6b6f with SMTP id 956f58d0204a3-67a0e57e7bdmr295150d50.116.1792562606795;
+        Tue, 20 Oct 2026 23:03:26 -0700 (PDT)
+Received: from localhost ([2a03:2880:10ff:51::])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67a0de4f56esm663275d50.0.2026.10.20.23.03.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Oct 2026 23:03:25 -0700 (PDT)
+From: Nhat Pham <nphamcs@gmail.com>
+To: akpm@linux-foundation.org
+Cc: chrisl@kernel.org,
+	kasong@tencent.com,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	yosry@kernel.org,
+	david@kernel.org,
+	muchun.song@linux.dev,
+	shikemeng@huaweicloud.com,
+	baoquan.he@linux.dev,
+	baohua@kernel.org,
+	youngjun.park@lge.com,
+	chengming.zhou@linux.dev,
+	ljs@kernel.org,
+	liam@infradead.org,
+	vbabka@kernel.org,
+	rppt@kernel.org,
+	surenb@google.com,
+	qi.zheng@linux.dev,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	riel@surriel.com,
+	gourry@gourry.net,
+	haowenchao22@gmail.com,
+	corbet@lwn.net,
+	hughd@google.com,
+	baolin.wang@linux.alibaba.com,
+	tj@kernel.org,
+	mkoutny@suse.com,
+	skhan@linuxfoundation.org,
+	rdunlap@infradead.org,
+	kunwu.chan@linux.dev,
+	kernel-team@meta.com,
+	nphamcs@gmail.com,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: [PATCH v6 00/12] Virtual Swap Space (Swap Table Edition)
+Date: Tue, 20 Oct 2026 23:03:11 -0700
+Message-ID: <20261021060323.553433-1-nphamcs@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,53 +133,425 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261019064157.29885-1-laoar.shao@gmail.com> <20261019064157.29885-2-laoar.shao@gmail.com>
- <179254940965.1919196.7604748267690139512.b4-reply@b4>
-In-Reply-To: <179254940965.1919196.7604748267690139512.b4-reply@b4>
-From: Yafang Shao <laoar.shao@gmail.com>
-Date: Wed, 21 Oct 2026 13:46:28 +0800
-X-Gm-Features: AclHuK9yUw3q9bz6eHz4oS9_OplikvSYcNJ_NBkBIXr9uF4A9eTzN6CgKR5Bujk
-Message-ID: <CALOAHbD_1rRWk+T4JU9gbQpjCnf6FnKmnj70U7G7CgWXdp61EQ@mail.gmail.com>
-Subject: Re: [RFC PATCH v3 bpf-next 1/5] sched: fix stale get_pref_llc() stub
- for !CONFIG_SCHED_CACHE
-To: "Gregory Price (Meta)" <gourry@gourry.net>
-Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, eddyz87@gmail.com, 
-	memxor@gmail.com, mingo@redhat.com, peterz@infradead.org, 
-	juri.lelli@redhat.com, vincent.guittot@linaro.org, akpm@linux-foundation.org, 
-	david@kernel.org, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, 
-	shakeel.butt@linux.dev, roman.gushchin@linux.dev, yu.c.chen@intel.com, 
-	zhao1.liu@intel.com, tim.c.chen@linux.intel.com, lizhe.67@bytedance.com, 
-	bpf@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 21, 2026 at 10:23=E2=80=AFAM Gregory Price (Meta) <gourry@gourr=
-y.net> wrote:
->
-> On 2026-10-19 14:41 +0800, Yafang Shao wrote:
-> > Commit b636fef85bda ("sched/cache: Introduce task_struct->sched_cache_g=
-rp
-> > to fix UAF") switched get_pref_llc() from taking a struct mm_struct * t=
-o
-> > taking the task's struct sched_cache_group *, but only updated the
-> > CONFIG_SCHED_CACHE definition and its caller: the stub in the
-> > !CONFIG_SCHED_CACHE branch kept the old mm_struct parameter.
-> >
-> > Fixes: b636fef85bda ("sched/cache: Introduce task_struct->sched_cache_g=
-rp to fix UAF")
-> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> > Cc: Tim Chen <tim.c.chen@linux.intel.com>
-> > Cc: Chen Yu <yu.c.chen@intel.com>
->
->
-> Reviewed-by: Gregory Price (Meta) <gourry@gourry.net>
->
-> Please submit fixes like these separate from your series.
+Changelog:
+* v5 [v5] -> v6
+    * Added a new cgroup memory.stats counter for vswap slots (patch 11).
+    * Fixed some small bugs: incorrect swap-allocation failure
+      classification, nofs check in phys swap fallback path, etc.
+    * Rebased onto a newer mm-unstable.
+* v4 [v4] -> v5
+    * OVERCOMMIT_GUESS now allows for 3xRAM margin when vswap is enabled,
+      to take into account swapfile-less zswap usage (proposed by
+      Johannes Weiner).
+    * Limit vswap swapfile size to 8TB and drop the last patch, to avoid
+      memcg private id refcnt saturation.
+    * More assorted cleanups and fixes: anon swappability check, etc.
+    * RFC: Replace the xarray with a new data structure (vmalloc array)
+      (new patch 11).
+    * Rebased onto mm-unstable.
+* v3 [v3] -> v4
+    * Replaced the runtime sysctl with a cmdline param, and remove
+      CONFIG_VSWAP (suggested by Johannes Weiner). CONFIG_VSWAP_DEFAULT_ON
+      now only gives the default value of the vswap cmdline parameter.
+    * Refactor swap-related memcg operations into composable building
+      blocks: reference acquisitions, charging, etc. (patch 8,
+      suggested by Johannes Weiner).
+    * Fixed vtable UAF bug reported by syzbot and Kunwu.
+    * Rebased onto mm-unstable (minimal merge conflicts).
+    * Re-run benchmarks (no signal change).
+* v2 [v2] -> v3:
+    * Rebased onto current mm-unstable.
+    * Add a runtime vm.vswap_enabled sysctl and CONFIG_VSWAP_DEFAULT_ON
+      to gate vswap allocation.
+    * More cleanups and small bug fixes.
+    * Split THP swapin enablement into its own patch (patch 5).
+    * Add production workload benchmark results, and drop RFC tag.
+* v1 [v1] -> v2:
+    * Rebased to a newer mm-unstable tip.
+    * Fix a bunch of assorted issues (incorrect zswap store failure
+      rollback, vswap_init() failure handling, rmap-encoding collision,
+      etc.) and clean up the code (rename a bunch of functions to
+      more closely follow existing patterns, etc.).
+    * Some more code clean up and simplification: some renamings to more
+      closely follow existing patterns, move vswap backing check to
+      __swap_cache_add_check, store zero state in the swap_table for
+      vswap entries, etc.. Many of these are proposed by Kairui Song
+      in [1].
+    * Defer memcg_table allocation on physical clusters until the first
+      vswap-backing slot installs. Saves ~512 bytes per physical cluster
+      that only serves vswap-backing slots (this is the new patch 8).
+    * Widen swap_info_struct->max and ->pages (and the swapoff unuse-path
+      index) so vswap supports ~8 PB of swap space (this is the new
+      patch 9).
+    * Split the physical-swap-backend patch into three for reviewability:
+      the core backend (patch 3), zswap writeback to physical swap
+      (patch 4), and reclaim of cache-only physical slots (patch 5). No
+      functional change.
+    * Add kerneldoc for the vswap API.
+    * Add some benchmark numbers for zswap case.
 
-Thanks for the review.
-I will send them separately.
 
---=20
-Regards
-Yafang
+Patch 12 is an RFC. It replaces vswap's cluster xarray with the VM_SPARSE
+vmalloc array Baoquan He designed for xswap [6]. This changes descriptor
+storage without adding a userspace interface. The array grows on demand
+but does not shrink [5]. Empty clusters release their per-cluster tables
+and return to the free list for reuse.
+
+The benchmark results below are from the xarray design. I have not
+benchmarked the VM_SPARSE version, but I have run a suite of simple stress
+tests.
+
+It is adapted almost entirely from Baoquan's code (see [6]), so I have
+kept Baoquan's Co-developed-by and Signed-off-by tag.
+
+
+I. Context and Motivation
+=========================
+
+Currently, when an anon page is swapped out, a slot in a backing swap
+device is allocated and stored in the page table entries that refer to
+the original page. This slot is also used as the "key" to find the
+swapped out content, as well as the index to swap data structures, such
+as the swap cache, or the swap cgroup mapping. Tying a swap entry to its
+backing slot in this way is performant and efficient when swap is purely
+just disk space, and swapoff is rare.
+
+However, the advent of many swap optimizations has exposed major
+drawbacks of this design. The first problem is that we occupy a physical
+slot in the swap space, even for pages that are NEVER expected to hit
+the disk: pages compressed and stored in the zswap pool, zero-filled
+pages, or pages rejected by both of these optimizations when zswap
+writeback is disabled. This is arguably the central shortcoming of
+zswap:
+* Resource-wise, it is hugely wasteful in terms of disk usage. At Meta,
+  we size swapfile in the order of 25-50% of host RAM, depending on flash
+  availability. This is a lot of flash for a fleet of our size, and
+  with universal zswap enablement, most of this is wasted for zswap
+  entries.
+
+* In deployments when no disk space can be afforded for swap (such as
+  mobile and embedded devices), users cannot adopt zswap, and are forced
+  to use zram. This is confusing for users, and creates extra burdens
+  for developers, having to develop and maintain similar features for
+  two separate swap backends (writeback, cgroup charging, THP support,
+  etc.). For instance, see the discussion in [2].
+
+* Tying zswap (and more generally, other in-memory swap backends) to
+  the current physical swapfile infrastructure makes zswap implicitly
+  statically sized. This does not make sense, as unlike disk swap, in
+  which we consume a limited resource (disk space or swapfile space) to
+  save another resource (memory), zswap consumes the same resource it is
+  saving (memory). The more we zswap, the more memory we have available,
+  not less. We are not rationing a limited resource when we limit
+  the size of the zswap pool, but rather we are capping the resource
+  (memory) saving potential of zswap. Under memory pressure, using
+  more zswap is almost always better than the alternative (disk IOs, or
+  even worse, OOMs), and dynamically sizing the zswap pool on demand
+  allows the system to flexibly respond to these precarious scenarios.
+
+* Operationally, static provisioning the swapfile for zswap poses
+  significant challenges, because the sysadmin has to prescribe how
+  much swap is needed a priori, for each combination of
+  (memory size x disk space x workload usage). It is even more
+  complicated when we take into account the variance of memory
+  compression, which changes the reclaim dynamics (and as a result,
+  swap space size requirement). The problem is further exacerbated for
+  users who rely on swap utilization (and exhaustion) as an OOM signal.
+
+  All of these factors make it very difficult to configure the swapfile
+  for zswap: too small of a swapfile and we risk preventable OOMs and
+  limit the memory saving potentials of zswap; too big of a swapfile
+  and we waste disk space and memory due to swap metadata overhead.
+  This dilemma becomes more drastic in high memory systems, which can
+  have up to TBs worth of memory.
+
+Swap virtualization is the answer to these issues, with three properties:
+
+1. Decoupled backends. For zswap in particular, this means we eliminate
+   the unused storage space, and allows zswap to be used in systems that
+   do not have enough storage capacity for physical swap (without having
+   to resort to silly hacks). Zero-filled swap pages and swap-cache-only
+   folios also benefit here.
+
+2. Dynamic swap space. Since virtual swap is not tied to any physical
+   resource, we can make it effectively infinite and dynamically grow it
+   on demand.
+   This massively simplifies operational provisioning, and increases the
+   utilization of compressed swap backends (zswap). Dynamicity also
+   reduces overhead on unused swap capacity.
+
+3. Efficient backend transfer. The virtualization scheme should not
+   introduce PTE/rmap walking overhead for backend transfer. This
+   is crucial for systems that want to support multiple swap backends
+   in a tiering fashion (for e.g zswap -> disk swap).
+
+For more historical contexts and references, please take a look at
+the cover letter of the older vswap submissions ([3] and [v2]).
+
+II. Design
+==========
+
+When vswap is enabled (via vswap=on cmdline parameter), a special vswap
+device is allocated at boot time. Anon pages eligible for zswap are first
+allocated virtual slots; physical slots are used if virtual allocation
+fails.
+
+These swap entries can subsequently acquire backend on-demand, such as
+a zswap entry, or a slot on a physical swap device (as a fallback option
+or at zswap writeback time).
+
+We repurpose much of the existing swap_table infrastructure and
+swapfile allocator for this new vswap device, with two notable
+differences:
+* Clusters are dynamically allocated on demand and managed through
+  an xarray. This in turn allows us to avoid static provisioning and
+  let swap space grow dynamically.
+
+* Each cluster of this new vswap device has a virtual_table that stores
+  the backend information of the entries in the cluster (see below).
+
+Diagrams:
+
+  Case 1: vswap entry (virtualized)
+
+  PTE                  swap_cluster_info_dynamic
+  vswap_entry          +---------------------------------+
+  (swp_entry_t) ------>| swap_cluster_info (ci)          |
+                       | +----------------------------+  |
+                       | | swap_table                 |  |
+                       | |   PFN / Shadow             |  |
+                       | | memcg_table                |  |
+                       | | count,flags,order          |  |
+                       | | lock, list                 |  |
+                       | +----------------------------+  |
+                       |                                 |
+                       | virtual_table                   |
+                       | +----------------------------+  |
+                       | | NONE                       |  |
+                       | | SWAPFILE(swp_entry_t)      |  |
+                       | | ZSWAP(struct zswap_entry*) |  |
+                       | +----------------------------+  |
+                       +---------------------------------+
+                              |
+                              | SWAPFILE resolves to
+                              v
+                       PHYSICAL CLUSTER (swap_cluster_info)
+                       +--------------------------+
+                       | swap_table per-slot:     |
+                       |   NULL   - free          |
+                       |   PFN    - cached folio  |
+                       |   Shadow - swapped out   |
+                       |   Vswap  - vswap rmap    |
+                       |   Bad    - unusable      |
+                       |                          |
+                       | Vswap-backing slot:      |
+                       |   Vswap(C|swp_entry_t)   |
+                       |     rmap back to vswap   |
+                       +--------------------------+
+
+  Case 2: direct-mapped physical entry (no vswap)
+
+  PTE                  PHYSICAL CLUSTER (swap_cluster_info)
+  phys_entry           +--------------------------+
+  (swp_entry_t) ------>| swap_table per-slot:     |
+                       |   NULL   - free          |
+                       |   PFN    - cached folio  |
+                       |   Shadow - swapped out   |
+                       |   Bad    - unusable      |
+                       +--------------------------+
+
+struct swap_cluster_info_dynamic {
+    struct swap_cluster_info ci;       /* swap_table, lock, etc. */
+    unsigned int index;                /* position in xarray */
+    struct rcu_head rcu;               /* kfree_rcu deferred free */
+    atomic_long_t *virtual_table;      /* backend info, 8 B/slot */
+};
+
+Each vswap cluster (swap_cluster_info_dynamic) extends the classic
+swap_cluster_info struct with a virtual_table array that stores the
+backend information for each virtual swap entry in the cluster. Each
+entry is tag-encoded in the low 3 bits to indicate the backend type:
+
+  NONE:     |----- 0000 ------|000|  no separate backend
+  ZSWAP:    |--- zswap_entry* |001|  compressed in zswap
+  SWAPFILE: |- type:5,off:56 -|010|  on a physical swapfile
+
+Zero-filled pages use the swap_table zero flag; cache folios use its PFN
+entries.
+
+Other design highlights:
+
+* Note that for the vswap device, we have merged the zswap xarray tree
+  with the swapfile-level clusters. This means that for zswap only users,
+  we have negligible extra space overhead.
+
+* Both vswap entries (Case 1) and directly-mapped physical entries
+  (Case 2) coexist as first-class citizens.
+
+* Backend transitions in the virtual_table are synchronized through the
+  swap cache and the folio lock - the same mechanism that already
+  serializes ordinary swap operations (swapin, swapout, zswap
+  writeback, swap cache reclaim). IOW, we can only assume that the
+  backend of a vswap entry is stable through swap cache/folio lock.
+  Looking at the backend without this should be done at best for
+  optimization purposes, as there is no guarantee that the backend
+  will not change under the observer.
+
+* Vswap-tagged swap_table entries on physical clusters provide the
+  rmap (physical -> virtual) lookup.
+
+* Virtual swap entries count towards memory.swap.current only when
+  backed by physical swap slots [4]. In cgroup v1, vswap entries are still
+  accounted towards the memsw counter.
+
+III. Benchmarks
+===============
+
+Note that the goal is not to match vswap performance with baseline on
+every single case yet - running with vswap off is still supported. We
+can optimize further once we have landed this new feature.
+
+A. Production Workload: Instagram
+=================================
+
+To test vswap's stability and performance, I ran an A/B experiment on
+Instagram (django) workload, with zswap as the swap backend. On these
+hosts, the swapfiles' size is 50% of RAM.
+
+Compared to baseline, vswap gives:
+
+* On par request throughput.
+* Lower request serving latency (by about 1-3%).
+* Lower memory pressure in the system service cgroups running alongside
+  the workload. PSI-based proactive reclaimer can therefore recover more
+  from them, lowering their overall memory footprint, allowing the main
+  workload to expand.
+* Elimination of swapfile footprint for all zswap users in the host.
+
+B. Semi-synthetic Workloads (memhog, usemem, kernel build)
+==========================================================
+
+All values are mean +/- standard deviation across rounds.
+
+Test system: x86_64, 52 cores, 64 GB swapfile for all 3 benchmarks.
+Swap backend: zswap (zstd) with the traditional active/inactive LRU. We
+focus on zswap here because it is the motivating use case for vswap.
+
+For each benchmark, we test 3 kernels:
+* Baseline: mm-unstable, no vswap patches.
+* VSS off: vswap series applied, vswap=off, to verify that there is no
+  regression to existing swap paths when we disable vswap.
+* VSS on: vswap series applied, vswap=on.
+
+1. Memhog: single-threaded, 48GB allocation on a host with 16GB RAM,
+   20 rounds.
+
+                    Baseline           VSS off            VSS on
+   real (s)        124.05 +/- 11.64   122.31 +/- 10.29   118.57 +/- 15.68
+   sys (s)         106.75 +/- 10.86   105.01 +/- 9.64    101.34 +/- 13.97
+   user (s)        10.81 +/- 0.11     10.85 +/- 0.09     10.79 +/- 0.09
+   delta real              -              -1.4%              -4.4%
+   delta sys               -              -1.6%              -5.1%
+
+Dropping the best and the worst round to reduce variance:
+
+   memhog              Baseline           VSS off            VSS on
+   real (s)        123.75 +/- 10.39   122.04 +/- 9.10    116.06 +/- 8.22
+   sys (s)         106.80 +/- 10.21   104.99 +/- 8.86    99.29 +/- 8.27
+   user (s)        10.82 +/- 0.11     10.85 +/- 0.08     10.79 +/- 0.10
+   delta real              -              -1.4%              -6.2%
+   delta sys               -              -1.7%              -7.0%
+
+
+2. Usemem single-threaded: 56GB allocation on a host with 32GB RAM,
+   16 rounds.
+
+                    Baseline           VSS off            VSS on
+   real (s)        178.75 +/- 6.47    178.95 +/- 6.56    175.97 +/- 7.74
+   sys (s)         127.03 +/- 6.56    128.08 +/- 6.59    124.71 +/- 7.90
+   tput (KB/s)     386662 +/- 14648   386264 +/- 15150   390443 +/- 17532
+   free (ms)       7669 +/- 146       7678 +/- 136       6439 +/- 111
+   delta real              -              +0.1%              -1.6%
+   delta sys               -              +0.8%              -1.8%
+   delta tput              -              -0.1%              +1.0%
+   delta free              -              +0.1%             -16.0%
+
+3. Kernel build: 52 workers (one per processor), memory.max=3GB, 10 rounds.
+
+                    Baseline           VSS off            VSS on
+   real (s)        165.58 +/- 0.45    165.83 +/- 0.49    166.01 +/- 0.58
+   sys (s)         694.24 +/- 26.13   710.76 +/- 19.83   705.06 +/- 21.40
+   user (s)       5132.62 +/- 1.12   5133.69 +/- 1.57   5134.68 +/- 1.68
+   delta real              -              +0.2%              +0.3%
+   delta sys               -              +2.4%              +1.6%
+   delta user              -              +0.0%              +0.0%
+
+
+For zswap backend, vswap outperforms baseline on usemem freeing, and is
+on par with baseline on the rest.
+
+IV. References
+==============
+
+[v1]: https://lore.kernel.org/all/20260528212955.1912856-1-nphamcs@gmail.com/
+[v2]: https://lore.kernel.org/all/20260612193738.2183968-1-nphamcs@gmail.com/
+[v3]: https://lore.kernel.org/all/20260806184254.3790858-1-nphamcs@gmail.com/
+[v4]: https://lore.kernel.org/all/20260825153238.2695446-1-nphamcs@gmail.com/
+[v5]: https://lore.kernel.org/all/20260918180241.3424851-1-nphamcs@gmail.com/
+[1]: https://lore.kernel.org/all/CAMgjq7BhOn48xEyC=2j837R7qddfjeBVHMiRqdx8no4ZEBpBLg@mail.gmail.com/
+[2]: https://lore.kernel.org/all/Zqe_Nab-Df1CN7iW@infradead.org/
+[3]: https://lore.kernel.org/all/20260505153854.1612033-1-nphamcs@gmail.com/
+[4]: https://lore.kernel.org/linux-mm/CAKEwX=P4syV38jAVCWq198r2OHXXc=xA-fx1dk6+qYef6yzxWQ@mail.gmail.com/
+[5]: https://lore.kernel.org/all/aqjpYHbZ14A8xRtK@fedora/
+[6]: https://lore.kernel.org/all/20260916101929.149106-1-hebaoquan@kylinos.cn/
+
+Nhat Pham (12):
+  mm, swap: add virtual swap device infrastructure
+  mm, swap: support zswap and zero-filled swap pages as vswap backends
+  mm, swap: prepare the swap IO path for vswap
+  mm, swap: support physical swap as a vswap backend
+  mm, swap: enable THP swapin for vswap entries
+  mm, swap: write back vswap zswap entries to physical swap
+  mm, swap: reclaim physical slots backing cache-only vswap entries
+  mm, swap: only charge physical swap entries
+  mm, swap: add debugfs counters for vswap
+  mm, swap: defer memcg_table allocation for physical swap clusters
+  mm, swap: add vmstat and memcg counters for vswap
+  mm, swap: back vswap clusters with a VM_SPARSE array
+
+ .../admin-guide/cgroup-v1/memcg_test.rst      |    2 +-
+ .../admin-guide/cgroup-v1/memory.rst          |    3 +-
+ Documentation/admin-guide/cgroup-v2.rst       |   54 +-
+ .../admin-guide/kernel-parameters.txt         |    7 +
+ MAINTAINERS                                   |    1 +
+ include/linux/memcontrol.h                    |    7 +
+ include/linux/swap.h                          |  101 +-
+ include/linux/swap_ops.h                      |   10 +-
+ include/linux/vmstat.h                        |    3 +
+ include/linux/zswap.h                         |    4 +
+ mm/Kconfig                                    |   20 +
+ mm/memcontrol-v1.c                            |   13 +-
+ mm/memcontrol.c                               |  208 ++-
+ mm/memory.c                                   |   21 +-
+ mm/page_io.c                                  |  104 +-
+ mm/shmem.c                                    |    4 +-
+ mm/swap.h                                     |   28 +-
+ mm/swap_state.c                               |   62 +-
+ mm/swap_table.h                               |   64 +-
+ mm/swapfile.c                                 | 1241 +++++++++++++++--
+ mm/util.c                                     |   13 +-
+ mm/vmscan.c                                   |   41 +-
+ mm/vmstat.c                                   |    6 +
+ mm/vswap.h                                    |  438 ++++++
+ mm/workingset.c                               |    2 +-
+ mm/zswap.c                                    |  127 +-
+ 26 files changed, 2291 insertions(+), 293 deletions(-)
+ create mode 100644 mm/vswap.h
+
+
+base-commit: 4dbe24720eb3811563cd56b35d87ddf3f9beed2a
+-- 
+2.53.0-Meta
+
