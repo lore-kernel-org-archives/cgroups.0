@@ -1,87 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.160
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792615203;
-	b=qBd5cm8M+hc3ZkszlZv8ynVRQV36K9TZPoPE3kjeKRGyVVzONb924RRsC4xSuEMMzq85
-	 ujRcXuWgfXMe85gsht2GglCmpDaLvwj5cAkbHosjVg9NvmAJMKWD8RPfkDfzR8g0ADB4+
-	 ue+6dwNMFnhTsSvgoNxa/9ea0PqT3C7XuPeLD34R1B4Y3o1lTObdoGulicktnJp2R8RB2
-	 J+7jlqzt8Jcvq/RxwKwb6yVHdiTilNOWHCKARZLftEaspKWPtrRW8SlWbYqXx8UYh3Igm
-	 IQJoU0HStgn0P/rcn9YBJM3Aph3U3TNAx60lXHB/LFF/5BTcued3LH7+D1IQu4nqQZg==
+	t=1792615706;
+	b=dD1VbTkVf593fCgX0ubjETxvFY7ZZJqaUTpBob3mzkTGz2tzpMJJFKveSyGsVEcz/zWe
+	 MYz2Ey9DxIeuMM+9bF4m5m/ZXUcLAWv34pEt2pzBEUQxOLXskSP2gfmq2crCn0VneoEXQ
+	 ZVOWcfWN1KgXQRl/UFGZKkfKnUUWhDS3+zEyDIZER9VRt4ej0Qir4+ixzDTO0UxhnREL9
+	 Ttdasq+ltyIINmfk38HQzKdyKRJr3v3C15yPECuLbw3QcfA8NtZVMn3bC9lilNpfAEIr5
+	 PqWSKmhM+06V6qeUjQVUMWt+c2KEcIgDv8aPeVZbjCZpwixhM/QcZrZ4pXmoNtOvi7Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792615203;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Subject:
-	 From:To:Cc:Date:In-Reply-To:References:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=juErZhvjoSkm5e8GzLZMCvXuam8Gd7RIkFvc7uAIv/w=;
-	b=UcYv+vx9ZqqA9UhAdIz1qfg2kmZt/7Vf5XjzljVtyf2MKTwX+1nb6BIRuEMMZ7FTLFJ1
-	 tqA6dITvq2PhezWkbqhELhEJpX6VskvneqzWF2D17rK5KhEEqZRVW5SwTrUas0G6oh40o
-	 T/gGluOUdmf/dT8QGoihOJZpVniIB6eCPZcpSc8sEybqecXYX3NQLdaYrJdSwagsLoeWs
-	 a4bjiDzsQomiffB8n550rFWvS1B1SydZsbz2aEfgPZu9+yiD2xUx4Mr5Iz/57gSrN0DAW
-	 MptGu/Bir86CO6fBNNE33w14kuEj1t07rr4wu7Ak+3VaOpfcs41WoCU3DeGVI83rsOw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792615706;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=6rUMDLFXufXDaESzYj+9ZndTGVI79zhxIDwrHIe4u+k=;
+	b=C2/hoB58OvrOUJXp/Zc1j61IR1kQNGh+KYMpxknCxN4D+0lQz+5vMboyGkm7nkOhH0gK
+	 UWrxCAehxWM7F+lVdmkiRdfltnVb+A4Soy+xIJFHdQ31d0KtrkSsPWk0lQHuYkXNb4oVN
+	 coff7w+9qciEK4YwTLEDilRkmwRyZm98q/FXZAiZ/u5S866SEHSKObA/urB99yOolz72F
+	 ABJfuv+nvbjXePsHtedi9k92mrmcsBeluL4CV+ySsPTinekA3DQz+lCChYkqPbhEJo4Jf
+	 RXh1RGGU22g4o/Vv1hcoekUMiVpLuyk0Rbp7CHLLjW3HB44FuE7SnzSOFj+U3wZWeCw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GhlogCuR;
-	arc=none smtp.remote-ip=192.198.163.12
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=kNHzWUKh;
+	arc=none smtp.remote-ip=91.218.175.160
+Received: from mta0.migadu.com (out-160.mta0.migadu.com [91.218.175.160])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC93B606A32C;
-	Wed, 21 Oct 2026 20:40:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DC93B606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E075F606A31A
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 20:48:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E075F606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=GhlogCuR
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1792615203; x=1824151203;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=J5q7gxHb9njBGGMG4RpHoR7VIzzwmBGZbkkvnhJBKA0=;
-  b=GhlogCuRzdBGj7MCL90UYCwuatoGstdFI+z8Mkh9vAOZ7kmSsPT8GFQP
-   PEEwTcmrA7jED8800DRTE0vyO4Eys1zAYqWJhPjxkoZwxCavsGkQepII9
-   ejY0v9vkZeQM+YZGESE+03KMofZ9cfzR/OF+aD9z98VCfgsN7oBqRIcwc
-   dhrFDOpMg0w6Fre2aTCpHjGQEDGaPeCEIQDda71C36MqrXpgf7cIIRfM1
-   avB5fsNWGJAHUSX/TL0qMmFq+p9xbm1wfF/16X4sSeB9xCWw7uqBmfa7p
-   WrhtSinP5rjPtUpwODW1dpl1UOpAEa/OOdLvnvdSkJWndetAFOg95heD8
-   A==;
-X-CSE-ConnectionGUID: aPs//FJdTpab+oEjulmjTw==
-X-CSE-MsgGUID: 8nKBQ0jYSImbr5w7OyAcyg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11942"; a="1257293"
-X-IronPort-AV: E=Sophos;i="6.27,170,1787036400"; 
-   d="scan'208";a="1257293"
-Received: from fmviesa013.fm.intel.com ([10.60.135.153])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 13:40:02 -0700
-X-CSE-ConnectionGUID: x2Z9GKP8TG6vbIsZ4Fic/A==
-X-CSE-MsgGUID: 3/BEZK9pTXOVpTGnUawn+A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,170,1787036400"; 
-   d="scan'208";a="4982516"
-Received: from unknown (HELO [10.241.242.209]) ([10.241.242.209])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2026 13:40:02 -0700
-Message-ID: <cbf93381e02861620b012ace93c816f2c0822fea.camel@linux.intel.com>
-Subject: Re: [RFC PATCH v3 bpf-next 1/5] sched: fix stale get_pref_llc()
- stub for !CONFIG_SCHED_CACHE
-From: Tim Chen <tim.c.chen@linux.intel.com>
-To: Yafang Shao <laoar.shao@gmail.com>, ast@kernel.org,
- daniel@iogearbox.net, 	andrii@kernel.org, eddyz87@gmail.com,
- memxor@gmail.com, mingo@redhat.com, 	peterz@infradead.org,
- juri.lelli@redhat.com, vincent.guittot@linaro.org, 
-	akpm@linux-foundation.org, david@kernel.org, gourry@gourry.net,
- tj@kernel.org, 	hannes@cmpxchg.org, mkoutny@suse.com,
- shakeel.butt@linux.dev, 	roman.gushchin@linux.dev, yu.c.chen@intel.com,
- zhao1.liu@intel.com, 	lizhe.67@bytedance.com
-Cc: bpf@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Date: Wed, 21 Oct 2026 13:40:01 -0700
-In-Reply-To: <20261019064157.29885-2-laoar.shao@gmail.com>
-References: <20261019064157.29885-1-laoar.shao@gmail.com>
-	 <20261019064157.29885-2-laoar.shao@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.1 (3.58.1-1.fc43) 
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=kNHzWUKh
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=+AiOmE1TdqOARmJDv1cMb8HWamB96s35l1LjYS9KVD8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792615704; v=1; x=1793220504;
+ b=kNHzWUKhUT6nfr8AUMoVmehPg7pSMDXUvzGPCSWVkfW8+8hj3iBIwTl5vLKnjA4HooFqZjGN
+ o27gI6gi9HqO6BHsWSGUz/6EJ33QNGdawWOPFRDKLQYCV6LTVbtujHTuvam0Vr89bh+DCQKT8UI
+ w/4Ntz3+6lziqgcxX8gYUTsU=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 16fb233232d2ba21;
+	Wed, 21 Oct 2026 20:48:23 +0000
+X-Mizu-Trace-ID: 16fb233232d2ba21
+X-Migadu-Flow: FLOW_OUT
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Chris Down <chris@chrisdown.name>,
+	Meta kernel team <kernel-team@meta.com>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>
+Subject: [PATCH] mm/page_counter: use WRITE_ONCE() for emin/elow when parent is the root
+Date: Wed, 21 Oct 2026 13:48:18 -0700
+Message-ID: <20261021204818.3431099-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -91,45 +71,69 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Mon, 2026-10-19 at 14:41 +0800, Yafang Shao wrote:
-> Commit b636fef85bda ("sched/cache: Introduce task_struct->sched_cache_grp
-> to fix UAF") switched get_pref_llc() from taking a struct mm_struct * to
-> taking the task's struct sched_cache_group *, but only updated the
-> CONFIG_SCHED_CACHE definition and its caller: the stub in the
-> !CONFIG_SCHED_CACHE branch kept the old mm_struct parameter.
->=20
-> Fixes: b636fef85bda ("sched/cache: Introduce task_struct->sched_cache_grp=
- to fix UAF")
+page_counter_calculate_protection() runs without locks. Several
+reclaimers can update the same counter's emin and elow at the same
+time, and readers such as mem_cgroup_below_min(), mem_cgroup_protection()
+and the dmem eviction code load them with READ_ONCE().
 
-Cc: <stable@vger.kernel.org> #v7.2.x
+Commit b3a7822e5e75 ("mm, memcg: prevent mem_cgroup_protected store
+tearing") made the main path store emin and elow with WRITE_ONCE(), but
+it missed the early return for a counter whose parent is the reclaim
+root. Those two stores are the only plain accesses to emin and elow
+left.
 
-> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> Cc: Tim Chen <tim.c.chen@linux.intel.com>
-> Cc: Chen Yu <yu.c.chen@intel.com>
-> ---
->  kernel/sched/fair.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 57360f5cdde4..973647ad6c2d 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -2194,7 +2194,7 @@ void init_sched_mm(struct task_struct *p) { }
->  static void task_tick_cache(struct rq *rq, struct task_struct *p) { }
-> =20
->  static inline int get_pref_llc(struct task_struct *p,
-> -			       struct mm_struct *mm)
-> +			       struct sched_cache_group *grp)
->  {
->  	return -1;
->  }
+With CONFIG_KCSAN_STRICT=y, a few tasks writing to the same cgroup's
+memory.reclaim trigger reports like this within seconds:
 
-Thanks for catching it.
+  BUG: KCSAN: data-race in page_counter_calculate_protection / shrink_node
 
-Should be backported to 7.2.x kernel as commit b636fef85bda
-that this patch fixes has been backported to stable.
+  read (marked) to 0xff1f91b146d40e40 of 8 bytes by task 163 on cpu 4:
+   shrink_node+0x57a/0x1210
+   do_try_to_free_pages+0x194/0x930
+   try_to_free_mem_cgroup_pages+0x204/0x3f0
+   user_proactive_reclaim+0x28a/0x4d0
+   memory_reclaim+0x35/0x50
+   ...
 
-Reviewed-by: Tim Chen <tim.c.chen@linux.intel.com>
+  write to 0xff1f91b146d40e40 of 8 bytes by task 167 on cpu 6:
+   page_counter_calculate_protection+0x1fa/0x360
+   mem_cgroup_calculate_protection+0x4e/0x70
+   shrink_node+0x53e/0x1210
+   ...
 
-Tim
+The default KCSAN config does not report it, because it treats aligned
+word-sized plain writes as atomic.
+
+Use WRITE_ONCE() for these two stores as well.
+
+There is no functional change. Readers already accept stale values, and
+compilers emit a single word-sized store either way: with GCC 14 the
+x86-64 object code is the same before and after this change.
+
+Fixes: b3a7822e5e75 ("mm, memcg: prevent mem_cgroup_protected store tearing")
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+ mm/page_counter.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index 9167ffd1380c..5293460831f8 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -472,8 +472,8 @@ void page_counter_calculate_protection(struct page_counter *root,
+ 		return;
+ 
+ 	if (parent == root) {
+-		counter->emin = READ_ONCE(counter->min);
+-		counter->elow = READ_ONCE(counter->low);
++		WRITE_ONCE(counter->emin, READ_ONCE(counter->min));
++		WRITE_ONCE(counter->elow, READ_ONCE(counter->low));
+ 		return;
+ 	}
+ 
+-- 
+2.53.0-Meta
+
