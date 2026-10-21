@@ -1,101 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.44
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792600807;
-	b=cnAD7QanpxD7G3vRVwWMkVLFp/i2rvdEoM69Wu7lSa/dAyU7bhlsceOSzIV7U6WyWEWV
-	 frAmkdK5rnp/aK9sbJfnymTVO0eAherz5kYKDT/1sm40lSJ1B9FurNN4rFgrdXKBV93a8
-	 k1aqEEbvm3QzA2k+P+7epHQ+tXUzyzb5oAKIkHIUwgYdI+P1G9WXJMYc2F2+2K/xF25Qz
-	 Ne1U0zIP8rNK8HnWiYwAqFH37fG082wFGD6g8unidqCDI/WaoOU3hOqOXYicdneOsDPki
-	 91k9fEFVMHtJQ9sHXbt9PH5SQdpmBmNQwtt7kcEqikBAygjUP9OPcW+MXT5zvSCoMBw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792600807;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.43
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1792605050;
+	b=Ij/0zj5YJlDrCtKog8gFprDxDBsjc3P8PCKgaN9YbOrNtTi2XN7TAOuZ8GfeUTU/r40/
+	 XBz0BOjYCHnRSLDU8CHmihA3tmMY8xGEmUBw859h8P1wiVU0QlJJL7+8NCG66/Bmt4Xv/
+	 a5GfWtOCBZfab8Nb8coEb4xqeEFsVyczgadxT5UXSXizytxG0MhP/Vda6TzxsDhRZj1Yw
+	 TtMANoWyVXTEPn+/tjs7pozX7p88kA4qefpU1o4FHve3bQ5maQSoWATjO4SfA7LMwymgD
+	 JL67HJOPO4zi8lFKrF7i/1N4fGaYV57Yc3kGC74o1D1Npj6oRqez0gph660M4EZHloA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792605050;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=9gOUhyLHHkMJbpilfrmh1aBh45/2ZIo3brA+Cp6zFLs=;
-	b=AglR2sijHn/GRk83MKG/cL07Dt4LyBIDlnaq6tghvoOo9nxlxrUIOpkPGTYrHIwND3/+
-	 f7SOBKJ8CAXgUfy+9/Jfy5mNtMZkLq/8uUlhIszMMrOkh3chnrk1X7+EhRcVtPFFw1zhB
-	 8Kcc5JX5IdmPYy2W/YYINly6+7CF87aumJrteIAo5bHQ807dCtiKUlZ1HbVNbbLwCavzK
-	 FvfUb9jmHPCgw594givve7BUYlG4Xb6UNK3j8nVgzKiG5hiHpM5nfG9f5cGuFMChQp4aR
-	 fqtvbuiV5PkEgI+FZtzZMowFYP7Ruu2wz9p2KibGgAxW5UEeaiU31hjVqCvWnR+7+Rg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=fjO05O2Q;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.44
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=mE9Ag/gCpQwpic9Sbpc9hGK5nNJZ45oi/KyynO+C5Ws=;
+	b=wMWkKfwUIJzLfzOV2OaIlfvzI/tsUj8LKG4NByCq9JfdtHTtoGvM4Rz5u/7D2NzrYxo6
+	 jzb8EKUICvukgZu2p7fjB8Wc8daEYBAitFQLsgRyxtSZT9si/KCyKJj3mmoCVVJdCttp4
+	 246GlK5HEw2zqvrikKIqVK6YFF7XiNV1G6qtDiaUlYozEc6y5ppbjL7K9f349m67fcvKW
+	 lgH8jTQKFaIUox8kUOmxHmSCfRXp+/o3+1cIFzPshysQmwHIxnOX7FuWSno4DOoCQkKec
+	 UDXVAfWjMX6ilJusthwWBoy4XVLnbftYFAnY5q1rhxUobVb0IX2UdLmrFsY+sOnb2wg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=trailofbits.com;
+	spf=pass smtp.mailfrom=trailofbits.com;
+	dkim=pass header.d=trailofbits.com header.i=@trailofbits.com header.a=rsa-sha256 header.s=google header.b=AcdzYn+x;
+	arc=none smtp.remote-ip=74.125.82.43
+Received: from mail-dl1-f43.google.com (mail-dl1-f43.google.com [74.125.82.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF86606A32F
-	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 16:40:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BF86606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5624B606A31B
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 17:50:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5624B606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=trailofbits.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=trailofbits.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20251104 header.b=fjO05O2Q
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4a1d2ec9aadso62575e9.1
-        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 09:40:06 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792600805; cv=none;
-        d=google.com; s=arc-20260327;
-        b=qcJ1J/ir50OW2wC6gsC9Z18EJDTgZs9KrL53fzFc4V5wgTbegO5MzRdKXgDgQpxjKF
-         r5e6XBl9zt/6l6wISumRNqORGz72wwu6yBu+l7T4/HFmHOOI7jy3gFZ9v2myNxdFJbfP
-         nhJfp0EMBcvx9P1txKa3znzJwkwFqdiCgJxZvSJ7v7ZFhSaR2vBWEIbp8p/Bk2HGm4NF
-         Lz5UwxkUWaHxsZMJvnAKj3+kQaGSVUWrh9P3QsPr/UQUDTE/arSt/yZ4hhUwp4W6oTfP
-         ryQEVJCeTLDT1cnkPDJG9Tn3yB66KhEUU5ThYdwGnfLaU7FQEXhkVnPyhRIWFIpXupwl
-         Gqvg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9gOUhyLHHkMJbpilfrmh1aBh45/2ZIo3brA+Cp6zFLs=;
-        fh=i7CnD/d2qOVEo1Hxbp2qf2dyxm6ZlYDfnoukqPSPk1g=;
-        b=W/Q6v3dJiIHHpswt1Y7NTER/+Z2hb8N43+xJ2oFQUbKtun7Smjl29GsOFXwC1YPBEV
-         B9hmR5ayAY5Fojkge5wmPhML9puURxrCvoNsADJwTontKg1pcK7NEQmBEY69QKG8kQDH
-         H8sFuciIf6/7hp6j65aVafeXkW8AJenTa7wHu+9GIbA95vx2RzhnslMa7FAbXJQulGKo
-         jkZJBhSkI47XfnyuRz3iUC2di4PsmgnFJb25e/a2cNX6ZvjysSusMtgZ9D1D5Je+E9Fg
-         r1oLozN6nsjSoJoK9nY/62t+uqSPjuYAH0vy/6hZdjytP34mCiIDcZXHfAGy4/SZarzb
-         w1Dg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=trailofbits.com header.i=@trailofbits.com header.a=rsa-sha256 header.s=google header.b=AcdzYn+x
+Received: by mail-dl1-f43.google.com with SMTP id a92af1059eb24-192faaff686so17865c88.1
+        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 10:50:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20251104; t=1792600805; x=1793205605; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9gOUhyLHHkMJbpilfrmh1aBh45/2ZIo3brA+Cp6zFLs=;
-        b=fjO05O2Q0qGAPz81SNh/wciIGLSVT1/aMsj6RZh1P7UKkYUE2JsJlY1gD7dCqE2jP8
-         GbD0n5CmgUlv593JGStjdrJJ4k1DC3DRhq4qeK26T+op8QKD4DNA/IEP4BwGmjRnD/vj
-         p0UwCNmLmKxr3bMk5UsiQn3yDNx5KXdGGgC0XySv5dgiLy+O70DnLUr2FIw4nEYRk04T
-         9xWQEmITDxv6n+2mrPdyxWaWWOg8PKlCcn1C5t/KmpMCP6p2D/laetw9OkCC8vpHr713
-         Fg0EBR85vvRdeW12s7uDq240KVnroB/GPTGurUk+skAjqwjOKY9SaumizECQEpuvDLPK
-         RCvg==
+        d=trailofbits.com; s=google; t=1792605049; x=1793209849; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=mE9Ag/gCpQwpic9Sbpc9hGK5nNJZ45oi/KyynO+C5Ws=;
+        b=AcdzYn+xJgZ24qhdgNzJ+znHcPBAcXz72e9f4fQNiIdR9DHJ88983AMvTE3ngzyFC7
+         SDCp43YiGEg2N4XU5y9IxSku8AVhcBQifpG6b+xFWQnuaUlWF9eKV6mIv1RvQan4ZlRi
+         A9tHlhTbISYlznruJmqYxa1i5DlWZ1i41oAkZUkiMLDZRtM51ZkD4+XEWQBcQnhAHTow
+         3uG185oH+MfhXlZiE12QtsqR6cagzCQoEmcGwZ9t3m3bGudFO8B9vNQh02gnj6beJXsG
+         HBNvvitmYn6+WQzRXLedcKF7QS4HnyyjH8bwxj1aB5uT88pEdpQBBl5Ih/61fj7fuIIF
+         Trxw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792600805; x=1793205605;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=9gOUhyLHHkMJbpilfrmh1aBh45/2ZIo3brA+Cp6zFLs=;
-        b=K2mpAhrHzVUTYZz4JRtqAg8ODHmHcfC9ULHpsNfKeXh8mn1OMa54qA+A9T3tXNwVuE
-         C6fsGkJdjjAeuOwRyPuIHCr5Sorn8W2qHzISFZCWNhfWTm5OoGdmT3CXfg3uDvzRTq7O
-         ykTU1Z9l6orI83x2mo/z1WzW2nhLJ500oG8zqKu1UgAU55yiRnJFixea5S6V0x6Zd/mV
-         E6kvDt8ibxKUr3JEJa0BfA6bGd7tkrHmRgTVo8RilCVIZHRN/DXAF69TXzEjy6qqAlOt
-         suagtRNOO3Y9TzM0nejimrgyENWPVw8dywlDkwCgorHD5KKiI2UWqwoWZRbXASaXDt/E
-         Ze5A==
-X-Forwarded-Encrypted: i=1; AKwUvBwVnCvAt6wj8TscODg2U6dAhU+d1IRPGslYVUI/OZAG0+rL1vPquY8rLEe1SyXvkCKs10qL14X2@vger.kernel.org
-X-Gm-Message-State: AFq9FYICPDhtBudDuHWgcGbP+8ucwJ05neBiD95hl+ZCiImhbR//e3dz
-	FvgYESBbVZcCnnQ3Bz8Bi+7wJV8K9p/WFZSMUuUyczPCH59j6i8iVPhZCFcf7qd11tSNuTHM+jM
-	vj0He7GfThGMOgBKYpv0oD2+vV1nE0Gl+VpuSploL
-X-Gm-Gg: AYBFou1ZNjvUEBMyp0FcnE0eIbXHsLUi/yr5sYKA7gMqhaFZaSdeyHP+3ZILd4euNgX
-	01JP+B4XKDP7VKd1A4G2OqzqNQttgVkKXL1uqVqIkiqU8EcqQUua6t0Js5Bm0KiRZAgxiz+YU2l
-	DMew1d14oIjhsCW8bJEJWgIi5ujN3VlzvxYtYfqU3Q+16E3mBvji/EDbrrIkxec6nQYYVxKuAcT
-	hWNSMfjD6VfC187x+XLou7e8iqWBBOQ5DilPP9iAUJ1i2cS+g0O/6I+gAPTOsRE76gdoOHFf6LK
-	jQbqds6W80hCXa2kNiYCXSgXqgVxdbuIX5DvPjXzaYqt/t2bQXmv95yj982CemzLYX819ZDtu2v
-	v+180Bq6+vE5eTZMESfKW8gNx64bNENBq0a6bw4tNUjNlF8G9aUuGcuIjAtlwyF9sHPUonHDyWZ
-	P7xAPH+XVy7JWQ
-X-Received: by 2002:a05:600c:2d05:b0:4a1:eccc:7807 with SMTP id
- 5b1f17b1804b1-4a1f5985a37mr1368455e9.8.1792600804895; Wed, 21 Oct 2026
- 09:40:04 -0700 (PDT)
+        d=1e100.net; s=20260707; t=1792605049; x=1793209849;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=mE9Ag/gCpQwpic9Sbpc9hGK5nNJZ45oi/KyynO+C5Ws=;
+        b=AXL6lOmByYL9v+C8lUshDb/IzCWW+7vuAGueX3XPfxHgOyrkjjHqSe0O6FBmOq6G+t
+         1TVpgUHvdQO/L1n7b+yQaGx+3PEvlCvYo27LkU5tx8QHwyF+GyEpi9ICxWuhx4xuEUOx
+         ppNG1WS08RIVweIi5SiEATl+xtzO9/Ep40xfQh2Nf5Uf1XDgh+h/dqH1WM1MNAyx0v/D
+         EZXjY2Lr4vUch8g/d+owTBZseK6Yf42g5CKgPTqpNf7k3ladRe0gw1u9L1Z3XwCEg5/9
+         9/hrLzghpvB9smILVNQLBVM2Ic67uFp+Sa9MJyboYqmTs4WtZBlCRl7+I6cB9THbhu7k
+         bXxw==
+X-Gm-Message-State: AFq9FYLm3whU50vWbl3JOTyNhilWXuzPWBNOiuGAjrHjWqstSh5DRmW/
+	luL2bhSEIaJYQyhSu7n+G1HtgYmVXcRgbwm/tTEVMpev8buc150m/W3cUrLJ5WeQ2jx+e5Cv7Fl
+	6T+5eXGTkhg==
+X-Gm-Gg: AYBFou2Ct1BRz0V5wcWs5y8xsGacZc8j4B9cX+qLoIpd0t1+chi9lS8m6kPkCfMhf/G
+	sUywP1dBhq6usNlmLP00gvzEG7+NX5B8FpGNHJqJjexg2MWmFxaBaCVkwRSVeC+PxteUoIkxhnU
+	nOkg7o4zWlDHgkk+kYNj+DqpzFS9pMI+FKoro2+r3R11aaroGcpY+R+QyxYG/ML5UlADLE+96dm
+	hArGXvyVdZcK/Me3uLctHw0qT3M9YKcjTzXFMABEvawZI4LRJAs2jxRskDST47nq1RaCgu39EmL
+	3yrm2XmNT9CMuVkR2cj/Zjuonh832JnywwTEuvFmFUSDfUHjMuA4Ib7jh+UtIBbTjI6FsH80CiV
+	611VXKfihzl01MwiX74OU+zh4XlSBGqoOXuH5gg6dzoMqUXj7kbo7yllQCBmXWTQp8iZ8yoi2RT
+	dXGFq71wu3lFH0u1qNkwH3GGNH4gGZwhriNDZWlpqeyI5u+QjdtZrqcAIv7iPy9Sw4PukEfeWop
+	rAT5cmxKOoFlnfmMvvPDOdK3wEMujHWlQZ8cpgBFwBq9xsGAXwPXEF9H63EPqtL5XrRe1pvW+CO
+	Y6TRSvvKEVCOoaeeITeljpUuIq4QuSq6eefXNSy9A57qv2W3rB3v
+X-Received: by 2002:a05:701b:424e:20b0:143:298f:33b8 with SMTP id a92af1059eb24-190a7756cafmr3521892c88.44.1792605049249;
+        Wed, 21 Oct 2026 10:50:49 -0700 (PDT)
+Received: from localhost.localdomain ([2603:8001:5f01:8bab:d059:e601:becb:a5ad])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1903ca044d4sm8229754c88.17.2026.10.21.10.50.48
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 21 Oct 2026 10:50:48 -0700 (PDT)
+From: Artem Dinaburg <artem@trailofbits.com>
+To: stable@vger.kernel.org
+Cc: cgroups@vger.kernel.org,
+	hannes@cmpxchg.org,
+	linux-kernel@vger.kernel.org,
+	longman@redhat.com,
+	mkoutny@suse.com,
+	ridong.chen@linux.dev,
+	tj@kernel.org
+Subject: [PATCH 6.6.y] cgroup/cpuset: Make nr_deadline_tasks an atomic_t
+Date: Wed, 21 Oct 2026 13:50:45 -0400
+Message-ID: <20261021175045.1443-1-artem@trailofbits.com>
+X-Mailer: git-send-email 2.55.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,128 +98,105 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261019182622.1584454-1-vincent.guittot@linaro.org>
- <20261021131313.GM2823843@noisy.programming.kicks-ass.net>
- <CAKfTPtDOZ0=nrQe1-WSTamgU0qqdJVvD3KZPtnsqwwnE53BSKA@mail.gmail.com>
- <ati_o5c-SoiOp529@scheduler.schedules> <20261021145042.GQ2823843@noisy.programming.kicks-ass.net>
-In-Reply-To: <20261021145042.GQ2823843@noisy.programming.kicks-ass.net>
-From: Josh Don <joshdon@google.com>
-Date: Wed, 21 Oct 2026 09:39:52 -0700
-X-Gm-Features: AclHuK9kE_MPdzQX8tUVw7v8ryQgrlgBpnHtL6HIx0LDZ771blfjDouEHb53TJg
-Message-ID: <CABk29Nv2ZzB1KGEuPmx4VmxTJ6pKmikGMr8cvzzDhHZSKpkgvg@mail.gmail.com>
-Subject: Re: [PATCH v2] sched/eevdf: Fix sched idle task group preemption
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Kayra Cizmeci <kayracizmeci@gmail.com>, Vincent Guittot <vincent.guittot@linaro.org>, mingo@redhat.com, 
-	juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, 
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, 
-	kprateek.nayak@amd.com, linux-kernel@vger.kernel.org, jakub@okonski.org, 
-	longman@redhat.com, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, 
-	cgroups@vger.kernel.org, jstultz@google.com, qyousef@layalina.io
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Oct 21, 2026 at 7:50=E2=80=AFAM Peter Zijlstra <peterz@infradead.or=
-g> wrote:
->
-> On Wed, Oct 21, 2026 at 04:41:52PM +0300, Kayra Cizmeci wrote:
-> > On Wed, Oct 21, 2026 at 03:32:59PM +0200, Vincent Guittot wrote:
-> > > On Wed, 21 Oct 2026 at 15:13, Peter Zijlstra <peterz@infradead.org> w=
-rote:
->
-> > > > What is the actual semantics of cpu.idle nonsense? Why do we care a=
-bout
-> > > > this common ancestor?
-> > >
-> > > AFAICT, cpu.idle applied to one level and against entities at the sam=
-e level
-> > >
-> >
-> > Yeah. Like on here:
-> >
-> >     ROOT
-> >      /\
-> >     /  \
-> >    /    \
-> >   GA*   GB
-> >    |    /\
-> >    V   /  \
-> >   TA  GC*  GD
-> >       |    |
-> >       V    V
-> >       TB   TC
->
-> (marked GA and GC with * to denote their 'idleness')
->
-> > If GA is idle and GB is not, while GC is idle and were looking to TA an=
-d
-> > TB we gotta choose TB. But if we just look to GC and GA we would choose
-> > neither. .idle just applies to one level as Vincent says.
->
-> Yeah, that's what we used to do, but the more I think about this, the
-> less sense it makes!
->
-> Josh added this (added to Cc now), but we have a number of Google folks
-> on Cc already. It would be good to hear how this is actually used.
->
->
-> So in your example TA and TB are both inside an idle group, and
-> therefore one can argue their behaviour should be like !idle. But their
-> common ancestor is root, and so the fact that they're contained in idle
-> groups gets lost (which seems crazeh).
+From: Waiman Long <longman@redhat.com>
 
-TA and TB have a matching se of GA and GB, since those entities are
-siblings under the common ancestor. Since GB is not idle but GA is, I
-would argue that TB should preempt TA.
+[ Upstream commit 95220e1f18f6321008f021abc7d6f581f64bcb82 ]
 
-Consider GA and GB as groups representing different users, and user GB
-has internally decided to create an idle cgroup GC to adjust
-competition between its own tasks (TB and TC). This should not affect
-GB's overall preemption ability against other users.
+The nr_deadline_tasks variable in the cpuset structure was introduced by
+commit 6c24849f5515 ("sched/cpuset: Keep track of SCHED_DEADLINE task
+in cpusets"). It is reported by sashiko [1] that nr_deadline_tasks
+can currently be modified by inc_dl_tasks_cs() under rq->lock and
+by cpuset_attach() under cpuset_mutex. So if both updates happen
+simultaneously, the nr_deadline_tasks variable can be corrupted leading
+to incorrect operations down the road.
 
-However in practice doing the exact computation to determine
-preemption for relative idle properties (especially on wakeup) is
-expensive and perhaps not strictly required. This is also why e.g. the
-whole sched_idle_rq stuff is imprecise. We keep an overall tally of
-the number of tasks that have a cpu.idle ancestor cgroup and use that
-for wakeup placement, but if we were trying to be perfect we would
-need to consider the matching_se stuff for that as well. What I'd say
-there though is that imprecise placement is better than imprecise
-preemption.
+Fix that by changing its type to atomic_t so that nr_deadline_tasks
+are always atomically updated. This fix patch is a low hanging fruit.
+It can handle some of the races between a concurrent sched_setscheduler()
+and cpuset_can_attach()/cpuset_attach() calls, but not all of them like
+the other issue raised by sashiko [2]. This will be handled hopefully
+in a future follow up patch.
 
-So overall, I would say the find_matching_se() stuff gives the more
-ideal preemption decision; my first preference would be to keep it. It
-avoids a regression with users who delegate cpu.idle internally within
-their own cgroup hierarchy. FWIW wakeup preemption already does a
-cgroup ancestor walk via update_curr; find_matching_se is similar in
-spirit.
+[1] https://sashiko.dev/#/patchset/20260626181923.133658-1-longman%40redhat.com
+[2] https://sashiko.dev/#/patchset/20260630033344.352702-1-longman%40redhat.com
 
-But to be clear I also don't think it would be terrible if we did
-something like you suggest, cache whether a cgroup has _any_ cpu.idle
-ancestor and then just make a single decision on wakeup comparing this
-for the two tasks. The result of which is TC preempts T{AB}, but TA
-and TB don't preempt each other. In which case I would suggest we
-cache that as a part of updating cpu.idle so that we can avoid a
-pointer chasing loop in se_is_idle().
+Fixes: 6c24849f5515 ("sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets")
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Signed-off-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Assisted-by: LLM
+[ Backport to 6.6.y: Apply the declaration change in
+  kernel/cgroup/cpuset.c; struct cpuset has not moved to
+  cpuset-internal.h. ]
+Signed-off-by: Artem Dinaburg <artem@trailofbits.com>
+---
+Hi,
 
-Either of these two will at least also restore some semblance of
-respecting cgroup cpu.idle in wakeup, as the flattening made it only
-consider task level SCHED_IDLE.
+Please consider this backport of the fix for CVE-2026-93150 to 6.6.y.
 
->
-> But worse I think is T{AB} vs TC. In that case none of the common
-> ancestors (root,GB) resp. is idle. But T{AB} being inside idle should,
-> IMO. definitely matter vs TC, which has no idle anywhere.
->
-> So I think I would very much like to change the semantics here. The
-> current stuff makes no sense.
->
-> Anybody, please chime in with how this idle crap is used and expected to
-> work.
+The code changes are identical to upstream, with the field declaration
+applied in cpuset.c. See the bracketed backport note above.
 
-Hopefully the above makes the use a bit more clear; cpu.idle is both a
-weight thing and a preemption thing. The weight part is respected
-naturally by the hierarchy, and it would be ideal to try to respect
-the preemption part as much as feasible.
+The complete fix is already present in 6.12.y, 6.18.y and 7.2.y.
 
-Best,
-Josh
+Build-tested only as part of a cumulative 6.6.y series on x86_64
+(allmodconfig, CONFIG_WERROR=y); no runtime testing.
+
+Thanks,
+Artem Dinaburg
+
+ kernel/cgroup/cpuset.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index bb413045d174469d9f5f8187af2de50d3c4076fd..4dc4b326781a8ffb93f503255eb5a026180adb23 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -175,7 +175,7 @@ struct cpuset {
+ 	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
+ 	 * know when to rebuild associated root domain bandwidth information.
+ 	 */
+-	int nr_deadline_tasks;
++	atomic_t nr_deadline_tasks;
+ 	int nr_migrate_dl_tasks;
+ 	u64 sum_migrate_dl_bw;
+ 
+@@ -235,14 +235,14 @@ void inc_dl_tasks_cs(struct task_struct *p)
+ {
+ 	struct cpuset *cs = task_cs(p);
+ 
+-	cs->nr_deadline_tasks++;
++	atomic_inc(&cs->nr_deadline_tasks);
+ }
+ 
+ void dec_dl_tasks_cs(struct task_struct *p)
+ {
+ 	struct cpuset *cs = task_cs(p);
+ 
+-	cs->nr_deadline_tasks--;
++	atomic_dec(&cs->nr_deadline_tasks);
+ }
+ 
+ /* bits in struct cpuset flags field */
+@@ -1091,7 +1091,7 @@ static void dl_update_tasks_root_domain(struct cpuset *cs)
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+ 
+-	if (cs->nr_deadline_tasks == 0)
++	if (atomic_read(&cs->nr_deadline_tasks) == 0)
+ 		return;
+ 
+ 	css_task_iter_start(&cs->css, 0, &it);
+@@ -2757,8 +2757,8 @@ out:
+ 	cs->old_mems_allowed = cpuset_attach_nodemask_to;
+ 
+ 	if (cs->nr_migrate_dl_tasks) {
+-		cs->nr_deadline_tasks += cs->nr_migrate_dl_tasks;
+-		oldcs->nr_deadline_tasks -= cs->nr_migrate_dl_tasks;
++		atomic_add(cs->nr_migrate_dl_tasks, &cs->nr_deadline_tasks);
++		atomic_sub(cs->nr_migrate_dl_tasks, &oldcs->nr_deadline_tasks);
+ 		reset_migrate_dl_data(cs);
+ 	}
+ 
