@@ -1,96 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792567150;
-	b=BO420OcIgK/p2X3EbF+ohmTRWXPdEO1JFIRllUIV/pZozyLM8EOcx3NxKqqEM0ZhJX2R
-	 ULD522qKpbm7CaJGSYAiCOMQTeJsnc+7vYqAFPDxWaZVc67A+V4KpL7/3mnj1mOWUkqnU
-	 Nu0XzqCF1Fy7/Jgky38kFCgddsrQA3H2w454JFH036DY91Nnu3TMtnz2islPSa2sFkzL1
-	 i36N4TNoI1iROdl/VRegKudGYxAhYpZLxbznU0WdNTqm3MGvQOy8+sukxzZRmshGs+B6o
-	 ZhVqZu9tk6xO5rblJyJ4kKA05MTjaSCtPtU0WwKO4qG/ZwqgQB9hXNPDUbfnPDFDLvQ==
+	t=1792568517;
+	b=boupQVxLU1Wqp9CsdAmcXnWV2Tjr7c+ikurhZjMVGV3qeDlrn64QSnHOQUBGv6MJJpig
+	 WUNuSLCSJUD0AtWJ1dgTTgYGKA2VSbLeDLG4/OOPfDjrQ3hQMoOZ2uDvuZgFOnS5ykZaR
+	 ZtkYHlSc2wiwnly1iGgaMnaUiezXO7tJ/BH0iBz5amg0TVpaP2S8CuQIyB8NJ2UI4sqM2
+	 TjY9Vne66/ZELf0PSvAx056sFmyU4qxRa9iWl/wPvgKMzejCKZ/8JVMW6pHlcCwb5LMoy
+	 j4946OiFOS5cQ3rCtyK7Lyhqhj7hSI+hvlWmU6riYko7PXbg9pBsiBawqm8p8w7p5cA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792567150;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
-	 In-Reply-To;
-	bh=lZp92o2ypA6mUomnWY8/aTISVyqFvde5Tqae7zZYQp8=;
-	b=XeHY3x/mjgR5GUpaEYWdMW2XbZDB+e7SOnoyu5FXa+Zv8TvIGi+Ubx4/DpGVNqeoadVX
-	 i17vAxAoV9F5Mb9KuV3HczJ6l58S7qU51DO80ZiRBtMZU7bITX+cj0YzIvcG2CuvIlfcp
-	 6Ina2YVpJaSt4pdT9tXRp7qj97GhUqmr8uqo0gK2QXJlGma/nhoH6p7kYoMrZAggmGxY0
-	 LQ4baf4NHSkrZE4u7AOs8ke5eQrQ/RH+nAGng/9TP1SRZxYGnfSzJJKUnKmarFeK9TW4W
-	 ZuPJ5zSwLBvH9x1GTj9zVqsXcljvXBwe5VT1dFWBogcG7FPN2BKs5qYZNAOHBDLtMjw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792568517;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=Q2W6HW6t4FD7GiH02r1fl3fKehEEk60q+ai1/oJoOqY=;
+	b=cIQHZIrmKnbGZIwxQwWQ5Zw6APCk192o9UXYPgjhz5UZQ1oY10mPr4TkrBXVwp0ZMVp9
+	 JQX73tD4JG+n43a4aYmqG5DgjoOhVi+2qzR95bOx3rcokk1xIp1trr75fpkJhHxqUIye3
+	 0Nup8aJuBZkYG3fiByuk/f5BDKMqzpo1jbNuUUvDOe7owmJ3Ra20DB0Z+QCuNyunYNna2
+	 YHAK44rsCaxzButt45BqxFNuwwH3vLthrSYrcMpjvJwPzHNrDWfH21u+ZluKdFClReDDU
+	 H1yQLIrY2ox4mulk7Oxl127JitwnhiPnd4oKcB57La1uvQ09NDrnrUbd6ZwrjcaP1jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=T27bLdqm;
-	arc=none smtp.remote-ip=209.85.221.48
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="Qvd/yrlh";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00EC2606A319
-	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 07:19:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 00EC2606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C0CA606A31B
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 07:41:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=T27bLdqm
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48bbb06f29bso8948f8f.3
-        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 00:19:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792567148; x=1793171948; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=lZp92o2ypA6mUomnWY8/aTISVyqFvde5Tqae7zZYQp8=;
-        b=T27bLdqmIG5OoMtqxzRK7XQelB13l+qAZbEz86BaLPglRfGRQtnafKS11gDv/5llOO
-         MPR1n8LaO0yQsmsZc389tz2pzOUW10zBtkt6mUYWDeTIJ7+3nzVvKKjIWC01CZ/NOLjA
-         addkf6PCZWaajuQHLHUaqinPOOUyGLYBle8MKQMkXJqazEG/oa7p79xKuK624vlm1do/
-         WWDreLZ8o+ndZCSWr/3WiK3/pFGSG3EXW3dlNd5X3C8vLJF1ErphZjkNZPIRC3GTb14s
-         b036IC0n+ecv65vFyKeqChULoVKR5m2FgZfPcCWoF99228CqkLUWXi5vWYmJvGqTSODM
-         P52w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792567148; x=1793171948;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=lZp92o2ypA6mUomnWY8/aTISVyqFvde5Tqae7zZYQp8=;
-        b=dgXqR88rhGEQCvGMSt/hOIXTco6939OAO7VTBJ1uKeD/GxHXOytePRiL2VZKHpmYsR
-         SnrWUEUxstfR7kVf8VwbA9NPXT5IYTJoASIG9+xTf3bjK6vnAODiu9jZVV5IfbGHOS7I
-         zDmFd+EdzgsnllJnTTIgFP4BbSdYNTsxShmwD/ihOeOR4sqTXzlpEb1VowYsPmqEOJYA
-         wA5VbiqKF5qiag8fWJM2GwAmD2hKuJcHyA9Qr16MsWQCv65D4yAgFpwNuIfoffagjbz8
-         dTEkt0xcA5xz6i53z+BjKYtmnTWBy0JIzqh06EeTHf6eUN9+TuF9vsx3m2fBhs5lpeel
-         kdKw==
-X-Forwarded-Encrypted: i=1; AKwUvBwjw3xYxFbDpKuBUTPvvqlFZq0zeaIJ96E4G76TF/iuYaqCQWDvd/4hYeH9WdPV5WJ0u8XVlrJp@vger.kernel.org
-X-Gm-Message-State: AFq9FYIUh7xwP3cKHgAgDV7KuECTyaIcqdVK7aYQXpHaabdwHs1j/eO8
-	TdPTJ7+q9SYlYCvOuEVvYyA/VJ0rXr7G+VQ68M+OTFSc4b66TXyoT49B
-X-Gm-Gg: AYBFou1trZBXsbaUV6p3hRmIHpD+nReLdKOSZZkYUY1RO3Ysb/LBmsDAgsNOXD+VQP+
-	0eDxae/CHsDHKrMgGNxtDw6VgLNS8oy/tFhyJj3aZ2rBbZEEKy3svkJswjRP+fwlKcYhx//L6tG
-	p8qSMHjqFTWiGCGRravNYfDAzFDrMdk1CixNWDoM0BAF1h9WgPDiGK3b+4RyCnj4QcC/OMv/b99
-	hbb8diT+buqDFRCnxkUWIYT3ya1Yum2AxEmVZRPZUErAx4y0qAydSc0aoNX5ik7f4Fn4rvEPKML
-	Objl08Iub0A+CDMST6ESdlVCwK/sNeHLKc5Q/O8owkhs+DVqaIsO1z2aagqTSOMN1qDxMP/n7Bw
-	VEpPCXvCA9k//uV6uCivNV1zWaDQKvaLwWWnksXr1a1q+KKX2NhWHic7S6EAouRtYxFyOzFOpcz
-	KxeqFExcztCYTAjaRR1lOHWdUfKL+lcD3l7Ga2rzcLPwyBvcVIjsTdH3MDlwvwcLcS5cB7QUE5u
-	fBxcnHtMcCg3/i3xyoLMM7nnu9LhZtD8vIM05UwujQNcj9kyRQ1y/ECjyvP9OHauykdwEdFM7N/
-	CbRnvxo=
-X-Received: by 2002:a05:6000:4a08:b0:48a:f4c1:4301 with SMTP id ffacd0b85a97d-48e264df908mr1913032f8f.6.1792567148094;
-        Wed, 21 Oct 2026 00:19:08 -0700 (PDT)
-Received: from scheduler.schedules ([85.100.66.184])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e2581f15esm3985576f8f.20.2026.10.21.00.19.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 00:19:07 -0700 (PDT)
-Date: Wed, 21 Oct 2026 10:19:04 +0300
-From: Kayra Cizmeci <kayracizmeci@gmail.com>
-To: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, 
-	vschneid@redhat.com, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org, 
-	jakub@okonski.org, longman@redhat.com, tj@kernel.org, hannes@cmpxchg.org, 
-	mkoutny@suse.com, cgroups@vger.kernel.org, jstultz@google.com, qyousef@layalina.io
-Subject: Re: [PATCH v2] sched/eevdf: Fix sched idle task group preemption
-Message-ID: <athWto0oZJvFzJ-w@scheduler.schedules>
-References: <20261019182622.1584454-1-vincent.guittot@linaro.org>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qvd/yrlh
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A1BC1F000D1
+	for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 07:41:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792568517;
+	bh=Q2W6HW6t4FD7GiH02r1fl3fKehEEk60q+ai1/oJoOqY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=Qvd/yrlh1PLhc1/2gXQqnk86EYYr9xscm0ZRiFB+pYPkP171xwBa5qs8KA0J4GdPF
+	 EaysR9xgCRhsZ+CmxlNq/eJC7Mz/tCuBS/VXHQsJP/PHwTBLjH8Chb89QAboeRvmeK
+	 64KfykPHw9QlqgQ1aFR7DlrRdjNLZIDBCtW0p5JIFEOaD3VtFljva5ulMn9X+6C6Cl
+	 shw3sIEgkmw2c9qyHF8NKywGG5S9P/X11QBGVPWMNGacDVNzrlCIZLb4Bsa9o70akQ
+	 ve9545LYU1TrY/LAyu97+QlshXiZFgvUphPwMYO7R/NrK5ysOWprNTvO86AvFUu//3
+	 6K7AJBaQu9hNw==
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-c43373ae89aso49403966b.3
+        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 00:41:57 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AKwUvBzAaHHk+pPZq3Gj/tdKx4SfCpG6ByEj4s8NNldx5rehW3pUpN88kSJqP5TxrPlgbere6ny6RdKi@vger.kernel.org
+X-Gm-Message-State: AFq9FYLILldmYo/+uaWCckqExEInkWqSTanecWE/BMTSsGB4gtYDaHGd
+	4+qfasAMlPuFP2qyFqH3bWIVwYwKYoqL/FY00704cQ3PXppXDbaK8Y1mOqO+rDL2NaJ+/s+bXpR
+	4PC6tryXVb0wwnc16vokZkVXBc2SLqEEWc6Q4by2Yxw==
+X-Received: by 2002:a17:906:dc93:b0:c46:645f:cedc with SMTP id
+ a640c23a62f3a-c46799d0f16mr92139766b.46.1792568515652; Wed, 21 Oct 2026
+ 00:41:55 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -100,194 +59,90 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261019182622.1584454-1-vincent.guittot@linaro.org>
+References: <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
+ <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+ <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org> <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
+ <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+ <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
+ <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
+ <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
+ <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org> <20261014195354.GA371161@cmpxchg.org>
+ <CAKEwX=Mwc+D+AN-B5T7p=80fqCDijdsiJjd6aN_3YMrEQjyvwQ@mail.gmail.com>
+ <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org> <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
+In-Reply-To: <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
+From: Chris Li <chrisl@kernel.org>
+Date: Wed, 21 Oct 2026 00:41:43 -0700
+X-Gmail-Original-Message-ID: <CACePvbVbMPZTrD5y=--XgBS+sa4CHb7e4RFTYCbWfzHzVc3vXA@mail.gmail.com>
+X-Gm-Features: AclHuK86lyz-XbdDB6Y-j0ii2s8PEPiP-QfZRMCvGYvdiUTKkHpNlLS-aItO5FE
+Message-ID: <CACePvbVbMPZTrD5y=--XgBS+sa4CHb7e4RFTYCbWfzHzVc3vXA@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: "David Hildenbrand (Arm)" <david@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	Muchun Song <muchun.song@linux.dev>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Barry Song <baohua@kernel.org>, YoungJun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Rik van Riel <riel@surriel.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Oct 19, 2026 at 08:26:22PM +0200, Vincent Guittot wrote:
-> Even with flat hierarchy which puts all runnable tasks in the same cfs rq,
-> we need to parse the hierarchy to check for sched_idle task group.
-> 
-> Reported-by: Jakub Okoński <jakub@okonski.org>
-> Link: https://lore.kernel.org/all/58dc8e8a-7260-43ce-aebb-8d9c29a6afc9@okonski.org/
-> Fixes: 85570f10a4c6 ("sched/eevdf: Move to a single runqueue")
-> Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
-> ---
-> 
-> Changes since v1:
-> - fix prototype and cleanup unsued variable
-> 
->  kernel/sched/fair.c | 82 ++++++++++++++++++++++++++++++++++++++-------
->  1 file changed, 69 insertions(+), 13 deletions(-)
-> 
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 0f2364479f9d..27ce3eb467a0 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -433,6 +433,38 @@ static inline struct sched_entity *parent_entity(const struct sched_entity *se)
->  	return se->parent;
->  }
->  
-> +static void
-> +find_matching_se(struct sched_entity **se, struct sched_entity **pse)
-> +{
-> +	int se_depth, pse_depth;
-> +
-> +	/*
-> +	 * preemption test can be made between sibling entities who are in the
-> +	 * same cfs_rq i.e who have a common parent. Walk up the hierarchy of
-> +	 * both tasks until we find their ancestors who are siblings of common
-> +	 * parent.
-> +	 */
-> +
-> +	/* First walk up until both entities are at same depth */
-> +	se_depth = (*se)->depth;
-> +	pse_depth = (*pse)->depth;
-> +
-> +	while (se_depth > pse_depth) {
-> +		se_depth--;
-> +		*se = parent_entity(*se);
-> +	}
-> +
-> +	while (pse_depth > se_depth) {
-> +		pse_depth--;
-> +		*pse = parent_entity(*pse);
-> +	}
-> +
-> +	while (!is_same_group(*se, *pse)) {
-> +		*se = parent_entity(*se);
-> +		*pse = parent_entity(*pse);
-> +	}
-> +}
-> +
+On Mon, Oct 19, 2026 at 5:35=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrote=
+:
+>
+> On Mon, Oct 19, 2026 at 5:28=E2=80=AFAM David Hildenbrand (Arm)
+> <david@kernel.org> wrote:
+> >
+> > On 10/19/26 14:24, Nhat Pham wrote:
+> >
+> > I'm traveling this week, so it's a bit tricky. I cannot make Thursday m=
+orning.
+> >
+> > On Thursday I'll be traveling back from Cambridge. But hang on.
+> >
+> > My plan lands on Oct 22, 11:10 PM. I should be home around Friday 1.30a=
+m - 2am.
+> >
+> > I could just naturally join that day.
+> >
+> > So one day later would work for me.
+>
+> Would that be too rushed for you? :)
+>
+> For everyone's convenience, this would be the time slot:
+>
+> PDT: Thu Oct 22, 5:00 PM
 
-So in a hierarchy like:
+Works for me :-)
 
-    ROOT
-     /\
-    /  \
-   /    \
-  GA    GB
-   |    /\
-   V   /  \
-  TA  GC   GD
-      |    |
-      V    V
-      TB   TC
+> EDT: Thu Oct 22, 8:00 PM
+> Europe: Fri Oct 23, 2:00 AM
 
-Where GA is idle, GB is not, GC is idle and GD is not.
+Ouch, David. If you commit to that, I understand it is very
+challenging. Thank you for taking one for the team.
 
-1. TA == se & TB == pse:
-pse_depth > se_depth is true, so we goto GC. Now pse = GC.
-Then we enter !is_same_group() block where we go up one more
-time, so now se is GA, and pse is GB.
+> China: Fri Oct 23, 8:00 AM
 
+Other swap developers: Kairui, Baoquan, YoungJun and Barry, when you
+have time, please comment on whether you can make the meeting as well.
 
->  static int tg_is_idle(struct task_group *tg)
->  {
->  	return tg->idle > 0;
-> @@ -476,6 +508,11 @@ static inline struct sched_entity *parent_entity(struct sched_entity *se)
->  	return NULL;
->  }
->  
-> +static inline void
-> +find_matching_se(struct sched_entity **se, struct sched_entity **pse)
-> +{
-> +}
-> +
->  static inline int tg_is_idle(struct task_group *tg)
->  {
->  	return 0;
-> @@ -10129,7 +10166,35 @@ preempt_sync(struct rq *rq, int wake_flags,
->  }
->  
->  /*
-> - * Preempt the current task with a newly woken task if needed:
-> + * Preempt an idle entity in favor of a non-idle entity (and don't preempt
-> + * in the inverse case).
-> + */
-> +static inline enum preempt_wakeup_action
-> +wakeup_preempt_sched_idle(struct sched_entity *cse, struct sched_entity *pse)
-> +{
-> +	int cse_is_idle, pse_is_idle;
-> +
-> +	find_matching_se(&cse, &pse);
-> +	WARN_ON_ONCE(!pse);
-> +
-> +	cse_is_idle = se_is_idle(cse);
-> +	pse_is_idle = se_is_idle(pse);
-> +
-> +	/*
-> +	 * Preempt an idle entity in favor of a non-idle entity (and don't preempt
-> +	 * in the inverse case).
-> +	 */
-> +	if (cse_is_idle && !pse_is_idle)
-> +		return PREEMPT_WAKEUP_RESCHED;
-> +
-> +	if (cse_is_idle != pse_is_idle)
-> +		return PREEMPT_WAKEUP_NONE;
-> +
-> +	return PREEMPT_WAKEUP_PICK;
-> +}
-> +
-> +/*
+I want to clarify one thing: Swap is my hobby not my job. My opinion
+represents my personal view as a maintainer, not my employer's. I
+consider different users of swap to be my customers. I really wish
+some of those impacted customers could join the meeting and speak up
+for themselves as well.
 
-
-2. In here, cse_is_idle is true, while pse_is_idle is false.
-So we return PREEMPT_WAKEUP_RESCHED. If these are inversed,
-we return PREEMPT_WAKEUP_NONE. If they are equal, we return
-PREEMPT_WAKEUP_PICK.
-
-
-> + * Preempt the current task with a newly woken task if needed.
->   */
->  static void wakeup_preempt_fair(struct rq *rq, struct task_struct *p, int wake_flags)
->  {
-> @@ -10137,7 +10202,6 @@ static void wakeup_preempt_fair(struct rq *rq, struct task_struct *p, int wake_f
->  	struct task_struct *donor = rq->donor;
->  	struct sched_entity *nse, *se = &donor->se, *pse = &p->se;
->  	struct cfs_rq *cfs_rq = &rq->cfs;
-> -	int cse_is_idle, pse_is_idle;
->  
->  	/*
->  	 * XXX Getting preempted by higher class, try and find idle CPU?
-> @@ -10174,22 +10238,14 @@ static void wakeup_preempt_fair(struct rq *rq, struct task_struct *p, int wake_f
->  	if (!sched_feat(WAKEUP_PREEMPTION))
->  		return;
->  
-> -	WARN_ON_ONCE(!pse);
-> -
-> -	cse_is_idle = se_is_idle(se);
-> -	pse_is_idle = se_is_idle(pse);
-> +	preempt_action = wakeup_preempt_sched_idle(se, pse);
->  
-> -	nse = se;
-> -	/*
-> -	 * Preempt an idle entity in favor of a non-idle entity (and don't preempt
-> -	 * in the inverse case).
-> -	 */
-> -	if (cse_is_idle && !pse_is_idle)
-> +	if (preempt_action == PREEMPT_WAKEUP_RESCHED)
->  		goto preempt;
->  
->  	update_curr_fair(rq);
->  
-> -	if (cse_is_idle != pse_is_idle)
-> +	if (preempt_action == PREEMPT_WAKEUP_NONE)
->  		goto update;
->  
->  	/*
-> -- 
-> 2.53.0
-> 
-
-This only changes where we look, not what we do
-with the results. AFAICT. I added my review notes too. They are not
-essential but I still did wanted to add them IDK why tho.
-
-Reviewed-by: Kayra Cizmeci <kayracizmeci@gmail.com>
-
-Thanks,
-
-Kayra
+Chris
