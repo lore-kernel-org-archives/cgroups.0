@@ -1,54 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.91
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792678171;
-	b=mkCODIojvTmj6TY6QcLkigI3JUxN4pTND8Pn1oOZvE0QUKeBB6N3LaqkUA4g8Da8fM7s
-	 1lcUtJ06Ue4WjCNR0w03WtKIo+yGa+XGDyi9MeLGtD0l0QOghT4cWAXoc9C9zaKt7//kn
-	 3a+Ksrr7oJ2eGUPd+OmUSnscZkQ1xtAwiLjim8pWPmVxp/NuZiB4/wC8yThsViCJ/cboG
-	 d26993cf9mRXZdG45e0i3M+GSH9nYFhUuAyZP6xCCIMXBAH995mqY35QwWqyCQMBSZin4
-	 b6fI/RF2KuXzZ2j+KSuofEa9Z1Xzlrp0f7aiLCS6DDDubcna4pZ70TMbJ1f47Tk67VA==
+	t=1792678313;
+	b=SXHULFXu0uMH6VE12EAFGqSD0puHH1I2/7QLZd2Iog+kj5TB5cQvAK4bWJ7DVSBwufC/
+	 Pl99Orms1yzkPiYUL5IbCaWqiYwAHyQyOLoztfqpKLd/ZSSRxMdtVhcggxTEjH36Kt4Xv
+	 wmm21nqf+vPcxlqEpcvNjRD5XjUjoW6e9YxO1iRNG80srVhPSo9H/H+pzkrtDCIJWGqyA
+	 P9uRLbwewhnz6/EIFe+03U0arDBS5nOx2kAuWPm8UffKxWDwZgGP5sEtOikaPmKgEQ3ye
+	 mDYrdnZGkmGXJ5WEIxXSnMu5VTzNx43ejU4PclMhcqFiieTQts6sRB1ZOsCfTqjml0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792678171;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=G8eBv0gpB33N8/cz2LgEKMiVTAe8ZtCvm6RFrTr54RM=;
-	b=HLf01L6pbURauyYDY9A72FhFgkRqoVDAzyL1nVrWHbKtv4GAlg2qbmmPJux425mWNQmC
-	 tTDu0yxja/pYcDOp6wtyhvM0OZLuDREIRlgt0ctSsNnAbPetB1Pt5mJPhhjIwod28dGmV
-	 ifcD95w9o6RAuVnpijGg8wl9VZmPGvHJY1/uR7qP2o2m5vr5W3mYWZCKZsCB0corH8zAs
-	 irXi/hXPJ6wqIOe9PGBG8+FoLWRvo59TUI6V7J8d40onuotkm6CeoKNGVWQSa2fjKo0Of
-	 7EwMjzkObhmcsgeSRsZ3ccCTvAk/uCmSP3zQ0oTvsuLMw2hf+f8qgxUnUicdZ+4gUsw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792678313;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=J0ObRZqURp05kcBQ0Zv+pu1j99ivc4QOppayGe5sXtU=;
+	b=RosTVMSeiJcYfnxOHVepUCRfXy87mc0QOm2vK2a7DikUnAWMvG823hsmS0laMe0u7hPM
+	 ofDi+hmFbbFElTsLoSGFaVw53KDTh4om5OUEmU0K/0F56IjHTK+ykFgbVBA/OMchpf52q
+	 ljpof6B/ap/Ssgxhwe+7UCk+ZNMNFA7IaqOF2xu/uh7lF/R9pI1AtX+42HWjhXXqpRZjj
+	 3DYSfPVIeVFD+c1heGWmhy8t+4Hk1ByWp8UCBY6OwsE/dZHshJ/Dw276VF0wG6tGnQQwQ
+	 kURs0jQ6stxQ7GBr6QEhanoAltXu7Gz5hJ3VGcLuhIlXRDVMdzsYzJBxXh0+GDWTejg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="Hv92zd/J";
-	arc=none smtp.remote-ip=95.215.58.91
-Received: from mta1.migadu.com (out-91.mta1.migadu.com [95.215.58.91])
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=hspHbGix;
+	arc=none smtp.remote-ip=209.85.219.43
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 895B5606A320
-	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 14:09:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 895B5606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0DE6606A321
+	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 14:11:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0DE6606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Hv92zd/J
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Fe7CT5c1Ji9lA2b4bgotlaNbgskgySBfznXCQQ0tVCc=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792678167; v=1; x=1793282967;
- b=Hv92zd/JCUl7Q6QlHGeg8nuHLSKzfKb5rKXAopyT+ek58R+A7TBAkzSSyTnLv550tVnh4weN
- UizRQ0KDDeisagPi2CQYj7/rZfnVi31AU1mplxaHnhhCeiQ6lvsnvzUwJGwNXztuGp9eTKny2HR
- /K3Ut3reD6P2wzIHX8yb031k=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ee1a4f980c0ce69a;
-	Thu, 22 Oct 2026 14:09:27 +0000
-X-Mizu-Trace-ID: ee1a4f980c0ce69a
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <553cb756-de36-4015-ad13-0c260dec675e@linux.dev>
-Date: Thu, 22 Oct 2026 22:09:23 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=hspHbGix
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-91b9e758c50so14597226d6.1
+        for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 07:11:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1792678312; x=1793283112; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=J0ObRZqURp05kcBQ0Zv+pu1j99ivc4QOppayGe5sXtU=;
+        b=hspHbGixeltXLiUWFKLsGHAgMKVn7rvek1mOKEilJTb8bqmvEgcqQyqX4UGFtDg0pK
+         QQUrekoQdgImuSvigHwv42IcxDuOq2ghijqvNxgvS0lHBE6gcsdD8/JToNc8NHgkPGM/
+         arEC5Ve8URC/4X3t4fGtPrWhiZiZ80aBMkXCwBKodF6s9uE/XC13TdyLK4U9DIoROqsn
+         CWPCMQBu0Yd6Q8tqnH5rbDQHxGF6r9+MCJsMFTcqG+vtzsOIHNLFTHEE+kug9BdMuLy7
+         G1d33p5icriK711BGr98viLfaK0ljpYlV9bAAaDA4rQIvyxHY0shQj9W8sKEFT+eLi0J
+         tzaQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792678312; x=1793283112;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=J0ObRZqURp05kcBQ0Zv+pu1j99ivc4QOppayGe5sXtU=;
+        b=OG/TEPf7zpTBGZ2SDFufgw9fc8Bj2/hKTSNAs1ulNnC+Jvx9ttlyk3ImNHbf/qfPi6
+         Kd8X0xnux/+TS0fF7hh/9I2CPEvxcuwLpPj/xmZ3U2wf3wpeWWKVw71OGH0cW6C/h0b6
+         uuTbUGNo4EhFg/TYWqyUZ983sGpe04HdahPvwDovnAipi6L8CXYZKmlfSaGwqGguX+IH
+         EnVoXEn4z6/LsQeVdXza8HYPVK4zrvSYhqCb2HNykcYjnkPDI+EUfnEfdmOa+65UrCy1
+         v1mqZeqbOebxqRdhPe/SOj6ze0u7qdiMoYMtB3QtGKA3cYMghmYq4ack2AGesLDQVEd2
+         xEvw==
+X-Forwarded-Encrypted: i=1; AKwUvBwtkvnL9SLgHOk4hDblwMKjJFZZ74izJ8hnyRA9RdKk/R5x7oNxdeM0n/oTHwIugYKs53iy/qXt@vger.kernel.org
+X-Gm-Message-State: AFq9FYLG7sODXaA+PC9MNCw3kJcvudbtQMJLMbXq67IxvbuTT9hd6EUw
+	7GLFQwPij8ZSSgDNNRPmM7BzsoI/+aUPfGv0uXrMwYtBuec+PL/37b++yZtY6iZy0qE=
+X-Gm-Gg: AYBFou2yix2zWbyf3O3jxkNxQyyyw2xmOXpLm2v2U0yJc+jXCpwAH8dde9+PjEHVNh/
+	0y/J4Y0H3kOe4imYtDV1bU9tLFIJp8bR1VaeafBVx5pxE2CMbNYCUYbK0U6QyrAmPI2KjsNYjjl
+	6TV35I5KEtFpZPdMBeo3pwdUC9TTTYF8RnUsOszcWyT8lWgy/i0Gt1WrcM9tqDrJIot6Snjnscm
+	1B+xwB75QeYByLYFtGVZccTPiLLzocPIyN61AKantZtWiVOZPSwHvVWKSQqq0wxA0MQcS4tSS5J
+	sSXRO1TmXy4r/nwQGEhnCx9vebqQpNVPfIjOD2FgGrILnn7L54+v06+pfn+dun1KcwGOwSpE9kF
+	s/Vu1OjYI+3KQRAK/Ymt56PaCXbyRHOppJfq+4tJRehWWUHd8c69SJEEknthoC0t0rvm/d962rb
+	WKxSt79S/ZJrbgdmY8nuxQhk/9GxaE/X5K2fEuSo6egwFrh3XGGXzA2KCMA4AHMO4xCR57DAwkv
+	Hgvqb/J+FjHL8sIWxFK1EEdChdrVrjY9sSEw7KOD3Z/u7GmFVp/UW28axm/1TRgRz1uYzuhIILt
+	uEM5v3cB/7A1dgu+jsK5+Y42IC4HIOZuaws3qQ==
+X-Received: by 2002:a05:6214:29ed:b0:919:57a8:7537 with SMTP id 6a1803df08f44-91c232e5013mr44009236d6.18.1792678311640;
+        Thu, 22 Oct 2026 07:11:51 -0700 (PDT)
+Received: from gourry-fedora-PF4VCD3F (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91c10c0bd4csm51371086d6.30.2026.10.22.07.11.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 07:11:51 -0700 (PDT)
+Date: Thu, 22 Oct 2026 10:11:49 -0400
+From: Gregory Price <gourry@gourry.net>
+To: Li Zhe <lizhe.67@bytedance.com>
+Cc: akpm@linux-foundation.org, david@kernel.org, ziy@nvidia.com,
+	joshua.hahnjy@gmail.com, rakie.kim@sk.com,
+	ying.huang@linux.alibaba.com, ljs@kernel.org, mhocko@suse.com,
+	muchun.song@linux.dev, roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev, weixugc@google.com, cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
+Message-ID: <atoZpXaCRc7etPW8@gourry-fedora-PF4VCD3F>
+References: <20261019141401.11927-1-lizhe.67@bytedance.com>
+ <atY-LD2AzCYATRii@gourry-fedora-PF4VCD3F>
+ <30457046-a662-4ff7-a6a8-100398d7a806@bytedance.com>
+ <179264138036.2549665.17429111144570830454.b4-reply@b4>
+ <9b715272-3ed9-42da-a6ae-467e8ae00c0b@bytedance.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,67 +105,38 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next 5/6] selftests/cgroup: Check for a single range
- nohz_full CPUs before running test matrix
-To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20261022031643.1351877-1-longman@redhat.com>
- <20261022031643.1351877-6-longman@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20261022031643.1351877-6-longman@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9b715272-3ed9-42da-a6ae-467e8ae00c0b@bytedance.com>
 
-
-
-在 2026/10/22 11:16, Waiman Long 写道:
-> Commit 989ca25c10ca ("selftests/cgroup: Add tests for nohz_full
-> housekeeping check") adds a nohz_full test matrix that will only be run
-> when a nohz_full boot parameter cover all the CPUs beyond CPUs 0-7. The
-> code looks for the first and last CPU numbers in the nohz_full sysfs
-> file to determine if that criterion is met. However if there are holes in
-> the range (i.e. has ",") the test matrix may be incorrectly run leading
-> to unexpected test failure. Fix that by skipping "," and anything after
-> that to make sure the first range will cover all the remaining CPUs.
+On Thu, Oct 22, 2026 at 05:43:49PM +0800, Li Zhe wrote:
+> On 10/22/26 11:56 AM, Gregory Price (Meta) wrote:
 > 
-> Fixes: 989ca25c10ca ("selftests/cgroup: Add tests for nohz_full housekeeping check")
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  tools/testing/selftests/cgroup/test_cpuset_prs.sh | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index 8595b6b4b7bf..5bc144836bdf 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -111,9 +111,9 @@ echo "" > test/cpuset.cpus
->  #
->  # If nohz_full CPUs have been reserved at boot time, they should not include
->  # CPUs 0-7 as that may fail some of the test cases. On the other hand if the
-> -# set of nohz_full CPUs includes all the CPUs except 0-7, we can run a special
-> -# set of housekeeping CPUs exhaustion tests to see if the cpuset code will
-> -# reject them.
-> +# set of nohz_full CPUs includes all the CPUs except 0-7 in a single range
-> +# <first>-<last>, we can run a special set of housekeeping CPUs exhaustion
-> +# tests to see if the cpuset code will reject them.
->  #
->  FIRST_NOHZ_FULL_CPU=
->  LAST_NOHZ_FULL_CPU=
-> @@ -124,7 +124,7 @@ NOHZ_FULL_CPUS=
->  LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
->  [[ -n "$NOHZ_FULL_CPUS" ]] && {
->  	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/[,-].*//")
-> -	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/.*[,-]//")
-> +	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/,.*//;s/.*[-]//")
->  	echo "Boot nohz_full CPUs: $NOHZ_FULL_CPUS"
->  }
->  [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" -le 7 ]] &&
+> So userspace cannot rely on one write to memory.reclaim to produce a
+> final per-node distribution. The intended usage is a feedback loop: the
+> controller observes the memcg's resident distribution, chooses the source
+> nodes it wants to relieve, applies source-scoped reclaim pressure,
+> observes the new distribution, and iterates.
+>
 
-Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+I think the critical question is what CAN userspace rely on?
+
+We can make a bunch of feedback loop interfaces, but there's no
+guarantee they'll actually be useful.
+
+> >
+> > At the very least i think you need to add details in your cover that
+> > demonstrates the process of doing something like per-node resident
+> > ratios, and show that it works as you intend.
+>
+> Agreed. I will update the cover letter to make this model clearer. I
+> will also make clear that source=nodes is not a final net per-node
+> footprint guarantee and does not change memory.reclaim completion
+> accounting.
+> 
+
+To be clear, I think not just making it clearer, but if you can show
+some tests that demonstrate the reliable behavior of the interface
+extension under different scenarios - that would be compelling.
+
+~Gregory
