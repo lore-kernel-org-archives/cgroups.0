@@ -1,75 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792704122;
-	b=IVfarpcgb8dx9v7ZA4VcyT3866UksMOXOzwYTldtW3P89kItHN+/lw87RSyFLWtBoe5B
-	 tx6RrmD0sYYet2xbES/cB04/nCr0Q+NtjLvcm3XN/hCh9SMzqpmPNCODJt/PXVTgR/kzG
-	 Tqt4xAyISXDF/6LPZv85IH1kBCinExo0M7JxDiZW72jvX8fNgNaybHzLmmS0rarGo8jSu
-	 0ki4od6CY65ojZ09hwnxECy+CzqWc1ncHQYkJ9htRoEPom2pAWMjFVInFp8D9hHb9WZQh
-	 RrcQ1Wg5DYZ/QTIH9KrpWIN5WqkXh9c/LAbDSzbkKQ/B/FmbYeHq+QlKIsVFOgGSn8w==
+	t=1792708793;
+	b=g986e7lZuRx4/stTBJw4vFZTVNNvm/v2Lg/PIAPH20igJo0N+KDD8ZIFtt6TPez7HwHC
+	 I5LXKEaZQYZbOlY9fOQLmSE+AP79JEIKHwcjiKubp6At6sJ/KKLcetsUTcLOJbVMObVNq
+	 kaBQp+d1XMOT//fLehJQU/uoXF2wQ+1U652DzCTtgbKQVm4uiM2LaCpYaQ2SLTsF5Oo8l
+	 bP2inrX6wATOZbdG2lSyhX1asw+oMd1h5GTpUjLTjtNoLqsdh/nNhZp7UVtmJbTDobIZJ
+	 bJdsmFWAir5Fi7embaKJq5vzc2srBEB/24flffX279m59MbW/tPuuHLFKTmmyYEAYJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792704122;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=4LHkfkw9eYCKRE1Ovy2OT1wG/BuLdxLosSSy54r1sgQ=;
-	b=AK9oqstzguBpH1EfkjzcrRKzpeVs/3wjQVEfYSrrVJGB+TsNKHaDQT8/88dUi+pb3Z3/
-	 uwscXIBi8dRHzvjzOZR1T7JWuEkNkC0yVNtNbUFW71YqZdFl47Mbr+Mqyk54BIC5GKkLk
-	 v1Q4rVSNIfHRdWHCcPoEFw7sFqvi0hapStKwkKN86azZf2xEtN1NNqN8ZSe4b5pbZiZAY
-	 ssFmXPtYi43zTe3SbiKzZOtdmP71dp/TqPSildwN3Bptk/tL7wW5TJ6N+YYmoXG4rFUlW
-	 hf7J83aQS93mAL2bLgkIuAKEkCpOBOFLF4D2H0RUww9heYT5U51EmU/2zFfwvQ43K1Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792708793;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=JtKxQk17mKJ5H+rcmhYc0xGV7tRV/52vlvUl23dtKyE=;
+	b=W+VJrycr1cRV5Photkhp3fRz2ljXSxKhwbspt7f4c1YM6tARwjGq/S+sjZHBF2K5WMEq
+	 haL5DWFw1PaPP9Ake1qVHC+FMNTcC4Ohq946S605zsSDuS4pMwccXOPcgTx6tvIklnelr
+	 8HycVlQ1q3JNQhsslgq7hy6OXW9mvkLDkK2nE++yFPd9inNRhYLLNX8wyFFCK64A+g/x1
+	 ZyP/LBt+B976MJYou40Me6khDWO1CIbEguzseb9tjQZOnAxFbBz+ZcdJx1V3TAZrepqFL
+	 MxPWxdiRGungstyxZcOldzCQXaCMSL2ePE6Uc3tHk/NAmUaV1QPJwuhP0FnIo/mvp3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=pass smtp.mailfrom=infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=sSEiDXa3;
-	arc=none smtp.remote-ip=90.155.50.34
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bgMVp+0s;
+	arc=none smtp.remote-ip=209.85.128.179
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3970606A31A;
-	Thu, 22 Oct 2026 21:21:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3970606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0208606A319
+	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 22:39:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0208606A319
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=sSEiDXa3
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=4LHkfkw9eYCKRE1Ovy2OT1wG/BuLdxLosSSy54r1sgQ=; b=sSEiDXa33sUi7DeL9M7WrVgs83
-	HJUt+5KkCuEQR7NfKVim6nP1bbskEhYnNz5TYh1GR41hc9bpmb5WHVbsDX4bQzwMp9cn0VXpTZK8C
-	t1BwbmWJws6vWZTBbov+ZKgVYSEF+yj+Rwo1cKDj7KAfPhmjINCZuv3wymn0j4UbJtYLnjSouUuq1
-	QXI78KRls6be0oyuDXZTfi77F/QessKi1P+AD/fWycbTsHqbYSsKk52dPuOtsJb1ZaNd0tN64THpt
-	xFl4oRx/9kH0Te1Czx3Holnp5xNhft/yBojWB0y3dbVnDdsD04M3g0z35r1jSHtuFnAzuaphyTXGW
-	mQ0Sf39g==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xK0ER-00000004d4s-1JSC;
-	Thu, 22 Oct 2026 21:21:51 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 46580300720; Thu, 22 Oct 2026 23:21:50 +0200 (CEST)
-Date: Thu, 22 Oct 2026 23:21:50 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Josh Don <joshdon@google.com>
-Cc: Kayra Cizmeci <kayracizmeci@gmail.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>, mingo@redhat.com,
-	juri.lelli@redhat.com, dietmar.eggemann@arm.com,
-	rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de,
-	vschneid@redhat.com, kprateek.nayak@amd.com,
-	linux-kernel@vger.kernel.org, jakub@okonski.org, longman@redhat.com,
-	tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
-	cgroups@vger.kernel.org, jstultz@google.com, qyousef@layalina.io
-Subject: Re: [PATCH v2] sched/eevdf: Fix sched idle task group preemption
-Message-ID: <20261022212150.GW2823843@noisy.programming.kicks-ass.net>
-References: <20261019182622.1584454-1-vincent.guittot@linaro.org>
- <20261021131313.GM2823843@noisy.programming.kicks-ass.net>
- <CAKfTPtDOZ0=nrQe1-WSTamgU0qqdJVvD3KZPtnsqwwnE53BSKA@mail.gmail.com>
- <ati_o5c-SoiOp529@scheduler.schedules>
- <20261021145042.GQ2823843@noisy.programming.kicks-ass.net>
- <CABk29Nv2ZzB1KGEuPmx4VmxTJ6pKmikGMr8cvzzDhHZSKpkgvg@mail.gmail.com>
- <20261022114705.GW88198@noisy.programming.kicks-ass.net>
- <CABk29NviVUAK6B_deQ7qah8eABiCikbFpTwDEO2hdproGLdLwQ@mail.gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=bgMVp+0s
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-8ab395abf79so3781217b3.0
+        for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 15:39:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792708792; x=1793313592; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JtKxQk17mKJ5H+rcmhYc0xGV7tRV/52vlvUl23dtKyE=;
+        b=bgMVp+0sudcJ8dXgkYK4tKQatlgpk5wPpV4vQGqjQKWuQtj7QHGPvIWPG57+LjO6iH
+         0NR4nsOPOyp7vCmV3hluG3FjJfYHWZkyGRLqcHb6kwIH6vlJ2Uquovw7MTliBkMnVPxl
+         MHORi95m5WkNQ40ivGxJ7Bpkr7cNYXgntcusWCHu1899VjnkFLnIDyhmEC9k2Er9xUka
+         +6u4AZGabnqfLBwObJSJ9iKpwSDAbwzrI35xbn4eTO8YSV0imdFjiwtR9y/CYgVkKu+l
+         0/adTPtPz7rzvuzHC1qeyUO94PwHmh1TUbslb6JUaZkGv9yiBYe6u5TUBl5yNb82rb0P
+         XHCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792708792; x=1793313592;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=JtKxQk17mKJ5H+rcmhYc0xGV7tRV/52vlvUl23dtKyE=;
+        b=VOQgJsx5DGpQPixhcENVleWIFI2tcBHplXgKjCv7+ZqviB7VXupG83vf/UZGNO9VuC
+         +WfTYUxpsJhT/k7vQlLew0g4kPYIj4YMHdlKPm+rUsxHoU+/UqCXoiPrmkpGijijhRKt
+         OAzuPlmjhopWwQ8YhZ529i44So1rSGgN/e8XGU+SGFbzq0P9kvr13X2nmrKWiVfHKZ3f
+         lv/1x5u8G7dVICdd04vScXNz8/fuSeBBMtKkFtin+OGT4d6pm7wuVbVeSz9pHaCiDzBT
+         xiRqVgkqMw6hnz1M35CXued/m3jJRL+Z/EfzLGq8DvkP5s0tdA5dI40f+CWOKkQvzUnr
+         IJOA==
+X-Forwarded-Encrypted: i=1; AKwUvBwh9gOh3i77tDqXYWf/7dCVChf6EsxEnfuBoMmFDhE7WsWh0vpQOvq0ftgvelS8bszI0rtAZO+x@vger.kernel.org
+X-Gm-Message-State: AFq9FYKX32qnmZPnd4EWfA/+mj7ns3p8cmCZbGv/aPqPEHIEIKLRxBUe
+	jo5IA84PMn+kyCjf+FLMldo1rk5e7SOOW2ABeVJPeVOwnnUi7bmBsGgA
+X-Gm-Gg: AYBFou13vCSV/yWOUttxJrZpqt9j3Y0ooao7QiScDmWNHCVPNF84dY/qplJBG7CohWX
+	hnePsVlLDnbKEUenBwuuPhc4VmkJn/pWBbkJiQ8MuOUX6IRL36T5TJKE6KgE8pn3UZmStcF0Pxs
+	+J3X+MmJnN9pt8Pvu8KDF/mHdfNIWkPKDt5oQGnod4N20ZixAiDpLqpfFGL+0lDHbmWWMTPsSID
+	KJY5f0+vnLX6URx9AUOdw4rPwIfi7QVVHe8oCKGRCHSusI5LJ4Zi4o4MV+iwg4Xr2NtfV7ow2kw
+	qzAmiYL+TtuLsCwmI2pmPLYNwfgykkE6W/pk7KXOxmPjNlGGAGZ5yGJGRvzwqsg9OfgC6N6rQzv
+	riqyiJcY6NOoDsNydD249/Dphn9CtZdBKxrLSYEUGoXuhB62SV6Q0hSRYd/ApNSu2gL0meHcLgb
+	uAdFaqszwGKRC+aC/dXQ3botaQQh+srKifS68JTfcC6uQbgEqbpuA0+VrTY2t80am33m/q4Sg9U
+	JOyZ/tjhI0W4hBZGlJ9zHyPU1up9Y/Tj+m1bMPZfuWx1pMAm4T96//fh6KQa+4DIRqefpHJmm4G
+	u5AS8hVfJxr9vtJ5r+1Bmr6V/E3/kqa8
+X-Received: by 2002:a05:690c:c4e9:b0:8b0:6d14:23fe with SMTP id 00721157ae682-8b157ef7c05mr3917477b3.52.1792708791905;
+        Thu, 22 Oct 2026 15:39:51 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:41::])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b155f8af63sm5238657b3.2.2026.10.22.15.39.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Oct 2026 15:39:51 -0700 (PDT)
+From: Joanne Koong <joannelkoong@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>,
+	Yosry Ahmed <yosry@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [PATCH v2 0/2] memcg: reduce cacheline contention from lruvec stat
+Date: Thu, 22 Oct 2026 15:39:28 -0700
+Message-ID: <20261022223930.138779-1-joannelkoong@gmail.com>
+X-Mailer: git-send-email 2.52.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -79,75 +100,49 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABk29NviVUAK6B_deQ7qah8eABiCikbFpTwDEO2hdproGLdLwQ@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Oct 22, 2026 at 10:49:36AM -0700, Josh Don wrote:
-> > diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> > index b5546cd27dba..779fcd5a2830 100644
-> > --- a/kernel/sched/fair.c
-> > +++ b/kernel/sched/fair.c
-> > @@ -15767,6 +15767,40 @@ int sched_group_set_shares(struct task_group *tg, unsigned long shares)
-> >         return ret;
-> >  }
-> >
-> > +struct tg_set_idle_struct {
-> > +       long idle;
-> > +       int cpu;
-> > +};
-> > +
-> > +static int tg_set_idle_up(struct task_group *tg, void *data)
-> > +{
-> > +       struct tg_set_idle_struct *tsi = data;
-> > +       struct cfs_rq *grp_cfs_rq = tg_cfs_rq(tg, tsi->cpu);
-> > +       struct sched_entity *se = tg_se(tg, tsi->cpu);
-> > +       int old_idle = grp_cfs_rq->idle;
-> > +       long task_delta;
-> > +
-> > +       grp_cfs_rq->idle += tsi->idle;
-> > +
-> > +       if (!!old_idle == !!grp_cfs_rq->idle)
-> > +               return 0;
-> > +
-> > +       task_delta = grp_cfs_rq->h_nr_queued - grp_cfs_rq->h_nr_idle;
-> > +       if (!task_delta)
-> > +               return 0;
-> > +
-> > +       task_delta *= tsi->idle;
-> > +
-> > +       for_each_sched_entity(se) {
-> > +               if (!se->on_rq)
-> > +                       break;
-> > +
-> > +               cfs_rq_of(se)->h_nr_idle += task_delta;
-> > +       }
-> > +
-> > +       return 0;
-> > +}
-> 
-> Took me a bit to parse this double traversal. I think this is broken
-> for the clear side?
-> 
-> root
->   |
->  A ( 2 tasks)
->  |
->  B (3 tasks)
-> 
-> If we start out with A marked as idle, then we have
-> root: h_nr_idle = 5
-> A: h_nr_idle = 3
-> B: h_nr_idle = 0
-> 
-> When we clear, we'll first start with B and subtract 3...
-> root: h_nr_idle = 2
-> A: h_nr_idle = 0
-> B: h_nr_idle = 0
-> 
-> Then we go to A and try to subtract 5 leading to
-> root: h_nr_idle = -3
-> 
+Memcg lruvec stat updates read fields of struct mem_cgroup_per_node and struct
+lruvec that can share a 128-byte cacheline pair with lines the lru_lock holder
+writes constantly (the LRU list heads, lru_lock or lru_zone_size[]), depending
+on where struct mem_cgroup_per_node lands in its slab. On CPUs that do spatial
+prefetching (eg Intel CPUs), this makes the stat updates contend with the
+lru_lock holder.
 
-Argh. Yes, I seem to have gotten it wrong. I'll try again in the
-morning.
+Patch 1 rearranges struct mem_cgroup_per_node so that its read-mostly line is
+paired with a cold line, and patch 2 makes the folio and kmem stat updates use
+the memcg and node they already know instead of going through the lruvec,
+whose pgdat field shares a cacheline pair with lru_lock or lru_zone_size[].
+
+Results on a 2-socket Skylake (80 CPUs), average pages per second for
+threads faulting in and freeing memory in a single memcg:
+
+		   base     patch 1   patch 1+2 
+shmem, 20 threads  4.74M    5.59M     5.77M
+shmem, 80 threads  7.94M    8.66M     8.82M
+anon,  20 threads  3.04M    3.08M     3.10M
+
+Changelog
+---------
+v1: https://lore.kernel.org/linux-mm/20261020200730.250189-1-joannelkoong@gmail.com/
+Changes from v1 -> v2:
+- Replace the lruvec_stats_percpu pointers in struct mem_cgroup with a
+  rearranged struct mem_cgroup_per_node layout (Shakeel)
+- Move lruvec_stat_mod_folio()/mod_lruvec_kmem_state() change into its own
+  patch (Shakeel)
+
+Joanne Koong (2):
+  memcg: reduce cacheline contention between lruvec stat updates and LRU
+    lists
+  memcg: don't go through the lruvec for folio and kmem lruvec stat
+    updates
+
+ include/linux/memcontrol.h | 22 ++++++------
+ mm/memcontrol.c            | 71 ++++++++++++++++----------------------
+ 2 files changed, 40 insertions(+), 53 deletions(-)
+
+
+base-commit: fcec4f4bcc1101dbd7e3aff267856b3bbfe128c6
+-- 
+2.52.0
+
