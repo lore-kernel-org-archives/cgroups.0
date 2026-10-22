@@ -1,91 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=156.147.23.52
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.208.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792670469;
-	b=fVCrqF9n7/drfVcmD+kS0iM0NlXR9IsgWKcvv1fkQbKhPJgsdIIh9qhZk4hMnya904Q0
-	 Bj7VPAMqPYUZZurscipXWOU+7px8VnR+mUmZ1rgmAtK+pXHC2eJrnJPUC64lpO1LLEchx
-	 RfKTtpBkKjyeWetwt8QDHM1mzEy3ON8igeO3o07L9r73g1JbybQj6BQfcZ+80UMQHL115
-	 FA5VnBOYwnJ7hmvzftgbHyk57JwVoRR4SKNF52Cm3hOl4IB8CvAO9FLT2g9KVkBDr52Q7
-	 Bz3BbR9cCMFLkUxxSzjgAG31iTli4UtLyHYmceJRyMirVzkfWa/EJagKeyKY6Y4ChPA==
+	t=1792670743;
+	b=H3+piLxjeJmw+tZjq7AB/Vngg6tQvRV20HCJUr61ILsNe7e390DIYWfNs+GQ6ynP/pYK
+	 Kdin/SGHaqBdlUQlWzVAJuGjy15GyBUsGsMMF5NQK3fbSZSyINUs2KN+TmP+YGVrn0kX6
+	 aL96gMLMwdE59Hg9t3lvcSOvf8Erid6r0jHG/jX99KtrC4t7Ng0AFlJLVRVH73LfCfPRa
+	 WEOAvJ/f+W5PgJyVjwcFhTG2CMWHxidSEP827D3SxVBLjy6zvmVjwi7n60C5Jc32keo3L
+	 bA7tbbDyjwXcbNyiwuaj7UKElYFJNpHGCJbwEeDRfXAewBMzk5JDkeSXRlEZXxAmBag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792670469;
-	h=DMARC-Filter:Received:X-Original-SENDERIP:X-Original-MAILFROM:
-	 Received:X-Original-SENDERIP:X-Original-MAILFROM:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
-	bh=s4DjmkflJ85sDaL3EcGa6JYsCik1zYKmblb+K5Ua+5E=;
-	b=GDQI0y2bxdCMSECRDpl2laQXuRJC2YsLHq8GFoR34hKk9o0hluRFfVFhMclp2a7Y1AfN
-	 nssKFFSE45LcK1Mglf37kQrdAgR1fxhHU8OtuuI8NHzdKkVBxY7BYDR9nCcuIR8bo24Ht
-	 30j5kqFjnM8E+6U7rZX/yzeanyEgjHQYCL8SJF7nK10NDWWxOQUwhhMerBONN4JKKVy1o
-	 JAn4goHRg6qQw2z7VUflA2t50EJnbx7Elu10aKszcwcUmCsx+/16nSNuJu6jTqrWtXWlj
-	 tdevB8FMl5Sdf3mbNrzXiRRpf1r5Ik5MyQ/5UlUBxFxsCbQFn3JUGF+nBnJWa6qh0mw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792670743;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:
+	 Content-Language:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=1lD9amVrEN5VBKxfAQDsDxJlbpUbXAXUW9BovN0dNeo=;
+	b=AmShomnKNY27RI5dsCa06uPMle2b7ESQG8K0jKZ22lGeFpo1td6RfWB7IKQmFwnfmpQU
+	 xNqKTsdiCrbQIhmdv3t4PKd1ohAQ7l7gDyHrd/OM3I+vwjVegVm7ubd2ZzZsBvq0SQIox
+	 eUfhQsbxo4ovrGS3twv5TbBCqNPVFCQuYtbfCl2zlxCCpUpW42J/7mg7Au1IVQKiQIipw
+	 Et2nmJzxKRHAFIrP4/tBMgRSvBFAFgpF+ZTta2toODaJRRvUhGOz5MET6pbF8FQZSyFlH
+	 DpGT2S54FdAUq25xOBIPT2dZAeKUR4b22uar9MDIAmoac4be2VEp2xuHWwWwOwLlbZw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=lge.com;
-	spf=pass smtp.mailfrom=lge.com;
-	arc=none smtp.remote-ip=156.147.23.52
-Received: from lgeamrelo12.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=none header.from=okonski.org;
+	spf=none smtp.mailfrom=okonski.org;
+	dkim=pass header.d=okonski-org.20251104.gappssmtp.com header.i=@okonski-org.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=TFe0b1FY;
+	arc=none smtp.remote-ip=209.85.208.51
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FFDC606A31A
-	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 12:01:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4FFDC606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
-Received: from unknown (HELO lgeamrelo04.lge.com) (156.147.1.127)
-	by 156.147.23.52 with ESMTP; 22 Oct 2026 21:00:58 +0900
-X-Original-SENDERIP: 156.147.1.127
-X-Original-MAILFROM: youngjun.park@lge.com
-Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
-	by 156.147.1.127 with ESMTP; 22 Oct 2026 21:00:58 +0900
-X-Original-SENDERIP: 10.177.112.156
-X-Original-MAILFROM: youngjun.park@lge.com
-Date: Thu, 22 Oct 2026 21:00:58 +0900
-From: Youngjun Park <youngjun.park@lge.com>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Chris Li <chrisl@kernel.org>, Nhat Pham <nphamcs@gmail.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Yosry Ahmed <yosry@kernel.org>, Muchun Song <muchun.song@linux.dev>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Barry Song <baohua@kernel.org>,
-	Chengming Zhou <chengming.zhou@linux.dev>,
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	Rik van Riel <riel@surriel.com>, Gregory Price <gourry@gourry.net>,
-	Wenchao Hao <haowenchao22@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Tejun Heo <tj@kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Kunwu Chan <kunwu.chan@linux.dev>,
-	Meta kernel team <kernel-team@meta.com>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-doc@vger.kernel.org,
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joshua Hahn <joshua.hahnjy@gmail.com>
-Subject: Re: Path forward for Virtualized Swap?
-Message-ID: <atn6+gEwHUxUKhLB@yjaykim-PowerEdge-T330>
-References: <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
- <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
- <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
- <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
- <20261014195354.GA371161@cmpxchg.org>
- <CAKEwX=Mwc+D+AN-B5T7p=80fqCDijdsiJjd6aN_3YMrEQjyvwQ@mail.gmail.com>
- <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org>
- <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
- <CACePvbVbMPZTrD5y=--XgBS+sa4CHb7e4RFTYCbWfzHzVc3vXA@mail.gmail.com>
- <7e998cd5-57e0-432b-a8e0-676a5b773436@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517BA606A31D
+	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 12:05:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 517BA606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=okonski.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=okonski.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=okonski-org.20251104.gappssmtp.com header.i=@okonski-org.20251104.gappssmtp.com header.a=rsa-sha256 header.s=20251104 header.b=TFe0b1FY
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-6b1b13e09ffso2477042a12.3
+        for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 05:05:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=okonski-org.20251104.gappssmtp.com; s=20251104; t=1792670741; x=1793275541; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=1lD9amVrEN5VBKxfAQDsDxJlbpUbXAXUW9BovN0dNeo=;
+        b=TFe0b1FY9C3TGA8Dl67TnvQoj1F18qXwJAPvi9MzJ/df3ytvAibyfiIdATWXBsI9fl
+         MCwA6ZLW8v36el5BmhkkSPbo5GEunLpdo3db1TvPsHsSSb14YOQ5+h+zVSIcovu8rwOd
+         wjg1YGSJXECAgDsJZ0o0omuQO7Xt0VXnt6LCdMTOGS5DyS0bnMY+IT4GNpvFbcJeQg51
+         8EhC9Timl6zYN6M5dJgzc8EFw7TgjubHR2kG/sdVIJnokuwQMB6kRMdtm9DSj0UMugP1
+         1HGeMnaRsZyerpM1+sb6S0r1BQyQHZpmIqnX5Nwoi3iSOol2z5TfFxQTHE828/Loquhp
+         mRWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792670741; x=1793275541;
+        h=content-transfer-encoding:content-type:in-reply-to:from
+         :content-language:references:cc:to:subject:user-agent:mime-version
+         :date:message-id:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1lD9amVrEN5VBKxfAQDsDxJlbpUbXAXUW9BovN0dNeo=;
+        b=AVEkz4XR0oY7Vju/1N4dwlrH22id8h4NKSPHhHmt0EbtdukZ+G8/KXJ5P0ZwHPQpY+
+         OejbIGr//eIEeKaUtmp1VcdtRFRMMoxofYxS8odfuYXf6txWN82Z+Rx2RoWYIGWOW+iN
+         R19lwOrkF/lAX4oOnwxcDzyQ5g0vU5Hfg/BoZcW2x/Z4uU7HqnR/P36qi0DcmzWRjR1v
+         62fQwDqde4eQHcovSxv+zEw8Frx8KFXMsbxn9mFhTwHSh8AYJSAZq+kBVDqVQ69k/eVt
+         WNC5M+9gyGNWBOVQJ3OFaTeGfHQwF/Qsue0Xuce+EW8YIcAXtRtcpK/KeHZvFeKPK8kN
+         9YZg==
+X-Forwarded-Encrypted: i=1; AKwUvBwjR551neBVpu+nOc4ygCcE/s3V24aiZYQZzBIo5O8hdDRdH7sbIfU58tIfrWaj129GSkzYiu7k@vger.kernel.org
+X-Gm-Message-State: AFq9FYLQuBotKnLjBmjJCM8KuJR61xOILnxAnDvv+KFzjyloN9fpct6Y
+	8vnoP1ml944yLnC9aU1OwyAM9zMr3sS+qme4q+TlOg10sQoxy+APuBFsF/uNDe5bYk0=
+X-Gm-Gg: AYBFou2ty6027qjKsWinTdwKKW/k0z4mTNh8N/aX0EghvvVkyRx1Fec2t7mS8/mGG5D
+	iFNCzdhkIvlytJTB25vfCBWT/SI9FG40dGAkmkaOduIN2U+j8NRGefDNKTQzE2jeAUuwd9qKVkO
+	KZ4RJ9AKUKQI5oNYZ9q5O4B+BYRsoSLFV/vrzdkvdVglL7KCJD7e1z8GNvHg2Dcq/9P6IZnByVK
+	34pXWkfL0qGiO/og7kRZzz+NW/w0S0Be6IitnBhvXQMLFD1QW4BVMX6rmSHBsCCPf7a9igWK7nV
+	jorbE7AvqWH80Uy+BOEDYd31LSl7nxOlFzYCFXI/0u6K/hHEbgUWhTSqIyfijT2+XhnO+gAMUWT
+	1AaBr6/DfWwBPRx4E7MNtg/2+Vn5OmbD+kdx43XRd4w5iL0rqu+GXNX1ANfx6xpmj5N9I61B+4D
+	K8zp64iGs7nYe9nX7P6GFcFmwGDkioLmDvhbBiT8uQ3mlVLc1qqyuBcHmsaT9DXr5wVs+Bxnx5Z
+	0f8oYoKOQFnjxYgf9wcPKiPaj1z4bLXBjhA2gR0/Uc10ZL7uwKybnUpxWxXUmSSNaqskRRQe3tz
+	LCYoQCqx52LYiITVHKnGw53XjD5NkqlkI5+Ch1tYvdvGL6w/AV6hA+WasMf3S0Sahs/sV8ic1XF
+	VQeZbn4MqZQUfvOIGFlMdp2nu
+X-Received: by 2002:a05:6402:4284:b0:6b4:29f7:f951 with SMTP id 4fb4d7f45d1cf-6b429f7fb5bmr881676a12.39.1792670740302;
+        Thu, 22 Oct 2026 05:05:40 -0700 (PDT)
+Received: from ?IPV6:2a02:21a0:10:748:1::2? ([2a02:21a0:10:748:1::2])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6b403110a23sm1638992a12.17.2026.10.22.05.05.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Oct 2026 05:05:39 -0700 (PDT)
+Message-ID: <a82eb30e-685a-4ee3-af49-36b1102587de@okonski.org>
+Date: Thu, 22 Oct 2026 14:05:38 +0200
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -95,66 +93,39 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7e998cd5-57e0-432b-a8e0-676a5b773436@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 7/7] sched/eevdf: Move to a single runqueue
+To: Vincent Guittot <vincent.guittot@linaro.org>
+Cc: Mike Galbraith <efault@gmx.de>, Peter Zijlstra <peterz@infradead.org>,
+ mingo@kernel.org, longman@redhat.com, juri.lelli@redhat.com,
+ dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
+ mgorman@suse.de, vschneid@redhat.com, tj@kernel.org, hannes@cmpxchg.org,
+ mkoutny@suse.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ jstultz@google.com, kprateek.nayak@amd.com, qyousef@layalina.io
+References: <20260605105513.354837583@infradead.org>
+ <20260605124052.227463677@infradead.org>
+ <58dc8e8a-7260-43ce-aebb-8d9c29a6afc9@okonski.org>
+ <b1002150c3e4f877d04790cd8e85d2149d17722f.camel@gmx.de>
+ <atZM6uF0CqCNh__I@vingu-cube>
+ <f1d0fc39-6939-4fb3-a422-273cd5c347c4@okonski.org>
+ <CAKfTPtB_gMM7axqM167_Tb=WiChskGPXFDgQ4YjVz4Bj+ZiJ0g@mail.gmail.com>
+ <01e25832-955c-4f39-a902-6cc253a2791c@okonski.org>
+ <CAKfTPtCVknqCO45p7oR3s=1fNEmDW-jv7-wtQh7vwkuJ=UmVcQ@mail.gmail.com>
+ <CAKfTPtBVJZ7DUeDci=JkCs1kstoYXsBru46VchZV7DE5=RB2+w@mail.gmail.com>
+Content-Language: en-US
+From: =?UTF-8?Q?Jakub_Oko=C5=84ski?= <jakub@okonski.org>
+In-Reply-To: <CAKfTPtBVJZ7DUeDci=JkCs1kstoYXsBru46VchZV7DE5=RB2+w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Oct 21, 2026 at 10:18:35AM +0200, David Hildenbrand (Arm) wrote:
-> On 10/21/26 09:41, Chris Li wrote:
-> > On Mon, Oct 19, 2026 at 5:35 AM Nhat Pham <nphamcs@gmail.com> wrote:
-> >>
-> >> On Mon, Oct 19, 2026 at 5:28 AM David Hildenbrand (Arm)
-> >> <david@kernel.org> wrote:
-> >>>
-> >>>
-> >>> I'm traveling this week, so it's a bit tricky. I cannot make Thursday morning.
-> >>>
-> >>> On Thursday I'll be traveling back from Cambridge. But hang on.
-> >>>
-> >>> My plan lands on Oct 22, 11:10 PM. I should be home around Friday 1.30am - 2am.
-> >>>
-> >>> I could just naturally join that day.
-> >>>
-> >>> So one day later would work for me.
-> >>
-> >> Would that be too rushed for you? :)
-> >>
-> >> For everyone's convenience, this would be the time slot:
-> >>
-> >> PDT: Thu Oct 22, 5:00 PM
-> > 
-> > Works for me :-)
-> > 
-> >> EDT: Thu Oct 22, 8:00 PM
-> >> Europe: Fri Oct 23, 2:00 AM
-> > 
-> > Ouch, David. If you commit to that, I understand it is very
-> > challenging. Thank you for taking one for the team.
-> > 
-> >> China: Fri Oct 23, 8:00 AM
-> > 
-> > Other swap developers: Kairui, Baoquan, YoungJun and Barry, when you
-> > have time, please comment on whether you can make the meeting as well.
-> 
-> I took the liberty to schedule the meeting and send out google calendar
-> invitations to everyone on the CC list (to keep it simple on my end ;) ).
-> 
-> If anybody did not receive an invite but wants to join, please let me know.
-> 
-> If anybody received an invite and does not want to join, just ignore :)
-> 
-> -- 
-> Cheers,
-> 
-> David
+On 10/21/26 13:55, Vincent Guittot wrote:
+> Which is the correct way to ask scheduler to make a task to run 1st
 
-Thanks, David and Chris!
+I totally get that and will try to make the changes in my workloads,
+starting with https://invent.kde.org/plasma/kwin/-/merge_requests/10192
 
-I'd like to participate in the meeting (This is 9:00 AM KST.)
+That said, I hope both the cpu.idle and nice 19 issues get resolved and
+I'll be watching those conversations. It's too disruptive otherwise!
 
-However, I have a company meeting and issue around that time.
-If everything is fine, I’ll join and participate in the discussion. 
-And If an issue comes up, I may need to leave early.
-
-Youngjun
+Regards,
+Jakub
