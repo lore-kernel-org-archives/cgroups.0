@@ -1,100 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792635733;
-	b=y2mv7ddPcYGoqTKI/Oiz8+SB13qYFP0YJdl5TTgdG3RVwEJzlLKF6ioZhTRKaDHU4For
-	 zhCiRBLcpLEM3T882r+3tUGT5sXPvZt7ICPFMbFsy4bMOZhYhOTCoa6/mnHBrNvR2xWC2
-	 DZBsaXMLJmQLYoCkWYuMzdchaHCJ19KuXgcizLnHMTQjejgz9hsI8J7VyvQA3mj3nVQqj
-	 lBxf4k8vTodNUkudcIBNShMtzlvipaxCCmx1Hf43xBLjvTkaFxdVCquSbhLdJ0IFFZh1n
-	 gZ4VRhPChIDjOT0Gwkeiqpa6esFSu6jNQPfZmK91k79Mr5fiwsHWIp2rue8yjBHz8rA==
+	t=1792636582;
+	b=I8ZpKsUUq0ZFU+kZINQ3Fpciz7FQDA6EZCCNJOOMo+R8QoFScQFHWhKPJwPfE4YN9dvm
+	 IbhzL3j3+6oQFO6MZyz0Pn0ocofgmKvNx4x70M9fy3MMF7gK9a0iP89/hoak1HSfHTFGb
+	 /b0rBqZ9LXKz3UHYhe9fk/5blBY/y/yCHuN+v+tXjzk2GXD3pWOs+AUZeLJLP+Oz6/DQI
+	 2pgDYoNxrKtZx/6f5ZOf7g3Owv5CZ245r4ZlpJCejuFxuCHiLHFK4odUiMkbG2zHbgOBi
+	 XOYJt5GOdEOyHe5ef5XbI0Kf5m0NBUZ6PbYVEN9kYyO04eGfhSEWGeZ+HznClplWflw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792635733;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792636582;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=/vcgmKyU3N8wJBKLGR6NXqrqBGbIingVRqEmBp0Pmd0=;
-	b=maAFvLPjvVaG/2YHYCHoeTROngUEBahErQQ+rdlKXcY3T1fCbjHte6NIv++sZi8/Bawk
-	 XPKJP0Rg4sFyqodsnrxjmA8BgjKOJev6daieKYAfUKltBzYdcFyaPuwbiUp+z8P6qe0dY
-	 jQFbQm6ZegTV0J1SQux9E8A3bQAuKVBcZm41N0gJ0d1BPpzNciUkGLmnXiLTQmMOmIAjj
-	 DyUFHF0m4TYs3QHL2c536eAc8HgRYvmKET4DojiL9z5aqNr9hD6ThnG3cIXqvAOph1OWb
-	 1bfzG9O1ZseItAIalc5smAs8X5b4Y2EWPcDAOyC2e/rN0FEVnoEFQbInxtY3tY9NlpA==
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:From:To:
+	 Cc:In-Reply-To:References:Date:Message-Id:X-Mailer;
+	bh=OnfyzMLO0P5DWvV355CXnkmHdcF8VekAj3yYMzW5EvM=;
+	b=ejoa/v0Sf3NRDNyL68oeaoNknUNKTylvm+GF1Yx8zDYS2YMbHUFMGMSXNliFMeFmtKs2
+	 s3FIG/mEDzl0jHw583zV31OlquMWi3W5qlG9N2SH/afV8hkhCoPlYgTxc0rT42PWagfBr
+	 bsszcK00Litf/uxYcuLIJrdId0+xAXe05B/+rMoSMan5OKxh8Gcm6uD//h6ACPIJhuuND
+	 +XscKvnnC4EWitLsVyQrL7mjZIg8uX6nZB81rmWk9p3XTQtHlmcFdepzYFWtVbfu33Lci
+	 YnZhSxqsr+0FQuzdO+UXpZr0PlrC9AWAo/abXYjIrlGpvFDbmcLL1unYmxT+Ig/Pfdw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=f8PycOzu;
-	arc=none smtp.remote-ip=74.125.82.180
-Received: from mail-dy1-f180.google.com (mail-dy1-f180.google.com [74.125.82.180])
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	arc=none smtp.remote-ip=209.85.160.182
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0757606A319
-	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 02:22:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0757606A319
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=f8PycOzu
-Received: by mail-dy1-f180.google.com with SMTP id 5a478bee46e88-35943f55c06so583473eec.0
-        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 19:22:12 -0700 (PDT)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F0B4606A31D
+	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 02:36:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7F0B4606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-535f9de49fcso9047381cf.0
+        for <cgroups@vger.kernel.org>; Wed, 21 Oct 2026 19:36:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792635732; x=1793240532; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=/vcgmKyU3N8wJBKLGR6NXqrqBGbIingVRqEmBp0Pmd0=;
-        b=f8PycOzuoHqsHt9XMwudJkKP7dilV/zrdLicO6TZrc6NettYJkf0P+LgTLjjzakNmO
-         Pcr5N+Xv3s33kB425p5aLKJqDwB7qfm3wxfc8M7POF4R8wGFLmNNMQ/DQqGRCay6eW5e
-         F9gC1ZJq6q5ICA260meKms8x1E6l7ARthBc8tKTIgeFIP9sJW7ilqrS8l6Bmjcq5+6FI
-         qjluXcwq0kL/dtysM6fEAwFNsRigfd2f1WJQ1XI2vemss7q4SHmGP9nZLkE9udwnhekr
-         BLrw2rg+OQku1v5lLMiELNcTdFKpQb7HYOKW1JDYWfSGA+V7Fiu23M7In5707INDjYeQ
-         5leA==
+        d=gourry.net; s=google; t=1792636580; x=1793241380; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=OnfyzMLO0P5DWvV355CXnkmHdcF8VekAj3yYMzW5EvM=;
+        b=DXfRIZohrO6JOR9N2TQfXwi6cS3IFf0u3AYrwtcV6cAz/rVDD7gYA/cEnUd7wXfC6H
+         sfSTAy7j3LwrJCHxVAhzWFOpiEsgVwT/fRT6BmOjP8g4NxugF58Kv64hPA8hnbMyMMLg
+         Bn4uk+VUNjJYH35He0ZZnX1j8fnuR9z1X+77UXRo20wYlj3BIhM4ayOT/xvxHjPPdiU+
+         FfSYeOstSqlXfhKWllHX+JM7bKGrsEHmlMhl8dWpG2+mPCDE3Y3naPT+E0bU+/a3txYD
+         pdUabMTzTxVpr1fgM8p26nP5aBPgBmL9e1ItEt0i/hYPGLmhUgvgszhgzDYl95JPGZok
+         h0jA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792635732; x=1793240532;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=/vcgmKyU3N8wJBKLGR6NXqrqBGbIingVRqEmBp0Pmd0=;
-        b=Cq2IdNzcczhTDimES2nzia0VXijAVygEctZ7Z7tzRj+ONxAzu9ZndRtLRMOsWF9Rrk
-         JADra+OsnRNvRPG1k3TMcDUkpX0s/5d1EvIx7wJzlP401DsMYDkcEi0PUF1UPtQ1xl0O
-         kGH8ZihC4XCEOAGreG+LKAb1aKSZSLTr/kJ9q+oHB2RVe8vUzMeYL1s53AZyzYkJR/29
-         h2cStRIKT4gL9lmaWl2KM51N9InjH4CbLmOmcwHb/uGPu4VBgKelEM0KLy2mdoBYTp6Q
-         7nrxfcMSQIEfGfYNoenpwbkfnUQVIe8yFZkgPIcWX/Qfe3ifjtfSofmXU+Q/mF0GC2i/
-         4x1Q==
-X-Forwarded-Encrypted: i=1; AKwUvBx6baCqj4RnEpowyymK+A8Gn4cRr1xMJpaLX3NkvCqIf/F8Zl4wvnVzjBO/dDPA54Ye3lhbyyBr@vger.kernel.org
-X-Gm-Message-State: AFq9FYIbp+bfdVMifnTN1qCX/QbdAm5MxlvdsIQIaDYB+dd8BodtaKlv
-	39wvWSa186JtVO+elycyjdK43bRiMgg/j/wqmAmFzDyggdXE5t35extJ
-X-Gm-Gg: AYBFou3LVGtjOnQOykYprBUOR4T/z69G5nIpZr8ZaIyOOEQJ516XN1eYVLRCK5JTmAV
-	4Wibt6KNl0pweWjjhq0hAGqr0zjiHBV4AHfdJnDcZkSOhuaNfsFt+gDTULW4E3F9BC0Us0CA+Ix
-	N0yqSEWXaI5wIgjdPqhgpdIjt7cWXlcCiepxwt43JrSjy4dW1yL/Nya76xGuVatcr+C5P6kEo5l
-	7wWDBYD4OxkjWkZZe77Q4k8gtOR2EhtbpPxFjvowxqFb+DHA5h46APk8+RwkewZCPNJfZpJzkQ7
-	EHhn1u4x4k/+G0OvcSJyZ1Tr49DBqI8jMkmrqVFSRHAfZEBo3n0T8d43r5sCUKtkXgYb/d095lV
-	CmkqSm0Rj5vajormG/e+FleGukq3weIuWcTK4gO0gsBcxKamMvkWOrLwNLMgkM3yYRgCsGLOjwi
-	u5qJmF3D/rZZFw06w4qj+/vTDHoWXVWUI0Vh07PvT++LoVWZC52cDh32bdZrnIs7eJ155PRVCu6
-	DxDmEQS57Qkt3oop+ybHB0bwGCXMI0Gz4itaDgsINR2qGhmIHrZ/fHjd1QIVSZTik6c4AIA/fmb
-	6q9sE7RB7aWTog==
-X-Received: by 2002:a05:7300:d407:b0:362:2e2f:c261 with SMTP id 5a478bee46e88-368b15180d8mr1246173eec.27.1792635731887;
-        Wed, 21 Oct 2026 19:22:11 -0700 (PDT)
-Received: from ancienth-X870E-Nova-WiFi ([125.186.72.2])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-367411bd27dsm12328555eec.17.2026.10.21.19.22.08
+        d=1e100.net; s=20260707; t=1792636580; x=1793241380;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=OnfyzMLO0P5DWvV355CXnkmHdcF8VekAj3yYMzW5EvM=;
+        b=0N50q8xJ6CA/bcDv5fWzatBom7dttdKKqptI3X4TXETVgMFgREgYkh4vaCXc3mL6Im
+         Gsvor8J7paknJdaO4TquZ39dDcf6Ix+EwBFv8YZ3kiCqsQhksDXkOb2Rmjo31LngDPv4
+         oQjdkEQDdGXm1buV9g3LlZssl10MsJhMA+yZh6UfZiA9QAw6u+1ZRg9WSStbLYfDDi/+
+         nBJ7taAhg/jF+EnH8SXlvWQZGV5Wucw3/TBTvoRtgAaur7JVP7yvI5Q17w0kZKDpzspV
+         Fqe5ldQ34vUpG/lqR6WF2EG4B8h5iMelsO/brpeIJcADZjU3mv99NHDnOuuDbQvVupo6
+         sNVw==
+X-Forwarded-Encrypted: i=1; AKwUvBxUL0chDS5FnQTuHZ3yJ/dG0PrZYAZst7ojYhbeqc9mrcXGQbHu6MDtwKjYkO+krj20SP2HRbHk@vger.kernel.org
+X-Gm-Message-State: AFq9FYKtZCCZA2iGtbKfR3Ct2qQ/OOJyLAfP4T+GPhCjDZFCBdOmuqtv
+	VdLrA7Wxi3unx4zo+XWbkM4SmVN4z1TzSzs53aNANOdnXkfB44vgLGM9Ciy38JUS5Po=
+X-Gm-Gg: AYBFou39TVO6taQbRBoEMthnxLup0HxP5fdRb/01MmVrhRJB5Y5sifNX7QkHaaQ38yG
+	MHsFjK6+UXDSvSYRV1Nimh/xQBQJ/MXx5ABbjOBGOKkh3TrB9KRwc6BwnMeHpEnbhDTCknztjHZ
+	fBxHc4JGxmsOU1z2LDZ38MY45cSAl3LRaOUpjALvDB16O5r358RRfTSfjHF6Joau7jAYofGevaM
+	oMNe+MUqTVQ2Xd6Xf8r8smCM3gK4bO2HKLX2ta7ckJwBZl1shv16uRoPsYOX/JjRhpnZCP4tR4p
+	om/j0eEUiHfuNRbMy5JGSyTlyM4bXLF6Ww9LOffxm5Gb4GtrUXt/nv4bpwmyEjAvtzi4VnMP6EH
+	J3fvyIj59sUXu+/3hEE62WJhx4F4LKiKCM5Z+SCrZxa0Jcb7laq0QFZ4LUQEX4rRbVp9WNSey26
+	z1v6ML+3qQk16MJNTl4eZ3zqIIIamRMgL44GpFCG/IRjrFxSPDjoJRPb4JsD1Q1RJ817acSF758
+	l1WARqjkAyGgkuNwtpGlMOWw+ZvR/eK8qTzMQxs0Yi3whw7eZPHEAJ92iIQDo359X2hD/lyILSa
+	UbLt3AFmQRyIe2WaqSbFV2000+w=
+X-Received: by 2002:a05:622a:4cd:b0:533:2bf3:3301 with SMTP id d75a77b69052e-5369b86ae59mr66504611cf.36.1792636580301;
+        Wed, 21 Oct 2026 19:36:20 -0700 (PDT)
+Received: from [192.168.86.58] (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-536ab73b09dsm16032801cf.17.2026.10.21.19.36.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2026 19:22:11 -0700 (PDT)
-From: Daehyeon Ko <4ncienth@gmail.com>
-To: muchun.song@linux.dev,
-	osalvador@suse.de,
-	akpm@linux-foundation.org
-Cc: david@kernel.org,
-	tj@kernel.org,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Daehyeon Ko <4ncienth@gmail.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] mm/hugetlb_cgroup: prevent use-after-free during cgroup offlining
-Date: Thu, 22 Oct 2026 11:21:46 +0900
-Message-ID: <20261022022146.506005-1-4ncienth@gmail.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261020103057.8066217f6f6fc5b3ed84c90b@linux-foundation.org>
-References: <20261020103057.8066217f6f6fc5b3ed84c90b@linux-foundation.org>
+        Wed, 21 Oct 2026 19:36:19 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,129 +85,59 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v6 00/12] Virtual Swap Space (Swap Table Edition)
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: akpm@linux-foundation.org, chrisl@kernel.org, kasong@tencent.com, 
+ hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+ shakeel.butt@linux.dev, yosry@kernel.org, david@kernel.org, 
+ muchun.song@linux.dev, shikemeng@huaweicloud.com, baoquan.he@linux.dev, 
+ baohua@kernel.org, youngjun.park@lge.com, chengming.zhou@linux.dev, 
+ ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, rppt@kernel.org, 
+ surenb@google.com, qi.zheng@linux.dev, axelrasmussen@google.com, 
+ yuanchu@google.com, weixugc@google.com, riel@surriel.com, gourry@gourry.net, 
+ haowenchao22@gmail.com, corbet@lwn.net, hughd@google.com, 
+ baolin.wang@linux.alibaba.com, tj@kernel.org, mkoutny@suse.com, 
+ skhan@linuxfoundation.org, rdunlap@infradead.org, kunwu.chan@linux.dev, 
+ kernel-team@meta.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+ linux-doc@vger.kernel.org, cgroups@vger.kernel.org
+In-Reply-To: <20261021060323.553433-1-nphamcs@gmail.com>
+References: <20261021060323.553433-1-nphamcs@gmail.com>
+Date: Wed, 21 Oct 2026 22:36:17 -0400
+Message-Id: <179263657717.2549665.11401372071846447074.b4-reply@b4>
+X-Mailer: b4 0.17-dev
 
-A normal hugetlb charge obtains the current task's hugetlb cgroup with
-css_tryget(), charges its page counter, and drops the CSS reference before
-the folio is committed under hugetlb_lock.
+On 2026-10-20 23:03 -0700, Nhat Pham wrote:
+> B. Semi-synthetic Workloads (memhog, usemem, kernel build)
+> ==========================================================
+> 
+> All values are mean +/- standard deviation across rounds.
+> 
+> Test system: x86_64, 52 cores, 64 GB swapfile for all 3 benchmarks.
+> Swap backend: zswap (zstd) with the traditional active/inactive LRU. We
+> focus on zswap here because it is the motivating use case for vswap.
+>
 
-The task can be migrated while the allocation is in progress.  If the old
-CSS is then offlined, its final active-folio scan can finish before the
-charge becomes visible.  The allocation can subsequently charge that dying
-CSS and commit its pointer to the folio.  Once the CSS is freed, uncharging
-the folio accesses the freed hugetlb_cgroup, including its page counter and
-per-node usage.
+I get that the motivation is zswap, but it would be nice to have
+disk-swap performance numbers here as well right in the cover.
 
-Keep the reference acquired by the charge until commit or cancellation.  At
-commit time, while holding hugetlb_lock, move an uncommitted charge out of
-each dying CSS to the first live ancestor.  The hierarchical charge already
-includes every ancestor, so moving it only requires canceling each dying
-CSS's local count.
+If only because...
 
-This orders commit against the offline active-folio scan: either the scan
-runs after commit and reparents the folio, or commit observes the dying CSS
-after the scan and selects a live ancestor.  The retained reference also
-keeps the originally selected hugetlb_cgroup alive through this decision.
-Reservation charges retain their existing CSS lifetime and are not
-reparented.
+> For each benchmark, we test 3 kernels:
+> * Baseline: mm-unstable, no vswap patches.
+> * VSS off: vswap series applied, vswap=off, to verify that there is no
+>   regression to existing swap paths when we disable vswap.
+> * VSS on: vswap series applied, vswap=on.
+> 
 
-On an unmodified v7.3 kernel with a 128-page 2 MiB pool, a
-capability-free uid 1000 allocator racing administrator rmdir reproduced
-KASAN writes to a freed hugetlb_cgroup in three of three boots.  Controller
-disable reproduced the same fault.  With this change, 5,000 rmdir rounds
-with over 1 million successful faults and 2,000 controller-disable rounds
-with over 1.6 million successful faults completed without KASAN, LOCKDEP,
-page-counter, or refcount reports.
+If the numbers you presented carry through, I'm left wondering why this
+is a boot option and not a build option.  I rather dislike the boot
+option compromise in general - but other reasoning aside, if there's no
+performance impact, then I don't see why it shouldn't be the default.
 
-AI-assisted source review was used to identify the race and to help draft
-the reproducer and fix.  The interleaving and the resulting allocation,
-free, and use-after-free stacks were verified with tracefs and KASAN.
+~Gregory
 
-Fixes: da1def55919f ("hugetlb/cgroup: add support for cgroup removal")
-Cc: stable@vger.kernel.org
-Signed-off-by: Daehyeon Ko <4ncienth@gmail.com>
----
-V1 -> V2:
-- Remove the redundant disabled-controller check from uncharge, as requested
-  by Andrew Morton.
-
-v1: https://lore.kernel.org/r/20261020100345.1677643-1-4ncienth@gmail.com
-
- mm/hugetlb_cgroup.c | 34 ++++++++++++++++++++++++++--------
- 1 file changed, 26 insertions(+), 8 deletions(-)
-
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 3fb41311e4c7dc..6921b185726662 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -310,11 +310,10 @@ static int __hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
- 		css_put(&h_cg->css);
- 		goto done;
- 	}
--	/* Reservations take a reference to the css because they do not get
--	 * reparented.
-+	/*
-+	 * Hold the CSS reference until commit. Reservations keep it longer
-+	 * because they are not reparented.
- 	 */
--	if (!rsvd)
--		css_put(&h_cg->css);
- done:
- 	*ptr = h_cg;
- 	return ret;
-@@ -337,9 +336,26 @@ static void __hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
- 					   struct hugetlb_cgroup *h_cg,
- 					   struct folio *folio, bool rsvd)
- {
-+	struct hugetlb_cgroup *charged_h_cg = h_cg;
-+
- 	if (hugetlb_cgroup_disabled() || !h_cg)
--		return;
-+		goto out;
- 	lockdep_assert_held(&hugetlb_lock);
-+
-+	/*
-+	 * A task can be migrated after selecting h_cg. Once offlining starts,
-+	 * redirect the uncommitted charge to a live ancestor. hugetlb_lock
-+	 * serializes this decision with the offline scan, which reparents
-+	 * earlier commits.
-+	 */
-+	if (!rsvd) {
-+		while (css_is_dying(&h_cg->css)) {
-+			page_counter_cancel(&h_cg->hugepage[idx], nr_pages);
-+			/* The root CSS never dies. */
-+			h_cg = parent_hugetlb_cgroup(h_cg);
-+		}
-+	}
-+
- 	__set_hugetlb_cgroup(folio, h_cg, rsvd);
- 	if (!rsvd) {
- 		unsigned long usage =
-@@ -352,6 +368,9 @@ static void __hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
- 		WRITE_ONCE(h_cg->nodeinfo[folio_nid(folio)]->usage[idx],
- 			   usage + nr_pages);
- 	}
-+out:
-+	if (!rsvd && charged_h_cg)
-+		css_put(&charged_h_cg->css);
- }
- 
- void hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
-@@ -419,15 +438,14 @@ static void __hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
- 					     struct hugetlb_cgroup *h_cg,
- 					     bool rsvd)
- {
--	if (hugetlb_cgroup_disabled() || !h_cg)
-+	if (!h_cg)
- 		return;
- 
- 	page_counter_uncharge(__hugetlb_cgroup_counter_from_cgroup(h_cg, idx,
- 								   rsvd),
- 			      nr_pages);
- 
--	if (rsvd)
--		css_put(&h_cg->css);
-+	css_put(&h_cg->css);
- }
- 
- void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+-- 
+Gregory Price (Meta) <gourry@gourry.net>
