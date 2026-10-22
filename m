@@ -1,65 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.205
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=90.155.50.34
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792703875;
-	b=Zn+fse1hsSWkh7eraPg5Ay9aD87wHC2l9cRoUTYf7FfPsD9U6I90sJ+ntMtSgTY1uVcH
-	 sduHdsH+2kd07sfayptRLr+fQEUU4sxHU72/89USmKOIG2IR22J65GBQGZXchQjOwIWFF
-	 dvF23Mw7D3s5KoeX2NCo0HCIFWdi+oeJhRyeHcL8dpyvnvAlhddno8bpMO3SVEJdFSGTY
-	 kRLHKe3mAcAeQsGVgAqMj1lzcFVk3U4zqBCqe2oCaBV41CWQYwg8O9QHEgDvRZMu7pZPY
-	 D/wH+gqMARCyNe0N5FE5QwilmytOfZBRjQb9n489du/rKcTiybnd5Gk7ghujywjhiIQ==
+	t=1792704122;
+	b=IVfarpcgb8dx9v7ZA4VcyT3866UksMOXOzwYTldtW3P89kItHN+/lw87RSyFLWtBoe5B
+	 tx6RrmD0sYYet2xbES/cB04/nCr0Q+NtjLvcm3XN/hCh9SMzqpmPNCODJt/PXVTgR/kzG
+	 Tqt4xAyISXDF/6LPZv85IH1kBCinExo0M7JxDiZW72jvX8fNgNaybHzLmmS0rarGo8jSu
+	 0ki4od6CY65ojZ09hwnxECy+CzqWc1ncHQYkJ9htRoEPom2pAWMjFVInFp8D9hHb9WZQh
+	 RrcQ1Wg5DYZ/QTIH9KrpWIN5WqkXh9c/LAbDSzbkKQ/B/FmbYeHq+QlKIsVFOgGSn8w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792703875;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=tCGGzZyU61kJ6IDawbKZzEOK2Mn7ancoajfi8twfHqg=;
-	b=XE99L85xwsh7jWowprlaVwVzc31z6AMlbr6MkqBcC1ZIYpPWApR5mUmPKFcWObUvki5+
-	 HjpPCk94TVzZZnmmfM/Wfns/6vYvh3qVFrO4c4F180b+QT6+iTNCZr6E8fCThadCF0+G1
-	 Yx0cJAE1byEH5wBd63pD1kVqDZXma2shBtui2ZRZhGVaHOA2wvoVv161zWjFW+rBmrM1K
-	 mma1bnY1sEH4mGZ4t2qWk6URWXfK0cae91Cpa4ewtjD1TB5WEAgXESKHQlGj0JiVdLPCI
-	 U6AUPFsZ2V5mLKXF6yUyCU/oJ3krPPwPYI5hiiluZONL+6LFXkavyVO55aMosnzW4Rw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792704122;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=4LHkfkw9eYCKRE1Ovy2OT1wG/BuLdxLosSSy54r1sgQ=;
+	b=AK9oqstzguBpH1EfkjzcrRKzpeVs/3wjQVEfYSrrVJGB+TsNKHaDQT8/88dUi+pb3Z3/
+	 uwscXIBi8dRHzvjzOZR1T7JWuEkNkC0yVNtNbUFW71YqZdFl47Mbr+Mqyk54BIC5GKkLk
+	 v1Q4rVSNIfHRdWHCcPoEFw7sFqvi0hapStKwkKN86azZf2xEtN1NNqN8ZSe4b5pbZiZAY
+	 ssFmXPtYi43zTe3SbiKzZOtdmP71dp/TqPSildwN3Bptk/tL7wW5TJ6N+YYmoXG4rFUlW
+	 hf7J83aQS93mAL2bLgkIuAKEkCpOBOFLF4D2H0RUww9heYT5U51EmU/2zFfwvQ43K1Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wrrawjN4;
-	arc=none smtp.remote-ip=95.215.58.205
-Received: from mta1.migadu.com (out-205.mta1.migadu.com [95.215.58.205])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=infradead.org;
+	spf=pass smtp.mailfrom=infradead.org;
+	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=sSEiDXa3;
+	arc=none smtp.remote-ip=90.155.50.34
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC5A3606A31B
-	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 21:17:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AC5A3606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3970606A31A;
+	Thu, 22 Oct 2026 21:21:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3970606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wrrawjN4
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=h0J8OgpZrOv3Sfgzgz7uTRPJyJ8BCDfUJCwW+8yZSG0=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792703871; v=1; x=1793308671;
- b=wrrawjN44aodaSGm07ZrQDkU52fkNTAPfuDARmJ2fz01DGuv7GMM5RSk4RTU3iqqf8v72P6K
- Jmc0uFnIuEtP0VIvCZHnGZo5WvwQFD//A4klg5kClMuOOvTw+rG9yP8mDbtSHyW/eZVHTQZLpGD
- SR6CSObUb4aQXTQX+7FSK8gg=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 76616d6bd444bd51;
-	Thu, 22 Oct 2026 21:17:51 +0000
-X-Mizu-Trace-ID: 76616d6bd444bd51
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 22 Oct 2026 14:17:45 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: akpm@linux-foundation.org, yosry@kernel.org, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	david@kernel.org, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, 
-	rppt@kernel.org, surenb@google.com, kasong@tencent.com, qi.zheng@linux.dev, 
-	baohua@kernel.org, baolin.wang@linux.alibaba.com, axelrasmussen@google.com, 
-	yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [PATCH v1] mm: move LRU size stat updates out of lru_lock in
- folio batches
-Message-ID: <atp7tN-UfEAu3wdk@linux.dev>
-References: <20261022200313.2354350-1-joannelkoong@gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=sSEiDXa3
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=4LHkfkw9eYCKRE1Ovy2OT1wG/BuLdxLosSSy54r1sgQ=; b=sSEiDXa33sUi7DeL9M7WrVgs83
+	HJUt+5KkCuEQR7NfKVim6nP1bbskEhYnNz5TYh1GR41hc9bpmb5WHVbsDX4bQzwMp9cn0VXpTZK8C
+	t1BwbmWJws6vWZTBbov+ZKgVYSEF+yj+Rwo1cKDj7KAfPhmjINCZuv3wymn0j4UbJtYLnjSouUuq1
+	QXI78KRls6be0oyuDXZTfi77F/QessKi1P+AD/fWycbTsHqbYSsKk52dPuOtsJb1ZaNd0tN64THpt
+	xFl4oRx/9kH0Te1Czx3Holnp5xNhft/yBojWB0y3dbVnDdsD04M3g0z35r1jSHtuFnAzuaphyTXGW
+	mQ0Sf39g==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by casper.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
+	id 1xK0ER-00000004d4s-1JSC;
+	Thu, 22 Oct 2026 21:21:51 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id 46580300720; Thu, 22 Oct 2026 23:21:50 +0200 (CEST)
+Date: Thu, 22 Oct 2026 23:21:50 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Josh Don <joshdon@google.com>
+Cc: Kayra Cizmeci <kayracizmeci@gmail.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>, mingo@redhat.com,
+	juri.lelli@redhat.com, dietmar.eggemann@arm.com,
+	rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de,
+	vschneid@redhat.com, kprateek.nayak@amd.com,
+	linux-kernel@vger.kernel.org, jakub@okonski.org, longman@redhat.com,
+	tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
+	cgroups@vger.kernel.org, jstultz@google.com, qyousef@layalina.io
+Subject: Re: [PATCH v2] sched/eevdf: Fix sched idle task group preemption
+Message-ID: <20261022212150.GW2823843@noisy.programming.kicks-ass.net>
+References: <20261019182622.1584454-1-vincent.guittot@linaro.org>
+ <20261021131313.GM2823843@noisy.programming.kicks-ass.net>
+ <CAKfTPtDOZ0=nrQe1-WSTamgU0qqdJVvD3KZPtnsqwwnE53BSKA@mail.gmail.com>
+ <ati_o5c-SoiOp529@scheduler.schedules>
+ <20261021145042.GQ2823843@noisy.programming.kicks-ass.net>
+ <CABk29Nv2ZzB1KGEuPmx4VmxTJ6pKmikGMr8cvzzDhHZSKpkgvg@mail.gmail.com>
+ <20261022114705.GW88198@noisy.programming.kicks-ass.net>
+ <CABk29NviVUAK6B_deQ7qah8eABiCikbFpTwDEO2hdproGLdLwQ@mail.gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,65 +81,73 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261022200313.2354350-1-joannelkoong@gmail.com>
+In-Reply-To: <CABk29NviVUAK6B_deQ7qah8eABiCikbFpTwDEO2hdproGLdLwQ@mail.gmail.com>
 
-On Thu, Oct 22, 2026 at 01:03:13PM -0700, Joanne Koong wrote:
-> folio_batch_move_lru() and folios_put_refs() take the lruvec's lru_lock
-> once per batch, but they update the node and memcg lruvec stats for
-> every folio in the batch while holding the lock. Only the LRU lists and
-> the memcg lru_zone_size need lru_lock. Updating the stats while holding
-> the lru_lock is unnecessary, and they make up a large part of the
-> critical section, as seen in [1]. 
-
-Can you please add a tldr from [1] here? Too much text in that link.
-
-> With many threads faulting and freeing
-> memory in a single memcg, about half of all cycles are spent waiting for
-> lru_lock, and the hold time of the lru_lock directly limits throughput.
-
-Do you have perf profile showing this? Mainly I want to know where in stats
-update we are spending the CPU most.
-
-I wonder if we can find a lower bound here by removing the stats update
-altogether in this code path (just for experimentation) and measure the
-throughput we get.
-
+On Thu, Oct 22, 2026 at 10:49:36AM -0700, Josh Don wrote:
+> > diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> > index b5546cd27dba..779fcd5a2830 100644
+> > --- a/kernel/sched/fair.c
+> > +++ b/kernel/sched/fair.c
+> > @@ -15767,6 +15767,40 @@ int sched_group_set_shares(struct task_group *tg, unsigned long shares)
+> >         return ret;
+> >  }
+> >
+> > +struct tg_set_idle_struct {
+> > +       long idle;
+> > +       int cpu;
+> > +};
+> > +
+> > +static int tg_set_idle_up(struct task_group *tg, void *data)
+> > +{
+> > +       struct tg_set_idle_struct *tsi = data;
+> > +       struct cfs_rq *grp_cfs_rq = tg_cfs_rq(tg, tsi->cpu);
+> > +       struct sched_entity *se = tg_se(tg, tsi->cpu);
+> > +       int old_idle = grp_cfs_rq->idle;
+> > +       long task_delta;
+> > +
+> > +       grp_cfs_rq->idle += tsi->idle;
+> > +
+> > +       if (!!old_idle == !!grp_cfs_rq->idle)
+> > +               return 0;
+> > +
+> > +       task_delta = grp_cfs_rq->h_nr_queued - grp_cfs_rq->h_nr_idle;
+> > +       if (!task_delta)
+> > +               return 0;
+> > +
+> > +       task_delta *= tsi->idle;
+> > +
+> > +       for_each_sched_entity(se) {
+> > +               if (!se->on_rq)
+> > +                       break;
+> > +
+> > +               cfs_rq_of(se)->h_nr_idle += task_delta;
+> > +       }
+> > +
+> > +       return 0;
+> > +}
 > 
-> Accumulate the stat changes per LRU list while holding the lock instead,
-> and only apply them after dropping the lock (while still inside
-> the RCU read section that keeps the lruvec's memcg alive). This moves
-> the stat updates out of the lru_lock critical section and turns the
-> per-folio updates into at most one update per LRU list per batch.
+> Took me a bit to parse this double traversal. I think this is broken
+> for the clear side?
 > 
-> The batch is attached to the lruvec while lru_lock is held so that the
-> LRU add/del helpers don't need to pass it down. To keep struct lruvec
-> from growing, cost_lock is moved into the hole after lru_lock, which
-> leaves room for the batch pointer in the same cacheline as lru_lock.
+> root
+>   |
+>  A ( 2 tasks)
+>  |
+>  B (3 tasks)
 > 
-> The stats can now lag behind the LRU lists by one batch, which is well
-> within the per-cpu batching they already have.
+> If we start out with A marked as idle, then we have
+> root: h_nr_idle = 5
+> A: h_nr_idle = 3
+> B: h_nr_idle = 0
 > 
-> On a 2-socket Skylake (80 CPUs, 2 NUMA nodes), with threads pinned to
-> CPUs repeatedly faulting in and freeing memory in a single memcg,
-> average pages per second over 7 freshly created memcgs per run, 2 boots
-> each:
+> When we clear, we'll first start with B and subtract 3...
+> root: h_nr_idle = 2
+> A: h_nr_idle = 0
+> B: h_nr_idle = 0
 > 
->                      before    after
->   shmem, 20 threads  4.74M     5.47M   (+15%)
->   shmem, 80 threads  7.94M    10.33M   (+30%)
->   anon,  20 threads  3.04M     3.35M   (+10%)
->   anon,  80 threads  3.23M     3.41M   (+5%)
+> Then we go to A and try to subtract 5 leading to
+> root: h_nr_idle = -3
 > 
-> Link: https://lore.kernel.org/linux-fsdevel/CAJnrk1ZezmmzrYdf8KP6re_a76izMS=qGPeC8ZZXiteHyZZC-Q@mail.gmail.com/ [1]
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> ---
-> An alternative that avoids adding the lru_size_batch pointer to the lruvec
-> struct is to pass the batch down explicitly, but the plumbing for this is a
-> bit ugly (and doesn't cover mglru paths). The code looks like [2]. Happy to go
-> with this if that is preferred.
 
-Do you expect there might be opportunity to batch the stats other than LRU stats
-you batched in this patch? If there is then I think we should at least explore
-if a more general stat batching can be done.
-
-This code looks good though.
+Argh. Yes, I seem to have gotten it wrong. I'll try again in the
+morning.
