@@ -1,67 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792680457;
-	b=H1HHn4JPdYyPXVSi1lVykVuZ6a8Fl61dDfQW+DnZUX4F/HYZbUQzyeAWn0+8asR16nsm
-	 aN44CaqLBzZniCunv8ZjImfrKVeRGxbDaasRD9mmEn7EfPlf+6ykC1gMjeyEmOBSyy48E
-	 LLF6bv2NLYT0WUVyaTgoxziVOadkngJHDZSPxyAUQpGELZ/EdokOzwkIwZW0Goxnzrp4d
-	 WnxEUJyJ4bMbO3Of4CSaiFLyWomudH7YgiBZ7rxqDdtUKUUEGAGrn9OqMM5x6YrGpD3FZ
-	 oUKGxbZBAXNeRcvseb3dGJIDetdFddWsPsq45006LU0jacvWlXVGwpwO9o7hcl6+W7w==
+	t=1792681234;
+	b=eeAGOXgtAsJS7Oibqi8a/X91XgYxMC3fIHqDci3V3FTSs7WjjQxouLFkAVpbnlmqXjlO
+	 Vi1aDykSjN4aGxppBqP9vgiOIMx3nfRORRiUMLzW/TEqpPx44Zi1CRSrm26BxbCG3vMbb
+	 39Ln7O/jXiJHbeZaGrSPKV9BGaoaRpALje+s6oSiuoiyHWtmPzH86jxw+9NXz+0VE1LNA
+	 oADDM1XX7RixTYGFAs1jqo7Qvkm9noKYqkyE6z7ruNhZ9gCY3T5CsQXcp53CkaG0Ip4uD
+	 aA1CkJRXFNP0zcms5TcGtX16IcvuE6Qa3Trh1loQUB6yUdUzVdWzwpuHSpmQY/a/ibQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792680457;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792681234;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
 	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=gR3P+P7Lz9tqKXYHROkw4qqoV+JJ8jwyD4HCWY891es=;
-	b=h3c5j0LVRvXL8/llDQyQuoi1erbqkXrwOGB8d3XsYCrVxDEPag0xQ6HnJoUce+pnKdLk
-	 RaW11VpsNqskk8rkcEK+ditOgPZftsHK+dvSX1JFJZWTSV3tS141Jae/3P6OA1ztjgA/c
-	 d3VlAeLvNWVhtSrXeS2ordplsyNZSjXEtBus5+mYM/oj7AbasobORb0G1aeJSC2IKQ4sc
-	 cvQQamdq2yGYSV4R+jOtNdBX8MinIlpPqgZtkVmyf7OVWNs9D6WDoRIpRdQ+pN+SMmFBI
-	 qlt8WcqAj3Vammxz8iB2BRUMSMRnC6TGaky4d4EOwILwGDuX15ZyXP0PFfc/lriSkxw==
+	bh=xs623UdJItXI4MGQan24ty4HXBQzoz47sYHjiuslv6g=;
+	b=2E921dunthd0Wr2byDsISmj+5d4spgakgGv6uOrxGyYNe0A6v4Dof7Mc3lOsO+MDwX+S
+	 OWHvOzPGDGN6jY0IX4i2ah6VglnvoM6NvMYp8/ycPN4bFB9PggFhByL958aZPxP3hEzPY
+	 meSUGSkaXi3RySZ78I+qsxRlnaUapyhYyNJhmBEa7ygBsd/NenxO8kTnx6TSjQ0+JoCr7
+	 NPZCqPLwyLkfoEtBvqiRt+AO/wEHl0Voape0znYyQ1S3Pe3rQyk4vLys5VIaFJe20eEdU
+	 /Th6xRkLKsr4o5rnruRPUq2qa/qYHrXfjEzPWXpYWVpGtQMAMOsV/E+vKV+/bdWr1mQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YUrj6l1A;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="XK+TV/7E";
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E60DE606A319
-	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 14:47:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E60DE606A319
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53A00606A31D
+	for <cgroups@vger.kernel.org>; Thu, 22 Oct 2026 15:00:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 53A00606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YUrj6l1A
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=XK+TV/7E
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792680455;
+	s=mimecast20190719; t=1792681233;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=gR3P+P7Lz9tqKXYHROkw4qqoV+JJ8jwyD4HCWY891es=;
-	b=YUrj6l1AuusRZDJ0xBxFtnjT+kVRJUY9YWPMKEwK/PsdUrH80ge8SxxamLPrro8v6JcQTj
-	MBoTrUc5xzhXE9UqRMOD1PlcI8/el/3YkR8hL+gA+X5PsOfXis7zBFHFhRnSw/xtPTTX/L
-	I0ZNCS7qUiBa5IAd1r6IfoWNJ2lDX1A=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=xs623UdJItXI4MGQan24ty4HXBQzoz47sYHjiuslv6g=;
+	b=XK+TV/7EBX61PQiU2QWsxsVItn9tatAy1ZK4dgEbR0hn3Zb9wucZ0A60X6R+l7VaWdq4Qe
+	ApBUEB0/mh3II0r4NDprzTQRtLANGWYlozUaCNn3XR5iLPdcWtizmp+VpRizVaya6pGvgV
+	3hfZSvveGDFjrNLL/JxOESX7IVR6Zj4=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-622-3MCdjVoxOLm4JmoiK8jIQg-1; Thu,
- 22 Oct 2026 10:47:31 -0400
-X-MC-Unique: 3MCdjVoxOLm4JmoiK8jIQg-1
-X-Mimecast-MFC-AGG-ID: 3MCdjVoxOLm4JmoiK8jIQg_1792680448
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-451-CkzDjcRgN5GEJfH14V3sDw-1; Thu,
+ 22 Oct 2026 11:00:29 -0400
+X-MC-Unique: CkzDjcRgN5GEJfH14V3sDw-1
+X-Mimecast-MFC-AGG-ID: CkzDjcRgN5GEJfH14V3sDw_1792681227
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1C6161955DB5;
-	Thu, 22 Oct 2026 14:47:28 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id ED4A81801BEC;
+	Thu, 22 Oct 2026 15:00:26 +0000 (UTC)
 Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8F6FA1955F01;
-	Thu, 22 Oct 2026 14:47:26 +0000 (UTC)
-Message-ID: <00130aa2-2f85-4c4f-8283-acfa6df7cae5@redhat.com>
-Date: Thu, 22 Oct 2026 10:47:25 -0400
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6594C3000723;
+	Thu, 22 Oct 2026 15:00:25 +0000 (UTC)
+Message-ID: <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
+Date: Thu, 22 Oct 2026 11:00:24 -0400
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -88,7 +88,8 @@ From: Waiman Long <longman@redhat.com>
 In-Reply-To: <c65208d9-aba6-4e9a-affa-4f7cd8794a0c@linux.dev>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+
 
 On 10/22/26 9:45 AM, Guopeng Zhang wrote:
 > Hi Longman,
@@ -146,8 +147,17 @@ On 10/22/26 9:45 AM, Guopeng Zhang wrote:
 > I have rebased my fix on top of this series and the partition recovers
 > correctly with it applied. Should the fix be folded into this patch,
 > or is there a better way to fix it? Happy to hear your thoughts.
-OK, I will look into that again.
->
+
+You are right. My patch series won't fix this particular issue. However, 
+converting an invalid partition back to a valid one is done on a best 
+effort basis. There is no guarantee that it will always happen. Just 
+echo "root" to "cpuset.cpus.partition" again will make it valid again. 
+So it is not a real bug from my point of view. It is just a nice to have 
+feature.
+
+Cheers,
+Longman
+
 > Also, is the test case below worth adding here as well? Note that it
 > fails until the fix is in:
 >
@@ -155,14 +165,6 @@ OK, I will look into that again.
 >      # populated parent should recover after its cpuset.cpus.exclusive
 >      # list is changed to a valid one.
 >      "C0-7:X0-7:P1  .      .      .     X1      .      .      .     0 A1:1|XA1:1 A1:P1 ."
-
-This test case assumes that there are only 8 CPUs in the test system 
-which may not be true in many cases. We need test case that will work no 
-matter the system it is running on.
-
-Cheers,
-Longman
-
 >
 > Thanks,
 > Guopeng
