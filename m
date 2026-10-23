@@ -1,61 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792785913;
-	b=bZBd6u8bjIxHLgz0+O2x3Yn2wh4ea1wu2IR2M+Zj7ROQFQ2fO8KantqtE2Hr+mHYKKZk
-	 yRLya8yFF9r8Mck11yFYsygJoiD/4+K3WP9ygHGUsFATT0FxwvwAInZ2afk6SS002JhLF
-	 UKJ6qNUnje+xPBukkEpFsliJa0N162RNnGGpRi2aAsH0z618tqLkj2KACfNSj2xTUxe/O
-	 L5+JUaKuyyiDupW1Q4aJ/euDBZR3dT68ozjS5jaoS0h+W4iPzwKRFS5brLL3ogMYS+6D3
-	 SuvFTVg84C0XPAW4Tw6qBoQiOD8/ZqmA3xPt6TGfQW8DdEUMaZGPTa1qWTYUs2Ag0IA==
+	t=1792786072;
+	b=2pn7LK1ObNpo4rmPJRb8q7DJHtBdQKvnu9gFLz54S6FTp4D2B9JN9mBb8abl12rnsp0h
+	 F7nXfuxVccGv0aI82/4dB3ChfMxcpk521ofjtSJ7zt8/DHH84rLFc1yTwC1sNAqxRt1hp
+	 s2lPkGjuccyxJOquGk4hjHTy0BSdMCqnBmiF3A/OyLVdFMl/VTq8A1Px14pspH3X5tRhr
+	 O93wDbS6LayNoKej89Px87Aje9Jlez3YqUcdt7uHvzTjcr0p/WuRgXMEbKwVr7lik4ppr
+	 /mp6hyZkmzXtvCdU9JCs9vXZPg6RSoJqAoZ0eRo96hoi15EE8DZVcam3LH7HjpIXICw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792785913;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References;
-	bh=NMpzoe28Li6scyvq7gG95vJno5EdAW6a0YsgQjZX2q0=;
-	b=KeyKytHOSKohge4GEa9yl2C8JQvGIxuGdIo78FrLv+JB0UHtw9yjoRtnkDV/xiOUT7GL
-	 QhW8zuNqwvyY9rOac5jlbBDkNQfT44ElVSNJ8TXn0qxd+lLs+e8SPP8jP4vQCzLstSbka
-	 MQtgS64HiDHXpM4WDjQ71sVH1YyPKIbbwqvBOHB0CA60V2PdUgNPcMc7C0TrtkhMdOz33
-	 DVpa+DLMH8SMXByyxJbqjLOmcLFwhQS0qq/Ux5Os1ARX31rAXO1XzX0n3OzwfuxAwIY2a
-	 uswGChTv7WXviCgHr4N5rl+LobQPAQtcLRH8gSxvgNHMwccCYScmwBsHCzxoz1tXXrQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792786072;
+	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=EuB51aRYMoB3ieHrj2HnljEvnH4sVtaaiFVu6E2r2rI=;
+	b=qDXB3hEOSx+RmZzJZyPIKFPc5Gw8FGLanv9rPwkhzBUR37G/DHML+O2hGb73JV2TIq55
+	 1WYV/6SrlxzYhpam4Ok8MbMr+9oDKGkMs8JqpwDGQHSnJMMIVhzu6520rKY/XsFFFpSCp
+	 8lp9e71xOaZsHoFU+eyvNnLjOErYjVMVThc6PKI/Q70SGKw4nX9DAJ7W/bchXKQDQ6iDy
+	 atkZ8JofX31dMTiKCpJA3jrfMNeTpXrSqAFGPKHbmqWZMtfIK4ea/bkN4n5zazQ6LiM0b
+	 QsvS0aVRRfb7oX7zqBlca+Jegj4tx8iB1JxjgR9z6241XT3dHLU2MFfm+LV7sihjZsQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BGve7nPZ;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=linutronix.de;
+	spf=pass smtp.mailfrom=linutronix.de;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=HkSUsKbf;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b="/YMLS10H";
+	arc=none smtp.remote-ip=193.142.43.55
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CDE606A31A;
-	Fri, 23 Oct 2026 20:05:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56B8A606A31A;
+	Fri, 23 Oct 2026 20:07:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56B8A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BGve7nPZ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 813B61F01825;
-	Fri, 23 Oct 2026 20:05:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792785912;
-	bh=NMpzoe28Li6scyvq7gG95vJno5EdAW6a0YsgQjZX2q0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=BGve7nPZbSwa2LqTQNHByaYKCoffL8elEuhk+jlz/gI5i7hV1ZK7iwu/qtmG9KnfW
-	 qDLQ6u36lWhx7UicKyDcMUNChfBFrWn3JenrDFldoBbRTNPnoVuGnXK7yry9/I+UhS
-	 MWE4pDnSM609ghIOhSw3yImpZyKuDOHWSrhjgRD5US80G6Qkq1oMwCM7PasP4Odoa5
-	 eWESoT+iBiqSqRyLeo/eyLiBZIlzhddfENhxpqe5rRVvDNGrCXD9ZfhommNweBCA6Y
-	 MohZtgivmb5EyOPKL9f0ST9iqF4qVtUezx3RIOK809+Ej3U/6BhD3Jc4as7eFyeM2/
-	 DlEx8t9aemyMg==
-Date: Fri, 23 Oct 2026 10:05:11 -1000
-Message-ID: <100602397eadeaae2e3206e1d9aae55e@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Wilson Felipe Pereira <wfelipe@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>,
- Nhat Pham <nphamcs@gmail.com>, Chengming Zhou <chengming.zhou@linux.dev>,
- Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
- linux-mm@kvack.org, linux-kselftest@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] selftests/cgroup: convert cg_read_key_*() helpers to s64
-In-Reply-To: <20261022042921.711624-1-wfelipe@google.com>
-References: <20261022042921.711624-1-wfelipe@google.com>
+	dkim=pass (2048-bit key, unprotected) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=HkSUsKbf;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=/YMLS10H
+Date: Fri, 23 Oct 2026 22:07:48 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1792786070;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EuB51aRYMoB3ieHrj2HnljEvnH4sVtaaiFVu6E2r2rI=;
+	b=HkSUsKbfuJQTn0aaj9vXHYfaR5vi75/PcqdXUYMySN2iIr91wW/mztEkKebDB94J+iA2fF
+	LsA5wpYac5ZQRJm4Z1pMVNcUOabu1pjkSlgN4joSCQ2gv4ukBXb1t3kTibZKKvBnBzJHdW
+	xMBRrUjYkBdL52PcIp3nFncCUPxd+5BFwbUXZLTDb3xbYw5KMpNBoAW6RQHt2TgH5sSnZ/
+	y7l8kT7Ct9Emgmeq58s5vJ+0OKVBbzTUqoa92hmVQSpHMvnuqWv+e2bk/qx3wFJFTajzpx
+	IyKukRtXvCX23Le7W14HD3tpuiQLsWsuV2BOt5tXnA3+Q0bcL7fglkU4hXCMRw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1792786070;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EuB51aRYMoB3ieHrj2HnljEvnH4sVtaaiFVu6E2r2rI=;
+	b=/YMLS10HHiqlizs6HC1SdrWf4xHEd3TT3+P+2jr2SjCad/8NNgyMe33Ga74Py6hP5yeGhy
+	0ilMSvQDMfQPVcAQ==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-rt-devel@lists.linux.dev, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
+	John Ogness <john.ogness@linutronix.de>,
+	Shrikanth Hegde <sshegde@linux.ibm.com>,
+	Yuri Andriaccio <yurand2000@gmail.com>,
+	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
+	Luca Abeni <luca.abeni@santannapisa.it>
+Subject: Re: [RFC] RT throttling, DL/ fair server, RT_GROUP_SCHED and
+ everything
+Message-ID: <20261023200748.YZjSwZ48@linutronix.de>
+References: <20261023161348.t3lpPLQZ@linutronix.de>
+ <f29f77edb2776b734306fd482b47a64f@kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -64,75 +85,39 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <f29f77edb2776b734306fd482b47a64f@kernel.org>
 
-Hello, Wilson.
+On 2026-10-23 07:16:10 [-1000], Tejun Heo wrote:
+> Hello, Sebastian.
+Hi Tejun,
 
-The following is a Claude-generated review.
+> On Fri, Oct 23, 2026 at 06:13:48PM +0200, Sebastian Andrzej Siewior wrote:
+> > - Remove CONFIG_RT_GROUP_SCHED
+> >   [ ] Yes [ ] No, because
+> >               _____________________
+> 
+> RT_GROUP_SCHED in its current form isn't widely useful. No major distro
+> kernel enables it (Fedora, RHEL/CentOS Stream, Debian, Ubuntu, openSUSE,
+> Arch and the Android GKI defconfig, PREEMPT_RT flavors included). I have
+> no objection to removing it.
 
-On Thu, Oct 22, 2026 at 04:28:57AM +0000, Wilson Felipe Pereira wrote:
-> On 32-bit platforms, cg_read_key_long() relies on atol(), which returns a
-> 32-bit signed long. When values in memory.stat or event counters exceed
-> 2.14GB (such as on 32-bit systems with large memory), the parsed value
-> overflows and wraps into negative numbers, leading to subtle bugs and
-> false test failures.
+Perfect.
 
-On 32-bit, glibc's atol() saturates at LONG_MAX instead of wrapping:
-atol("3000000000") returns 2147483647. Event counters are counts, not
-bytes. No test reads a value near 2^31 from its cgroups, so the false
-failures are hypothetical. Can the description be updated to match?
+> There was an attempt to make it more useful: the Hierarchical Constant
+> Bandwidth Server (HCBS) patchset from Yuri Andriaccio and Luca Abeni. It
+> replaces RT_GROUP_SCHED with per-cgroup deadline servers and a cgroup2
+> interface. The last posting was RFC v6 in June:
+> 
+> https://lore.kernel.org/all/20260608121546.69910-1-yurand2000@gmail.com/
 
-cg_read_long() and cg_read_long_fd() still use atol() and return long.
-They read memory.current, memory.peak and the swap counters, which the
-same reasoning covers.
+Yes, I am aware of this. It replaces RT_GROUP_SCHED and does not rely on
+it (as far as I remember).
 
-> - Migrate helper functions (get_cg_wb_count(), get_zswpout(),
->   get_zswap_incomp(), wait_for_writeback(), and cg_check_freezetime())
->   and their callers to s64.
+> The effort seems to have stalled.
+> 
+> Thanks.
 
-In test_freezer.c, only test_cgfreezer_time_empty() is converted.
-test_cgfreezer_time_simple(), _populate(), _migrate(), _parent(),
-_child() and _nested() still store cg_check_freezetime() results in
-long and print them with %ld. In test_cpu.c, overprovision_validate()
-still computes "long delta" from two s64 usage values. A 32-bit build
-with -Wshorten-64-to-32 flags all of these.
-
->     rebased on top of mm-stable to complete the s64 conversion across the
->     cgroup selftests (including updating test_no_kmem_bypass() to s64).
-
-This doesn't apply to mainline. The test_zswap.c hunks depend on the
-test_zswap fixes in mm-stable, which aren't in mainline yet. The
-tcp_client() hunk in test_memcontrol.c conflicts with eb69e955de7b
-("selftests: cgroup: make test_memcg_sock check flushed sock stats"),
-which went in through the cgroup tree for v7.4. Can it be rebased on
-v7.4-rc1 once that's out?
-
-> +typedef signed long long s64;
-
-This is the main problem. The KVM selftests build libcgroup too:
-kvm/Makefile.kvm includes ../cgroup/lib/libcgroup.mk and links
-cgroup_util.o into every KVM test, and access_tracking_perf_test.c
-includes cgroup_util.h. That build uses -I tools/include, and
-tools/include/linux/types.h has "typedef int64_t s64;", which is long
-on 64-bit.
-
-cgroup_util.c then fails with "typedef redefinition with different
-types ('long long' vs 'int64_t' (aka 'long'))", so none of the KVM
-selftests build on 64-bit. Maybe use int64_t with PRId64 from
-<inttypes.h> instead of the local typedef and %lld?
-
-> -
->  	ret = KSFT_PASS;
-
-The blank line removal is unrelated to the conversion, same for the one
-in test_cpu.c.
-
-> +		ksft_print_msg("debug: zswpout=%lld zswapped=%lld zswap_b=%lld\n",
-> +				zswpout, zswapped, zswap_b);
-
-The continuation line was aligned with the opening parenthesis before
-and now isn't.
-
-Thanks.
-
---
-tejun
+Sebastian
