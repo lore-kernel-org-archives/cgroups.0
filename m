@@ -1,58 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.177
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792784786;
-	b=JkN6jpgkOl0QgDGdnp5nz/CquRspA4b/nAl7FNHERMKBelHL5QbSIlReduOwz1lW4iIF
-	 cneiYLUAuBFiJ2/gqbFu+Oja834jtiHd6zwE26aIbU1RRzmGRulvle99BTtZy4qGPdU9I
-	 7hc0HLHUAOr5U9XWAU0dnn3Vjx5hq5UtJMFlQH8zxBkii6pbboRpn6gHoyscqxK4tX8kU
-	 KDyw8e+KlcTvUF5XCwsdW5hf76ErKKvt/j87g9Oy+0OUOuOPaaPxJoaGq2v9hSD5+Mzvg
-	 jlu97FdIdFp7X2EEJwCAwaEDwW0DCc98536nBChBeRC9RJu9+8IxYzi+AH6+FZ2UBVA==
+	t=1792785284;
+	b=HbPWSuoU0f+5BAmH0niqpUv4Ni7lVTk4Ai/XyLruWC7S5/QtAMjfTu1ERN6YUnGvtENi
+	 kUoW15GYiuatMROW2EbQkdBj/N7kcSj/AyTZ8MVst67mL5P6Mml/LQd+bZzaQ3WEeqfi9
+	 su054WpDrJezEsTBZhUb+Um4RQswmJruj1dFd6VKHSYSPTwiMYX5Hd9xT/4R3pnQ6KgD4
+	 afRUMQfVQ8COfc7lqq097/ABumMD5lwrH8sjzfHU08z0m3D6kO+XBLeil9icJ/5JEfK8v
+	 nzJRuKj4n0ef9O6J8SVU2qP/S6apeytKQOLTXBhXodM1j2Ud+3mAJRVUcq8h5tg7s9A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792784786;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=X4WY9OI7pRLoxyt5aowUMYA8CAEnFmKkD4+RrPyHHWM=;
-	b=Hb6DjtcqOK+ZBwA2AUHAKLcLCjuK4TEyJM4HRfloNWdEesTESS59LM+B60aNLbaQtv/I
-	 p6uYa0L2OmkybeTcG0LWl1BdXg9pIGQnJR6l3LsTp8IQfxCH71P6gKlswhfIovHVB1mEp
-	 qLyF72zAKaDcfMvQLU90verrx7h2B1QwXcFBHkHzi/qK2QNlkg9ycj6zj1l/ZH26skO8i
-	 FENT4CJJ5TcrSOew/ajX7bli9gabjVi/vMdzYhqbVb8s2jpCIcFBADHTGUpbVh/w1RL69
-	 fk+zwNLiq8BUVFCFA4s5i+f5R/h//KcZfy564K3Sp5+XYf1ztdV7O+F5n/rAOMCy4Yw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792785284;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=cpi2EB3quHQgRCV81Rzv4dQD8elBWDJHR5WGv5PMzrE=;
+	b=p2Aw2uMj9PDRzdHvbF6HvTtBzWeLpntww9TQvXyavSmTiAdF+NCNG3MqtYDWLkDqAdD1
+	 TMeViZEfhrHaCBnuDuiyQAK067QXFyZcuOQDaCilwQK2O3Oo62VOLS45OrsjxEYMJtNRd
+	 aKMV5jK6xtARTy6NMpcB+JHs8fKxslWnsiDdmQoxxfP43IfQ0eajKnIvprfn5oIxxlaZs
+	 n4NOg8Tqzp8NQJ3Gz9KQijjXvwoQDr1m2kLAd5F07UtcSNrs4W4pU9PH169GOfXwDPCnJ
+	 8dDJxo80oMLOZeIdoje6uVnE6O3Hhv2EeeKUdtExFOBhBXlci7c+RZttwhDyQdwy6Dw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fvvumnG3;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=F2OjsTuS;
+	arc=none smtp.remote-ip=209.85.128.177
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A235606A31A;
-	Fri, 23 Oct 2026 19:46:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA9E4606A32E
+	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 19:54:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA9E4606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fvvumnG3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C7271F01825;
-	Fri, 23 Oct 2026 19:46:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1792784785;
-	bh=X4WY9OI7pRLoxyt5aowUMYA8CAEnFmKkD4+RrPyHHWM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=fvvumnG3ZleVbIEXiRoKq9E8XZ+Ju9N+0l9GfK9cflJ1igDFyib5MgjenSPuthEHv
-	 G8M0yNiQE5w4QvYSvtZrcAEfLKEQOKRzaMVH1a/LzrhzfqQxEnsTjUnavcMPIbI1hR
-	 YkoijNECkZVMrj7GKaDmkQMtpmnHa+D+GZy2TDSYp7nl9rrym8Wnnd9d9a1EudjNSW
-	 MHDQ6VBdgHaLvC/PwQ0SIny9JMJrmXq5gZ/soSVsCw72buySXJ0xt+Cfs3/LWVt27j
-	 My7UtniMVmolRg5MxAr3vrGyggYEjl67nVz6vp0g+jgmRtei1oiN97ItbQ4dakJBt4
-	 MBTOzDt9I6CYg==
-From: Sasha Levin <sashal@kernel.org>
-To: Tejun Heo <tj@kernel.org>,
-	Kir Kolyshkin <kolyshkin@gmail.com>,
-	Oleg Nesterov <oleg@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=F2OjsTuS
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-8b05bf699easo12867897b3.2
+        for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 12:54:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1792785282; x=1793390082; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=cpi2EB3quHQgRCV81Rzv4dQD8elBWDJHR5WGv5PMzrE=;
+        b=F2OjsTuSL6PVNs63tm+ricYJIzLRzmZ9xGkIgr9wBvR3jhtI8aL398rTIG8prwON3v
+         gEOFJd1he522xh0JHGFz0FInas1OSTqgmJlMr4CkT9DacALmFwLr+kwBee58tgKXwhEV
+         yTjKR7FY8QZJCu3q2YNAk2DocC33QLMkp+KlkKPbZBXv1q2K+Sz0AR6vQAH+35yZDH0K
+         ioD1GQn6M+kwuXHZTB2YLwIXhwSW5ZOsnGeWVoUfBbwVEAv13GNHzn5Wbp9acMeuCzaz
+         78sZTmKtnglSmLyVSpejj7COwdrz5PkIao+L2SIL+PyH+pjtVXzjsJ/bAYGnE0AUQrwF
+         czpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792785282; x=1793390082;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=cpi2EB3quHQgRCV81Rzv4dQD8elBWDJHR5WGv5PMzrE=;
+        b=ED2Svrv/uFqOGaCxOpEhMNODHSgbVd0pEiI7BTj1XGZToka/PhMh97aSGKqpoxrHHR
+         73ogRykMdh2sDB7j0s1E9xB7EBi2Mf1tDkEFfpLba1bI3R0/PzgUhHCeuBJKKz1t8AoT
+         aFE1nA1PSIkqyiDqVmXd4QRMMSn/X31iatgclatBut7Fzg2r5n6z4LNICPPF8FH0ymuB
+         kVjiDNCqlsJNDAd/hCgGfI1CPx91BTOH0g3f+w3DYmkT7c8jJKGbrPTr3PhS4+2mSUPw
+         fQxhK/e96v9rDN0IRgUhGZnHY5CGryWWnPsgA6afLy7D+UEEShtKcntRFLSY9diBfkFR
+         m+jA==
+X-Forwarded-Encrypted: i=1; AKwUvBxa4TlYBKYuRn9NRa0qoJY5T77U/nAEb6dy8f74EYpgw4ZHoCQTQaGM//0ZL0raEqEvD3dTrI88@vger.kernel.org
+X-Gm-Message-State: AFq9FYJJLQsNFRIppU1DKYht7HfJ4GLN4L75F4oL2b6X5dCPZvahuS6r
+	eAtAi3YKqPPL9TT62PzqTei5A1Ut6BcGbdC5gdHSxEaF6bxdAw5UaEmE6ESfDQ==
+X-Gm-Gg: AYBFou0uZyzCSwszvRjnHjMkBzUu203mnaJFHKwYAmZ7ow3XDqOK0HEFj0iT/Rko3Ee
+	0lAJ0K0TP29XPDi3AesB4nkog/SrwNjpNEDzZxoWv0tuG5FyePOiu9yBsek02aCkRhr4WzWr/Hq
+	K1uYuHLVkRGrL8+IZkaqOxRvqLXro3ERfIHx80sBQwloP0zVBkrUa0cOzCoxP+GMB7+Dl3tsI2/
+	hwH1QoirqAZNPdgcjMnQ2vLxcP4na7GEGORs9IIdaWP/0hBOI5ElDP/Hd3uhSdllpyKywhT4m2J
+	jQFtFsLjOwIzlLyB710SttzL++k+rNI06QI7Aw+v3FJXc19P/98BOqX6YIA6Zua2qgoYP7vJ3FN
+	9d3gPdqBMj8b8r7FmjvHzHo7XlGexFFPDtxtPm6oCpivZ51VpLIf3K2ymKoKyglu458uQw+MD/9
+	yd0X/enpHcy3NOP0N1f5HMKJ9LSd2Z59qR6PIF0+DllrfBv72dWfOIg26ADvmexIMxRFG0k42nH
+	Pm3SeK0/AXYYd1Ri/SRbAJ955YKwZlKXHGWafkCBIaC7llrFk0Utkz6UY8hl+7wq814fy8Tvs+G
+	zWgaW4u0vMNx+BSAEO7P5/aXMbUZ9rhr
+X-Received: by 2002:a05:690c:c117:b0:8ac:805b:3a7d with SMTP id 00721157ae682-8b166c2de63mr1462627b3.47.1792785282377;
+        Fri, 23 Oct 2026 12:54:42 -0700 (PDT)
+Received: from localhost ([2a03:2880:ff:40::])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b166dd01c0sm961667b3.7.2026.10.23.12.54.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 12:54:41 -0700 (PDT)
+From: Joanne Koong <joannelkoong@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>,
+	Yosry Ahmed <yosry@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
 	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] cgroup: don't kill migrated processes through their exiting threads
-Date: Fri, 23 Oct 2026 15:46:23 -0400
-Message-ID: <20261023194623.3566511-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <6cfe7cba3720e25400118d43643e55a6@kernel.org>
-References: <6cfe7cba3720e25400118d43643e55a6@kernel.org>
+	linux-mm@kvack.org
+Subject: [PATCH v3 0/2] memcg: reduce cacheline contention from lruvec stat
+Date: Fri, 23 Oct 2026 12:54:15 -0700
+Message-ID: <20261023195417.1391216-1-joannelkoong@gmail.com>
+X-Mailer: git-send-email 2.52.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -64,67 +102,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Since commit da13e0e72a73 ("cgroup: fix cgroup.kill for exited thread
-group leader"), __cgroup_kill() visits every thread in the cgroup and
-sends SIGKILL with PIDTYPE_TGID, so each visited thread takes down its
-whole thread group.
+Memcg lruvec stat updates read fields of struct mem_cgroup_per_node and struct
+lruvec that can share a 128-byte cacheline pair with lines the lru_lock holder
+writes constantly (the LRU list heads, lru_lock or lru_zone_size[]), depending
+on where struct mem_cgroup_per_node lands in its slab. On CPUs that do spatial
+prefetching (eg Intel CPUs), this makes the stat updates contend with the
+lru_lock holder.
 
-A thread that has started exiting can stay in a cgroup after its process
-has been moved out of it. cgroup_migrate_add_task() skips PF_EXITING
-tasks, and the thread is only unlinked by cgroup_task_dead() after its
-final context switch. mm_release() clears the thread's clear_child_tid
-word and wakes the joiner well before that, so pthread_join() can return
-while the thread is still in the old cgroup.
+Patch 1 rearranges struct mem_cgroup_per_node so that its read-mostly line is
+paired with a cold line, and patch 2 makes the folio and kmem stat updates use
+the memcg and node they already know instead of going through the lruvec,
+whose pgdat field shares a cacheline pair with lru_lock or lru_zone_size[].
 
-If cgroup.kill is written in that window, __cgroup_kill() finds the
-exiting thread and complete_signal() passes the group-wide SIGKILL on to
-a live thread, killing a process that already left the cgroup. The cgroup
-selftest test_stress.sh runs into this: test_cgcore_proc_migration()
-joins its threads, moves itself back to the root cgroup, and cg_destroy()
-falls back to cgroup.kill on the old cgroup when rmdir() fails with
-EBUSY, so test_core kills itself. KernelCI has been reporting
-"with_stress.sh: line 94: ... Killed" on several arm64 boards since the
-commit reached linux-next.
+Results on a 2-socket Skylake (80 CPUs), average pages per second for
+threads faulting in and freeing memory in a single memcg:
 
-Keep visiting every thread, but go back to sending SIGKILL to the thread
-that was found. A SIGKILL sent to a live thread still kills its whole
-thread group, so both cases fixed by that commit stay fixed, and
-task_can_queue_signal() drops one sent to a thread that is already
-exiting.
+	   base     patch 1   patch 1+2 
+shmem, 20 threads  4.74M    5.59M     5.77M
+shmem, 80 threads  7.94M    8.66M     8.82M
+anon,  20 threads  3.04M    3.08M     3.10M
 
-Fixes: da13e0e72a73 ("cgroup: fix cgroup.kill for exited thread group leader")
-Link: https://lore.kernel.org/all/179272264722.329188.4773475583351189022@6e52bff8000c/
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+Changelog
+---------
+v2: https://lore.kernel.org/linux-mm/20261022223930.138779-1-joannelkoong@gmail.com/
+Changes from v2 -> v3:
+- Add in a comment about memcg_pn_cold placement after memcg_pn_read_mostly
+  (Shakeel)
+- Add Shakeel's Acked-bys
 
-da13e0e72a73 is in cgroup/for-7.4-fixes and not in mainline yet, so this
-can also be folded into it. Skipping PF_EXITING tasks in the loop also
-fixes it, if keeping PIDTYPE_TGID is preferred.
+v1: https://lore.kernel.org/linux-mm/20261020200730.250189-1-joannelkoong@gmail.com/
+Changes from v1 -> v2:
+- Replace the lruvec_stats_percpu pointers in struct mem_cgroup with a
+  rearranged struct mem_cgroup_per_node layout (Shakeel)
+- Move lruvec_stat_mod_folio()/mod_lruvec_kmem_state() change into its own
+  patch (Shakeel)
 
-To reproduce without waiting for the race in test_stress.sh, fork a child
-that moves itself into a cgroup, creates and joins a dozen threads, moves
-back to the root cgroup and writes 1 to the old cgroup's cgroup.kill. A
-thread doing mmap()/munmap() in a loop widens the window. In a 2 CPU KVM
-guest running next-20261022, 436 of 20000 children killed themselves this
-way, and none did with this patch. test_kill passes with and without it,
-including the two tests added with da13e0e72a73.
+Joanne Koong (2):
+  memcg: reduce cacheline contention between lruvec stat updates and LRU
+    lists
+  memcg: don't go through the lruvec for folio and kmem lruvec stat
+    updates
 
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/memcontrol.h | 29 ++++++++++------
+ mm/memcontrol.c            | 71 ++++++++++++++++----------------------
+ 2 files changed, 47 insertions(+), 53 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index faccc793325e5..a284225f8dc95 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4313,7 +4313,7 @@ static void __cgroup_kill(struct cgroup *cgrp)
- 		if (__fatal_signal_pending(task))
- 			continue;
- 
--		do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, task, PIDTYPE_TGID);
-+		send_sig(SIGKILL, task, 0);
- 	}
- 	css_task_iter_end(&it);
- }
+
+base-commit: fcec4f4bcc1101dbd7e3aff267856b3bbfe128c6
 -- 
-2.53.0
+2.52.0
 
