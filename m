@@ -1,51 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.147
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.149
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792719702;
-	b=1Xt4djPuN57KwmXoceH/FDE+Ej3puGA2afeTs0ScXaAfUl1dVbiXD6+dKx+8S1VEuhE8
-	 u0NmY/oLMnZBiruEOeKjQwxcFoP1iEz82tSn+EwytzfvYX36h3Y0110+XTrHQv6mZS5Re
-	 ELwwgnnIpPbyZcMMdZ9woeSxMlsszQn33yEghpdmBOeGxAQfj8WwzOJqrW1UFvpU8coBy
-	 monGCOngrLAdLTUXbiWs4WzGQffU7Im8dQaMksdaphlUBakekwa4to2cFvvwQ5vfToXzu
-	 3rch5Z6CDlbThXswwSn393AawG3xW8Y0fk6XrMJG9fb1DLfT0a5dW366jCmwM1S8F7g==
+	t=1792720408;
+	b=Q9wr3fAPB64gEMzAPviOpO//wjdtYjhz2JAd8Qi/f1w5yp4h58N0wS6D5zV9QGqESEeI
+	 LEV1iGgb6UgsDGstSKUiZv7kuLmuwsXQ0pK4xcBpeqyTptIiyVFuXeXXH5hzNHJu8rekR
+	 8pjqyj6U9ZxoifcVUL62wAK7LuegCp7vtnfBNy/5hy0cQeBUPnajvdrBD9SpzAsKl8CtY
+	 vJdH8YXPK4dqNtkKmkcRM6Gj8GJ7DUsJ8XOO5s8jsKosx8SBBQlgo37HVPcUslKDxPYR1
+	 3Ue1RR7n7W6NE7E3Af+S0NZpjjv3JsCw3MrtbNUpoKm4m6iLaESqMZryf4S4/Fh1apg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792719702;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792720408;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=hP0KBA+rRy4x64wgKIjta1bZFthYN4mc2kQX0835edk=;
-	b=nSC9grH3drXHJ9QmGEC7+L5OA2FtfqAr4D5spZEd1V5ji2UcYknTmUNAq5HmgDaml2cP
-	 beOuFid+06WyEDBPt9q5gcF+7vkTNFyoi8wkn4nl8kqmjSDe66ZV1dXiza7jjEWUuNwh9
-	 BwlrPSj7RyzZyQJH7wB733mREa2TkfoNhOcPyp0RLx7WTcsWeDBfFkNVQyYPNt9irb8Rz
-	 grxqYIeUjsnsYuq6xmu5gxxHI94ECNur5f0AIHI0mZUON1hi8GMO27MxA7GwOP7cbKHao
-	 KV3cAmyyPq9a+oUQ7fZ6aOHrCvWyYy39ArU8ZnRWWYTrUCHJMxm4WRH0V9p5ehvn5gw==
+	bh=D07eyQXW6CyfYGV/GLKHH76F8XoU44KN7tbJsOmA9ec=;
+	b=wkTUIfd9X3sL9FPAfSoVnDANaR22E07EFrKpgNBdU38gUcdIIgLxpuM3IyGaZVanzNKV
+	 B8Y1ds6dZoCa52NZyy0/GVu5XsPu7dMPEA/KKIJ/SJ/zxcGHqVWuoNbJyy1+BGeE1k3Y9
+	 DfNDldOQyCsAIMaNvhFoAVReh6ekBy9wAf0jQilMez3MP3xNwfukZPaNo8xQ6C5oiMP8r
+	 FZwGNi816p7qHIcJRSG/0U0Zs6G6sDKV8YyOcnydMhkb8/uAonDm7rs7LknWuLZKGE8aw
+	 Ku69z9Dr8HH4EDrJIpzQmOeEV5+RUlUThXeE7SaKHDbz9e/DY6nKMsJdYO0eZdy9VTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=95.215.58.147
-Received: from mta1.migadu.com (out-147.mta1.migadu.com [95.215.58.147])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SB7DLNbz;
+	arc=none smtp.remote-ip=91.218.175.149
+Received: from mta0.migadu.com (out-149.mta0.migadu.com [91.218.175.149])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E4F5606A31E
-	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 01:41:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2E4F5606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C040606A32F
+	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 01:53:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3C040606A32F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SB7DLNbz
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=rWDElumkBOPy1a7EM5B02mSy46xW2Va/g+rFO2mrpTs=;
+DKIM-Signature: a=rsa-sha256; bh=ERNQcTMDaUHOgt1ezW5NchEKQ3p5W3gtHeKeBSygDso=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792719694; v=1; x=1793324494;
- b=EhemhwrOhTkpoHWeuqBav1b7ftCriTsbdky1jPosmDelsFpT67HCR+3FC8Be5Nk6f1jEbOVk
- ex3JvDhz5qqPWbx2RxNj7at0SIDPuJehpLXB6483oIWC95KaFZhY4mef+Nv2EHhkkzQArSwJwS1
- iOq/1g6wXq358//exoCEPx+Q=
+ t=1792720404; v=1; x=1793325204;
+ b=SB7DLNbzQGdY6heJepkyIeeaXYgjdxfnMhQ33jYud6x20z0l0qP1fqURSHHlcwF9F0exzarz
+ OAXwWqwglOXHhfXHW0ewCg8iV6DmZaPoHADNjnYRN4RZhC8tS4TY8Ht8hPy3FYU5gi6zavnaHvL
+ Sdhc11rX+DrJ4Pxo/OZtbUVc=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f7e72994e1a7a8cb;
-	Fri, 23 Oct 2026 01:41:33 +0000
-X-Mizu-Trace-ID: f7e72994e1a7a8cb
+Received: by smtp.migadu.com with ESMTPS id cd14fa31b589aab4;
+	Fri, 23 Oct 2026 01:53:24 +0000
+X-Mizu-Trace-ID: cd14fa31b589aab4
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <0f191ffa-450a-4b0d-b2b6-7d29149d7f13@linux.dev>
-Date: Fri, 23 Oct 2026 09:41:29 +0800
+Message-ID: <776306f8-2200-486b-8c43-2b5fd9b5eeb5@linux.dev>
+Date: Fri, 23 Oct 2026 09:53:20 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -67,16 +70,17 @@ Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
 References: <20261022031643.1351877-1-longman@redhat.com>
  <20261022031643.1351877-3-longman@redhat.com>
  <c65208d9-aba6-4e9a-affa-4f7cd8794a0c@linux.dev>
- <00130aa2-2f85-4c4f-8283-acfa6df7cae5@redhat.com>
+ <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
 Content-Language: en-US
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <00130aa2-2f85-4c4f-8283-acfa6df7cae5@redhat.com>
+In-Reply-To: <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 
 
-在 2026/10/22 22:47, Waiman Long 写道:
+在 2026/10/22 23:00, Waiman Long 写道:
+> 
 > On 10/22/26 9:45 AM, Guopeng Zhang wrote:
 >> Hi Longman,
 >>
@@ -133,20 +137,11 @@ Content-Transfer-Encoding: 8bit
 >> I have rebased my fix on top of this series and the partition recovers
 >> correctly with it applied. Should the fix be folded into this patch,
 >> or is there a better way to fix it? Happy to hear your thoughts.
-> OK, I will look into that again.
->>
->> Also, is the test case below worth adding here as well? Note that it
->> fails until the fix is in:
->>
->>      # An invalid local partition that took all the CPUs from its
->>      # populated parent should recover after its cpuset.cpus.exclusive
->>      # list is changed to a valid one.
->>      "C0-7:X0-7:P1  .      .      .     X1      .      .      .     0 A1:1|XA1:1 A1:P1 ."
 > 
-> This test case assumes that there are only 8 CPUs in the test system which may not be true in many cases. We need test case that will work no matter the system it is running on.
+> You are right. My patch series won't fix this particular issue. However, converting an invalid partition back to a valid one is done on a best effort basis. There is no guarantee that it will always happen. Just echo "root" to "cpuset.cpus.partition" again will make it valid again. So it is not a real bug from my point of view. It is just a nice to have feature.
 > 
-You are right, I wasn't thinking clearly and missed that rule.
+Thanks for the explanation. This helps me better understand the
+intended behavior of partition recovery.
 
 Thanks,
 Guopeng
-
