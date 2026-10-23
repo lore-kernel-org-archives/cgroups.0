@@ -1,75 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.118
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792772043;
-	b=Z9bihGItVRIyRVVFMD+KFEzwgFqUDlEnK9Sg+U5xxElUc4Re2OeBOV63Mv55faoinfld
-	 uZybV0wi8rBl15ad7LH4Anuq3nux3xfZKHgjIFTGb0BGR0L+iwNtCocFGlY+nOxyEQj3+
-	 uHemCUgt05y88MDhPSaMdC0fLr9d6oCoxGv29QqErLUEoE1O83Kwpz5qchRD+0ZL9xuqk
-	 MMMcKcWW59Wiih3kvVHwljRBlFS2Foo5f+e4ISgozNv4WqcU1NfCBs1sj6jhG6b/Q2ofd
-	 X+zkKSm3FOo9yLxS915W3kaviEoUc86yXQjKmeRamzFmVAT39hMLQZ3+D6GWhNLf2Zg==
+	t=1792773167;
+	b=Fj7PEtYrOIdnFkamDhsxdIGPYpBgAkAYVUYxX9/Ls+MV9yGCxhuoZ4UOIMYIjwpf52KD
+	 Pm9CYZ2rhjWx4M1X7oWSdpTrBrRGa+EzTzZIeMVoPRzkfeeG6tG1tW+74zbYWSg1JVRcd
+	 XD4QmoYghySE6IdLIqgIcZJ3hIdDZjAGwjVdy32mMH2P7qO9PlE/NL69d/NV4DDI13B+q
+	 GEL07hMc8wJbuH2AKejhjX4aKFVMFHwj1C24auu3LhW+xY+85VDkLWeitBc+D7Hqx4HDo
+	 /fSjAlonfJ64dxqT+zq8FiLymZHERca/qN7X4f6I+wow9tY8SxvUSR/nfgcAGwZjk7g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792772043;
-	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding;
-	bh=Asfzo7d0ZU4tyWErLKe4Wr1LaU1gRWvW6QItwU7vgRg=;
-	b=zxaGQk7zmx9NSXlMbfnKH9WzXjMdcm+NuYr6ZoOtVvxUcfByAuiizBrxeH+Kb3fyZyH5
-	 lyTCV4bN3BeSOwycz/Qc+7dhqkRPSSdEOL3Rf1XUYwstoF3P+Mi1DMPOEt4LACN3kvO99
-	 PQf0qUJsprdvV1QpUc/ilLz+nSiDJvz09FZ+lvrOmnNN9SdN5+HxN4Iy6Vp7lzw+izCuJ
-	 Y1wMup4bn1d/aWbNpB+U/1zTRxRXvH+k/lnwqCQWsW+Ajl5Z+Zf7yY8DBaSNOwXMu+4v1
-	 ccbEZrW49o7H+41QhGDvk+279lI5/KzPDnDaJTxw4Es2yyNG3wUFTsnmUYXiHlkdYbg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792773167;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Date:From:To:
+	 Cc:Subject:Message-ID:Reply-To:References:MIME-Version:Content-Type:
+	 Content-Disposition:Content-Transfer-Encoding:In-Reply-To;
+	bh=3ema2G2wwnlTArQOf2q2NQI5SlV/oLWW1i1rn+h9N4k=;
+	b=Q8irdVbjaST/prwshS0R6z66eIg605xzSPvPuZUPQHTX7E64iaWboDVUB7+XCjxN+VNl
+	 mPeaswrCPlkLgwrB1JmzUawRXnPNJFvegJKwj6TEEBxc3rE7FmGsvx7kZyA/rZHAngpIg
+	 AikdfPvqam8OK2D0zuxenxAQoDu3GiUdMFSRtqt51OpWWEXTL1hBRsmSJ/Fdo7midk+Kn
+	 gaBA9IS2qWuiw7STtFeD6Ee3C1A0zt5YcKUdIncudKVb6q4ly1u0pTw2+5A44KB0ugiBg
+	 E+tA9iTTfvdzx54/OFIYM/UwiCFLQEO8iDX0LbgP4+fo0lpdqkT/p7NxhArKZEdR1fg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=0Yuev588;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=djBMFzOW;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	arc=none smtp.remote-ip=115.124.30.118
+Received: from out30-118.freemail.mail.aliyun.com (out30-118.freemail.mail.aliyun.com [115.124.30.118])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3011E606A31B;
-	Fri, 23 Oct 2026 16:13:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3011E606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=0Yuev588;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=djBMFzOW
-Date: Fri, 23 Oct 2026 18:13:48 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1792772030;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Asfzo7d0ZU4tyWErLKe4Wr1LaU1gRWvW6QItwU7vgRg=;
-	b=0Yuev588qVG8lOMhfasNCGTpCrsax7sG9ipjBEYzyoV8ZjGljdwTItl7AaTW9qI1x0KEpB
-	YzE2BYMNcSwp9b6VXD/92kxE9JLbltu04UMoU8BDfEaQySj5dRsg0X3md2UFi/eskoZvna
-	htKYQ1XhlFTMjxFSlBRglWwFDrs71gYgWKw4wYOF4J9sSIZ5YO/p4PV47LRxpkQfcLLg3w
-	fnmkL5HwSmUpKx+mf5owISNHfaccPCWRRPf/a/nfaFPDVMQEm9utf808dtXadxxtK3hJS6
-	fCihMFeqncwyfJ0P4I1W/Zm6qZ42fpErXKNjawFhwSQ2bVYAcejRJ02LJYIvjw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1792772030;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Asfzo7d0ZU4tyWErLKe4Wr1LaU1gRWvW6QItwU7vgRg=;
-	b=djBMFzOWevmLNVTffTsSU+q172gBXT/hEAulmgKrP3S/SYUpPL9YJmHVhVR3i5qeAf/fsx
-	kSNK4HyT7nVV3BCQ==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-rt-devel@lists.linux.dev, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32B31606A31D;
+	Fri, 23 Oct 2026 16:32:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 32B31606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1792773161; h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type;
+	bh=3ema2G2wwnlTArQOf2q2NQI5SlV/oLWW1i1rn+h9N4k=;
+	b=LXA7K+6QV9zmifvT+SxUkRdKEd0ajcgpj//SS6SggmhAA4yimO6yNexlCcb6h6TTjy6TySdEoHfJCM1h20Io6XOGVH3TIfnBTjc/Cu9+fn4T0P/elVZAhBgN16fxVMzoMfJNCFh22EUe8JpCay0V0coNVbqAWC4vA+J8Mp1vf2U=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R161e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037026112;MF=peng_wang@linux.alibaba.com;NM=1;PH=DS;RN=19;SR=0;TI=SMTPD_---0XDMSvpS_1792773159;
+Received: from localhost(mailfrom:peng_wang@linux.alibaba.com fp:SMTPD_---0XDMSvpS_1792773159 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Sat, 24 Oct 2026 00:32:40 +0800
+Date: Sat, 24 Oct 2026 00:32:38 +0800
+From: Peng Wang <peng_wang@linux.alibaba.com>
+To: Frederic Weisbecker <frederic@kernel.org>
+Cc: Anna-Maria Behnsen <anna-maria@linutronix.de>,
+	Ingo Molnar <mingo@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
 	Steven Rostedt <rostedt@goodmis.org>,
-	K Prateek Nayak <kprateek.nayak@amd.com>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-	John Ogness <john.ogness@linutronix.de>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>
-Subject: [RFC] RT throttling, DL/ fair server, RT_GROUP_SCHED and everything
-Message-ID: <20261023161348.t3lpPLQZ@linutronix.de>
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+	He Rongguang <herongguang@linux.alibaba.com>,
+	linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: Re: [RFC PATCH v2 1/2] tick/nohz: Add a policy dependency for full
+ dynticks
+Message-ID: <atuMJiJEwbzGjiu4@MacBook-Pro.local>
+Reply-To: Peng Wang <peng_wang@linux.alibaba.com>
+References: <cover.1792242566.git.peng_wang@linux.alibaba.com>
+ <58bc33cb018a2651e9cc3fc02baad7de4d543705.1792242566.git.peng_wang@linux.alibaba.com>
+ <att2hiYaaHTIkzG9@localhost.localdomain>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -79,170 +72,232 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=gb2312
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <att2hiYaaHTIkzG9@localhost.localdomain>
 
-Hi,
+On Fri, Oct 23, 2026 at 05:00:22PM +0200, Frederic Weisbecker wrote:
+> Le Sat, Oct 17, 2026 at 09:13:41PM +0800, Peng Wang a éãrit :
+> > Cloud hosts may pin vCPU threads one-to-one to host CPUs. At full
+> > allocation this includes the housekeeping CPUs, which always retain
+> > their non-idle tick. Operators want comparable performance for otherwise
+> > equivalent vCPUs. Retaining the non-idle tick on nohz_full CPUs as well
+> > avoids one placement-dependent difference in host tick interference.
+> > With spare capacity, selected CPUs may stop the tick to reduce host
+> > scheduler-tick interference with vCPUs.
+> > 
+> > Allocation changes as VMs are created or destroyed while other VMs
+> > remain running. A vCPU thread may be the only runnable task in either
+> > state, so existing tick dependencies do not express this policy.
+> 
+> I'm not sure I understand correctly what you are trying to solve.
+> Are you saying that you want to keep the tick running when there
+> is more than one vCPU per CPU? Because the scheduler already takes
+> care of that.
 
-this is about the old RT throttling mechanism, the DL/fair server around
-the RT tasks, the /proc/sys/kernel/sched_rt_* mechanism to control the
-former and CONFIG_RT_GROUP_SCHED which never worked as it supposed to.
-The current status looks like a mess and I'm not sure if there is a bug
-somewhere leading to my headaches or if this is just not meant to be
-working together. If so out with it.
+Hi Frederic,
 
-tl;dr /proc/=E2=80=A6/sched_rt_*, sched_rt_runtime_exceeded() probably
-CONFIG_RT_GROUP_SCHED should be removed. A bit of docs should be added
-for the fair server (or the right place).
+No. We pin vCPU threads one-to-one to host CPUs, without
+oversubscription. By "full allocation" I meant that all allocatable
+host CPUs are in use, including CPUs outside the nohz_full set.
 
-Now. Details.
+For example, on an eight-CPU host booted with isolcpus=nohz,1-7,
+CPU0 is outside the nohz_full set:
 
-The "old" RT throttler was meant to throttle RT task(s) that went rogue.
-The idea was to throttle the RT tasks so that the admin, using
-SCHED_OTHER, could step in and kill the misbehaving task.
-This, as simple as it sounds, is problematic on a PREEMPT_RT system
-because all the drivers are running also as SCHED_FIFO meaning
-throttling the RT class resulted also in not servicing any HW. So an
-admin can't interact with the system via SSH/ network or keyboard/ USB.
-What often did help was the fact that the RT application did realise its
-overstepping and contained themself.
-As a result real-time applications under PREEMPT_RT disable the RT
-throttler because from time to time they do have legitimate cases where
-the RT class runs > 1s and the throttler just breaks everything. So
-hush.
-Some people did not learn about the RT-throttler because at some point
-one CPU could run 100% real-time tasks if there were other CPUs
-available (the argument was that the SCHED_OTHER workload could be moved
-there).
+- With eight pinned vCPUs, CPU0 retains its non-idle tick while
+  CPUs1-7 may stop theirs. Retaining the tick on CPUs1-7 too avoids
+  this placement-dependent difference in tick interference between
+  otherwise equivalent vCPUs.
 
-The throttler used to be present unconditionally. Since commit
-5f6bd380c7bdb ("sched/rt: Remove default bandwidth control") (v6.12) it
-is hidden behind CONFIG_RT_GROUP_SCHED. Without CONFIG_RT_GROUP_SCHED
-defined it does not exist, yet the proc files are there. Not sure if
-they do much.
+- With seven or fewer pinned vCPUs, we can leave CPU0 without a
+  vCPU and keep them on CPUs1-7. We can then allow tick suppression
+  on CPUs1-7, subject to the existing dependencies. This gives
+  these vCPUs a common tick policy while reducing host tick
+  interference.
 
-With CONFIG_RT_GROUP_SCHED enabled assigning SCHED_FIFO-1 priority to a
-user task is kind of broken as it returns with -EPERM due to
+If the vCPU on CPU0 is released while the other seven remain
+running, we allow CPUs1-7 to suppress their ticks. If a new vCPU
+is later assigned to CPU0, we retain the ticks on CPUs1-7 again
+to avoid the difference in tick interference.
 
-| #ifdef CONFIG_RT_GROUP_SCHED
-|                 /*
-|                  * Do not allow real-time tasks into groups that have no =
-runtime
-|                  * assigned.
-|                  */
-|                 if (rt_group_sched_enabled() &&
-|                                 rt_bandwidth_enabled() && rt_policy(polic=
-y) &&
-|                                 task_group(p)->rt_bandwidth.rt_runtime =
-=3D=3D 0 &&
-|                                 !task_group_is_autogroup(task_group(p))) {
-|                         retval =3D -EPERM;
-|                         pr_err("%s(%d)\n", __func__, __LINE__);
-|                         goto unlock;
-|                 }
-| #endif /* CONFIG_RT_GROUP_SCHED */
+Throughout these transitions, CPU1 can still have its original
+pinned vCPU thread as its only runnable task. Its runnable task
+count does not change merely because CPU0 gains or loses a vCPU,
+so the scheduler's existing tick dependency cannot express this
+allocation policy.
 
-rt_bandwidth.rt_runtime is zero and auto-group (which is SCHED_OTHER
-anyway) is off. I did not find a way to enable one of these knobs. The
-cgroup file (rt_runtime_us) that _should_ set rt_bandwidth.rt_runtime is
-CGroup v1 and not available (since we do v2 these days). I don't see how
-to bypass this. Unless rt_group_sched_enabled() is disabled I see no
-hope.
-Oh wait, this was exactly mentioned in commit 277e0909754e9 ("sched:
-Bypass bandwitdh checks with runtime disabled RT_GROUP_SCHED").
+> 
+> > 
+> > Add a per-CPU POLICY dependency within the boot-time nohz_full set.
+> > Permission defaults to enabled. The policy can be changed without
+> > taking CPUs offline. Revoking permission uses the existing asynchronous
+> > kick; granting it leaves all other dependencies effective. Preserve
+> > POLICY across CPU hotplug and report it in tick_stop tracing.
+> > 
+> > Idle tick suppression, nohz_full membership, context tracking, RCU
+> > offloading and housekeeping configuration are unchanged.
+> 
+> This still keeps the overhead of nohz_full even if the tick stays on, right?
+> (RCU nocb, kernel <-> user overhead, etc...). Isn't it a problem for you?
 
-Once I passed these gates I got stuck at the next barrier. Since commit
-c2e390197ad13 ("sched/rt: Update default bandwidth for real-time tasks
-to ONE") (v7.2) the value for sysctl_sched_rt_runtime is at 1s, same as
-sysctl_sched_rt_period. (I am not going to mention that the
-documentation in Documentation/scheduler/sched-rt-group.rst is kind of
-outdated.)
+Yes. Our setup uses only the nohz flag of isolcpus, without
+additional housekeeping affinity tuning. Context tracking and
+RCU callback offloading remain enabled when the tick is kept
+running.
 
-This means the throttler does nothing since period can not exceed
-the runtime. I'm not sure why exactly but I can't lower the value
-because then tg_rt_schedulable() will complain in
+We have observed a performance benefit from this nohz_full setup
+with our database workload running on pinned vCPUs. We retain the
+boot-time nohz_full configuration so that tick suppression remains
+available as vCPU allocation changes, even though its other costs
+remain when the tick is kept running.
 
-|         /*
-|          * Nobody can have more than the global setting allows.
-|          */
-|         if (total > to_ratio(global_rt_period(), global_rt_runtime()))
-|                 return -EINVAL;
+This control changes only whether non-idle ticks may be suppressed;
+it does not change the nohz_full CPU set or housekeeping CPU masks.
 
-so that one second remains. It can be disabled (via -1). One can revert
-the commit and have the throttler is working again (but more later).
-Once at 0.95s it can go up to 1s and down again but it can't go below
-its initial value. This does not look as it is working as designed.
+Thanks,
+Peng
 
-Without enabled RT_GROUP_SCHED the files can be set. Are they useful?
-According to Documentation/scheduler/sched-deadline.rst it used for
-"admission control" whatever that means. Anyway the fair server still
-kicks if it is disabled. So I *think* this is just something else and
-not part for the docs there.
-
-With RT_GROUP_SCHED enabled the two proc files can't change their
-content. Plus it all kind of works just for cgroup-v1 and for v2 it
-breaks RT applications. And it never worked AFAIK. So from my point of
-view CONFIG_RT_GROUP_SCHED did not serve any good and can go.
-
-Moving on. The old throttler did warn one before throttling real-time
-tasks so the risk of a heart attack was limited but still there. The
-sched* trace events do not show this: the RT task goes away and the CPU
-might go idle in the end. But we did have the printk().
-On the other hand the fair-server decides that it is time for a
-SCHED_OTHER task, the scheduler obeys and we switch to SCHED_OTHER and
-then back to SCHED_FIFO. Okay, more efficient (as no CPU in idle). No
-hint what goes on.
-
-In order to get to the non-throttling behavior one needs to
-	echo 0 > /sys/kernel/debug/sched/fair_server/cpuX/runtime
-
-There is a crumble of documentation in sched-rt-group.rst which went
-in via commit b1536481c81fb ("sched/rt: Update limit of sched_rt sysctl
-in documentation") but it has nothing to do with CONFIG_RT_GROUP_SCHED
-and the fair server is 100% fine working without it. I don't think it is
-the right place for this.
-
-Side note: Remember me asking for a sched-event in sched_tick() if
-sched-lazy is promoted to an actual scheduling request? Well, this is
-what the fair-server preemption looks like with sched event enabled:
-
-|       loop-time-1295    [000] d.h1.   339.006215: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1295 runtime=3D3999761 [ns]
-|       loop-time-1295    [000] d.h1.   339.006482: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1295 runtime=3D267302 [ns]
-|       loop-time-1295    [000] d.h1.   339.008953: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1295 runtime=3D2471124 [ns]
-|       loop-time-1295    [000] dN.2.   339.008955: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1295 runtime=3D1152 [ns]
-|       loop-time-1295    [000] d..2.   339.008956: sched_switch: prev_comm=
-=3Dloop-time prev_pid=3D1295 prev_prio=3D9 prev_state=3DR =3D=3D> next_comm=
-=3Dkworker/u4:4 next_pid=3D1148 next_prio=3D120
-|    kworker/u4:4-1148    [000] d..21   339.008959: sched_waking: comm=3Dss=
-hd-session pid=3D1256 prio=3D120 target_cpu=3D000
-
-suddenly Need-resched is set and we schedule to lower prio task. Not a
-problem if you know about this=E2=80=A6 Or have the timer events enabled at
-which point dl_task_timer will give you a hint. But we have LLMs so=E2=80=A6
-
-Anyway. Could this interface be moved to /sys/kernel/sched/fair_server
-away from the debugfs part? debugfs is not for stable kernels/ ABI. Is
-there a reason why this might be considered debugging and not final or
-restricted from productive?
-
-Just to summarize:
-- Remove /proc/sys/kernel/sched_rt_*
-  [ ] Yes [ ] No, because
-              _____________________
-- Remove CONFIG_RT_GROUP_SCHED
-  [ ] Yes [ ] No, because
-              _____________________
-
-- An additional trace sched event for fair server preemption
-  [ ] Yes   [ ] No, it is silly to have
-
-- Fair server documentation needs to go to
-  [ ] It is fine where it is
-  [ ] To ____________________
-
-Sebastian
+> 
+> Thanks.
+> 
+> > 
+> > Co-developed-by: He Rongguang <herongguang@linux.alibaba.com>
+> > Signed-off-by: He Rongguang <herongguang@linux.alibaba.com>
+> > Signed-off-by: Peng Wang <peng_wang@linux.alibaba.com>
+> > ---
+> >  include/linux/tick.h         |  8 +++++--
+> >  include/trace/events/timer.h |  3 ++-
+> >  kernel/time/tick-sched.c     | 42 ++++++++++++++++++++++++++++++++++++
+> >  3 files changed, 50 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/include/linux/tick.h b/include/linux/tick.h
+> > index b121c5d53e308..8b250f245ff31 100644
+> > --- a/include/linux/tick.h
+> > +++ b/include/linux/tick.h
+> > @@ -111,9 +111,10 @@ enum tick_dep_bits {
+> >  	TICK_DEP_BIT_SCHED		= 2,
+> >  	TICK_DEP_BIT_CLOCK_UNSTABLE	= 3,
+> >  	TICK_DEP_BIT_RCU		= 4,
+> > -	TICK_DEP_BIT_RCU_EXP		= 5
+> > +	TICK_DEP_BIT_RCU_EXP		= 5,
+> > +	TICK_DEP_BIT_POLICY		= 6
+> >  };
+> > -#define TICK_DEP_BIT_MAX TICK_DEP_BIT_RCU_EXP
+> > +#define TICK_DEP_BIT_MAX TICK_DEP_BIT_POLICY
+> >  
+> >  #define TICK_DEP_MASK_NONE		0
+> >  #define TICK_DEP_MASK_POSIX_TIMER	(1 << TICK_DEP_BIT_POSIX_TIMER)
+> > @@ -122,6 +123,7 @@ enum tick_dep_bits {
+> >  #define TICK_DEP_MASK_CLOCK_UNSTABLE	(1 << TICK_DEP_BIT_CLOCK_UNSTABLE)
+> >  #define TICK_DEP_MASK_RCU		(1 << TICK_DEP_BIT_RCU)
+> >  #define TICK_DEP_MASK_RCU_EXP		(1 << TICK_DEP_BIT_RCU_EXP)
+> > +#define TICK_DEP_MASK_POLICY		(1 << TICK_DEP_BIT_POLICY)
+> >  
+> >  #ifdef CONFIG_NO_HZ_COMMON
+> >  extern bool tick_nohz_enabled;
+> > @@ -205,6 +207,8 @@ extern void tick_nohz_dep_set_signal(struct task_struct *tsk,
+> >  extern void tick_nohz_dep_clear_signal(struct signal_struct *signal,
+> >  				       enum tick_dep_bits bit);
+> >  extern bool tick_nohz_cpu_hotpluggable(unsigned int cpu);
+> > +extern bool tick_nohz_full_get_allowed(unsigned int cpu);
+> > +extern int tick_nohz_full_set_allowed(unsigned int cpu, bool allowed);
+> >  
+> >  /*
+> >   * The below are tick_nohz_[set,clear]_dep() wrappers that optimize off-cases
+> > diff --git a/include/trace/events/timer.h b/include/trace/events/timer.h
+> > index 3aa0608c63611..dff9579cd90eb 100644
+> > --- a/include/trace/events/timer.h
+> > +++ b/include/trace/events/timer.h
+> > @@ -435,7 +435,8 @@ TRACE_EVENT(itimer_expire,
+> >  		tick_dep_name(SCHED)			\
+> >  		tick_dep_name(CLOCK_UNSTABLE)		\
+> >  		tick_dep_name(RCU)			\
+> > -		tick_dep_name_end(RCU_EXP)
+> > +		tick_dep_name(RCU_EXP)			\
+> > +		tick_dep_name_end(POLICY)
+> >  
+> >  #undef tick_dep_name
+> >  #undef tick_dep_mask_name
+> > diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+> > index 87e2a7a875265..0d6fcc3736bae 100644
+> > --- a/kernel/time/tick-sched.c
+> > +++ b/kernel/time/tick-sched.c
+> > @@ -375,6 +375,11 @@ static bool check_tick_dependency(atomic_t *dep)
+> >  		return true;
+> >  	}
+> >  
+> > +	if (val & TICK_DEP_MASK_POLICY) {
+> > +		trace_tick_stop(0, TICK_DEP_MASK_POLICY);
+> > +		return true;
+> > +	}
+> > +
+> >  	return false;
+> >  }
+> >  
+> > @@ -561,6 +566,39 @@ void tick_nohz_dep_clear_cpu(int cpu, enum tick_dep_bits bit)
+> >  }
+> >  EXPORT_SYMBOL_GPL(tick_nohz_dep_clear_cpu);
+> >  
+> > +/* Read policy, not whether a CPU currently has its tick stopped. */
+> > +bool tick_nohz_full_get_allowed(unsigned int cpu)
+> > +{
+> > +	struct tick_sched *ts = per_cpu_ptr(&tick_cpu_sched, cpu);
+> > +
+> > +	/* CPU teardown resets and restores this bit under stop_machine(). */
+> > +	return !(atomic_read(&ts->tick_dep_mask) & TICK_DEP_MASK_POLICY);
+> > +}
+> > +
+> > +int tick_nohz_full_set_allowed(unsigned int cpu, bool allowed)
+> > +{
+> > +	struct tick_sched *ts = per_cpu_ptr(&tick_cpu_sched, cpu);
+> > +
+> > +	if (!tick_nohz_full_cpu(cpu))
+> > +		return -EINVAL;
+> > +
+> > +	/* CPU device removal may wait for an active sysfs callback. */
+> > +	if (!cpus_read_trylock())
+> > +		return -EBUSY;
+> > +
+> > +	if (allowed) {
+> > +		tick_nohz_dep_clear_cpu(cpu, TICK_DEP_BIT_POLICY);
+> > +	} else if (cpu_online(cpu)) {
+> > +		/* The existing kick requests an asynchronous restart. */
+> > +		tick_nohz_dep_set_cpu(cpu, TICK_DEP_BIT_POLICY);
+> > +	} else {
+> > +		/* Record policy without queuing irq_work on an offline CPU. */
+> > +		atomic_or(TICK_DEP_MASK_POLICY, &ts->tick_dep_mask);
+> > +	}
+> > +	cpus_read_unlock();
+> > +	return 0;
+> > +}
+> > +
+> >  /*
+> >   * Set a per-task tick dependency. RCU needs this. Also posix CPU timers
+> >   * in order to elapse per task timers.
+> > @@ -1533,6 +1571,7 @@ void tick_sched_timer_dying(int cpu)
+> >  {
+> >  	struct tick_sched *ts = &per_cpu(tick_cpu_sched, cpu);
+> >  	unsigned long idle_calls, idle_sleeps;
+> > +	int policy;
+> >  
+> >  	/* This must happen before hrtimers are migrated! */
+> >  	if (tick_sched_flag_test(ts, TS_FLAG_HIGHRES))
+> > @@ -1540,7 +1579,10 @@ void tick_sched_timer_dying(int cpu)
+> >  
+> >  	idle_calls = ts->idle_calls;
+> >  	idle_sleeps = ts->idle_sleeps;
+> > +	/* Preserve only the policy dependency across CPU offline/online. */
+> > +	policy = atomic_read(&ts->tick_dep_mask) & TICK_DEP_MASK_POLICY;
+> >  	memset(ts, 0, sizeof(*ts));
+> > +	atomic_set(&ts->tick_dep_mask, policy);
+> >  	ts->idle_calls = idle_calls;
+> >  	ts->idle_sleeps = idle_sleeps;
+> >  }
+> > -- 
+> > 2.47.0
+> > 
+> 
+> -- 
+> Frederic Weisbecker
+> SUSE Labs
