@@ -1,67 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.43
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792788352;
-	b=oaTCq1ppqNcMEVOD6TINhpXtImW1OhpWxBT5isRGEucIQaN9FKvlKUltIERJG3DEHZVE
-	 JuTn02WkEb2RlUM3sRv4P73/ZM6us+g/i1qlUjVu6D+K6lIan98Y4e/smGQYsvGB7N24b
-	 uP1MeOXMjs0unjd/2TMNO/t/4TLcXwDxM6l1+oSCfSBasLMx+pFQ6g9l6HSLJ3yNkQu7s
-	 Rz11janGt+Wwkv+2LQM26BKCrWGiMraTEs3RL/ACCDwI/kpQe5CoOmF+jXrnyXPnHwC2o
-	 an9kpFMO+i2jqzpu2E6TcUALwT+uhLHse9uC4G1nmRzTnJpoKOmiZri7YZgAP2ChrKA==
+	t=1792792334;
+	b=GVELCX3ZcjuBFmKkDQUIViWwugebcZUrHeUpQEqBGJoLL3OGJvVX56DBdnwSWS/cb+jS
+	 WCwR4k2sH6AD4eguFW67fH0vG8P/vOODYcWRkThn9NbGOiuS5clLA8u/uN4Z+igj3o2IK
+	 orvyOHQZFrlqd6jXAWQi8fxIb/YbnKnEajwjd6bQ5o7+1xfrud1WOi7r5/qZrq9vkbVmr
+	 IBiy2pf2eA9izRvthqPD3oZIj2i0xW2SB1FqEGkzFKt6JZci+YHCngmgUjATQ2Rgs4qnq
+	 pVw3g+Ri0qk2Wc+Au07YteLYKgaZESgHdn9ELBOfMLp/a49ZrlorapkTn2e7q6JP+rw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792788352;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=bFFffzUvgnJue3yyaiYiiCh8qM+TcfI9WgeY9k8g54M=;
-	b=KTrY3Xb+Y9niSUzdXmfn/9ptVilyBgjWXRwC3NlXWf6t84xO1kzu8LhJKGMr5pM3z7NR
-	 04jI66BK4vqGVB05k4FW5kV++xl9wvxndOvBeyYA1WuylCm32Rk/sPMkE5912zgzknXX8
-	 HDsXU97EGXnLmgwXhCtgDyj1odzbqCEuljAhesiGwNLXzlb0w7H63W/Bmf17gM9N2USSk
-	 3bUALDoq3TcDVMB0DIGOKDrp3QyOApqr6OJMniDBQ7xkUY70ozsXiI79Xd0LLOLVejNoI
-	 xVA8Q3hYn8f4ndcIbNovFeXq/gTQd/pvAk/FYQEwWDZqfyNhBdeyTdj9ACVany3c0JA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792792334;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:From:To:
+	 Cc:In-Reply-To:References:Date:Message-Id:X-Mailer;
+	bh=jU1IZAOHq9r8Ir5hIP1rjGnLwS+weWaNtdurABD6X5g=;
+	b=gCwSb6eU0pPP6wBG+mSHCp79tGu41LUnhCWl9NHddkS6hg4BX/k0eyYEkPQwNot2HDEC
+	 85ck1Zq4PbYiHBh2zA1Hfy77BVq7oIrxaDQSkzxGI21WwFsTcBQNHkZkQYnxSwcuhsU7m
+	 DEbF2FF5VySzA2NXwaKF2P0ShUF6KPchNa0SOarpVasoZW/CSB6AkIs8dDTp4WEYd8kAe
+	 qgqYTnWho85o8CZDAyVR0mE7MAuwBINWryHQVjPRO3UomuNq8sVzt6uCxzs7CPXtQ5FU2
+	 wtnVFvtZqRls4i6IfwwFkhoy7r1aObRCfo6HusEpNVJ11hAkE8IGOev8IkcZ1AaBPeA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=AlAT+vVV;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=HGqGxOqE;
+	arc=none smtp.remote-ip=209.85.219.43
+Received: from mail-qv1-f43.google.com (mail-qv1-f43.google.com [209.85.219.43])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33E4606A323
-	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 20:45:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A33E4606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2625A606A31D
+	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 21:52:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2625A606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=AlAT+vVV
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1792788350;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bFFffzUvgnJue3yyaiYiiCh8qM+TcfI9WgeY9k8g54M=;
-	b=AlAT+vVVMK+sP7gD7pUZgBpOL9q7XWA/iWVXl0pJAk4QWileHRIIEX4KfyqbvX6qGBYx+6
-	WIp5JvATDqNYe6Y+e+Epl3CRB8MTwD5KOT0/b/gaUBDYi/o9Gau0lOEx4cfZ4A6EXyEVBM
-	HS+UE0sO3IT0pZUGaqFAO1wq+yIEhwA=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-55-75Gnvlz7Pc20nvVELP8pTA-1; Fri,
- 23 Oct 2026 16:45:45 -0400
-X-MC-Unique: 75Gnvlz7Pc20nvVELP8pTA-1
-X-Mimecast-MFC-AGG-ID: 75Gnvlz7Pc20nvVELP8pTA_1792788343
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8F2AD1800841;
-	Fri, 23 Oct 2026 20:45:43 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 060071800446;
-	Fri, 23 Oct 2026 20:45:41 +0000 (UTC)
-Message-ID: <8c8f27eb-26af-406e-9766-537dbe9c173a@redhat.com>
-Date: Fri, 23 Oct 2026 16:45:41 -0400
+	dkim=pass (2048-bit key, unprotected) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=HGqGxOqE
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-91c3fd7bbdeso9978116d6.1
+        for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 14:52:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1792792333; x=1793397133; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=jU1IZAOHq9r8Ir5hIP1rjGnLwS+weWaNtdurABD6X5g=;
+        b=HGqGxOqExzIyB7hPavSyBDvkHprEJhOVaBIV5g5URIZNOHs9N4YRyG5vMPVAgS/q/e
+         I+cQ4l3HPXviBlFxpvlTlRpxuOp49ndv7fAU21ovgA65rnX2guDwXIma4qyoNi5MLYEW
+         XdDuwvuS3z1gB5IYmho6szpf4Tiu4hoTuEnvYWQ0aVg16z3kioAJj7b6bMtlkyHxzpaf
+         x7JCS2bPNpM2zG0eH4t9jDuct8F8iPqapD4rp8QHG+PT867T5gcDXwMdI93RmUcWGrEb
+         R5C73gEQs8Vwj6CV7Ik+oQgE3G211F4vOsU82Rad62zdb4R3D4yQIrQarhQRnytIwAHO
+         BB/A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1792792333; x=1793397133;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=jU1IZAOHq9r8Ir5hIP1rjGnLwS+weWaNtdurABD6X5g=;
+        b=L0ZJM2z51/Q2FbzWclLA37XIYN9wdz3jbmGV15kW+Nuz3eNiA1OHOWEQ4SMs/0ZTI+
+         OYfrPUH4zAAH9lPr+1k3srxRQhP6c3yGX3WkRaEii5I9cSdY8CYIfgYx9iqU5VcLC1V4
+         Dj8dPBFMcKT7NN4FdZHqJfeiZpK0yG54lah9a5Y1GNwxVOK7hfZPueVgRZEXFpAR0Eaz
+         qVmgQwqvbu1wYadilSwN0OuasPlaQ5eZba9DjCdq82RGQ8j/f0gsBVGXmfxSkfyZdLt+
+         99yo1ftmA8quG++timum0/eTkwYg75iSg0fxanQqksfHwdPjAHDuI3rtR1ZpUY+tHwYJ
+         lxyA==
+X-Forwarded-Encrypted: i=1; AKwUvBwqR76CNQRjOj5Rnd0eWisyN63doRQTDGg1ABms/+R/MzyhHR0H61dCaVWVFjMOvRrnTFp8aLOT@vger.kernel.org
+X-Gm-Message-State: AFq9FYLR2svJijpPMN5Y/SEPu6+igOBhte0PRXn846kVJ0cDy7WGp3py
+	fc9N1MnK8mf+e5B5GU3BwxCTJBh0ewT6bUKq5+uVT+svKdQc8rIFvUjQLrDtiSG+0ME=
+X-Gm-Gg: AYBFou2k+to0aGfplbucE8xlesGapBAeQdxaEzbRnm7UdPSMlHtGJnGs2sq0uRlqWHy
+	/x5tZKP9v7SAye4/pgW8L71FLjRw3ut7bynN1wuko6msu7JcGeKtS3fx1odUcA/b6O/futTsslx
+	sG7NLyH+95KdYa1CMpoiKVr5Fdn+Y4syvkAhd0LRhbHzvSHkXjMM/tQtCOz1eK35KQSj57csVVu
+	BgfXRhnVCHoYr6iAs3qdt2DAiugtpeKo1w2zSewZ0JD1ur73uew51vjI2nARA+rijks0PivUPo1
+	ANfPymQQBvPinq/GBu0TAgCsBRyrzFUwMnK5Aqxo04u6L+z8Krz1yR4JIKKpJBVS2ceNCMII0VL
+	FcMLAOOuQZw2AnBmdV1vM2P8nyzSMfuEeLnPbR+2ffCjo+8VVVRBch/I/zYSo5IgJJlCaOtDEfW
+	riD+OC2wlrvNxdVse8fs2yi/d5Ndp2y9XmjdCC+awgKeR4qN42/f8ryxcVsbf8TGJk8KACCy6c7
+	Ze7lNk22NDwZpOW5aZ1qEMNHIjgk1GWazNpSZkw6LvOVHlrvn3IpPa0cD4RkNV+whggFMP1uuDG
+	ctDa4lGI9B1j7B/erchRyjPyBCc=
+X-Received: by 2002:a05:6214:5c45:b0:91b:8870:3930 with SMTP id 6a1803df08f44-91c48e76cf4mr5685596d6.45.1792792333037;
+        Fri, 23 Oct 2026 14:52:13 -0700 (PDT)
+Received: from [192.168.86.58] (pool-173-79-60-52.washdc.fios.verizon.net. [173.79.60.52])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91c47c6f3bcsm5375386d6.29.2026.10.23.14.52.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 Oct 2026 14:52:12 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,95 +88,98 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next 2/6] cgroup/cpuset: Properly compute effective xcpus
- in update_parent_effective_cpumask()
-To: Guopeng Zhang <guopeng.zhang@linux.dev>,
- Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20261022031643.1351877-1-longman@redhat.com>
- <20261022031643.1351877-3-longman@redhat.com>
- <c65208d9-aba6-4e9a-affa-4f7cd8794a0c@linux.dev>
- <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
- <776306f8-2200-486b-8c43-2b5fd9b5eeb5@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <776306f8-2200-486b-8c43-2b5fd9b5eeb5@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Subject: Re: Path forward for Virtualized Swap?
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: Yosry Ahmed <yosry@kernel.org>
+Cc: Rik van Riel <riel@surriel.com>, Wei Xu <weixugc@google.com>, 
+ Nhat Pham <nphamcs@gmail.com>, "David Hildenbrand (Arm)" <david@kernel.org>, 
+ Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
+ Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+ YoungJun Park <youngjun.park@lge.com>, 
+ Chengming Zhou <chengming.zhou@linux.dev>, 
+ "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, 
+ "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, 
+ =?utf-8?q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+ Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+ Yuanchu Xie <yuanchu@google.com>, Gregory Price <gourry@gourry.net>, 
+ Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
+ Hugh Dickins <hughd@google.com>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+ Meta kernel team <kernel-team@meta.com>, 
+ Linux Memory Management List <linux-mm@kvack.org>, 
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, 
+ linux-doc@vger.kernel.org, 
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Joshua Hahn <joshua.hahnjy@gmail.com>
+In-Reply-To: <CAO9r8zOtK7YYdBNS+h5bNW-miKED7p4G0igy=D-=HRnGqA-38A@mail.gmail.com>
+References: <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
+ <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+ <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org>
+ <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
+ <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+ <aqgMCIOFi0dKx_6L@fedora>
+ <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
+ <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
+ <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
+ <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
+ <20261014195354.GA371161@cmpxchg.org>
+ <CAKEwX=Mwc+D+AN-B5T7p=80fqCDijdsiJjd6aN_3YMrEQjyvwQ@mail.gmail.com>
+ <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org>
+ <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
+ <CAKEwX=PCSyCEAqxeOH6CkCMu1eB3xUn3iz5XNuTbpDM3EmWYAg@mail.gmail.com>
+ <c6e62e80befa886fccd36d34a39cf56ea5b9c9c2.camel@surriel.com>
+ <CAO9r8zOtK7YYdBNS+h5bNW-miKED7p4G0igy=D-=HRnGqA-38A@mail.gmail.com>
+Date: Fri, 23 Oct 2026 17:52:11 -0400
+Message-Id: <179279233116.3784731.9576593182600250610.b4-reply@b4>
+X-Mailer: b4 0.17-dev
 
-On 10/22/26 9:53 PM, Guopeng Zhang wrote:
->
-> 在 2026/10/22 23:00, Waiman Long 写道:
->> On 10/22/26 9:45 AM, Guopeng Zhang wrote:
->>> Hi Longman,
->>>
->>> 在 2026/10/22 11:16, Waiman Long 写道:
->>>> Since the introduction of cpuset.cpus.exclusive in commit
->>>> e2ffe502ba45 ("cgroup/cpuset: Add cpuset.cpus.exclusive for v2"), a
->>>> compute_effective_exclusive_cpumask() helper which is later renamed to
->>>> compute_excpus() is added to compute the effective xcpus of a partition
->>>> root. However update_parent_effective_cpumask() is not updated in all
->>>> proper places to use the new helper to check if a given cpuset should
->>>> remain a valid partition root. This can cause a cpuset to incorrectly
->>>> remain a valid partition root even if no effective xcpus is left.
->>>>
->>>> Fix that problem by using compute_excpus() to compute the effective xcpus
->>>> into delmask in all cases except partcmd_disable and partcmd_invalidate
->>>> and use it for tasks_nocpu_error() check as well as checking its
->>>> emptiness. This enables us to catch invalid partition root more
->>>> accurately in update_parent_effective_cpumask().
->>>>
->>> I re-tested the repro from the link below on top of this series
->>> (applied on cgroup/for-7.4-fixes), and it still fails:
->>>
->>>     https://lore.kernel.org/all/20261010075947.333549-3-guopeng.zhang@linux.dev/
->>>
->>>     cd /sys/fs/cgroup
->>>     echo +cpuset > cgroup.subtree_control
->>>     mkdir A
->>>     echo 0-7 > A/cpuset.cpus
->>>     echo 0-7 > A/cpuset.cpus.exclusive
->>>     echo root > A/cpuset.cpus.partition
->>>     cat A/cpuset.cpus.partition
->>>     echo 1 > A/cpuset.cpus.exclusive
->>>     cat A/cpuset.cpus.partition
->>>
->>> The last command still shows "root invalid (Parent unable to distribute
->>> cpu downstream)".
->>>
->>> In this case compute_excpus() returns the stale user mask unchanged.
->>> user_xcpus() is gone from update_parent_effective_cpumask(), but the
->>> dependency just moved one level down: the new code calls
->>> compute_excpus(cs, tmp->delmask), and its first line is
->>>
->>>     cpumask_and(excpus, user_xcpus(cs), parent->effective_xcpus)
->>>
->>> Here user_xcpus(cs) is cs->exclusive_cpus, which still holds the old
->>> 0-7 when compute_excpus() runs: update_exclusive_cpumask() publishes
->>> cs->exclusive_cpus only after partition_cpus_change(). Nothing corrects
->>> it either - the sibling trim is skipped as exclusive_cpus is non-empty,
->>> and for a direct child of the root cpuset the intersection with
->>> parent->effective_xcpus is a no-op. So the stale 0-7 mask still reaches
->>> tasks_nocpu_error() and PERR_NOCPUS is set again. Please point it out
->>> if I got the analysis wrong.
->>>
->>> I have rebased my fix on top of this series and the partition recovers
->>> correctly with it applied. Should the fix be folded into this patch,
->>> or is there a better way to fix it? Happy to hear your thoughts.
->> You are right. My patch series won't fix this particular issue. However, converting an invalid partition back to a valid one is done on a best effort basis. There is no guarantee that it will always happen. Just echo "root" to "cpuset.cpus.partition" again will make it valid again. So it is not a real bug from my point of view. It is just a nice to have feature.
->>
-> Thanks for the explanation. This helps me better understand the
-> intended behavior of partition recovery.
+On 2026-10-23 13:25 -0700, Yosry Ahmed wrote:
+> On Fri, Oct 23, 2026 at 1:03 PM Rik van Riel <riel@surriel.com> wrote:
+> >
+> > +-------+     +------------+
+> > | vswap |-----| swap cache |
+> > +---+---+     +------------+
+> >     |
+> >     +----------+-----------+
+> >     |          |           |
+> > +---+---+  +---+---+   +---+---+
+> > | swap  |  | zswap |   | zram  |
+> > | file  |  |       |   |       |
+> > +-------+  +-------+   +-------+
+> >
+> > What exactly do people want to accomplish here?
+> 
+> Today if you swapoff a swapfile, every is swapped in into the
+> swapcache, whether it's in zswap or on disk. With vswap, you have no
+> way to trigger swapin of compressed memory in zswap.
+> 
 
-I did find the reason why your test case isn't working. I have made some 
-adjustment in patch 2 which should make your test case work now with the 
-v2 series.
+This seems like a missing interface in zswap, rather than something
+vswap needs.  But you could just write this as
 
-Cheers,
-Longman
+vswap swapoff {
+  disable new backend writeback (swapcache fault-in only)
+
+  for each backend {
+    backend swapoff
+  }
+}
+
+so rather than vswap.swapoff() you'd actually just want a stop-bit that
+says to disable the swap subsystem writeback behavior to all backends.
+
+Otherwise the user can just disable each backend individually.
+
+-- 
+~Gregory
 
