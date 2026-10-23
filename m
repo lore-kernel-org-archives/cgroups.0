@@ -1,54 +1,159 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.149
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792720408;
-	b=Q9wr3fAPB64gEMzAPviOpO//wjdtYjhz2JAd8Qi/f1w5yp4h58N0wS6D5zV9QGqESEeI
-	 LEV1iGgb6UgsDGstSKUiZv7kuLmuwsXQ0pK4xcBpeqyTptIiyVFuXeXXH5hzNHJu8rekR
-	 8pjqyj6U9ZxoifcVUL62wAK7LuegCp7vtnfBNy/5hy0cQeBUPnajvdrBD9SpzAsKl8CtY
-	 vJdH8YXPK4dqNtkKmkcRM6Gj8GJ7DUsJ8XOO5s8jsKosx8SBBQlgo37HVPcUslKDxPYR1
-	 3Ue1RR7n7W6NE7E3Af+S0NZpjjv3JsCw3MrtbNUpoKm4m6iLaESqMZryf4S4/Fh1apg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792720408;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=D07eyQXW6CyfYGV/GLKHH76F8XoU44KN7tbJsOmA9ec=;
-	b=wkTUIfd9X3sL9FPAfSoVnDANaR22E07EFrKpgNBdU38gUcdIIgLxpuM3IyGaZVanzNKV
-	 B8Y1ds6dZoCa52NZyy0/GVu5XsPu7dMPEA/KKIJ/SJ/zxcGHqVWuoNbJyy1+BGeE1k3Y9
-	 DfNDldOQyCsAIMaNvhFoAVReh6ekBy9wAf0jQilMez3MP3xNwfukZPaNo8xQ6C5oiMP8r
-	 FZwGNi816p7qHIcJRSG/0U0Zs6G6sDKV8YyOcnydMhkb8/uAonDm7rs7LknWuLZKGE8aw
-	 Ku69z9Dr8HH4EDrJIpzQmOeEV5+RUlUThXeE7SaKHDbz9e/DY6nKMsJdYO0eZdy9VTQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SB7DLNbz;
-	arc=none smtp.remote-ip=91.218.175.149
-Received: from mta0.migadu.com (out-149.mta0.migadu.com [91.218.175.149])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.23.95
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1792725544;
+	b=z/bZDuAsPf7TFPquhxu1g6uEttnIKyjhuHVel0JmdF/G8tSyUpeUnm1mJyArmFfCsXbk
+	 8FAJycOJHmykWAUaZ+vTWbVaToao7+QyCJHnAvdNi2eAxDL6fLviEBe0vzJSXIC6mC9JV
+	 4RYRrytWe5NTsFTUictG/GT8iBmfwYq8x16fTnp6NkCt2APGoyYVX2AxJmpxJoSqQKrbq
+	 c1RLObhtJhAkqmfZc/wQAnWwkJ88NEyzeIGpSQoGLYxIlHU1PAcfPqIVerWl8ucTtzGKa
+	 KpupMcZfix2SCDK4Wi7fW8Mpk0DLmCkYDUiRp2z5GSEA5L5fUzQvPP3t5H6497WkISQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792725544;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:
+	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=XTmDXo/pjdJNtEU2WmGt3GIKQRIQihw5jlwO8wFNaCQ=;
+	b=vTeWeCSJVri6m4aduAOk3nucoyBoE3njHV6pidAaPv0BZO//yHDd9aCeOyn8oSSYsCxO
+	 OlyKngW+5X4GWmQMgDkBlm7ueRr+Z6jmXiKJq5M3cxan6jO0c+t8NesLppHVjDHpzF7ir
+	 tbq9pcoYOFr30GZ6rLFUnE4MjvYsz1AaUmB7tqohmos7TT70MpE7PDgc5UhO+8pILh2VK
+	 NO2aA1o4xqikeY986bU3UyjrjprHo1PpxM4CfK7Yfc/jKqlSmm9AU88wYrENuuGhBHo6/
+	 jKhegyOKG9zjEdfOxp01D3Qw/x4wz5at0swL92DXyOow+B1GxjVm7ClFQc0GNmP2X4Q==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=outlook.com;
+	spf=pass smtp.mailfrom=outlook.com;
+	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=PK8YzDc5;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.23.95
+Received: from PH0PR06CU001.outbound.protection.outlook.com (mail-westus3azolkn19011095.outbound.protection.outlook.com [52.103.23.95])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C040606A32F
-	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 01:53:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3C040606A32F
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC7C9606A31D;
+	Fri, 23 Oct 2026 03:19:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC7C9606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SB7DLNbz
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ERNQcTMDaUHOgt1ezW5NchEKQ3p5W3gtHeKeBSygDso=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792720404; v=1; x=1793325204;
- b=SB7DLNbzQGdY6heJepkyIeeaXYgjdxfnMhQ33jYud6x20z0l0qP1fqURSHHlcwF9F0exzarz
- OAXwWqwglOXHhfXHW0ewCg8iV6DmZaPoHADNjnYRN4RZhC8tS4TY8Ht8hPy3FYU5gi6zavnaHvL
- Sdhc11rX+DrJ4Pxo/OZtbUVc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id cd14fa31b589aab4;
-	Fri, 23 Oct 2026 01:53:24 +0000
-X-Mizu-Trace-ID: cd14fa31b589aab4
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <776306f8-2200-486b-8c43-2b5fd9b5eeb5@linux.dev>
-Date: Fri, 23 Oct 2026 09:53:20 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=PK8YzDc5
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=FF989drmrPWT8nbFnTF2aocyRW5UHqeHbq4OAutR6CqafGc/F3cUJXMaqKBNn9GHWTLlyjwcXN4gJ5jVbLoK9pT0AAd/ReVNioFqsMp6GUKqIxXozNAN6I+tw5ukpZhTNcP4dYNy/3xdHX2CVyAwymxq98Y2z0hUPVUu7LhKyjSs5rYt1Dh0pVSSNkV3HPOJWyX6j3ZRu9m6/jJRrn68NrAndiQGtTgae9co5wp4g9ucJHaP0jEXcPu+SrwXX35ABYCu64kPsC6ogX2F75YAaCAjosFq2HHvOOI8VfQ6HhIdbegHrF5reanFhebp4+7qlUnoxwDGq62GMjQHCimzEQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
+ bh=XTmDXo/pjdJNtEU2WmGt3GIKQRIQihw5jlwO8wFNaCQ=;
+ b=WN8crcFHdu8/a2/uSJfqZrOc7oBT/EIaBJHHoW2e5ixC/alrxw9LR3omXmbRaQCr64CIYRT9h7/sXcpw668lcUDOfwLmmMIY7kgO+wM+mODkOj7j7Qxzc6VFn0DhOpLKlde8sR17hhxlNlC4yEdzgd7CxurULn05d0xETC4dRVhZcgJK5d0MzBxc/01NM3nGnOgXf5Ul2CbelaRSSSlX6YjC6nwGFj8jTwGA3Xo2FtAWPOudQUKBzmTRI0Ec9a7BE7dhjPCfzQcPA1KlPunaBoxX5cBJagNcVnCQIK05bUWrCtxwrJfih2c4IgtNttMQ873cnrYXwsglRzIqNBgPaA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XTmDXo/pjdJNtEU2WmGt3GIKQRIQihw5jlwO8wFNaCQ=;
+ b=PK8YzDc51UNtItfZcQubEhbTzPK4Go8pmOt64dgJqM6rB5KaDFE7QKSI+r0lGoAUSbkTcGKbDvFEualnTql+SO9LYYoD/VKVOV1TyOYjpvZD8CSYs8CfQVLrZFJf+FGD8xADtkRSTHj2exY+t3Rf//yJw1Hcb/V0OyS4OMNkcFNxoFf18z7Dc5kyNwHL0eYO6zRsepnsyLtRu/75a5gzojdS4n84Xlf/D+OLE1Vn08YKU8Tgzl43ZvvI3fwiYw2VxlP4IiPctwGM/R8uFJg64o6fAVx4C5TVY3Y+TnVCdQfrR1t2xOVMeuTDjNgVIWYtBjuyqAuXhSQ09GIF/aszdA==
+Received: from SA3PR05MB10385.namprd05.prod.outlook.com
+ (2603:10b6:806:39d::17) by DS1PR05MB10613.namprd05.prod.outlook.com
+ (2603:10b6:8:218::16) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.18; Fri, 23 Oct
+ 2026 03:19:02 +0000
+Received: from SA3PR05MB10385.namprd05.prod.outlook.com
+ ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
+ ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0546.012; Fri, 23 Oct 2026
+ 03:19:01 +0000
+From: Yingjie Wang <x-professor@outlook.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Manfred Spraul
+	<manfred@colorfullife.com>, Alexey Gladkov <legion@kernel.org>, "Eric W .
+ Biederman" <ebiederm@xmission.com>
+CC: Yingjie Wang <x-professor@outlook.com>, Vasily Averin
+	<vasily.averin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt
+	<shakeel.butt@linux.dev>, =?iso-8859-1?Q?Michal_Koutn=FD?=
+	<mkoutny@suse.com>, Michal Hocko <mhocko@suse.com>, Alejandro Colomar
+	<alx@kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v2 1/3] ipc/sem: account enlarged sops arrays to memcg
+Thread-Topic: [PATCH v2 1/3] ipc/sem: account enlarged sops arrays to memcg
+Thread-Index: AQHdYp0/OtN6TF50S0i1VjdA6dr/Lw==
+Date: Fri, 23 Oct 2026 03:18:59 +0000
+Message-ID:
+ <0ab8e85a569df7b9250f89e3f99da44b34996997.1792724953.git.x-professor@outlook.com>
+References: <cover.1792724953.git.x-professor@outlook.com>
+In-Reply-To: <cover.1792724953.git.x-professor@outlook.com>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|DS1PR05MB10613:EE_
+x-ms-office365-filtering-correlation-id: dae72721-f138-49d1-e624-08df30b462c7
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|39105399006|22091999003|24121999003|12121999013|15080799012|38102599003|11091999009|31061999003|21061999006|22141099003|24021099003|41001999006|4140399003|19110799012|8062599012|8060799015|25010399006|1602099012|10035399007|41105399003|40105399003|26121999007|102099032|440099028|4302099013|3412199025|1710799026;
+x-microsoft-antispam-message-info:
+ =?iso-8859-1?Q?6IDM2z+vyWy/kyltmQmm6G4ZiB8hYzfU+eWVBczh+xvI7jqmKXfmXAP4ZY?=
+ =?iso-8859-1?Q?JRft5IYvf0XGrGRfYx0Z3qxhtY3jSPuq6KAdiMI/D8+XMkIWha+Ssrer2n?=
+ =?iso-8859-1?Q?U0t9L6P3Nu9W6BiL0vINExCJEJjW8GIsxSYyEstolYGZfCZ3/3Hrv7yy3s?=
+ =?iso-8859-1?Q?AQ19p9tnXpyXJVJTnzLKw5z3oaHMXYzzRbXtCayDX3aSUs4yMhdd//k46M?=
+ =?iso-8859-1?Q?tFe0Mi1Gm3xquL7XaeXuUYJQew78ZqD3i3znf8LF47EfwS6twCKnk/TEDj?=
+ =?iso-8859-1?Q?6Rx4HHfWezLCmyoUptw/afXWoinTJ8b2jZIYvi7qUeHeO1Y8sNy3hE73nD?=
+ =?iso-8859-1?Q?KovM4ldXqKYQg7wqnXlXWd0pMBlj/QuokpdN7TJ55cD+eUDR5qEImEr2o1?=
+ =?iso-8859-1?Q?MxNVnXTEnJsELsZdj1qj2Wfl7VN0OXK4dFkUqMxTJ1oUNGI3N+CWUwigXW?=
+ =?iso-8859-1?Q?59POOO6I+7USCsvLwoZllPJe0vpAmQSd2uf4CjjR/xsRIkHrFeAnh58h3t?=
+ =?iso-8859-1?Q?qHvoM9dbMK4BJFktigKv3s5YmOqZL6DFq8BcCurHaqzSh89tzfSeceD3Ci?=
+ =?iso-8859-1?Q?MzUAw7r0uJnwUCLnsmAJqPNkdOLNLTHprDjX8GkLzWvXdoFEZIIoj72vta?=
+ =?iso-8859-1?Q?IE5LByafhMy1JdijqkV+M/SzJlFxCPNhw5sBF0HcDfZIhM3il2CGQDvusa?=
+ =?iso-8859-1?Q?arTQm8rldnvSdOs3+35UWT2Fd1dpzeb7m0gAQgs2NdttntPhF8s95knHbv?=
+ =?iso-8859-1?Q?5R1LoTpuXCM9fn4kMnkhP4yVZXnrx/Zmghx4NuyLAtGx4pi1KcuFu1oGg9?=
+ =?iso-8859-1?Q?xrNTHD7XJObrlqiWO5rJ83iFwvARxfpACrWuc0wAELFJUvoToib18BbCNC?=
+ =?iso-8859-1?Q?RYywXQMZiEXx8PCLl5hs2O3dwEz4gdF8iNFQgiG6sY+IHzgsbYFFZcWCcW?=
+ =?iso-8859-1?Q?LcAB8pKtKgYEjNdWKkc5Dyt6yrOjQD9DB5c1qm7DsVKPIu+M1oOxfaJaTm?=
+ =?iso-8859-1?Q?k2BpybS8yii50GG0lb+fz/NuW/wtaBWucfskNtrES932lPmXb1OHJG5CD9?=
+ =?iso-8859-1?Q?oZT8ps4bZ6I6QryzEu1ET2FRY50cJHdpdeuIHJiVvErFPxzovd3MvKTdDI?=
+ =?iso-8859-1?Q?AvnYt6Wja7IC5RFvFhTk9Jb/gHXvd9yL53ggJQ1LW7jcwDS1j1W1WO0Y4N?=
+ =?iso-8859-1?Q?dP834MhdNoxltA+NdZB/rjrEa+KmVwG/Mhf/yGJz1TYBYaTP10EHc7p2Tm?=
+ =?iso-8859-1?Q?jBURhODzdb2hOUiBf6HeIdsRrCK3M0vd6BOOw+KG5vAYckqcmdeU49cREj?=
+ =?iso-8859-1?Q?LD4tz9E3etepWI4/tmAFG0m3GiCdEpHHSnrWMl9jCgkSbWdNDVh5UAjMf3?=
+ =?iso-8859-1?Q?saPZvRDP5K?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?M/EFMwJVQvFkvrUyEw9K6m0xIJubCG7HN7xXg19k91xkxb+CgSdYbuRD9O?=
+ =?iso-8859-1?Q?bX8wv6I7ZBVY/IFIq7L6V/aBeG1XlD9+iMNHLwLJXmlF+G3Mds6izPeP6t?=
+ =?iso-8859-1?Q?qIDO0bcQhMHX3Qf1ZnENBIAF015IfQWBuxbiImIWPHfxSPNPdiSKx43BUd?=
+ =?iso-8859-1?Q?Zba8R3QKVgenLlP/qAt/9fCfC8+20jpsVO3PJdAI6lR/vt1cGAXZxX3+OK?=
+ =?iso-8859-1?Q?Nlt4eBNb6y8/d/tPvDFXxoyyN721MpDFKv9wMLq2Gi69AkWj9TqSpP8c+D?=
+ =?iso-8859-1?Q?mX0AkIwRTLZpXsbfK8X5L6nBDmphUteDCRHujyM/aavZkuA5W0ynPyPnDF?=
+ =?iso-8859-1?Q?wDocJVo/DfvHU1fU887Udou8ev3fowlNrX7mM/xEZLVmq8ZhfPXzQW+hgV?=
+ =?iso-8859-1?Q?TqaZIYnfH0t/bn28PRQQNNUQDZDq2rqnuFTJJ/GZoSUP3nG7FcfyN5Oo/e?=
+ =?iso-8859-1?Q?UPrlGZgrnOAdn0KP3gdVLQhkhdmy9AfePxkoBSqU4Qt7MSd3Gr4sx/ohvB?=
+ =?iso-8859-1?Q?xnmPCGFKaVkDY48a4S/LjJLZ+JCnnZQdJFM4agAiybK63nspJIoe3u4d1c?=
+ =?iso-8859-1?Q?V4/zqGMWv9ND99KWVTs02UgB2UYu4E0uzSQTXoPsvHCOqm5xbbmocYbmAr?=
+ =?iso-8859-1?Q?fOqF1+HZLPsxW5vOcf0XXLd5z4FpqNxrxjhJb9MHtw9+Ieum2WD5I8selK?=
+ =?iso-8859-1?Q?FCyU7Db8lzutWLK/t8Wd42KcNhBaAHvqOgou6Y33k/SFg4/v4nzH/1lvdh?=
+ =?iso-8859-1?Q?Tol1EhGGBXgxE76l+ioWHSgjvjYkZ/UNncpQfzf7t/podmOzFPqabotdr8?=
+ =?iso-8859-1?Q?n6DmSO1TtpsmHm1nzemE5SxZ6wYHSpoZdJGY5QwqaAmOBS/4Tdn2dSO+hi?=
+ =?iso-8859-1?Q?VZUCW5h/4FFJN9gyF7a2l0SHds7hjds0A0i4DXOwd6Qf+ztzUfg/RQBNKl?=
+ =?iso-8859-1?Q?uhr36UL/dkGS73Gi5j03nX4CZw0mpz+2BTijQnQi4pgro1cS4qbSpUuQZD?=
+ =?iso-8859-1?Q?QwGvOSo6ixzdFaHu9Zst8f8/UyS/6m/D3EQxhSFhgP44XFBgL7C6hDZGZk?=
+ =?iso-8859-1?Q?2TtQSnm0OyspyPr7RkOB9eYflmGmqS+zrQk8PT+HGgm7YLHr/QA5bFROS3?=
+ =?iso-8859-1?Q?Qf+/iMrkfyacUDe7ujHLCh4ntvMXIMIxWHRrWneldwAaLbfLspyY07hoa7?=
+ =?iso-8859-1?Q?7Tz9YI0HbRYKttYo+pIVzKg1iU7cOWDI2ZECpu1N9SlWKSLuex8GiTzin1?=
+ =?iso-8859-1?Q?yU/rIOnrujCsTCn7jFApAi3JUhA/m9s4YbhxR77q2JT+MRUp+lDtVgAv6Q?=
+ =?iso-8859-1?Q?Bwjdbk4qwFPCbHPFFmGiAJDoFRQ6lGnclGkOs1+Q4VvDi6txA9PbmN4JUZ?=
+ =?iso-8859-1?Q?4+wshHQXtT+1Pbu+2i8lrSjaGYjxV3ymFxQ74z040uZqBr7RYPJbinFwkk?=
+ =?iso-8859-1?Q?eOgJwY5Q516rAvGn?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,90 +163,59 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next 2/6] cgroup/cpuset: Properly compute effective xcpus
- in update_parent_effective_cpumask()
-To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20261022031643.1351877-1-longman@redhat.com>
- <20261022031643.1351877-3-longman@redhat.com>
- <c65208d9-aba6-4e9a-affa-4f7cd8794a0c@linux.dev>
- <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: dae72721-f138-49d1-e624-08df30b462c7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Oct 2026 03:18:59.9483
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS1PR05MB10613
 
-
-
-在 2026/10/22 23:00, Waiman Long 写道:
-> 
-> On 10/22/26 9:45 AM, Guopeng Zhang wrote:
->> Hi Longman,
->>
->> 在 2026/10/22 11:16, Waiman Long 写道:
->>> Since the introduction of cpuset.cpus.exclusive in commit
->>> e2ffe502ba45 ("cgroup/cpuset: Add cpuset.cpus.exclusive for v2"), a
->>> compute_effective_exclusive_cpumask() helper which is later renamed to
->>> compute_excpus() is added to compute the effective xcpus of a partition
->>> root. However update_parent_effective_cpumask() is not updated in all
->>> proper places to use the new helper to check if a given cpuset should
->>> remain a valid partition root. This can cause a cpuset to incorrectly
->>> remain a valid partition root even if no effective xcpus is left.
->>>
->>> Fix that problem by using compute_excpus() to compute the effective xcpus
->>> into delmask in all cases except partcmd_disable and partcmd_invalidate
->>> and use it for tasks_nocpu_error() check as well as checking its
->>> emptiness. This enables us to catch invalid partition root more
->>> accurately in update_parent_effective_cpumask().
->>>
->> I re-tested the repro from the link below on top of this series
->> (applied on cgroup/for-7.4-fixes), and it still fails:
->>
->>    https://lore.kernel.org/all/20261010075947.333549-3-guopeng.zhang@linux.dev/
->>
->>    cd /sys/fs/cgroup
->>    echo +cpuset > cgroup.subtree_control
->>    mkdir A
->>    echo 0-7 > A/cpuset.cpus
->>    echo 0-7 > A/cpuset.cpus.exclusive
->>    echo root > A/cpuset.cpus.partition
->>    cat A/cpuset.cpus.partition
->>    echo 1 > A/cpuset.cpus.exclusive
->>    cat A/cpuset.cpus.partition
->>
->> The last command still shows "root invalid (Parent unable to distribute
->> cpu downstream)".
->>
->> In this case compute_excpus() returns the stale user mask unchanged.
->> user_xcpus() is gone from update_parent_effective_cpumask(), but the
->> dependency just moved one level down: the new code calls
->> compute_excpus(cs, tmp->delmask), and its first line is
->>
->>    cpumask_and(excpus, user_xcpus(cs), parent->effective_xcpus)
->>
->> Here user_xcpus(cs) is cs->exclusive_cpus, which still holds the old
->> 0-7 when compute_excpus() runs: update_exclusive_cpumask() publishes
->> cs->exclusive_cpus only after partition_cpus_change(). Nothing corrects
->> it either - the sibling trim is skipped as exclusive_cpus is non-empty,
->> and for a direct child of the root cpuset the intersection with
->> parent->effective_xcpus is a no-op. So the stale 0-7 mask still reaches
->> tasks_nocpu_error() and PERR_NOCPUS is set again. Please point it out
->> if I got the analysis wrong.
->>
->> I have rebased my fix on top of this series and the partition recovers
->> correctly with it applied. Should the fix be folded into this patch,
->> or is there a better way to fix it? Happy to hear your thoughts.
-> 
-> You are right. My patch series won't fix this particular issue. However, converting an invalid partition back to a valid one is done on a best effort basis. There is no guarantee that it will always happen. Just echo "root" to "cpuset.cpus.partition" again will make it valid again. So it is not a real bug from my point of view. It is just a nice to have feature.
-> 
-Thanks for the explanation. This helps me better understand the
-intended behavior of partition recovery.
-
-Thanks,
-Guopeng
+Commit 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in=0A=
+do_semtimedop()") removed accounting based on the assumption that sops=0A=
+arrays would remain small, describing a maximum cost of two pages.=0A=
+=0A=
+SEMOPM was already tunable. Commit 50ec499b9a43 ("sysctl: allow change=0A=
+system v ipc sysctls inside ipc namespace") later made that tuning=0A=
+available to IPC namespace owners without capabilities in the initial=0A=
+user namespace. A blocking semop() retains its operation array, so=0A=
+raising SEMOPM permits enlarged arrays to consume user-controlled kernel=0A=
+memory outside the calling task's memory cgroup.=0A=
+=0A=
+Use GFP_KERNEL_ACCOUNT when the actual nsops exceeds the compiled-in=0A=
+SEMOPM default. This preserves the existing allocation behavior for=0A=
+requests within the default limit while accounting the enlarged arrays.=0A=
+=0A=
+Link: https://lore.kernel.org/r/20261016152609.2528805-1-x-professor@outloo=
+k.com=0A=
+Fixes: 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in do_s=
+emtimedop()")=0A=
+Cc: stable@vger.kernel.org=0A=
+Signed-off-by: Yingjie Wang <x-professor@outlook.com>=0A=
+---=0A=
+ ipc/sem.c | 4 +++-=0A=
+ 1 file changed, 3 insertions(+), 1 deletion(-)=0A=
+=0A=
+diff --git a/ipc/sem.c b/ipc/sem.c=0A=
+index 5ec41de7e85b2..8c9edecc16076 100644=0A=
+--- a/ipc/sem.c=0A=
++++ b/ipc/sem.c=0A=
+@@ -2234,7 +2234,9 @@ static long do_semtimedop(int semid, struct sembuf __=
+user *tsops,=0A=
+ 		return -EINVAL;=0A=
+ =0A=
+ 	if (nsops > SEMOPM_FAST) {=0A=
+-		sops =3D kvmalloc_objs(*sops, nsops);=0A=
++		gfp_t gfp =3D nsops > SEMOPM ? GFP_KERNEL_ACCOUNT : GFP_KERNEL;=0A=
++=0A=
++		sops =3D kvmalloc_objs(*sops, nsops, gfp);=0A=
+ 		if (sops =3D=3D NULL)=0A=
+ 			return -ENOMEM;=0A=
+ 	}=0A=
+-- =0A=
+2.43.0=0A=
+=0A=
