@@ -1,126 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=96.67.55.147
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792785870;
-	b=HrdSil7MhWArHnDfRLswQVRjkzKqMHvtjerASIo1mKUlP/xLCaetNZW+jyDWNBJTVm77
-	 XTx2gCdMSWGf63m3+nzg+slgZ8bOmFDDx3Ky3nwUVa6Vgzb9al0mtTWqy716SpQXZjGCB
-	 nmmGf0pgdtee0Z92ZCpCOzPnN9Ke798lKEBd7ByMvZjS5RCJujuTYu7NCtpQzAyOI2rmy
-	 /wQiUd8fVVS/w/j439ZGIkJObTCQeknC85OwPywIttSv4tTCPqBRoOsPi26HjeapZZhvs
-	 UfZIs7ov49MDBb/u3FyW9lTbQBxxks9iVCni/Rv3u7zHVwkFJSKVzwD0wAApEmsPu5A==
+	t=1792785913;
+	b=bZBd6u8bjIxHLgz0+O2x3Yn2wh4ea1wu2IR2M+Zj7ROQFQ2fO8KantqtE2Hr+mHYKKZk
+	 yRLya8yFF9r8Mck11yFYsygJoiD/4+K3WP9ygHGUsFATT0FxwvwAInZ2afk6SS002JhLF
+	 UKJ6qNUnje+xPBukkEpFsliJa0N162RNnGGpRi2aAsH0z618tqLkj2KACfNSj2xTUxe/O
+	 L5+JUaKuyyiDupW1Q4aJ/euDBZR3dT68ozjS5jaoS0h+W4iPzwKRFS5brLL3ogMYS+6D3
+	 SuvFTVg84C0XPAW4Tw6qBoQiOD8/ZqmA3xPt6TGfQW8DdEUMaZGPTa1qWTYUs2Ag0IA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792785870;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Subject:From:To:Cc:
-	 Date:In-Reply-To:References:Autocrypt:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=L5AsRIiZMbrgA4PZqqlNr6o4NUAaZZjGSwOgBDqGUkk=;
-	b=GAYvWVzrZf82UgRv0LcXQuqu4gctCvd7TcyS65yAJvxsK695Q7PaJAyDWkSEaVWEJOu9
-	 v6rATK7KTvphmhjHcJNHXRAqC5Z6cH9QAnWZ30WU43m+/Ns/JKLezWtGPICZYJiL3Ix4u
-	 UqY/7Mpur+q4MVHhk1GZOCGa9AOc8YqxbGk6fW7n9qcnsqcQ90gFqqk+YhLZ0uh+ujh0B
-	 oIVm137et3zZw7ldQmaR6iS5LDIeK4IosQS0LMUhQeNcI+EgRLW0IAg9lfufEBwvn8sZp
-	 Nejg8u0LzQYBp8SkOfMwI3M1jxnIOBtj2Mv2vHeM/DD+OPp4CFkPOnc+tKqLvc7twsg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792785913;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References;
+	bh=NMpzoe28Li6scyvq7gG95vJno5EdAW6a0YsgQjZX2q0=;
+	b=KeyKytHOSKohge4GEa9yl2C8JQvGIxuGdIo78FrLv+JB0UHtw9yjoRtnkDV/xiOUT7GL
+	 QhW8zuNqwvyY9rOac5jlbBDkNQfT44ElVSNJ8TXn0qxd+lLs+e8SPP8jP4vQCzLstSbka
+	 MQtgS64HiDHXpM4WDjQ71sVH1YyPKIbbwqvBOHB0CA60V2PdUgNPcMc7C0TrtkhMdOz33
+	 DVpa+DLMH8SMXByyxJbqjLOmcLFwhQS0qq/Ux5Os1ARX31rAXO1XzX0n3OzwfuxAwIY2a
+	 uswGChTv7WXviCgHr4N5rl+LobQPAQtcLRH8gSxvgNHMwccCYScmwBsHCzxoz1tXXrQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=surriel.com;
-	spf=pass smtp.mailfrom=surriel.com;
-	dkim=pass header.d=surriel.com header.i=@surriel.com header.a=rsa-sha256 header.s=mail header.b=Kviwx26c;
-	arc=none smtp.remote-ip=96.67.55.147
-Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BGve7nPZ;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED745606A31B;
-	Fri, 23 Oct 2026 20:04:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ED745606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=surriel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=surriel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30CDE606A31A;
+	Fri, 23 Oct 2026 20:05:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=surriel.com header.i=@surriel.com header.a=rsa-sha256 header.s=mail header.b=Kviwx26c
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=surriel.com
-	; s=mail; h=MIME-Version:Content-Transfer-Encoding:Content-Type:References:
-	In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:Content-ID:
-	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-	:Resent-Message-ID; bh=L5AsRIiZMbrgA4PZqqlNr6o4NUAaZZjGSwOgBDqGUkk=; b=Kviwx2
-	6czWisXsriXBrkBD9a99LPzObI0uncUBqAkxbr0AxsGcfrYvF6TM7eENn+2X//B3fZWQZAkWyAZZz
-	0a1neBuP1wri6WTonSlsO6hqn7ogvS5EEKOg+TsfKZW+DkDDvpvPS9CjgkREH7pDUlY7aHgpjw5EO
-	r3nwcBCJI7/4wPgqwfIZ0BYeV/fHzlCCE5yO9x4m0k4QP89kZIlJO1k6uY2T8flV1POY6/CT7fdRa
-	mOEP+rpg9cZZOsKcszbuFTsXvZcjzY8+p2oBedFFecqcJEtLBqqzpnLl1A+NioHb1/wmV2IsLd0ob
-	TK8f3hBn6n8c+o8k1wXi9EJ7UZQA==;
-Received: from [2601:18c:8100:a0e0:2541:b86e:2586:d219]
-	by shelob.surriel.com with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
-	(Exim 4.99.5)
-	(envelope-from <riel@surriel.com>)
-	id 1xKLTn-00000006rxs-0kX8;
-	Fri, 23 Oct 2026 20:03:07 +0000
-Message-ID: <c6e62e80befa886fccd36d34a39cf56ea5b9c9c2.camel@surriel.com>
-Subject: Re: Path forward for Virtualized Swap?
-From: Rik van Riel <riel@surriel.com>
-To: Nhat Pham <nphamcs@gmail.com>, "David Hildenbrand (Arm)"
- <david@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
- Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, Michal
- Hocko <mhocko@kernel.org>,  Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
- Muchun Song <muchun.song@linux.dev>, Kemeng Shi
- <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>,  YoungJun Park
- <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>,
- "Lorenzo Stoakes (Oracle)"	 <ljs@kernel.org>, "Liam R. Howlett"
- <liam@infradead.org>, "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike
- Rapoport <rppt@kernel.org>, Suren =?UTF-8?Q?Baghdasaryan=EF=BF=BC?=	
- <surenb@google.com>, Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen	
- <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu	
- <weixugc@google.com>, Gregory Price <gourry@gourry.net>, Wenchao Hao	
- <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins	
- <hughd@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo	
- <tj@kernel.org>, Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Shuah
- Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, Meta
- kernel team	 <kernel-team@meta.com>, Linux Memory Management List
- <linux-mm@kvack.org>,  Linux Kernel Mailing List
- <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, "open
- list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
- <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
- Joshua Hahn	 <joshua.hahnjy@gmail.com>
-Date: Fri, 23 Oct 2026 16:03:05 -0400
-In-Reply-To: <CAKEwX=PCSyCEAqxeOH6CkCMu1eB3xUn3iz5XNuTbpDM3EmWYAg@mail.gmail.com>
-References: <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
-	 <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
-	 <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org>
-	 <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
-	 <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
-	 <aqgMCIOFi0dKx_6L@fedora>
-	 <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
-	 <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
-	 <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
-	 <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org>
-	 <20261014195354.GA371161@cmpxchg.org>
-	 <CAKEwX=Mwc+D+AN-B5T7p=80fqCDijdsiJjd6aN_3YMrEQjyvwQ@mail.gmail.com>
-	 <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org>
-	 <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
-	 <CAKEwX=PCSyCEAqxeOH6CkCMu1eB3xUn3iz5XNuTbpDM3EmWYAg@mail.gmail.com>
-Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
- keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
- eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
- Z/nl6IA8MDhSqyqdnTY8z7LnQHqq16jAqwo7Ll9qALXz4yG1ZdSCmo80VPetBZZPw7WMjo+1hByv/
- lvdFnLfiQ52tayuuC1r9x2qZ/SYWd2M4p/f5CLmvG9UcnkbYFsKWz8bwOBWKg1PQcaYHLx06sHGdY
- dIDaeVvkIfMFwAprSo5EFU+aes2VB2ZjugOTbkkW2aPSWTRsBhPHhV6dABEBAAG0HlJpayB2YW4gU
- mllbCA8cmllbEByZWRoYXQuY29tPokBHwQwAQIACQUCW5LcVgIdIAAKCRDOed6ShMTeg05SB/986o
- gEgdq4byrtaBQKFg5LWfd8e+h+QzLOg/T8mSS3dJzFXe5JBOfvYg7Bj47xXi9I5sM+I9Lu9+1XVb/
- r2rGJrU1DwA09TnmyFtK76bgMF0sBEh1ECILYNQTEIemzNFwOWLZZlEhZFRJsZyX+mtEp/WQIygHV
- WjwuP69VJw+fPQvLOGn4j8W9QXuvhha7u1QJ7mYx4dLGHrZlHdwDsqpvWsW+3rsIqs1BBe5/Itz9o
- 6y9gLNtQzwmSDioV8KhF85VmYInslhv5tUtMEppfdTLyX4SUKh8ftNIVmH9mXyRCZclSoa6IMd635
- Jq1Pj2/Lp64tOzSvN5Y9zaiCc5FucXtB9SaWsgdmFuIFJpZWwgPHJpZWxAc3VycmllbC5jb20+iQE
- +BBMBAgAoBQJSLd2lAhsjBQkSzAMABgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRDOed6ShMTe
- g4PpB/0ZivKYFt0LaB22ssWUrBoeNWCP1NY/lkq2QbPhR3agLB7ZXI97PF2z/5QD9Fuy/FD/jddPx
- KRTvFCtHcEzTOcFjBmf52uqgt3U40H9GM++0IM0yHusd9EzlaWsbp09vsAV2DwdqS69x9RPbvE/Ne
- fO5subhocH76okcF/aQiQ+oj2j6LJZGBJBVigOHg+4zyzdDgKM+jp0bvDI51KQ4XfxV593OhvkS3z
- 3FPx0CE7l62WhWrieHyBblqvkTYgJ6dq4bsYpqxxGJOkQ47WpEUx6onH+rImWmPJbSYGhwBzTo0Mm
- G1Nb1qGPG+mTrSmJjDRxrwf1zjmYqQreWVSFEt26tBpSaWsgdmFuIFJpZWwgPHJpZWxAZmIuY29tP
- okBPgQTAQIAKAUCW5LbiAIbIwUJEswDAAYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AACgkQznneko
- TE3oOUEQgAsrGxjTC1bGtZyuvyQPcXclap11Ogib6rQywGYu6/Mnkbd6hbyY3wpdyQii/cas2S44N
- cQj8HkGv91JLVE24/Wt0gITPCH3rLVJJDGQxprHTVDs1t1RAbsbp0XTksZPCNWDGYIBo2aHDwErhI
- omYQ0Xluo1WBtH/UmHgirHvclsou1Ks9jyTxiPyUKRfae7GNOFiX99+ZlB27P3t8CjtSO831Ij0Ip
- QrfooZ21YVlUKw0Wy6Ll8EyefyrEYSh8KTm8dQj4O7xxvdg865TLeLpho5PwDRF+/mR3qi8CdGbkE
- c4pYZQO8UDXUN4S+pe0aTeTqlYw8rRHWF9TnvtpcNzZw==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.60.2 (3.60.2-2.fc44) 
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BGve7nPZ
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 813B61F01825;
+	Fri, 23 Oct 2026 20:05:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792785912;
+	bh=NMpzoe28Li6scyvq7gG95vJno5EdAW6a0YsgQjZX2q0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=BGve7nPZbSwa2LqTQNHByaYKCoffL8elEuhk+jlz/gI5i7hV1ZK7iwu/qtmG9KnfW
+	 qDLQ6u36lWhx7UicKyDcMUNChfBFrWn3JenrDFldoBbRTNPnoVuGnXK7yry9/I+UhS
+	 MWE4pDnSM609ghIOhSw3yImpZyKuDOHWSrhjgRD5US80G6Qkq1oMwCM7PasP4Odoa5
+	 eWESoT+iBiqSqRyLeo/eyLiBZIlzhddfENhxpqe5rRVvDNGrCXD9ZfhommNweBCA6Y
+	 MohZtgivmb5EyOPKL9f0ST9iqF4qVtUezx3RIOK809+Ej3U/6BhD3Jc4as7eFyeM2/
+	 DlEx8t9aemyMg==
+Date: Fri, 23 Oct 2026 10:05:11 -1000
+Message-ID: <100602397eadeaae2e3206e1d9aae55e@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Wilson Felipe Pereira <wfelipe@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry@kernel.org>,
+ Nhat Pham <nphamcs@gmail.com>, Chengming Zhou <chengming.zhou@linux.dev>,
+ Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kselftest@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] selftests/cgroup: convert cg_read_key_*() helpers to s64
+In-Reply-To: <20261022042921.711624-1-wfelipe@google.com>
+References: <20261022042921.711624-1-wfelipe@google.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -129,58 +64,75 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
 
-On Fri, 2026-10-23 at 10:24 -0700, Nhat Pham wrote:
->=20
-> * Swapoff: this was brought up as a request, but we ran out of time
-> before we could discuss the motivations and use cases behind them.
-> Folks interested, could you explain as a follow-up?
+Hello, Wilson.
 
-This is one that I really don't understand.
+The following is a Claude-generated review.
 
-In my mind, we have vswap sitting as kind
-of a swap VFS between the rest of the system
-and the swap devices:
+On Thu, Oct 22, 2026 at 04:28:57AM +0000, Wilson Felipe Pereira wrote:
+> On 32-bit platforms, cg_read_key_long() relies on atol(), which returns a
+> 32-bit signed long. When values in memory.stat or event counters exceed
+> 2.14GB (such as on 32-bit systems with large memory), the parsed value
+> overflows and wraps into negative numbers, leading to subtle bugs and
+> false test failures.
 
-+-------+     +------------+
-| vswap |-----| swap cache |
-+---+---+     +------------+
-    |
-    +----------+-----------+
-    |          |           |
-+---+---+  +---+---+   +---+---+
-| swap  |  | zswap |   | zram  |
-| file  |  |       |   |       |
-+-------+  +-------+   +-------+
+On 32-bit, glibc's atol() saturates at LONG_MAX instead of wrapping:
+atol("3000000000") returns 2147483647. Event counters are counts, not
+bytes. No test reads a value near 2^31 from its cgroups, so the false
+failures are hypothetical. Can the description be updated to match?
 
-When a page is unmapped from userspace by the
-reclaim code, it goes into the swap cache.
+cg_read_long() and cg_read_long_fd() still use atol() and return long.
+They read memory.current, memory.peak and the swap counters, which the
+same reasoning covers.
 
-The vswap layer then decides where to store it
-at eviction time. This is configurable by userspace.
+> - Migrate helper functions (get_cg_wb_count(), get_zswpout(),
+>   get_zswap_incomp(), wait_for_writeback(), and cg_check_freezetime())
+>   and their callers to s64.
 
-If the zswap pool is shrunk, the vswap layer knows
-where to put the data next. There is no need to
-change page table entries to indicate that the
-data was moved from zswap to a swap file.
+In test_freezer.c, only test_cgfreezer_time_empty() is converted.
+test_cgfreezer_time_simple(), _populate(), _migrate(), _parent(),
+_child() and _nested() still store cg_check_freezetime() results in
+long and print them with %ld. In test_cpu.c, overprovision_validate()
+still computes "long delta" from two s64 usage values. A 32-bit build
+with -Wshorten-64-to-32 flags all of these.
 
-If we decide to disable one of the backing swap
-devices, the vswap layer can just move the data
-into the swap cache, and the page reclaim code
-can evict it into a different backing store, if
-needed.
+>     rebased on top of mm-stable to complete the s64 conversion across the
+>     cgroup selftests (including updating test_no_kmem_bypass() to s64).
 
-Using vswap as a swap VFS would also allow us to
-get rid of the page table and tmpfs scanning
-code we have in swapoff today.
+This doesn't apply to mainline. The test_zswap.c hunks depend on the
+test_zswap fixes in mm-stable, which aren't in mainline yet. The
+tcp_client() hunk in test_memcontrol.c conflicts with eb69e955de7b
+("selftests: cgroup: make test_memcg_sock check flushed sock stats"),
+which went in through the cgroup tree for v7.4. Can it be rebased on
+v7.4-rc1 once that's out?
 
-In that model, I really do not understand what
-"swapoff vswap" means.
+> +typedef signed long long s64;
 
-We cannot umount the VFS.
+This is the main problem. The KVM selftests build libcgroup too:
+kvm/Makefile.kvm includes ../cgroup/lib/libcgroup.mk and links
+cgroup_util.o into every KVM test, and access_tracking_perf_test.c
+includes cgroup_util.h. That build uses -I tools/include, and
+tools/include/linux/types.h has "typedef int64_t s64;", which is long
+on 64-bit.
 
-What exactly do people want to accomplish here?
+cgroup_util.c then fails with "typedef redefinition with different
+types ('long long' vs 'int64_t' (aka 'long'))", so none of the KVM
+selftests build on 64-bit. Maybe use int64_t with PRId64 from
+<inttypes.h> instead of the local typedef and %lld?
 
---=20
-All Rights Reversed.
+> -
+>  	ret = KSFT_PASS;
+
+The blank line removal is unrelated to the conversion, same for the one
+in test_cpu.c.
+
+> +		ksft_print_msg("debug: zswpout=%lld zswapped=%lld zswap_b=%lld\n",
+> +				zswpout, zswapped, zswap_b);
+
+The continuation line was aligned with the opening parenthesis before
+and now isn't.
+
+Thanks.
+
+--
+tejun
