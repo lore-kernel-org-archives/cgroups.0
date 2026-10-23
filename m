@@ -1,52 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.111
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792737172;
-	b=FooYi3Iiend43cSsEEsUm0f21GMCJCE++nyZMP0HgjXavYyqSa/jYMLA6906Uo/JQZod
-	 h5cMOkwws01LXLLjXQ9Ji7I2bqaU64jGCImvfqpETD7fIkKyPHfh6Dn1QOKeQHFx4Bbeq
-	 ByskjkYzdPgHo7gIZSMiUxR2rVIIkF2fLwwyvP8aMGB62uIYc3bpJX+cVe0U3yw2+1q1B
-	 7n+y8/IMZ6MdLdwDFZWI9KfYOiTfVG1SyVGJMkUk2+HOZzUvXswo8IYvQiosaDtxFkr8b
-	 m+tfK4TVGnwQuX1/osTHiaeDrKID5z1aeflPjlsMM8f8kpdiaqkEtSAHk4uITzdYg5g==
+	t=1792737867;
+	b=MIcv0fcOHvsqAJghcSZyqu/9ypVGDQZAE3M+tM0tW2P9e45JaF0c/KgrYF7DcwLngH+b
+	 rzOcPa2/4zxl+743CIQC/Kypx3K73sVXbeDJa0ErKye/XwbTp6+3Zn3AeTTb4Z0q0ysbm
+	 4a4ve7m56k9tiDcduKTC3APSXUHbFNRRG7DgsMMqbTAlGWnfL+EHU9j5TpHNB9b0IQJED
+	 /4G5LxuSMBjQcrnwqrqmT9ODH8PoGPIPdczliKGvLRHrSAFp3RrqlibJrLmAYST+f/qRk
+	 OwHjn14u8NLOC4jS3/MJhOpcwCjofU6Z/XUjSRYZI4oQM5vEm5U67tcsKeA+p6Osrag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792737172;
-	h=DMARC-Filter:DKIM-Signature:Subject:User-Agent:In-Reply-To:
-	 Message-Id:Mime-Version:Content-Transfer-Encoding:To:Date:Cc:From:
-	 Content-Type:X-Lms-Return-Path:References:X-Original-From;
-	bh=A/KkeSW0iJwwqF3dTal22x/IVE71KQpeS559w4ryEuE=;
-	b=hrmD+7/6DVCvIITU8BVpt9F5XyCTq3KImXc1QlTFpddVOkIP37+tVjgskf3XCY1YGB8D
-	 M1SBISpZQEpMk5in3YRsS7yFv6YL5PjpfMbqytmkKRnwyNP9d/O83A8d3yspv8sNZyWIK
-	 YoFrZc4xQC/Ro4OqU2vYbFEcjdSMwyStyCYevX9W99oyhW9/tAeIRceDe2lYTsuvR+gwL
-	 CmblDoQ34NtkcXoJOj8YbIexEHYIUrko6OdygDer/nU1Ak/Srb9BRbiV3T/RoV5nm9Jdv
-	 HR7PPNWTvBJBNaC3GBPiEQL4CppUU9BLfoq/3FyoXZEsm+a+CvhJMYgvgwKPKXXFnJA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792737867;
+	h=DMARC-Filter:DKIM-Signature:From:Content-Type:In-Reply-To:Subject:
+	 Date:Message-Id:X-Original-From:User-Agent:Cc:Mime-Version:To:
+	 References:Content-Transfer-Encoding:X-Lms-Return-Path;
+	bh=RRG6U99EKeZDnYNuky91yYiF/y3AS7tMgJRzNytuW38=;
+	b=g1RfcEfhPohvEhKCO0YXHuWdJfzImfPnLM5g1KJkQblUpi1PcHT+qcuAf3wzD96MHqqG
+	 UcK+tFlI7frKrTr07dfvyjVLiKGsPfkLVaeXVpe9uBGWyE8Tx4GlfvuMu6r4g+RrX4VME
+	 ZZdOHCcp8cbUWtXq03ArCX+q0xl+aM8xCLrp+dDNIeNfXoYkG0QH1LP17/9KwHwWzUv3o
+	 eYrMEbt/vtGTIFyqUJBiHr8u6N+c69QXT9yPKmyV5ZqbSp7tSqNaEH9FBxVZ9XvzdH5Pv
+	 e44AF5XZPeytixS7aJEcr6qrPIIhnORe4uhp2xWsmwZC33zBZKMwTcbTrb3gGoyvGPg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=bytedance.com;
 	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=ZunCuudQ;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b="cpys32/L";
 	arc=none smtp.remote-ip=209.127.230.111
 Received: from va-1-111.ptr.blmpb.com (va-1-111.ptr.blmpb.com [209.127.230.111])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C08F606A31A
-	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 06:32:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C08F606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C661F606A31F
+	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 06:44:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C661F606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=ZunCuudQ
+	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=cpys32/L
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1792737158; h=from:subject:
+ s=2212171451; d=bytedance.com; t=1792737860; h=from:subject:
  mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
  mime-version:in-reply-to:message-id;
- bh=A/KkeSW0iJwwqF3dTal22x/IVE71KQpeS559w4ryEuE=;
- b=ZunCuudQz4sc9UuX1ESe/ATn26vRhp++gXavBXjrKaHnJU56X9Rlw4VohHcBtmWcla3Hln
- 3Y6ph4OaBoN2Kvv19x6ZuQIlcqiA91Ekf5U315QjVc0Jy8TFADK+rx42J4kh2/hE5IQ6hX
- cLQt+QIUK1/x8wfJEpCt7XApTdjGJGjbtnXBMLqs7nfoZ7DyHYpSIetABw2PR3OwO+Hmt3
- RqkGcDfCbcQW+SpelP/ZMADf4Kfh64E6uuJ9rG7nKMuCFTfsMUPJczP/biADXu1nAYpT/J
- Cm7MCVlga+ealsDvcK5JvolBOmGANKCnBoKiyfi3sYoiLs96LdRtVu6L64XaBQ==
-Subject: Re: [RFC PATCH v3 bpf-next 0/5] BPF-based per-cgroup NUMA balancing mode selection
+ bh=RRG6U99EKeZDnYNuky91yYiF/y3AS7tMgJRzNytuW38=;
+ b=cpys32/LRolwEFjjMEMw/5ElImdKxW3aek0sC7tkC1CNPLkRKMJvICJUrECWh/hB0z30gw
+ O2MP7SyffSrZ+log0mKJ8xHHnjE7ajfrF8OUXcg08jUoiNFS+ZBOVIzgir2eZ3QVBuLAwS
+ Du83PYH0Bn1iHjxPqYpSOG1+8vnBVJmr08xntzi89e3Vd7dhZxBdkMQI7XwynjBqvxw/41
+ 62EhywzBgDtmsC6/YixqjbCOBGfR7DMX3zLMeUXX4V/SL6jFS6iWgT+g/sMtVuHugXjR7V
+ 4yLlBgQsZIKhr4Fi+HIGJ4tpRrUFlLtHI8NtZVASvZK4v9caO8Vq75AvaYG4uw==
+From: "Li Zhe" <lizhe.67@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <atoZpXaCRc7etPW8@gourry-fedora-PF4VCD3F>
+Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
+Date: Fri, 23 Oct 2026 14:43:57 +0800
+Message-Id: <ab7aa28c-ccf7-4bad-a871-4b05f7e9bfca@bytedance.com>
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
 User-Agent: Mozilla Thunderbird
-In-Reply-To: <20261019064157.29885-1-laoar.shao@gmail.com>
-Message-Id: <f68e7f9e-6037-4087-b7cd-a17ea4dba279@bytedance.com>
+Cc: <akpm@linux-foundation.org>, <david@kernel.org>, <ziy@nvidia.com>, 
+	<joshua.hahnjy@gmail.com>, <rakie.kim@sk.com>, 
+	<ying.huang@linux.alibaba.com>, <ljs@kernel.org>, <mhocko@suse.com>, 
+	<muchun.song@linux.dev>, <roman.gushchin@linux.dev>, 
+	<shakeel.butt@linux.dev>, <weixugc@google.com>, 
+	<cgroups@vger.kernel.org>, <linux-doc@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -56,144 +67,54 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+To: "Gregory Price" <gourry@gourry.net>
+References: <20261019141401.11927-1-lizhe.67@bytedance.com> <atY-LD2AzCYATRii@gourry-fedora-PF4VCD3F> <30457046-a662-4ff7-a6a8-100398d7a806@bytedance.com> <179264138036.2549665.17429111144570830454.b4-reply@b4> <9b715272-3ed9-42da-a6ae-467e8ae00c0b@bytedance.com> <atoZpXaCRc7etPW8@gourry-fedora-PF4VCD3F>
 Content-Transfer-Encoding: 7bit
-To: "Yafang Shao" <laoar.shao@gmail.com>, <ast@kernel.org>, 
-	<daniel@iogearbox.net>, <andrii@kernel.org>, <eddyz87@gmail.com>, 
-	<memxor@gmail.com>, <mingo@redhat.com>, <peterz@infradead.org>, 
-	<juri.lelli@redhat.com>, <vincent.guittot@linaro.org>, 
-	<akpm@linux-foundation.org>, <david@kernel.org>, <gourry@gourry.net>, 
-	<tj@kernel.org>, <hannes@cmpxchg.org>, <mkoutny@suse.com>, 
-	<shakeel.butt@linux.dev>, <roman.gushchin@linux.dev>, 
-	<yu.c.chen@intel.com>, <zhao1.liu@intel.com>, 
-	<tim.c.chen@linux.intel.com>
-Date: Fri, 23 Oct 2026 14:32:08 +0800
-Cc: <bpf@vger.kernel.org>, <linux-mm@kvack.org>, <cgroups@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>
-From: "Li Zhe" <lizhe.67@bytedance.com>
-Content-Type: text/plain; charset=UTF-8
-X-Lms-Return-Path: <lba+26adaff84+45ab06+vger.kernel.org+lizhe.67@bytedance.com>
-References: <20261019064157.29885-1-laoar.shao@gmail.com>
-X-Original-From: Li Zhe <lizhe.67@bytedance.com>
+X-Lms-Return-Path: <lba+26adb0242+06f775+vger.kernel.org+lizhe.67@bytedance.com>
 
-On 10/19/26 2:41 PM, Yafang Shao wrote:
-> The Problem
-> ===========
+On 10/22/26 10:11 PM, Gregory Price wrote:
+> On Thu, Oct 22, 2026 at 05:43:49PM +0800, Li Zhe wrote:
+>> On 10/22/26 11:56 AM, Gregory Price (Meta) wrote:
+>>
+>> So userspace cannot rely on one write to memory.reclaim to produce a
+>> final per-node distribution. The intended usage is a feedback loop: the
+>> controller observes the memcg's resident distribution, chooses the source
+>> nodes it wants to relieve, applies source-scoped reclaim pressure,
+>> observes the new distribution, and iterates.
+>>
+> I think the critical question is what CAN userspace rely on?
 >
-> In our large fleet of Kubernetes-managed servers, NUMA balancing has
-> been historically disabled globally on each server. With the increasing
-> deployment of multi-socket AMD EPYC servers, cross-NUMA access has
-> become a critical performance issue, which made us reconsider enabling NUMA
-> balancing to address it.
->
-> Enabling NUMA balancing globally is still not acceptable since it can
-> introduce latency spikes for latency-sensitive workloads. What we need is
-> to choose per workload whether NUMA balancing runs at all, and which mode
-> it runs in. A latency-sensitive service wants NUMA balancing disabled,
-> while a batch service wants its PMEM-resident memory promoted when hot
-> without paying for scheduler-driven migration. No single global setting
-> serves both.
->
-> The Design
-> ==========
->
-> This series introduces the fine-grained per-cgroup NUMA balancing
-> control. It grows out of Tejun's suggestion to store the existing
-> NUMA_BALANCING_* bitmask per cgroup and expose it through BPF kfuncs.
-> cgroup::numab_mode holds the request: NUMAB_FOLLOW_SYSTEM (-1) defers
-> to the global sysctl state, anything else is a bitmask.
-> bpf_numab_set_mode() writes a request, bpf_numab_get_mode() reads the
-> combined request of the cgroup and of every ancestor back. The hot
-> paths walk the same chain at read time behind a static key, so while no
-> cgroup makes a request the overhead is one patched-out branch.
->
-> An opt-out wins and binds the subtree: a DISABLED request anywhere in
-> the chain opts the cgroup's tasks out entirely. Otherwise the requested
-> bits OR together and the kernel reads them independently, the way
-> kernel.numa_balancing reads them, so a combined NORMAL|TIERING engages
-> both modes. A DISABLED request only speaks for the cgroup's tasks,
-> never for its memory, which follows the remaining requests of its
-> ancestors.
->
-> The cost of the additive combination is that an ancestor cannot cap
-> tiering short of a full opt-out: a descendant's TIERING request
-> re-engages promotion for its own memory, and promotion is the mode that
-> consumes the shared fast tier.
+> We can make a bunch of feedback loop interfaces, but there's no
+> guarantee they'll actually be useful.
+
+The reliable part I currently want to claim is narrow: userspace can ask
+memory.reclaim to apply reclaim pressure to memcg memory resident on the
+selected source nodes. It should not rely on a single write to produce a
+final net per-node footprint. The existing memory.reclaim interface is
+also a best-effort reclaim request rather than a deterministic placement
+primitive; this patch only adds a way to select where that reclaim
+pressure is applied.
 
 
-I am not sure that this matches the usual cgroup hierarchy semantics.
-If promotion consumes the shared fast tier, why is a descendant allowed
-to re-enable TIERING when an ancestor cannot cap it short of a full
-opt-out?
+>
+>>> At the very least i think you need to add details in your cover that
+>>> demonstrates the process of doing something like per-node resident
+>>> ratios, and show that it works as you intend.
+>> Agreed. I will update the cover letter to make this model clearer. I
+>> will also make clear that source=nodes is not a final net per-node
+>> footprint guarantee and does not change memory.reclaim completion
+>> accounting.
+>>
+> To be clear, I think not just making it clearer, but if you can show
+> some tests that demonstrate the reliable behavior of the interface
+> extension under different scenarios - that would be compelling.
+
+
+That makes sense. I will run more detailed tests across different
+scenarios and include the results in v2.
 
 Thanks,
 Zhe
 
 >
-> The readback contract is worth spelling out: bpf_numab_get_mode()
-> returns the combined request of the cgroup and its ancestors, and the
-> kernel reads it the same way it reads a single request, each bit
-> independently as kernel.numa_balancing does, so a combined
-> NORMAL|TIERING engages both modes. When any cgroup in the chain makes a
-> request, the value read back is the mode in effect for the cgroup's tasks;
-> when none does, the readback is NUMAB_FOLLOW_SYSTEM (-1) and the sysctl
-> decides. The answer speaks for the cgroup's tasks only: its memory follows
-> the remaining requests of its chain when it opts out, and that folio-side
-> view is not exposed by the kfuncs. These are deliberate simplifications;
-> both can be revisited if callers turn out to need them.
->
-> The sysctl's own documentation is untouched; the override is documented
-> where it lives, in the CONFIG_BPF_NUMAB Kconfig help and the kfunc docs.
->
-> The override was measured with schbench, 384 workers, on a two-node
-> 384-core machine. Whatever kernel.numa_balancing is set to, a cgroup
-> request puts the cgroup at the throughput of the equivalent
-> system-wide setting, within a fraction of a percent: the override
-> itself costs nothing measurable, performance follows the effective
-> state alone. The two states themselves differ by less than a percent
-> under this load.
->
-> Changes
-> =======
->
-> RFC v2->RFC v3:
-> - The struct_ops interface is replaced by two kfuncs, following
->    Tejun's suggestion.
-> - Improve on the function naming and simplify the code (David)
->
-> RFC v2: https://lwn.net/Articles/1099962/
->
-> RFC v1->RFC v2:
-> v1 keyed the hook on the memory cgroup and temporarily embedded the cgroup
-> id into the struct-ops value, because the cgroup struct_ops integration was
-> still under development. v2 attaches through the cgroup struct_ops support
-> that has since landed in bpf-next, keys the task surface on the task's
-> cgroup and the memory surface on the folio's memcg, and adds the
-> memory-tiering mode alongside enable and disable.
->
-> RFC v1: https://lwn.net/Articles/1054030/
->
-> Yafang Shao (5):
->    sched: fix stale get_pref_llc() stub for !CONFIG_SCHED_CACHE
->    sched: use static_branch_likely() for the NUMA balancing tick check
->    sched: add helpers for numa balancing
->    sched: add BPF-based per-cgroup NUMA balancing mode selection
->    selftests/bpf: add tests for the numab kfuncs
->
->   include/linux/cgroup-defs.h                   |  10 +
->   include/linux/sched/numa_balancing.h          | 149 ++++++++++++
->   init/Kconfig                                  |  20 ++
->   kernel/cgroup/cgroup.c                        |  14 ++
->   kernel/sched/bpf_numab.c                      | 195 +++++++++++++++
->   kernel/sched/build_policy.c                   |   4 +
->   kernel/sched/fair.c                           |  33 +--
->   kernel/sched/sched.h                          |   1 -
->   mm/memory-tiers.c                             |   9 +-
->   mm/mempolicy.c                                |   3 +-
->   mm/migrate.c                                  |   7 +-
->   mm/vmscan.c                                   |   6 +-
->   .../selftests/bpf/prog_tests/bpf_numab.c      | 227 ++++++++++++++++++
->   tools/testing/selftests/bpf/progs/bpf_numab.c |  32 +++
->   14 files changed, 681 insertions(+), 29 deletions(-)
->   create mode 100644 kernel/sched/bpf_numab.c
->   create mode 100644 tools/testing/selftests/bpf/prog_tests/bpf_numab.c
->   create mode 100644 tools/testing/selftests/bpf/progs/bpf_numab.c
+> ~Gregory
