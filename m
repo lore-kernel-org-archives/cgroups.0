@@ -1,65 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1792785666;
-	b=VNhpN4hR7lWM+njwkOmbe9OJ794OysBhZmQnB9gzCiOmufcgvldxBW5aiP6FNToava2N
-	 U3FnYUSdApIoLkmcu7eKLvRH+55Vy6zaNRfvYLUhOYpBxOhKHugi5nTbIPnj0P4KeiDlB
-	 TkbUiABRHa6BpxBy2xB3VnY7shMYyiAaa1BzkI02NU/4GC8b25MAxKIHKL0oQlieuc3Mv
-	 1KBVCySnbFFTwl7lIIlz2xz1tRJsPpQe5ytlW24Kx0thiUfxaisXgGPWu3glKXvgBBNmu
-	 46abiM67WhHLkz7SQkMMCWFgm8PuDkWGeS/y6Hw23vzVns0+0CPwJQ9xizt+yIP2CiA==
+	b=O9knuNCUy6iXXrYug4Cq8aUNKnYf4gWcBoWuh+YCT0lj5IF6NYP0Mi1I/6J3kvsXn8PG
+	 2YggzXZg1JiEpZtwzxvNhQMo0XDlfSBIoQLX9CxiIZcxWg+laG/kHKxKYtd8IpDs34YOx
+	 P7LaiOBaSmZzLYCoFyanHn3iD0IZKTN+Ldvvqmx8jBGpvIBUzJAgILxxoNVDf/P3Si06y
+	 LswrQWBmIdQbi+6fIILUEQI3txdKNACZJYIlnUKpqdD3Y60FgCS9SoV6HXzzgtqB0Es40
+	 yQmnB3qGSL74U7/H1tg6AozKzsS19xKt2oxi+SpRIe54O+b8rnpIKEFXl/QlOwkbt9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1792785666;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=eHJlwnQsKCIXal/ZPY0INEZh4Dk/VmnivrDCPE+YXYQ=;
-	b=zJJ5Ru4aIJxX6QI/PflGpVYQlgy/4zD5HM4caWh6tEPhwCN3akXuriKD8rsp9UtuffPr
-	 D8WaGo/LFu0jV8Xefs2SNF8melXzr6Ctcyzla8rfeOayJQY6X6+XgIdYTpmRti0UgWELU
-	 8gno0v1W0j/JualhNY9G8AlDKsMd8HRx1nbBfPcCH2bl7ffK0GAB3n0pudDSyBxmSY3d5
-	 0kgkzFyMiHm5YtAiCNW7gSaUXzuoy31o8c0Ok/rtKzkofDw9xJ88bUWk485O98KSwWvfP
-	 QhmJmwNPJQRM/81VV0xCKTgzcnqLxKWrmX3p1qZEGmnbKdjdF+g7cXzzNhD8OtRZKHQ==
+	bh=41akheXLDiu5sa/hLvnKGPpvOk6X/oqZPDwHABeQ4+A=;
+	b=p4/a1Cep9z5VPrdJERmdddohW0cbzgFHaWQDhu8ZpQAa9K9g8sFOo5XNdqMgXEBThzyf
+	 o68u6sb9os6l70ZDAw2Yxuu9ZCEhZyKzYeem1d2UNTSeMKUxnq3qL4yxdMxuXVKwSlTJX
+	 j3jehIBWO5r9sNmJI6InFCwmMkD3yyYfIYy1aEgSU2mQRrZhEglTdXL3NG/NZ/z+j5p+Q
+	 qD4ENSjc9QsJyDzxmSHtEu8xXiDU8j456x2H2CHnBtuHSS92M+RlmZxsoKj6q8u9RO1Fb
+	 t4pH1ufbchOK1oRwqUHqV+jawCXElH3w7NXoGlxtXVf4Lycrf36KZQ8+SsBXSGZTJwg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=C90uZvp+;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZdI9ATcT;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 914C860A2628
-	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 20:01:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 914C860A2628
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A5A606A32C
+	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 20:01:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29A5A606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=C90uZvp+
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZdI9ATcT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
 	s=mimecast20190719; t=1792785664;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=eHJlwnQsKCIXal/ZPY0INEZh4Dk/VmnivrDCPE+YXYQ=;
-	b=C90uZvp+bHfKhv0I64mCynAPyYFjLFcxsFThBTyYE5Kfn6QpUQ4HfhmKQwC0brctBz9rYq
-	4qrV1ZAk7MDB/B9Ggu0xKHghPC/j7myQDsgz5BGqDKc7xTmYVG2WtK8AgobdDiuZghDDAu
-	kAb4fjjxA7EYNz2JlIhDUopJOCUcNg0=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+	bh=41akheXLDiu5sa/hLvnKGPpvOk6X/oqZPDwHABeQ4+A=;
+	b=ZdI9ATcTvu+C70tP4XE9Jo7K5btDJqDlhLLWwxoyVwC4LTNU94itcZe+qxvFu5senlPLPc
+	gxcVklGB4asM3rbXbt8e6rLjJbBns69AVPyTY8Dw2++/QqeMIxS5TBlHEDUIr5BTi9aS01
+	ooJrRjwVwUtDoHipSyGIkUBvajH5uiM=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-88-2Vp7OvzDNuGPjlUHqJgHFw-1; Fri,
- 23 Oct 2026 16:00:59 -0400
-X-MC-Unique: 2Vp7OvzDNuGPjlUHqJgHFw-1
-X-Mimecast-MFC-AGG-ID: 2Vp7OvzDNuGPjlUHqJgHFw_1792785657
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-167-_pcV6CCsOoak6Q-1Wj-fKw-1; Fri,
+ 23 Oct 2026 16:00:52 -0400
+X-MC-Unique: _pcV6CCsOoak6Q-1Wj-fKw-1
+X-Mimecast-MFC-AGG-ID: _pcV6CCsOoak6Q-1Wj-fKw_1792785650
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id ACF5D1955BD0;
-	Fri, 23 Oct 2026 20:00:56 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 49BF41944B38;
+	Fri, 23 Oct 2026 20:00:49 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0FC721956088;
-	Fri, 23 Oct 2026 20:00:54 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4C8611955F25;
+	Fri, 23 Oct 2026 20:00:46 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Ridong Chen <ridong.chen@linux.dev>,
 	Tejun Heo <tj@kernel.org>,
@@ -72,9 +72,9 @@ Cc: cgroups@vger.kernel.org,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	Waiman Long <longman@redhat.com>,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH-next v2 05/10] selftests/cgroup: Check for a single range nohz_full CPUs before running test matrix
-Date: Fri, 23 Oct 2026 16:00:31 -0400
-Message-ID: <20261023200036.60560-6-longman@redhat.com>
+Subject: [PATCH-next v2 01/10] cgroup/cpuset: Find furthest isolated ancestor for invalidated isolated partition
+Date: Fri, 23 Oct 2026 16:00:27 -0400
+Message-ID: <20261023200036.60560-2-longman@redhat.com>
 In-Reply-To: <20261023200036.60560-1-longman@redhat.com>
 References: <20261023200036.60560-1-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -89,49 +89,110 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Commit 989ca25c10ca ("selftests/cgroup: Add tests for nohz_full
-housekeeping check") adds a nohz_full test matrix that will only be run
-when a nohz_full boot parameter cover all the CPUs beyond CPUs 0-7. The
-code looks for the first and last CPU numbers in the nohz_full sysfs
-file to determine if that criterion is met. However if there are holes in
-the range (i.e. has ",") the test matrix may be incorrectly run leading
-to unexpected test failure. Fix that by skipping "," and anything after
-that to make sure the first range will cover all the remaining CPUs.
+Commit 46b885416c27 ("cgroup/cpuset: Fix a missing isolated_cpus
+update in update_cpumasks_hier()") searches for the closet partition
+root ancestor to determine if the isolated CPUs in a to be invalidated
+isolation partition should be removed from isolated_cpus or not.
+
+As reported by sashiko, this method may not work when there is a deeply
+nested isolated partition hierarchy. For instance, Consider a nested
+hierarchy A0 -> A1 -> A2 -> A3 where all four are PRS_ISOLATED:
+
+  A0: effective_xcpus = 0-4
+  A1: effective_xcpus = 1-4
+  A2: effective_xcpus = 2-4
+  A3: effective_xcpus = 3-4
+
+When A1 shrinks its exclusive_cpus from 1-4 to 1-2, A2 will update it
+effective_xcpus to 2. A3 will find its closet partition root ancestor
+A2 and decides that its effective_xcpus 3-4 should be removed from
+isolated_cpus which is incorrect.
+
+Address this corner case by searching for the furthest isolated partition
+root ancestor instead to decide if its isolated CPUs should be returned
+to isolated_cpus.
+
+There are other pre-existing problems that will still prevent the
+above test case to work correctly. These problems will be addressed in
+subsequent patches.
 
 Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-Fixes: 989ca25c10ca ("selftests/cgroup: Add tests for nohz_full housekeeping check")
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Fixes: 46b885416c27 ("cgroup/cpuset: Fix a missing isolated_cpus update in update_cpumasks_hier()")
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ kernel/cgroup/cpuset.c | 36 +++++++++++++++++-------------------
+ 1 file changed, 17 insertions(+), 19 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index f4eb984752a0..3c9f67f91366 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -111,9 +111,9 @@ echo "" > test/cpuset.cpus
- #
- # If nohz_full CPUs have been reserved at boot time, they should not include
- # CPUs 0-7 as that may fail some of the test cases. On the other hand if the
--# set of nohz_full CPUs includes all the CPUs except 0-7, we can run a special
--# set of housekeeping CPUs exhaustion tests to see if the cpuset code will
--# reject them.
-+# set of nohz_full CPUs includes all the CPUs except 0-7 in a single range
-+# <first>-<last>, we can run a special set of housekeeping CPUs exhaustion
-+# tests to see if the cpuset code will reject them.
- #
- FIRST_NOHZ_FULL_CPU=
- LAST_NOHZ_FULL_CPU=
-@@ -124,7 +124,7 @@ NOHZ_FULL_CPUS=
- LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
- [[ -n "$NOHZ_FULL_CPUS" ]] && {
- 	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/[,-].*//")
--	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/.*[,-]//")
-+	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/,.*//;s/.*[-]//")
- 	echo "Boot nohz_full CPUs: $NOHZ_FULL_CPUS"
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 585a982249ad..1ca548cd50fd 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2156,22 +2156,20 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
  }
- [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" -le 7 ]] &&
+ 
+ /*
+- * ancestor_partition - Find and return the closest valid partition root ancestor
++ * furthest isolated_ancestor - Return furthest isolated partition root ancestor available
+  * @cs: the current cpuset
+- *
+- * Return: The closet partition root ancestor cpuset
++ * Return: The furthest isolated partition root ancestor available or NULL if
++ *	   not found.
+  */
+-static struct cpuset *ancestor_partition(struct cpuset *cs)
++static struct cpuset *furthest_isolated_ancestor(struct cpuset *cs)
+ {
+ 	struct cpuset *ancestor = parent_cs(cs);
++	struct cpuset *iancestor = NULL;
+ 
+-	/*
+-	 * The top_cpuset is always a valid partition root which will stop
+-	 * the loop if it is reached.
+-	 */
+-	while (!is_partition_valid(ancestor))
+-		ancestor = parent_cs(ancestor);
+-	return ancestor;
++	for (; ancestor; ancestor = parent_cs(ancestor))
++		if (ancestor->partition_root_state == PRS_ISOLATED)
++			iancestor = ancestor;
++	return iancestor;
+ }
+ 
+ /*
+@@ -2283,23 +2281,23 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 				 * For a to be invalidated isolated partition,
+ 				 * its isolated CPUs may or may not need to be
+ 				 * removed from isolated_cpus depending on if
+-				 * its closest partition root ancestor is a root
+-				 * or isolated partition. With a PRS_ISOLATED
+-				 * ancestor, the CPUs are checked against its
+-				 * effective xcpus to see if any of them needed
+-				 * to be removed.
++				 * there is a furthest isolated partition root
++				 * ancestor available. When such a PRS_ISOLATED
++				 * ancestor is available, the CPUs are checked
++				 * against its effective xcpus to see if any of
++				 * them needed to be removed.
+ 				 */
+ 				if (is_partition_valid(cp))
+ 					new_prs = -old_prs;
+ 
+ 				if (old_prs == PRS_ISOLATED) {
+-					struct cpuset *ancestor = ancestor_partition(cp);
++					struct cpuset *iancestor = furthest_isolated_ancestor(cp);
+ 
+-					if (ancestor->partition_root_state == PRS_ROOT)
++					if (!iancestor)
+ 						del_cpus = cp->effective_xcpus;
+ 					else if (cpumask_andnot(tmp->delmask,
+ 								cp->effective_xcpus,
+-								ancestor->effective_xcpus))
++								iancestor->effective_xcpus))
+ 						del_cpus = tmp->delmask;
+ 
+ 					if (del_cpus) {
 -- 
 2.56.0
 
