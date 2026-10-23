@@ -1,105 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792763347;
-	b=hmMpRe+lRkMYNY49eOA4KCRN9P86u027n6YI1VExWGwR89D6eWRl1fBeyNwz/rnwBQ5r
-	 FaovY5qwMRlIgMUtDkxBl1/0EBtLDkbLZwZTireWMubkrhrY1HPnUTv5MmkysnTlFM5Kn
-	 lHtLRdmX0Su6gSK3jLNQJDN4oRbIFlOopmiHQ8S55PDfsMEpNGhaau2d+ho+gxPf43l4w
-	 nLv8ZEAhtQirklLbn9c/qtoJ81F6CRSa6lGQxywCvOLp6wp5hwxQ8JQOfLhGAlGCcQ3M2
-	 9DJs3wvgPvVfeioTPXRBTu6I8xIAs6yeKpzX/ybAlTn+qTts5kITr9OAkkxhEkmS8hA==
+	t=1792767625;
+	b=qO+HK7su27uQjH3QKFvpOm9gjuzQsV4fQdjyLVl+qD8fcF8qk16xuFugS/0rjjkNnD2p
+	 vWBvKqTbFwAmQjT9ScMyNPGxQxjj2SnUH+dg74hlUF8oB3g2BdoUWgzDL7+fKLTKIkeWs
+	 2WnnbjfBon3pguQ0Ke2BTGrx+xEDbP3QbzuRHtb9eFpt+b03fDlJXvXnk7bGTNv9ter5g
+	 dKJYKCjpQ3qZc9k9aEkaJFcjk+pBUKUzAt9wgNl+6afVucoR7pvuT73a4oha8CbymcABZ
+	 +Ac4XAypRfrrZterfzejJ9EUDUvss/yTbPK/PMo/28A/t6FDAhXpBB4OgeZW2Twmy2w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792763347;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=lADM6itUBZwyMq6HdMlP1DiVjIl458v5XJJQdVmxpDU=;
-	b=ORmJOgaGfHr2Bv08whPo05FMfS5Se/k/BP/Ja0HwlzWeX9yM93fcmc7mP6OgOEVoCrUS
-	 YLn/d0Ah2LOGVqZ/yG1UJA4T6ts4wFviRytF2oLZlKW7jDJYtEmf6fkQlW81LOffNUeuR
-	 nPfWDXZ6w03at+Z7yftmX+vZ1JB2H8eFUohYVykLm89FOcJTV1IgLpo8DNbbll8K0SoIg
-	 OTSQT0WdX2F2N3th/sS7r1coVhOR3YwZVKJ613AozksFfu5jbYMB5OMdmTc2aa5YREF6/
-	 usFwFDAQrXn3FeJGTZw/FeRgT6Z72fGiIX+ouyfunTqlW61XYsKksgWurqAay8tY8Zg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792767625;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=7bmXE9eB7alT01S68+GEqtmKgfMF4L3T/lFunQRLqUY=;
+	b=ZUJxBXOnns9WIn+yeEkOZaDDgNfVzU7NUMjhVrq5ZnXTIS9U6YPoEJ5LKKlUymJhsqOn
+	 D+66SAY+JoLsY/DUf9lTRFg0KDjkB9ZFdI+806/r49leo7S97uMKnXZi7aVpEMXq9sjQH
+	 ez2k/eLS+H8Qy+k7Vq0iQge6CNBRqFU7l6+O+lkdK8loMZ9jChS+nYZzkEBtFhYqqprs7
+	 CzSJf6mMbvzN0QB6uLeaT6yrLA8P6a00zEo78b5cCr7Efp4T26kByTjj3TrlbKwLE0ZvV
+	 7pwlv6xQA+7vZpQG7JdyngnHBOvPpWOllgiv50/JJMApIgj3Bqkgnh6RNxgYLTd5B8g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Ck3SHypY;
-	arc=none smtp.remote-ip=209.85.128.54
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qz65DyB1;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAC14606A31D
-	for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 13:49:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BAC14606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73BBE606A32A;
+	Fri, 23 Oct 2026 15:00:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=Ck3SHypY
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a20be3b39eso1015685e9.1
-        for <cgroups@vger.kernel.org>; Fri, 23 Oct 2026 06:49:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792763345; x=1793368145; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=lADM6itUBZwyMq6HdMlP1DiVjIl458v5XJJQdVmxpDU=;
-        b=Ck3SHypYRrk1suhVZfWywGwBzo9joU0vXQYeXrJVBKm6jKF1uVNjRXOzHMq+ZnGzud
-         BAnYM0P8/uGJV1ZbiarlSGrZYQkNbZ+HSqIzgZ4oHpVizEMxuUEyP9yWJXn1flZa9Dp3
-         jjvWHQ/Js+9q3ws3qDXHgZwbL0I1OWsbnER4NZDZftOMRbHyu8e1Fpj1SqMsSNO3Bbez
-         BwTQhMuryU5ZrnnDMUaFlgwAs8TqP7UJ+7iN6J5b6XY6KBA8cKeVjnaZy5Dp8TO9VgdT
-         R4Gsv8EF6x0CD4cCfG0/22csmHUWlFHhEe6LN3HOCjO8W+v7QWYBCHLji0mlRLYbb8JG
-         KwYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792763345; x=1793368145;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=lADM6itUBZwyMq6HdMlP1DiVjIl458v5XJJQdVmxpDU=;
-        b=t5G4Mlf8I7MzhIt/QoOpXtn73dPYMVNq8i7cAWRFKGyDjGrJ9g8gaI2iSVZ2DJ2f+g
-         zElfmZy/kuoBhTYh6rfgnBAGemlVELKSEwVsU51IfsMkfJ29YxAOLFlcy6WNOugUK11e
-         A5Tl4nZkdVQcV8Qb564QhE1Vv4bRdlf6/KMBTI20S3Qmbh0+eW5v9qo3k6lWhO2YyPDi
-         ojSyx2WP+d0gCA0R0gNj9hbdtqY55sH2cDuvOQPpJ5Wrdt/qEC2xe+qiyOEa+ou2z6ET
-         ogiCfXvetkTijZrMYRmXtnpsp1dexKOjljuqV957HHY+NesbGs+Pch1MJWTG7pEGhNuf
-         675Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxpevRtQgBTHdm+c/pzzLY1FLdRGvfpC9IJqgULYTjbxSXKphi/kZr3rH21T6HAMorc6S++r8Dd@vger.kernel.org
-X-Gm-Message-State: AFq9FYIQk9BIdCNSCr6R1oEoIpZyCULReHhACjSRlPrKJTLB1qejFNbK
-	ck4zGApOvF4KEYAtyIRZKb0F9YnEUmJBP4WymzFynDwKxjVGvhk7PYjE
-X-Gm-Gg: AYBFou2no//HbCb8VnVLO2k+uIW8DcM038+kTWm4MTCiY3vJjiewCnafSpRsMysAlal
-	bkof01qXl9+Q/VnpLwPDBvx9+WgrcG6Zn2Hmmb4P6+x4Py6mi0wGjZ+1A7ooXwx8kR7UCKXvUVO
-	CVhEOC+Cr9UXDQAx8DKbCs8neuGWOax9+d61JqtaVusqkFYEoSUjvfn2eXupDhwFsgWiPRau6rC
-	PBGfs7W+fSWyuXPlA0sVi9F9otTuN7fzapbjHzhtR2Pa1fHtB+xArpP+7MtQYs1CiE9QSyb4PBz
-	7UhXBJP/R8+gFoIfdvtlLiJMGHpjQ/j+BEqIWzE1fnKvCLAM3bJQpVoobycTQCpFcZ/M8nCC0MY
-	inowAKLEAkBv2N4RNBZqkgpH6VqPfLxop6raAd0n7R9AbBoAHF1d2l0ydcSi7omPNUJCvUAwomB
-	EZ7mNlXcMrKvU3bKl7NG1ghQQw6LH9FWQAeNrDpL1SFJM3e7izKCudVC6ikOhQzQuMi9C0w5Dqr
-	e3jpXpFuOq9T1bgza/mKppQ4xfk8L4NaqFXse9tgyscM8rRrZpO6jpXWl2vxovCAFRHzcFfovU+
-	M3axfe4x
-X-Received: by 2002:a05:600c:5955:b0:4a1:b027:99ef with SMTP id 5b1f17b1804b1-4a211cb40f2mr28461605e9.2.1792763344664;
-        Fri, 23 Oct 2026 06:49:04 -0700 (PDT)
-Received: from scheduler.schedules ([85.100.66.184])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4a2a92a42adsm5970285e9.3.2026.10.23.06.49.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Oct 2026 06:49:04 -0700 (PDT)
-Date: Fri, 23 Oct 2026 16:49:00 +0300
-From: Kayra Cizmeci <kayracizmeci@gmail.com>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Josh Don <joshdon@google.com>, 
-	Vincent Guittot <vincent.guittot@linaro.org>, mingo@redhat.com, juri.lelli@redhat.com, 
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, 
-	vschneid@redhat.com, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org, 
-	jakub@okonski.org, longman@redhat.com, tj@kernel.org, hannes@cmpxchg.org, 
-	mkoutny@suse.com, cgroups@vger.kernel.org, jstultz@google.com, qyousef@layalina.io
-Subject: Re: [PATCH v2] sched/eevdf: Fix sched idle task group preemption
-Message-ID: <attitenhAXB86seS@scheduler.schedules>
-References: <20261019182622.1584454-1-vincent.guittot@linaro.org>
- <20261021131313.GM2823843@noisy.programming.kicks-ass.net>
- <CAKfTPtDOZ0=nrQe1-WSTamgU0qqdJVvD3KZPtnsqwwnE53BSKA@mail.gmail.com>
- <ati_o5c-SoiOp529@scheduler.schedules>
- <20261021145042.GQ2823843@noisy.programming.kicks-ass.net>
- <CABk29Nv2ZzB1KGEuPmx4VmxTJ6pKmikGMr8cvzzDhHZSKpkgvg@mail.gmail.com>
- <20261022114705.GW88198@noisy.programming.kicks-ass.net>
- <CABk29NviVUAK6B_deQ7qah8eABiCikbFpTwDEO2hdproGLdLwQ@mail.gmail.com>
- <20261022212150.GW2823843@noisy.programming.kicks-ass.net>
- <20261023132956.GD409038@noisy.programming.kicks-ass.net>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Qz65DyB1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD8A31F031E1;
+	Fri, 23 Oct 2026 15:00:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1792767625;
+	bh=7bmXE9eB7alT01S68+GEqtmKgfMF4L3T/lFunQRLqUY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=Qz65DyB1QDCzSVoTx6uXxOvKWmS2R8mZfO/NABTvk6rz5211L+k2sd4Q78SicBJf3
+	 XCIFj4bAp7tM5Y3XNl1UU5I7263BbMzbmnko44BmpQ3Qi4yBNFCAUJGkB1t6mrEO41
+	 aTQBhN+7NSKFyrjWT1ic+L6pwJcZYx8ZFqJQrn3eTC/eOmluVsO4F+oYmwIThkcswq
+	 csTH2oIj7EBF3ecJsX+wD2pHDOQJTrfyoAPo117BmBIvEjbYN1wLCTEyMiqR5vQo08
+	 kZMp7tzKASXXaved61t48KwGVAKSJcn6fTEa17pMahgcsanyhmFlzyrU+kzrwWj2MV
+	 9YJvxGqJ28AwA==
+Date: Fri, 23 Oct 2026 17:00:22 +0200
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Peng Wang <peng_wang@linux.alibaba.com>
+Cc: Anna-Maria Behnsen <anna-maria@linutronix.de>,
+	Ingo Molnar <mingo@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+	He Rongguang <herongguang@linux.alibaba.com>,
+	linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+	driver-core@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: Re: [RFC PATCH v2 1/2] tick/nohz: Add a policy dependency for full
+ dynticks
+Message-ID: <att2hiYaaHTIkzG9@localhost.localdomain>
+References: <cover.1792242566.git.peng_wang@linux.alibaba.com>
+ <58bc33cb018a2651e9cc3fc02baad7de4d543705.1792242566.git.peng_wang@linux.alibaba.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -109,154 +71,181 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20261023132956.GD409038@noisy.programming.kicks-ass.net>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <58bc33cb018a2651e9cc3fc02baad7de4d543705.1792242566.git.peng_wang@linux.alibaba.com>
 
-On Fri, Oct 23, 2026 at 03:29:56PM +0200, Peter Zijlstra wrote:
-> On Thu, Oct 22, 2026 at 11:21:50PM +0200, Peter Zijlstra wrote:
-> > On Thu, Oct 22, 2026 at 10:49:36AM -0700, Josh Don wrote:
+Le Sat, Oct 17, 2026 at 09:13:41PM +0800, Peng Wang a écrit :
+> Cloud hosts may pin vCPU threads one-to-one to host CPUs. At full
+> allocation this includes the housekeeping CPUs, which always retain
+> their non-idle tick. Operators want comparable performance for otherwise
+> equivalent vCPUs. Retaining the non-idle tick on nohz_full CPUs as well
+> avoids one placement-dependent difference in host tick interference.
+> With spare capacity, selected CPUs may stop the tick to reduce host
+> scheduler-tick interference with vCPUs.
 > 
-> > > Took me a bit to parse this double traversal. I think this is broken
-> > > for the clear side?
-> > > 
-> > > root
-> > >   |
-> > >  A ( 2 tasks)
-> > >  |
-> > >  B (3 tasks)
-> > > 
-> > > If we start out with A marked as idle, then we have
-> > > root: h_nr_idle = 5
-> > > A: h_nr_idle = 3
-> > > B: h_nr_idle = 0
-> > > 
-> > > When we clear, we'll first start with B and subtract 3...
-> > > root: h_nr_idle = 2
-> > > A: h_nr_idle = 0
-> > > B: h_nr_idle = 0
-> > > 
-> > > Then we go to A and try to subtract 5 leading to
-> > > root: h_nr_idle = -3
-> > > 
-> > 
-> > Argh. Yes, I seem to have gotten it wrong. I'll try again in the
-> > morning.
+> Allocation changes as VMs are created or destroyed while other VMs
+> remain running. A vCPU thread may be the only runnable task in either
+> state, so existing tick dependencies do not express this policy.
+
+I'm not sure I understand correctly what you are trying to solve.
+Are you saying that you want to keep the tick running when there
+is more than one vCPU per CPU? Because the scheduler already takes
+care of that.
+
 > 
-> Bah, so I can't operate cgroup well enough to actually set up the above
-> scenario. I think I'm stuck in cgroup-v2 mode which disallows this. I
-> should probably ask one of the AI thingies to write me a script.
+> Add a per-CPU POLICY dependency within the boot-time nohz_full set.
+> Permission defaults to enabled. The policy can be changed without
+> taking CPUs offline. Revoking permission uses the existing asynchronous
+> kick; granting it leaves all other dependencies effective. Preserve
+> POLICY across CPU hotplug and report it in tick_stop tracing.
 > 
-> Anyway, I think the below *should* work. It seems to behave for the
-> simple cases I did test.
+> Idle tick suppression, nohz_full membership, context tracking, RCU
+> offloading and housekeeping configuration are unchanged.
+
+This still keeps the overhead of nohz_full even if the tick stays on, right?
+(RCU nocb, kernel <-> user overhead, etc...). Isn't it a problem for you?
+
+Thanks.
+
 > 
-> This also fixes that init thing you noted, and yes, we can use this as
-> an optimization for the find_matching_se() -- although I still think
-> those semantics are weird, but whatever. If that's what people really
-> want.
-> 
+> Co-developed-by: He Rongguang <herongguang@linux.alibaba.com>
+> Signed-off-by: He Rongguang <herongguang@linux.alibaba.com>
+> Signed-off-by: Peng Wang <peng_wang@linux.alibaba.com>
 > ---
-> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-> index 0ab15f03cb94..731befb0f671 100644
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -8970,7 +8970,7 @@ void __init sched_init(void)
->  		rq->nr_running = 0;
->  		rq->calc_load_active = 0;
->  		rq->calc_load_update = jiffies + LOAD_FREQ;
-> -		init_cfs_rq(&rq->cfs);
-> +		init_cfs_rq(&rq->cfs, NULL);
->  		init_rt_rq(&rq->rt);
->  		init_dl_rq(&rq->dl);
->  #ifdef CONFIG_FAIR_GROUP_SCHED
-> diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-> index e6a3b516c703..9914498df0e2 100644
-> --- a/kernel/sched/debug.c
-> +++ b/kernel/sched/debug.c
-> @@ -1090,6 +1090,7 @@ void print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq)
->  	SEQ_printf(m, "  .%-30s: %d\n", "h_nr_runnable", cfs_rq->h_nr_runnable);
->  	SEQ_printf(m, "  .%-30s: %d\n", "h_nr_queued", cfs_rq->h_nr_queued);
->  	SEQ_printf(m, "  .%-30s: %d\n", "h_nr_idle", cfs_rq->h_nr_idle);
-> +	SEQ_printf(m, "  .%-30s: %d\n", "idle", cfs_rq->idle);
->  	SEQ_printf(m, "  .%-30s: %ld\n", "load", cfs_rq->load.weight);
->  	SEQ_printf(m, "  .%-30s: %lu\n", "load_avg",
->  			cfs_rq->avg.load_avg);
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index b5546cd27dba..2fcb01a514c5 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -15581,8 +15581,10 @@ static void set_next_task_fair(struct rq *rq, struct task_struct *p, enum snt_e
->  		hrtick_start_fair(rq, p);
->  }
+>  include/linux/tick.h         |  8 +++++--
+>  include/trace/events/timer.h |  3 ++-
+>  kernel/time/tick-sched.c     | 42 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 50 insertions(+), 3 deletions(-)
+> 
+> diff --git a/include/linux/tick.h b/include/linux/tick.h
+> index b121c5d53e308..8b250f245ff31 100644
+> --- a/include/linux/tick.h
+> +++ b/include/linux/tick.h
+> @@ -111,9 +111,10 @@ enum tick_dep_bits {
+>  	TICK_DEP_BIT_SCHED		= 2,
+>  	TICK_DEP_BIT_CLOCK_UNSTABLE	= 3,
+>  	TICK_DEP_BIT_RCU		= 4,
+> -	TICK_DEP_BIT_RCU_EXP		= 5
+> +	TICK_DEP_BIT_RCU_EXP		= 5,
+> +	TICK_DEP_BIT_POLICY		= 6
+>  };
+> -#define TICK_DEP_BIT_MAX TICK_DEP_BIT_RCU_EXP
+> +#define TICK_DEP_BIT_MAX TICK_DEP_BIT_POLICY
 >  
-> -void init_cfs_rq(struct cfs_rq *cfs_rq)
-> +void init_cfs_rq(struct cfs_rq *cfs_rq, struct cfs_rq *parent)
->  {
-> +	if (parent)
-> +		cfs_rq->idle = parent->idle;
->  	cfs_rq->tasks_timeline = RB_ROOT_CACHED;
->  	cfs_rq->zero_vruntime = (u64)(-(1LL << 20));
->  	raw_spin_lock_init(&cfs_rq->removed.lock);
-> @@ -15633,7 +15635,7 @@ int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
->  			goto err;
+>  #define TICK_DEP_MASK_NONE		0
+>  #define TICK_DEP_MASK_POSIX_TIMER	(1 << TICK_DEP_BIT_POSIX_TIMER)
+> @@ -122,6 +123,7 @@ enum tick_dep_bits {
+>  #define TICK_DEP_MASK_CLOCK_UNSTABLE	(1 << TICK_DEP_BIT_CLOCK_UNSTABLE)
+>  #define TICK_DEP_MASK_RCU		(1 << TICK_DEP_BIT_RCU)
+>  #define TICK_DEP_MASK_RCU_EXP		(1 << TICK_DEP_BIT_RCU_EXP)
+> +#define TICK_DEP_MASK_POLICY		(1 << TICK_DEP_BIT_POLICY)
 >  
->  		se = tg_se(tg, i);
-> -		init_cfs_rq(cfs_rq);
-> +		init_cfs_rq(cfs_rq, tg_cfs_rq(parent, i));
->  		init_tg_cfs_entry(tg, cfs_rq, se, i, tg_se(parent, i));
->  		init_entity_runnable_average(se);
+>  #ifdef CONFIG_NO_HZ_COMMON
+>  extern bool tick_nohz_enabled;
+> @@ -205,6 +207,8 @@ extern void tick_nohz_dep_set_signal(struct task_struct *tsk,
+>  extern void tick_nohz_dep_clear_signal(struct signal_struct *signal,
+>  				       enum tick_dep_bits bit);
+>  extern bool tick_nohz_cpu_hotpluggable(unsigned int cpu);
+> +extern bool tick_nohz_full_get_allowed(unsigned int cpu);
+> +extern int tick_nohz_full_set_allowed(unsigned int cpu, bool allowed);
+>  
+>  /*
+>   * The below are tick_nohz_[set,clear]_dep() wrappers that optimize off-cases
+> diff --git a/include/trace/events/timer.h b/include/trace/events/timer.h
+> index 3aa0608c63611..dff9579cd90eb 100644
+> --- a/include/trace/events/timer.h
+> +++ b/include/trace/events/timer.h
+> @@ -435,7 +435,8 @@ TRACE_EVENT(itimer_expire,
+>  		tick_dep_name(SCHED)			\
+>  		tick_dep_name(CLOCK_UNSTABLE)		\
+>  		tick_dep_name(RCU)			\
+> -		tick_dep_name_end(RCU_EXP)
+> +		tick_dep_name(RCU_EXP)			\
+> +		tick_dep_name_end(POLICY)
+>  
+>  #undef tick_dep_name
+>  #undef tick_dep_mask_name
+> diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+> index 87e2a7a875265..0d6fcc3736bae 100644
+> --- a/kernel/time/tick-sched.c
+> +++ b/kernel/time/tick-sched.c
+> @@ -375,6 +375,11 @@ static bool check_tick_dependency(atomic_t *dep)
+>  		return true;
 >  	}
-> @@ -15767,6 +15769,37 @@ int sched_group_set_shares(struct task_group *tg, unsigned long shares)
->  	return ret;
+>  
+> +	if (val & TICK_DEP_MASK_POLICY) {
+> +		trace_tick_stop(0, TICK_DEP_MASK_POLICY);
+> +		return true;
+> +	}
+> +
+>  	return false;
 >  }
 >  
-> +struct tg_set_idle_struct {
-> +	struct task_group *tg;
-> +	long idle;
-> +	int cpu;
-> +};
-> +
-> +static int tg_set_idle_up(struct task_group *tg, void *data)
+> @@ -561,6 +566,39 @@ void tick_nohz_dep_clear_cpu(int cpu, enum tick_dep_bits bit)
+>  }
+>  EXPORT_SYMBOL_GPL(tick_nohz_dep_clear_cpu);
+>  
+> +/* Read policy, not whether a CPU currently has its tick stopped. */
+> +bool tick_nohz_full_get_allowed(unsigned int cpu)
 > +{
-> +	struct tg_set_idle_struct *tsi = data;
-> +	struct cfs_rq *grp_cfs_rq = tg_cfs_rq(tg, tsi->cpu);
-> +	struct sched_entity *se = tg_se(tg, tsi->cpu);
-> +	int old_idle = grp_cfs_rq->idle;
-> +	long task_delta;
+> +	struct tick_sched *ts = per_cpu_ptr(&tick_cpu_sched, cpu);
 > +
-> +	grp_cfs_rq->idle += tsi->idle;
+> +	/* CPU teardown resets and restores this bit under stop_machine(). */
+> +	return !(atomic_read(&ts->tick_dep_mask) & TICK_DEP_MASK_POLICY);
+> +}
 > +
-> +	if (tg == tsi->tg)
-> +		return 0;
+> +int tick_nohz_full_set_allowed(unsigned int cpu, bool allowed)
+> +{
+> +	struct tick_sched *ts = per_cpu_ptr(&tick_cpu_sched, cpu);
 > +
-> +	if (!!old_idle == !!grp_cfs_rq->idle)
-> +		return 0;
+> +	if (!tick_nohz_full_cpu(cpu))
+> +		return -EINVAL;
 > +
-> +	task_delta = grp_cfs_rq->h_nr_queued - grp_cfs_rq->h_nr_idle;
-> +	if (!task_delta)
-> +		return 0;
+> +	/* CPU device removal may wait for an active sysfs callback. */
+> +	if (!cpus_read_trylock())
+> +		return -EBUSY;
 > +
-> +	task_delta *= tsi->idle;
-> +	cfs_rq_of(se)->h_nr_idle += task_delta;
+> +	if (allowed) {
+> +		tick_nohz_dep_clear_cpu(cpu, TICK_DEP_BIT_POLICY);
+> +	} else if (cpu_online(cpu)) {
+> +		/* The existing kick requests an asynchronous restart. */
+> +		tick_nohz_dep_set_cpu(cpu, TICK_DEP_BIT_POLICY);
+> +	} else {
+> +		/* Record policy without queuing irq_work on an offline CPU. */
+> +		atomic_or(TICK_DEP_MASK_POLICY, &ts->tick_dep_mask);
+> +	}
+> +	cpus_read_unlock();
 > +	return 0;
 > +}
+> +
+>  /*
+>   * Set a per-task tick dependency. RCU needs this. Also posix CPU timers
+>   * in order to elapse per task timers.
+> @@ -1533,6 +1571,7 @@ void tick_sched_timer_dying(int cpu)
+>  {
+>  	struct tick_sched *ts = &per_cpu(tick_cpu_sched, cpu);
+>  	unsigned long idle_calls, idle_sleeps;
+> +	int policy;
+>  
+>  	/* This must happen before hrtimers are migrated! */
+>  	if (tick_sched_flag_test(ts, TS_FLAG_HIGHRES))
+> @@ -1540,7 +1579,10 @@ void tick_sched_timer_dying(int cpu)
+>  
+>  	idle_calls = ts->idle_calls;
+>  	idle_sleeps = ts->idle_sleeps;
+> +	/* Preserve only the policy dependency across CPU offline/online. */
+> +	policy = atomic_read(&ts->tick_dep_mask) & TICK_DEP_MASK_POLICY;
+>  	memset(ts, 0, sizeof(*ts));
+> +	atomic_set(&ts->tick_dep_mask, policy);
+>  	ts->idle_calls = idle_calls;
+>  	ts->idle_sleeps = idle_sleeps;
+>  }
+> -- 
+> 2.47.0
+> 
 
-I think this works wrong again on here AFAICT :-):
-
-ROOT
-  |
-  A (3 Tasks)
-  |
-  B (2 Tasks)
-
-When we do A idle, it should be:
-
-B = 0, A = 2, ROOT = 5.
-
-We start from B, We add +2 to A. Now, B = 0, A = 2, ROOT = 0.
-Then we get to A. 5 - 2 is 3, we add h_nr_idle 3 and ROOT = 3.
-While it should be 5, no?
-
-Thanks!
-
-Kayra
+-- 
+Frederic Weisbecker
+SUSE Labs
