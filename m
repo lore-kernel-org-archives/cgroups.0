@@ -1,13 +1,13 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.12.2
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792725546;
-	b=DGk/Jzu+AcyNpSr3ktUHLjMZQYEU5Kdr7t+x6asXh6pszEQAvCz40F1kf19QVDbF8tLp
-	 7PFenxP4DGblb3VX6Sv+kTTZ7l/lqXb8/+WOUeQcl1T/K9Z7pbWXviYbFNCtbhj0Amudn
-	 FFeGxS5qX35aKPu4ZAQmBkIxKSA32+7B3ZVDRlr2/YomGgBnNQ18vTaZmmHqP4o6sDigP
-	 gwZbCUABan6I6mmWuebLidVv+Guy+pVt5ao1jI1L4nKf8+UThTCGawnOOZ/41H8YpWAVk
-	 q+4/6gsnTFjHo1Ljbw8k9C5e6S4Tb5674/1oxlr3Qr6B4dYIljlqT9pFaEFj2Jpv4vQ==
+	t=1792725547;
+	b=y2hrd+sVg68rejcyrxCfunY634JjPNK9VlG5n43NV+r9bA3IRZ86m3FP1A6fxYFULIL4
+	 QksegYtJiFzDMWZzGTeLKOdR9gzTSg9nbH9q6gXgHObGdvdkq5QLO6QpJdWwiOOP1MMWh
+	 J+wluAkzpmHvnHzZXsoWpEixauj3K0I8Ro/EAJSdvnishGRtQ2AD3EdgNxzgUNluzpAps
+	 eRXvHYcnKwQLKVV2ZocTRQF7a39dp1eN+AGo9mkmwdkVKuCsr6tLRH1V/+mLlc2dISt6Y
+	 5iooMiOZOQn0nt6PQGDFVIZoS5sKSUTYTC+9oPBQVfUGGcH29AxQJ4rHxwJrWAg/bLw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792725546;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792725547;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
 	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
 	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
@@ -25,50 +25,50 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-id:
 	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=HAvLrDOw/KD8tKGJG5DYUjyUVfEWJ3N4MoqyKYrJhKg=;
-	b=QhpPL3tRYMHA0rszx9icL42r8KOJBon6EpZGIdyCo3ciRYYoEULxNj/wJI+s1KEjlISj
-	 EJC5dxlQxiFzYNuRtW/K9yUtzOwX/xNLJ+Dr2nOOLWEFL8JEo90+CMs6KdKeuphUleTgk
-	 UpZEZ1DXETrFaVIvbb0Xpyj3KeqANJoge2Q87YeF36JSWdKHiQKiRbucTPCmTVKRkQ1gs
-	 1w3CG7cGk1v6+DdqGmyN2Vu8HdtL1UdAb+tO6lA4+xNvVL7EYzzL3M0qeUMd4HDkGlWpt
-	 fpOC8eiCliT56OiCZbScGnku+IzZbDWbABB5pp3Iqx3zaTvWdzw+4hs9aZuD7tnY8XQ==
+	bh=0JCYanH8hcSS4tau1i+r2BdXAet9Ro6m2E5vuWlOwus=;
+	b=Hio7u7PgsKNYWnDiSOBxXXBJ9sn4VxcVTD+LHU85fEs1IhKLHL6HdxxxSsAvYk26fE2k
+	 yok2GcakylfvARHsnd7wuwqyAIrA4PoiYfD+9eMM8svjj+FUPbhgq2g7Gu/7p0jD0x92x
+	 UELdW6X3YQizNLgVPRcwDlYcpEsprJrNJPfda2sUb6y5fFhAPLjBTbDTvQE7uVFq+2TKD
+	 MD9QLcw33ZZWIcdVtFVKa3MHvoCAu/L5IERWpNvGMaWWPoRgMOlOgbL1frcLke3lP2g+q
+	 0nFXfMzDCwzmYGclFVBHxu42LMIo6e/adoT7HCa3kv0HrlJH9WLafnEmgXAxVLoUXEw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=outlook.com;
 	spf=pass smtp.mailfrom=outlook.com;
-	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b="I12/8Yba";
+	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=M35hu6UN;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.12.2
 Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azolkn19010002.outbound.protection.outlook.com [52.103.12.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0762D606A32E;
-	Fri, 23 Oct 2026 03:19:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0762D606A32E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B434B606A33D;
+	Fri, 23 Oct 2026 03:19:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B434B606A33D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=I12/8Yba
+	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=M35hu6UN
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HgEvAKyeIVD0BdrMITfQyoIcDOJKC0YJ13agPgyvo1bigHSR1kQBsylmoaAMknu15EBiXUnZpXDkeq1bEqOKn8t6w5hvMT/Bkyi/zWhfwY5+hdHkwotpas+8tTd8lJbI/2yJGfUSYWqGdYslhRnYb3d8t+IJ73xlGzfJk3KLpOXMGqsKUL3HCD/vlEcHlJTWyLAOD4FeLYfQFetPJ/h29t3IULxvIDfU6g9HN7KMFpUEYkuUvPutQZ3IOKJFQPTNEW1s9EjBoTsSr2e1bmOaj9DakFDIyi6Me3ovKdnBNEF7NjAYKl1GsH9cSAcjyErHZQ5dZIZhXxzLq0pKOEWmIA==
+ b=G/+SFeCGzQ+oDuGlfX7oawBMTmdEGhjn27hnYdOfzd6FRODUVgbCmH+Iq27WI9d8xm/MsW4hwFBBg2O5JdRVjq4XVnme77zmjW/Iz4RNNKlHxB3GMXrovKIosUYpKFA1hYH7xW3xBW+zq5mvQvNWhh8aolmbvxyqp73ZTBwGTxjaf8sXhekJUJqF9lGjcw7dLnU3ERWZEqxVFyhZWvaqZlnXEjskpLtdrRt2CnkPPRsdzHKbW/+Iq1wxHsrsC0fMCXURjoTpxsYUlXXZVa6Zh1QH7AjOWG8j/0uCbVm532Zh3WRwXBKd9GenmVJZm1aBR5rS6S3DyC2qw6WtE2HOkg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=HAvLrDOw/KD8tKGJG5DYUjyUVfEWJ3N4MoqyKYrJhKg=;
- b=kNHJyODzHeOLJyDy12ir+8jDowWXEu+JisOKYtqxCu5oA3SqijtX85KcTEQn0QnBt9URs1N9yJ5JTnL7Z/XVd3HNW6MG6hNMKTRpj1HSILh6+ZvMesMzAjE4yXQple9/sn60dI9g7ROjUZssii8rIq1suDZ0wmHy/AAtDTIRyfg0YWywK2b+heoZ21fIYh4FjAaRLCooyjMB5o1Oy5CYT/asvBS3FiLPqSoyDgoSYtVVGfrq0hVur4QIl8qXo82SSQONjtPzj3V3XYgc7t2sqmxQgcfNkpUtkR5e1PnmMPv8rJm2pW1hpXKj0xB7+P4O6hclEC+MWXjo2QQG4Mc8Ow==
+ bh=0JCYanH8hcSS4tau1i+r2BdXAet9Ro6m2E5vuWlOwus=;
+ b=rnKuAFLmcRQzatzUd2f0Goi5op6Lzc0Gv3imM3TEZ6rgsTJ1k50VxvliUVDrZywzmLxy7WjANN9RnxroWHWMEqRbl614pUP3ATOwGAN0sOFeRcSUj4852NY95tfWvy1S85hALs+3d85UadKpXW1RGHiP9Uv4Ujab7ZaJeTCYr6R4jUeuWVaOg46do/IuOQV3JS1W2+Q1llcytrr89YnhY7PbxLMCrnGro67bdjrx3cIDfMZ6OhvvCtbjEpbtQAYxe7/z8xhWRs2UrSaLL3/P+Pnfea7lqy7SrfyXgD96A6w1RsNNdWiJRtOkraAILGdol8PffWmlcROVnzByY0Kk7Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
  dkim=none; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HAvLrDOw/KD8tKGJG5DYUjyUVfEWJ3N4MoqyKYrJhKg=;
- b=I12/8Yba9EFFbG4dIpms1LHVnBs5ae/R5KkKnhyD4LXo+p6rcWSGTVksSMcNIiSDhIPdq+jQaQZxVfJvB9YHX6z6yq6gaXdpvGFUnHaRKXsu4Nxr6XikxVcApjZn4u4qEhANBVC6SsJTpChxYAFFKoxJtmLnJTcxqp8gmHr/dpsJyFm24Kus758gZcGzl9eihFGt93h8GOwbIbaeTZk7xMD51PSYM+rYpqqi2hcnfo7dZoobK4rEoP/dH9cJ3PolDkCXLn/kPmG6uI9DNKal/AMr25RpfwLM0Xxjg8FYTTUBOlWE9xN6a+PExrfGcY3DfgB5OqO2+sg99d01DHN6qA==
+ bh=0JCYanH8hcSS4tau1i+r2BdXAet9Ro6m2E5vuWlOwus=;
+ b=M35hu6UN99yrRNdltxqOulOmbqitNRZYr2rN7tmxCXUOnhI7+jsfK9IA7F9rVZcqCG6pOuBecvJuCt5UkkeVYX1Soo8G1srhvlopzYFpKrYlQUDc5noqZlYydwe4rRSY/aV+5lf7htx9/0grAHv/27PdO6v2KS1HrO5uAvFDM0jg2xiDFfEPgGLSaqrazkz3S/pyrovjzxtuisMsrPthT/DV7SN/9NthJT0T+ZIc5cNHcBQEOjV7gCMa5CBMa2i58X/IzoYh7ajnbVY5sQo3yxibO/43UAMQnLstTmVshCXhyysXkDctX15R0i6j2wf2ZdoRt8O0RAmjfawq8a61DA==
 Received: from SA3PR05MB10385.namprd05.prod.outlook.com
  (2603:10b6:806:39d::17) by DS1PR05MB10613.namprd05.prod.outlook.com
  (2603:10b6:8:218::16) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.18; Fri, 23 Oct
- 2026 03:19:03 +0000
+ 2026 03:19:05 +0000
 Received: from SA3PR05MB10385.namprd05.prod.outlook.com
  ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
  ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0546.012; Fri, 23 Oct 2026
- 03:19:03 +0000
+ 03:19:05 +0000
 From: Yingjie Wang <x-professor@outlook.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Manfred Spraul
 	<manfred@colorfullife.com>, Alexey Gladkov <legion@kernel.org>, "Eric W .
@@ -81,14 +81,14 @@ CC: Yingjie Wang <x-professor@outlook.com>, Vasily Averin
 	<linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
 	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
 	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
-	"linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: [PATCH v2 2/3] ipc/sem: reject negative SEMOPM values
-Thread-Topic: [PATCH v2 2/3] ipc/sem: reject negative SEMOPM values
-Thread-Index: AQHdYp0/oGfigbLUF0qBSGFY6huXEw==
-Date: Fri, 23 Oct 2026 03:19:00 +0000
+	"linux-man@vger.kernel.org" <linux-man@vger.kernel.org>
+Subject: [PATCH v2 3/3] ipc/sem: remove obsolete SEMOPM fragmentation warning
+Thread-Topic: [PATCH v2 3/3] ipc/sem: remove obsolete SEMOPM fragmentation
+ warning
+Thread-Index: AQHdYp1AORTj4pQi9U+RHJ+GlDT8vg==
+Date: Fri, 23 Oct 2026 03:19:02 +0000
 Message-ID:
- <4fc7f5cb6bea186c5266415fcadb7e26c7738a85.1792724953.git.x-professor@outlook.com>
+ <cbd5dc183943d2177e5564f6e8ec92499836c7e5.1792724953.git.x-professor@outlook.com>
 References: <cover.1792724953.git.x-professor@outlook.com>
 In-Reply-To: <cover.1792724953.git.x-professor@outlook.com>
 Accept-Language: en-US, zh-CN
@@ -97,60 +97,57 @@ X-MS-Has-Attach:
 X-MS-TNEF-Correlator:
 x-ms-publictraffictype: Email
 x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|DS1PR05MB10613:EE_
-x-ms-office365-filtering-correlation-id: a9fbed8e-4b80-4895-3415-08df30b463e7
+x-ms-office365-filtering-correlation-id: 280a61ae-98f2-4bf8-0776-08df30b464b0
 x-microsoft-antispam:
- BCL:0;ARA:14566002|39105399006|22091999003|24121999003|12121999013|15080799012|38102599003|31061999003|22141099003|24021099003|41001999006|4140399003|19110799012|8062599012|8060799015|25010399006|12091999003|1602099012|10035399007|41105399003|40105399003|26121999007|102099032|440099028|4302099013|3412199025|1710799026;
+ BCL:0;ARA:14566002|22091999003|24121999003|15080799012|38102599003|31061999003|16051099003|24021099003|4140399003|19110799012|8062599012|8060799015|25010399006|52005399003|40105399003|26121999007|102099032|440099028|3412199025|1710799026;
 x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?4XMSmRMC90fSuNUyvU5Y9B4cYh/edaSlufX7AFUZx0IYtp0I9v7Db6cScm?=
- =?iso-8859-1?Q?EPT6T+bxI9IORQNzXRGpTaxc9mZ3tlOKOWW1ZvAOXav/lhIaL6pu0YLpgZ?=
- =?iso-8859-1?Q?/bTYxlC05GxL0YEYT2D4SKbz3h5acbX9qqYcRhJ9VwGMYgrxoTArCULJnD?=
- =?iso-8859-1?Q?6DCC95dKJZfgeQ00v6+5Wk4e3fyRxKTPrKdzpaHg1w3wX2l7UBj/0zXwfo?=
- =?iso-8859-1?Q?XIFHYG86wHgFsPfItytpGDJFwWlbPSJWl0c9FqcDrJAapvrmdm62wBZDzB?=
- =?iso-8859-1?Q?CGIU9cf22MAY5EQddWCi7aCJAzv5bajcSK0cM/qLc1syo245ZChWmKWqeq?=
- =?iso-8859-1?Q?GmVHd4d7ucegb1pQoFyJGyQa4OCPY04dcs6hmn4ZTjT4Tkw1CwCgWCsOKq?=
- =?iso-8859-1?Q?caKilJsWzZ4Q1vemSagAJIxVi/3UWxE4PImEgYgaeZNvXWSDAB5nJtQZVr?=
- =?iso-8859-1?Q?QWYKV6S3KbENKSu9MDeA+VSwKcjqbdNe+CR0cwY6k5ho9rKRgjRVrAlHhd?=
- =?iso-8859-1?Q?6JFwvxRNfUVxVhqaIPXh0VaymMJ20jraICaRzUF1hbpxdo2uFE1ictBQQ6?=
- =?iso-8859-1?Q?4cq1v6/oFPG5bwKbp1S3ix9LrTP8QxcWW3QDaddoM0TI8pOqLq7OeGaGoI?=
- =?iso-8859-1?Q?GJOMs2iCxTCnXS7UnJ7QPW7afQQLQzKBvC5QJx5ezDiYWDK0JLfDK3X6gh?=
- =?iso-8859-1?Q?3HXBKFmLTnunFy8s1oEA8OV4dIhCc+KQHiOl2YSGE5YftGiOGRm3SDv2uQ?=
- =?iso-8859-1?Q?hpzW7cgDB8n2s7Jv8uYk1vOHZNGwDtW1MeiiWFIA54S+bjn5OeocBcvwHO?=
- =?iso-8859-1?Q?5dX5TXOPowmIv79wwNYl4Njih8qNgzs8+79+DGo5eNMbfczMPuz/hFmxiC?=
- =?iso-8859-1?Q?KpyCBaNIkoQveAqqDe1ir+yoCGYC5NQ7ywgDGPq8cxbuyx1vDGgeNZLMFp?=
- =?iso-8859-1?Q?y7FYg2msm3ejVLEKKtXDMtYRl1BVR2HWL60yQ/aCoT66eAniQ/yQilYE6v?=
- =?iso-8859-1?Q?y/GqJXMqsfBmP+mbbmk8IK7Ms1GNvtIGicTNSihXjck370jJIZR2Hhnfr0?=
- =?iso-8859-1?Q?YFs7UAZ4FmdcfKWRx0MyWvsveWj5iqqJv9xns0aLnFTdLMHAWKjlxb3+eG?=
- =?iso-8859-1?Q?UFFvFruY/46l+QFgoxrVVb62F979JVBm26JAPhScr1rDd8gaW7dXcBCWeP?=
- =?iso-8859-1?Q?EmSiccSIjnOx82WuRu0nszXlPkdbso910kUtYLtjuK6PYaAxlrD8NTUmhh?=
- =?iso-8859-1?Q?aZBebzXd7lH+LpgY25BficvlEcmKHjXlR8vPBhH5J1uP/1ZA1N2vMwW1VT?=
- =?iso-8859-1?Q?bZFoAXvwwlKbw7rA0GrjAUADAPj/o9xt0NoXHG/j6gE4t/c=3D?=
+ =?iso-8859-1?Q?+EIy1WsC1GmahC+3b+LVOOQswnNhv+6DtESwfVho+vRCYPtKg0OUxLZAD2?=
+ =?iso-8859-1?Q?XVAkDZZ1bmw92zugSmW85mQVWp7gpkjtqkTaCYnva8JyCMsluStUAKi5Wg?=
+ =?iso-8859-1?Q?JAVldwslnTebQtMrQ3WbVKSmlmDS1v2KMu9mt+6wP88qCFxCoKpEU+WbK/?=
+ =?iso-8859-1?Q?1e62tXBM0bA+tvPpz3I49O5Vai40SvXj5FIoQL+5UIFNj498n1FYBYDNEh?=
+ =?iso-8859-1?Q?ZN7M0vSWr8p/SypIBnoccjysWDQDscrNhpoOTueVHjYy6nV0tT89LTbtB/?=
+ =?iso-8859-1?Q?6qXXmQlY58MPRkMvzX+2J7d6XazQgQA1Bzt6w8TeXySPIEr6Dzp2+KoeGj?=
+ =?iso-8859-1?Q?QL+L7O7+hII2lp36BnfCQy22+sPhGo06Z8d7tJwnf8k4fwqBdDP6u+iLtf?=
+ =?iso-8859-1?Q?fI9SlDaMhZyuFI+afFcXA8dWhr91hG5slGsWME/cgb+Ji1RY5ZRLyj/bdY?=
+ =?iso-8859-1?Q?u7Qawe9OykgD79tcpE2fChA+fIH8uSfvLL/xT4tpK8yzV3QCfTNMS9/Lb1?=
+ =?iso-8859-1?Q?EUdEjyE4ibQEcEmfwI1jIHVNxjvCc6hSuU51IdoHGX7Zi46NEBM5Fd60Ja?=
+ =?iso-8859-1?Q?cgtDmHa09APf/yP56cqevDpc1EiptC6hR8cd9RVkbsJnGCUnNajcp+en9O?=
+ =?iso-8859-1?Q?5b4eYPdNZM9lXTi6z55MLSDFkUEbLKcICYEPPpUna2C/G4bTliivAZQyz+?=
+ =?iso-8859-1?Q?PSjG/VZhGxM1jrp400v+wuCLeiiDxdLAlvWD79ofUhd/+biWV+9sWVz3o6?=
+ =?iso-8859-1?Q?BNJSAdU+Uh9nNKGaexBECras/fUQvM8Uv4x9j7lBEmNJzTVxKHVL1rDrxf?=
+ =?iso-8859-1?Q?eh489zCUf7oXZr38LkiQTMjIrKF10QUlGh+J3hDIWb8XuzaTu08bWmtZG2?=
+ =?iso-8859-1?Q?C0qMcjc7aUl5n3+F555EL6nOIfyAwoqbdv7oPzg/iskJB3XYpoRBtJ3aEB?=
+ =?iso-8859-1?Q?u9wFdQdJUH/qhN254GKzbdOu9ds3NbwqoeE15zdI2sZG3tJOiIPr8FK9Uq?=
+ =?iso-8859-1?Q?bDuc0p3bPMw0iCVQ5bo9EavzzF/C3f2qms8u1j+M7KjzCnKwIXWkvcJ/Oa?=
+ =?iso-8859-1?Q?ni/PY2tYmYPMr2CUAOJ/tM8xbKJN3X/lAfHtdoIH+DEsxWS06YkuxI/835?=
+ =?iso-8859-1?Q?WFrHnJ4T+6lYkAByGWPkXx5oXdyH2U6tCgkDY9aUP9nbkLyggi?=
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?4jEw4IDCPTliopUrZy2HT2nha8iODFT98rdP4tmO4ovmLr/MW1+VuZJ5SH?=
- =?iso-8859-1?Q?mdgh+s7Rr09iCf4VZVZFlMsPzxP9L96Pjfps1dkF1yCGX0b45s7dzfdTKr?=
- =?iso-8859-1?Q?zD/QLTl7les/OWOnTG4RLbfcZ5zU6RCTShYX55ZEobGcytC7XLHzjaPl12?=
- =?iso-8859-1?Q?DLGmR9I5C84MMFQ/dv4nHpGFhtrRAyqL+m0DIGRW63T7AxXt7+Q8MjDhQ5?=
- =?iso-8859-1?Q?L6M7vemOBU8KQs+0cO09G4EKoFZTOwASmww2HUN2O4/rELBxg3Dr8U8rxu?=
- =?iso-8859-1?Q?P4peKzzZWZlQBSGwJ3Gpc1kzc2oZc5mEsZaPnO/agACBprg1konALMVtyn?=
- =?iso-8859-1?Q?h2Bbph4RpUO8zARzfLrC06MGgy+Bu6+Ycqfa4Pcc3DVkQX/BHsTPHIPlIN?=
- =?iso-8859-1?Q?+GzqdEhPqi2J16z59gxWe1bzrHpk83LYUD1hvQsI8gmGcDo3rtm/9MUX/z?=
- =?iso-8859-1?Q?ZjlTf8XiBouMpn/B3s98GzO6t4fNZjUWUabHvsJNABclMdKm/HfjsR11gF?=
- =?iso-8859-1?Q?ZlrgR3NV4t1tulv1bSop4QXMIDs6rlCs3uUjHm91sJ0ozjBugKopkaTySm?=
- =?iso-8859-1?Q?dVE2y1IwUABM2ndFVUcezs0YMeAJAJt88RJ5xh99Itpkwx0r3omQnns9qU?=
- =?iso-8859-1?Q?m1HuuuoWPSfmHflFoL7inywB7bIUpoSpUCFAstQGEXQR5cwEk8OGlbnkQ/?=
- =?iso-8859-1?Q?5e6hXI6owXFKKO6ZBOT++uhNKq5NoNw0i7EcsDXhh0qS5+dvfh1LHxcEAj?=
- =?iso-8859-1?Q?DA4eSMMDw7XFOdbtbC/2D6eiU6rNCU8DU2hSYnHgDaNJ8c3nisuj+waR7q?=
- =?iso-8859-1?Q?5CuOTr1YqtdNJpXUHLGW6kT8EUh/63aLe+ItFEWR4Rf+fcKd/ji3VO+P35?=
- =?iso-8859-1?Q?UOLFO75SYUa9OsA353wtO40hxV48zpAbyD2FSA4Rg/GGr0P9QzJtz1bBK7?=
- =?iso-8859-1?Q?QgojbOU7yM0wIYkr1xLg+0FFWhIt0X94Sx6o7/JWJ18xaNiKPMoFoJb7sO?=
- =?iso-8859-1?Q?2G+gClgdhthgm6dgXq0IPbJ8sxzGA6pQ+yxJf/knbNf+tUr5vai0C+TIi8?=
- =?iso-8859-1?Q?bZEa9f9Qc63tfwEVBcqv7kQNsQVGL0Mj1oYRuk9ydPoWZWBWBISH/hbBfj?=
- =?iso-8859-1?Q?f6HbmY2eKtf8IrhSVIDhz2cwbRH1yx6JzLOMLLA15Ihk1FH36N0SKTmk6O?=
- =?iso-8859-1?Q?0CI1WyTuU/4rYj2Q3h94uN5CYlqpkjB+qioV2sV8iCj2+eaxsv1Ro8fLNZ?=
- =?iso-8859-1?Q?0G2rgihnXTCfaLGpbE0Z86Z41PR/XIdsfIKegNOD3QWw0BWAiW8QvCGSrJ?=
- =?iso-8859-1?Q?2RV4w0iCUAlyIaQ/5DFVKjmZCxLXoMktAcSsOcX2l+ZYgDSxUBUEzLCPCz?=
- =?iso-8859-1?Q?OWvrqw/SObEuKCfNZCu9CDgtocrP515XqzbmFMoOTkLwYYlGncwnET4A9W?=
- =?iso-8859-1?Q?H3KKymyXVfHZn9Gx?=
+ =?iso-8859-1?Q?hSLi5xRs8tXnI9/ZdFcNF5JveStganvXDWahGVmjb7t84LrG4ep5pWnkMR?=
+ =?iso-8859-1?Q?WnKzRokkUJK+Q7QFwvygL5MUZqVYt7nWlveQ2kFhyAgPqWLjjpMkF1SrjB?=
+ =?iso-8859-1?Q?+cpjQvMZX2y8b9bWLQvi6j+AZhwsc7uVgkrSSh6KxQ9svyRfTXQflxchAW?=
+ =?iso-8859-1?Q?Uqqp0JpQmodbaWoGPxkUIVhFFNcOVHEt1cQNaoK6kJQzMwgOdr2/7wd0QB?=
+ =?iso-8859-1?Q?mF/BaOdTHhxALqgHkO4uoJ1DW5D7Di/RQcMwjb885f+tx8x83F/2hdC44f?=
+ =?iso-8859-1?Q?hbuz8C/c4P53TjjbwC62YIIOjK8/9vw4k7RQMHlU7TsEhBlWGdsoJ4nXEs?=
+ =?iso-8859-1?Q?+njB/+UHAhWmbkxf8pjfAk4fvJwwLd7oxsompju3VIhMfVSwH0NnPW+0pg?=
+ =?iso-8859-1?Q?06+f9Rpa+THaj0VI2NVcvK1mFq/uVB2MHFLK0dThhKn97JokC7f1+25de8?=
+ =?iso-8859-1?Q?AUVzzX6/5AdfyvJljhbpwYzPywGHA8GILl9kcreTEprPyxluF32sBSgUFh?=
+ =?iso-8859-1?Q?F5UL+AZsy1ZNhSivQcQ7go0klmw29+sNBKAOoCiHHWbm5HxQPWLF51uQb9?=
+ =?iso-8859-1?Q?Ut8quJ2Gup9B4UrqX3KBv/zAhcBtmvJPO40eKCtvY6qrUUm2M7p2MO062P?=
+ =?iso-8859-1?Q?VOKKPC13TAeFZq1H/fdVBJqAcXFtWaZx/65M7LU2wWCq3gfsnP0gWu4epO?=
+ =?iso-8859-1?Q?HmqE9oyqD4Yu/RNc1h5IrRwfovVCLjEJqi87MlVgtiRFW+o3W6A/VPP26m?=
+ =?iso-8859-1?Q?hbDWFuqt4w3tc845pIjUKHrdFlwXSCJtVmHnsOfwDxFuguT7W4E7f9RIzA?=
+ =?iso-8859-1?Q?wei0j7JDdkirud5MlI0QdEhnPET1XY3IS8r7p9zYoHmd3b99hSqY0GSBTp?=
+ =?iso-8859-1?Q?olrvg30k1hMM9SHaJNjgFEBpbDpXlIV6OFIk5TrLig7NduiEJ11oVAQ7OX?=
+ =?iso-8859-1?Q?vM1OiacVfTgHp5mCLgtW5LvVF17nwurumd+QZ9JmrTJSoyBbfN7/Oueb44?=
+ =?iso-8859-1?Q?U3VQauMY56OKBzxIZoGDaeulmCVo8e/F3YVp41EP7RmplpuQivGxhFExSI?=
+ =?iso-8859-1?Q?CXTh8F1Y+HULALq1wWVw5Oae45ooe94ANJI0K2lWN6nP06YcjcfFgHn7Us?=
+ =?iso-8859-1?Q?y28FTJYZX7/Z67zNAksKkeinTlmS1ZxxGkrBQCndL3Q0l5uRGPUXBwq9vX?=
+ =?iso-8859-1?Q?1wBJpsVO2+TxvUiiPb7iNBlDQhufzWZfe1xblRGf3a5VNpS5TP2XLY+kCn?=
+ =?iso-8859-1?Q?A2WqK909DrTcFun2v994sXv8DilAMEXbMJs9WvtOGapZ4PW5xNAw+udUCG?=
+ =?iso-8859-1?Q?2BpttnFQLNj52SIF+M1dqdZkW3KT10p300kgRzBAUliQjYgT7gx6u14IBc?=
+ =?iso-8859-1?Q?QmuSGw8Kcd5jc9FDtpWViw+5Zxl68a8dNgFs1N3tElbcAOn3acDe17bRV1?=
+ =?iso-8859-1?Q?q/eK7BT3jUxrem1D?=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: cgroups@vger.kernel.org
@@ -166,171 +163,62 @@ X-OriginatorOrg: outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: a9fbed8e-4b80-4895-3415-08df30b463e7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Oct 2026 03:19:00.9940
+X-MS-Exchange-CrossTenant-Network-Message-Id: 280a61ae-98f2-4bf8-0776-08df30b464b0
+X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Oct 2026 03:19:02.0681
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS1PR05MB10613
 
-The SEMOPM field has been stored as an int while semop() receives an=0A=
-unsigned operation count since the beginning of Git history. A negative=0A=
-SEMOPM accepted by proc_dointvec() is converted to a large unsigned value=
+The UAPI comment advises keeping SEMOPM at or below 1000 because a larger=
 =0A=
-in the comparison, defeating the intended operation-count limit.=0A=
+operation array may fail due to physical memory fragmentation.=0A=
 =0A=
-Commit 50ec499b9a43 ("sysctl: allow change system v ipc sysctls inside ipc=
+Commit e4243b8062c1 ("ipc/sem: play nicer with large nsops allocations")=0A=
+changed the operation array to kvmalloc() specifically to support larger=0A=
+configured limits, with vmalloc fallback when a physically contiguous=0A=
+allocation is unavailable.=0A=
 =0A=
-namespace") made kernel.sem writable by IPC namespace owners without=0A=
-capabilities in the initial user namespace.=0A=
+Replace the obsolete warning with a description of the compiled-in=0A=
+default and the runtime sysctl.=0A=
 =0A=
-Parse writes against a temporary copy and validate SEMOPM and SEMMNI=0A=
-before changing the live settings. Hold a per-namespace mutex from the=0A=
-snapshot through publication so concurrent sysctl writers cannot publish=0A=
-stale values for fields they did not supply. Access the live fields with=0A=
-READ_ONCE() and WRITE_ONCE(), preserving the per-field access semantics of=
-=0A=
-proc_dointvec(). Read requests continue to use proc_dointvec() directly.=0A=
-=0A=
-Failed writes leave the live settings unchanged. Successful partial writes=
-=0A=
-change only the supplied fields relative to the latest locked snapshot.=0A=
-The writer mutex retains the existing per-field visibility for readers.=0A=
-=0A=
-Keep zero and positive SEMOPM values valid. Zero continues to reject every=
-=0A=
-non-empty semop() request.=0A=
-=0A=
-Suggested-by: Andrew Morton <akpm@linux-foundation.org>=0A=
-Link: https://lore.kernel.org/r/20261016155905.2a659b7bb7d61f33467a3263@lin=
-ux-foundation.org=0A=
-Link: https://lore.kernel.org/r/51c93c19-f1dd-455f-8698-6b1ee30eb630@colorf=
-ullife.com=0A=
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")=0A=
-Cc: stable@vger.kernel.org=0A=
 Signed-off-by: Yingjie Wang <x-professor@outlook.com>=0A=
 ---=0A=
- include/linux/ipc_namespace.h |  3 +++=0A=
- ipc/ipc_sysctl.c              | 38 ++++++++++++++++++++++++++---------=0A=
- ipc/sem.c                     |  1 +=0A=
- ipc/util.h                    |  7 +++----=0A=
- 4 files changed, 36 insertions(+), 13 deletions(-)=0A=
+ include/uapi/linux/sem.h | 7 +++----=0A=
+ 1 file changed, 3 insertions(+), 4 deletions(-)=0A=
 =0A=
-diff --git a/include/linux/ipc_namespace.h b/include/linux/ipc_namespace.h=
+diff --git a/include/uapi/linux/sem.h b/include/uapi/linux/sem.h=0A=
+index 75aa3b273cd99..cfd772f4c3396 100644=0A=
+--- a/include/uapi/linux/sem.h=0A=
++++ b/include/uapi/linux/sem.h=0A=
+@@ -71,16 +71,15 @@ struct  seminfo {=0A=
+  * The values has been chosen to be larger than necessary for any=0A=
+  * known configuration.=0A=
+  *=0A=
+- * SEMOPM should not be increased beyond 1000, otherwise there is the=0A=
+- * risk that semop()/semtimedop() fails due to kernel memory fragmentation=
+ when=0A=
+- * allocating the sop array.=0A=
++ * SEMOPM is the default maximum number of operations per semop() call. Th=
+e=0A=
++ * runtime limit can be changed through /proc/sys/kernel/sem.=0A=
+  */=0A=
+ =0A=
+ =0A=
+ #define SEMMNI  32000           /* <=3D IPCMNI  max # of semaphore identif=
+iers */=0A=
+ #define SEMMSL  32000           /* <=3D INT_MAX max num of semaphores per =
+id */=0A=
+ #define SEMMNS  (SEMMNI*SEMMSL) /* <=3D INT_MAX max # of semaphores in sys=
+tem */=0A=
+-#define SEMOPM  500	        /* <=3D 1 000 max num of ops per semop call */=
 =0A=
-index 12faca29bbb9c..c06568ccfca88 100644=0A=
---- a/include/linux/ipc_namespace.h=0A=
-+++ b/include/linux/ipc_namespace.h=0A=
-@@ -4,6 +4,7 @@=0A=
- =0A=
- #include <linux/err.h>=0A=
- #include <linux/idr.h>=0A=
-+#include <linux/mutex.h>=0A=
- #include <linux/rwsem.h>=0A=
- #include <linux/notifier.h>=0A=
- #include <linux/nsproxy.h>=0A=
-@@ -31,6 +32,8 @@ struct ipc_ids {=0A=
- struct ipc_namespace {=0A=
- 	struct ipc_ids	ids[3];=0A=
- =0A=
-+	/* Serialize kernel.sem writers. */=0A=
-+	struct mutex	sem_ctls_mutex;=0A=
- 	int		sem_ctls[4];=0A=
- 	int		used_sems;=0A=
- =0A=
-diff --git a/ipc/ipc_sysctl.c b/ipc/ipc_sysctl.c=0A=
-index d038d944257f6..2a542f838a530 100644=0A=
---- a/ipc/ipc_sysctl.c=0A=
-+++ b/ipc/ipc_sysctl.c=0A=
-@@ -51,21 +51,41 @@ static int proc_ipc_auto_msgmni(const struct ctl_table =
-*table, int write,=0A=
- static int proc_ipc_sem_dointvec(const struct ctl_table *table, int write,=
++#define SEMOPM  500	        /* default max num of ops per semop call */=0A=
+ #define SEMVMX  32767           /* <=3D 32767 semaphore maximum value */=
 =0A=
- 	void *buffer, size_t *lenp, loff_t *ppos)=0A=
- {=0A=
-+	struct ctl_table ipc_table;=0A=
- 	struct ipc_namespace *ns =3D=0A=
- 		container_of(table->data, struct ipc_namespace, sem_ctls);=0A=
--	int ret, semmni;=0A=
-+	int sem_ctls[ARRAY_SIZE(ns->sem_ctls)];=0A=
-+	size_t i;=0A=
-+	int ret;=0A=
-+=0A=
-+	if (!write)=0A=
-+		return proc_dointvec(table, write, buffer, lenp, ppos);=0A=
+ #define SEMAEM  SEMVMX          /* adjust on exit max value */=0A=
  =0A=
--	semmni =3D ns->sem_ctls[3];=0A=
--	ret =3D proc_dointvec(table, write, buffer, lenp, ppos);=0A=
-+	mutex_lock(&ns->sem_ctls_mutex);=0A=
-+	for (i =3D 0; i < ARRAY_SIZE(sem_ctls); i++)=0A=
-+		sem_ctls[i] =3D READ_ONCE(ns->sem_ctls[i]);=0A=
- =0A=
--	if (!ret)=0A=
--		ret =3D sem_check_semmni(ns);=0A=
-+	memcpy(&ipc_table, table, sizeof(ipc_table));=0A=
-+	ipc_table.data =3D sem_ctls;=0A=
- =0A=
--	/*=0A=
--	 * Reset the semmni value if an error happens.=0A=
--	 */=0A=
-+	ret =3D proc_dointvec(&ipc_table, write, buffer, lenp, ppos);=0A=
- 	if (ret)=0A=
--		ns->sem_ctls[3] =3D semmni;=0A=
-+		goto out_unlock;=0A=
-+=0A=
-+	if (sem_ctls[2] < 0) {=0A=
-+		ret =3D -ERANGE;=0A=
-+		goto out_unlock;=0A=
-+	}=0A=
-+=0A=
-+	ret =3D sem_check_semmni(sem_ctls[3]);=0A=
-+	if (ret)=0A=
-+		goto out_unlock;=0A=
-+=0A=
-+	for (i =3D 0; i < ARRAY_SIZE(sem_ctls); i++)=0A=
-+		WRITE_ONCE(ns->sem_ctls[i], sem_ctls[i]);=0A=
-+=0A=
-+out_unlock:=0A=
-+	mutex_unlock(&ns->sem_ctls_mutex);=0A=
- 	return ret;=0A=
- }=0A=
- =0A=
-diff --git a/ipc/sem.c b/ipc/sem.c=0A=
-index 8c9edecc16076..019a736b79316 100644=0A=
---- a/ipc/sem.c=0A=
-+++ b/ipc/sem.c=0A=
-@@ -248,6 +248,7 @@ static int sysvipc_sem_proc_show(struct seq_file *s, vo=
-id *it);=0A=
- =0A=
- void sem_init_ns(struct ipc_namespace *ns)=0A=
- {=0A=
-+	mutex_init(&ns->sem_ctls_mutex);=0A=
- 	ns->sc_semmsl =3D SEMMSL;=0A=
- 	ns->sc_semmns =3D SEMMNS;=0A=
- 	ns->sc_semopm =3D SEMOPM;=0A=
-diff --git a/ipc/util.h b/ipc/util.h=0A=
-index a55d6cebe6d3b..b148b5e15fc6e 100644=0A=
---- a/ipc/util.h=0A=
-+++ b/ipc/util.h=0A=
-@@ -245,13 +245,12 @@ int ipcget(struct ipc_namespace *ns, struct ipc_ids *=
-ids,=0A=
- void free_ipcs(struct ipc_namespace *ns, struct ipc_ids *ids,=0A=
- 		void (*free)(struct ipc_namespace *, struct kern_ipc_perm *));=0A=
- =0A=
--static inline int sem_check_semmni(struct ipc_namespace *ns) {=0A=
-+static inline int sem_check_semmni(int semmni)=0A=
-+{=0A=
- 	/*=0A=
- 	 * Check semmni range [0, ipc_mni]=0A=
--	 * semmni is the last element of sem_ctls[4] array=0A=
- 	 */=0A=
--	return ((ns->sem_ctls[3] < 0) || (ns->sem_ctls[3] > ipc_mni))=0A=
--		? -ERANGE : 0;=0A=
-+	return semmni < 0 || semmni > ipc_mni ? -ERANGE : 0;=0A=
- }=0A=
- =0A=
- #ifdef CONFIG_COMPAT=0A=
 -- =0A=
 2.43.0=0A=
 =0A=
