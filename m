@@ -1,97 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.42
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1792899398;
-	b=TEWdu7TNBKj4+vQiyypjY6vqiAK5M/G1/iDc1vrT4HNSzcYpAD7Vp/JdbkUoryeGCNGF
-	 oNL9pNSR9HLjYy4l+AVCF8Nn+38h8HisLG1jm/dR8RGuhPKUkhj1W34eRpPqldNwPCav4
-	 orh5EJCsNOzmEjwIzgXbbJ4u27abQSQnwSYdYpyaqE4ci1hK3zroI+tschbtrLy3auaOI
-	 mwx36riqKeX388UIM9GzUletdd5H61akqA0UuMvyRFEhywWl+M9ujO1oHnmOcZmml2T15
-	 lUDo/t4nagGCVPYMt2hnZGfa4lg3crs+KRmFUgihxE9ltMPgHFw8tzYC9twbjvs99zw==
+	t=1792902139;
+	b=ohnR9Qr24+v7ctrasdlNRhBnSxU5Z9sb1Qkf71vu+T9PJFBHb60onbGDUCGpdBDer0GM
+	 dZrIkoh3Lc8mmFbm65kox5RHRozXfjVoE6e4I1XJHu0HPSpK241xuRmx9M92u0oos1etH
+	 hp4Z57G3dAJhaMbT2o/aMJuBrFY8U9qDYhfEmpoaBbU8Ok1DoAKHbc+XE9DNDqF7nxBGs
+	 uPXlguc2bJ52fT3ctS7nnLUShuubXvkye6A/5TOGZbzCB86azqpHxKDgUER/Xko88id0C
+	 8PqauJHNs6G9UYPsV/ZIYVSZaIXHzKyCqNgVxY6lDjVTRwuHg/ShZ7VIVk7imABFqvA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792899398;
+	a=rsa-sha256; c=relaxed/relaxed; t=1792902139;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=DjKh57N4UF4L0vPTEmwKkugiAf2AMgqPZ3+VipYde0U=;
-	b=MfOfds1Ai1V5qDXRkeURHq58POk/6LmGiqnxYr9MpKAegWGy/vzmhutX/tWOgI9Qx/cw
-	 ZDbEBC/azM8s0cjqcfYw5bZuz2qJ2IJ6dS6MwDMPolqLHZnoEM1tpQ4Cnzia9aBp5/8zC
-	 PpIzLk+0GiQFxVfkrk2SWigGDA2w/8uAMJn+X7/Gvd8Xo6N9Dbr1lVKXQfocBHnthqCn7
-	 11o4sw3rzBVyhwDKI9/6MO0237RXQnnRro9tX1qR8c4pM2tRetnxOo8aVKvMqQnmGBBO1
-	 8SMskw/D9I+fLeUDRwADs6ipLhHgdNR0tMNK65MLDf60HJBo4cVswUC09dYpRg19Z5A==
+	bh=a1mCdSVSMJNKyuKTGD9/YocEfXnPBH17bBoNZvqCmSw=;
+	b=oyJ58623sdXU3JyMcQbtIRwwk8ihRvCbrOZGAeCxRL7fBpcJ7Pgp6ubGwnWhhhf2jcM4
+	 0dvs7jOD3HmUXdfJbXT3LJbLzA1MfHHdjBiYVtedAxblyyanmAv658fsn/BE+abUl8AZh
+	 EzyzL7VqvUnyxHum/SIoIo9fORmHvuaNdo2Bx+d08bCobwSiRlXqG/8q7ea0Vy5z1Cv4R
+	 Rc9JMinRqPIK47k8Syc75KKxlBYPoEQ0BFZCZf5lydYj5PaxAEiuza2ATnNgTWO4DzY+0
+	 YtnlfFTxJiuhGpqhT6G6Eizjq/vBIj3h4SPfZCWXf/RS5wLYJgtn0jbAExO3ca4Uccw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.224.42
-Received: from mail-yx1-f42.google.com (mail-yx1-f42.google.com [74.125.224.42])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=iasWHbsi;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4B03606A31D
-	for <cgroups@vger.kernel.org>; Sun, 25 Oct 2026 03:36:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A4B03606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B9EF606A31A
+	for <cgroups@vger.kernel.org>; Sun, 25 Oct 2026 04:22:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B9EF606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yx1-f42.google.com with SMTP id 956f58d0204a3-677bc4704cbso1859803d50.0
-        for <cgroups@vger.kernel.org>; Sat, 24 Oct 2026 20:36:32 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1792899392; cv=none;
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=iasWHbsi
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c4203bbb1e9so285736466b.3
+        for <cgroups@vger.kernel.org>; Sat, 24 Oct 2026 21:22:19 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1792902138; cv=none;
         d=google.com; s=arc-20260327;
-        b=h5OUsnWm1fp8y3/jFz2exoTx9D2YQKtCgwkPgGqM/nvgvNPUGW2sdATbgIn9xRIqXi
-         QVz0m9kXnKVinY4UghFxVMHaRPwW4BXKedpSY9W597xEPcruEHMHztHl6V2AYch3R6+/
-         nJ4iDPwS41/sNhYJgAas3AIk2eGK8dphbUuW2jcT8ysVjVoWQ1CHjqsW3iHzuiE0dJIF
-         viNsZiHYdz+IiuPAL5J3WMBeV2u0VTpaPrhs++5ghPololAWbVjil7SCPmOfrXLcPeJD
-         E91Jayh3b8/gq/mqShMIf8yZmf5Kk5tuvqbhcpYuTuXNeoH2yuzJ5vmqr5P6CxywLjZf
-         jegQ==
+        b=Py8W/lNQKQKUyhx3wvR9uZXRvvmY3aowLpH+MdYR5vrw7cBbfINLppnkdBnDQywAv7
+         JY9rySyMmNWGY4RiPTUGQg3aeKPtELVTse+2ivw2PjJgpTuS1ag2T/Kn1IBo6gklp+/c
+         Hoh5XB1tQaDZmehD4hE92S38oRf2NerlyPzmsKNPd29gnzukyvL2y4yNoLYJr7Bgpt8c
+         vwCcx6nT/0BxHl4DIiIdfM6qSboqi4ENrToDHDXUpEYvWdxL7LFxp4tradFMzti7iVEE
+         Dzugm4pe7F1oVgSG+4c6OUkcOgb55Pl1Ejd6agSQujlhFDBtordoqqMmKlR717oo4H5G
+         khBA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=DjKh57N4UF4L0vPTEmwKkugiAf2AMgqPZ3+VipYde0U=;
-        fh=HbJIBnhqKaxO1fGCJIRVnudT53kBUwdrZMzXJQRJTSo=;
-        b=GBQHCSr96VqkF64lwRBIRsLpmzJ5MtF11rbCXTnzWrKJlxN2/nkqStTiEAX7kdRFo/
-         nheYQIm9xMES9HKhc9LvToll9bWx6Jg5Gsvods/E5ZvutsCNiKLVQu2MvZHt709atSx2
-         6/zeVAV+MYOm+pyFLn0Hgq9mWIZ2KFMbJs17VULnKmomFPSNJrFU8Qadf19tpJ8O8HX+
-         R5LXNpSYdwDwt2/TZXI/zMM24VEMYEU10f1mJQNsHfXffJtS55PwOg50f4u+cInivBsJ
-         uFblMIH9WENKR/tMge8IYiQquOJaDUGTiP3M2lD/2jt3tcXZYw1Q9IttY4dPbCxR++Hd
-         iOrg==;
+        bh=a1mCdSVSMJNKyuKTGD9/YocEfXnPBH17bBoNZvqCmSw=;
+        fh=aU9HUpOJ2Ls6yYWrcfntBqUPfEWTCrrlGVteZ63XISU=;
+        b=s2+7swanJuodTVoyr9ePbM9yo0UQjr9+xHTHuS9HwaB0kOZYTT+WHr2dEIHSqXLVwY
+         TPHbw4awq+8bF+s2TxUvNGy4ukQr0H5Fxc9zUjrakpsBCN9oY5qq1sYwxrTf0KlIv/n6
+         UfC/FBUl3CY5U9Mbe8I6id/BotuBsoSq0v6vjvFkm04YKJfuk1JlnotAoX11d1xi9j1x
+         Ammx7bzgid4W6Pvwp9dptpyqZlNArx+a+lO1VKEoDYFH95YnmSHciD0G1eScrl3dtQ75
+         8bZGeODHCtBdD90GA8dmX+LkT9L8PoyTKoT8C3JwuRUTckUPWubgKtWteIhyGwUstZxU
+         o9mw==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20251104; t=1792899392; x=1793504192; darn=vger.kernel.org;
+        d=gmail.com; s=20251104; t=1792902138; x=1793506938; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=DjKh57N4UF4L0vPTEmwKkugiAf2AMgqPZ3+VipYde0U=;
-        b=LeZq6DBIc6AySagJ4h20GcT7Y5Ym0FgUVily4RFMHswaMVmTf3cY2VMsfzdZWu5zXX
-         BMZ54TNQQDoRY1tcf1OiP+fqN3rVaR6wmL4DHf0MG8QKopQ9m7zCJeQ60e4w3mfIQI55
-         0PtatJeBVWpbrPngvRuEXN8B1lUohAK6psht7aAVAtvTr6/IbAhko0bK7Y3Uz/dJV4oA
-         iVx5HcZylhHvvqaEdAZkz2EJyvd08hcZbpvXzoZg+L5Bh7DXf/pCz7pCkYPdfnK1I78T
-         2XBdvo6GSyaPrk3LL+iGGNpUEBtFYQhyZ0omidOMAQqD9p1i1Cs0SSrzPxFnIe9EY33S
-         5SNw==
+        bh=a1mCdSVSMJNKyuKTGD9/YocEfXnPBH17bBoNZvqCmSw=;
+        b=iasWHbsijiuq2xwVwgSfhcJ3IY1intlKQNNQD+S8DlfTqSh7nkiKvV7naDnJWjylSJ
+         KLna6Yn9u7lGBZ5EaaoWywoZgNJ+LzQbtxGQOsBBRTyxbmGuvdXs2mJLfHU0SCQEMJX2
+         U3qbc7UQJ6wLBFjDfCqPddRIrRSYqtKJBIXzYtZwrvjssyyeqURsd2EgGcP9o9UGF1+B
+         1QL/k8LPgp3uvnmKRaHNXpz525mjHrVjnHYZtuR2Dnl1Up1IbKhfx/VwZzJt81KLjr0V
+         Z/NHjeXRarSvdL6xgpCvLKeJYStQdG+MyhNDZgRbuCYrb3LeQfYbfrSle1TERmcaN11j
+         CyAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1792899392; x=1793504192;
+        d=1e100.net; s=20260707; t=1792902138; x=1793506938;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=DjKh57N4UF4L0vPTEmwKkugiAf2AMgqPZ3+VipYde0U=;
-        b=mb06kH16ipzv8zJAj7lejar7HejwmMJijExc3QWqyMRvtfJp+dGQa8Se6/upA3TaSS
-         B19os9/+fI8Ol6hO5kVkQSMyaxNF6oYaVDVcO485os+ZhemxhneowZB6Ap9Z1WB6VnC4
-         3Q9vfz5rs8gpR0iRb15Lju/4mJUWli7cxV/iFTMZ1RNvHVVFlX9qv2Wq3DolCL9hSO3K
-         IfQ5hNDugM18NVdpHRtoGkL1xCAdti6cdq/o2Xc4cKEcCHO/DQZeJKjon/vnxHjtihYZ
-         z6ziO6TCxaMKiZBWeRydR7uAZ+9DWCFg5bVVdkfG5PyRUOEzlKAwe8DmkOjSYwZ57sAF
-         E5pQ==
-X-Forwarded-Encrypted: i=1; AKwUvBy81vQcg88vdqk6yS6zq1cnJhf/qLrd94srgtKgmSgEN7xcTCDiK/kqGqiweAKZT6p81iyims4U@vger.kernel.org
-X-Gm-Message-State: AFq9FYIwowJUmkqCMNtsgkiY/IQ/A5lWaiKfKeZSDVsEjAd7Gm0qeXAT
-	nxR5VexEzATHDksYGXWC9PdmsBmDwjKXMEK50+AAaqHPxbCEJ5BZUTXhuzjJVMynMp+WAS+i0/u
-	KTiHDmATwIOk0o5tBtSqn8Y3ZzdlfMzY=
-X-Gm-Gg: AYBFou1LG5E59mZlRWM7rDy9P6MTNrYX7ECPCjkDVywWrHGFpN2ZjsL5mVU5+1c9czw
-	yDt6uRzlaXbKxCd687tpfRZhQ0xw4mbYOVBH9eMYsV/FClM0qHyVQ6YP8qfqQUtDdSRqNZIWBDB
-	1UwxLmyLrG6RNC7ZABl28KMMSRmFkXf7fzkI8m89my4++rya8vAmF6Yfxee6Qnh1OH8hiVg0sa2
-	O1+ZrJyCDOLRaHSHBPb1VQV2cPPn/7B8t2Kpm9FnAuLv71pn5tscINk/kVYVJ3UcQd2Mp3Jip6T
-	6uWShWvSWRS7nLkul909+M2rICQjRcG8EClgrmBxAoR3+/c20xQa5DvtAuEWb2+bD25FXFE9f9V
-	nHHLrMu5LvmlydBpsbsdOCEvlgkmCtQ2KasHzrOdfli63bnoWK6JcDIE3JTrSaODipXc=
-X-Received: by 2002:a05:690e:1a27:b0:679:95cd:1aed with SMTP id
- 956f58d0204a3-67a454bdfc5mr1270836d50.60.1792899391596; Sat, 24 Oct 2026
- 20:36:31 -0700 (PDT)
+        bh=a1mCdSVSMJNKyuKTGD9/YocEfXnPBH17bBoNZvqCmSw=;
+        b=mZq9ECwQAf1N5c4xI1BQIzamaouerNzCalNxpM92eTZyJgNoveg20U44cgIJsGfL5d
+         7/gaqFInZsA1UScAkfRrMSvXk3ePmPdcI+9+/VzJfEbtKKUHQPW/kzpw5AWHRe0w2fRn
+         xKXIwP8Vb+R+iVePCCywOw1swzNATs0mVNP6NtRv0+kSbRH2Tj3bXrgKOErz9vuDgaX5
+         Y2wqjaIxaOnLTi2+oYbhkcXpy8+Aklr1YTSvRGZvkRDwbdfhTBUGvprV90blqTMcPYMF
+         ou/vyqt4LkkdcrDGAy/j+usK72GEWPkByf7qQV5UpCqV6cmNT1JXXXavnBBioYZNdRUY
+         xsZQ==
+X-Forwarded-Encrypted: i=1; AKwUvByv0l02vQPsbm9hyanWx5FO5XLynUI+kudu0J3J61oDklIUhCGozdqrK246D9tsc1QTnib65RTd@vger.kernel.org
+X-Gm-Message-State: AFq9FYIUTpFIvLngmwBveSdsFvyS/rih0o8vViQIT1I4CQrOSQmXhadb
+	fhTlxxNI326S9zvb5kagGbUqC/fsqv+GiJIGjeIh2S91fTIaTiu9P56dRSUle+AFbu/94MFVQGD
+	KdBrtBpZhilyP6bISiiBEFq+ptSiw7pE=
+X-Gm-Gg: AYBFou089+Oo7CKaT1q1BI5IUgDQ1gQijaCDZ1NRYio/P4j8KU/i7hX+zJJt7VBj9IK
+	PHdpS/6dRAGsssfUf4oMpruYBv4rWMI12+a1sluTtIHFvlUnRRSIhNHiErJ242fihG6ye/zssAu
+	0hCKmreLacKWB0rmrfnrXvcLTLHkeZWKXDoH85zfYSS7kzhjzTOhQO8COObcuhr6iOHhCziucX9
+	SYvYvxU0Uua6Rc6hnBmdM/JgV2zvw51x1krIaSUL4L6UteM9kjyUkoF5bI91FLJXLXnZG80SuYi
+	EWL0XJ9KQO8T+4hUBUW5K3gwLaU8TZxMm8XlvbqSU9/TQYT5h9rP1HqH7j+L5zGvMvpey+UD5jy
+	jZ/341j00Ilz8BHPben7Sn5rrowzODXesH9st+T8OhyXmTsvcELg7Ow4DdQGMU028eHoRi3ULgy
+	fANWqxavlRJv33vco=
+X-Received: by 2002:a17:907:a0c9:b0:c3f:153a:8649 with SMTP id
+ a640c23a62f3a-c46bdacd060mr422491666b.7.1792902137803; Sat, 24 Oct 2026
+ 21:22:17 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -101,143 +105,142 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261019064157.29885-1-laoar.shao@gmail.com> <f68e7f9e-6037-4087-b7cd-a17ea4dba279@bytedance.com>
-In-Reply-To: <f68e7f9e-6037-4087-b7cd-a17ea4dba279@bytedance.com>
-From: Yafang Shao <laoar.shao@gmail.com>
-Date: Sun, 25 Oct 2026 11:35:55 +0800
-X-Gm-Features: AclHuK-Ie5-cJruVMuWsByPpF2E5memGw2rPj5uhPsydhaudr0vHLSJ1wQm8wZE
-Message-ID: <CALOAHbBP3n1uyC6qE-678ZNvh+12HSQ-H24xg4RqGtaZXKbL1A@mail.gmail.com>
-Subject: Re: [RFC PATCH v3 bpf-next 0/5] BPF-based per-cgroup NUMA balancing
- mode selection
-To: Li Zhe <lizhe.67@bytedance.com>
-Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, eddyz87@gmail.com, 
-	memxor@gmail.com, mingo@redhat.com, peterz@infradead.org, 
-	juri.lelli@redhat.com, vincent.guittot@linaro.org, akpm@linux-foundation.org, 
-	david@kernel.org, gourry@gourry.net, tj@kernel.org, hannes@cmpxchg.org, 
-	mkoutny@suse.com, shakeel.butt@linux.dev, roman.gushchin@linux.dev, 
-	yu.c.chen@intel.com, zhao1.liu@intel.com, tim.c.chen@linux.intel.com, 
-	bpf@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
+References: <5fdb3777-95a2-48f9-bb38-aa4ba3c96a81@kernel.org>
+ <CAKEwX=MuW6q354nB3tyFTM8d3ox7LRaqcSfUxeATR=Sop5mZPw@mail.gmail.com>
+ <5ca344de-bc34-4a9b-ab85-f553811a1d9c@kernel.org> <CAKEwX=N05iOC4hmiyTt5OxjAsOfU7_V8xGfmK_RgUyrKtuyUTA@mail.gmail.com>
+ <CAMgjq7DJwGCHCAchcfi2Kcu+XHx2YnKXDj53e0t2kpG_GSejkQ@mail.gmail.com>
+ <aqgMCIOFi0dKx_6L@fedora> <CACePvbVMFA9N0nQers=sOnSXGbNhtNE0ewq47AJEH5Cr8imQXA@mail.gmail.com>
+ <CAKEwX=OMYhUs3tt7jUzEzxsOW3yA2JmzpwwxVBP2eZuHOFu=vw@mail.gmail.com>
+ <CACePvbUMjRgK=dQzLjECgBXaUtQSPdAnBXL1Y4=Kh5d15swYvQ@mail.gmail.com>
+ <5c8a2b7b-b76d-4bba-92e1-ec3d66794273@kernel.org> <20261014195354.GA371161@cmpxchg.org>
+ <CAKEwX=Mwc+D+AN-B5T7p=80fqCDijdsiJjd6aN_3YMrEQjyvwQ@mail.gmail.com>
+ <a24ca7b8-8b42-43f3-ad72-afe62f97f76c@kernel.org> <CAKEwX=OdbOrFbdihntP3rmcWJUyM1UpYa5n+pYjt_feMQwx8yA@mail.gmail.com>
+ <CAKEwX=PCSyCEAqxeOH6CkCMu1eB3xUn3iz5XNuTbpDM3EmWYAg@mail.gmail.com>
+ <c6e62e80befa886fccd36d34a39cf56ea5b9c9c2.camel@surriel.com>
+ <CAMgjq7CN7qTes+OXvCfsgPOnbtyY7YPytTEP3zZJTBxrGZ5JnA@mail.gmail.com> <12081d266e4846f23faacfc65c7be7da4ed013a9.camel@surriel.com>
+In-Reply-To: <12081d266e4846f23faacfc65c7be7da4ed013a9.camel@surriel.com>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Sun, 25 Oct 2026 12:21:41 +0800
+X-Gm-Features: AclHuK9AJB_Ij_SjIfwwNYU3XIUY4vB1BJ41W2msTZ1ne8yK1FWjUOt9jpj91Ss
+Message-ID: <CAMgjq7Cjt==BxXPNw5HjiA0hjxhfzWn=9gDQ+2x-rdrEQBWTeg@mail.gmail.com>
+Subject: Re: Path forward for Virtualized Swap?
+To: Rik van Riel <riel@surriel.com>
+Cc: Nhat Pham <nphamcs@gmail.com>, "David Hildenbrand (Arm)" <david@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Yosry Ahmed <yosry@kernel.org>, Muchun Song <muchun.song@linux.dev>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
+	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
+	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Gregory Price <gourry@gourry.net>, Wenchao Hao <haowenchao22@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
+	Joshua Hahn <joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Oct 23, 2026 at 2:32=E2=80=AFPM Li Zhe <lizhe.67@bytedance.com> wro=
-te:
+Rik van Riel <riel@surriel.com> =E4=BA=8E 2026=E5=B9=B410=E6=9C=8825=E6=97=
+=A5=E5=91=A8=E6=97=A5 02:16=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On 10/19/26 2:41 PM, Yafang Shao wrote:
-> > The Problem
-> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> On Sat, 2026-10-24 at 23:50 +0800, Kairui Song wrote:
+> > On Sat, Oct 24, 2026 at 4:03=E2=80=AFAM Rik van Riel <riel@surriel.com>
+> > wrote:
+> > >
+> > > On Fri, 2026-10-23 at 10:24 -0700, Nhat Pham wrote:
+> > > >
+> > > > * Swapoff: this was brought up as a request, but we ran out of
+> > > > time
+> > > > before we could discuss the motivations and use cases behind
+> > > > them.
+> > > > Folks interested, could you explain as a follow-up?
+> > >
+> > > This is one that I really don't understand.
+> > >
+> > > In my mind, we have vswap sitting as kind
+> > > of a swap VFS between the rest of the system
+> > > and the swap devices:
+> > >
+> > > +-------+     +------------+
+> > > > vswap |-----| swap cache |
+> > > +---+---+     +------------+
+> > >     |
+> > >     +----------+-----------+
+> > >     |          |           |
+> > > +---+---+  +---+---+   +---+---+
+> > > > swap  |  | zswap |   | zram  |
+> > > > file  |  |       |   |       |
+> > > +-------+  +-------+   +-------+
+> > >
+> > > When a page is unmapped from userspace by the
+> > > reclaim code, it goes into the swap cache.
+> > >
+> > > The vswap layer then decides where to store it
+> > > at eviction time. This is configurable by userspace.
+> > >
+> > > If the zswap pool is shrunk, the vswap layer knows
+> > > where to put the data next. There is no need to
+> > > change page table entries to indicate that the
+> > > data was moved from zswap to a swap file.
+> > >
+> > > If we decide to disable one of the backing swap
+> > > devices, the vswap layer can just move the data
+> > > into the swap cache, and the page reclaim code
+> > > can evict it into a different backing store, if
+> > > needed.
 > >
-> > In our large fleet of Kubernetes-managed servers, NUMA balancing has
-> > been historically disabled globally on each server. With the increasing
-> > deployment of multi-socket AMD EPYC servers, cross-NUMA access has
-> > become a critical performance issue, which made us reconsider enabling =
-NUMA
-> > balancing to address it.
-> >
-> > Enabling NUMA balancing globally is still not acceptable since it can
-> > introduce latency spikes for latency-sensitive workloads. What we need =
-is
-> > to choose per workload whether NUMA balancing runs at all, and which mo=
-de
-> > it runs in. A latency-sensitive service wants NUMA balancing disabled,
-> > while a batch service wants its PMEM-resident memory promoted when hot
-> > without paying for scheduler-driven migration. No single global setting
-> > serves both.
-> >
-> > The Design
-> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> >
-> > This series introduces the fine-grained per-cgroup NUMA balancing
-> > control. It grows out of Tejun's suggestion to store the existing
-> > NUMA_BALANCING_* bitmask per cgroup and expose it through BPF kfuncs.
-> > cgroup::numab_mode holds the request: NUMAB_FOLLOW_SYSTEM (-1) defers
-> > to the global sysctl state, anything else is a bitmask.
-> > bpf_numab_set_mode() writes a request, bpf_numab_get_mode() reads the
-> > combined request of the cgroup and of every ancestor back. The hot
-> > paths walk the same chain at read time behind a static key, so while no
-> > cgroup makes a request the overhead is one patched-out branch.
-> >
-> > An opt-out wins and binds the subtree: a DISABLED request anywhere in
-> > the chain opts the cgroup's tasks out entirely. Otherwise the requested
-> > bits OR together and the kernel reads them independently, the way
-> > kernel.numa_balancing reads them, so a combined NORMAL|TIERING engages
-> > both modes. A DISABLED request only speaks for the cgroup's tasks,
-> > never for its memory, which follows the remaining requests of its
-> > ancestors.
-> >
-> > The cost of the additive combination is that an ancestor cannot cap
-> > tiering short of a full opt-out: a descendant's TIERING request
-> > re-engages promotion for its own memory, and promotion is the mode that
-> > consumes the shared fast tier.
+> > And in this case we want to disable vswap itself.
 >
+> OK, so you are looking for a way to totally depopulate
+> the swap cache, in addition to swap files, zswap, etc?
 >
-> I am not sure that this matches the usual cgroup hierarchy semantics.
+> I think we can accomplish that by simply keeping the
+> current swapoff code around, which scans through the
+> virtual memory of all processes and brings the memory
+> out of swap.
 
-I think the usual cgroup hierarchy semantics being invoked here is
-the semantics of resource limits: an ancestor's limit binds every
-descendant.  That is the right semantics for limits: a limit
-partitions a shared, finite resource, and what a descendant
-consumes comes out of its ancestors' pool, so an ancestor's limit
-must bind every level below it.
+Yeah, that's the right starting point. The scan itself can also be
+optimized to be cheaper or better later on, but that's orthogonal.
 
-A policy request is a different kind of knob: it is a preference
-about how the kernel should treat the workload, not a quantity
-drawn from a parent's pool.  Nothing is consumed by expressing it,
-so the limit semantics does not carry over; the question is only
-how the preferences of several levels should combine.
+> > I also hope there is a way to release swap metadata completely too.
+> > e.g. for fs, you at least have umount, and can rmmod the fs itself
+> > afterwards. We also have many ways to bypass the page cache. In cases
+> > where a virtual layer is just a burden, we want raw physical swap,
+> > and
+> > the ability to swap off that too.
+>
+> The VM cannot operate without the swap cache, though.
+>
+> That is very much built into core parts of the VM.
 
-We chose the additive answer: a descendant may ask for more on top
-of what its ancestors asked for, while an opt-out at any level
-still wins - DISABLED anywhere in the tree caps the whole
-subtree.
+I never meant to strip swap cache out of VM... The opposite, actually
+:), most of my work over the last couple of years has been about
+removing the paths that bypass the swap cache (e.g. the
+SWP_SYNCHRONOUS_IO fast path), to get a simpler model and better
+performance.
 
-This also matches our operational experience with policy-type
-knobs in our Kubernetes fleet: letting a child refine the result
-has worked better than having the parent's choice bind the child.
+What I'd like is for swapoff of the last swap device to return the
+system to its pre-swapon state: no leftover swap metadata, no leftover
+per-slot or per-cgroup data or statistic, and ideally no residual cost
+in the fast paths (e.g. minor fault).
 
-So with
-                      Pod     (NORMAL)
-                  /              \
-  cgroup-A (none)  cgroup-B (TIERING)
+> However, having swapoff remove all data from the swap
+> cache, after mapping the memory back into userspace
+> page tables, seems like it would be fairly easy to do.
+>
+> Does that meet the needs of your use case?
 
-the effective modes are
-
-                           Pod     (NORMAL)
-                  /                      \
-  cgroup-A (NORMAL)  cgroup-B (TIERING|NORMAL)
-
-> If promotion consumes the shared fast tier, why is a descendant allowed
-> to re-enable TIERING when an ancestor cannot cap it short of a full
-> opt-out?
-
-Promotion can't make a cgroup consume more memory than it may
-already consume: it moves the cgroup's own folios, within its own
-memory limit, from the slow tier into the fast tier.  The cost to
-the rest of the system is placement contention on the fast tier,
-which each contributor's own limit bounds.
-
-What an ancestor can't do now is cap only tiering while leaving
-normal balancing available below.  If that targeted cap is wanted,
-the natural extension is a negative request: NO_TIERING would
-propagate down the tree like the positive requests and mask
-TIERING out of the effective mode.  With
-
-                  Pod (NORMAL | NO_TIERING)
-                     /            \
-            cgroup-A (none)   cgroup-B (TIERING)
-
-the effective modes would be
-
-                      Pod (NORMAL)
-                     /            \
-            cgroup-A (NORMAL)  cgroup-B (NORMAL)
-
-For the RFC I would keep the modes minimal and add NO_TIERING
-as a follow-up once there is a real user for it.  If you think the
-targeted cap should be there from the start, it is a small
-addition.  What do you think?
-
---
-Regards
-Yafang
+Right, it's nothing hard, as long as we don't add mandatory new
+layers. For very high bandwidth swap devices, a mandatory indirection
+layer is pure overhead. I posted a per-CPU queue based allocator for
+that case (https://lore.kernel.org/linux-mm/20260829-swap-pcp-priq-v2-resen=
+d-0-68d3d925578c@gmail.com/).
