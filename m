@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.69
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.195.21
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793010692;
-	b=A+kb+D1ruVl4bBR+r7LymZ1562kphS0SOnFxP5TvHkTfwjEmYJsz1xL37FRu+igTBOW5
-	 vbnFd63L84rjGVUUf4YwPjZ5eIvGG/pWzkCfdB99FyyqMDPNE0siSIA0xYOrXJp89Shdg
-	 fCXv6eY9vbogzIVTI36XPj1omT0m14jBfHq0mWv3MfavmSmxhp/yutcR+aFaGi1vtIG7F
-	 oQYS//alq92DEw1PA1PAwHVhmehDgVSrobGZUqhakDrTgxxe5ZqMliNPeoo/le6PQqFpv
-	 rWGDkL9hEivzJtdhdcSs9Voh8Up/n14ix5FbDDoP/VjG6+iXVDgyzi8ydF7mz7L8TIA==
+	t=1793010704;
+	b=ERQBJFxx/uJVvlQmdJHNfYL0J2SY3A0lIZzYlUIUUGKQgLOPmwUYsuceVimT57QSK8ud
+	 Dx2jq2mlBP4nAeXdRJ1thVqEkyf9Z4TGwCby4UiPDD+7yHcf0Tq5IMAssLeq3XhCmrFMp
+	 Y2FKmePeh1GJVryFicIr/bhyK0ct0mOkAuUvD0DrLvciro+vvVWJ5vVdTgODqzk8PAUn9
+	 FXYZgIQCf06E+0lHlaFuCKux1RCa8MP/ZIXP8uCFELoQBALi0seeGtzalSF2z+EqZgHiW
+	 Mqe8Z9i8yHgV+nmB9vdtUgkSC55N/qOOxZlatam8Bq1eRaLepnvZ2T85lLnWMUmTEEg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793010692;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793010704;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
 	 From:Date:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
@@ -27,53 +27,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=fyugMBav7xTQnoOl+Qj+YPtNJnrNVEg3p+9n1nI4itw=;
-	b=GihSqrkSHnr+tGl0G+OAqsazyXraakW7rPGq6pSJb9ruA9bnFfdCg1er8vcUXRqjtnrG
-	 ylH6j0m0xfe35d9ANEJj4r8YJjbFo72CEA6OYFLxSLgQsDg4ZQH+6bxcu0Nd0+2o1XWzE
-	 AyR4RMXt4lAEVe+NE/quYE990I8jFa01e7Q9QwqLDaXonOHRFFDOKvhoIPSCZ2Y4Bnocz
-	 YwWPFU7iSoMnys8a3WlEFCIgpQOgJtReS/3g/ac17z8BOB9hHa+0f6bYFBpy4ju8aTPov
-	 WwF5CddBKG6UclCAVhvMVPocW3smDIOwrBm8+hS1nFN/W4dnEvd8U/HrvMrNKXCIXJw==
+	bh=UWtIHgV8oRRs59cjVLpBEKyZq42axVGiiW/nSZnEpVo=;
+	b=WJl5hramdL7r9qQk7iZaOV1boUbMqer0sgplUz6v5rgrt+p9LZ5jGLo6i/uH3sFPa07R
+	 bkurvACiwfJzRMjmeTzinwmNXX+D1HluUZW1InfAqLtmpbnIIHOpxMJmdO284xuNpdE6r
+	 Cn50VX4DArlI5SmgbRIVmRyqoq2TCOLX6XhQ0M7SsV1h9oMeceiFn0TMckQszTEBRi9aG
+	 Qlihs2tul9vYY2HCQBjT31pQ9GVyS5QuypImADfz2NeedyyxRGSPeXW5e6zO4Ax9qJ5t1
+	 CXzg/1UmxfxinEgE8rOU2BHaPWgQpPXCepn3WcosxFzW453UjsmiA4taXORozZBlmLA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=EPJO9XZA;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.69
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012069.outbound.protection.outlook.com [52.101.48.69])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=zLFPITZU;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.195.21
+Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012021.outbound.protection.outlook.com [40.93.195.21])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC20C606A31B;
-	Mon, 26 Oct 2026 10:31:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC20C606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0626606A31A;
+	Mon, 26 Oct 2026 10:31:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F0626606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=EPJO9XZA
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=zLFPITZU
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KV3GgOu4E7yFivdr5ZR66b0micNIvtQQ+1sx2n5pmgOAHbD+v8IuU74Lk3iFRI6VWEhRCv6ENv21rmBewp/PmwxRgiB7hu7Rub/JTMeDjDsw8gcBjDf/1+h9zmEgioQj/9e1Hr99E1mOiQxC36QD3olgpPF2QJTvubPGEXgtHyLJXjl8j0//vx7Ga4G4zE3NMwjW3dvzQ0MySMtKamRLikjWt3uaNANd8YU393s31BcByWgF4AOvPmkSww6igoUxuHJStoIpCufTn0EncEDDRO0y9lqgw7JVwBuy9h3iSSuDN1Ki8QjJZOL/1oinZqi2kjcoH+lVmgB3TiJlJRgOuQ==
+ b=N91+Cg0Goh5ltjuBSgJv3r1QSLcXJlCJkFY9UbXi9PlfX7F3zkJcBlYaubE40KOXBMQ0mlFcF5b/ul2d5jm+uYVtgbh2MVivmBpL6b4KRzPB2w8xCri/sAiKG3lUeVlBgCemD3a7wsRr9oyrARxbglzJHozvPq9zubl74s6OHPKJ9C6jQKHz7nSpRIz3wOjoFH++MftPe0XYbU+s8RY+rw+WmKg6Rgz030yFhoA2COg1t3aPtRKS8vFt8pcn0p9EN/0QfxnmTxzAIxd1kh6p9FYceEEJieuufBtj+Us7SDyPPdixR12ImRISdPdyHN6RhLVPhx5xRhjbmqslqB+6hQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fyugMBav7xTQnoOl+Qj+YPtNJnrNVEg3p+9n1nI4itw=;
- b=l5g3EFoGYGyimDmOgS6EveQ4gsM64HWjXPIbaaw1bWrlVOsOL2jvvR+I90Xa4ruRrz7ZMovPpBhSkLlq4XfNfNe6DGPdRdE2Mu/iqkvqZAMPJRvMbVcN8UUR5Xv9bQCkn5Hl1KgatEBuSA92n3Fam2qBOQxbjmVwKcyHn0yrqOAxeMqjMTkwm/UVaA2AEXJi9w77VHuofl+dTTeYOikvw47qKxzc9mjZyjzCG8nrz7uILioKtchnS4+tN7XDye2RX7c4fJYEsPL+bvk5gT0klsLrVAzZXNy+DXimUDy3KCBfK0U4Ngi1QoOd7b5X09dTtshvJMzAVlI5PE6Ovod9dQ==
+ bh=UWtIHgV8oRRs59cjVLpBEKyZq42axVGiiW/nSZnEpVo=;
+ b=gYA4K6JQNXPCpZ8g6z8qrYCPyI6ICttom2XUODERT+vuwyiQQO9FmZZwsXnDUPhV3ZJ2WQXAGBdB8fV6p/PPmgKH8B09f8o7S3sqxdqla/s0t6yKZlMkQRjM40VIFRB/UPDp36mKZgcNU+CDDNU6T18XQBoW2YjdrxKy8xEcT1QozJXZfPNdoTI7n1N3xeud2b+w67SagkwWv7hcD0aijO/hbySmGhw6fz2+kiGA7niqmIhXu6f1MSicoSC33yvC98zwJ0Q1oLuHnSiBbj1wOqCTxtHR7CpMUnpWHnhahx2mTUjaUUPA304C7XqE5XxbQcLJOcZhMR+jiQofjj0VPw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=infradead.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fyugMBav7xTQnoOl+Qj+YPtNJnrNVEg3p+9n1nI4itw=;
- b=EPJO9XZA0KmUSTE1lQMsf1YrCidS+ucKv8nxCI/JotUMxNW9CXn/99QtV3bMZ7pPb1qN7WXCIc0E8QaTBVcDXn5aRG0iZ9iinVPk9o6vV9fGllYpBuk/uZR46SQmxdZ+vfV4Oc2Qg0/WdVn9RWF8X0s8ryhSAGr8FD+xWaFvh3Q=
-Received: from CH0PR13CA0004.namprd13.prod.outlook.com (2603:10b6:610:b1::9)
- by IA0PPFDC28CEE69.namprd12.prod.outlook.com (2603:10b6:20f:fc04::be8) with
+ bh=UWtIHgV8oRRs59cjVLpBEKyZq42axVGiiW/nSZnEpVo=;
+ b=zLFPITZU/4GNh4TFlBDN7Fu/RIslJiJICnHsed+1wtv+GHkuY101yMx8GUPDLtbyCqD6C46m+VD6gI4idHNX8DHN2lnJId0rtN3fuzzEvSMXCgXBEsKnG9xCd1gIg13UXqvfXbHsRfPgZn4war9Q8zgstR/ASf6y2QoQW0PN4fU=
+Received: from CH0PR13CA0018.namprd13.prod.outlook.com (2603:10b6:610:b1::23)
+ by MN0PR12MB6125.namprd12.prod.outlook.com (2603:10b6:208:3c7::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Mon, 26 Oct
- 2026 10:31:27 +0000
+ 2026 10:31:39 +0000
 Received: from BL6PEPF0006C3E1.namprd02.prod.outlook.com
- (2603:10b6:610:b1:cafe::46) by CH0PR13CA0004.outlook.office365.com
- (2603:10b6:610:b1::9) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.569.6 via Frontend Transport; Mon, 26
- Oct 2026 10:31:27 +0000
+ (2603:10b6:610:b1:cafe::93) by CH0PR13CA0018.outlook.office365.com
+ (2603:10b6:610:b1::23) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.569.7 via Frontend Transport; Mon, 26
+ Oct 2026 10:31:39 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -83,14 +83,14 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from satlexmb07.amd.com (165.204.84.17) by
  BL6PEPF0006C3E1.mail.protection.outlook.com (10.167.249.231) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.569.4 via Frontend Transport; Mon, 26 Oct 2026 10:31:27 +0000
+ 15.21.569.4 via Frontend Transport; Mon, 26 Oct 2026 10:31:39 +0000
 Received: from [127.0.1.1] (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.53; Mon, 26 Oct
- 2026 05:31:15 -0500
+ 2026 05:31:27 -0500
 From: Shivank Garg <shivankg@amd.com>
-Date: Mon, 26 Oct 2026 10:30:29 +0000
-Subject: [PATCH 1/8] mm/vmstat: remove unused folio stat helpers
+Date: Mon, 26 Oct 2026 10:30:30 +0000
+Subject: [PATCH 2/8] mm: remove unused folio refcount helpers
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -102,7 +102,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20261026-unused-sym-v1-1-82ca2dceabe1@amd.com>
+Message-ID: <20261026-unused-sym-v1-2-82ca2dceabe1@amd.com>
 References: <20261026-unused-sym-v1-0-82ca2dceabe1@amd.com>
 In-Reply-To: <20261026-unused-sym-v1-0-82ca2dceabe1@amd.com>
 To: Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand
@@ -132,111 +132,108 @@ CC: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
 	<bpf@vger.kernel.org>, <damon@lists.linux.dev>, <kasan-dev@googlegroups.com>,
 	Shivank Garg <shivankg@amd.com>
 X-Mailer: b4 0.15-dev-47d62
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793010663; l=2287;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793010663; l=2085;
  i=shivankg@amd.com; s=20260518; h=from:subject:message-id;
- bh=DefGTvUpFwbcZk2mR+oumYqwMkGhYq6r8/H27DOF33U=;
- b=5SHt7jFCvyZydEFn9weQyboLS4iJFN6a6gfc7BMbkzBMcSAN/pOdacCAOpCNKkg6GnprW/l2L
- s3llS9gLRtQBEKXCuU6bcifhtw68M4tBLjYjfKXJQU00jZolIykib55
+ bh=nwtYqIbL8/V5b7bzA76rWHGJPJ4cfMktwdPFXwAmZsU=;
+ b=HuGR1CXwcRCIYVj4ot01O+Dd2qcoWuk86b4aprMQdLX2dMVqQy7LW9Y5zmSkU/vPtZTWFRGtR
+ 7N+4dtTHBZVD7HubXiofQ4LNk69WwGuF72vuFs+BdWzN+6rE7ffFqZR
 X-Developer-Key: i=shivankg@amd.com; a=ed25519;
  pk=2l2QGTeXuGkZTtfmx0nPQU8iFZfjYmX/ymMojitevx4=
 X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0006C3E1:EE_|IA0PPFDC28CEE69:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4be09906-4d54-4935-4eaf-08df334c4abb
+X-MS-TrafficTypeDiagnostic: BL6PEPF0006C3E1:EE_|MN0PR12MB6125:EE_
+X-MS-Office365-Filtering-Correlation-Id: d14e641b-4c2d-4fd0-d1fc-08df334c51ba
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|23010399003|376014|1800799024|82310400026|36860700016|261009223027099003|261021123027099003|10067099003|56012099006|18002099003|22082099003|921020|11063799006;
+	BCL:0;ARA:13230040|82310400026|36860700016|23010399003|7416014|376014|1800799024|18002099003|22082099003|921020|56012099006|11063799006|261021123027099003|10067099003|261009223027099003;
 X-Microsoft-Antispam-Message-Info:
-	ti1omnjRJ0zSIt/15hBauuogN+6Le3iFhyOVirAr3zM4BuvI5ju614fvRv6gptsy6EocuHHcmFrY0PtVWFef92d61tlpcT5owG1XAQVCPmEmFnDtX2XuQjYb2m8s+X9k0YBsMxpmt1B3FQv2vTyPciNPG8r5k3Lz0lOvF6Lt5Z8icJhVbJd/O6QyqVwH8OVDTKDsSfZf6qIoRBZmO0nSgMn7iVFOVGcaCuRBbLrvZiSdhHClBURlgKFcL2rTESQ34fA/vH37gOYlLSoBT99p7r8MEjupfXQWYV6I8Zf1HhlzMa0jrPl3ODI0DydnYB4kwUgziPL+p6mdNeHdiZmdauQRjtSSBy0MvcMetJ047kKnyB27d+wzNaFqxnNjRQYeIZwUUbN00LBh8GS4J6llQJ7E+O5qt1mphYNvMXLmwaT6JESjXiQfJEFyvMDH80/FH4Yg5iRKJpGzbFJq7ih+UerqDEHd/Jv5KFRGsCT48Xr0qQxeMhnsriZU9hUFvMFBDL+x00/CTZmCB7bEefjF5JMPWWvGhGws91/2qvIp4naT/lxCSBh6vyE8xBJAyKiDpaLiB4jxtytHEJxdrdD6SvJ25kqyxw9boAS3Rap4YjEF/8HTjA3yziBV5T5+T50v/d2CjsLIz8SauTdWflEuEdEJtlLXo6C9K7YOoKV/+O29k/W/LQxaoj43OjYNqguw1Pp6vt7s0jGn9wRq4hsKxzC+RGaSgJHfib7Myxg+Dq8B7sPTQxyPhI0s3UaFas7e
+	EvOWZUnEBfSaixjhkMSAiUJ/vzBtZb2JWfvusyKn1/m/KVmnx3DgDDqEKX5aWFwUHhCKgupyutGc0/lrFC0bO1QGsAB5qogt0+E/BNdw0hBi/VTRjoLgdbOUoMF7IGw8x42AskRYoSbq9dzbgMH+tQqkeqwXYooP8LJK3w644++7ZCRfZJCppGBBcHuV7sD92PlfI/+fLnXgHtTO7ofUhzc9fT4Bh9iqTcPKFzB9ZbUHrhyvTYz9VHeczx74zSO6rhs6C3Jc8M5x00VK4fgv1x2KAScQ8tzyDxHTkIlEie0uRKcqF0hShu3UO4G6MrHTksAooltnhYWb72TPeJIblraxLOUxsD7ipLiFqCK5rvodvD2B7O9dSc/VFHa+a67VTyhyS3gvWrHUjGlmP4kvk4MItUzXF+UtjBORnNN35g+Vl46DBv8FnyRw/A4ad0r32K5DOCqG1YsSGZRqSfpZFyHfcjELVr6j2tqUKF3TrvM9Unejn7hGaT+/Uaowh9l1O4DGA7ijpkZxoxNKFziRJh/hCXUl/aUskiNLjnEx2CWL+9gcL+Y1hF1O8c9vwoUeJ27kX7KTgRGWoYKQS3jpk/ZQQ28PixuOnp+HWFV72wu7DeOjN5HcLJovbaop/n1bSxst2quh0M+NZCl4bsTKeAzwtwwlior+wnsZI/nfvQVC5rHrcf/U84Y6IYEVOS/IJgTL//5PMufhTXWPyvdBzSrQNNFHdxB/Ez6YM2lvqKM+7e0/SsoPVAuXuJpa3fWN
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(376014)(1800799024)(82310400026)(36860700016)(261009223027099003)(261021123027099003)(10067099003)(56012099006)(18002099003)(22082099003)(921020)(11063799006);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700016)(23010399003)(7416014)(376014)(1800799024)(18002099003)(22082099003)(921020)(56012099006)(11063799006)(261021123027099003)(10067099003)(261009223027099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	WyRlMVee1i0Yc2z+ZFugOkxhAS9bSSjGqlRk5drM2cMmDO9gxCEfmhp7tSaJV3fNNxKHFwmE80rKRUKBe+RIWzHLMcTmekW+cV/mGcuzMs4gjd2ADtXyqkXZx+ZSoulwmVWyNUKCua1lQkA5PgpAE59UU4RKSZHnEi+h+zBR2vgmfzoWAp7cAkEamG3AgtgLEksAvxcBoqY/cDcKkc1gJRhqzW89JOIgxL1JQyTUtLFWv3Gcwl5rbGbV/ozgkceC9TypcPyJdvAVwdryHs+JfhKhQqD0IC5x+krsOrPcgZlvGpyGlrvG7UzwhUOpFz50vlU0+S0XkzHizKBW8J5W4YvFPJSRcdfenYITpTNR5U3Sl/wk1ZiKqFl6pa0qPffpEWinpo8T8xxxZFlITvEZB9ThCJCxIW1AlKARzRkNZetn0UW8AIoWDqpbvsrwjHjK
+	qraevKmG1gm2VJEGjpdSq4GVAU9j5svjccsI1hEG4hsBl7jHVztl8MeAc5dB0WzaE1mU7X+offE16iXGdaGm3E0DqzKZ8VN6uYuK2+YrgSGyQrCONsb90SsnE1DUz3hpjBXPReBX1/fC2Cs5P0KAfYDZZqTNUBaamFxs/ao4JefWI8CYMCGJJazDRg4UPPTpzN3guCgS4k8RJBhGJv4QN0g6lJh7Whuhs5nZXmN7ByznY8a72ye40WCrjJ+pN0EggvLlabXuq1WtW+APIiKGSjGWikZPG9vTdnHc5HTMynt7mSUQWlSWD2HJZfVOd9WhMGd5Sj9wJYPnZ03Gjv4UnZRCR4P+hyTgQszVfcX0uxJ9vR6fhbXftg2z6JLLrg249JPWGA6pGoYUTzv2DOUGSOhqniuh7b7gNIE8dBUoCaZx/qXMGsmaaDMq8T2t+Fpj
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Oct 2026 10:31:27.3797
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Oct 2026 10:31:39.1198
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4be09906-4d54-4935-4eaf-08df334c4abb
+X-MS-Exchange-CrossTenant-Network-Message-Id: d14e641b-4c2d-4fd0-d1fc-08df334c51ba
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	BL6PEPF0006C3E1.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PPFDC28CEE69
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6125
 
-__zone_stat_add_folio(), __zone_stat_sub_folio(), zone_stat_add_folio(),
-zone_stat_sub_folio(), __node_stat_add_folio() and __node_stat_sub_folio()
-have no callers.  The last zone_stat_sub_folio() user was removed in
-commit f1ee018baee9 ("mm: use __page_cache_release() in folios_put()").
+folio_ref_sub_return(), folio_ref_inc_return(), folio_ref_dec_and_test()
+and folio_ref_dec_return() have no callers.  The last
+folio_ref_sub_return() user was removed in commit 38607c62b34b
+("fs/dax: properly refcount fs dax pages").
 
 Signed-off-by: Shivank Garg <shivankg@amd.com>
 ---
- include/linux/vmstat.h | 36 ------------------------------------
- 1 file changed, 36 deletions(-)
+ include/linux/page_ref.h | 24 ------------------------
+ 1 file changed, 24 deletions(-)
 
-diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
-index 5b31d8e7ae40..953d8ef65400 100644
---- a/include/linux/vmstat.h
-+++ b/include/linux/vmstat.h
-@@ -425,54 +425,18 @@ static inline void __zone_stat_mod_folio(struct folio *folio,
- 	__mod_zone_page_state(folio_zone(folio), item, nr);
+diff --git a/include/linux/page_ref.h b/include/linux/page_ref.h
+index 9f5c75d06f76..6fc20a49fa84 100644
+--- a/include/linux/page_ref.h
++++ b/include/linux/page_ref.h
+@@ -157,15 +157,6 @@ static inline void folio_ref_sub(struct folio *folio, int nr)
+ 	page_ref_sub(&folio->page, nr);
  }
  
--static inline void __zone_stat_add_folio(struct folio *folio,
--		enum zone_stat_item item)
+-static inline int folio_ref_sub_return(struct folio *folio, int nr)
 -{
--	__mod_zone_page_state(folio_zone(folio), item, folio_nr_pages(folio));
+-	int ret = atomic_sub_return(nr, &folio->_refcount);
+-
+-	if (page_ref_tracepoint_active(page_ref_mod_and_return))
+-		__page_ref_mod_and_return(&folio->page, -nr, ret);
+-	return ret;
 -}
 -
--static inline void __zone_stat_sub_folio(struct folio *folio,
--		enum zone_stat_item item)
--{
--	__mod_zone_page_state(folio_zone(folio), item, -folio_nr_pages(folio));
--}
--
- static inline void zone_stat_mod_folio(struct folio *folio,
- 		enum zone_stat_item item, long nr)
+ static inline void page_ref_inc(struct page *page)
  {
- 	mod_zone_page_state(folio_zone(folio), item, nr);
+ 	atomic_inc(&page->_refcount);
+@@ -213,11 +204,6 @@ static inline int page_ref_inc_return(struct page *page)
+ 	return ret;
  }
  
--static inline void zone_stat_add_folio(struct folio *folio,
--		enum zone_stat_item item)
+-static inline int folio_ref_inc_return(struct folio *folio)
 -{
--	mod_zone_page_state(folio_zone(folio), item, folio_nr_pages(folio));
+-	return page_ref_inc_return(&folio->page);
 -}
 -
--static inline void zone_stat_sub_folio(struct folio *folio,
--		enum zone_stat_item item)
--{
--	mod_zone_page_state(folio_zone(folio), item, -folio_nr_pages(folio));
--}
--
- static inline void __node_stat_mod_folio(struct folio *folio,
- 		enum node_stat_item item, long nr)
+ static inline int page_ref_dec_and_test(struct page *page)
  {
- 	__mod_node_page_state(folio_pgdat(folio), item, nr);
+ 	int ret = atomic_dec_and_test(&page->_refcount);
+@@ -227,11 +213,6 @@ static inline int page_ref_dec_and_test(struct page *page)
+ 	return ret;
  }
  
--static inline void __node_stat_add_folio(struct folio *folio,
--		enum node_stat_item item)
+-static inline int folio_ref_dec_and_test(struct folio *folio)
 -{
--	__mod_node_page_state(folio_pgdat(folio), item, folio_nr_pages(folio));
+-	return page_ref_dec_and_test(&folio->page);
 -}
 -
--static inline void __node_stat_sub_folio(struct folio *folio,
--		enum node_stat_item item)
--{
--	__mod_node_page_state(folio_pgdat(folio), item, -folio_nr_pages(folio));
--}
--
- static inline void node_stat_mod_folio(struct folio *folio,
- 		enum node_stat_item item, long nr)
+ static inline int page_ref_dec_return(struct page *page)
  {
+ 	int ret = atomic_dec_return(&page->_refcount);
+@@ -241,11 +222,6 @@ static inline int page_ref_dec_return(struct page *page)
+ 	return ret;
+ }
+ 
+-static inline int folio_ref_dec_return(struct folio *folio)
+-{
+-	return page_ref_dec_return(&folio->page);
+-}
+-
+ static inline bool page_ref_add_unless_zero(struct page *page, int nr)
+ {
+ 	bool ret = atomic_add_unless(&page->_refcount, nr, 0);
 
 -- 
 2.53.0
