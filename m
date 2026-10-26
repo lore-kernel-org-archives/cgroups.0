@@ -1,17 +1,17 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.70
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.69
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793010684;
-	b=otNzdYgmmAb5QrynTU8qKcHClJdmWZJJXy6IbBITDD6Ks7YxBWKfmTwdh6QLHZ8IZ0DN
-	 aLT6l4ImpSKF4c92VGP/mwXXiHIrBVNo71wD86yAWFJTDtVOZA4RcIv/IvtYAixGKBY3+
-	 mKPFPWetutOHxZCCEk8bIhVIKuUbPRNbbJ4iBWysjrYVNq2ijvsZTckGZ3E1BHoXtxrjt
-	 HmBKwOxrEGwMdeapR9B97Rv1hAm2ARQ3TOpvHZqjtZEvmrmdGul1XZI4OWF21jbCLy3Vk
-	 IPB1t5xJNzNVhBZapa/rzHD3iGR/1/LGwDG7igU+/bEUWOgF7/GxahssebuURI0dsuw==
+	t=1793010692;
+	b=A+kb+D1ruVl4bBR+r7LymZ1562kphS0SOnFxP5TvHkTfwjEmYJsz1xL37FRu+igTBOW5
+	 vbnFd63L84rjGVUUf4YwPjZ5eIvGG/pWzkCfdB99FyyqMDPNE0siSIA0xYOrXJp89Shdg
+	 fCXv6eY9vbogzIVTI36XPj1omT0m14jBfHq0mWv3MfavmSmxhp/yutcR+aFaGi1vtIG7F
+	 oQYS//alq92DEw1PA1PAwHVhmehDgVSrobGZUqhakDrTgxxe5ZqMliNPeoo/le6PQqFpv
+	 rWGDkL9hEivzJtdhdcSs9Voh8Up/n14ix5FbDDoP/VjG6+iXVDgyzi8ydF7mz7L8TIA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793010684;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793010692;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 X-MS-Exchange-Authentication-Results:Received-SPF:Received:Received:
-	 From:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:CC:X-Mailer:
+	 From:Date:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	 Message-ID:References:In-Reply-To:To:CC:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Originating-IP:
 	 X-ClientProxiedBy:X-EOPAttributedMessage:X-MS-PublicTrafficType:
 	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
@@ -27,53 +27,53 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
 	 X-MS-Exchange-CrossTenant-FromEntityHeader:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=Re367Wt8LXM2TVLXR5gu1dStH5vIBrxwZf0APW1W3pU=;
-	b=B314giDgojVyO8IbNPO8l41GnTFB+dCHFEwVwC8lAjfammCp+4oDGijLaqdoLJ9TOqTN
-	 E8V3nQO2V4SUw8e8e2xnTIAqYxuOIN1BFd+3Vey5QpjfvFSWU/l56mzoJqgnISR/TI6AY
-	 D8rDltw/HuGmJkgsOCSH+wos3UF//hu6viIkV6cXSHvahqt4qNLJ8z+zhcYqI86WFtA+Q
-	 nr0wLdE7g5rbd78I5sO+qK8PbYiw7lrTDkF9js+SY/lq3iwRxkA1yaRwKiDrnJbFD7Gc/
-	 W22RJpRshoq1l2CZLBDIj4EA22Dv2rhJJfEIgW3RVXa3dhsbyZDqTi97dxPcalvaYXw==
+	bh=fyugMBav7xTQnoOl+Qj+YPtNJnrNVEg3p+9n1nI4itw=;
+	b=GihSqrkSHnr+tGl0G+OAqsazyXraakW7rPGq6pSJb9ruA9bnFfdCg1er8vcUXRqjtnrG
+	 ylH6j0m0xfe35d9ANEJj4r8YJjbFo72CEA6OYFLxSLgQsDg4ZQH+6bxcu0Nd0+2o1XWzE
+	 AyR4RMXt4lAEVe+NE/quYE990I8jFa01e7Q9QwqLDaXonOHRFFDOKvhoIPSCZ2Y4Bnocz
+	 YwWPFU7iSoMnys8a3WlEFCIgpQOgJtReS/3g/ac17z8BOB9hHa+0f6bYFBpy4ju8aTPov
+	 WwF5CddBKG6UclCAVhvMVPocW3smDIOwrBm8+hS1nFN/W4dnEvd8U/HrvMrNKXCIXJw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amd.com;
 	spf=fail smtp.mailfrom=amd.com;
-	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=3wvtLj7H;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.70
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013070.outbound.protection.outlook.com [40.93.196.70])
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=EPJO9XZA;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.69
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012069.outbound.protection.outlook.com [52.101.48.69])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 788FA606A31A;
-	Mon, 26 Oct 2026 10:31:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 788FA606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC20C606A31B;
+	Mon, 26 Oct 2026 10:31:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC20C606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=3wvtLj7H
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=EPJO9XZA
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Ah3aCgOrof+NNxbY2Jl/XZqnidt5wOI8JAx9xHyd5HEwVdrrSi2axKQh3946oMZk5edPmiixrQhAtXGeA2uB0bS+1ri4+mpeZwe7UXuaXL0JaKEms7iJIIveTULyIINWKP5ztYjmX6IaObiSVRUXXyWhGXeg82NnFU3LZFEgVpk/+icnufwdXmAmFAl4YwwZmEI8flLFM2RktfxsluKHXmLLxvIl7OpBafT6A0TiZ8dTJPwowqvjnhI1WScK2TSV2Ppo7IHTy4jA6kPgJcABhcRSfHhkIENzK6/Ju2BPD8RxHKThmSMHpsDEgSk/3uO4lWncCNyAwfdbenKvqZAJsg==
+ b=KV3GgOu4E7yFivdr5ZR66b0micNIvtQQ+1sx2n5pmgOAHbD+v8IuU74Lk3iFRI6VWEhRCv6ENv21rmBewp/PmwxRgiB7hu7Rub/JTMeDjDsw8gcBjDf/1+h9zmEgioQj/9e1Hr99E1mOiQxC36QD3olgpPF2QJTvubPGEXgtHyLJXjl8j0//vx7Ga4G4zE3NMwjW3dvzQ0MySMtKamRLikjWt3uaNANd8YU393s31BcByWgF4AOvPmkSww6igoUxuHJStoIpCufTn0EncEDDRO0y9lqgw7JVwBuy9h3iSSuDN1Ki8QjJZOL/1oinZqi2kjcoH+lVmgB3TiJlJRgOuQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Re367Wt8LXM2TVLXR5gu1dStH5vIBrxwZf0APW1W3pU=;
- b=hBqj7R0pOVzfcsx+AAqf+2HQmgUXMYNwaFNr4S0+NXB4yftWADaOwaJnFYUyMzdCLmCViS7cyD8KjPligFWviKmHNhRju83Z75Qy9fnEkfWtEwd8wApNyAPVVTLcElylTueJoNV7xnoN17oQLtmJkshJVVK4SKWkelKcZ0B3uqJdLz9asshoeW+8NXmT/+l8ELqHKLVjHRKb/czZdn4jzajQy3zZwc3W9mCvUqC6UsFObkx/hrEXE03T3FwdPSOSOc/eC2ibm0SQE/+dRiJLHSZ7QdD1Nc3gTdBi4iw03hsMssfD4HdMSfqXE2/uBwg7HK1JnO5HhCGyFpWnzAypOA==
+ bh=fyugMBav7xTQnoOl+Qj+YPtNJnrNVEg3p+9n1nI4itw=;
+ b=l5g3EFoGYGyimDmOgS6EveQ4gsM64HWjXPIbaaw1bWrlVOsOL2jvvR+I90Xa4ruRrz7ZMovPpBhSkLlq4XfNfNe6DGPdRdE2Mu/iqkvqZAMPJRvMbVcN8UUR5Xv9bQCkn5Hl1KgatEBuSA92n3Fam2qBOQxbjmVwKcyHn0yrqOAxeMqjMTkwm/UVaA2AEXJi9w77VHuofl+dTTeYOikvw47qKxzc9mjZyjzCG8nrz7uILioKtchnS4+tN7XDye2RX7c4fJYEsPL+bvk5gT0klsLrVAzZXNy+DXimUDy3KCBfK0U4Ngi1QoOd7b5X09dTtshvJMzAVlI5PE6Ovod9dQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=infradead.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Re367Wt8LXM2TVLXR5gu1dStH5vIBrxwZf0APW1W3pU=;
- b=3wvtLj7HJOg861+2aNpyhbTY/W+a82NKiV6WSafzsAeVp3r8GvmB9U/XRaY5E2/D8b8h4RP3ZaBdcVLzc/tncwtgfztZNGonHRXrQKGuvJsD2qMf66EMg512CE4ONnfSu8k8Bt2DYMLSsq+lk0efy9R2rH/NNXC+84OCqHWxKdk=
-Received: from CH0PR03CA0035.namprd03.prod.outlook.com (2603:10b6:610:b3::10)
- by SA3PR12MB8762.namprd12.prod.outlook.com (2603:10b6:806:31f::9) with
+ bh=fyugMBav7xTQnoOl+Qj+YPtNJnrNVEg3p+9n1nI4itw=;
+ b=EPJO9XZA0KmUSTE1lQMsf1YrCidS+ucKv8nxCI/JotUMxNW9CXn/99QtV3bMZ7pPb1qN7WXCIc0E8QaTBVcDXn5aRG0iZ9iinVPk9o6vV9fGllYpBuk/uZR46SQmxdZ+vfV4Oc2Qg0/WdVn9RWF8X0s8ryhSAGr8FD+xWaFvh3Q=
+Received: from CH0PR13CA0004.namprd13.prod.outlook.com (2603:10b6:610:b1::9)
+ by IA0PPFDC28CEE69.namprd12.prod.outlook.com (2603:10b6:20f:fc04::be8) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Mon, 26 Oct
- 2026 10:31:16 +0000
-Received: from BL6PEPF0006C3E0.namprd02.prod.outlook.com
- (2603:10b6:610:b3:cafe::89) by CH0PR03CA0035.outlook.office365.com
- (2603:10b6:610:b3::10) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.21.546.16 via Frontend Transport; Mon,
- 26 Oct 2026 10:31:16 +0000
+ 2026 10:31:27 +0000
+Received: from BL6PEPF0006C3E1.namprd02.prod.outlook.com
+ (2603:10b6:610:b1:cafe::46) by CH0PR13CA0004.outlook.office365.com
+ (2603:10b6:610:b1::9) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.21.569.6 via Frontend Transport; Mon, 26
+ Oct 2026 10:31:27 +0000
 X-MS-Exchange-Authentication-Results: mx.microsoft.com 1; spf=pass (sender IP
  is 165.204.84.17) smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -81,17 +81,16 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- BL6PEPF0006C3E0.mail.protection.outlook.com (10.167.249.235) with Microsoft
+ BL6PEPF0006C3E1.mail.protection.outlook.com (10.167.249.231) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.21.569.4 via Frontend Transport; Mon, 26 Oct 2026 10:31:15 +0000
+ 15.21.569.4 via Frontend Transport; Mon, 26 Oct 2026 10:31:27 +0000
 Received: from [127.0.1.1] (10.180.168.240) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.53; Mon, 26 Oct
- 2026 05:31:03 -0500
+ 2026 05:31:15 -0500
 From: Shivank Garg <shivankg@amd.com>
-Subject: [PATCH 0/8] mm: remove unused functions
-Date: Mon, 26 Oct 2026 10:30:28 +0000
-Message-ID: <20261026-unused-sym-v1-0-82ca2dceabe1@amd.com>
+Date: Mon, 26 Oct 2026 10:30:29 +0000
+Subject: [PATCH 1/8] mm/vmstat: remove unused folio stat helpers
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -103,10 +102,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDIzNDAyMT3dK80uLUFN3iylzdNFNz80TTJAtzk7RkJaCGgqLUtMwKsGHRsbW
- 1ABqjz1lcAAAA
-X-Change-ID: 20261024-unused-sym-f577a5b874fc
+Message-ID: <20261026-unused-sym-v1-1-82ca2dceabe1@amd.com>
+References: <20261026-unused-sym-v1-0-82ca2dceabe1@amd.com>
+In-Reply-To: <20261026-unused-sym-v1-0-82ca2dceabe1@amd.com>
 To: Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand
 	<david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett"
 	<liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport
@@ -134,140 +132,112 @@ CC: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
 	<bpf@vger.kernel.org>, <damon@lists.linux.dev>, <kasan-dev@googlegroups.com>,
 	Shivank Garg <shivankg@amd.com>
 X-Mailer: b4 0.15-dev-47d62
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793010663; l=4991;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793010663; l=2287;
  i=shivankg@amd.com; s=20260518; h=from:subject:message-id;
- bh=HfPcxskqyJdwsRoR+BYJC2/1riiJVVu2W7JK9eq6WgA=;
- b=x84fMUS12Xc/VmQpWc2ywiAy0sAd1AKLKnnN+lltJxaPknJ1FxsXoFSih/0sSxTjd+ikoCJn4
- FwqgIhkhSKWABmvfaqkqzZIiRycVvRj5j17hFmu8i20AtxAKU+6LHi8
+ bh=DefGTvUpFwbcZk2mR+oumYqwMkGhYq6r8/H27DOF33U=;
+ b=5SHt7jFCvyZydEFn9weQyboLS4iJFN6a6gfc7BMbkzBMcSAN/pOdacCAOpCNKkg6GnprW/l2L
+ s3llS9gLRtQBEKXCuU6bcifhtw68M4tBLjYjfKXJQU00jZolIykib55
 X-Developer-Key: i=shivankg@amd.com; a=ed25519;
  pk=2l2QGTeXuGkZTtfmx0nPQU8iFZfjYmX/ymMojitevx4=
 X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
  (10.181.42.216)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0006C3E0:EE_|SA3PR12MB8762:EE_
-X-MS-Office365-Filtering-Correlation-Id: bf96e645-1134-4547-766c-08df334c43d4
+X-MS-TrafficTypeDiagnostic: BL6PEPF0006C3E1:EE_|IA0PPFDC28CEE69:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4be09906-4d54-4935-4eaf-08df334c4abb
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700016|82310400026|1800799024|376014|7416014|23010399003|6133799003|10067099003|18002099003|13003099007|921020|56012099006|11063799006|261021123027099003|261009223027099003|261021133027099003|261022105027099003|261021135927099003|261021130227099003|261022115727099003|261022113327099003|261022075727099003|261021121427099003|260925022911599003|260925021911599003|260925021311599003;
+	BCL:0;ARA:13230040|7416014|23010399003|376014|1800799024|82310400026|36860700016|261009223027099003|261021123027099003|10067099003|56012099006|18002099003|22082099003|921020|11063799006;
 X-Microsoft-Antispam-Message-Info:
-	PsWXVfFUwpuYaVrqRVoakBAHcQuLSxm5f+CAOdvbgXurFkPLxA9GJxy0OsoMui/olN8HDMYiEt5XbvMdp5jC5bbQuG45VD3NUpM9PMkfp1j+xkYUIVT8puhv7N/VyAFDPwmHZbpXamIoqecUW33tqBX0sRTGQYcFrdOSq3dV5zTUrhywtRKxzsjNUU+mkXCoHHovsokrDIMb45v1mdvG8C9ES7agK6QgdX5O8mkksVOHY7ma6a5hwrK8+rkYeurBduPn7KZsfYn/M7yJOKF1TuusMZZrXW2QsS6CxiXzfc4O2WJyTOExZoqKnnAZ7VnbAvgwqrNkFO78FqBvhoku5xu6LOJcxSQMSXORaadQkPvi8jL8nbbuttuqn2UmHUs2x8louXKOf7vM8a+hhuCyxeDe2gVRQtKfnMOmAp+mWt0Vff/wTQdQ+mQibmJ5rv69UQ9qUSikSP4OmZyMGhQY0SwCKAKRxMo9z5otEaBZya3VP21xOtPM/Mdsx7J7uy7bWTIgdkqX2oB1pvP1inSM49rsHkczoav7oGeZeiPcM3kcLKyv3Qt7nigBm7b/tx2XWT8bADu/u49Cxp7x+BwACPHo8C+SGpEPwGuaOYsVavQYV1R25a9xcnq7Z8o6rvE4INezaau3BorKFDFuvnFBTYUsv/3zEYJhWxGpjtG+Z2fxWw/qucqJ7MSkJ6iTpZ882LIuHadR6J9IdBLlRh1iCw==
+	ti1omnjRJ0zSIt/15hBauuogN+6Le3iFhyOVirAr3zM4BuvI5ju614fvRv6gptsy6EocuHHcmFrY0PtVWFef92d61tlpcT5owG1XAQVCPmEmFnDtX2XuQjYb2m8s+X9k0YBsMxpmt1B3FQv2vTyPciNPG8r5k3Lz0lOvF6Lt5Z8icJhVbJd/O6QyqVwH8OVDTKDsSfZf6qIoRBZmO0nSgMn7iVFOVGcaCuRBbLrvZiSdhHClBURlgKFcL2rTESQ34fA/vH37gOYlLSoBT99p7r8MEjupfXQWYV6I8Zf1HhlzMa0jrPl3ODI0DydnYB4kwUgziPL+p6mdNeHdiZmdauQRjtSSBy0MvcMetJ047kKnyB27d+wzNaFqxnNjRQYeIZwUUbN00LBh8GS4J6llQJ7E+O5qt1mphYNvMXLmwaT6JESjXiQfJEFyvMDH80/FH4Yg5iRKJpGzbFJq7ih+UerqDEHd/Jv5KFRGsCT48Xr0qQxeMhnsriZU9hUFvMFBDL+x00/CTZmCB7bEefjF5JMPWWvGhGws91/2qvIp4naT/lxCSBh6vyE8xBJAyKiDpaLiB4jxtytHEJxdrdD6SvJ25kqyxw9boAS3Rap4YjEF/8HTjA3yziBV5T5+T50v/d2CjsLIz8SauTdWflEuEdEJtlLXo6C9K7YOoKV/+O29k/W/LQxaoj43OjYNqguw1Pp6vt7s0jGn9wRq4hsKxzC+RGaSgJHfib7Myxg+Dq8B7sPTQxyPhI0s3UaFas7e
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700016)(82310400026)(1800799024)(376014)(7416014)(23010399003)(6133799003)(10067099003)(18002099003)(13003099007)(921020)(56012099006)(11063799006)(261021123027099003)(261009223027099003)(261021133027099003)(261022105027099003)(261021135927099003)(261021130227099003)(261022115727099003)(261022113327099003)(261022075727099003)(261021121427099003)(260925022911599003)(260925021911599003)(260925021311599003);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(23010399003)(376014)(1800799024)(82310400026)(36860700016)(261009223027099003)(261021123027099003)(10067099003)(56012099006)(18002099003)(22082099003)(921020)(11063799006);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	BN1rQs0OraG302mtvTkuDW3GPLZS5He7EzrG6naWaX7D+Idl9gjbIxGlf5oUmUe9QOX5xOpbMbOiF8ODO9nd3cwEuvFlOgZOOgOTtGzYSn6KXeSv4QUOfIacsG9y66NYeoUt9boKchtopfj0YV5aZbdijI4KTaimiqE/xngG0vizwwxbgDpFDQI1llG+hxqq3/+IlqMD1j803UhYyOiiDNoUzhOaHIB6gImVXqbV5g0bYRO9XJEG87GrE0Tvn81QwkXPbejdZaOAOlolMRtRF5gAFw+Q2w6YsOC9SEGtTWapJCU9xi3ry1FHIbcUZAOgnK8evCvLVSFG9GJA1o8p5v8ebMvQUFR7bz0Fc3jBa+UITb/1txItVubyMl/tVI/Mb8E9pFQhvfo3zjxGHL98WOt9qn9l2TpD1vjQEHw442FsrLqVXsf9LCaq9pq+qcTD
+	WyRlMVee1i0Yc2z+ZFugOkxhAS9bSSjGqlRk5drM2cMmDO9gxCEfmhp7tSaJV3fNNxKHFwmE80rKRUKBe+RIWzHLMcTmekW+cV/mGcuzMs4gjd2ADtXyqkXZx+ZSoulwmVWyNUKCua1lQkA5PgpAE59UU4RKSZHnEi+h+zBR2vgmfzoWAp7cAkEamG3AgtgLEksAvxcBoqY/cDcKkc1gJRhqzW89JOIgxL1JQyTUtLFWv3Gcwl5rbGbV/ozgkceC9TypcPyJdvAVwdryHs+JfhKhQqD0IC5x+krsOrPcgZlvGpyGlrvG7UzwhUOpFz50vlU0+S0XkzHizKBW8J5W4YvFPJSRcdfenYITpTNR5U3Sl/wk1ZiKqFl6pa0qPffpEWinpo8T8xxxZFlITvEZB9ThCJCxIW1AlKARzRkNZetn0UW8AIoWDqpbvsrwjHjK
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Oct 2026 10:31:15.7997
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Oct 2026 10:31:27.3797
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: bf96e645-1134-4547-766c-08df334c43d4
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4be09906-4d54-4935-4eaf-08df334c4abb
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BL6PEPF0006C3E0.namprd02.prod.outlook.com
+	BL6PEPF0006C3E1.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR12MB8762
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PPFDC28CEE69
 
-This series removes 16 functions and one variable in mm that have no
-users left anywhere in the tree. The functions are all static inline
-helpers in headers, which no compiler warns about: GCC never reports
-unused static inline functions, and Clang only reports them in .c
-files, and only with W=2. The variable is heap_stack_gap in
-mm/nommu.c, unused since the start of git history. Each patch covers
-one file or subsystem, so they can be picked or dropped independently.
-
-How they were found:
-
-I wrote some Python scripts, with the help of an LLM, that scan the
-whole tree for every config and architecture at once. They look for
-static inline functions without callers, and for non-static functions
-named nowhere but in their own definition, declarations, stubs and
-EXPORT_SYMBOL(). Where a ## macro could paste together one of the
-names, they read every call of that macro to see whether one does.
-The candidates were then cross-checked with a real build: a scratch
-tree marks each one __deprecated, an x86_64 allmodconfig build is run,
-and any candidate that triggers even one deprecation warning is
-dropped. The final report labels a symbol "Sure" only when that build
-confirms it unused, and "Unsure" when the build doesn't compile it or
-the scripts can't rule out a use. 
-
-Before posting, I searched lore with semcode MCP for removals that
-others had already posted, to avoid duplicates. Each patch was also
-build-tested on its own.
-
-The scripts and a generated HTML report are here [1], if anyone wants
-to play with them:
-
-[1] https://github.com/AMDESE/linux-mm/tree/shivank/kunused
-
-Left out on purpose:
-- mmap_action_map_kernel_pages() and mmap_action_map_kernel_pages_full()
-  are unused but documented in Documentation/filesystems/mmap_prepare.rst.
-- zone_span_writelock() and zone_span_writeunlock() are unused, which
-  means span_seqlock is never written while page_alloc.c still reads
-  it. That deserves its own patch.
-- cpupid_cpu_unset() and kmsan_poison_memory() are unused, but each is
-  one half of a pair whose other half has users: cpupid_pid_unset() and
-  kmsan_unpoison_memory(). I left them out to avoid breaking the
-  pairing, but I'm happy to include them if that's okay.
-
-Already posted by others, or about to get a caller, so not in this
-series:
-- __mm_flags_set_mask_bits_word(), by Kevin Brodsky:
-  https://lore.kernel.org/r/20260714-remove_pgtable_cdtor-v1-1-44be8a7685d7@arm.com
-- pfn_in_present_section(), by David Hildenbrand. His series also
-  reworks the code around valid_section_nr(), so that one can wait until
-  it has landed:
-  https://lore.kernel.org/r/20260921-b4-sparsemem_cleanups-v2-7-54d81d65e125@kernel.org
-- page_memcg_check() and mod_memcg_page_state(), by Sang-Heon Jeon and
-  by Tal Zussman:
-  https://lore.kernel.org/r/20260918165601.1014666-2-ekffu200098@gmail.com
-  https://lore.kernel.org/r/20261014-memcg-unused-page-helpers-v1-0-240b37c53831@columbia.edu
-- vmf_insert_mixed_mkwrite(), by Sang-Heon Jeon:
-  https://lore.kernel.org/r/20261002160535.661399-1-ekffu200098@gmail.com
-- folio_dup_file_rmap_pmd() has no caller today, but Konstantin
-  Khorenko's fork rework fixes it and adds one:
-  https://lore.kernel.org/r/20261021-b4-prep-vstor-149847-copy_huge_pmd-recheck-special-pmd-v4-0-66f00b7a564c@virtuozzo.com
-- read_cache_page_gfp(), by Qu Wenruo, as the last patch of a btrfs
-  series in January. It hasn't been applied yet, so I've left it to
-  that series:
-  https://lore.kernel.org/r/a5ffadf18dca846d6f8086b29366288e794a24b6.1768017091.git.wqu@suse.com
-- folio_is_pfmemalloc() has no caller today, but Ameer Hamza's SUNRPC
-  page recycling patch adds one:
-  https://lore.kernel.org/r/20260817210811.3984663-3-ameer.hamza@truenas.com
-
-I'm starting with mm. Across the whole tree the scripts currently find
-about ~4000 symbols, and of which 3000 pass build checks, so there's plenty of
-fun left for other subsystems :)
+__zone_stat_add_folio(), __zone_stat_sub_folio(), zone_stat_add_folio(),
+zone_stat_sub_folio(), __node_stat_add_folio() and __node_stat_sub_folio()
+have no callers.  The last zone_stat_sub_folio() user was removed in
+commit f1ee018baee9 ("mm: use __page_cache_release() in folios_put()").
 
 Signed-off-by: Shivank Garg <shivankg@amd.com>
 ---
-Shivank Garg (8):
-      mm/vmstat: remove unused folio stat helpers
-      mm: remove unused folio refcount helpers
-      mm/page_ext: remove unused page_ext_iter_get()
-      mm: remove unused helpers from pagemap.h
-      mm/swapops: remove unused make_guard_swp_entry()
-      mm/swap: remove unused folio_to_swp_tb()
-      mm/zsmalloc: remove unused zpdesc_lock()
-      mm: nommu: remove unused heap_stack_gap
+ include/linux/vmstat.h | 36 ------------------------------------
+ 1 file changed, 36 deletions(-)
 
- include/linux/page_ext.h | 11 -----------
- include/linux/page_ref.h | 24 ------------------------
- include/linux/pagemap.h  | 11 -----------
- include/linux/swapops.h  |  5 -----
- include/linux/vmstat.h   | 36 ------------------------------------
- mm/nommu.c               |  1 -
- mm/swap_table.h          |  5 -----
- mm/zpdesc.h              |  5 -----
- 8 files changed, 98 deletions(-)
----
-base-commit: 6b4b543fa18757297ac756a6fe6e64f506b7844a
-change-id: 20261024-unused-sym-f577a5b874fc
+diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
+index 5b31d8e7ae40..953d8ef65400 100644
+--- a/include/linux/vmstat.h
++++ b/include/linux/vmstat.h
+@@ -425,54 +425,18 @@ static inline void __zone_stat_mod_folio(struct folio *folio,
+ 	__mod_zone_page_state(folio_zone(folio), item, nr);
+ }
+ 
+-static inline void __zone_stat_add_folio(struct folio *folio,
+-		enum zone_stat_item item)
+-{
+-	__mod_zone_page_state(folio_zone(folio), item, folio_nr_pages(folio));
+-}
+-
+-static inline void __zone_stat_sub_folio(struct folio *folio,
+-		enum zone_stat_item item)
+-{
+-	__mod_zone_page_state(folio_zone(folio), item, -folio_nr_pages(folio));
+-}
+-
+ static inline void zone_stat_mod_folio(struct folio *folio,
+ 		enum zone_stat_item item, long nr)
+ {
+ 	mod_zone_page_state(folio_zone(folio), item, nr);
+ }
+ 
+-static inline void zone_stat_add_folio(struct folio *folio,
+-		enum zone_stat_item item)
+-{
+-	mod_zone_page_state(folio_zone(folio), item, folio_nr_pages(folio));
+-}
+-
+-static inline void zone_stat_sub_folio(struct folio *folio,
+-		enum zone_stat_item item)
+-{
+-	mod_zone_page_state(folio_zone(folio), item, -folio_nr_pages(folio));
+-}
+-
+ static inline void __node_stat_mod_folio(struct folio *folio,
+ 		enum node_stat_item item, long nr)
+ {
+ 	__mod_node_page_state(folio_pgdat(folio), item, nr);
+ }
+ 
+-static inline void __node_stat_add_folio(struct folio *folio,
+-		enum node_stat_item item)
+-{
+-	__mod_node_page_state(folio_pgdat(folio), item, folio_nr_pages(folio));
+-}
+-
+-static inline void __node_stat_sub_folio(struct folio *folio,
+-		enum node_stat_item item)
+-{
+-	__mod_node_page_state(folio_pgdat(folio), item, -folio_nr_pages(folio));
+-}
+-
+ static inline void node_stat_mod_folio(struct folio *folio,
+ 		enum node_stat_item item, long nr)
+ {
 
-Best regards,
 -- 
-Shivank Garg <shivankg@amd.com>
+2.53.0
 
