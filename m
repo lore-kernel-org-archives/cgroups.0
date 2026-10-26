@@ -1,54 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.160
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.98
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792993605;
-	b=VKyeltrcQo0nxVafr/F52NmNiB44sFnDwvROPvFT+tsJ33FmnL7Y+k3Qv+p81fzs+z4j
-	 a6t3JRhEY+Pm5RcoqfXfOIhhQ+kOm8BgY1MLjViLezYb9GvXIyAOJmgmby8YT459BvGzD
-	 ghu85WfPQJpdBoC8fxwGf+2HQMfJ41mG3pe6OCWzGJk4TqtFXvs7jWmKSapejJ2oR1ZhZ
-	 Y9tfXcuETDKIydHaeQwp7GqdaRnQd9LcczM4YaRKRrPMkpoLPDL6yA9/AGzN2DyA12Hvi
-	 gKIiFt8dfVDBrkXokUfFtiO1OhVr7LyECDpq3ZFoqiaRVTDM0lUyOTx+MVchPbZynZQ==
+	t=1792996029;
+	b=2D/y1MswXIRiKtPgOxMxnTc5cEfn+Ht8gAr+F+iTHtGLEorKIjdh1Z/tPJPQHsMuLzCA
+	 ijA6XNpO1GqdTcvzEgFzBtuf28Sua04TUIJ6pUvRJV/ehkG+rd458XLPytsz7w2hMM7F0
+	 kIVvDsJZseVD1Yn7jGgp34dGwDjR76kXHZW30YovhtsKOeaZLGmamRtsLBUb5W4tSHc4e
+	 H6u2raXnm8PYFy+I8jJ/Hrj9Vq2kFxhpniwVD7UQ08MOiqN7vEmMlnRjNr7gkLHdBcDQ6
+	 OzDDEYx7CfRw7WbfAtSHvb213wRhDegys2K+C0XFyDIyvAYoBhuPs+IP9TS3yn4GyrQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792993605;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=uQLlasw/IxJ+4pKyXG1ZY91FKtsq+8znejKtb+FOn8Y=;
-	b=m/yAP0hdmP9D9pejVJzIQXoWRvx3kma8ANblkq1JT5CqW6ne7o9sQqmXmp9Rhzv8Cr59
-	 XOUZFhPH3PNIlm+tbh0mQ7nrbW2nQqYjPKLe69r+Lgty22rqunW9Z0G8dGCl2gbCcOzZH
-	 +uIuWhrSEXVFD017Y7oyolCpj0RSOFyIPNU3jxAzEhLY5/jlCCDiPdFC3h4vkMeuPhZeo
-	 32pFeUUb8gb5KzOJz1t9rL5OqDkmrEkBu4q37HFpNe+XIHE3N0a/3Bi4gK+mL5ofJKhaV
-	 EqjGKk1qUXb9u1VVJe64SvrM9ISbTh/DXDtGvx6JvO4+vLssmGpZsT+AWq9Tl0O4VoQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792996029;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=pQSTFgbxlxLL9jSJ52YUzd8VpEj4hxBSu+fg6mberfc=;
+	b=qKXyl6AjgHyiMzhkQOh4XqXb/sb/W+w//iSX2ZGJWYpcXY5XPy8bKcLZ5CZc25o7/Ott
+	 iRDq/mVTbGejBMct0uAHhZFEvnci+zPm/o8apxO74bjUBKMpHlgz/LJy2t0Phj3wfymlg
+	 Cj4W5YD8/YDFydfapyePKIHhkp7DZ+Y786o4rwgyZTBkaonsV03SZmmVkG8wSEz3KiSF6
+	 4vn8KEmcfpv/qV9nyznx9QrObKjmqyruqntROZjPfCffLnZ0sz0E2SQYBGyfYsn582fOW
+	 znfVWlNm3bs4sew/CcFUCvWGy3WuBDGt4QnisNFH4Iv2m+42l7Eq0BPHb8TjByIJQbQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=nonwGZ5U;
-	arc=none smtp.remote-ip=95.215.58.160
-Received: from mta1.migadu.com (out-160.mta1.migadu.com [95.215.58.160])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=C7mZx1i+;
+	arc=none smtp.remote-ip=115.124.30.98
+Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FB56606A32A
-	for <cgroups@vger.kernel.org>; Mon, 26 Oct 2026 05:46:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3FB56606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310B3606A31A;
+	Mon, 26 Oct 2026 06:27:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 310B3606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=nonwGZ5U
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=hu/DyBoO3+WUq6/3FILwmjguLln6byz8HGIo9SgKR7s=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1792993602; v=1; x=1793598402;
- b=nonwGZ5UnOoM1ju14GBwGwKx5rfLK+IMs5458HfJv/MzSJyIWckVG1Jfy101j4k6F69cFHmH
- zliub99k3+o5LDamIAL9AACQjVO0/DxNmWGrI2+Z2kGbqIyimIbMHJGcedvX/2LvVcSDXWy7vAn
- x9A6CCflT/P/bWoEEF4ahIwc=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 8956af835298cb35;
-	Mon, 26 Oct 2026 05:46:42 +0000
-X-Mizu-Trace-ID: 8956af835298cb35
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <485c2661-cf99-406f-8881-094ab28795cf@linux.dev>
-Date: Mon, 26 Oct 2026 13:46:37 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=C7mZx1i+
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1792996024; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=pQSTFgbxlxLL9jSJ52YUzd8VpEj4hxBSu+fg6mberfc=;
+	b=C7mZx1i+GZgsuuAQxPO7LzRyynVq6mzhK0H8f0lr8gIlfAHLFfFAL0fNHkZDKUGpGB/2WYfCjg5CL03jNho/QOgTmo3YgHHEzNAxCmODlqsJp/erHMfrYyQAtKa8Ji0WCnmohR+9t1+73rPop/QooZNl2+Qa7oJTtRt2nlkryps=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R261e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=22;SR=0;TI=SMTPD_---0XDSv6CD_1792996016;
+Received: from 30.178.68.215(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XDSv6CD_1792996016 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Mon, 26 Oct 2026 14:27:01 +0800
+Message-ID: <8fe2314a-ec7c-4ff0-92cf-27f7f8c9c132@linux.alibaba.com>
+Date: Mon, 26 Oct 2026 14:26:55 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,99 +54,142 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next 2/6] cgroup/cpuset: Properly compute effective xcpus
- in update_parent_effective_cpumask()
-To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20261022031643.1351877-1-longman@redhat.com>
- <20261022031643.1351877-3-longman@redhat.com>
- <c65208d9-aba6-4e9a-affa-4f7cd8794a0c@linux.dev>
- <a3caf0f6-da89-4b5c-b80f-3baf6c82a2c4@redhat.com>
- <776306f8-2200-486b-8c43-2b5fd9b5eeb5@linux.dev>
- <8c8f27eb-26af-406e-9766-537dbe9c173a@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <8c8f27eb-26af-406e-9766-537dbe9c173a@redhat.com>
+Subject: Re: [PATCH v4 0/5] mm: restore per-memcg reclaim for NONSLAB
+ shrinkers under nokmem
+To: akpm@linux-foundation.org
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
+ shakeel.butt@linux.dev, muchun.song@linux.dev, mkoutny@suse.com,
+ david@kernel.org, ziy@nvidia.com, baolin.wang@linux.alibaba.com,
+ usama.arif@linux.dev, david@fromorbit.com, qi.zheng@linux.dev,
+ yosry@kernel.org, nphamcs@gmail.com, chengming.zhou@linux.dev,
+ xlpang@linux.alibaba.com, ryncsn@gmail.com, gourry@gourry.net,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
+From: Qinyun Tan <qinyuntan@linux.alibaba.com>
+In-Reply-To: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
+Hi, All
 
+Gentle ping on this series.
 
-在 2026/10/24 04:45, Waiman Long 写道:
-> On 10/22/26 9:53 PM, Guopeng Zhang wrote:
->>
->> 在 2026/10/22 23:00, Waiman Long 写道:
->>> On 10/22/26 9:45 AM, Guopeng Zhang wrote:
->>>> Hi Longman,
->>>>
->>>> 在 2026/10/22 11:16, Waiman Long 写道:
->>>>> Since the introduction of cpuset.cpus.exclusive in commit
->>>>> e2ffe502ba45 ("cgroup/cpuset: Add cpuset.cpus.exclusive for v2"), a
->>>>> compute_effective_exclusive_cpumask() helper which is later renamed to
->>>>> compute_excpus() is added to compute the effective xcpus of a partition
->>>>> root. However update_parent_effective_cpumask() is not updated in all
->>>>> proper places to use the new helper to check if a given cpuset should
->>>>> remain a valid partition root. This can cause a cpuset to incorrectly
->>>>> remain a valid partition root even if no effective xcpus is left.
->>>>>
->>>>> Fix that problem by using compute_excpus() to compute the effective xcpus
->>>>> into delmask in all cases except partcmd_disable and partcmd_invalidate
->>>>> and use it for tasks_nocpu_error() check as well as checking its
->>>>> emptiness. This enables us to catch invalid partition root more
->>>>> accurately in update_parent_effective_cpumask().
->>>>>
->>>> I re-tested the repro from the link below on top of this series
->>>> (applied on cgroup/for-7.4-fixes), and it still fails:
->>>>
->>>>     https://lore.kernel.org/all/20261010075947.333549-3-guopeng.zhang@linux.dev/
->>>>
->>>>     cd /sys/fs/cgroup
->>>>     echo +cpuset > cgroup.subtree_control
->>>>     mkdir A
->>>>     echo 0-7 > A/cpuset.cpus
->>>>     echo 0-7 > A/cpuset.cpus.exclusive
->>>>     echo root > A/cpuset.cpus.partition
->>>>     cat A/cpuset.cpus.partition
->>>>     echo 1 > A/cpuset.cpus.exclusive
->>>>     cat A/cpuset.cpus.partition
->>>>
->>>> The last command still shows "root invalid (Parent unable to distribute
->>>> cpu downstream)".
->>>>
->>>> In this case compute_excpus() returns the stale user mask unchanged.
->>>> user_xcpus() is gone from update_parent_effective_cpumask(), but the
->>>> dependency just moved one level down: the new code calls
->>>> compute_excpus(cs, tmp->delmask), and its first line is
->>>>
->>>>     cpumask_and(excpus, user_xcpus(cs), parent->effective_xcpus)
->>>>
->>>> Here user_xcpus(cs) is cs->exclusive_cpus, which still holds the old
->>>> 0-7 when compute_excpus() runs: update_exclusive_cpumask() publishes
->>>> cs->exclusive_cpus only after partition_cpus_change(). Nothing corrects
->>>> it either - the sibling trim is skipped as exclusive_cpus is non-empty,
->>>> and for a direct child of the root cpuset the intersection with
->>>> parent->effective_xcpus is a no-op. So the stale 0-7 mask still reaches
->>>> tasks_nocpu_error() and PERR_NOCPUS is set again. Please point it out
->>>> if I got the analysis wrong.
->>>>
->>>> I have rebased my fix on top of this series and the partition recovers
->>>> correctly with it applied. Should the fix be folded into this patch,
->>>> or is there a better way to fix it? Happy to hear your thoughts.
->>> You are right. My patch series won't fix this particular issue. However, converting an invalid partition back to a valid one is done on a best effort basis. There is no guarantee that it will always happen. Just echo "root" to "cpuset.cpus.partition" again will make it valid again. So it is not a real bug from my point of view. It is just a nice to have feature.
->>>
->> Thanks for the explanation. This helps me better understand the
->> intended behavior of partition recovery.
+V4 fixes the boot hang Kairui reported against v3 -- the root cause
+was that the walker reverse-resolved xarray keys as private memcg IDs
+after the keys were switched to cgroup IDs, causing shrink_dcache_sb()
+to loop forever on the global drain. The fix passes the xarray index
+directly through the internal walk path (new patch 1), so no reverse
+lookup is needed.
+
+Could someone take a look when they have a chance?
+
+Thanks,
+Qinyun Tan
+
+On 10/13/26 11:12 AM, Qinyun Tan wrote:
+> With cgroup.memory=nokmem, the THP deferred split shrinker and the
+> zswap shrinker are degraded in two ways.
 > 
-> I did find the reason why your test case isn't working. I have made some adjustment in patch 2 which should make your test case work now with the v2 series.
+> First, both shrinkers are missing the SHRINKER_NONSLAB flag, so
+> shrinker_memcg_alloc() demotes them to non-memcg-aware shrinkers:
+> limit-induced reclaim of a cgroup neither splits its partially
+> unmapped THPs nor writes back its zswapped pages.  v1 of this series
+> [1] restored the flag to fix that.
 > 
-
-Thanks for looking into this issue again.
-
-Cheers,
-Guopeng
-
+> However, as Sashiko's review of v1 pointed out [2], the flag alone
+> is not enough.  __list_lru_init() also collapses every list_lru into
+> per-node lists under nokmem, so even with the flag restored, the
+> objects of all cgroups share one list per node: the per-memcg
+> shrinker bit is only set for whichever memcg happens to repopulate
+> the empty list, so pressure in other cgroups may not even trigger
+> the scan, and when it does, the scan walks everyone's objects.
+> 
+> Before commit fafaeceb89a5 ("mm: switch deferred split shrinker to
+> list_lru"), THP had fully per-memcg deferred split queues embedded
+> in struct mem_cgroup, working independently of kmem accounting.
+> nokmem only opts out of kernel slab accounting; THPs and zswapped
+> pages are user memory and remain charged to their cgroups, so
+> per-memcg reclaim is still what these shrinkers want.
+> 
+> This series keeps list_lrus backed by SHRINKER_NONSLAB shrinkers
+> memcg aware under nokmem:
+> 
+> Patch 1 passes the xarray index directly to the list_lru walker and
+> drops the reverse memcg lookup that v3 still performed between the
+> xarray iteration and the walk.  That lookup was the cause of the
+> boot hang reported against v3 [3]: after the keys were switched to
+> cgroup IDs, the walker kept resolving them as private memcg IDs, so
+> the global drain kept skipping non-empty per-memcg sublists and
+> shrink_dcache_sb() could loop forever.  Passing the index directly
+> also removes the temporary css reference from the walk.
+> 
+> Patch 2 drops the kmemcg_id copy, which is only assigned when kmem
+> accounting is enabled, and indexes the list_lru xarray with
+> mem_cgroup_id() instead, so the index works independently of kmem
+> accounting.  The list_lru plumbing passes memcg pointers now, and
+> memcg_online_kmem()/memcg_offline_kmem() are inlined into the css
+> online/offline hooks.  It also drops the nokmem early return from
+> the offline path so these lrus are reparented on offline.
+> 
+> Patch 3 keeps a list_lru memcg aware under nokmem when its backing
+> shrinker is registered SHRINKER_NONSLAB.
+> 
+> Patches 4 and 5 restore/add SHRINKER_NONSLAB on the THP deferred
+> split shrinker and the zswap shrinker.
+> 
+> The savings of nokmem are preserved: slab-backed lrus (e.g. the
+> superblock dentry/inode lrus) still fall back to per-node lists, and
+> the per-memcg lists are only allocated when a memcg actually holds
+> such objects.
+> 
+> Changes in v4:
+>  - Fix the boot hang reported by Kairui against v3 [3]: the walker
+>    no longer reverse-resolves the xarray keys; the index is passed
+>    directly through the internal walk path (new patch 1, split out
+>    as a preparation so patch 2 remains a pure key switch).
+>  - Drop the kmemcg_id member from memcg_struct_check() along with
+>    the field removal, as pointed out by Gregory Price [4].
+>  - Otherwise unchanged from v3.
+> 
+> Changes in v3:
+>  - Index the list_lru xarray with mem_cgroup_id() (the cgroup ID)
+>    instead of the private memcg ID, whose lifetime only covers
+>    online groups, and pass memcg pointers through the list_lru
+>    plumbing; inline memcg_online_kmem()/memcg_offline_kmem() into
+>    the css online/offline hooks (patch 1 as numbered in v3, per
+>    Johannes's review of v2 [5]).
+>  - Describe in the THP patch's changelog why fafaeceb89a5 dropped
+>    SHRINKER_NONSLAB knowingly, per Johannes's pointer to the
+>    original discussion [5].
+>  - Collected review tags: Johannes's Reviewed-by on patches 2-4,
+>    Nhat's and Yosry's Acked-by on patch 4 (numbering as in v3).
+> 
+> Changes in v2:
+>  - Keep the list_lrus behind the two shrinkers per-memcg under
+>    nokmem, so the shrinker bits are set for the right memcgs and
+>    scans stay scoped to the target cgroup's objects (patches 1-2
+>    as numbered in v2, new; addresses Sashiko's review of v1 [2]).
+>  - Patches 3-4 unchanged from v1; collected the review tags.
+> 
+> [1] https://lore.kernel.org/lkml/20260904033503.4067283-1-qinyuntan@linux.alibaba.com/
+> [2] https://sashiko.dev/#/patchset/20260904033503.4067283-1-qinyuntan@linux.alibaba.com
+> [3] https://lore.kernel.org/lkml/20260910080722.3961351-1-qinyuntan@linux.alibaba.com/
+> [4] https://lore.kernel.org/lkml/arNK64PxTXbVEhis@gourry-fedora-PF4VCD3F/
+> [5] https://lore.kernel.org/lkml/20260907110111.2286932-1-qinyuntan@linux.alibaba.com/
+> 
+> Qinyun Tan (5):
+>   mm: list_lru: pass the memcg index directly to the walker
+>   mm: memcontrol: drop kmemcg_id and use mem_cgroup_id() for list_lru
+>     indexing
+>   mm: list_lru: keep per-memcg lists with nokmem for NONSLAB-backed lrus
+>   mm: thp: restore SHRINKER_NONSLAB on the deferred split shrinker
+>   mm: zswap: mark the zswap shrinker SHRINKER_NONSLAB
+> 
+>  include/linux/memcontrol.h |  16 ------
+>  mm/huge_memory.c           |   3 +-
+>  mm/list_lru.c             | 114 +++++++++++++++++++++----------------
+>  mm/memcontrol.c            |  45 +++------------
+>  mm/zswap.c                 |   4 +-
+>  5 files changed, 77 insertions(+), 105 deletions(-)
+> 
 
