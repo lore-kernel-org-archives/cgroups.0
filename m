@@ -1,49 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.98
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.84
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1792996029;
-	b=2D/y1MswXIRiKtPgOxMxnTc5cEfn+Ht8gAr+F+iTHtGLEorKIjdh1Z/tPJPQHsMuLzCA
-	 ijA6XNpO1GqdTcvzEgFzBtuf28Sua04TUIJ6pUvRJV/ehkG+rd458XLPytsz7w2hMM7F0
-	 kIVvDsJZseVD1Yn7jGgp34dGwDjR76kXHZW30YovhtsKOeaZLGmamRtsLBUb5W4tSHc4e
-	 H6u2raXnm8PYFy+I8jJ/Hrj9Vq2kFxhpniwVD7UQ08MOiqN7vEmMlnRjNr7gkLHdBcDQ6
-	 OzDDEYx7CfRw7WbfAtSHvb213wRhDegys2K+C0XFyDIyvAYoBhuPs+IP9TS3yn4GyrQ==
+	t=1792996406;
+	b=PNA8fQ77hwwkSkEWaCOsb3B4/nCKOa61Z9CJ9a2Vs/bpIrdrddK9UJiPKu2Lj0noipN/
+	 R8PpkITV7HlufXTg5XuBaHk8XamH1hEXuvmHzYRLA32xSHwbBuwM7nP7Mh3hTwOZK1eZJ
+	 VJXQVoNwLXBY39QH01kdR3BJJ1pfR6sR6+zCppho09pjlmR7KHZGIWvUjCKwzeMbc5UQI
+	 jFKu3yVMBK6ZxOiIl2wz6n81BGLLjbnKodrXK+V86kNDIlPSTEHFclTKaHup60oZ7+Met
+	 xZZWVuZFER19uCSIw4DB23MTsZCeITv+cTjOH2Vyw5XBmUNmocyzTdWtUHz4Na2c34g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1792996029;
-	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=pQSTFgbxlxLL9jSJ52YUzd8VpEj4hxBSu+fg6mberfc=;
-	b=qKXyl6AjgHyiMzhkQOh4XqXb/sb/W+w//iSX2ZGJWYpcXY5XPy8bKcLZ5CZc25o7/Ott
-	 iRDq/mVTbGejBMct0uAHhZFEvnci+zPm/o8apxO74bjUBKMpHlgz/LJy2t0Phj3wfymlg
-	 Cj4W5YD8/YDFydfapyePKIHhkp7DZ+Y786o4rwgyZTBkaonsV03SZmmVkG8wSEz3KiSF6
-	 4vn8KEmcfpv/qV9nyznx9QrObKjmqyruqntROZjPfCffLnZ0sz0E2SQYBGyfYsn582fOW
-	 znfVWlNm3bs4sew/CcFUCvWGy3WuBDGt4QnisNFH4Iv2m+42l7Eq0BPHb8TjByIJQbQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1792996406;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=uUoKt/goi6/gdJH+xfQQEGMWPgHYjoWcetRx8SRGhMo=;
+	b=tlqMcXBLC1oYDMV0+rUEiIWsqR+6UBDA4UmMK82tnk3efG12YoNg91EN0w5muq9y63MJ
+	 pDrtIR8rF5r3Xs51jOmrZGiUGb30W7nxbWT8euOYayRUpHgGi+93GqEplk6WgVGXyoQX2
+	 ToSndWjbJVMWTKy2Ug5wTT4tcCN3QPYKCr5XrL8RWMJQ0z0zeEBLyfXfaQgoXesBw8ptP
+	 b1BeYlB5NaEBJsUMqlfPhC3HI4SRM+SmwAprywzavX9kvhtRQLbyzwDWq/On1i5A1wW3t
+	 nL1MHDP+IggY4lzZOu7t/TH3kVGD5hSE841voNf4QJ7RrUyvYEkTZmOXObAUcDgA+Xg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.alibaba.com;
-	spf=pass smtp.mailfrom=linux.alibaba.com;
-	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=C7mZx1i+;
-	arc=none smtp.remote-ip=115.124.30.98
-Received: from out30-98.freemail.mail.aliyun.com (out30-98.freemail.mail.aliyun.com [115.124.30.98])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=D0i9EJmn;
+	arc=none smtp.remote-ip=91.218.175.84
+Received: from mta0.migadu.com (out-84.mta0.migadu.com [91.218.175.84])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 310B3606A31A;
-	Mon, 26 Oct 2026 06:27:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 310B3606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BECDD606A31D
+	for <cgroups@vger.kernel.org>; Mon, 26 Oct 2026 06:33:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BECDD606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=C7mZx1i+
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1792996024; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=pQSTFgbxlxLL9jSJ52YUzd8VpEj4hxBSu+fg6mberfc=;
-	b=C7mZx1i+GZgsuuAQxPO7LzRyynVq6mzhK0H8f0lr8gIlfAHLFfFAL0fNHkZDKUGpGB/2WYfCjg5CL03jNho/QOgTmo3YgHHEzNAxCmODlqsJp/erHMfrYyQAtKa8Ji0WCnmohR+9t1+73rPop/QooZNl2+Qa7oJTtRt2nlkryps=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R261e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=22;SR=0;TI=SMTPD_---0XDSv6CD_1792996016;
-Received: from 30.178.68.215(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XDSv6CD_1792996016 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Mon, 26 Oct 2026 14:27:01 +0800
-Message-ID: <8fe2314a-ec7c-4ff0-92cf-27f7f8c9c132@linux.alibaba.com>
-Date: Mon, 26 Oct 2026 14:26:55 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=D0i9EJmn
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=j9y/gJSpMQGmuIOH4DvgaG5yYS9ycUpPlogqZlKBAY4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1792996403; v=1; x=1793601203;
+ b=D0i9EJmnH3zyPuRGUbFg5dFF3EvyrTMoMKqnSqVkXHwY1YEcRc6eh7Ajqo7cDZc33TvFCuJu
+ AqWnqwzzxskhS+UGTcorUBjmLWTq1HiOjmTGoMhVeSq/Qn1n6tNNjjMjPdmsYXutUZXRy8mhhV9
+ 3gyAptbjw8w+3cZerF5pmz4Q=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id ffcdcf60b4644b82;
+	Mon, 26 Oct 2026 06:33:23 +0000
+X-Mizu-Trace-ID: ffcdcf60b4644b82
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <48408c54-8fdd-443e-94b3-2aca07d298dc@linux.dev>
+Date: Mon, 26 Oct 2026 14:33:17 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -54,142 +59,220 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/5] mm: restore per-memcg reclaim for NONSLAB
- shrinkers under nokmem
-To: akpm@linux-foundation.org
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
- shakeel.butt@linux.dev, muchun.song@linux.dev, mkoutny@suse.com,
- david@kernel.org, ziy@nvidia.com, baolin.wang@linux.alibaba.com,
- usama.arif@linux.dev, david@fromorbit.com, qi.zheng@linux.dev,
- yosry@kernel.org, nphamcs@gmail.com, chengming.zhou@linux.dev,
- xlpang@linux.alibaba.com, ryncsn@gmail.com, gourry@gourry.net,
- cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
-References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
-From: Qinyun Tan <qinyuntan@linux.alibaba.com>
-In-Reply-To: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
+Subject: Re: [PATCH-next v3 01/11] cgroup/cpuset: Find furthest isolated
+ ancestor for invalidated isolated partition
+To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org
+References: <20261025214449.310715-1-longman@redhat.com>
+ <20261025214449.310715-2-longman@redhat.com>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261025214449.310715-2-longman@redhat.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hi, All
 
-Gentle ping on this series.
 
-V4 fixes the boot hang Kairui reported against v3 -- the root cause
-was that the walker reverse-resolved xarray keys as private memcg IDs
-after the keys were switched to cgroup IDs, causing shrink_dcache_sb()
-to loop forever on the global drain. The fix passes the xarray index
-directly through the internal walk path (new patch 1), so no reverse
-lookup is needed.
+在 2026/10/26 05:44, Waiman Long 写道:
+> Commit 46b885416c27 ("cgroup/cpuset: Fix a missing isolated_cpus
+> update in update_cpumasks_hier()") searches for the closet partition
+> root ancestor to determine if the isolated CPUs in a to be invalidated
+> isolation partition should be removed from isolated_cpus or not.
+> 
+> As reported by sashiko, this method may not work when there is a deeply
+> nested isolated partition hierarchy. For instance, Consider a nested
+> hierarchy A0 -> A1 -> A2 -> A3 where all four are PRS_ISOLATED:
+> 
+>   A0: effective_xcpus = 0-4
+>   A1: effective_xcpus = 1-4
+>   A2: effective_xcpus = 2-4
+>   A3: effective_xcpus = 3-4
+> 
+> When A1 shrinks its exclusive_cpus from 1-4 to 1-2, A2 will update it
+> effective_xcpus to 2. A3 will find its closet partition root ancestor
+> A2 and decides that its effective_xcpus 3-4 should be removed from
+> isolated_cpus which is incorrect.
+> 
+> Address this corner case by adding a new isolated_cpus_release() helper
+> to replace the existing ancestor_partition() helper. This new helper
+> will search for the furthest isolated partition root ancestor to decide
+> if some or all of its isolated CPUs should be removed from isolated_cpus
+> and also perform the removal when appropriate.
+> 
+> The is_remote_partition() and is_local_partition() helpers are also
+> moved up so they can be used in earlier functions.
+> 
+> There are other pre-existing problems that will still prevent the
+> above test case to work correctly. These problems will be addressed in
+> subsequent patches.
+> 
+> Fixes: 46b885416c27 ("cgroup/cpuset: Fix a missing isolated_cpus update in update_cpumasks_hier()")
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  kernel/cgroup/cpuset.c | 104 +++++++++++++++++++++--------------------
+>  1 file changed, 53 insertions(+), 51 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 585a982249ad..bbd44782d4bf 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1257,6 +1257,16 @@ static void reset_partition_data(struct cpuset *cs)
+>  		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
+>  }
+>  
+> +static inline bool is_remote_partition(struct cpuset *cs)
+> +{
+> +	return cs->remote_partition;
+> +}
+> +
+> +static inline bool is_local_partition(struct cpuset *cs)
+> +{
+> +	return is_partition_valid(cs) && !is_remote_partition(cs);
+> +}
+> +
+>  /* Return true if isolated_cpus changes. */
+>  static bool isolated_cpu_update(int new_prs, int cpu)
+>  {
+> @@ -1299,6 +1309,45 @@ static void isolated_cpus_update(int old_prs, int new_prs, struct cpumask *xcpus
+>  		update_housekeeping = true;
+>  }
+>  
+> +/*
+> + * isolated_cpus_release - Remove the relevant CPUs in @xcpus from isolated_cpus
+> + * @cs: the current cpuset
+> + * @xcpus: the set of effective xcpus to be considered for removal
+> + *
+> + * This function is called when an isolated partition is invalidated or when
+> + * some of its effective xcpus are to be removed from isolated_cpus due to
+> + * changes in parent cpuset. The given @xcpus must be modifiable as the function
+> + * will update its value to determine the right set of CPUs to be removed.
+> + */
+> +static void isolated_cpus_release(struct cpuset *cs, struct cpumask *xcpus)
+> +{
+> +	struct cpuset *ancestor = parent_cs(cs);
+> +	struct cpuset *iancestor = NULL;
+> +
+> +	/*
+> +	 * Search the furthest isolated partition root ancestor available
+> +	 * until top_cpuset or a remote partition root is hit.
+> +	 */
+> +	for (; ancestor; ancestor = parent_cs(ancestor)) {
+> +		if (ancestor->partition_root_state == PRS_ISOLATED)
+> +			iancestor = ancestor;
+> +		if (is_remote_partition(ancestor))
+> +			break;
+> +	}
+> +
+> +	/*
+> +	 * If a furthest isolated partition acnestor is found, use it to
+> +	 * determine which of the CPUs in @xcpus should be removed from
+> +	 * isolated_cpus. Otherwise, all of them will be removed.
+> +	 */
+> +	if (iancestor && !cpumask_andnot(xcpus, xcpus, iancestor->effective_xcpus))
+> +		return; /* No CPU should be removed from isolated_cpus */
+> +
+> +	spin_lock_irq(&callback_lock);
+> +	isolated_cpus_update(PRS_ISOLATED, PRS_ROOT, xcpus);
+> +	spin_unlock_irq(&callback_lock);
+> +}
+> +
+>  /*
+>   * partition_xcpus_add - Add new exclusive CPUs to partition
+>   * @new_prs: new partition_root_state
+> @@ -1571,16 +1620,6 @@ static int compute_trialcs_excpus(struct cpuset *trialcs, struct cpuset *cs)
+>  	return rm_siblings_excl_cpus(parent, cs, excpus);
+>  }
+>  
+> -static inline bool is_remote_partition(struct cpuset *cs)
+> -{
+> -	return cs->remote_partition;
+> -}
+> -
+> -static inline bool is_local_partition(struct cpuset *cs)
+> -{
+> -	return is_partition_valid(cs) && !is_remote_partition(cs);
+> -}
+> -
+>  /*
+>   * remote_partition_enable - Enable current cpuset as a remote partition root
+>   * @cs: the cpuset to update
+> @@ -2155,25 +2194,6 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>  	rcu_read_unlock();
+>  }
+>  
+> -/*
+> - * ancestor_partition - Find and return the closest valid partition root ancestor
+> - * @cs: the current cpuset
+> - *
+> - * Return: The closet partition root ancestor cpuset
+> - */
+> -static struct cpuset *ancestor_partition(struct cpuset *cs)
+> -{
+> -	struct cpuset *ancestor = parent_cs(cs);
+> -
+> -	/*
+> -	 * The top_cpuset is always a valid partition root which will stop
+> -	 * the loop if it is reached.
+> -	 */
+> -	while (!is_partition_valid(ancestor))
+> -		ancestor = parent_cs(ancestor);
+> -	return ancestor;
+> -}
+> -
+>  /*
+>   * update_cpumasks_hier - Update effective cpumasks and tasks in the subtree
+>   * @cs:  the cpuset to consider
+> @@ -2267,7 +2287,6 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+>  		 */
+>  		if ((cp != cs) && old_prs) {
+>  			int parent_prs = parent->partition_root_state;
+> -			struct cpumask *del_cpus = NULL;
+>  
+>  			switch (parent_prs) {
+>  			case PRS_ROOT:
+> @@ -2281,32 +2300,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+>  				 * child partition roots become invalid too.
+>  				 *
+>  				 * For a to be invalidated isolated partition,
+> -				 * its isolated CPUs may or may not need to be
+> -				 * removed from isolated_cpus depending on if
+> -				 * its closest partition root ancestor is a root
+> -				 * or isolated partition. With a PRS_ISOLATED
+> -				 * ancestor, the CPUs are checked against its
+> -				 * effective xcpus to see if any of them needed
+> -				 * to be removed.
+> +				 * call return_isolated_cpus() to remove the
+> +				 * relevant CPUs from isolated_cpus.
+>  				 */
+>  				if (is_partition_valid(cp))
+>  					new_prs = -old_prs;
+>  
+>  				if (old_prs == PRS_ISOLATED) {
+> -					struct cpuset *ancestor = ancestor_partition(cp);
+> -
+> -					if (ancestor->partition_root_state == PRS_ROOT)
+> -						del_cpus = cp->effective_xcpus;
+> -					else if (cpumask_andnot(tmp->delmask,
+> -								cp->effective_xcpus,
+> -								ancestor->effective_xcpus))
+> -						del_cpus = tmp->delmask;
+> -
+> -					if (del_cpus) {
+> -						spin_lock_irq(&callback_lock);
+> -						isolated_cpus_update(old_prs, new_prs, del_cpus);
+> -						spin_unlock_irq(&callback_lock);
+> -					}
+> +					cpumask_copy(tmp->delmask, cp->effective_xcpus);
+> +					isolated_cpus_release(cp, tmp->delmask);
+>  				}
+>  				WRITE_ONCE(cp->prs_err,
+>  					   is_partition_invalid(parent)
 
-Could someone take a look when they have a chance?
+Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
 Thanks,
-Qinyun Tan
-
-On 10/13/26 11:12 AM, Qinyun Tan wrote:
-> With cgroup.memory=nokmem, the THP deferred split shrinker and the
-> zswap shrinker are degraded in two ways.
-> 
-> First, both shrinkers are missing the SHRINKER_NONSLAB flag, so
-> shrinker_memcg_alloc() demotes them to non-memcg-aware shrinkers:
-> limit-induced reclaim of a cgroup neither splits its partially
-> unmapped THPs nor writes back its zswapped pages.  v1 of this series
-> [1] restored the flag to fix that.
-> 
-> However, as Sashiko's review of v1 pointed out [2], the flag alone
-> is not enough.  __list_lru_init() also collapses every list_lru into
-> per-node lists under nokmem, so even with the flag restored, the
-> objects of all cgroups share one list per node: the per-memcg
-> shrinker bit is only set for whichever memcg happens to repopulate
-> the empty list, so pressure in other cgroups may not even trigger
-> the scan, and when it does, the scan walks everyone's objects.
-> 
-> Before commit fafaeceb89a5 ("mm: switch deferred split shrinker to
-> list_lru"), THP had fully per-memcg deferred split queues embedded
-> in struct mem_cgroup, working independently of kmem accounting.
-> nokmem only opts out of kernel slab accounting; THPs and zswapped
-> pages are user memory and remain charged to their cgroups, so
-> per-memcg reclaim is still what these shrinkers want.
-> 
-> This series keeps list_lrus backed by SHRINKER_NONSLAB shrinkers
-> memcg aware under nokmem:
-> 
-> Patch 1 passes the xarray index directly to the list_lru walker and
-> drops the reverse memcg lookup that v3 still performed between the
-> xarray iteration and the walk.  That lookup was the cause of the
-> boot hang reported against v3 [3]: after the keys were switched to
-> cgroup IDs, the walker kept resolving them as private memcg IDs, so
-> the global drain kept skipping non-empty per-memcg sublists and
-> shrink_dcache_sb() could loop forever.  Passing the index directly
-> also removes the temporary css reference from the walk.
-> 
-> Patch 2 drops the kmemcg_id copy, which is only assigned when kmem
-> accounting is enabled, and indexes the list_lru xarray with
-> mem_cgroup_id() instead, so the index works independently of kmem
-> accounting.  The list_lru plumbing passes memcg pointers now, and
-> memcg_online_kmem()/memcg_offline_kmem() are inlined into the css
-> online/offline hooks.  It also drops the nokmem early return from
-> the offline path so these lrus are reparented on offline.
-> 
-> Patch 3 keeps a list_lru memcg aware under nokmem when its backing
-> shrinker is registered SHRINKER_NONSLAB.
-> 
-> Patches 4 and 5 restore/add SHRINKER_NONSLAB on the THP deferred
-> split shrinker and the zswap shrinker.
-> 
-> The savings of nokmem are preserved: slab-backed lrus (e.g. the
-> superblock dentry/inode lrus) still fall back to per-node lists, and
-> the per-memcg lists are only allocated when a memcg actually holds
-> such objects.
-> 
-> Changes in v4:
->  - Fix the boot hang reported by Kairui against v3 [3]: the walker
->    no longer reverse-resolves the xarray keys; the index is passed
->    directly through the internal walk path (new patch 1, split out
->    as a preparation so patch 2 remains a pure key switch).
->  - Drop the kmemcg_id member from memcg_struct_check() along with
->    the field removal, as pointed out by Gregory Price [4].
->  - Otherwise unchanged from v3.
-> 
-> Changes in v3:
->  - Index the list_lru xarray with mem_cgroup_id() (the cgroup ID)
->    instead of the private memcg ID, whose lifetime only covers
->    online groups, and pass memcg pointers through the list_lru
->    plumbing; inline memcg_online_kmem()/memcg_offline_kmem() into
->    the css online/offline hooks (patch 1 as numbered in v3, per
->    Johannes's review of v2 [5]).
->  - Describe in the THP patch's changelog why fafaeceb89a5 dropped
->    SHRINKER_NONSLAB knowingly, per Johannes's pointer to the
->    original discussion [5].
->  - Collected review tags: Johannes's Reviewed-by on patches 2-4,
->    Nhat's and Yosry's Acked-by on patch 4 (numbering as in v3).
-> 
-> Changes in v2:
->  - Keep the list_lrus behind the two shrinkers per-memcg under
->    nokmem, so the shrinker bits are set for the right memcgs and
->    scans stay scoped to the target cgroup's objects (patches 1-2
->    as numbered in v2, new; addresses Sashiko's review of v1 [2]).
->  - Patches 3-4 unchanged from v1; collected the review tags.
-> 
-> [1] https://lore.kernel.org/lkml/20260904033503.4067283-1-qinyuntan@linux.alibaba.com/
-> [2] https://sashiko.dev/#/patchset/20260904033503.4067283-1-qinyuntan@linux.alibaba.com
-> [3] https://lore.kernel.org/lkml/20260910080722.3961351-1-qinyuntan@linux.alibaba.com/
-> [4] https://lore.kernel.org/lkml/arNK64PxTXbVEhis@gourry-fedora-PF4VCD3F/
-> [5] https://lore.kernel.org/lkml/20260907110111.2286932-1-qinyuntan@linux.alibaba.com/
-> 
-> Qinyun Tan (5):
->   mm: list_lru: pass the memcg index directly to the walker
->   mm: memcontrol: drop kmemcg_id and use mem_cgroup_id() for list_lru
->     indexing
->   mm: list_lru: keep per-memcg lists with nokmem for NONSLAB-backed lrus
->   mm: thp: restore SHRINKER_NONSLAB on the deferred split shrinker
->   mm: zswap: mark the zswap shrinker SHRINKER_NONSLAB
-> 
->  include/linux/memcontrol.h |  16 ------
->  mm/huge_memory.c           |   3 +-
->  mm/list_lru.c             | 114 +++++++++++++++++++++----------------
->  mm/memcontrol.c            |  45 +++------------
->  mm/zswap.c                 |   4 +-
->  5 files changed, 77 insertions(+), 105 deletions(-)
-> 
-
+Guopeng
