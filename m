@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.192
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.126
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793092368;
-	b=2EU5QqU4nUI+28KQPg9GDe12sI/PR7zorYIj/mp/TJt+Q49oKBAyvQy8Ag4Ree2hubBC
-	 2ABCxWMrElm9B1voV0woo4OMo0LfkehQaShAb5HQw1bzi9g5DVdaoJMTu0HwYKBZ3wELQ
-	 INrWU07gnvIcmw9y4XzVSO+qYzeHbQiV98LsVscm9u3OS8kdzP30HHCoHpMF87mNDzHbj
-	 Ngpi87eggIKzqfeFKhPuA9tbvaFcdwWSKRDC+9ZBusq0vH6qeuS9BEI/f7Wh1k+AqhuGc
-	 xpyjKhXoqsGPKqD+Lcmumz6tCGkDJMrsM8RxzDLqPRrTtFAgRbgxe9OZU2+xQDlrhzQ==
+	t=1793092386;
+	b=uuxmdctGKjc5LwS50sPFouWQpc/X7o2QtiAqss0PnnsKIqGo710pbw+rUg6nEdo+aMZM
+	 zq9RkED9JKUU+QkKb7CQarluJbb1oRYiU5QoLww524yMB3UumKtZLKBwprex0AJmBT6KD
+	 GZAqSv2ruvUgxjbIU2eDn8f1elSMUqyw2MmNFco/q2T1vV2nSf28Av7g2+fCk97T2CJS6
+	 erUc/m3qt2qHlYVntFU+vSvmJydE8HDzUplGxfobOW2XdtDadZ+NnuQCQEIbl40Q2j/87
+	 RGkS3mNOj9xqSv1sC7qEJUchlYYFNye/RNF+aMPIab6a3SYpaqa2CBNFHc8uMXZZ6bQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793092368;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793092386;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=k/dTFSfGJ7Wol96B6/xB0ZxDvyvOOn0OtSCdq6jxfcY=;
-	b=V/3WhxdoB/E8qGrB/wQnVth/Yso5ORAlmO49mvJguJVnTdMGGDsG8cJfbsxslSrecr5/
-	 F2jYS60Q3iZf6H2zec/iaN0uU7/IXDhYNChkC6pVNKBwM/fVYmo9n7V3pVlngO9m/EzaZ
-	 2ioJE+mRrLJ6zoL/N9lD97gZsW7GZbGaDdpbVklj0xMllBMyT7pr94fBEkVd/McLUL49S
-	 JldfarPxjgA1mfVZ9N8UlDGzu/8QNME4TTQkeOg2812/VQsqIQHdz7QAm84dvAyvg+mwK
-	 xpxWsvadnPI8MLd726cqE8qj0pcu1Ang6PCVIqDPr8GH922x+VUvPdC8pHK8//HCVoA==
+	bh=zrNPQA98bso1gIF7bLBSbmMuWs6Q/3EJgOF5OyGhH8U=;
+	b=vGzeFS2QIv6d1737WbGbHHnwxblJr+f5NfOhZQ6etULdeCGYJL61NhOYhJ0+oQ/JDHuC
+	 WSwWQrYWEisOfrIX46dgbCfupu8g9/7aC/c4WDp+eOwpWgr42HemdC1gtyJWUGoPMbsoJ
+	 dj1+Qz0l29XYKB40ZVSe8g6w6IeNIJBuk+XALhZgm/upiKO5eYQpc1ixMT1ricNUDvIOY
+	 BdESZn0kQ00qgc4akcLEyR65hvZ/D21YCw+MYw4WimzW9k42lcPYTQwBVhLxDtp3YqBWn
+	 IRhy85ulg4oWec2c13TtvV3JTWkVwBKEFUz7tGpt7+Pu78kR1qJm3vsZBfK44FW/NWQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=FTD19RQG;
-	arc=none smtp.remote-ip=91.218.175.192
-Received: from mta0.migadu.com (out-192.mta0.migadu.com [91.218.175.192])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XR5IVBBH;
+	arc=none smtp.remote-ip=95.215.58.126
+Received: from mta1.migadu.com (out-126.mta1.migadu.com [95.215.58.126])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DF46606A31A
-	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 09:12:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DF46606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0495A606A31B
+	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 09:13:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0495A606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=FTD19RQG
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XR5IVBBH
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=KAl5IqRhG4ZYvj+INYntsB2zYazNnfYB3228GT+ZllY=;
+DKIM-Signature: a=rsa-sha256; bh=gNw6rX3/dhh2H6vbjInMfVwRCNgPnsLDs4wpnXgzlr4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793092365; v=1; x=1793697165;
- b=FTD19RQGo1TUuC/Q2hXxyF78a3FGIMNnCkgAvrORRTJY5FLdzS04UzHvjcX3Y7eco2TNu1XK
- LSy2+E77mfX9v+LDtk+iSaDwNQ5ZsIPV+BFcID/6wVsoY7I2DdMiRiCQ9jNf1SUJxhEzjnafvDt
- 1x1fk7pQ/kggm28X1mTun1bU=
+ t=1793092383; v=1; x=1793697183;
+ b=XR5IVBBH3CCS16zN9omJhYlq4okJH3aYsvQwPhQEnEdSV05zuzIvYIMYpB1r4hqa8fNT13pG
+ 45MqKW7WU+Dl06tgS9xo+cssEJ4eZsqOcJrsMvy+SouhFKrz+1bHgzhElhYhbYWDx6jQg66MOmD
+ xuG5tGgGq5QuuhE6D5rxU/lo=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id dc19a8d0d3dac675;
-	Tue, 27 Oct 2026 09:12:45 +0000
-X-Mizu-Trace-ID: dc19a8d0d3dac675
+Received: by mta11.migadu.com with ESMTPS id 348395f4de271727;
+	Tue, 27 Oct 2026 09:13:02 +0000
+X-Mizu-Trace-ID: 348395f4de271727
 X-Migadu-Flow: FLOW_OUT
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Alexei Starovoitov <ast@kernel.org>,
@@ -108,9 +108,9 @@ To: Alexei Starovoitov <ast@kernel.org>,
 	netdev@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
 Cc: Hui Zhu <zhuhui@kylinos.cn>
-Subject: [RFC PATCH 1/2] memcg_ext: add memory.low and memory.min protection policies
-Date: Tue, 27 Oct 2026 17:11:59 +0800
-Message-ID: <1fb433ab13bd56211b6b7c76a1e26e19e42108a1.1793086858.git.zhuhui@kylinos.cn>
+Subject: [RFC PATCH 2/2] selftests/bpf: Add bpf_memcg_ops protection test
+Date: Tue, 27 Oct 2026 17:12:00 +0800
+Message-ID: <a5c4feb51ff6557f7423315259fd3482be3879ee.1793086858.git.zhuhui@kylinos.cn>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1793086858.git.zhuhui@kylinos.cn>
 References: <cover.1793086858.git.zhuhui@kylinos.cn>
@@ -127,457 +127,269 @@ Content-Transfer-Encoding: 8bit
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-mem_cgroup_below_low() and mem_cgroup_below_min() decide whether
-reclaim may touch a cgroup by comparing the effective threshold
-against usage.  The comparison is fixed, so a workload that wants
-protection on other terms has no way to ask for it.
+low_policy and min_policy are asked after the kernel compares a cgroup's
+own memory.low/min, so a policy can protect a cgroup that carries
+neither.  Attach both to a child cgroup, fault 8M of anonymous memory
+into it and reclaim from its parent.  Check that the kernel consulted
+both hooks and that the ctx named the child, the parent as the reclaim
+target, a zero threshold and a nonzero usage.  Without swap nothing is
+reclaimed and the write returns EAGAIN, but every scan still consulted
+the hooks; both policies answer NO_OPINION, so the outcome is not
+asserted.
 
-Add low_policy and min_policy to bpf_memcg_ops.  A program gets a
-read-only snapshot of the check: the memcg, the reclaim target, the
-threshold and the usage.  It returns a request, and there is one so
-far: BPF_MEMCG_PROT_BELOW treats the cgroup as below its threshold,
-so reclaim skips it.
+The counters are filtered by cgroup id: attaching any policy turns the
+dispatcher on for every memcg, so background reclaim would otherwise
+move them too.
 
-The kernel compares first and asks BPF only when it found the cgroup
-unprotected.  A check runs the policies of the cgroup and of every
-ancestor and ORs what they return, so a policy can only add
-protection, never take it away.  Reclaim then treats the cgroup as
-below its threshold throughout, which includes counting it in
-memory.events.
+A full example of answering BELOW so that reclaim skips a cgroup and
+takes the memory from a sibling is maintained out of tree at [1],
+released under GPLv2.
 
-Both dispatchers share one walk setup and teardown, factored out
-of the high dispatcher.  The setup carries the
-task_struct::in_bpf_memcg re-entry guard and a cgroup_on_dfl()
-test: a v1 cgroup has no effective array and an uninitialised
-cgrp->bpf.refcnt.  The memory.high debt is v2-only, so a v1 memcg
-never reached the high dispatcher and no reachable path of it
-changes, but it does reach the protection checks: emin and elow
-stay 0 and reclaim still asks.
-
-Guard the dispatcher declarations with CONFIG_BPF_SYSCALL and add
-stubs so every supported configuration builds.  mm/bpf_memcontrol.c
-is built only with struct_ops support, while CONFIG_MEMCG does not
-select it, which already left bpf_memcg_high_policy() undefined at
-link time.
+[1] https://github.com/teawater/memcg-async-reclaim/tree/memcg_ext_plus
 
 Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
 ---
- include/linux/bpf_memcontrol.h | 104 ++++++++++++++++++++-
- include/linux/memcontrol.h     |  23 ++++-
- mm/bpf_memcontrol.c            | 162 ++++++++++++++++++++++++++-------
- 3 files changed, 247 insertions(+), 42 deletions(-)
+ .../bpf/prog_tests/memcg_ops_protection.c     | 151 ++++++++++++++++++
+ .../bpf/progs/memcg_ops_protection.c          |  72 +++++++++
+ 2 files changed, 223 insertions(+)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c
+ create mode 100644 tools/testing/selftests/bpf/progs/memcg_ops_protection.c
 
-diff --git a/include/linux/bpf_memcontrol.h b/include/linux/bpf_memcontrol.h
-index 76ea5d1c3d32..53222e57ae4a 100644
---- a/include/linux/bpf_memcontrol.h
-+++ b/include/linux/bpf_memcontrol.h
-@@ -2,9 +2,9 @@
- /*
-  * BPF policy hooks for the memory controller.
-  *
-- * A bpf_memcg_ops is attached to a cgroup.  A charge runs the policies of
-- * that cgroup and of every ancestor, and the kernel combines what they
-- * return.  BPF only picks between things the kernel already does.
-+ * A bpf_memcg_ops is attached to a cgroup.  A hook runs the policies of that
-+ * cgroup and of every ancestor, and the kernel combines what they return.
-+ * BPF only picks between things the kernel already does.
-  */
- #ifndef _LINUX_BPF_MEMCONTROL_H
- #define _LINUX_BPF_MEMCONTROL_H
-@@ -30,6 +30,22 @@ enum bpf_memcg_high_request {
- 
- #define BPF_MEMCG_HIGH_VALID_MASK	BPF_MEMCG_HIGH_DEFER_INLINE
- 
+diff --git a/tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c b/tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c
+new file mode 100644
+index 000000000000..8ad47bffb42d
+--- /dev/null
++++ b/tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c
+@@ -0,0 +1,151 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * What a policy can ask for when the kernel checks memory.low or memory.min
-+ * protection.  The kernel ORs them, so one policy cannot undo another.
-+ */
-+enum bpf_memcg_prot_request {
-+	BPF_MEMCG_PROT_NO_OPINION	= 0,
-+	/*
-+	 * Treat the cgroup as below its threshold, so reclaim skips it.  This
-+	 * only adds protection: a policy cannot expose a cgroup the kernel
-+	 * already considers below its threshold.
-+	 */
-+	BPF_MEMCG_PROT_BELOW		= 1U << 0,
-+};
-+
-+#define BPF_MEMCG_PROT_VALID_MASK	BPF_MEMCG_PROT_BELOW
-+
- /* Read-only snapshot.  Only values the caller already has. */
- struct bpf_memcg_ctx {
- 	struct mem_cgroup	*memcg;			/* charged memcg */
-@@ -41,6 +57,21 @@ struct bpf_memcg_ctx {
- 	u32			gfp_flags;
- };
- 
-+/*
-+ * Read-only snapshot of a protection check.  @threshold is the effective
-+ * memory.low for low_policy and the effective memory.min for min_policy, and
-+ * the kernel has already found it below @usage.
-+ */
-+struct bpf_memcg_prot_ctx {
-+	struct mem_cgroup	*memcg;			/* cgroup checked */
-+	struct mem_cgroup	*target;		/* NULL for global reclaim */
-+	struct task_struct	*task;			/* current */
-+	u64			cgroup_id;
-+	u64			target_cgroup_id;	/* 0 if none */
-+	u64			threshold;		/* elow or emin, pages */
-+	u64			usage;			/* pages */
-+};
-+
- struct bpf_memcg_ops {
- 	/**
- 	 * high_policy - say where memory.high should be enforced
-@@ -50,8 +81,35 @@ struct bpf_memcg_ops {
- 	 * are dropped.
- 	 */
- 	u32 (*high_policy)(const struct bpf_memcg_ctx *ctx);
-+
-+	/**
-+	 * low_policy - say whether a cgroup is below its memory.low
-+	 * @ctx: snapshot of the protection check
-+	 *
-+	 * Only runs once the kernel has found @ctx->usage above
-+	 * @ctx->threshold, so a policy can only add protection.  Reclaim then
-+	 * treats the cgroup as below memory.low throughout, which includes
-+	 * counting it in memory.events.
-+	 *
-+	 * Return: bits from enum bpf_memcg_prot_request, or 0.  Other bits
-+	 * are dropped.
-+	 */
-+	u32 (*low_policy)(const struct bpf_memcg_prot_ctx *ctx);
-+
-+	/**
-+	 * min_policy - say whether a cgroup is below its memory.min
-+	 * @ctx: snapshot of the protection check
-+	 *
-+	 * Same as low_policy, for the hard memory.min protection.
-+	 *
-+	 * Return: bits from enum bpf_memcg_prot_request, or 0.  Other bits
-+	 * are dropped.
-+	 */
-+	u32 (*min_policy)(const struct bpf_memcg_prot_ctx *ctx);
- };
- 
-+#if IS_ENABLED(CONFIG_BPF_SYSCALL)
-+
- /*
-  * Run every high_policy on @memcg's cgroup and its ancestors, and return the
-  * combined request for the caller to act on.
-@@ -63,4 +121,44 @@ struct bpf_memcg_ops {
- u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
- 			  struct mem_cgroup *over_limit, gfp_t gfp_mask);
- 
-+/*
-+ * Run every low_policy or min_policy on @memcg's cgroup and its ancestors,
-+ * and return the combined request for the caller to act on.
++ * Drive the memcg_ops_protection sample: check that the kernel consults
++ * min_policy and low_policy during reclaim, and that the ctx they receive
++ * describes the check faithfully.  The policies themselves always say
++ * NO_OPINION, so nothing about reclaim's outcome changes.
 + *
-+ * @memcg:	the memcg whose protection is being checked, never the root
-+ * @target:	the reclaim root, or NULL for global reclaim
-+ * @elow/@emin:	the effective threshold, in pages
-+ * @usage:	the current usage, in pages
-+ */
-+u32 bpf_memcg_low_policy(struct mem_cgroup *memcg, struct mem_cgroup *target,
-+			 unsigned long elow, unsigned long usage);
-+u32 bpf_memcg_min_policy(struct mem_cgroup *memcg, struct mem_cgroup *target,
-+			 unsigned long emin, unsigned long usage);
-+
-+#else /* CONFIG_BPF_SYSCALL */
-+
-+/* mm/bpf_memcontrol.c is only built with struct_ops support. */
-+static inline u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
-+					struct mem_cgroup *over_limit,
-+					gfp_t gfp_mask)
-+{
-+	return BPF_MEMCG_HIGH_NO_OPINION;
-+}
-+
-+static inline u32 bpf_memcg_low_policy(struct mem_cgroup *memcg,
-+				       struct mem_cgroup *target,
-+				       unsigned long elow, unsigned long usage)
-+{
-+	return BPF_MEMCG_PROT_NO_OPINION;
-+}
-+
-+static inline u32 bpf_memcg_min_policy(struct mem_cgroup *memcg,
-+				       struct mem_cgroup *target,
-+				       unsigned long emin, unsigned long usage)
-+{
-+	return BPF_MEMCG_PROT_NO_OPINION;
-+}
-+
-+#endif /* CONFIG_BPF_SYSCALL */
-+
- #endif /* _LINUX_BPF_MEMCONTROL_H */
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7d1c0ce189a8..3f937be7b057 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -23,6 +23,7 @@
- #include <linux/writeback.h>
- #include <linux/page-flags.h>
- #include <linux/shrinker.h>
-+#include <linux/bpf_memcontrol.h>
- 
- struct mem_cgroup;
- struct obj_cgroup;
-@@ -621,21 +622,35 @@ static inline bool mem_cgroup_unprotected(struct mem_cgroup *target,
- static inline bool mem_cgroup_below_low(struct mem_cgroup *target,
- 					struct mem_cgroup *memcg)
- {
-+	unsigned long elow, usage;
-+
- 	if (mem_cgroup_unprotected(target, memcg))
- 		return false;
- 
--	return READ_ONCE(memcg->memory.elow) >=
--		page_counter_read(&memcg->memory);
-+	elow = READ_ONCE(memcg->memory.elow);
-+	usage = page_counter_read(&memcg->memory);
-+	if (elow >= usage)
-+		return true;
-+
-+	return bpf_memcg_low_policy(memcg, target, elow, usage) &
-+	       BPF_MEMCG_PROT_BELOW;
- }
- 
- static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
- 					struct mem_cgroup *memcg)
- {
-+	unsigned long emin, usage;
-+
- 	if (mem_cgroup_unprotected(target, memcg))
- 		return false;
- 
--	return READ_ONCE(memcg->memory.emin) >=
--		page_counter_read(&memcg->memory);
-+	emin = READ_ONCE(memcg->memory.emin);
-+	usage = page_counter_read(&memcg->memory);
-+	if (emin >= usage)
-+		return true;
-+
-+	return bpf_memcg_min_policy(memcg, target, emin, usage) &
-+	       BPF_MEMCG_PROT_BELOW;
- }
- 
- int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp);
-diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
-index cfd0f1d443c9..999d2012abd4 100644
---- a/mm/bpf_memcontrol.c
-+++ b/mm/bpf_memcontrol.c
-@@ -255,8 +255,20 @@ static u32 high_policy_stub(const struct bpf_memcg_ctx *ctx)
- 	return BPF_MEMCG_HIGH_NO_OPINION;
- }
- 
-+static u32 low_policy_stub(const struct bpf_memcg_prot_ctx *ctx)
-+{
-+	return BPF_MEMCG_PROT_NO_OPINION;
-+}
-+
-+static u32 min_policy_stub(const struct bpf_memcg_prot_ctx *ctx)
-+{
-+	return BPF_MEMCG_PROT_NO_OPINION;
-+}
-+
- static struct bpf_memcg_ops __bpf_memcg_ops = {
- 	.high_policy = high_policy_stub,
-+	.low_policy = low_policy_stub,
-+	.min_policy = min_policy_stub,
- };
- 
- static const struct bpf_func_proto *
-@@ -264,7 +276,7 @@ bpf_memcg_get_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
- {
- 	/*
- 	 * The base set is all a policy needs today, and none of it sleeps.
--	 * Anything added here must be safe from the charge path.
-+	 * Anything added here must be safe from the charge and reclaim paths.
- 	 */
- 	return bpf_base_func_proto(func_id, prog);
- }
-@@ -293,7 +305,7 @@ static int bpf_memcg_check_member(const struct btf_type *t,
- 				  const struct btf_member *member,
- 				  const struct bpf_prog *prog)
- {
--	/* Members run from the charge path, which cannot sleep. */
-+	/* Members run from the charge and reclaim paths, which cannot sleep. */
- 	if (prog->sleepable)
- 		return -EINVAL;
- 
-@@ -335,6 +347,62 @@ static struct bpf_struct_ops bpf_memcg_ops_desc = {
- 	 */
- };
- 
-+/*
-+ * Prepare to run the policies attached to @memcg's cgroup and its ancestors.
++ * Layout, under the test workdir:
 + *
-+ * On success returns the cgroup with its bpf reference held, inside the RCU
-+ * section the effective array walk needs; the caller finishes with
-+ * bpf_memcg_walk_end().  NULL means no policy can run and the caller keeps
-+ * the request it started with: nothing is attached anywhere, the cgroup is
-+ * on a v1 hierarchy, this task is already inside a policy, or the cgroup is
-+ * going.
++ *   memcg_ops_prot           P   reclaim runs from P/memory.reclaim
++ *   memcg_ops_prot/victim    C   holds the memory, carries the ops
++ *   memcg_ops_prot_ctl       -   where the test process normally sits
++ *
++ * The test process joins C itself and faults in 8M of anonymous memory:
++ * C's usage above its zero emin/elow is exactly what makes the kernel ask
++ * the hooks.  Nothing is actually reclaimed -- without swap there is
++ * nothing to take -- so the write returns EAGAIN after seventeen full
++ * scans, and every one of them consulted the hooks.  No file is involved
++ * on purpose: a VM's working directory is often a shared mount where
++ * temporary files are unsupported or unevictable.  On the way out the
++ * process rejoins the ctl cgroup, so the framework's cleanup can rmdir
++ * C and P.
 + */
-+static inline struct cgroup *bpf_memcg_walk_begin(struct mem_cgroup *memcg)
++
++#include <errno.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <string.h>
++#include <sys/mman.h>
++#include <unistd.h>
++
++#include <bpf/libbpf.h>
++
++#include <test_progs.h>
++#include "cgroup_helpers.h"
++#include "memcg_ops_protection.skel.h"
++
++#define CTL_PATH	"/memcg_ops_prot_ctl"
++#define PARENT_PATH	"/memcg_ops_prot"
++#define VICTIM_PATH	PARENT_PATH "/victim"
++
++#define FILL_SZ		(8UL << 20)
++#define RECLAIM_SZ	"1M"
++
++void test_memcg_ops_protection(void)
 +{
-+	struct cgroup *cgrp = memcg->css.cgroup;
++	struct memcg_ops_protection *skel = NULL;
++	struct bpf_link *ops_link = NULL;
++	int ctlfd = -1, pfd = -1, cfd = -1, rfd;
++	void *mem = MAP_FAILED;
++	ssize_t n;
++	int err;
 +
-+	if (!cgroup_bpf_enabled(CGROUP_MEMCG_OPS))
-+		return NULL;
++	/* Sets the environment up and parks this process outside of P. */
++	ctlfd = test__join_cgroup(CTL_PATH);
++	if (!ASSERT_GE(ctlfd, 0, "join_cgroup"))
++		return;
 +
-+	/*
-+	 * Only the default hierarchy has a cgroup_bpf, and the static key is
-+	 * global, so one policy anywhere turns this on for v1 memcgs too.  A
-+	 * v1 cgroup has no effective array and an uninitialised
-+	 * cgrp->bpf.refcnt.
-+	 */
-+	if (!cgroup_on_dfl(cgrp))
-+		return NULL;
-+
-+	/*
-+	 * A program can allocate and re-enter the charge path, and reclaim
-+	 * with it.  Skip the nested call.  This guards the callbacks only.
-+	 */
-+	if (current->in_bpf_memcg)
-+		return NULL;
-+	current->in_bpf_memcg = 1;
-+
-+	rcu_read_lock_dont_migrate();
++	pfd = create_and_get_cgroup(PARENT_PATH);
++	if (!ASSERT_GE(pfd, 0, "create_parent"))
++		goto done;
 +
 +	/*
-+	 * A memcg outlives its cgroup while it has charges, and
-+	 * cgroup_bpf_release() frees the arrays when the cgroup goes.
++	 * The victim's memory.* files need the memory controller in P's
++	 * subtree_control.  A failure here is the usual "v1 still owns
++	 * memory", which is a skip rather than a fail.
 +	 */
-+	if (!cgroup_bpf_tryget_live(cgrp)) {
-+		rcu_read_unlock_migrate();
-+		current->in_bpf_memcg = 0;
-+		return NULL;
++	if (enable_controllers(PARENT_PATH, "memory")) {
++		fprintf(stderr, "no memory controller under %s\n", PARENT_PATH);
++		test__skip();
++		goto done;
 +	}
 +
-+	return cgrp;
-+}
++	cfd = create_and_get_cgroup(VICTIM_PATH);
++	if (!ASSERT_GE(cfd, 0, "create_victim"))
++		goto done;
 +
-+static inline void bpf_memcg_walk_end(struct cgroup *cgrp)
-+{
-+	cgroup_bpf_put(cgrp);
-+	rcu_read_unlock_migrate();
-+	current->in_bpf_memcg = 0;
-+}
++	skel = memcg_ops_protection__open();
++	if (!ASSERT_OK_PTR(skel, "open"))
++		goto done;
 +
- static void bpf_memcg_ctx_init(struct bpf_memcg_ctx *ctx,
- 			       struct mem_cgroup *memcg,
- 			       struct mem_cgroup *over_limit, gfp_t gfp_mask)
-@@ -358,36 +426,9 @@ u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
- 	u32 acc = BPF_MEMCG_HIGH_NO_OPINION;
- 	struct cgroup *cgrp;
- 
--	if (!cgroup_bpf_enabled(CGROUP_MEMCG_OPS))
--		return acc;
--
--	/*
--	 * Only the default hierarchy has a cgroup_bpf, and the static key is
--	 * global, so one policy anywhere turns this on for v1 memcgs too.  A
--	 * v1 memcg still cannot get here, because memory.high and swap.high
--	 * are both v2-only and so it never builds the debt that leads to this
--	 * call.  A hook on a path v1 can reach needs its own cgroup_on_dfl()
--	 * test: a v1 cgroup has no effective array and an uninitialised
--	 * cgrp->bpf.refcnt.
--	 */
--	cgrp = memcg->css.cgroup;
--
--	/*
--	 * A program can allocate and re-enter the charge path.  Skip the
--	 * nested call.  This guards the callbacks only.
--	 */
--	if (current->in_bpf_memcg)
-+	cgrp = bpf_memcg_walk_begin(memcg);
-+	if (!cgrp)
- 		return acc;
--	current->in_bpf_memcg = 1;
--
--	rcu_read_lock_dont_migrate();
--
--	/*
--	 * A memcg outlives its cgroup while it has charges, and
--	 * cgroup_bpf_release() frees the arrays when the cgroup goes.
--	 */
--	if (!cgroup_bpf_tryget_live(cgrp))
--		goto out;
- 
- 	bpf_memcg_ctx_init(&ctx, memcg, over_limit, gfp_mask);
- 
-@@ -397,15 +438,66 @@ u32 bpf_memcg_high_policy(struct mem_cgroup *memcg,
- 			       BPF_MEMCG_HIGH_VALID_MASK;
- 	}
- 
--	cgroup_bpf_put(cgrp);
--out:
--	rcu_read_unlock_migrate();
-+	bpf_memcg_walk_end(cgrp);
- 
--	current->in_bpf_memcg = 0;
-+	return acc;
-+}
++	skel->bss->target_cgroup_id = get_cgroup_id(VICTIM_PATH);
++	skel->bss->parent_cgroup_id = get_cgroup_id(PARENT_PATH);
++	if (!ASSERT_NEQ(skel->bss->target_cgroup_id, 0ULL, "victim_id"))
++		goto done;
++	if (!ASSERT_NEQ(skel->bss->parent_cgroup_id, 0ULL, "parent_id"))
++		goto done;
 +
++	if (!ASSERT_OK(memcg_ops_protection__load(skel), "load"))
++		goto done;
++
++	ops_link = bpf_map__attach_cgroup_opts(skel->maps.prot_ops, cfd, NULL);
++	if (!ASSERT_OK_PTR(ops_link, "attach_ops"))
++		goto done;
++
++	/* From here on the test process lives in C; leave via done. */
++	if (!ASSERT_OK(join_cgroup(VICTIM_PATH), "join_victim"))
++		goto done;
++
++	mem = mmap(NULL, FILL_SZ, PROT_READ | PROT_WRITE,
++		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
++	if (!ASSERT_TRUE(mem != MAP_FAILED, "mmap"))
++		goto done;
++	memset(mem, 0xa5, FILL_SZ);
++
++	/* The trigger.  EAGAIN is as good a scan as success. */
++	rfd = openat(pfd, "memory.reclaim", O_RDWR);
++	if (!ASSERT_GE(rfd, 0, "open_reclaim"))
++		goto done;
++	n = write(rfd, RECLAIM_SZ, sizeof(RECLAIM_SZ) - 1);
++	err = n < 0 ? -errno : 0;
++	close(rfd);
++	if (!ASSERT_TRUE(err == 0 || err == -EAGAIN, "reclaim_trigger"))
++		goto done;
++
++	/* Both hooks run for one unprotected cgroup in one scan. */
++	if (!ASSERT_GT(skel->bss->min_calls, 0ULL, "min_calls"))
++		goto done;
++	if (!ASSERT_GT(skel->bss->low_calls, 0ULL, "low_calls"))
++		goto done;
++
++	/* The victim has no memory.min/low, and it is not empty. */
++	if (!ASSERT_EQ(skel->bss->seen_min_threshold, 0ULL, "emin"))
++		goto done;
++	if (!ASSERT_GT(skel->bss->seen_min_usage, 0ULL, "min_usage"))
++		goto done;
++	if (!ASSERT_EQ(skel->bss->seen_low_threshold, 0ULL, "elow"))
++		goto done;
++	if (!ASSERT_GT(skel->bss->seen_low_usage, 0ULL, "low_usage"))
++		goto done;
++
++	/* The reclaim came from P, and the ctx said so. */
++	if (!ASSERT_EQ(skel->bss->saw_min_from_parent, 1, "min_target"))
++		goto done;
++	ASSERT_EQ(skel->bss->saw_low_from_parent, 1, "low_target");
++
++done:
++	/* Detach before anything else: no policy may run during teardown. */
++	bpf_link__destroy(ops_link);
++	memcg_ops_protection__destroy(skel);
++	if (mem != MAP_FAILED)
++		munmap(mem, FILL_SZ);
++	/* A no-op when the process never made it into the victim. */
++	join_cgroup(CTL_PATH);
++	if (cfd >= 0)
++		close(cfd);
++	if (pfd >= 0)
++		close(pfd);
++	if (ctlfd >= 0)
++		close(ctlfd);
++}
+diff --git a/tools/testing/selftests/bpf/progs/memcg_ops_protection.c b/tools/testing/selftests/bpf/progs/memcg_ops_protection.c
+new file mode 100644
+index 000000000000..0288e3ca7858
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/memcg_ops_protection.c
+@@ -0,0 +1,72 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Run every low_policy (@is_min false) or min_policy (@is_min true) on
-+ * @memcg's cgroup and its ancestors, and return the combined request.
++ * Watch the memory.low / memory.min policy hooks for the
++ * memcg_ops_protection runner: count the consultations about the victim
++ * cgroup and snapshot what the ctx carries.  Both members always say
++ * NO_OPINION, so the kernel's own comparison decides and reclaim stays
++ * free to take the cache; the runner only checks that the hooks ran and
++ * saw sane values.
++ *
++ * The counters are victim-scoped on purpose: once any policy is attached
++ * the dispatcher runs for every memcg, and background reclaim of unrelated
++ * cgroups would otherwise drown the signal in noise.
 + */
-+static u32 bpf_memcg_prot_policy(struct mem_cgroup *memcg,
-+				 struct mem_cgroup *target,
-+				 unsigned long threshold, unsigned long usage,
-+				 bool is_min)
++
++#include "vmlinux.h"
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_tracing.h>
++
++char _license[] SEC("license") = "GPL";
++
++/* Set by the runner between open and load. */
++__u64 target_cgroup_id;
++__u64 parent_cgroup_id;
++
++/* How often the kernel consulted us about the victim. */
++__u64 min_calls;
++__u64 low_calls;
++
++/* Last victim-scoped snapshot, for checking what the ctx carries. */
++__u64 seen_min_threshold;
++__u64 seen_min_usage;
++__u64 seen_low_threshold;
++__u64 seen_low_usage;
++int saw_min_from_parent;
++int saw_low_from_parent;
++
++/* BPF_PROG() uses "ctx" for the raw argument array, hence "mctx" here. */
++SEC("struct_ops")
++__u32 BPF_PROG(prot_min_policy, const struct bpf_memcg_prot_ctx *mctx)
 +{
-+	const struct bpf_prog_array_item *item;
-+	const struct bpf_memcg_ops *ops;
-+	struct bpf_memcg_prot_ctx ctx;
-+	u32 acc = BPF_MEMCG_PROT_NO_OPINION;
-+	struct cgroup *cgrp;
++	if (mctx->cgroup_id != target_cgroup_id)
++		return BPF_MEMCG_PROT_NO_OPINION;
 +
-+	cgrp = bpf_memcg_walk_begin(memcg);
-+	if (!cgrp)
-+		return acc;
++	__sync_fetch_and_add(&min_calls, 1);
++	seen_min_threshold = mctx->threshold;
++	seen_min_usage = mctx->usage;
++	if (mctx->target_cgroup_id == parent_cgroup_id)
++		saw_min_from_parent = 1;
 +
-+	ctx = (struct bpf_memcg_prot_ctx) {
-+		.memcg			= memcg,
-+		.target			= target,
-+		.task			= current,
-+		.cgroup_id		= cgroup_id(cgrp),
-+		.target_cgroup_id	= target ?
-+					cgroup_id(target->css.cgroup) : 0,
-+		.threshold		= threshold,
-+		.usage			= usage,
-+	};
-+
-+	bpf_cgroup_struct_ops_foreach(ops, item, cgrp, CGROUP_MEMCG_OPS) {
-+		u32 (*policy)(const struct bpf_memcg_prot_ctx *ctx);
-+
-+		policy = is_min ? ops->min_policy : ops->low_policy;
-+		if (policy)
-+			acc |= policy(&ctx) & BPF_MEMCG_PROT_VALID_MASK;
-+	}
-+
-+	bpf_memcg_walk_end(cgrp);
- 
- 	return acc;
- }
- 
-+u32 bpf_memcg_low_policy(struct mem_cgroup *memcg, struct mem_cgroup *target,
-+			 unsigned long elow, unsigned long usage)
-+{
-+	return bpf_memcg_prot_policy(memcg, target, elow, usage, false);
++	return BPF_MEMCG_PROT_NO_OPINION;
 +}
 +
-+u32 bpf_memcg_min_policy(struct mem_cgroup *memcg, struct mem_cgroup *target,
-+			 unsigned long emin, unsigned long usage)
++SEC("struct_ops")
++__u32 BPF_PROG(prot_low_policy, const struct bpf_memcg_prot_ctx *mctx)
 +{
-+	return bpf_memcg_prot_policy(memcg, target, emin, usage, true);
++	if (mctx->cgroup_id != target_cgroup_id)
++		return BPF_MEMCG_PROT_NO_OPINION;
++
++	__sync_fetch_and_add(&low_calls, 1);
++	seen_low_threshold = mctx->threshold;
++	seen_low_usage = mctx->usage;
++	if (mctx->target_cgroup_id == parent_cgroup_id)
++		saw_low_from_parent = 1;
++
++	return BPF_MEMCG_PROT_NO_OPINION;
 +}
 +
- static int __init bpf_memcg_ops_register(void)
- {
- 	/*
++SEC(".struct_ops.link")
++struct bpf_memcg_ops prot_ops = {
++	.low_policy = (void *)prot_low_policy,
++	.min_policy = (void *)prot_min_policy,
++};
 -- 
 2.43.0
 
