@@ -1,81 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793090077;
-	b=1IQd3nMgtRQB8uP4RcScx3rfoq+B0FOlp4ZRSFPbgiWPFr1vJBUeZE/qTE3AW+HmrcM9
-	 at2s9N9bQ5BuCy4KF18OM+lziY/41/E4vyZmV9X0yw5f5vSWLkTAIx1rogdnfXha8ZXMO
-	 nHQ1Jn1fikSMQMvUjYCH6h3oYFdQTSkVxQZgLQheVCdbR8qOlehLcleiXBpBVHra5445o
-	 jzIkSGjfmrrJEEvlHUGdIsoOAPXXnUatNpe8/r2XkKj7y9BDB4uOwg/TVtqiZlvOuthHN
-	 UWkU6miOvGKvT/yfoudmavHkQ8/bEyM7ooRRSe3zYIq6x5ZDj6+Qzn+upihkYxY+sIw==
+	t=1793090371;
+	b=E+MNXJUvcUNAJi8sgrH1oluq9lMPwSBdfMmpGwj4qpJbKdFn6eAIsqCRSPKi/0zqOgM8
+	 kEw7aKU0LQIOH6VbNy9g9w6a3s9jw1AuOQCWZZLsuJZG9//wtPFPIISvRw0pYsio3UH0U
+	 rfDGaAEgCMFO5fGjyulcp/KYIyIPuQty4KLi+vABaoR9uzEq6/psLCMHc1vibrY+T14wb
+	 omFhuRFZ33PVnx2FBpW1R/VGAbg4YonaSPs8tK613xTCw5xTUgWHUZMsV2UkJWMZwU+VP
+	 nmV7ROAQAMjCelB1HiWRk6jMq/uAlHyrdoNTZUdirz5fIn/DKDSdSPsFHaxv9bsRXlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793090077;
-	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
-	 Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=UU2IRJHJWcOG1Zl2ASPC5KKLoKp7LnHivsfxFBY8zhU=;
-	b=huzZhjnVeOI/U4/S9hQf+O5wOY6cJIYk2omft23zxOWGdIdvsVt/gP97gOdRl9qu6Ffe
-	 W6fSuBXdky3/xVXfBACGHwZuqHrdbmeX4CawKxXuWxc/lmIqCYYI+qamEh28tS1uKNhhR
-	 ffiZKJjmguDBzzCbUXq0U9aQu3XCVKajkP7b+6WxWmCY4Tx+RhtGF4VHKvXH3K/8o3t9v
-	 YVasRyRxOsacly869ClETjhc0O5IDLPbGNaayoNkof11qZKC058CErgDS/vkFqkPGt6SD
-	 g+VGI3w/1FmfI6Ld8on5wSVtKnx8SxT20R80Pwyge0XkG9G/9RYh96xlvFjmgd+ijBQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793090371;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=1z6u6B82Pr3/hzW5YMWmMP5A7ww17vCOqXR2hKgLl9c=;
+	b=NpOEk/eqMihyaRp6j4UeGVDPYljHxjF05eZ/Jd4hkrZJLz8WXV8vs4DymtraI5Zc/r1b
+	 ZA9xjswA4MtOldvHA81eGS4vfvRMoWe9mDLXsLY8ndC0jHZ4B1Ky4x4hewTukvs44MBAW
+	 w8CVO9jNVWnjAIpsF+yyBuvmtx+HIi8Dv0OUAHWvEcQeVw1dja+ZJpmUtT9ToNEz4BOB1
+	 FTBRHkoPaZTcBfthd0u4Qv9WGVEYB1F0iVniIZ4F5dxcv6zXyIe1knzzUCMO+GhQE6g5r
+	 5XXqKWfPWr43wupT5jNq/DV9OAkPTpX7kYMEyXWq0Kg5B5AncojI4jjhcpD+QRtjQrw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=kylinos.cn;
-	arc=none smtp.remote-ip=124.126.103.232
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=oSdjbadH;
+	arc=none smtp.remote-ip=209.85.215.171
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0244C606A327;
-	Tue, 27 Oct 2026 08:34:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0244C606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 38961f5cd1e111f19a56ed5b684f684d-20261027
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
-	HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
-	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT
-	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, SA_EXISTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
-	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
-	AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:8118a2e7-8bb5-472d-a1c6-44cf4c022dd5,IP:20,
-	URL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:-5
-X-CID-INFO: VERSION:1.3.19,REQID:8118a2e7-8bb5-472d-a1c6-44cf4c022dd5,IP:20,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-5
-X-CID-META: VersionHash:7db8b62,CLOUDID:50c03a1732b74deda5bb4e8310771fb3,BulkI
-	D:261027163429LDR9HYVY,BulkQuantity:0,SF:17|19|38|66|78|102|127|850|865|89
-	8,TC:nil,Content:0|15|50|99|100|102|153,EDM:-3,IP:-2,URL:0,File:nil,RT:nil
-	,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,B
-	RR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 38961f5cd1e111f19a56ed5b684f684d-20261027
-X-User: liuzhe1@kylinos.cn
-Received: from localhost.localdomain [(223.70.159.239)] by mailgw.kylinos.cn
-	(envelope-from <liuzhe1@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1638462346; Tue, 27 Oct 2026 16:34:27 +0800
-From: Zhe Liu <liuzhe1@kylinos.cn>
-To: tj@kernel.org,
-	josef@toxicpanda.com,
-	axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A596606A31F
+	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 08:39:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A596606A31F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20251104 header.b=oSdjbadH
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-cdab6ae1ee9so772724a12.1
+        for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 01:39:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1793090371; x=1793695171; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=1z6u6B82Pr3/hzW5YMWmMP5A7ww17vCOqXR2hKgLl9c=;
+        b=oSdjbadHGHjMx6m92nhrDQflhJGALNSv+UxevBBC5BaLg3+8GAsVik0aVme73SHE8e
+         d7VUZ+GR2k3kyC9HFXLEIqrpRpT8zg/RxMPQv0r/jJTaYUrlE3uXhnmCnj+AQsDG451/
+         EUquDDFPcdq6qZqoFf7XAZiE2S1fSQq94sAWA+YjIvjlvG4R8rUP1gl4GewWR+eTcg+L
+         OtGcAodpql3gqVlUKiIZUEAUKBz0CjDDK3yDoW+LGSVmMlx/VNmlBpfb7w4bKu8+IiPC
+         4WtlJxWpc2ZZ4v3TedSwMmtl0HIw83vBuq5/8Ns7+meabVHRc2PLmvpZ2V8O2tPhkRPW
+         1fng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793090371; x=1793695171;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=1z6u6B82Pr3/hzW5YMWmMP5A7ww17vCOqXR2hKgLl9c=;
+        b=1bshftwLOCH8WJom6cWvD4xp173b27k3Fy87AjadhAOdZ/zEKZtQWm1uEI3fgv2Dbf
+         JJx17Zlkk8esrmF2lt/a9lBWXpHbkuu3iQwyYSlgNPGnOF08Ue+pW1cQDXCznUKGJknf
+         vA89xjnqMqFXEAhcqv1dM3ucBNznmswLxjqs3P0E8fVQ+3ho1uHj9Ivq19E/6PCbUU49
+         q6XgGKUzAddN8uHn9okEz9pkXVFhLWIuDISAmp3bx5q3NqavKilNzDXWQhDzcLfP+NIM
+         u2wlrX+glQ68oTSkUVUNaYsuybb4HwkLen6t0VNfuM079HnFRvLM7uxDpLtrHaJvEj2W
+         7+yQ==
+X-Forwarded-Encrypted: i=1; AKwUvBxu7tLy/TKFZ68qtsACZ4Ec6BdfNX9AEU3M9Yj2d0Sa/wIlWDYqa1CHVK5DAgUWbL/Iq4iANZyV@vger.kernel.org
+X-Gm-Message-State: AFq9FYLFpMD6ZSCwDfrcTtMeaU7Cwy8XGqK4v+c86pv5/LNPiy4vJ32+
+	sRuCfyCmX8LG91N6/jLC+FNHihiX3JY3+p59Q07iRFkzrhZz8ZbKfK7a
+X-Gm-Gg: AYBFou02oh4KYP1a5f3+50OExP0YPLS7KN6tZ/HlLWH049hVJP/R0PhFDQWqEKcEHew
+	D3pN/zJtROomFFoi/Jdn6AUVbUhE3rjmz2BJ992Kb4pHYP9EDpVAuoX2LfuSOWxvSW88/3CKOXF
+	QfwQkZHuJMSc+o0MDj7eIJEIssXoXFicwZS98iaRZbJ1RIHrsxdgjDkd5x9Un0Hij+nNqONDg3I
+	wvyVKFdYmfwul1FHOYsWYNM+iSmjFeGLBTASq8K5JbgWRNQBj7ePojGMcS3NvuBEh3cc5RBn7T3
+	iz7FB7MSNTts29stXOfMviym4yMnfymlgdUr1sQBf1/orG4NRuyyzqwGFigAUSKGeVTIf8u+NeT
+	y6CbsDNO8aNc0gnQDK7A/9PwwFya6sL63hZqmdDbCX9XOgnaHKkoZJ45MB/Xo0rH9TplRPSklbD
+	61dS90py1F+dd8reX7IhtDF+brYDiN39vdYJ8D37EWD18w7+ZaSh5+8IVSk0yPvj9KsdIH7rb6h
+	ceOK9MrwD6/aSu0siytAzk62ZJTukCKzstvON538MCaPGqFx43/ClY3U43Ivgjp7vP8Ornc
+X-Received: by 2002:a17:90a:e18c:b0:3ad:3e8:12 with SMTP id 98e67ed59e1d1-3adeb126491mr6478782a91.48.1793090370681;
+        Tue, 27 Oct 2026 01:39:30 -0700 (PDT)
+Received: from osman.mioffice.cn ([43.224.245.178])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3ae4041fafcsm3618951a91.0.2026.10.27.01.39.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2026 01:39:30 -0700 (PDT)
+From: Zhan Xusheng <zhanxusheng1024@gmail.com>
+To: akpm@linux-foundation.org
+Cc: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	penguin-kernel@I-love.SAKURA.ne.jp,
+	tj@kernel.org,
+	mkoutny@suse.com,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kselftest@vger.kernel.org,
+	shuah@kernel.org,
 	linux-kernel@vger.kernel.org,
-	Zhe Liu <liuzhe1@kylinos.cn>,
-	stable@vger.kernel.org
-Subject: [PATCH] blk-iocost: validate weights before narrowing to u32
-Date: Tue, 27 Oct 2026 16:34:10 +0800
-Message-Id: <20261027083410.704150-1-liuzhe1@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	zhanxusheng@xiaomi.com
+Subject: [PATCH] selftests: cgroup: test memcg OOM on a process whose leader has exited
+Date: Tue, 27 Oct 2026 16:39:23 +0800
+Message-ID: <20261027083923.2412015-1-zhanxusheng1024@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261026120248.2188024-1-zhanxusheng1024@gmail.com>
+References: <20261026120248.2188024-1-zhanxusheng1024@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -87,55 +110,177 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-ioc_weight_write() parses io.weight into a u32 with sscanf("%u")
-and range-checks the result afterwards.  vsscanf() truncates
-out-of-range values modulo 2^32 without reporting an error, so the
-check only sees the truncated residue: writing "default 4294967297"
-(2^32+1) is accepted as weight 1 instead of being rejected with
--EINVAL, leaving the cgroup with the lowest possible weight.  The
-per-device override path has the same problem.
+From: Zhan Xusheng <zhanxusheng@xiaomi.com>
 
-Parse into a u64 with %llu in both paths so the range check runs on
-the true value.  Out-of-range writes now fail with -EINVAL and leave
-the configuration untouched; weights that pass the check still fit
-in the u32 fields as before.
+Moving a process whose thread group leader has exited leaves the leader
+behind, so its live threads sit in the destination memcg with nothing
+listed in cgroup.procs.  Check that an OOM there still kills the process.
 
-Fixes: 7caa47151ab2 ("blkcg: implement blk-iocost")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn>
+Without "mm: memcontrol: don't miss processes whose leader has exited in
+OOM scans" no task is selected and the test fails after five seconds.
+
+Signed-off-by: Zhan Xusheng <zhanxusheng@xiaomi.com>
 ---
- block/blk-iocost.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ .../selftests/cgroup/test_memcontrol.c        | 123 ++++++++++++++++++
+ 1 file changed, 123 insertions(+)
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index a81488c755ca..2ae40138e041 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -3170,13 +3170,13 @@ static ssize_t ioc_weight_write(struct kernfs_open_file *of, char *buf,
- 	struct blkg_conf_ctx ctx;
- 	struct ioc_now now;
- 	struct ioc_gq *iocg;
--	u32 v;
-+	u64 v;
- 	int ret;
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index bb673012dcf0..bddbe923fa42 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -4,6 +4,8 @@
+ #include <linux/limits.h>
+ #include <linux/oom.h>
+ #include <fcntl.h>
++#include <sched.h>
++#include <signal.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -18,6 +20,7 @@
+ #include <netdb.h>
+ #include <errno.h>
+ #include <sys/mman.h>
++#include <sys/syscall.h>
+ #include <sys/sysinfo.h>
  
- 	if (!strchr(buf, ':')) {
- 		struct blkcg_gq *blkg;
- 
--		if (!sscanf(buf, "default %u", &v) && !sscanf(buf, "%u", &v))
-+		if (!sscanf(buf, "default %llu", &v) && !sscanf(buf, "%llu", &v))
- 			return -EINVAL;
- 
- 		if (v < CGROUP_WEIGHT_MIN || v > CGROUP_WEIGHT_MAX)
-@@ -3216,7 +3216,7 @@ static ssize_t ioc_weight_write(struct kernfs_open_file *of, char *buf,
- 	if (!strncmp(ctx.body, "default", 7)) {
- 		v = 0;
- 	} else {
--		if (!sscanf(ctx.body, "%u", &v))
-+		if (!sscanf(ctx.body, "%llu", &v))
- 			goto unprep;
- 		if (v < CGROUP_WEIGHT_MIN || v > CGROUP_WEIGHT_MAX)
- 			goto unprep;
+ #include "kselftest.h"
+@@ -1417,6 +1420,125 @@ static bool memcg_sockets_disabled(void)
+  * The TCP client interleaves reads from the socket with check whether
+  * memory.current and memory.stat.sock are similar.
+  */
++static int exited_leader_pipe[2];
++
++static int exited_leader_thread(void *arg)
++{
++	char c;
++
++	/* Wait until the process has been moved, then fill memory. */
++	if (read(exited_leader_pipe[0], &c, 1) == 1)
++		alloc_anon(NULL, (void *)MB(100));
++	for (;;)
++		pause();
++	return 0;
++}
++
++/* Start a thread and exit only the thread group leader. */
++static int exited_leader_fn(const char *cgroup, void *arg)
++{
++	const size_t stack_size = 64 * 1024;
++	char *stack = malloc(stack_size);
++
++	if (!stack)
++		return EXIT_FAILURE;
++
++	if (clone(exited_leader_thread, stack + stack_size,
++		  CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND |
++		  CLONE_THREAD | CLONE_SYSVSEM, NULL) < 0)
++		return EXIT_FAILURE;
++
++	syscall(SYS_exit, 0);
++	return EXIT_FAILURE;
++}
++
++/*
++ * Moving a process whose leader has exited leaves the leader behind, so
++ * the destination's cgroup.procs is empty.  Check that the destination's
++ * OOM killer still finds the process using its memory.
++ */
++static int test_memcg_oom_exited_leader(const char *root)
++{
++	char *parent = NULL, *src = NULL, *dst = NULL;
++	int ret = KSFT_FAIL;
++	pid_t pid = -ESRCH;
++	int i;
++
++	if (pipe(exited_leader_pipe))
++		return KSFT_FAIL;
++
++	parent = cg_name(root, "memcg_test_exited_leader");
++	if (!parent)
++		goto cleanup;
++	src = cg_name(parent, "src");
++	if (!src)
++		goto cleanup;
++	dst = cg_name(parent, "dst");
++	if (!dst)
++		goto cleanup;
++
++	if (cg_create(parent))
++		goto cleanup;
++	if (cg_write(parent, "cgroup.subtree_control", "+memory"))
++		goto cleanup;
++	if (cg_create(src) || cg_create(dst))
++		goto cleanup;
++	if (cg_write(dst, "memory.max", "30M"))
++		goto cleanup;
++	if (cg_write(dst, "memory.swap.max", "0"))
++		goto cleanup;
++
++	pid = cg_run_nowait(src, exited_leader_fn, NULL);
++	if (pid < 0)
++		goto cleanup;
++
++	for (i = 0; i < 100; i++) {
++		if (!proc_read_strstr(pid, false, "stat", ") Z "))
++			break;
++		usleep(10000);
++	}
++	if (i == 100)
++		goto cleanup;
++
++	/* The exited leader stays in src, the live thread moves. */
++	if (cg_enter(dst, pid))
++		goto cleanup;
++	if (cg_read_strcmp(dst, "cgroup.procs", ""))
++		goto cleanup;
++
++	if (write(exited_leader_pipe[1], "x", 1) != 1)
++		goto cleanup;
++
++	if (cg_read_key_long_poll(dst, "memory.events", "oom_kill ", 1,
++				  50, 100000) != 1)
++		goto cleanup;
++
++	if (cg_read_strcmp_wait(dst, "cgroup.events", "populated 0\n"))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	if (dst)
++		cg_write(dst, "cgroup.kill", "1");
++	if (pid > 0) {
++		kill(pid, SIGKILL);
++		waitpid(pid, NULL, 0);
++	}
++	close(exited_leader_pipe[0]);
++	close(exited_leader_pipe[1]);
++	if (dst)
++		cg_destroy(dst);
++	if (src)
++		cg_destroy(src);
++	if (parent)
++		cg_destroy(parent);
++	free(dst);
++	free(src);
++	free(parent);
++	return ret;
++}
++
+ static int test_memcg_sock(const char *root)
+ {
+ 	int bind_retries = 5, ret = KSFT_FAIL, pid, err;
+@@ -1816,6 +1938,7 @@ struct memcg_test {
+ 	T(test_memcg_oom_group_leaf_events),
+ 	T(test_memcg_oom_group_parent_events),
+ 	T(test_memcg_oom_group_score_events),
++	T(test_memcg_oom_exited_leader),
+ 	T(test_memcg_inotify_delete_file),
+ 	T(test_memcg_inotify_delete_dir),
+ };
+
+base-commit: d135ab453a7400a34930bdda1ef4bdc8acfac80e
 -- 
-2.25.1
+2.43.0
 
