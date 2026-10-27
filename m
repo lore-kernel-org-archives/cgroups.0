@@ -1,55 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.36
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793054089;
-	b=AuzE40kojbz0cCIg+uc836VYRoM/n/PKxQu8MXnYKnbOD8r5LTkX7p0RAy9y3P7aHuHs
-	 VMaoWnm1yfW1fW5BsV+xB5CJdmJC8kw9GPLfuCONZjwn/1c1ds2Mx4iH0+WBV7ww0zmUM
-	 gyigSLGhGGQVG3ePkTjHN2I89G3UrFPtBmA4j2jtipPUTzMcQOoHuVeOBrfLeEIt8ydUo
-	 3XNkyRN0nOl4bwzKP0cxlmbJbgE27EX0M1Kn1Vq85T4WcCDMWVyJm9VphHKVaFFWQuSMA
-	 gFdI6LST0tfcGc2tP3jbJDzHzkCHSuw8gKQMimNB1WawXes+GdSsoe/T3b7O5u/2+fQ==
+	t=1793068942;
+	b=ThOGgukQR34XCfqHxm2qG8Kh+/ugfJsCbbylC5tDtHBCv3Sop5pq7AkXo/uVNCV+6QCU
+	 0bnO1PH96PZPyN9N92WMapF17YhpR8pbEhx/Cqu8CDu5O/C+LHR8aW0p0NeabTV04NgAr
+	 rBM+VV4Kyghj+pOp2oHMsjBz88ksxv8smiTQbJW6MD4cJr3UZuET4bWfCZZtsxMtcF2f2
+	 8fBdafEo/HE2KsyEfaP2BxE4Vt7C8arTAdaWjF7Uzw79Wa/8tw7WDlEU49Vacwfxas/Jj
+	 nF/rMHY5dVpUb0u8qAcD/BPTuUi+FmD9AlYT3Tcd5ymAcj+1mBBM0JsSRXvyhuxjtoQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793054089;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=HcaAjZorHHb3l5RdR8AVzhqeikVAxrwM1RaByGmw9Yc=;
-	b=22L7oz+PptT/9aSLT3FeV3QFMgxeprnh00TVdC7GaenrWlHBaYPzqjFhouEpazcGCj4s
-	 O2T12AHzIMKc5NrrVK7TGfi59+VWhb+ixNfzoDMR6yasDXbN6TYmzkbnOXmmiEhU4TYyN
-	 1hKVW5wbHxpvaaBKy5lPlZ5MgGYwZ0MCFBXFoiFAtC+YBbuUuFR2/NSLk73kUrlk/aeuY
-	 U/Jy2jxmQNLDh6+Sdr6oD+Ov462qf/ysrs9sdfkkeN8+Br/yEdOYIueDmNSG/2qASUu8j
-	 4kf4BUIeVVnrm/bbVGQ7krQqSTTB4U+AmwprynTg0rKn86FUfVlO0gxrat3/chCb3dA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793068942;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
+	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
+	 To:X-Mailer;
+	bh=dxplr2PW9T2cb7PCCoveVu/o9kyEMHS33OhsZEP7yEg=;
+	b=XUHziRiCo8Rd5h/4TXVqB7vr+rBGa735M8T9f6iC8DTHLGM4a0haE1n6+yXTqxQzRgem
+	 Yl4fpwfX7CKrsErmywXpWPCONK2CllIfEuUwWowg/wp51oggSzewdw2LvMZLf4Svmn/T1
+	 xLkwsNEcz412ErWnJR1AtHC7nY3fTZtUnvK4WikSxdyMrTUwGIE0ZoXQyWM/jxprXcqvw
+	 Rr5tw4ls5p/Zjdp2Al+0xAX4VSYFmHqaT93nPqAYECtODXxWeCy9A33OcVvwLLLk+muRd
+	 fClD3oEr26SisTEZ8G+n05sqrP9VoOhWZ3mvol8k4b8cl5GPMPCLjYqqboKSqXcMKMA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jtr2b4rd;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=tD2mSSSy;
+	arc=none smtp.remote-ip=95.215.58.36
+Received: from mta1.migadu.com (out-36.mta1.migadu.com [95.215.58.36])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F3E606A32F
-	for <cgroups@vger.kernel.org>; Mon, 26 Oct 2026 22:34:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFA9C606A31D
+	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 02:42:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EFA9C606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jtr2b4rd
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F010A1F031EB
-	for <cgroups@vger.kernel.org>; Mon, 26 Oct 2026 22:34:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793054088;
-	bh=HcaAjZorHHb3l5RdR8AVzhqeikVAxrwM1RaByGmw9Yc=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=jtr2b4rdy80J8VXiCReV1XjeedXzj0+9hEEOpA7+ZGMMVLgPlChKO1fo5Lyn1x65K
-	 Y+fRecewIzI7QuNArsdnvpTGEuYMCdvJ9m0cWaclc/G0sHFNg1Kc1lu8NYkBrDVgqj
-	 CndmPLaoJLrX5U8Fr1HpinhseNWZwhMw7sBfT19ArnOsZ9SJGoG90qPMdrK74joRd0
-	 fqQTk//dULfyDjSl56Gk8MgXDFQ9PzcCPft5XPGrZe8MmGfiX7WK8UycxRY+ml9hfe
-	 wMCeQi5vIFFnZxmzk48UtEfPEHL7heI9ePDOEAwqrx7pn33V2Eql5FnZar1giwgXlx
-	 2u9A62QSAd4ww==
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-5364042eecfso45879441cf.2
-        for <cgroups@vger.kernel.org>; Mon, 26 Oct 2026 15:34:47 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBwSDYwdJbAJnPUJnvuIh30vcQQqiHAbkMDe4nPlafR1T4iNCwE/HzRsGReDrrc4pSTvKV0zTCWT@vger.kernel.org
-X-Gm-Message-State: AFq9FYJGk6ANleTzYsY5zXXxv3evm310ISItGUI6Zmz3vOFp6lRTZtc+
-	zAZ/a2azvixJNnSCBAs7DnOQMi40minGbQLPN2IdGGqOhqJgDSt6KRYXxS47uK8sxwfNzq109ui
-	lqlJfipmtfPtbjG+S0DSFgExWpsNoFyg=
-X-Received: by 2002:a05:620a:4487:b0:93f:22ae:f8ff with SMTP id
- af79cd13be357-940ef8ea2a0mr1252625785a.46.1793054086667; Mon, 26 Oct 2026
- 15:34:46 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=tD2mSSSy
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=gKD0g/74uU1V+yV//x6cgxOJGY2dkcadxe3i7Wn/Ix4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793068935; v=1; x=1793673735;
+ b=tD2mSSSyzXdmuLX6KVdugQFsyw1b7iG7GmOImpN1/itubHqCo1p80PTCavTPLSUPHZlFhx8E
+ kdonG6dRagUCPraX8M4Yb1SVGDjKGToZ8Rslf1Vs0kigndQKyOKc/jM9MlYrvazE8cqhbtLsrUr
+ jBgU4hUSE2VQlrIcekTskbh0=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id a11537fa0e8ad6d7;
+	Tue, 27 Oct 2026 02:42:14 +0000
+X-Mizu-Trace-ID: a11537fa0e8ad6d7
+X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain;
+	charset=us-ascii
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,432 +57,188 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016-mglru-fg-v4-4-2106750c0bfa@tencent.com> <CAGsJ_4z3q_q-qyWdj85ZkMZvKOsXu7eO6qkiuQcppnd2oE3dTQ@mail.gmail.com>
- <CAMgjq7Dqa5Thm+tXUMrg5D1oSJxwyuJR5UOU+w33OgiebGvcJw@mail.gmail.com>
-In-Reply-To: <CAMgjq7Dqa5Thm+tXUMrg5D1oSJxwyuJR5UOU+w33OgiebGvcJw@mail.gmail.com>
-From: Barry Song <baohua@kernel.org>
-Date: Tue, 27 Oct 2026 06:34:35 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4yOtb+qaDtLAEC9-JEGp=1nSE7EVAExusKpuLX=Jy9t0g@mail.gmail.com>
-X-Gm-Features: AclHuK_EgWblfKLU5vwI51ApCslBvbMrsiLYxVpzxVXvBo33Mt1M-XVAW31COos
-Message-ID: <CAGsJ_4yOtb+qaDtLAEC9-JEGp=1nSE7EVAExusKpuLX=Jy9t0g@mail.gmail.com>
-Subject: Re: [PATCH v4 04/17] mm/mglru: frequency guided workingset promotion (MGLRU-FG)
-To: Kairui Song <ryncsn@gmail.com>
-Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
-	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>, 
-	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
-	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
-	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
-	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
-	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
-	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
-	zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
-	Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH] mm: memcontrol: fix NULL pointer deref in
+ high_work_func() on dying memcg
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20261023222313.3979455-1-tjmercier@google.com>
+Date: Tue, 27 Oct 2026 10:42:00 +0800
+Cc: hannes@cmpxchg.org,
+ mhocko@kernel.org,
+ roman.gushchin@linux.dev,
+ shakeel.butt@linux.dev,
+ zhengqi.arch@bytedance.com,
+ akpm@linux-foundation.org,
+ cgroups@vger.kernel.org,
+ linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
 Content-Transfer-Encoding: quoted-printable
+Message-Id: <DF7DBE4B-E0BA-423B-BDA7-DB07D1C9E564@linux.dev>
+References: <20261023222313.3979455-1-tjmercier@google.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-On Mon, Oct 19, 2026 at 8:09=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrot=
-e:
->
-> On Mon, Oct 19, 2026 at 6:10=E2=80=AFPM Barry Song <baohua@kernel.org> wr=
-ote:
-> >
-[...]
-> >
-> > So this is the main course, with the earlier ones as appetizers and
-> > the later ones as desserts?
-> > Overall, this dish looks very delicious to me.
-> >
-> > I ran kernel build on my machine, the result is quite similar with[1].
-> >
-> > W/o patch:
-> >
-> > eal    1m49.094s
-> > user    25m31.484s
-> > sys     3m40.959s
-> > pswpin: 662112
-> > pswpout: 2504415
-> > pgpgin: 4424336
-> > pgpgout: 10355273
-> > refault_file: 359626
-> > refault_anon: 670724
-> >
-> > W/ patch:
-> >
-> > real 1m48.944s
-> > user 25m30.987s
-> > sys 3m34.605s
-> > pswpin: 467952
-> > pswpout: 2319080
-> > pgpgin: 3481187
-> > pgpgout: 9603332
-> > swpout_zero: 602042
-> > swpin_zero: 6250
-> > refault_file: 310538
-> > refault_anon: 474154
-> >
-> > But it behaves in a much more sensible way.
->
-> Hi Barry,
->
-> Thanks for the review and testing. Glad to see it worked for you.
->
-> >
-> > I've had a preliminary look, but haven't reviewed it in detail yet.
-> > I have a few comments.
-> >
-> > [1] https://lore.kernel.org/linux-mm/20261016213115.70515-1-baohua@kern=
-el.org/
->
-> Right there could be some similarities, and some differences, e.g. no
-> more lru_gen_in_fault hanlding here, or difference between anon /
-> file. BTW did you test the whole series or just this patch? This patch
 
-I tested the whole series rather than this patch in isolation.
 
-[...]
-
-> > Could we use the following instead? Coming from a hardware register bac=
-kground,
-> > this looks more like register encoding to me:
-> >
-> > static inline int lru_get_refs_flags(unsigned long flags)
-> > {
-> >     int refs;
-> >
-> >     refs  =3D !!(flags & BIT(PG_referenced));
-> >     refs |=3D !!(flags & BIT(PG_workingset)) << 1;
-> >     refs |=3D ((flags & LRU_REFS_MASK) >> LRU_REFS_PGOFF) << 2;
-> >     return refs;
-> > }
->
-> No problem; it means the same thing and looks better indeed. I think I
-> better change the return type to unsigned too, refs can never be
-> negative (gen could be though, as a reserved value).
-
-make sense to me. lru_get_refs_flags() is impossible to be negative.
-
->
-> >
-> > >
-> > >  static inline int folio_lru_refs(const struct folio *folio)
-> > > @@ -236,14 +240,29 @@ static inline void folio_set_lru_refs(struct fo=
-lio *folio, unsigned int refs)
-> > >         } while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_=
-flags));
-> > >  }
-> > >
-> > > +void folio_inc_lru_refs(struct folio *folio, unsigned int flags);
-> > > +
-> > >  static inline int folio_lru_gen(const struct folio *folio)
-> > >  {
-> > >         return lru_get_gen_flags(READ_ONCE(*const_folio_flags(folio, =
-0)));
-> > >  }
-> > >
-> > > +static inline bool lru_gen_at_tail(struct lruvec *lruvec, int type, =
-int gen)
-> > > +{
-> > > +       unsigned long min_seq =3D READ_ONCE(lruvec->lrugen.min_seq[ty=
-pe]);
-> > > +
-> > > +       /*
-> > > +        * Consider a folio is at the tail of its LRU when it is with=
+> On Oct 24, 2026, at 06:23, T.J. Mercier <tjmercier@google.com> wrote:
+>=20
+> When memory.high is exceeded in non-task context, try_charge_memcg()
+> schedules memcg->high_work without taking a CSS reference on the =
+memcg,
+> and high_work_func() invokes reclaim_high() without pinning the memcg.
+>=20
+> Before commit f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of
+> dying memory cgroup for LRU folios"), memory usage above memory.high
+> kept the memcg's refcount non-zero. With reparenting, folios and =
+objcgs
+> charged to a child memcg are reparented to its parent in
+> mem_cgroup_css_offline(), leaving the offlined child's memory usage
+> permanently above its memory.high even after its last reference is
+> dropped.
+>=20
+> cancel_work_sync(&memcg->high_work) only runs at the end of teardown =
 in
-> > > +        * MIN_NR_GENS of the oldest generation of its own type
-> > > +        */
-> > > +       BUILD_BUG_ON(MIN_NR_GENS !=3D 2);
-> > > +       return gen =3D=3D lru_gen_from_seq(min_seq) ||
-> > > +              gen =3D=3D lru_gen_from_seq(min_seq + 1);
-> > > +}
-> >
-> > If only two generations remain, should both be considered hot?
-> > If three generations remain, is only the oldest generation old?
-> >
-> > Also, the name is a bit confusing, as "tail" usually refers
-> > to a list. Could we rename it to one of the following?
-> >
-> > lru_gen_is_old()
-> > or
-> > lru_gen_is_near_oldest()
->
-> Right, I wanted to introduce an idea of something called tailing gens
-> (e.g. 8 tailing gens when there are 64 gens in total, folios in
-> tailing gens are promoted on each access instead of multiple access,
-> this works really well for fine grained hotness detection, and avoids
-> over protection too). But for now this helper is just meant to tell
-> the caller if the folio is close to be evicted or not, checking
-> min_seq only could easily fall into a pitfall where the oldest gen is
-> very short.
->
-> Maybe lru_gen_at_expiry? Or lru_gen_at_salvage?
->
+> mem_cgroup_css_free(), so high_work_func() can start or still be =
+running
+> reclaim_high() after mem_cgroup_css_released() or shrink_many() has
+> called lru_gen_release_memcg() and unhashed lruvec->lrugen.list. This
+> causes lru_gen_rotate_memcg() to dereference a NULL pprev pointer.
+>=20
+> Fix this by acquiring a reference with css_tryget_online() in
+> high_work_func() before calling reclaim_high(), and by resetting
+> memory.high and swap.high to PAGE_COUNTER_MAX in
+> mem_cgroup_css_offline() so that charges via references on an offlined
+> memcg do not trigger high_work on the dead child or skip checking live
+> ancestors in try_charge_memcg().
+>=20
+> Oops: general protection fault, probably for non-canonical address =
+0xdffffc0000000000: 0000 [#1] SMP KASAN NOPTI
+> KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+> CPU: 1 UID: 0 PID: 27 Comm: kworker/1:0 Tainted: G    B   W           =
+7.3.0-rc5-g2bba28e98578 #284 PREEMPT(full) <- Taint from =
+lru_gen_rotate_memcg() VM_WARN_ON_ONCE
+> Tainted: [B]=3DBAD_PAGE, [W]=3DWARN
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS =
+1.17.0-debian-1.17.0-1 04/01/2014
+> Workqueue: events high_work_func
+> RIP: 0010:lru_gen_rotate_memcg+0x1a3/0xe90
+> Code: fd 7f 09 45 84 ed 0f 85 64 0c 00 00 48 89 cf c6 83 6a 07 00 00 =
+00 48 c1 ef 03 88 83 69 07 00 00 48 b8 00 00 00 00 00 fc ff df <80> 3c =
+07 00 0f 85 ec 0b 00 00 48 89 31 40 f6 c6 01 0f 85 4e 00
+> RSP: 0018:ffa00000001ef4c8 EFLAGS: 00010046
+> RAX: dffffc0000000000 RBX: ff1100000779e440 RCX: 0000000000000000
+> RDX: 0000000000000001 RSI: ff1100000779b9b0 RDI: 0000000000000000
+> RBP: ff110000bffd8e40 R08: 0000000000000000 R09: ff1100000779ebb8
+> R10: ff1100000779ebb0 R11: 0000000000000246 R12: 0000000000000000
+> R13: 0000000000000000 R14: ffa00000001efb30 R15: 0000000000000002
+> FS:  0000000000000000(0000) GS:ff1100011c0e7000(0000) =
+knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 000000000251ac88 CR3: 0000000009d6c000 CR4: 0000000000751ef0
+> PKRU: 55555554
+> Call Trace:
+> <TASK>
+> ? read_ctrl_pos+0x22f/0x3f0
+> shrink_lruvec+0x16cb/0x1b80
+> ? ret_from_fork_asm+0x1a/0x30
+> ? lapic_next_event+0x15/0x20
+> ? clockevents_program_event+0x2bb/0x6f0
+> ? lapic_next_event+0x15/0x20
+> ? __pfx_shrink_lruvec+0x10/0x10
+> ? __pfx_clockevents_program_event+0x10/0x10
+> ? _raw_spin_lock+0x84/0xe0
+> ? __pfx__raw_spin_lock+0x10/0x10
+> ? kasan_save_stack+0x30/0x50
+> ? psi_group_change+0x381/0x740
+> ? __pfx_sched_clock_cpu+0x10/0x10
+> ? save_fpregs_to_fpstate+0xc4/0x2c0
+> ? finish_task_switch.isra.0+0x1de/0xac0
+> ? __schedule+0xf62/0x42c0
+> ? __pfx___schedule+0x10/0x10
+> ? __pfx___irq_work_queue_local+0x10/0x10
+> ? shrink_node+0x626/0x31e0
+> shrink_node+0x626/0x31e0
+> ? ring_buffer_unlock_commit+0x11d/0x5c0
+> ? kswapd_clear_hopeless+0xa0/0x150
+> ? __pfx_shrink_node+0x10/0x10
+> ? 0xffffffffc0000095
+> do_try_to_free_pages+0x255/0x13b0
+> ? ring_buffer_unlock_commit+0x11d/0x5c0
+> ? reclaim_high+0x10a/0x1b0
+> try_to_free_mem_cgroup_pages+0x1f9/0x5a0
+> ? __pfx_try_to_free_mem_cgroup_pages+0x10/0x10
+> ? irqentry_exit+0xc6/0x670
+> reclaim_high+0x10a/0x1b0
+> ? __pfx_reclaim_high+0x10/0x10
+> ? process_one_work+0x5ff/0x1030
+> ? __pfx_high_work_func+0x10/0x10
+> process_one_work+0x6e2/0x1030
+> ? __pfx___schedule+0x10/0x10
+> ? __pfx_process_one_work+0x10/0x10
+> worker_thread+0x422/0xbb0
+> ? __pfx_worker_thread+0x10/0x10
+> kthread+0x2cd/0x3a0
+> ? recalc_sigpending+0x15c/0x200
+> ? __pfx_kthread+0x10/0x10
+> ret_from_fork+0x368/0x590
+> ? __pfx_ret_from_fork+0x10/0x10
+> ? __switch_to+0x588/0xf50
+> ? __pfx_kthread+0x10/0x10
+> ret_from_fork_asm+0x1a/0x30
+> </TASK>
+>=20
+> Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying =
+memory cgroup for LRU folios")
 
-at_expiry gives the impression that a timer is involved in
-triggering a timeout, while at_salvage is not very intuitive
-for non-native English speakers.
+Hi T.J.,
 
-I'd still prefer lru_gen_is_old(); it's simpler and easier to understand.
+Thanks for fixing this.
 
-> BTW the whole picture involves three kinds of gens:
-> {tailing/expiry/salvage} gens (promote by one gen on each one FD
-> access), frequency gens (promote by one gen on multiple FD access),
-> times gens (promote to latest gen on PTE access); We now only have
-> expiry gens and frequency gens, timed gens are extensions for the
-> workingset report or pghot design. e.g we have 64 gens, then 8 tailing
-> gens are expiry gens, 16 frequency gens, and 48 newest gens are timed
-> gens.
-> https://lwn.net/Articles/976985/
->
-> I mentioned this in the cover letter that the "climbing of the file
-> cache" will stop at 8 gens or 16 gens, this is the whole story, there
-> is a lot of context and plan so I trimed them off to focus on the FG
-> improvement first..
->
-[...]
-> > >         if (folio_test_active(folio))
-> > > -               gen =3D MIN_NR_GENS - folio_test_workingset(folio);
-> > > +               gen =3D MIN_NR_GENS - (refs >=3D LRU_REFS_WORKINGSET)=
-;
-> >
-> > Could we define the "workingset" variant earlier so we can reuse it her=
-e?
-> >
-> > workingset =3D refs >=3D LRU_REFS_WORKINGSET;
->
-> Looks good, will do.
+I have one question about the Fixes tag.
 
-thanks!
+The changelog says that, before f1cf8d2f36dc, memory usage above
+memory.high kept the memcg reference count non-zero. This is true for
+LRU folios: before that commit, each charged LRU folio held a CSS
+reference until it was uncharged.
 
+However, I wonder whether objcg-based kmem already provided a reachable
+path before f1cf8d2f36dc.
 
->
-> > > +/*
-> > > + * Update the folio's lru refs indicator. The caller doesn't need to=
- hold
-> > > + * the folio lock, isolate the folio, or hold the lruvec lock. Used =
-by both
-> > > + * cache access (flags =3D=3D 0) and page table access (LRU_REF_MAPP=
-ED,
-> > > + * optionally with LRU_REF_EXEC).
-> > > + */
-> > > +void folio_inc_lru_refs(struct folio *folio, unsigned int flags)
-> > > +{
-> > > +       int max_gen;
-> > > +       int type, refs, old_gen, gen;
-> > > +       unsigned long new_flags, old_flags, max_seq;
-> > > +       struct lru_gen_folio *lrugen;
-> > > +       struct lruvec *lruvec =3D NULL;
-> > > +
-> > > +       type =3D folio_is_file_lru(folio);
-> > > +       old_flags =3D READ_ONCE(*folio_flags(folio, 0));
-> > > +       do {
-> > > +               new_flags =3D old_flags;
-> > > +               old_gen =3D lru_get_gen_flags(old_flags);
-> > > +               refs =3D lru_get_refs_flags(old_flags) + 1;
-> > > +               gen =3D old_gen;
-> > > +               if (old_gen < 0)
-> > > +                       goto out;
-> > > +               /*
-> > > +                * Lock the lruvec if the folio is on-list. We are al=
-ready
-> > > +                * doing lazy promotion so in theory we don't need th=
-is,
-> > > +                * but for now, concurrent aging would still corrupt =
-the
-> > > +                * size counters.  This is a temporary limitation and
-> > > +                * will be lifted very soon, so the lock here is not =
-a
-> > > +                * performance concern.
-> > > +                */
-> > > +               if (!lruvec) {
-> > > +                       lruvec =3D lruvec_live_lock_irq(folio_lruvec(=
-folio));
-> > > +                       lrugen =3D &lruvec->lrugen;
-> > >                 }
-> > > +               max_seq =3D READ_ONCE(lrugen->max_seq);
-> > > +               max_gen =3D lru_gen_from_seq(max_seq);
-> > > +               if (old_gen =3D=3D max_gen)
-> > > +                       goto out;
-> > >
-> > > -               folio_set_lru_refs(folio, 1);
-> > > -               return false;
-> > > -       }
-> > > +               if (flags & (LRU_REF_MAPPED | LRU_REF_EXEC)) {
-> > > +                       /* Promote second page table access or execut=
-able */
-> > > +                       if (refs > LRU_REFS_REFERENCED || flags & LRU=
-_REF_EXEC)
-> > > +                               gen =3D max_gen;
-> >
-> > This looks a bit odd to me. Could we handle LRU_REF_EXEC in a
-> > separate branch instead of mixing it with refs > LRU_REFS_REFERENCED?
->
-> Not sure how? They seem to want the same thing: promote the folio.
+In particular, BPF alloc_bulk() mostly runs from irq_work. It obtains a
+temporary memcg reference from a persistent objcg, uses =
+set_active_memcg()
+while performing __GFP_ACCOUNT allocations, and drops the temporary
+reference after the allocation. The charge can therefore queue
+memcg->high_work in non-task context without transferring a CSS
+reference to the work item.
 
-I mean we could have a separate branch for LRU_REF_EXEC | LRU_REF_FORCE:
+If this races with memcg offlining, objcg reparenting can redirect the
+objcg to the parent while the old child's page-counter usage remains
+above memory.high. Once the temporary CSS reference is dropped,
+mem_cgroup_css_released() can call lru_gen_release_memcg() before the
+queued high_work runs. The worker can then enter reclaim_high() and
+rotate an already removed lrugen.list.
 
-                if (flags & (LRU_REF_EXEC | LRU_REF_FORCE)) {
-                        gen =3D max_gen;
-                        refs =3D min(refs, LRU_REFS_PROTECTED);
-                } else if (flags & LRU_REF_MAPPED) {
-                        if (refs > LRU_REFS_REFERENCED)
-                                gen =3D max_gen;
-                        /* First access only defers eviction of a tail gen =
-*/
-                        else if (lru_gen_at_tail(lruvec, file, old_gen))
-                                gen =3D (old_gen + 1) % MAX_NR_GENS;
-                        refs =3D min(refs, LRU_REFS_PROTECTED);
-                } else if (refs > LRU_REFS_MAX) {
+This path appears to have all the required pieces after:
 
+  e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
 
-right now, it is:
+Commit 6867c7a33206 later changed the release operation to
+hlist_nulls_del_init_rcu(), which explains the exact NULL pprev seen in
+the reported crash. Before that, the same invalid second deletion would
+instead encounter LIST_POISON2.
 
-                if (flags & (LRU_REF_MAPPED | LRU_REF_EXEC | LRU_REF_FORCE)=
-) {
-                        if (refs > LRU_REFS_REFERENCED ||
-                            flags & (LRU_REF_EXEC | LRU_REF_FORCE))
-                                gen =3D max_gen;
-                        /* First access only defers eviction of a tail gen =
-*/
-                        else if (lru_gen_at_tail(lruvec, file, old_gen))
-                                gen =3D (old_gen + 1) % MAX_NR_GENS;
-                        refs =3D min(refs, LRU_REFS_PROTECTED);
-                } else if (refs > LRU_REFS_MAX) {
+So f1cf8d2f36dc clearly broadens the problem to ordinary LRU folios, but
+I am not very sure it is the first commit after which the underlying =
+race is
+reachable.
 
-a bit hard to follow.
+Is there an additional lifetime guarantee that prevents the pre-f1cf
+objcg/kmem path above? If no, would the following be more appropriate?
 
->
-> > > +                       /* First access only defers eviction of a tai=
-l gen */
-> > > +                       else if (lru_gen_at_tail(lruvec, type, old_ge=
-n))
-> > > +                               gen =3D (old_gen + 1) % MAX_NR_GENS;
-> >
-> > The logic makes a lot of sense to me. It should be able to
-> > differentiate readahead folios from those that are actually mapped
-> > and likely to be accessed more than once.
-> >
-> > If we allow two generations to remain, this could be a problem
-> > because old_gen + 1 would overflow. Maybe add a
-> > VM_WARN_ON() to guard against this case?
->
-> We just checked if (old_gen =3D=3D max_gen), so this should be fine? I
-> mean overflow and the mod MAX_NR_GENS is also part of the sliding
-> window logic.
+Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
 
-Yep, I missed your check:
+Thanks,
+Muchun
 
-                if (old_gen =3D=3D max_gen)
-                        goto out;
-
-[...]
-> > Sometimes you use >=3D LRU_REFS_WORKINGSET, while elsewhere
-> > you use refs > LRU_REFS_REFERENCED. Can we unify these
-> > checks or define a workingset variant?
->
-> No problem; I can use a macro for that, as they mean the same thing.
-
-right, thanks!
-
->
-> > > +/*
-> > > + * Update the lru refs indicator of an isolated folio, only used on
-> > > + * mapped folios upon the final eviction.
-> > > + *
-> > > + * Increments the refs count (capped at LRU_REFS_PROTECTED, evict_fo=
-lios()
-> > > + * then caps it at LRU_REFS_WORKINGSET).  Returns true if the caller=
- should
-> > > + * activate the folio (second access or executable), false to put it=
- back
-> > > + * for a second chance.
-> > > + */
-> > > +static bool folio_inc_lru_refs_isolated(struct folio *folio, const v=
-ma_flags_t *vma_flags)
-> > > +{
-> > > +       unsigned long new_flags, old_flags =3D READ_ONCE(*folio_flags=
-(folio, 0));
-> > > +       int refs;
-> > > +
-> > > +       do {
-> > > +               new_flags =3D old_flags;
-> > > +               refs =3D lru_get_refs_flags(old_flags) + 1;
-> > > +               lru_set_refs_flags(&new_flags, min(refs, LRU_REFS_PRO=
-TECTED));
-> >
-> > I'm having a hard time understanding why an activated folio
-> > still keeps LRU_REFS_PROTECTED, since it will be promoted
-> > to the active list anyway :-)
->
-> Right the FG idea is to always retain the frequency counts, instead of
-> resetting them to 0, so folio_inc_lru_refs can promote FD accessed
-> folios much more proactively, when a folio reaches LRU_REFS_MAX it
-> will be promoted by one gen.
->
-
-folio_inc_lru_refs_isolated() is only called when
-referenced_ptes is true, so these should always be mapped
-folios:
-
-if (lru_gen_enabled() && !lru_gen_switching()) {
-      if (!referenced_ptes)
-             return FOLIOREF_RECLAIM;
-
-      return folio_inc_lru_refs_isolated(folio, &vma_flags) ?
-        FOLIOREF_ACTIVATE : FOLIOREF_KEEP;
-}
-
-When you say "FD-accessed folios" here, do you mean that
-these mapped folios can also be accessed through syscalls,
-and that you keep the refs to detect further FD accesses?
-
-> I did a in depth analyze of runtime distribution, with this, we can
-> see very hot folio being promoted from max_seq - 1 to max_seq, and
-> after aging, the hotness info is still kept and workingset stay stable
-> and accurate (it's like the global aging of traditional LFU, which is
-> obsoluted in upstream due to overhead despite having better accuracy,
-> but now it comes with almost zero cost).
->
-> >
-> > Later, I see that you set it to LRU_REFS_WORKINGSET in
-> > evict_folios():
-> >
-> > folio_set_lru_refs(folio, min(folio_lru_refs(folio), LRU_REFS_WORKINGSE=
-T));
->
-> Right that part is meant for aging the older folios and PID controller
-> though. LRU_REFS_WORKINGSET could means historical workingset, and
-> LRU_REFS_PROTECTED means folios being currently actively protected.
->
-
-folio_inc_lru_refs_isolated() is called from the eviction path.
-Folios that are not reclaimed will go through:
-
-__folio_set_lru_refs(folio, min(folio_lru_refs(folio), LRU_REFS_WORKINGSET)=
-);
-
-in evict_folios().
-
-So LRU_REFS_PROTECTED eventually becomes
-LRU_REFS_WORKINGSET(or 0, 1).
-
-I'm still struggling to understand why we need a transition
-from LRU_REFS_PROTECTED to LRU_REFS_WORKINGSET (or 0/1 if
-folio_lru_refs() < LRU_REFS_WORKINGSET), since those folios
-will always end up in LRU_REFS_WORKINGSET (or 0/1) anyway.
-
-Thanks
-Barry
