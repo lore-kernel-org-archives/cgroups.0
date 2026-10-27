@@ -1,100 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.47
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793122117;
-	b=OeszcxYEyNNAp/4hrZtVcEq+AnnZtqw86gnr4cnRQ7qKYhKxunnzOYyNwzdX6WdH9JCT
-	 Z2iO0DC7VVk8+d3ReSeM9hcImIUbG5LAtJnVZsQWgFCQvFHGZxWPqFFfJQIolk+qqKWof
-	 QjnjVYOTLkVyfRzth4A0bUbMbD7Bya1HANgeARItQMfLKx8g54QOXeokXILkBUvom4lMg
-	 JDHzFhRW1MZM7nUXPjXzXrXTVLRpl9L3v1QIc9aSDzSVNvTstKSYJfgJysEKSyYO8K2z/
-	 VsTZ8d2vTVJI9C1biqlWYwbdvhwGSpXZ7N2huj+1nfn3v5sdoLeOlU5apDFuIO4XGDA==
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=209.85.128.46
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
+	t=1793123007;
+	b=vMX6rmNlHdfjibOnOg4B7gFIIuWiCJF0369ZUPDKMx603u2ii66/du5foihqvp18gW+g
+	 3jfrSJ93jXT+zFMQbo8fvXOdZQinRe2Z2YaYzKVY9hZ2tdGEMeA3YeOYPyI5oA88rVsFd
+	 TKNaijTQM/PuC+pwWkyNzyjvrp4RPtUGTJXyeY1Jb7qUhAJ/Tb5RSh3b+g94JoLUuvHFg
+	 aXk0I8TTY1mX2+FxISYsyzFv4+To/BoA8JmYby/79psG1zYdbXmelahp70BLePjsDR+W+
+	 2YRgnfIGPbb3M7D2zuQmrXN3fh3+amRFgSQ2fKyvHPPOBYXpOPcvH8R5R5GccRawajQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793122117;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793123007;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
-	b=P4uMkN2/yHIo43gN3slZTmJSxnw+RoP/nGutNdnW+FFB2emNLZg1sbzi+x2g5uRysgJ4
-	 y6+cdgTiRgIU3SpYZ22dR5t02qWZI/Xy4sILti+s/9Ht9KSp8SMCmPGY62Voul1lyWyWt
-	 Hsxzu2YRQSQRc/hXmmbZhCNYpr1/xHSgXUX32pzR+p4ytROcyXWti53KGbdhhCtzpHRkA
-	 pN0fJR47LXGWQ2uGbsltZ+5KlQfvjdZayTx086nM85AowQ7n7YQHtzEvKrcMi0D2B8iRd
-	 27gtqwkagG+fR1e19wHiCmpSYjm5KN/lZ2V/po5ZLTX6ow/N2namFhQOo30xp0my4UA==
+	bh=p3B3dOUVUprYHGKVW+MiktwDFrlXxMAYs/IueGeZxSQ=;
+	b=uFkmMh+ByJtNH+wsnsXUmBgwY0KptmgbPZIbukOeU1MxBpJ/cb4PZ4Iwne69vtiqAbK5
+	 pUXehk0uhe6XK1M+xP+h25fyITPnzTIkaHUq5/m+VMQXhxKFSKbipTWPgvH0i5IdegQ9A
+	 E6D95/puyC3gEx433LQcLIa06l0JZ1uFfhr0qYPQKN3HDI9Z2/C41QcVNg0AccfYIzUL+
+	 P6+yrBhb10Z+pQVP81Otsxv1I291zQN5Tq1k3KceERZGqOHAqVnjB1Dw7mVXQ06iOt3z6
+	 ktUdpervvgWDfuVvayLUC2rlOldzUiTo2qbJgOIwC/OOS0TqRxygr1DcbUtcT4pcxBQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=UfJwrzbW;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.47
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=aJnmVK7k;
+	arc=fail smtp.remote-ip=209.85.128.46
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F74606A31A
-	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 17:28:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0F74606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2201B606A31D
+	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 17:43:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2201B606A31D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=UfJwrzbW
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4a206f0b95bso4145e9.0
-        for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 10:28:36 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1793122115; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=aJnmVK7k
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a206f0b95bso6375e9.0
+        for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 10:43:26 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793123005; cv=none;
         d=google.com; s=arc-20260327;
-        b=jjLbNC5VJ0mSt2XguPUc8bA92UWC/T4XnEhJ77ohhtnqJs8HDlfZfAqJH3qjuMnAHD
-         sqgjaIF/iaWwFLE2N442NTUiFj+OM3lzC7krWsbmQMb3NaNWklhwKfmazNjDEq+ZaD66
-         QRzNqRPI4A+X4XFndIlEYdJi7G1vJB3znedCsXh/3Y0IrGs1pj5oMphC1pTntQs7pgSw
-         60bj8f76wMFytQEB04ZNHSZdmcjV8QZFlWLrr1PDK5ADl3E0yY9xt8fBNsYgm+zcnh/E
-         wUpiBNuQ1VO0lU0e3rnW721189Aq/td+qjA5nmezhIqXr4zNND9haNntoLLcISOLYKUg
-         4z+g==
+        b=MQoFO+/bebaR+2weihfvP5QrFXL+qm3nk8asI52WDCuYXMqIpV9zSmhtUIYIf3jO72
+         hACla/xnrqF42qJUSz3+ofyaWOPnzlwKkw72UBlmmJpDZckrKx5Eiz3ShPSmpzeRanTh
+         gAP+mybu6S8la1fskvCF0U3mOcOXZzrOeZyhH3UGVeBOC7RXA+FiEXntQeCF1bpqCDMB
+         1MQWmPrk76oq7QDup/z094kxviBBZ8jLu/loJIr6kcW1NelkSpanjggw0ZetSTRZ53Jw
+         d38sGPZS8HwpSnjI43NcygcCFQCs5xdpIxorqK/7lz3VW2o82ddgrM3scCS8ShUSyBKL
+         uNbA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
-        fh=SCt3wQlDcHW+S07p53jdvyyTKgoKTqaxHLm/gZI4GEw=;
-        b=L87K17KHUhDqTDDQrZ7HmOiRfA1O9G5Y99NUOoY7wYh1PL2T9A46E/E1BqjMda4ca6
-         SfodVEtxGUC2iuhAAn69adV2Trp+oESE2LaLbVOeZ+OBjiG9Itcg+eqRQUtyi79ovULH
-         8f8MmJqQ2NDxDIpKV97NZGWq76pMzd+886h7htIkdiQgTVP53nJyiVy1BtHGGsdbDtpk
-         RSFC87qjxeJtok8IHMWuF0MEgqhzhiUUB1eCbOVs8dZuMFvlYG/mDgjGm+Q9OFwD88VB
-         vXkSyWuIr96xeI+qu1kKQ+SoQxyRwpZrdidLhmEXuX3j0Id7LdaauOm7oKAXfjz7e3L8
-         U3IA==;
+        bh=p3B3dOUVUprYHGKVW+MiktwDFrlXxMAYs/IueGeZxSQ=;
+        fh=M6xkxpST720u57H+4NtEv3Ci6XFyhaRUPqJZ+Px5UtM=;
+        b=KLjz7Xgh7U1jJ5bhzUVlGbDNBIoW4+JplBDZPIuh3cQOBv/z0D9B6nTR0PmzWq71KW
+         IBl/0AsspsqDIyFO3lHWymuEm/v8xKB6X4QZEV6lddJiesdrV1l6GM1zLphauPZWbDC6
+         tTMFqIPy/IPBUsNacoYtm8sh1Xsp9VWaUdIvJLeM0djA08qzViUXfEQh1ffJsfFkUCB/
+         uNH/34fkwrL4gA+W+n0s98w5tj6skBT5owkPpCDYJ/vEp55Hg9rw35eeWYzQ9Zv0qxSK
+         tyg0l5GJxZaFmwVGrDJm2t31qtn3NPJ0XLiU/8AaLtHg5t6xsPc46NAhnfLg380bjx4U
+         ENVg==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793122115; x=1793726915; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793123005; x=1793727805; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
-        b=UfJwrzbWe19olWOGWK9v9Tdy+n8MuTnu7Cpny2V9eunfRlSMAZIzGvtgPB0PzeHnHs
-         jVkEovX+ZNVaIiuEm2UCvh7aEdPZ4yKMLydT6yk2SHzNWFp1asCzGTqJBL15ewsp+XJA
-         PspYEXI3jBA0T9StwsqzgDI9SgdRFG2X+N9/4hDzAXFJZEuCr+PzNAlJUA1a3HCTqHhQ
-         +mwqaQsv5Pj6PiCnXWAzky1ZxPK3utb/PcSVJ4OwobKu4h9yUMxVkx/ea/E467JSiQEL
-         ix1iQ3yuVeRrs2b6OF8UxzH0CvL57o3dLvwgLdxrMxzV54KDcTj5LEGqOXNVL0bUaYWb
-         W25w==
+        bh=p3B3dOUVUprYHGKVW+MiktwDFrlXxMAYs/IueGeZxSQ=;
+        b=aJnmVK7kp+8RQDq/9rrzQLnJK6Gv7tEDbKCdVeOIzNNZRf/oTNA/9L194r13/FophL
+         lNDDcFRUoXcAU6+hDjC1T55LHcJAHUPzws6b/7Sz56SJLsW0WXADRN4DSabG903/LL9h
+         BddV7AEUobaVzQ1rZlKf42w74N6MOhvhoJtgdG8OAQsaw6xlXLzlTrttrIu+HOt2ha20
+         RY7g3mYLw+Zb42JHBqJTM972c3pP4yCa9aLFXEaqIQiwGjHSW1u7VgEAzGLTL/7Ipkfj
+         0pUqcLHlfsnFdmz5iv4TF+I7ETThNysjdCTc18nuw3nzmS4vUw7aJbGTmZI4kF8ybPYh
+         +2Xg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793122115; x=1793726915;
+        d=1e100.net; s=20260707; t=1793123005; x=1793727805;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
-        b=bXhJrnv3knWXsXqvK0q240KEvav759ILUoukcBfh7ljjNc+W4P/yo4Du6ATuMgqGv6
-         FT1dT1vkv+z6M6SCLUe3DA5YEZNU55qunYBWVkwtrdtMZ0DcdUHBlXQ97Xqv0u3nBve2
-         jbBUMBcoGQ9joJH3lEWbIwhXW/muF2/NTJSMkKh3dringejJH/q1DOfQD72YV9GlNpJt
-         a8X/lL1QVY4anAxB1Qm5u31/ci7bDQ8ZRsESQzMxVnOW/lzOcB1px8YIVbrYxql/V4fw
-         876+3mIvxowVEFn+R4/rfJVZO2yis2prdMWH2OC/Zu6pkiUE3r/jIOoOtM82jRcXA+E5
-         MRSw==
-X-Forwarded-Encrypted: i=1; AKwUvBxqZYYgZUCzXB8nViU63827t6vkmoS29/1XcvTULfj7POa+3kjGJKX1+XaXN13K0RBdV1roVLQZ@vger.kernel.org
-X-Gm-Message-State: AFq9FYKFnPt/0FbzpesdRGc2+s2KmfChmzhqH2okQJmouUymwEYW80h6
-	6yW11J+kFk1+POsRJQyNA6zREqP2BimSy6tRr5tkexz5y2xi+8HV0elCm3Qmq6q2va53B4HmLuh
-	1wkUWNVHlQd5b+Jc5B21PERNr+jJq0iuol6mHt2gZ
-X-Gm-Gg: AYBFou1WoWbfg8SknFHe618PZ8Z2bGiCjA3lLNLVKCcQLZTM/HVDi5PqqLnVSW+gJvQ
-	msK4AQFdiBwhr5bPaZ7qxI8Og8z2lfkYfVdMpKyZyFvEnHO4/QPBXCv30MuhDyVFQ8Pur4Hhdyq
-	ZTaQW7CvCUMWjga4yOsdbsGgg5LROaARyCZXObv8h2nQvmFP9ZSnt/+b8nKXEud3GLKBQ3e1Z22
-	ob8UJFwuURI+oaNH9ULjjHty/wYQPQWwfpZlHZUeR4hLaiwQkFwgzDvZgcKsgN7fenIrmtvnJNp
-	KVVcZeTGDBiKiKFam1R859tngYmeNtWZtTufId89gIPO4rAc5pGzejV0Q1Fcs8eTKR0H9ImAV9S
-	dm0xJl/S9UCJuYoU3oGZNGmty0N3MVP//m+LegToJ8sezU6fW+EYuVM9LEN3Zksv7Ojn81TS/+m
-	qkrv+9d/F9QAs3lw==
-X-Received: by 2002:a05:600c:3049:b0:4a1:eccc:7807 with SMTP id
- 5b1f17b1804b1-4a937e30731mr28445e9.8.1793122114845; Tue, 27 Oct 2026 10:28:34
+        bh=p3B3dOUVUprYHGKVW+MiktwDFrlXxMAYs/IueGeZxSQ=;
+        b=veZQfexKILWoZjf4Keb2unrlxJeDu119OXMJe+UofKyIR70ERFUlzw3z5VsVO0KeGq
+         COktq3NroSFcDna2nY5Ga+McSlzpdCfYIcOCmvGnoyLriGaT2Z9h0wOph1mIqc71hjUb
+         1szcYkDcBlopX+LXfuTwnCR2R3NbuxU0C4tYCAeLKZhbjzX/Zq8VMHMQl7icIH4/N4/j
+         rKKaHiaxUHKh8e62fM8Mtz2Ru2Km0Ts44SleAcj4lnCZl8x9VK/XBKNm7etOJnOj0UdZ
+         PChI38jC2f4OdL5VOoAbdy8fC1wtb5rttr0QEplQR27WyITfmc3zfm4ZMeguDLjnDLgu
+         bo7g==
+X-Forwarded-Encrypted: i=1; AKwUvBxLTQif07to4glMworSESmr+baROy52YZYMvUr3hu8GMXXAS66tLjNVzIpLmhZZBTSkaqxEO2qg@vger.kernel.org
+X-Gm-Message-State: AFq9FYKEgxdHXkd3ytz6mYjkUTQBVskSLsW15Si5/EjHmGs+S/t2+dyd
+	f6b8l87BEhmYC0p1JnmBp9V16L92hHtam/xQoNXUfXz3dCiRZgkXLhGKfiKOxh6bR51Gcci5KWq
+	ttTLUWqRkvlazwnfp+h4VSQVqrv9TIDIo8sJNHRVO
+X-Gm-Gg: AYBFou0TjCzvONWdDgyMC74y9GkY3h9LE5dNi+2amc1Uod8EibdTVa30uglCzS79Foh
+	PSZtANmZ0K7FOCd48A1BRCQF76qG3QYMaYoMvmhoS1JTb5vGulHjhflyFViUuDiFN1rM4y8ReD5
+	m+d87sVz6zO4FGCk08eaO5eeXIkKFniOdvD/p/62UzdvWr3GqYA2r9f5hesexW5EybRezdWYdcA
+	5+MAnUjiPKg6xo7XQj39SLtq7jdEowipuTaRjyNQ9aDsvdzgGdXelz4IbQEB09N3KXhwtvB4drO
+	ym12LAfmFTf2aIToQWDgkhqHpz5L1A+i3jYzBHmTvjVP9jHJGQZf9O1Nzyd9tSWGHglY2u3kCE4
+	g/B0k+odIxdG8lc8Kqn3MSlsI343xXL0TBo/LwuVheYNOsH8zsMXfyRztpBXArpubnEz/fLPnEQ
+	rl9kP4l4qtxcpniQ==
+X-Received: by 2002:a05:600c:1092:b0:4a1:eb02:37c with SMTP id
+ 5b1f17b1804b1-4a93cd51d37mr18155e9.6.1793123005040; Tue, 27 Oct 2026 10:43:25
  -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -105,170 +105,194 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261023222313.3979455-1-tjmercier@google.com>
- <at9U2HvyUP-iYOCt@tiehlicka> <CABdmKX1mLKEJNiecW+meJ=LB_Kb8-ieeWdZDd4T6rNR9gKuq_A@mail.gmail.com>
- <auBxqU34FQYauoQr@tiehlicka>
-In-Reply-To: <auBxqU34FQYauoQr@tiehlicka>
+References: <20261023222313.3979455-1-tjmercier@google.com> <DF7DBE4B-E0BA-423B-BDA7-DB07D1C9E564@linux.dev>
+In-Reply-To: <DF7DBE4B-E0BA-423B-BDA7-DB07D1C9E564@linux.dev>
 From: "T.J. Mercier" <tjmercier@google.com>
-Date: Tue, 27 Oct 2026 10:28:22 -0700
-X-Gm-Features: AclHuK-NAoFvZLQL5pNcy4EmaDv4m9SumnHLP9lwTJmOHtHQgmvKyUv42pTsi0E
-Message-ID: <CABdmKX2Hua321nr9vR=Q7-Uu5N6e2JARtUe5RnC3JFu6aGRqhQ@mail.gmail.com>
+Date: Tue, 27 Oct 2026 10:42:00 -0700
+X-Gm-Features: AclHuK_QytrvT9uNtK6TFZfkFqcTUjqFLup9uHHWt2PGssnl21GD_10Q-N8u7ck
+Message-ID: <CABdmKX3-XKWXwZe5f=VwZeSuKH6xM0dsK7TvY7u9B1hgaPOm4g@mail.gmail.com>
 Subject: Re: [PATCH] mm: memcontrol: fix NULL pointer deref in
  high_work_func() on dying memcg
-To: Michal Hocko <mhocko@suse.com>
-Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
-	muchun.song@linux.dev, zhengqi.arch@bytedance.com, akpm@linux-foundation.org, 
+To: Muchun Song <muchun.song@linux.dev>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	shakeel.butt@linux.dev, zhengqi.arch@bytedance.com, akpm@linux-foundation.org, 
 	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
 	stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 27, 2026 at 2:41=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrot=
-e:
+On Mon, Oct 26, 2026 at 7:42=E2=80=AFPM Muchun Song <muchun.song@linux.dev>=
+ wrote:
 >
-> On Mon 26-10-26 11:01:51, T.J. Mercier wrote:
-> > On Mon, Oct 26, 2026 at 6:25=E2=80=AFAM Michal Hocko <mhocko@suse.com> =
-wrote:
-> > >
-> > > On Fri 23-10-26 15:23:13, T.J. Mercier wrote:
-> > > [...]
-> > > > ---
-> > > >  mm/memcontrol.c | 5 +++++
-> > > >  1 file changed, 5 insertions(+)
-> > > >
-> > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > > index a05d9a8baa1b..84f4a8fd4d16 100644
-> > > > --- a/mm/memcontrol.c
-> > > > +++ b/mm/memcontrol.c
-> > > > @@ -2457,7 +2457,10 @@ static void high_work_func(struct work_struc=
-t *work)
-> > > >       struct mem_cgroup *memcg;
-> > > >
-> > > >       memcg =3D container_of(work, struct mem_cgroup, high_work);
-> > > > +     if (!css_tryget_online(&memcg->css))
-> > > > +             return;
-> > > >       reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
-> > > > +     css_put(&memcg->css);
-> > > >  }
-> > >
-> > > OK.
-> > >
-> > > >  static void high_irq_work_func(struct irq_work *work)
-> > > > @@ -4463,6 +4466,8 @@ static void mem_cgroup_css_offline(struct cgr=
-oup_subsys_state *css)
-> > > >
-> > > >       page_counter_set_min(&memcg->memory, 0);
-> > > >       page_counter_set_low(&memcg->memory, 0);
-> > > > +     page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
-> > > > +     page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
-> > > >
-> > > >       zswap_memcg_offline_cleanup(memcg);
-> > >
-> > > Should we simply disable_work_sync when the memcg is going to be
-> > > released instead (mem_cgroup_css_released)? That should both prevent
-> > > the run reclaim_high during the memcg shut down and and also avoid
-> > > plaing with limits to work around.
+>
+>
+> > On Oct 24, 2026, at 06:23, T.J. Mercier <tjmercier@google.com> wrote:
 > >
-> > Hi Michal,
+> > When memory.high is exceeded in non-task context, try_charge_memcg()
+> > schedules memcg->high_work without taking a CSS reference on the memcg,
+> > and high_work_func() invokes reclaim_high() without pinning the memcg.
 > >
-> > Unfortunately that won't work for shrink_many() ->
-> > !mem_cgroup_tryget() -> lru_gen_release_memcg() which can occur before
-> > mem_cgroup_css_released() runs. (mem_cgroup_css_released() happens
-> > through the cgroup_release_wq.)
+> > Before commit f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of
+> > dying memory cgroup for LRU folios"), memory usage above memory.high
+> > kept the memcg's refcount non-zero. With reparenting, folios and objcgs
+> > charged to a child memcg are reparented to its parent in
+> > mem_cgroup_css_offline(), leaving the offlined child's memory usage
+> > permanently above its memory.high even after its last reference is
+> > dropped.
+> >
+> > cancel_work_sync(&memcg->high_work) only runs at the end of teardown in
+> > mem_cgroup_css_free(), so high_work_func() can start or still be runnin=
+g
+> > reclaim_high() after mem_cgroup_css_released() or shrink_many() has
+> > called lru_gen_release_memcg() and unhashed lruvec->lrugen.list. This
+> > causes lru_gen_rotate_memcg() to dereference a NULL pprev pointer.
+> >
+> > Fix this by acquiring a reference with css_tryget_online() in
+> > high_work_func() before calling reclaim_high(), and by resetting
+> > memory.high and swap.high to PAGE_COUNTER_MAX in
+> > mem_cgroup_css_offline() so that charges via references on an offlined
+> > memcg do not trigger high_work on the dead child or skip checking live
+> > ancestors in try_charge_memcg().
+> >
+> > Oops: general protection fault, probably for non-canonical address 0xdf=
+fffc0000000000: 0000 [#1] SMP KASAN NOPTI
+> > KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+> > CPU: 1 UID: 0 PID: 27 Comm: kworker/1:0 Tainted: G    B   W           7=
+.3.0-rc5-g2bba28e98578 #284 PREEMPT(full) <- Taint from lru_gen_rotate_memc=
+g() VM_WARN_ON_ONCE
+> > Tainted: [B]=3DBAD_PAGE, [W]=3DWARN
+> > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.17.0-debi=
+an-1.17.0-1 04/01/2014
+> > Workqueue: events high_work_func
+> > RIP: 0010:lru_gen_rotate_memcg+0x1a3/0xe90
+> > Code: fd 7f 09 45 84 ed 0f 85 64 0c 00 00 48 89 cf c6 83 6a 07 00 00 00=
+ 48 c1 ef 03 88 83 69 07 00 00 48 b8 00 00 00 00 00 fc ff df <80> 3c 07 00 =
+0f 85 ec 0b 00 00 48 89 31 40 f6 c6 01 0f 85 4e 00
+> > RSP: 0018:ffa00000001ef4c8 EFLAGS: 00010046
+> > RAX: dffffc0000000000 RBX: ff1100000779e440 RCX: 0000000000000000
+> > RDX: 0000000000000001 RSI: ff1100000779b9b0 RDI: 0000000000000000
+> > RBP: ff110000bffd8e40 R08: 0000000000000000 R09: ff1100000779ebb8
+> > R10: ff1100000779ebb0 R11: 0000000000000246 R12: 0000000000000000
+> > R13: 0000000000000000 R14: ffa00000001efb30 R15: 0000000000000002
+> > FS:  0000000000000000(0000) GS:ff1100011c0e7000(0000) knlGS:00000000000=
+00000
+> > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> > CR2: 000000000251ac88 CR3: 0000000009d6c000 CR4: 0000000000751ef0
+> > PKRU: 55555554
+> > Call Trace:
+> > <TASK>
+> > ? read_ctrl_pos+0x22f/0x3f0
+> > shrink_lruvec+0x16cb/0x1b80
+> > ? ret_from_fork_asm+0x1a/0x30
+> > ? lapic_next_event+0x15/0x20
+> > ? clockevents_program_event+0x2bb/0x6f0
+> > ? lapic_next_event+0x15/0x20
+> > ? __pfx_shrink_lruvec+0x10/0x10
+> > ? __pfx_clockevents_program_event+0x10/0x10
+> > ? _raw_spin_lock+0x84/0xe0
+> > ? __pfx__raw_spin_lock+0x10/0x10
+> > ? kasan_save_stack+0x30/0x50
+> > ? psi_group_change+0x381/0x740
+> > ? __pfx_sched_clock_cpu+0x10/0x10
+> > ? save_fpregs_to_fpstate+0xc4/0x2c0
+> > ? finish_task_switch.isra.0+0x1de/0xac0
+> > ? __schedule+0xf62/0x42c0
+> > ? __pfx___schedule+0x10/0x10
+> > ? __pfx___irq_work_queue_local+0x10/0x10
+> > ? shrink_node+0x626/0x31e0
+> > shrink_node+0x626/0x31e0
+> > ? ring_buffer_unlock_commit+0x11d/0x5c0
+> > ? kswapd_clear_hopeless+0xa0/0x150
+> > ? __pfx_shrink_node+0x10/0x10
+> > ? 0xffffffffc0000095
+> > do_try_to_free_pages+0x255/0x13b0
+> > ? ring_buffer_unlock_commit+0x11d/0x5c0
+> > ? reclaim_high+0x10a/0x1b0
+> > try_to_free_mem_cgroup_pages+0x1f9/0x5a0
+> > ? __pfx_try_to_free_mem_cgroup_pages+0x10/0x10
+> > ? irqentry_exit+0xc6/0x670
+> > reclaim_high+0x10a/0x1b0
+> > ? __pfx_reclaim_high+0x10/0x10
+> > ? process_one_work+0x5ff/0x1030
+> > ? __pfx_high_work_func+0x10/0x10
+> > process_one_work+0x6e2/0x1030
+> > ? __pfx___schedule+0x10/0x10
+> > ? __pfx_process_one_work+0x10/0x10
+> > worker_thread+0x422/0xbb0
+> > ? __pfx_worker_thread+0x10/0x10
+> > kthread+0x2cd/0x3a0
+> > ? recalc_sigpending+0x15c/0x200
+> > ? __pfx_kthread+0x10/0x10
+> > ret_from_fork+0x368/0x590
+> > ? __pfx_ret_from_fork+0x10/0x10
+> > ? __switch_to+0x588/0xf50
+> > ? __pfx_kthread+0x10/0x10
+> > ret_from_fork_asm+0x1a/0x30
+> > </TASK>
+> >
+> > Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of dying me=
+mory cgroup for LRU folios")
 >
-> I do not follow. Could you explain why please?
-
-Calling disable_work_sync in mem_cgroup_css_released() is too late. As
-soon as the memcg refcount drops to 0, mem_cgroup_tryget() starts
-failing, and lru_gen_release_memcg() can run.
-mem_cgroup_css_released() runs async via css_release() ->
-css_release_work_fn().
-
-high_work_func() doesn't hold a memcg reference, so the memcg refcount
-can hit 0 while high_work_func() is already running, or waiting to
-run.
-
-high_work_func()                    kswapd
-reclaim_high(memcg)
- try_to_free_mem_cgroup_pages()
-                                    <memcg refcount hits 0>
-                                    shrink_many()
-                                     mem_cgroup_tryget() fails
-                                     lru_gen_release_memcg()
-  shrink_lruvec()
-   lru_gen_rotate_memcg()
-    NULL pprev deref
-
-... later, on cgroup_release_wq:
-css_release_work_fn()
- mem_cgroup_css_released()
-  disable_work_sync()   /* too late */
-
-> > The high limit reset is also needed for targeting live ancestors above
-> > the offlined child in try_charge_memcg(). Without the resets,
-> > high_work is never attempted on them since it gets dropped when
-> > attempted on the offlined child due to the first hunk, and
-> > try_charge_memcg() breaks out of the loop.
+> Hi T.J.,
 >
-> I must be missing something really obvious here because I really do not
-> follow you here too. So we are offlining a memcg. We need to coordinate
-> memory reclaim with the memcg tear down, right? For the high reclaim we
-> can achieve this synchronization through disable_work_sync in
-> mem_cgroup_css_offline.
-
-We could call disable_work_sync() in mem_cgroup_css_offline(), but
-that waits until high_work_func() is done and it could be performing
-reclaim. mem_cgroup_css_offline() runs under the cgroup_mutex, and
-cgroup_mutex contention is already bad enough. I don't want to add to
-it. It would also block the rest of the cgroup_offline_wq.
-
-Every other caller of try_to_free_mem_cgroup_pages() keeps the memcg
-alive. high_work_func() should too.
-
-> For a synchronous high memory reclaim we do not
-> have such means but we are keeping a memcg reference which makes the
-> lifetime well defined. If you reset counter you might help to bail out
-> early(ier) but that shouldn't be necessary from a correctness POV as it
-> doesn't provide any explicit synchronization.
-
-The high resets are not for synchronization. They are for performing
-high_work on the correct live memcg if necessary.
-
-Even if we take the disable_work_sync() approach, we still need the
-high limit resets. Any try_charge_memcg() on that offlined memcg would
-break out of this loop too early at schedule_work(&memcg->high_work)
-(a no-op), and potentially skip calling it on any of the parents.
-
-do {
-        bool mem_high, swap_high;
-        mem_high =3D page_counter_read(&memcg->memory) >
-                READ_ONCE(memcg->memory.high);
-        swap_high =3D page_counter_read(&memcg->swap) >
-                READ_ONCE(memcg->swap.high);
-
-        /* Don't bother a random interrupted task */
-        if (!in_task()) {
-                if (mem_high) {
-                        if (allow_spinning)
-                                schedule_work(&memcg->high_work);
-                        else
-                                irq_work_queue(&memcg->high_irq_work);
-                        break;
-                }
-                continue;
-        }
-...
-} while ((memcg =3D parent_mem_cgroup(memcg)));
-
-
-> > Shakeel's remote charging patch
-> > (https://lore.kernel.org/all/20261010210957.1350874-4-shakeel.butt@linu=
-x.dev/)
-> > sends remote charges through high_work too, so without the resets
-> > those would lose ancestor reclaim the same way. Before that patch not
-> > performing the resets means reclaim_high() runs unnecesarily against
-> > current's memcg (not the remote memcg above memory.high).
+> Thanks for fixing this.
 >
-> --
-> Michal Hocko
-> SUSE Labs
+> I have one question about the Fixes tag.
+>
+> The changelog says that, before f1cf8d2f36dc, memory usage above
+> memory.high kept the memcg reference count non-zero. This is true for
+> LRU folios: before that commit, each charged LRU folio held a CSS
+> reference until it was uncharged.
+>
+> However, I wonder whether objcg-based kmem already provided a reachable
+> path before f1cf8d2f36dc.
+>
+> In particular, BPF alloc_bulk() mostly runs from irq_work. It obtains a
+> temporary memcg reference from a persistent objcg, uses set_active_memcg(=
+)
+> while performing __GFP_ACCOUNT allocations, and drops the temporary
+> reference after the allocation. The charge can therefore queue
+> memcg->high_work in non-task context without transferring a CSS
+> reference to the work item.
+>
+> If this races with memcg offlining, objcg reparenting can redirect the
+> objcg to the parent while the old child's page-counter usage remains
+> above memory.high. Once the temporary CSS reference is dropped,
+> mem_cgroup_css_released() can call lru_gen_release_memcg() before the
+> queued high_work runs. The worker can then enter reclaim_high() and
+> rotate an already removed lrugen.list.
+>
+> This path appears to have all the required pieces after:
+>
+>   e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
+>
+> Commit 6867c7a33206 later changed the release operation to
+> hlist_nulls_del_init_rcu(), which explains the exact NULL pprev seen in
+> the reported crash. Before that, the same invalid second deletion would
+> instead encounter LIST_POISON2.
+>
+> So f1cf8d2f36dc clearly broadens the problem to ordinary LRU folios, but
+> I am not very sure it is the first commit after which the underlying race=
+ is
+> reachable.
+>
+> Is there an additional lifetime guarantee that prevents the pre-f1cf
+> objcg/kmem path above? If no, would the following be more appropriate?
+>
+> Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
+>
+> Thanks,
+> Muchun
+
+Hi Muchun,
+
+Everything you said sounds correct to me. I don't think there's
+anything preventing kmem from keeping the memcg above high while the
+refcount hits 0, and hitting the same problem in
+lru_gen_rotate_memcg() from lru_gen_shrink_lruvec().
+
+So using Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node
+lru_gen_folio lists") sounds good to me.
+
+Thanks,
+T.J.
