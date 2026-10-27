@@ -1,119 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.126
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793092386;
-	b=uuxmdctGKjc5LwS50sPFouWQpc/X7o2QtiAqss0PnnsKIqGo710pbw+rUg6nEdo+aMZM
-	 zq9RkED9JKUU+QkKb7CQarluJbb1oRYiU5QoLww524yMB3UumKtZLKBwprex0AJmBT6KD
-	 GZAqSv2ruvUgxjbIU2eDn8f1elSMUqyw2MmNFco/q2T1vV2nSf28Av7g2+fCk97T2CJS6
-	 erUc/m3qt2qHlYVntFU+vSvmJydE8HDzUplGxfobOW2XdtDadZ+NnuQCQEIbl40Q2j/87
-	 RGkS3mNOj9xqSv1sC7qEJUchlYYFNye/RNF+aMPIab6a3SYpaqa2CBNFHc8uMXZZ6bQ==
+	t=1793094061;
+	b=CWiKI4d0e32ZlpVLh054rEYpOuO71UpcGNiV96pRLC53K0t9k/C8G7s/xlC0pQCrKu0I
+	 UvCEtlHxTock5TbPHOPuaR9ZXCkaF4fCgs7No4Q/3Xp2MFTOy6lOAy2DKoRC8trqe/6eB
+	 5QDcZRUcu7uHRzIe+IiE9HQ9XGrQdo338LPdbY9WHfibWn2qxp/Un/18mfrweEvZBMGgU
+	 49EBENSlpX4qEXIy7c3yMybZmSxcq+bTnaNyXT15CkuQiLmpsPIezW1tH39L/Oxa4aI7G
+	 WGU3DEkAmKveQXjSudBQlDoXIaMQPFUQyFU8sS0ha7T4fXaq1IlHcIe3XkyXmCnOiag==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793092386;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=zrNPQA98bso1gIF7bLBSbmMuWs6Q/3EJgOF5OyGhH8U=;
-	b=vGzeFS2QIv6d1737WbGbHHnwxblJr+f5NfOhZQ6etULdeCGYJL61NhOYhJ0+oQ/JDHuC
-	 WSwWQrYWEisOfrIX46dgbCfupu8g9/7aC/c4WDp+eOwpWgr42HemdC1gtyJWUGoPMbsoJ
-	 dj1+Qz0l29XYKB40ZVSe8g6w6IeNIJBuk+XALhZgm/upiKO5eYQpc1ixMT1ricNUDvIOY
-	 BdESZn0kQ00qgc4akcLEyR65hvZ/D21YCw+MYw4WimzW9k42lcPYTQwBVhLxDtp3YqBWn
-	 IRhy85ulg4oWec2c13TtvV3JTWkVwBKEFUz7tGpt7+Pu78kR1qJm3vsZBfK44FW/NWQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793094061;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
+	 In-Reply-To;
+	bh=JVBSyNaPKEtFoMBnmXCIBXxl7RDB3mGMHMJZz01NkVk=;
+	b=HRtKVrETbvDM1I1UawfxMBWE31IHwlMBHNAMQij2hTjh+y575DbHoNI1xc4u3Erpzv2V
+	 Fgl1JnUVD1dbZ6bZ/jV5FyKvXuepJ0HQxIole1jg91s7bjlbYCgQMrGe6rsldYcDA7drl
+	 oFnuzefzB6qKt68bKgSMO6vS2iedti5C7wEN6zc+gEMvxeFmnO2hABm2lJnziPRb+bDy9
+	 gV1Gf8jFas09XpMdH13fe8SwOhny/8Lb7NZ2F8WzA/KQiuPepala/pSB4/rWpPE2ErZot
+	 S6qyT5182d+5S4qEQ1ySbQINE5ydzw/mC+Gxk1qbTjiQCHv4jeUeiSjxgbUN3wZUSdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XR5IVBBH;
-	arc=none smtp.remote-ip=95.215.58.126
-Received: from mta1.migadu.com (out-126.mta1.migadu.com [95.215.58.126])
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=Cb3HmVQU;
+	arc=none smtp.remote-ip=209.85.221.44
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0495A606A31B
-	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 09:13:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0495A606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A313B606A322
+	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 09:41:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A313B606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XR5IVBBH
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=gNw6rX3/dhh2H6vbjInMfVwRCNgPnsLDs4wpnXgzlr4=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793092383; v=1; x=1793697183;
- b=XR5IVBBH3CCS16zN9omJhYlq4okJH3aYsvQwPhQEnEdSV05zuzIvYIMYpB1r4hqa8fNT13pG
- 45MqKW7WU+Dl06tgS9xo+cssEJ4eZsqOcJrsMvy+SouhFKrz+1bHgzhElhYhbYWDx6jQg66MOmD
- xuG5tGgGq5QuuhE6D5rxU/lo=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 348395f4de271727;
-	Tue, 27 Oct 2026 09:13:02 +0000
-X-Mizu-Trace-ID: 348395f4de271727
-X-Migadu-Flow: FLOW_OUT
-From: Hui Zhu <hui.zhu@linux.dev>
-To: Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	John Fastabend <john.fastabend@gmail.com>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Martin KaFai Lau <martin.lau@linux.dev>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	JP Kobryn <jp.kobryn@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Shuah Khan <shuah@kernel.org>,
-	davem@davemloft.net,
-	Jakub Kicinski <kuba@kernel.org>,
-	Jesper Dangaard Brouer <hawk@kernel.org>,
-	Stanislav Fomichev <sdf@fomichev.me>,
-	KP Singh <kpsingh@kernel.org>,
-	Tao Chen <chen.dylane@linux.dev>,
-	Mykyta Yatsenko <yatsenko@meta.com>,
-	Leon Hwang <leon.hwang@linux.dev>,
-	Anton Protopopov <a.s.protopopov@gmail.com>,
-	Amery Hung <ameryhung@gmail.com>,
-	Tobias Klauser <tklauser@distanz.ch>,
-	Eyal Birger <eyal.birger@gmail.com>,
-	Rong Tao <rongtao@cestc.cn>,
-	Hao Luo <haoluo@google.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Kees Cook <kees@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Jeff Xu <jeffxu@chromium.org>,
-	mkoutny@suse.com,
-	Jan Hendrik Farr <kernel@jfarr.cc>,
-	Christian Brauner <brauner@kernel.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Brian Gerst <brgerst@gmail.com>,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Willem de Bruijn <willemb@google.com>,
-	Jason Xing <kerneljasonxing@gmail.com>,
-	Paul Chaignon <paul.chaignon@gmail.com>,
-	Lance Yang <lance.yang@linux.dev>,
-	Jiayuan Chen <jiayuan.chen@linux.dev>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Ihor Solodrai <ihor.solodrai@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Geliang Tang <geliang@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	bpf@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	netdev@vger.kernel.org,
-	linux-kselftest@vger.kernel.org
-Cc: Hui Zhu <zhuhui@kylinos.cn>
-Subject: [RFC PATCH 2/2] selftests/bpf: Add bpf_memcg_ops protection test
-Date: Tue, 27 Oct 2026 17:12:00 +0800
-Message-ID: <a5c4feb51ff6557f7423315259fd3482be3879ee.1793086858.git.zhuhui@kylinos.cn>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <cover.1793086858.git.zhuhui@kylinos.cn>
-References: <cover.1793086858.git.zhuhui@kylinos.cn>
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=Cb3HmVQU
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-48dfc0421d9so3322265f8f.1
+        for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 02:41:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1793094059; x=1793698859; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JVBSyNaPKEtFoMBnmXCIBXxl7RDB3mGMHMJZz01NkVk=;
+        b=Cb3HmVQUB4Lk3lJ79uCjsoT4M/qng2XCwVuFJd72c76fT2RpGya+bs94EVQS3lXDmZ
+         Cg6Q/94Kp3EhZ+A4j0FZjWN7jGX4D6jypPFwwK0yPUImFmFPBTlpaSeUh2a7bEC1QbUd
+         tr+NkkzXvQt6SV1iynM+/8ppGaWS+slHAvSfG53l13e7LLNjulAMqbtEqwtpFqVnOnGW
+         JmTaemFR5SrKvLjFC7wFZ54Pxa5aI0vOlssM2QPIltl6RZXoedLpf7CdZLldhKIIu4MS
+         bWbXpjrLCpBEtF3JY+6vwFTkIORr9u73Mx3nz3PLfGM63BCnn7/LqxxYIXWVl9C0nZgn
+         Klpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793094059; x=1793698859;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=JVBSyNaPKEtFoMBnmXCIBXxl7RDB3mGMHMJZz01NkVk=;
+        b=nAURNoiQSsFIWItbvHYfaQewBxl3znm/rNXqREoyt/CcjPqgi5sHx8WEq/52l8qdBv
+         nt4QNX4YryIhNw5xyXjWCf5GHtqVPC7ZyMVfoyyjDQ+1LY01jBM2uIgkD+ScE/ryIUho
+         nCPbH33er9L2ffseiNkzOaveEd+V4og3CCxP6jPE4yzI9RpORhWgWAGxdW/CG9ruH07X
+         EVABBNualP9/HHr6QO5pegdUz46asvw+VwWKg45qrk7RQJwsTv6m7LKbI/IDv29vedcp
+         XK7YkZIh7BkGMx1OdqOt3f4eC9nAynlVwbZ70EAjonHcmt+sDhwObwGx2wqHyN+i4bU+
+         iEDA==
+X-Forwarded-Encrypted: i=1; AKwUvBw/O71xKS1tCQGi9cZnHDUo/a5cRjHtUC1xra8F0BlwMdWAehHly1U7x7OYnnYWCF0xSF/seC/b@vger.kernel.org
+X-Gm-Message-State: AFq9FYLizoTeokrm7hHspLWJKAVlWA7Q5uB1RTOBq+SNRBPOnMyjwk6d
+	oRalrgsJFNietRUYJ9DZzZqA6/M0Pu+WCr4IvCxfgzg3GiFV+GJuncz4A91GSiPdRes=
+X-Gm-Gg: AYBFou1Kj9HcvC23V2sxNVvhsEKKbWtHlsFs47xyZ9W9EXq1xOcPfGrHa3Bipe4MIhD
+	TQPMnHnbPetObvY+6AkzTGSQjIbAIlizT/9Igvjjo0yLaQoEvPya4MjVPEGFc01vPeoR3StLzeT
+	0dx6RppNfd4g9rpZGyiudz78AsRRgEaNN2coTyxKfScguEONg6o6i93b+FcJM/Se5BgINUDgQoB
+	JPQIL46PJ1X0PChL3FoCQFc6d09Hyf1eFLQpwYshhYc4I9SM5Kybxb8xIj/WNkEO7m/siTI6MIB
+	sAWEkx/+Tp5nvBQ+rpCQ1tzYCFtPRs/uiYNng+iuQzO5r/jceVALRyw92EcwA1lCPefv36LxT2K
+	yiwmyy/FDnQA8QsP9gNKGkNR5TG5Vay5nRpo/nAcVfJ4PTqfAcM/I2CJXYyejAjeQX+UNrg4RFr
+	DrqgwMv4mUEIiZ6W3NukjJZ4Fzb4Px67teYMcePjLucb+SWlAzmLnsIdIAHBtFCcBP/2FvLQb8C
+	difKR5VLI2kTyZ4kJz6lTVf4/cp0PpGoAVuChNEFGZN7qde9HbrVX7RaxOmc4w6DmlwTw==
+X-Received: by 2002:a05:6000:2989:10b0:48d:fbdd:4132 with SMTP id ffacd0b85a97d-48e3eb78141mr13538157f8f.18.1793094058994;
+        Tue, 27 Oct 2026 02:40:58 -0700 (PDT)
+Received: from localhost (109-81-20-177.rct.o2.cz. [109.81.20.177])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e3ebd4bc5sm21909641f8f.34.2026.10.27.02.40.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Oct 2026 02:40:58 -0700 (PDT)
+Date: Tue, 27 Oct 2026 10:40:57 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, zhengqi.arch@bytedance.com,
+	akpm@linux-foundation.org, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] mm: memcontrol: fix NULL pointer deref in
+ high_work_func() on dying memcg
+Message-ID: <auBxqU34FQYauoQr@tiehlicka>
+References: <20261023222313.3979455-1-tjmercier@google.com>
+ <at9U2HvyUP-iYOCt@tiehlicka>
+ <CABdmKX1mLKEJNiecW+meJ=LB_Kb8-ieeWdZDd4T6rNR9gKuq_A@mail.gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -123,273 +102,83 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CABdmKX1mLKEJNiecW+meJ=LB_Kb8-ieeWdZDd4T6rNR9gKuq_A@mail.gmail.com>
 
-From: Hui Zhu <zhuhui@kylinos.cn>
+On Mon 26-10-26 11:01:51, T.J. Mercier wrote:
+> On Mon, Oct 26, 2026 at 6:25 AM Michal Hocko <mhocko@suse.com> wrote:
+> >
+> > On Fri 23-10-26 15:23:13, T.J. Mercier wrote:
+> > [...]
+> > > ---
+> > >  mm/memcontrol.c | 5 +++++
+> > >  1 file changed, 5 insertions(+)
+> > >
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index a05d9a8baa1b..84f4a8fd4d16 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -2457,7 +2457,10 @@ static void high_work_func(struct work_struct *work)
+> > >       struct mem_cgroup *memcg;
+> > >
+> > >       memcg = container_of(work, struct mem_cgroup, high_work);
+> > > +     if (!css_tryget_online(&memcg->css))
+> > > +             return;
+> > >       reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
+> > > +     css_put(&memcg->css);
+> > >  }
+> >
+> > OK.
+> >
+> > >  static void high_irq_work_func(struct irq_work *work)
+> > > @@ -4463,6 +4466,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+> > >
+> > >       page_counter_set_min(&memcg->memory, 0);
+> > >       page_counter_set_low(&memcg->memory, 0);
+> > > +     page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+> > > +     page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
+> > >
+> > >       zswap_memcg_offline_cleanup(memcg);
+> >
+> > Should we simply disable_work_sync when the memcg is going to be
+> > released instead (mem_cgroup_css_released)? That should both prevent
+> > the run reclaim_high during the memcg shut down and and also avoid
+> > plaing with limits to work around.
+> 
+> Hi Michal,
+> 
+> Unfortunately that won't work for shrink_many() ->
+> !mem_cgroup_tryget() -> lru_gen_release_memcg() which can occur before
+> mem_cgroup_css_released() runs. (mem_cgroup_css_released() happens
+> through the cgroup_release_wq.)
 
-low_policy and min_policy are asked after the kernel compares a cgroup's
-own memory.low/min, so a policy can protect a cgroup that carries
-neither.  Attach both to a child cgroup, fault 8M of anonymous memory
-into it and reclaim from its parent.  Check that the kernel consulted
-both hooks and that the ctx named the child, the parent as the reclaim
-target, a zero threshold and a nonzero usage.  Without swap nothing is
-reclaimed and the write returns EAGAIN, but every scan still consulted
-the hooks; both policies answer NO_OPINION, so the outcome is not
-asserted.
+I do not follow. Could you explain why please?
 
-The counters are filtered by cgroup id: attaching any policy turns the
-dispatcher on for every memcg, so background reclaim would otherwise
-move them too.
+> The high limit reset is also needed for targeting live ancestors above
+> the offlined child in try_charge_memcg(). Without the resets,
+> high_work is never attempted on them since it gets dropped when
+> attempted on the offlined child due to the first hunk, and
+> try_charge_memcg() breaks out of the loop.
 
-A full example of answering BELOW so that reclaim skips a cgroup and
-takes the memory from a sibling is maintained out of tree at [1],
-released under GPLv2.
+I must be missing something really obvious here because I really do not
+follow you here too. So we are offlining a memcg. We need to coordinate
+memory reclaim with the memcg tear down, right? For the high reclaim we
+can achieve this synchronization through disable_work_sync in
+mem_cgroup_css_offline. For a synchronous high memory reclaim we do not
+have such means but we are keeping a memcg reference which makes the
+lifetime well defined. If you reset counter you might help to bail out
+early(ier) but that shouldn't be necessary from a correctness POV as it
+doesn't provide any explicit synchronization.
 
-[1] https://github.com/teawater/memcg-async-reclaim/tree/memcg_ext_plus
+> Shakeel's remote charging patch
+> (https://lore.kernel.org/all/20261010210957.1350874-4-shakeel.butt@linux.dev/)
+> sends remote charges through high_work too, so without the resets
+> those would lose ancestor reclaim the same way. Before that patch not
+> performing the resets means reclaim_high() runs unnecesarily against
+> current's memcg (not the remote memcg above memory.high).
 
-Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
----
- .../bpf/prog_tests/memcg_ops_protection.c     | 151 ++++++++++++++++++
- .../bpf/progs/memcg_ops_protection.c          |  72 +++++++++
- 2 files changed, 223 insertions(+)
- create mode 100644 tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c
- create mode 100644 tools/testing/selftests/bpf/progs/memcg_ops_protection.c
-
-diff --git a/tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c b/tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c
-new file mode 100644
-index 000000000000..8ad47bffb42d
---- /dev/null
-+++ b/tools/testing/selftests/bpf/prog_tests/memcg_ops_protection.c
-@@ -0,0 +1,151 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Drive the memcg_ops_protection sample: check that the kernel consults
-+ * min_policy and low_policy during reclaim, and that the ctx they receive
-+ * describes the check faithfully.  The policies themselves always say
-+ * NO_OPINION, so nothing about reclaim's outcome changes.
-+ *
-+ * Layout, under the test workdir:
-+ *
-+ *   memcg_ops_prot           P   reclaim runs from P/memory.reclaim
-+ *   memcg_ops_prot/victim    C   holds the memory, carries the ops
-+ *   memcg_ops_prot_ctl       -   where the test process normally sits
-+ *
-+ * The test process joins C itself and faults in 8M of anonymous memory:
-+ * C's usage above its zero emin/elow is exactly what makes the kernel ask
-+ * the hooks.  Nothing is actually reclaimed -- without swap there is
-+ * nothing to take -- so the write returns EAGAIN after seventeen full
-+ * scans, and every one of them consulted the hooks.  No file is involved
-+ * on purpose: a VM's working directory is often a shared mount where
-+ * temporary files are unsupported or unevictable.  On the way out the
-+ * process rejoins the ctl cgroup, so the framework's cleanup can rmdir
-+ * C and P.
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <unistd.h>
-+
-+#include <bpf/libbpf.h>
-+
-+#include <test_progs.h>
-+#include "cgroup_helpers.h"
-+#include "memcg_ops_protection.skel.h"
-+
-+#define CTL_PATH	"/memcg_ops_prot_ctl"
-+#define PARENT_PATH	"/memcg_ops_prot"
-+#define VICTIM_PATH	PARENT_PATH "/victim"
-+
-+#define FILL_SZ		(8UL << 20)
-+#define RECLAIM_SZ	"1M"
-+
-+void test_memcg_ops_protection(void)
-+{
-+	struct memcg_ops_protection *skel = NULL;
-+	struct bpf_link *ops_link = NULL;
-+	int ctlfd = -1, pfd = -1, cfd = -1, rfd;
-+	void *mem = MAP_FAILED;
-+	ssize_t n;
-+	int err;
-+
-+	/* Sets the environment up and parks this process outside of P. */
-+	ctlfd = test__join_cgroup(CTL_PATH);
-+	if (!ASSERT_GE(ctlfd, 0, "join_cgroup"))
-+		return;
-+
-+	pfd = create_and_get_cgroup(PARENT_PATH);
-+	if (!ASSERT_GE(pfd, 0, "create_parent"))
-+		goto done;
-+
-+	/*
-+	 * The victim's memory.* files need the memory controller in P's
-+	 * subtree_control.  A failure here is the usual "v1 still owns
-+	 * memory", which is a skip rather than a fail.
-+	 */
-+	if (enable_controllers(PARENT_PATH, "memory")) {
-+		fprintf(stderr, "no memory controller under %s\n", PARENT_PATH);
-+		test__skip();
-+		goto done;
-+	}
-+
-+	cfd = create_and_get_cgroup(VICTIM_PATH);
-+	if (!ASSERT_GE(cfd, 0, "create_victim"))
-+		goto done;
-+
-+	skel = memcg_ops_protection__open();
-+	if (!ASSERT_OK_PTR(skel, "open"))
-+		goto done;
-+
-+	skel->bss->target_cgroup_id = get_cgroup_id(VICTIM_PATH);
-+	skel->bss->parent_cgroup_id = get_cgroup_id(PARENT_PATH);
-+	if (!ASSERT_NEQ(skel->bss->target_cgroup_id, 0ULL, "victim_id"))
-+		goto done;
-+	if (!ASSERT_NEQ(skel->bss->parent_cgroup_id, 0ULL, "parent_id"))
-+		goto done;
-+
-+	if (!ASSERT_OK(memcg_ops_protection__load(skel), "load"))
-+		goto done;
-+
-+	ops_link = bpf_map__attach_cgroup_opts(skel->maps.prot_ops, cfd, NULL);
-+	if (!ASSERT_OK_PTR(ops_link, "attach_ops"))
-+		goto done;
-+
-+	/* From here on the test process lives in C; leave via done. */
-+	if (!ASSERT_OK(join_cgroup(VICTIM_PATH), "join_victim"))
-+		goto done;
-+
-+	mem = mmap(NULL, FILL_SZ, PROT_READ | PROT_WRITE,
-+		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-+	if (!ASSERT_TRUE(mem != MAP_FAILED, "mmap"))
-+		goto done;
-+	memset(mem, 0xa5, FILL_SZ);
-+
-+	/* The trigger.  EAGAIN is as good a scan as success. */
-+	rfd = openat(pfd, "memory.reclaim", O_RDWR);
-+	if (!ASSERT_GE(rfd, 0, "open_reclaim"))
-+		goto done;
-+	n = write(rfd, RECLAIM_SZ, sizeof(RECLAIM_SZ) - 1);
-+	err = n < 0 ? -errno : 0;
-+	close(rfd);
-+	if (!ASSERT_TRUE(err == 0 || err == -EAGAIN, "reclaim_trigger"))
-+		goto done;
-+
-+	/* Both hooks run for one unprotected cgroup in one scan. */
-+	if (!ASSERT_GT(skel->bss->min_calls, 0ULL, "min_calls"))
-+		goto done;
-+	if (!ASSERT_GT(skel->bss->low_calls, 0ULL, "low_calls"))
-+		goto done;
-+
-+	/* The victim has no memory.min/low, and it is not empty. */
-+	if (!ASSERT_EQ(skel->bss->seen_min_threshold, 0ULL, "emin"))
-+		goto done;
-+	if (!ASSERT_GT(skel->bss->seen_min_usage, 0ULL, "min_usage"))
-+		goto done;
-+	if (!ASSERT_EQ(skel->bss->seen_low_threshold, 0ULL, "elow"))
-+		goto done;
-+	if (!ASSERT_GT(skel->bss->seen_low_usage, 0ULL, "low_usage"))
-+		goto done;
-+
-+	/* The reclaim came from P, and the ctx said so. */
-+	if (!ASSERT_EQ(skel->bss->saw_min_from_parent, 1, "min_target"))
-+		goto done;
-+	ASSERT_EQ(skel->bss->saw_low_from_parent, 1, "low_target");
-+
-+done:
-+	/* Detach before anything else: no policy may run during teardown. */
-+	bpf_link__destroy(ops_link);
-+	memcg_ops_protection__destroy(skel);
-+	if (mem != MAP_FAILED)
-+		munmap(mem, FILL_SZ);
-+	/* A no-op when the process never made it into the victim. */
-+	join_cgroup(CTL_PATH);
-+	if (cfd >= 0)
-+		close(cfd);
-+	if (pfd >= 0)
-+		close(pfd);
-+	if (ctlfd >= 0)
-+		close(ctlfd);
-+}
-diff --git a/tools/testing/selftests/bpf/progs/memcg_ops_protection.c b/tools/testing/selftests/bpf/progs/memcg_ops_protection.c
-new file mode 100644
-index 000000000000..0288e3ca7858
---- /dev/null
-+++ b/tools/testing/selftests/bpf/progs/memcg_ops_protection.c
-@@ -0,0 +1,72 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Watch the memory.low / memory.min policy hooks for the
-+ * memcg_ops_protection runner: count the consultations about the victim
-+ * cgroup and snapshot what the ctx carries.  Both members always say
-+ * NO_OPINION, so the kernel's own comparison decides and reclaim stays
-+ * free to take the cache; the runner only checks that the hooks ran and
-+ * saw sane values.
-+ *
-+ * The counters are victim-scoped on purpose: once any policy is attached
-+ * the dispatcher runs for every memcg, and background reclaim of unrelated
-+ * cgroups would otherwise drown the signal in noise.
-+ */
-+
-+#include "vmlinux.h"
-+#include <bpf/bpf_helpers.h>
-+#include <bpf/bpf_tracing.h>
-+
-+char _license[] SEC("license") = "GPL";
-+
-+/* Set by the runner between open and load. */
-+__u64 target_cgroup_id;
-+__u64 parent_cgroup_id;
-+
-+/* How often the kernel consulted us about the victim. */
-+__u64 min_calls;
-+__u64 low_calls;
-+
-+/* Last victim-scoped snapshot, for checking what the ctx carries. */
-+__u64 seen_min_threshold;
-+__u64 seen_min_usage;
-+__u64 seen_low_threshold;
-+__u64 seen_low_usage;
-+int saw_min_from_parent;
-+int saw_low_from_parent;
-+
-+/* BPF_PROG() uses "ctx" for the raw argument array, hence "mctx" here. */
-+SEC("struct_ops")
-+__u32 BPF_PROG(prot_min_policy, const struct bpf_memcg_prot_ctx *mctx)
-+{
-+	if (mctx->cgroup_id != target_cgroup_id)
-+		return BPF_MEMCG_PROT_NO_OPINION;
-+
-+	__sync_fetch_and_add(&min_calls, 1);
-+	seen_min_threshold = mctx->threshold;
-+	seen_min_usage = mctx->usage;
-+	if (mctx->target_cgroup_id == parent_cgroup_id)
-+		saw_min_from_parent = 1;
-+
-+	return BPF_MEMCG_PROT_NO_OPINION;
-+}
-+
-+SEC("struct_ops")
-+__u32 BPF_PROG(prot_low_policy, const struct bpf_memcg_prot_ctx *mctx)
-+{
-+	if (mctx->cgroup_id != target_cgroup_id)
-+		return BPF_MEMCG_PROT_NO_OPINION;
-+
-+	__sync_fetch_and_add(&low_calls, 1);
-+	seen_low_threshold = mctx->threshold;
-+	seen_low_usage = mctx->usage;
-+	if (mctx->target_cgroup_id == parent_cgroup_id)
-+		saw_low_from_parent = 1;
-+
-+	return BPF_MEMCG_PROT_NO_OPINION;
-+}
-+
-+SEC(".struct_ops.link")
-+struct bpf_memcg_ops prot_ops = {
-+	.low_policy = (void *)prot_low_policy,
-+	.min_policy = (void *)prot_min_policy,
-+};
 -- 
-2.43.0
-
+Michal Hocko
+SUSE Labs
