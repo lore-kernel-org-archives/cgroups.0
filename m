@@ -1,80 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793125033;
-	b=oNjDGwAYUjufgXvFqfZDOtk8ygR7JOJkqErv5xf9ugCrtTCgjVgxFACe3TpciUA4EPhk
-	 2pj4SAUl6XnAKVGjRyJ+e42O/hNrzVCvSYoRFrzyRl0pCm3lv1eAThowOmOjjQJypXSuc
-	 KH1RSOtlFNIoykUGS1/Jl3IaQ4XDR3xnfCbRwaF5gNHfPlfQ3sMZXYmPUWTRBxY0IJQLB
-	 wZ5BFcnNayl4WBnAl7XQFpAPNnFrVngiASH95VykkiTPdJR1bdEU4zDMI7B2L/f3l3g7I
-	 99QwHF4YgfBP/WOViJs8W1MLUbOPm8MFjXI1FrHg28xGMcoXzPPuJREtO3D40xE+jpw==
+	t=1793130370;
+	b=adQVQmKCrU5AAIO6pTRlNWpCV5F8fUVkdySJvW3QYSgHgt4UUSp3k6RStc0YpvtsjvjO
+	 yzGzAe/RSHCtYM0aP5DJ55WnL2BKGQQdpkDYzLxyhebd465UrRWkoqEGxgoGF6yN4sWvx
+	 MZPal9DLrVzmuFsyWvOrs0b0IDGsa0UgfhfmVeeXDDWu47MxGYukCu9pZo6T3xxpO90te
+	 +CLhRIXtSTgm0otBZGV+O/OxnvoCQ3aKXudUKTnACnClQ4zF8kRgDJwx0qAWTKOEERTS7
+	 pEamBY7XPtyi0c/fwfLGL+GdMdSZdUlOMFZg9t5wVpHj0tuYrKSpgW9ywEsA3N2KdOA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793125033;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References;
-	bh=BQlG+dpy8YjBQ/Jf8HDAX4aO1LrQ0VKAd1X1FNGlEsc=;
-	b=ydZxHM1FTxOwNYGeKHuCcwOpP2FCqg1peeharRkys3ckSn4oRIJpFd8sM4rE9WMFAWMs
-	 hOFFNxn5Sf2D5Q5R6s+bzbabmL01o/RpN9Po6PeVyzCYiHDz4+v7Df3d7CXlBYAyb+i3K
-	 QwrlJYMwM17G96vc/+4ZQl2PyukcfMEKcrX+i01uKRrBwD8kQAxRkwztdf/YDdnN92/zZ
-	 M4yhfb+9KWDd36FWutp5kObQs8INneuewYT6jhR+GV5pKISabpDieQHwX/tDoyapb3NSj
-	 cVfUryrC9d9Prniftp89AEJNTLvFmsngl2RTUJFIEFhqXafVPi+XtfvIcfgudgDeVAA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793130370;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject;
+	bh=y9zesWRNIpPzsx/0tL1PLhlHzMGCdhSTE+soVlAoOw0=;
+	b=ka3KuZndQmBnlWUleCg1a95QkJGR3c6yuilL8/zOQemohrHjYFkrOohqNxqeP0Huj5lZ
+	 tqWol+9Xejdx+nbSPQ6MlQtCWYeFc/3yDexGOkTzUqbpfjYxnQLo+LQZJ/gqTxjLWoTAR
+	 pzPS18eDtKrrQhs9Uj9Xlp1DF0DpcscvQgQgHrppfMUUP8lAso8cU02NNBc0teZtn97pv
+	 Ahklp54h+bvlAUsPxv3sk1N4h9gk1t9KVhEeI15MxR5vs0vExKUI0Q9B1rzUmjrZbB0wt
+	 9MrTaV8zOlMC/Lgr2U9JbIIRtBG7nsKsNInbfO9wv+NKDmdOK7soAmlNQ4Nhi9njKSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jLPqgKVf;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G8JSIEAk;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C2CF606A31D;
-	Tue, 27 Oct 2026 18:17:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19F77606A31D;
+	Tue, 27 Oct 2026 19:46:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jLPqgKVf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB6511F031E5;
-	Tue, 27 Oct 2026 18:17:11 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=G8JSIEAk
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65B631F01825;
+	Tue, 27 Oct 2026 19:46:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793125032;
-	bh=BQlG+dpy8YjBQ/Jf8HDAX4aO1LrQ0VKAd1X1FNGlEsc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=jLPqgKVfOPVsDgLwoMZ16UseK8OHOo8JpJwNW/YVi0kw3fyQlEsd/UVg32FMZs3OW
-	 r4P5KEJCPIj/KOyDQJDreVJVPyrB9ZKlgbeWThq5yAcHYydcr3eWO39CsPMsWs4YzX
-	 ty8ec6TIzned9CARBFQmSPik48yQoBZn5DuK+GyZh73+m/oGiaCpMUsswuEpUy1+/B
-	 23Ww8KgzPaUGxYKedH2WJ6EK08iuAw/pGCySpsh73GwcFgXbpCs1fGhaD+DjqHzW4p
-	 yCNW05kom5Kf5o1qvD3E9oL7GPtzdiHaTHg/5xmtSzKc2wlh09rM45Nyjj1+dO0iMI
-	 u+HyATTnHHaaA==
-Date: Tue, 27 Oct 2026 08:17:11 -1000
-Message-ID: <769e80ffa618327ac03c13c4657e7229@kernel.org>
+	s=k20260515; t=1793130369;
+	bh=y9zesWRNIpPzsx/0tL1PLhlHzMGCdhSTE+soVlAoOw0=;
+	h=Date:From:To:Cc:Subject;
+	b=G8JSIEAkOtjmGRamZA+MMA24zOFST+LD3/MFeopaPIkPlQgo2V3PhGXJFHAdjBi1E
+	 1uTe6HN+iHO4omhfSicB2lUYOsUOdj0v2XfPWffnWzfuYHZ2zlrpFCkgJ83r5T1UX8
+	 E8nVHG9Rr8GjZVSU/moZV+sGSHF9MZe7g0ApDp0GWBhzZPcN+ug1pbgWbb3AJw88ge
+	 Di+37VKokE3lY/jK8+LPjY41+An1HZMof9IjcRNFl9nD0c0zCiCs4tcAbfpk7IvxKK
+	 SCkaBpfmjEBTOXpHywb8jlXfJoA0/2TnW7A0XSbgEP2jdqOQQwzu9IKxhdbKd9cmwt
+	 14g50/iZyXplQ==
+Date: Tue, 27 Oct 2026 09:46:08 -1000
+Message-ID: <728f269e1bd680a3d18d3b7c826fe864@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Hui Zhu <hui.zhu@linux.dev>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>,
- John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>,
- Martin KaFai Lau <martin.lau@linux.dev>, Eduard Zingerman <eddyz87@gmail.com>,
- Kumar Kartikeya Dwivedi <memxor@gmail.com>, Song Liu <song@kernel.org>,
- Yonghong Song <yonghong.song@linux.dev>, Jiri Olsa <jolsa@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, JP Kobryn <jp.kobryn@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, Shuah Khan <shuah@kernel.org>,
- davem@davemloft.net, Jakub Kicinski <kuba@kernel.org>,
- Jesper Dangaard Brouer <hawk@kernel.org>, Stanislav Fomichev <sdf@fomichev.me>,
- KP Singh <kpsingh@kernel.org>, Tao Chen <chen.dylane@linux.dev>,
- Mykyta Yatsenko <yatsenko@meta.com>, Leon Hwang <leon.hwang@linux.dev>,
- Anton Protopopov <a.s.protopopov@gmail.com>, Amery Hung <ameryhung@gmail.com>,
- Tobias Klauser <tklauser@distanz.ch>, Eyal Birger <eyal.birger@gmail.com>,
- Rong Tao <rongtao@cestc.cn>, Hao Luo <haoluo@google.com>,
- Peter Zijlstra <peterz@infradead.org>, Miguel Ojeda <ojeda@kernel.org>,
- Nathan Chancellor <nathan@kernel.org>, Kees Cook <kees@kernel.org>,
- Jeff Xu <jeffxu@chromium.org>, mkoutny@suse.com, Jan Hendrik Farr <kernel@jfarr.cc>,
- Christian Brauner <brauner@kernel.org>, Randy Dunlap <rdunlap@infradead.org>,
- Brian Gerst <brgerst@gmail.com>, Masahiro Yamada <masahiroy@kernel.org>,
- Willem de Bruijn <willemb@google.com>, Jason Xing <kerneljasonxing@gmail.com>,
- Paul Chaignon <paul.chaignon@gmail.com>, Lance Yang <lance.yang@linux.dev>,
- Jiayuan Chen <jiayuan.chen@linux.dev>, Emil Tsalapatis <emil@etsalapatis.com>,
- Ihor Solodrai <ihor.solodrai@linux.dev>, Barry Song <baohua@kernel.org>,
- Geliang Tang <geliang@kernel.org>, linux-kernel@vger.kernel.org,
- bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
- netdev@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Hui Zhu <zhuhui@kylinos.cn>
-Subject: Re: [RFC PATCH 0/2] memcg_ext: dynamic memory.low and memory.min protection
-In-Reply-To: <cover.1793086858.git.zhuhui@kylinos.cn>
-References: <cover.1793086858.git.zhuhui@kylinos.cn>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
+ Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [GIT PULL] cgroup: Fixes for v7.4
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,21 +55,93 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 
-Hello, Hui.
+Hello,
 
-On Tue, Oct 27, 2026 at 05:11:58PM +0800, Hui Zhu wrote:
-> Why it matters: memory.low and memory.min protect a cgroup by a fixed
-> threshold and have no idea whether it is using the memory.  A
-> high-priority cgroup that holds a large working set and then goes idle
-> keeps suppressing reclaim on its siblings, and that memory is wasted.
-> A policy program sees the real activity - page faults, charges - and
-> can grant or withdraw protection as it changes.
+The following changes since commit 1850c669516cb8568150937497a9a16a7bfa1582:
 
-This doesn't justify the changes. Why can't the same be achieved by
-adjusting memory.low and memory.min from userspace? The arguments made
-so far are neither convincing nor proven.
+  selftests/cgroup: test pids.events notification (2026-10-16 09:52:06 -1000)
 
-Thanks.
+are available in the Git repository at:
 
---
+  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.4-fixes
+
+for you to fetch changes up to 518cec2def9992192291f5028edc077fb2e475e9:
+
+  cgroup/cpuset: Integrate compute_partition_effective_cpumask() into compute_effective_cpumask() (2026-10-26 07:44:43 -1000)
+
+----------------------------------------------------------------
+cgroup: Fixes for v7.4
+
+- cgroup.kill did not kill a process whose thread group leader had exited
+  while other threads still ran, nor those threads once moved to another
+  cgroup, letting a process survive its container being killed.
+
+- A cgroup.procs write under favordynmods could migrate a newly forked
+  process before fork linked it to its cgroup, corrupting cgroup task lists.
+
+- cpuset partition fixes for nested hierarchies: invalidation, revival,
+  shrinking and switches between root and isolated could leak isolated CPUs,
+  skip or miscompute the housekeeping check, or leave wrong effective CPUs.
+
+  - A root partition can no longer be created under an isolated parent or
+    stay valid under one, as disabling it could leave no housekeeping CPUs.
+
+  - Enabling a partition failed when a grandchild held tasks, although the
+    parent had none of its own.
+
+  - Separately, an allocation racing with a cpuset.mems update could drop
+    its mempolicy nodemask and land on the wrong node, and a memoryless node
+    in cpuset.mems triggered a spurious "movable nodes only" warning.
+
+  - Two no-functional-change cleanups of the effective CPU computation.
+
+----------------------------------------------------------------
+Daehyeon Ko (1):
+      cgroup: serialize migrations of newly forked processes
+
+Gregory Price (Meta) (2):
+      cgroup/cpuset: use mems_allowed_seq when checking a policy nodemask
+      cgroup/cpuset: check effective mems for a movable-only configuration
+
+Guopeng Zhang (1):
+      cgroup/cpuset: Fix task checking when enabling a partition
+
+Kir Kolyshkin (2):
+      cgroup: fix cgroup.kill for exited thread group leader
+      selftests/cgroup: test cgroup.kill with an exited thread group leader
+
+Sasha Levin (1):
+      cgroup: don't kill migrated processes through their exiting threads
+
+Waiman Long (20):
+      cgroup/cpuset: Fix a missing isolated_cpus update in update_cpumasks_hier()
+      cgroup/cpuset: Consolidate isolated_cpus_can_update() into prstate_housekeeping_conflict()
+      cgroup/cpuset: Consider all the exclusive CPUs when doing housekeeping check
+      cgroup/cpuset: Do housekeeping check before converting invalid partition to valid
+      cgroup/cpuset: Properly disabling partition when partition state switching fails
+      cgroup/cpuset: Don't allow a child root partition under an isolated parent
+      selftests/cgroup: Add tests for isolcpus housekeeping check
+      selftests/cgroup: Add tests for nohz_full housekeeping check
+      selftests/cgroup: Skip test_cpuset_prs.sh test if some required CPUs are offline
+      cgroup/cpuset: Find furthest isolated ancestor for invalidated isolated partition
+      cgroup/cpuset: Properly compute effective xcpus in update_parent_effective_cpumask()
+      cgroup/cpuset: Fix incorrect effective_cpus bug in update_cpumasks_hier()
+      cgroup/cpuset: Minor fixes to prstate_housekeeping_conflict()
+      selftests/cgroup: Check for a single range nohz_full CPUs before running test matrix
+      cgroup/cpuset: Prevent recursive call of remote_cpus_update() via update_cpumasks_hier()
+      cgroup/cpuset: Make sure compute_partition_effective_cpumask() is only called for valid partition
+      cgroup/cpuset: Release invalid isolated CPUs in compute_partition_effective_cpumask()
+      cgroup/cpuset: Release invalid isolated CPUs with a shrunk root partition parent
+      cgroup/cpuset: Relocate compute_*effective_cpumask() and compute_effective_nodemask()
+      cgroup/cpuset: Integrate compute_partition_effective_cpumask() into compute_effective_cpumask()
+
+ Documentation/admin-guide/cgroup-v2.rst           |   4 +-
+ kernel/cgroup/cgroup.c                            |  30 +-
+ kernel/cgroup/cpuset-internal.h                   |   6 +
+ kernel/cgroup/cpuset.c                            | 678 +++++++++++++---------
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 276 +++++++--
+ tools/testing/selftests/cgroup/test_kill.c        | 158 +++++
+ 6 files changed, 823 insertions(+), 329 deletions(-)
+
+-- 
 tejun
