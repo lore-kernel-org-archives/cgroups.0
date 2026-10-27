@@ -1,100 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.67
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.47
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793113479;
-	b=A2WGJ/3YzIM6ZkWV3+aJh6nRXW+OIRIDgnUpo3l+6klz0351xmq/B9SM+0A9l5O31nuf
-	 /Gt7SlfNLtXFEbSf/p5/pVb+YwJm3wZI8GXf/y6v0GEb5KfsIIc0GxHK6ceEf6SX/i4WS
-	 SPztCG/QAbqqCmUitTI5nUrttz81GQ17Zvv9rxxpwl4GXBQLHQqByCBhYsMlLGNnyraG1
-	 Nmp5W8YDQjVOWLra/2RklsMO8ux3hjNhF86WJzpWMlJIHNtns3mfFGRpCxsBpQjzz+2QE
-	 wWP+pi4LkviYRffw2fkVX4abOuem6UUbhhgJx2X2rM9Jhq0A/I3iPPwf+mhOoOyeSWQ==
+	t=1793122117;
+	b=OeszcxYEyNNAp/4hrZtVcEq+AnnZtqw86gnr4cnRQ7qKYhKxunnzOYyNwzdX6WdH9JCT
+	 Z2iO0DC7VVk8+d3ReSeM9hcImIUbG5LAtJnVZsQWgFCQvFHGZxWPqFFfJQIolk+qqKWof
+	 QjnjVYOTLkVyfRzth4A0bUbMbD7Bya1HANgeARItQMfLKx8g54QOXeokXILkBUvom4lMg
+	 JDHzFhRW1MZM7nUXPjXzXrXTVLRpl9L3v1QIc9aSDzSVNvTstKSYJfgJysEKSyYO8K2z/
+	 VsTZ8d2vTVJI9C1biqlWYwbdvhwGSpXZ7N2huj+1nfn3v5sdoLeOlU5apDFuIO4XGDA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793113479;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:Cc:Subject:
-	 Date:X-Mailer:Message-ID:In-Reply-To:References:Content-Type:
-	 Content-Transfer-Encoding:X-MS-Reactions:X-ClientProxiedBy:
-	 MIME-Version:X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=qq4mh4EQ0eFU7IR5aQFnIoyJEAscSabo3lQGAD1qryk=;
-	b=zuxu1SpSo4uDEYGRdRfz7ajMMsvVgcN1vvwMqOD+B7J9tHOuTTzhfuNOVZt7lJSGciRv
-	 E3SmLRq5dOELqrl7/TYtk7jm94ejeuCIweswyOpsVyHxo9DRulDmGRJ8rluP2bOBy5fZF
-	 1yr9pbJa4RqmvWw4qizAqk39CYSIz8iOlrgbdUcQpia7N00aDMRUd86rMT7auivUi4GQW
-	 LiQVzHgqvUc9dV5HYN92KHOVFzuP1DdUqBJrffW01MgIZh28AfQeIqIBGettSzfW0dOUt
-	 7VwpbnI0YH4Plo1yUdXFY6wq3XgRqS1b5KA7UsmvaFV2TCKDygImETP7m9YUwgEUovQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793122117;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
+	b=P4uMkN2/yHIo43gN3slZTmJSxnw+RoP/nGutNdnW+FFB2emNLZg1sbzi+x2g5uRysgJ4
+	 y6+cdgTiRgIU3SpYZ22dR5t02qWZI/Xy4sILti+s/9Ht9KSp8SMCmPGY62Voul1lyWyWt
+	 Hsxzu2YRQSQRc/hXmmbZhCNYpr1/xHSgXUX32pzR+p4ytROcyXWti53KGbdhhCtzpHRkA
+	 pN0fJR47LXGWQ2uGbsltZ+5KlQfvjdZayTx086nM85AowQ7n7YQHtzEvKrcMi0D2B8iRd
+	 27gtqwkagG+fR1e19wHiCmpSYjm5KN/lZ2V/po5ZLTX6ow/N2namFhQOo30xp0my4UA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b="V/Qs3BNy";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.43.67
-Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012067.outbound.protection.outlook.com [52.101.43.67])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=UfJwrzbW;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.47
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA72606A32E;
-	Tue, 27 Oct 2026 15:04:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6FA72606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0F74606A31A
+	for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 17:28:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0F74606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=V/Qs3BNy
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tPiBKDJhaq0X3UBtjeTv5TFLoj43W8cwQss1JY5f12kGLwA3elFJvo9y6Q+jgbm4NjW0JX2ZZTGH4OXLgWq938qgz8QC7k3/xDvBflk6VI8yKlGcuameJBEHWcBkzB8wPBtdAyoM+veLRMVtoGi+dgjUoe6Iuz6MST5onh9ERcuNYJf1khBdm2eD76PJk/HrJT81nn6RtVCnQC5Ouge2cVtxvsy5PyaAY3WIR2UzRXdJTIYFSImrxtxn8sWSsDe1YmLRnkOq5kbfJVgwe+OwVlJHDdxh2lUPnppyXaRzDACIoDSeRr+lxq2XE5ts50k7i4jlPcfiab2WlFdzlNiLUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qq4mh4EQ0eFU7IR5aQFnIoyJEAscSabo3lQGAD1qryk=;
- b=CGN8e5/h/pJgim9aFidwPYPF3ZGNFlQKZTsZv6hhTfZZkFIbRbu+HbmgB5VxOQngHl3y6Fzwz2nJwl/mAit16shvNm2UmjsPri75NFD1cLY95XNn7y2AhxTGZZR05aoWbv0bIwWbM4eAX9FjNaxq+li07zuE/dJ7711QohTN2H5jLSKinQDPtNBJ4FPtryVOeB6WdN5EKGMZXn1Jo9XnOMiloj6UdVIXTIcLcclhtJ8WeGS2XOfXzZICKwPEJDxi2OU4cA3fT39gMrmNgccQxHYiYsQFjyhNkUDHr9jrwUA7cayQn0Cd112Nob8HzymMRiwNh+e0SN6rW39NutsMfg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qq4mh4EQ0eFU7IR5aQFnIoyJEAscSabo3lQGAD1qryk=;
- b=V/Qs3BNyQAd/VpvND9FlloI+YEhS+a/IawhUEuTNv3yXdO2OEQyzoCSkDWiXEzkmffip4CiJ7paC2WEybio4vHly4sMxeO9e/fOTcdURUbfWBYKfGJ0BfNV1qJqlZiUvqc9wQfhmRuVqFQ7YiACrBg7n//5t9Zt+Yiinh3LpS3Oluo7w0C0Juwp0Ns2maHHdgml63kEeE0eOGnLueBqMtEARYANseOwoQ3rvo/BUc0GNxO5RPMWo3xTzKUDSJmZ5mkLT+XQyrpqIXV8zMnvr01AoLDL5A8rArsyN9kUV9CWkTtKLFGmIgRzXngNJSeDUHhtX2sJ/RZM/hN5t+EPrZQ==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com (2603:10b6:208:40e::7)
- by PH7PR12MB5854.namprd12.prod.outlook.com (2603:10b6:510:1d5::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Tue, 27 Oct
- 2026 15:04:29 +0000
-Received: from IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16]) by IA0PR12MB8374.namprd12.prod.outlook.com
- ([fe80::d85f:4c87:ae84:3f16%6]) with mapi id 15.21.0546.021; Tue, 27 Oct 2026
- 15:04:25 +0000
-From: Zi Yan <ziy@nvidia.com>
-To: Qinyun Tan <qinyuntan@linux.alibaba.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev,
- mkoutny@suse.com, david@kernel.org, baolin.wang@linux.alibaba.com,
- usama.arif@linux.dev, david@fromorbit.com, qi.zheng@linux.dev,
- yosry@kernel.org, nphamcs@gmail.com, chengming.zhou@linux.dev,
- xlpang@linux.alibaba.com, ryncsn@gmail.com, gourry@gourry.net,
- cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 0/5] mm: restore per-memcg reclaim for NONSLAB
- shrinkers under nokmem
-Date: Tue, 27 Oct 2026 11:04:21 -0400
-X-Mailer: MailMate (3.0r7032)
-Message-ID: <4C44AE80-1642-4808-ACF2-896E4B84EEAA@nvidia.com>
-In-Reply-To: <8fe2314a-ec7c-4ff0-92cf-27f7f8c9c132@linux.alibaba.com>
-References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
- <8fe2314a-ec7c-4ff0-92cf-27f7f8c9c132@linux.alibaba.com>
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-X-MS-Reactions: disallow
-X-ClientProxiedBy: BN9P221CA0024.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:408:10a::23) To IA0PR12MB8374.namprd12.prod.outlook.com
- (2603:10b6:208:40e::7)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=UfJwrzbW
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4a206f0b95bso4145e9.0
+        for <cgroups@vger.kernel.org>; Tue, 27 Oct 2026 10:28:36 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793122115; cv=none;
+        d=google.com; s=arc-20260327;
+        b=jjLbNC5VJ0mSt2XguPUc8bA92UWC/T4XnEhJ77ohhtnqJs8HDlfZfAqJH3qjuMnAHD
+         sqgjaIF/iaWwFLE2N442NTUiFj+OM3lzC7krWsbmQMb3NaNWklhwKfmazNjDEq+ZaD66
+         QRzNqRPI4A+X4XFndIlEYdJi7G1vJB3znedCsXh/3Y0IrGs1pj5oMphC1pTntQs7pgSw
+         60bj8f76wMFytQEB04ZNHSZdmcjV8QZFlWLrr1PDK5ADl3E0yY9xt8fBNsYgm+zcnh/E
+         wUpiBNuQ1VO0lU0e3rnW721189Aq/td+qjA5nmezhIqXr4zNND9haNntoLLcISOLYKUg
+         4z+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
+        fh=SCt3wQlDcHW+S07p53jdvyyTKgoKTqaxHLm/gZI4GEw=;
+        b=L87K17KHUhDqTDDQrZ7HmOiRfA1O9G5Y99NUOoY7wYh1PL2T9A46E/E1BqjMda4ca6
+         SfodVEtxGUC2iuhAAn69adV2Trp+oESE2LaLbVOeZ+OBjiG9Itcg+eqRQUtyi79ovULH
+         8f8MmJqQ2NDxDIpKV97NZGWq76pMzd+886h7htIkdiQgTVP53nJyiVy1BtHGGsdbDtpk
+         RSFC87qjxeJtok8IHMWuF0MEgqhzhiUUB1eCbOVs8dZuMFvlYG/mDgjGm+Q9OFwD88VB
+         vXkSyWuIr96xeI+qu1kKQ+SoQxyRwpZrdidLhmEXuX3j0Id7LdaauOm7oKAXfjz7e3L8
+         U3IA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1793122115; x=1793726915; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
+        b=UfJwrzbWe19olWOGWK9v9Tdy+n8MuTnu7Cpny2V9eunfRlSMAZIzGvtgPB0PzeHnHs
+         jVkEovX+ZNVaIiuEm2UCvh7aEdPZ4yKMLydT6yk2SHzNWFp1asCzGTqJBL15ewsp+XJA
+         PspYEXI3jBA0T9StwsqzgDI9SgdRFG2X+N9/4hDzAXFJZEuCr+PzNAlJUA1a3HCTqHhQ
+         +mwqaQsv5Pj6PiCnXWAzky1ZxPK3utb/PcSVJ4OwobKu4h9yUMxVkx/ea/E467JSiQEL
+         ix1iQ3yuVeRrs2b6OF8UxzH0CvL57o3dLvwgLdxrMxzV54KDcTj5LEGqOXNVL0bUaYWb
+         W25w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793122115; x=1793726915;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=MWyXscpgq0mKENbth6U6G8hO/Fpg0qBlfyz578FuBms=;
+        b=bXhJrnv3knWXsXqvK0q240KEvav759ILUoukcBfh7ljjNc+W4P/yo4Du6ATuMgqGv6
+         FT1dT1vkv+z6M6SCLUe3DA5YEZNU55qunYBWVkwtrdtMZ0DcdUHBlXQ97Xqv0u3nBve2
+         jbBUMBcoGQ9joJH3lEWbIwhXW/muF2/NTJSMkKh3dringejJH/q1DOfQD72YV9GlNpJt
+         a8X/lL1QVY4anAxB1Qm5u31/ci7bDQ8ZRsESQzMxVnOW/lzOcB1px8YIVbrYxql/V4fw
+         876+3mIvxowVEFn+R4/rfJVZO2yis2prdMWH2OC/Zu6pkiUE3r/jIOoOtM82jRcXA+E5
+         MRSw==
+X-Forwarded-Encrypted: i=1; AKwUvBxqZYYgZUCzXB8nViU63827t6vkmoS29/1XcvTULfj7POa+3kjGJKX1+XaXN13K0RBdV1roVLQZ@vger.kernel.org
+X-Gm-Message-State: AFq9FYKFnPt/0FbzpesdRGc2+s2KmfChmzhqH2okQJmouUymwEYW80h6
+	6yW11J+kFk1+POsRJQyNA6zREqP2BimSy6tRr5tkexz5y2xi+8HV0elCm3Qmq6q2va53B4HmLuh
+	1wkUWNVHlQd5b+Jc5B21PERNr+jJq0iuol6mHt2gZ
+X-Gm-Gg: AYBFou1WoWbfg8SknFHe618PZ8Z2bGiCjA3lLNLVKCcQLZTM/HVDi5PqqLnVSW+gJvQ
+	msK4AQFdiBwhr5bPaZ7qxI8Og8z2lfkYfVdMpKyZyFvEnHO4/QPBXCv30MuhDyVFQ8Pur4Hhdyq
+	ZTaQW7CvCUMWjga4yOsdbsGgg5LROaARyCZXObv8h2nQvmFP9ZSnt/+b8nKXEud3GLKBQ3e1Z22
+	ob8UJFwuURI+oaNH9ULjjHty/wYQPQWwfpZlHZUeR4hLaiwQkFwgzDvZgcKsgN7fenIrmtvnJNp
+	KVVcZeTGDBiKiKFam1R859tngYmeNtWZtTufId89gIPO4rAc5pGzejV0Q1Fcs8eTKR0H9ImAV9S
+	dm0xJl/S9UCJuYoU3oGZNGmty0N3MVP//m+LegToJ8sezU6fW+EYuVM9LEN3Zksv7Ojn81TS/+m
+	qkrv+9d/F9QAs3lw==
+X-Received: by 2002:a05:600c:3049:b0:4a1:eccc:7807 with SMTP id
+ 5b1f17b1804b1-4a937e30731mr28445e9.8.1793122114845; Tue, 27 Oct 2026 10:28:34
+ -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,202 +105,170 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA0PR12MB8374:EE_|PH7PR12MB5854:EE_
-X-MS-Office365-Filtering-Correlation-Id: 28cab706-f6d9-43a3-f468-08df343b96d1
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|7416014|376014|1800799024|23010399003|261026140227099003|11063799006|4143699003|261026121527099003|10067099003|261021123027099003|261021121427099003|261022075727099003|261009223027099003|56012099006|261022105027099003|22082099003|18002099003|6133799003;
-X-Microsoft-Antispam-Message-Info:
-	eSlLaNh2f2wZMHfoV62h2CFsJrjwyqO7zlGv1nca7uYPP8xIVZI8fpGpcoyx3LtqX3RqwjTL2w0t+4+PLheQQ3INwjXSidmvSBahXI530QUD9vlDMhz3rAzKsrvSyxLKrhVmmoLQ0jHyxQSme1GdkKiXjr4b49z2Wx6MNHDhKRzkkbKanS0D4/OAYQeYhzRd2ChWSTXBoczfVYAz2rd8y2BT0TQTiHfjaWGl2lRUBt3Gv+LT5MysOA2Fq+TKtRHGOsS9AChio9c77ipvoWvEj8IaGa+eHR1+7wMOuZEPuHIDx0b1g14uArPtOuGwcvnf6NX6jSvOFI1Jfm35PZgYUw8jpCVAx26wo0DR5GRRGObsONjuopSZh/hxLy75VwujwHitcv1+wLmdhY26ZlySUKCcFUMSxFo1KhS40VvScbH/6cfT79Yaw8lukxCAguBpOohJ1QWfCs5Z0o2KTpXUvPdfl9WmJHA89jg2x9Hcl51diZPgzx0GQ2XYWFcq/0S8FmOhNPFlrIWgFxWh2ydu1Qis+eCLV+F7CFOdfYhDIIEDDJDjITjXbQl7oxBSIWQmTjgkSHlaMSKbqKfn98UObhPv6Aw2IJVeZ9JptZnOt3Z0DRWVwXKtlalARrmaCpASb2ZUMNKpgatm3T6hshhE6HwdJEuCjBVMMs1rPXM5VKc=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024)(23010399003)(261026140227099003)(11063799006)(4143699003)(261026121527099003)(10067099003)(261021123027099003)(261021121427099003)(261022075727099003)(261009223027099003)(56012099006)(261022105027099003)(22082099003)(18002099003)(6133799003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?hssYbx46NQGM5PIjdJ7mrN5M2bvfwI1cJfzLzAl8WVLYP7JBJkw266ITmX6u?=
- =?us-ascii?Q?ZqaWc2Q4djwHEVh2xXh9HTgAq5OXhFE2QStrGEniaSw8t4+QZw5e8HXI20wq?=
- =?us-ascii?Q?r9x4utu+7Ao1bUyixkCMDgr30fVtVHYybLiBbIKij/cprc3trDj5jGKw4mD/?=
- =?us-ascii?Q?3RTQRIRcc8BDAY1rq1CTfnojFaBjFOc/A9nc6buDMtp5ievXa/iIWN3fFLvz?=
- =?us-ascii?Q?frGgCUWCnr4cG7IwYlJc4PgGzuH0u3DLtrP8pKSS3OQByweRtfmk4UEnF59g?=
- =?us-ascii?Q?8soc4ioZXkGl3svgiwTNx60UaKb8kmNHjCl4xsjxoto7gY5Xb2eypO6oLrv1?=
- =?us-ascii?Q?u8yIghL32QSpQT/PXpp3Q5Ez3Ncjefch1y6nW1XHaJ60nlpgn4Z68e2qi5tE?=
- =?us-ascii?Q?SBNhvgYHqweEiCGaFr98W42Ta3rQT1qiSpW+ekm4hLLUoW2KkX4TvF82CMzw?=
- =?us-ascii?Q?CKB3y/kDa4ywAW7rLTxZ5aMyaXTbNcVCU18tYrSpn4eLaPrN4w8ky+Q1ARD6?=
- =?us-ascii?Q?G6wFOPZqpvlPds25cyZ4ESb1S3qwf1GlQiTTyrmmQDFMvjGtNTbjvxepql0E?=
- =?us-ascii?Q?m3OcSbbtjJCz1uE3xRBr409bAliZq5dM8dOI4MjggLTprqsc1EmgWj+rFvT8?=
- =?us-ascii?Q?pCKi2j4dapTMSbhCKUf6xftaW3EFRmo6zwh+MDv5igOHprzGaLEeaA+L2rs8?=
- =?us-ascii?Q?khhLY0YapiAja7//jk5NrzsjItyiMORoi7F3xobt2ILXys9GvWsm3Yc6pOjX?=
- =?us-ascii?Q?uKbW3Q8Sm+LD66UQwgK8MSf1fsVJc1RyxlxK9x/izNDmjdYOQTE8y3Xk4JbI?=
- =?us-ascii?Q?1udo6fWmyu97ra38TFaiSt2wLbPIkcHRwHXYInkxk8kxJzaT2LuQ3twOc+au?=
- =?us-ascii?Q?4ZKe8qYLWWKM5+fgOY7twBKF+W9K1g2fameETkApox52GZdeKhBUslyPsM+7?=
- =?us-ascii?Q?abvVsW1UuT3qX0muDwq97aceMQzqIxnXlNWiWoUDLcER0rZGTSYU/ACamlbX?=
- =?us-ascii?Q?dPaDRJam1W9FyZKIaYl4mGOZ8ppjhE1Ijpwr/PUqXPiMw2sMuMzSx2HiJsG6?=
- =?us-ascii?Q?iJzPNLK9e90/mVrj5qW3hQZk/WVBRdS8snjm4fkVO9NZ9Q6oED+fmc/BxLQi?=
- =?us-ascii?Q?fHBRwGTGA9wrDiN2i1q3MjHNninmYspXdJnxjAkzWvEZgLFzOV+BdNsuXE8j?=
- =?us-ascii?Q?7c2US+lr/9D2pV9kE93QY39UMcrUiO9j3H7ac/qBCwUsu6W2hivW4JGMDab6?=
- =?us-ascii?Q?33tG1X9dPQWbS23fHRcQI3+q7E7Ao0puN4N7l6/GVOaLTrNEir7cmKOTHd8N?=
- =?us-ascii?Q?xCtfKoLyrwbs5E8+dWwIKoZIbyotZhNjgJRs5+/wAZf8onj/xrPnzaqSrM8r?=
- =?us-ascii?Q?7pwYulglmXMU93Wi2Ms4PU183n0bL6IjXPzfuye3wXvHKRagLeBP6uFw9+ua?=
- =?us-ascii?Q?xdzT0bQPlGVJgj2XDbxJo9GrTefINM7O7KAcb/K0qR9lBAAHMg9KX8jsS+8Y?=
- =?us-ascii?Q?wB4Z9Gnu6dJXRfIBvAt+akIfxg4kAWBXAK8SiBfJ11DEgVy4RD3YhhJ8j70X?=
- =?us-ascii?Q?kHlvgd/dRlK0org19pqc/Ux6O8A6qTv5loWr99lNCe+TLs7FBuaomkUy/k6a?=
- =?us-ascii?Q?IwmRTv+Ijo2PUK2CmjiqnD3Od/UpoUOBAdk28L4CirFfJyOaa4ypLxGw4Zvf?=
- =?us-ascii?Q?ptNCv01x/nubPcIeWBKDYoynuCD9O0K/XgRt892uu6gWKH5AU2Ikk9BYWp5J?=
- =?us-ascii?Q?ZOu4JMHaaA=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 28cab706-f6d9-43a3-f468-08df343b96d1
-X-MS-Exchange-CrossTenant-AuthSource: IA0PR12MB8374.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Oct 2026 15:04:24.9444
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7RhQO6ywt2A63JGOUmZpMyRgWiE+o6jIeViGyHJ4vOC4DPdX9Yv/o5vDH2hnOK4R
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5854
+References: <20261023222313.3979455-1-tjmercier@google.com>
+ <at9U2HvyUP-iYOCt@tiehlicka> <CABdmKX1mLKEJNiecW+meJ=LB_Kb8-ieeWdZDd4T6rNR9gKuq_A@mail.gmail.com>
+ <auBxqU34FQYauoQr@tiehlicka>
+In-Reply-To: <auBxqU34FQYauoQr@tiehlicka>
+From: "T.J. Mercier" <tjmercier@google.com>
+Date: Tue, 27 Oct 2026 10:28:22 -0700
+X-Gm-Features: AclHuK-NAoFvZLQL5pNcy4EmaDv4m9SumnHLP9lwTJmOHtHQgmvKyUv42pTsi0E
+Message-ID: <CABdmKX2Hua321nr9vR=Q7-Uu5N6e2JARtUe5RnC3JFu6aGRqhQ@mail.gmail.com>
+Subject: Re: [PATCH] mm: memcontrol: fix NULL pointer deref in
+ high_work_func() on dying memcg
+To: Michal Hocko <mhocko@suse.com>
+Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	muchun.song@linux.dev, zhengqi.arch@bytedance.com, akpm@linux-foundation.org, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 26 Oct 2026, at 2:26, Qinyun Tan wrote:
-
-> Hi, All
+On Tue, Oct 27, 2026 at 2:41=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrot=
+e:
 >
-> Gentle ping on this series.
+> On Mon 26-10-26 11:01:51, T.J. Mercier wrote:
+> > On Mon, Oct 26, 2026 at 6:25=E2=80=AFAM Michal Hocko <mhocko@suse.com> =
+wrote:
+> > >
+> > > On Fri 23-10-26 15:23:13, T.J. Mercier wrote:
+> > > [...]
+> > > > ---
+> > > >  mm/memcontrol.c | 5 +++++
+> > > >  1 file changed, 5 insertions(+)
+> > > >
+> > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > > index a05d9a8baa1b..84f4a8fd4d16 100644
+> > > > --- a/mm/memcontrol.c
+> > > > +++ b/mm/memcontrol.c
+> > > > @@ -2457,7 +2457,10 @@ static void high_work_func(struct work_struc=
+t *work)
+> > > >       struct mem_cgroup *memcg;
+> > > >
+> > > >       memcg =3D container_of(work, struct mem_cgroup, high_work);
+> > > > +     if (!css_tryget_online(&memcg->css))
+> > > > +             return;
+> > > >       reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
+> > > > +     css_put(&memcg->css);
+> > > >  }
+> > >
+> > > OK.
+> > >
+> > > >  static void high_irq_work_func(struct irq_work *work)
+> > > > @@ -4463,6 +4466,8 @@ static void mem_cgroup_css_offline(struct cgr=
+oup_subsys_state *css)
+> > > >
+> > > >       page_counter_set_min(&memcg->memory, 0);
+> > > >       page_counter_set_low(&memcg->memory, 0);
+> > > > +     page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+> > > > +     page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
+> > > >
+> > > >       zswap_memcg_offline_cleanup(memcg);
+> > >
+> > > Should we simply disable_work_sync when the memcg is going to be
+> > > released instead (mem_cgroup_css_released)? That should both prevent
+> > > the run reclaim_high during the memcg shut down and and also avoid
+> > > plaing with limits to work around.
+> >
+> > Hi Michal,
+> >
+> > Unfortunately that won't work for shrink_many() ->
+> > !mem_cgroup_tryget() -> lru_gen_release_memcg() which can occur before
+> > mem_cgroup_css_released() runs. (mem_cgroup_css_released() happens
+> > through the cgroup_release_wq.)
 >
-> V4 fixes the boot hang Kairui reported against v3 -- the root cause
-> was that the walker reverse-resolved xarray keys as private memcg IDs
-> after the keys were switched to cgroup IDs, causing shrink_dcache_sb()
-> to loop forever on the global drain. The fix passes the xarray index
-> directly through the internal walk path (new patch 1), so no reverse
-> lookup is needed.
+> I do not follow. Could you explain why please?
+
+Calling disable_work_sync in mem_cgroup_css_released() is too late. As
+soon as the memcg refcount drops to 0, mem_cgroup_tryget() starts
+failing, and lru_gen_release_memcg() can run.
+mem_cgroup_css_released() runs async via css_release() ->
+css_release_work_fn().
+
+high_work_func() doesn't hold a memcg reference, so the memcg refcount
+can hit 0 while high_work_func() is already running, or waiting to
+run.
+
+high_work_func()                    kswapd
+reclaim_high(memcg)
+ try_to_free_mem_cgroup_pages()
+                                    <memcg refcount hits 0>
+                                    shrink_many()
+                                     mem_cgroup_tryget() fails
+                                     lru_gen_release_memcg()
+  shrink_lruvec()
+   lru_gen_rotate_memcg()
+    NULL pprev deref
+
+... later, on cgroup_release_wq:
+css_release_work_fn()
+ mem_cgroup_css_released()
+  disable_work_sync()   /* too late */
+
+> > The high limit reset is also needed for targeting live ancestors above
+> > the offlined child in try_charge_memcg(). Without the resets,
+> > high_work is never attempted on them since it gets dropped when
+> > attempted on the offlined child due to the first hunk, and
+> > try_charge_memcg() breaks out of the loop.
 >
-> Could someone take a look when they have a chance?
+> I must be missing something really obvious here because I really do not
+> follow you here too. So we are offlining a memcg. We need to coordinate
+> memory reclaim with the memcg tear down, right? For the high reclaim we
+> can achieve this synchronization through disable_work_sync in
+> mem_cgroup_css_offline.
 
-People are currently busy with reviewing various mm fixes[1][2].
-Hopefully we will come back to this after the merge window closes.
+We could call disable_work_sync() in mem_cgroup_css_offline(), but
+that waits until high_work_func() is done and it could be performing
+reclaim. mem_cgroup_css_offline() runs under the cgroup_mutex, and
+cgroup_mutex contention is already bad enough. I don't want to add to
+it. It would also block the rest of the cgroup_offline_wq.
 
-[1] https://lore.kernel.org/all/20261027-fixes_core-v1-0-6f74bec9a5bb@ker=
-nel.org/
-[2] https://lore.kernel.org/all/20261027-fixes_shmem-v2-0-86a00952acb9@ke=
-rnel.org/
+Every other caller of try_to_free_mem_cgroup_pages() keeps the memcg
+alive. high_work_func() should too.
 
+> For a synchronous high memory reclaim we do not
+> have such means but we are keeping a memcg reference which makes the
+> lifetime well defined. If you reset counter you might help to bail out
+> early(ier) but that shouldn't be necessary from a correctness POV as it
+> doesn't provide any explicit synchronization.
+
+The high resets are not for synchronization. They are for performing
+high_work on the correct live memcg if necessary.
+
+Even if we take the disable_work_sync() approach, we still need the
+high limit resets. Any try_charge_memcg() on that offlined memcg would
+break out of this loop too early at schedule_work(&memcg->high_work)
+(a no-op), and potentially skip calling it on any of the parents.
+
+do {
+        bool mem_high, swap_high;
+        mem_high =3D page_counter_read(&memcg->memory) >
+                READ_ONCE(memcg->memory.high);
+        swap_high =3D page_counter_read(&memcg->swap) >
+                READ_ONCE(memcg->swap.high);
+
+        /* Don't bother a random interrupted task */
+        if (!in_task()) {
+                if (mem_high) {
+                        if (allow_spinning)
+                                schedule_work(&memcg->high_work);
+                        else
+                                irq_work_queue(&memcg->high_irq_work);
+                        break;
+                }
+                continue;
+        }
+...
+} while ((memcg =3D parent_mem_cgroup(memcg)));
+
+
+> > Shakeel's remote charging patch
+> > (https://lore.kernel.org/all/20261010210957.1350874-4-shakeel.butt@linu=
+x.dev/)
+> > sends remote charges through high_work too, so without the resets
+> > those would lose ancestor reclaim the same way. Before that patch not
+> > performing the resets means reclaim_high() runs unnecesarily against
+> > current's memcg (not the remote memcg above memory.high).
 >
-> Thanks,
-> Qinyun Tan
->
-> On 10/13/26 11:12 AM, Qinyun Tan wrote:
->> With cgroup.memory=3Dnokmem, the THP deferred split shrinker and the
->> zswap shrinker are degraded in two ways.
->>
->> First, both shrinkers are missing the SHRINKER_NONSLAB flag, so
->> shrinker_memcg_alloc() demotes them to non-memcg-aware shrinkers:
->> limit-induced reclaim of a cgroup neither splits its partially
->> unmapped THPs nor writes back its zswapped pages.  v1 of this series
->> [1] restored the flag to fix that.
->>
->> However, as Sashiko's review of v1 pointed out [2], the flag alone
->> is not enough.  __list_lru_init() also collapses every list_lru into
->> per-node lists under nokmem, so even with the flag restored, the
->> objects of all cgroups share one list per node: the per-memcg
->> shrinker bit is only set for whichever memcg happens to repopulate
->> the empty list, so pressure in other cgroups may not even trigger
->> the scan, and when it does, the scan walks everyone's objects.
->>
->> Before commit fafaeceb89a5 ("mm: switch deferred split shrinker to
->> list_lru"), THP had fully per-memcg deferred split queues embedded
->> in struct mem_cgroup, working independently of kmem accounting.
->> nokmem only opts out of kernel slab accounting; THPs and zswapped
->> pages are user memory and remain charged to their cgroups, so
->> per-memcg reclaim is still what these shrinkers want.
->>
->> This series keeps list_lrus backed by SHRINKER_NONSLAB shrinkers
->> memcg aware under nokmem:
->>
->> Patch 1 passes the xarray index directly to the list_lru walker and
->> drops the reverse memcg lookup that v3 still performed between the
->> xarray iteration and the walk.  That lookup was the cause of the
->> boot hang reported against v3 [3]: after the keys were switched to
->> cgroup IDs, the walker kept resolving them as private memcg IDs, so
->> the global drain kept skipping non-empty per-memcg sublists and
->> shrink_dcache_sb() could loop forever.  Passing the index directly
->> also removes the temporary css reference from the walk.
->>
->> Patch 2 drops the kmemcg_id copy, which is only assigned when kmem
->> accounting is enabled, and indexes the list_lru xarray with
->> mem_cgroup_id() instead, so the index works independently of kmem
->> accounting.  The list_lru plumbing passes memcg pointers now, and
->> memcg_online_kmem()/memcg_offline_kmem() are inlined into the css
->> online/offline hooks.  It also drops the nokmem early return from
->> the offline path so these lrus are reparented on offline.
->>
->> Patch 3 keeps a list_lru memcg aware under nokmem when its backing
->> shrinker is registered SHRINKER_NONSLAB.
->>
->> Patches 4 and 5 restore/add SHRINKER_NONSLAB on the THP deferred
->> split shrinker and the zswap shrinker.
->>
->> The savings of nokmem are preserved: slab-backed lrus (e.g. the
->> superblock dentry/inode lrus) still fall back to per-node lists, and
->> the per-memcg lists are only allocated when a memcg actually holds
->> such objects.
->>
->> Changes in v4:
->>  - Fix the boot hang reported by Kairui against v3 [3]: the walker
->>    no longer reverse-resolves the xarray keys; the index is passed
->>    directly through the internal walk path (new patch 1, split out
->>    as a preparation so patch 2 remains a pure key switch).
->>  - Drop the kmemcg_id member from memcg_struct_check() along with
->>    the field removal, as pointed out by Gregory Price [4].
->>  - Otherwise unchanged from v3.
->>
->> Changes in v3:
->>  - Index the list_lru xarray with mem_cgroup_id() (the cgroup ID)
->>    instead of the private memcg ID, whose lifetime only covers
->>    online groups, and pass memcg pointers through the list_lru
->>    plumbing; inline memcg_online_kmem()/memcg_offline_kmem() into
->>    the css online/offline hooks (patch 1 as numbered in v3, per
->>    Johannes's review of v2 [5]).
->>  - Describe in the THP patch's changelog why fafaeceb89a5 dropped
->>    SHRINKER_NONSLAB knowingly, per Johannes's pointer to the
->>    original discussion [5].
->>  - Collected review tags: Johannes's Reviewed-by on patches 2-4,
->>    Nhat's and Yosry's Acked-by on patch 4 (numbering as in v3).
->>
->> Changes in v2:
->>  - Keep the list_lrus behind the two shrinkers per-memcg under
->>    nokmem, so the shrinker bits are set for the right memcgs and
->>    scans stay scoped to the target cgroup's objects (patches 1-2
->>    as numbered in v2, new; addresses Sashiko's review of v1 [2]).
->>  - Patches 3-4 unchanged from v1; collected the review tags.
->>
->> [1] https://lore.kernel.org/lkml/20260904033503.4067283-1-qinyuntan@li=
-nux.alibaba.com/
->> [2] https://sashiko.dev/#/patchset/20260904033503.4067283-1-qinyuntan@=
-linux.alibaba.com
->> [3] https://lore.kernel.org/lkml/20260910080722.3961351-1-qinyuntan@li=
-nux.alibaba.com/
->> [4] https://lore.kernel.org/lkml/arNK64PxTXbVEhis@gourry-fedora-PF4VCD=
-3F/
->> [5] https://lore.kernel.org/lkml/20260907110111.2286932-1-qinyuntan@li=
-nux.alibaba.com/
->>
->> Qinyun Tan (5):
->>   mm: list_lru: pass the memcg index directly to the walker
->>   mm: memcontrol: drop kmemcg_id and use mem_cgroup_id() for list_lru
->>     indexing
->>   mm: list_lru: keep per-memcg lists with nokmem for NONSLAB-backed lr=
-us
->>   mm: thp: restore SHRINKER_NONSLAB on the deferred split shrinker
->>   mm: zswap: mark the zswap shrinker SHRINKER_NONSLAB
->>
->>  include/linux/memcontrol.h |  16 ------
->>  mm/huge_memory.c           |   3 +-
->>  mm/list_lru.c             | 114 +++++++++++++++++++++----------------=
-
->>  mm/memcontrol.c            |  45 +++------------
->>  mm/zswap.c                 |   4 +-
->>  5 files changed, 77 insertions(+), 105 deletions(-)
->>
-
-
-Best Regards,
-Yan, Zi
+> --
+> Michal Hocko
+> SUSE Labs
