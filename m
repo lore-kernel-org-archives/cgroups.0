@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.188
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793198172;
-	b=rclxy2tU7o/Hst7XLWMOXtNeJk3xyX9lFZGArCkMsalDXnRedo8GUhP/VyN58V+NmN0h
-	 pFo0KLNaZznPtCYV9aMs8zQeBcQcI7w0+Cxa1UcKYmYMlkAWF0+C9GdKDyb+jcrrim91C
-	 xwIVoqk/FzNC5WNQ931Bf/bYt54u4GMNNsNhZVKR5Yq33Jquxex58Ttcos2rIN/oas30Q
-	 CTpkrwbnXk2mPyg3c6QVtqv72WDXI7azpc6ZxJQt7w0I+I3GXC+RpPOQGniNlHsxywUiJ
-	 yfiLXk1DdOLu3R8e59TBW41nHwsvPPNVpJi1Gg06+oWnlSV98ZczgzoktyL7STVIR5A==
+	t=1793198180;
+	b=g245258hLLiKHCYZao2taGng8LIzzm9RSX1b9tU7p7XnPsoXmfiQVwfULjaR32U2IDzR
+	 kjxt1H4i9j8nt0dy2YVECT/PfsGQlRTIQ8J12ExtGud9eFVIHBYcq4omf5dOAnJT2nPPE
+	 VXfIdByOFQ9BeI7Zon0qU+KvxHLsrp22lE5WUPPHLEcVCmMu1mJb8SfVK+Ti7y7zDvUYU
+	 IdCYsuB1tzkYVlFpe7XLGEz0eRIpL48r0ChFuNmTGTNchb/42xjBa5O+E2lC+XEO9B/D4
+	 tXb7Xq0KEpJyUCN5jTaHtlB6eNBMxZlmfZaIZnXftVYgX8rYI8XhTPHRx+jNV57i/bg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793198172;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793198180;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Ylmg5lCVmWx3NxPwfufEG1L3aDDL/kudf9v2k+Q6c90=;
-	b=ASkUt0/kOGlDCr7A5HV0vwdQ4b8Lt8pPwOxYQtZJYpwz67NkmeyOx4zaUF13n1db7B4y
-	 qsTN1HoapOcB/xQn2kZr52k19AA6koCmaETYDNmYbOEY+5fWMEJvdI9DgeuX+ZzAlM+y8
-	 V0yzxqT8339Obk8qIWYc1U8FDfjVktCI7wMcQaYFofNPq9tQzKCMX+1a43Pi1gntRu58T
-	 2U5l1WI9QwTb6IICSmBR+LxM+zpTPPfzK+fcm9VzLlXD+0I8s8P4qPAxTOC1v2g4lHucq
-	 ZwupdW0M5P/jEiiQuCd58+iZ7hbS53GWj9GYxhdGw1pYDDyuWkpENs0PiywlsJUg5Xw==
+	bh=LQvqZGxbzyBvcq0Q9+494LxkG+PEciNSa7Qvt2H5qtI=;
+	b=COoOrd0SsybXZrYdidbB6VL59CsgByukzi3ozRtcrbIACmSic5OO5xL1E6x8TaC9IIZy
+	 VZXDUFYnjHfnmmKnfV5Tt+8nl8z7/Xolv8Nl0HyCayieJoQkawV2461/HioeV46QXfxeY
+	 WBn7pNWRileVuIrR/cNdJC9j0UMIM4x//jYqn2i2PuAeQl5vLbLFIuEEVQIZLCdEIEhNX
+	 TqTyq+bTO6LAXmof9uM685vx0LOXutFlitvLGKV6adFaH/33Rc1JgW8E5L23FDGJwj6VO
+	 sE9NMqcMQPFF0HUVSdQJk3J1pm29ljFwQTH45OIA/FNga/2ndzdbqlAOABfM3yurLcQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lF+j2Ykd;
-	arc=none smtp.remote-ip=95.215.58.172
-Received: from mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=hRSTMtt8;
+	arc=none smtp.remote-ip=95.215.58.188
+Received: from mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 118D3606A31C
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 14:36:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 118D3606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7465E606A327
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 14:36:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7465E606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lF+j2Ykd
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=hRSTMtt8
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=YeXzskRdXPHsICW5UdxrJbyxPrYTDBGzQp+T323v5zA=;
+DKIM-Signature: a=rsa-sha256; bh=TQz+0humdudhgjZTD5BvWY2LOlWl40hSfdZfJyp+3ig=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793198167; v=1; x=1793802967;
- b=lF+j2YkdK4/8djWW+Zn7utpIX/9FBhywcfgCi10my77SnnOtdyTn9S8tHbufEjuYSCbQSDbG
- ACUGI/32oW6LkaDX5RBAF5TkoVBZxDTg9cHk+a2OLziwReY4QyVo8ynbfP12FaIhjTUPx/v49T0
- uOTTR8jczLmqixsR4SB1+Umw=
+ t=1793198176; v=1; x=1793802976;
+ b=hRSTMtt8G36oJcQS7Bs0dFIi66DldaRAU2URZKOJFaTo+CCEkpsIplkWA332QEnHN7wbtHvB
+ pnZxgiSDAhd3xQZWJOFHfqmZkUQAbWyfGTlUTWGIC1n8zPM3NCAKRIq9WRv+m+eWJKLFr8E/EpV
+ qSVwk3ihcp8J7Jx0ZOwlbye4=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 2cdbc2d0c847d73d;
-	Wed, 28 Oct 2026 14:36:07 +0000
-X-Mizu-Trace-ID: 2cdbc2d0c847d73d
+Received: by smtp.migadu.com with ESMTPS id de9bdc35bde96d31;
+	Wed, 28 Oct 2026 14:36:16 +0000
+X-Mizu-Trace-ID: de9bdc35bde96d31
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -64,9 +64,9 @@ Cc: cgroups@vger.kernel.org,
 	cuitao@kylinos.cn,
 	ameryhung@gmail.com,
 	alexei.starovoitov@gmail.com
-Subject: [PATCH 2/5] blk-iocost: add BPF struct_ops cost model support
-Date: Wed, 28 Oct 2026 22:35:31 +0800
-Message-ID: <20261028143534.135968-3-cui.tao@linux.dev>
+Subject: [PATCH 3/5] selftests/bpf: add iocost cost model test
+Date: Wed, 28 Oct 2026 22:35:32 +0800
+Message-ID: <20261028143534.135968-4-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261028143534.135968-1-cui.tao@linux.dev>
 References: <20261028143534.135968-1-cui.tao@linux.dev>
@@ -83,999 +83,1253 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-iocost prices IO with a linear model derived from a handful of
-device parameters.  The real cost of an IO depends on device
-internals the formula cannot capture and the right formula is
-device specific.  This lets a BPF program take over pricing for a
-device so that the model can be adapted to it without rebuilding
-the kernel.
+Add two example iocost cost models and tests which attach them to a
+null_blk instance the tests create through configfs, so everything
+runs without external setup.
 
-Attaching an iocost_model_ops struct_ops binds the model to one
-device: the target is set in the dev member from userspace, .reg
-creates the ioc if needed like an io.cost.model write and switches
-the device to the model with the queue frozen before rq_qos_mutex
-like an io.cost.qos write.  The attachment records the owning link
-in the ioc and holds a reference on the map; detach verifies the
-attachment under rq_qos_mutex and device removal ejects the model,
-so a stale link cannot tear down a newer attachment.  io.cost.model
-selects between the attached and builtin models without detaching
-the struct_ops; only .unreg or device removal detaches.
+The first model implements the builtin linear HDD formula at double
+cost, plus iocg_init()/iocg_free() counters for the pairing checks.
+The second implements the multi-stream sequentiality detection: it
+keeps a per-cgroup table of stream slots instead of the single
+builtin cursor, so concurrent sequential streams in one cgroup are
+priced sequentially.  Both set the target device through the
+struct_ops member before load, and the maps are declared
+".struct_ops.link" so that a test dying in between does not leave
+the model attached.
 
-While in use, the BPF model prices every charged IO: calc_cost()
-is called from the submission path with the bio and returns the
-cost in vtime units, clamped to one second of device time per IO.
-The struct_ops also carries the transfer coefficients used by the
-completion-time request sizing, so latency tracking and vrate
-adjustment follow the model's pricing.  Models without calc_cost
-or with zero or out-of-range transfer coefficients are rejected
-at registration.
-
-The cgroup callbacks pair with the iocg policy lifetime:
-iocg_init() is delivered from ioc_pd_online() and, on attach, to
-cgroups already online on the device; iocg_free() on detach and at
-pd_free(), so each (cgroup, device) pair sees exactly one init and
-one free.
+The tests verify the model=bpf readback while attached, that
+ctrl=bpf is rejected, that a second model on the same device fails
+with -EBUSY, that model=linear and model=bpf switch between the
+attached and builtin models without detaching, and that detaching
+restores the builtin model.  With the controller enabled through
+io.cost.qos, they also verify that IOs are priced through
+calc_cost(), that the iocost_ioc_tick tracepoint is seen from BPF,
+and that iocg_init()/iocg_free() pair up across attach, detach, a
+cgroup created while attached, and device removal under the
+attached model, with a recreated device attachable again.
 
 Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
- MAINTAINERS            |   1 +
- block/Kconfig          |   4 +
- block/Makefile         |   1 +
- block/blk-iocost-bpf.c | 464 +++++++++++++++++++++++++++++++++++++++++
- block/blk-iocost.c     | 124 ++++++++++-
- block/blk-iocost.h     | 181 +++++++++++++++-
- 6 files changed, 763 insertions(+), 12 deletions(-)
- create mode 100644 block/blk-iocost-bpf.c
+ tools/testing/selftests/bpf/config            |   2 +
+ .../selftests/bpf/prog_tests/iocost_model.c   | 806 ++++++++++++++++++
+ .../selftests/bpf/progs/iocost_model.c        | 201 +++++
+ tools/testing/selftests/bpf/progs/iocost_ms.c | 175 ++++
+ 4 files changed, 1184 insertions(+)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/iocost_model.c
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_model.c
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_ms.c
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b3b421ee262e..598a5f65423d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6826,6 +6826,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux.git
- F:	Documentation/admin-guide/cgroup-v1/blkio-controller.rst
- F:	block/bfq-cgroup.c
- F:	block/blk-cgroup.c
-+F:	block/blk-iocost-bpf.c
- F:	block/blk-iocost.c
- F:	block/blk-iocost.h
- F:	block/blk-iolatency.c
-diff --git a/block/Kconfig b/block/Kconfig
-index 70e4a66d941f..8eaa2a803b61 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -229,6 +229,10 @@ config BLK_ERROR_INJECTION
- 
- 	  See Documentation/block/error-injection.rst for details.
- 
-+config BLK_CGROUP_IOCOST_BPF
-+	def_bool y
-+	depends on BLK_CGROUP_IOCOST && BPF_SYSCALL && BPF_JIT && DEBUG_INFO_BTF
-+
- source "block/Kconfig.iosched"
- 
- endif # BLOCK
-diff --git a/block/Makefile b/block/Makefile
-index e7bd320e3d69..ee5cebeea006 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -39,3 +39,4 @@ obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o \
- 					   blk-crypto-sysfs.o
- obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
- obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
-+obj-$(CONFIG_BLK_CGROUP_IOCOST_BPF)	+= blk-iocost-bpf.o
-diff --git a/block/blk-iocost-bpf.c b/block/blk-iocost-bpf.c
+diff --git a/tools/testing/selftests/bpf/config b/tools/testing/selftests/bpf/config
+index 49dfe939467c..78ed59f83a16 100644
+--- a/tools/testing/selftests/bpf/config
++++ b/tools/testing/selftests/bpf/config
+@@ -141,3 +141,5 @@ CONFIG_SMC_HS_CTRL_BPF=y
+ CONFIG_DIBS=y
+ CONFIG_DIBS_LO=y
+ CONFIG_PM_WAKELOCKS=y
++CONFIG_BLK_CGROUP_IOCOST=y
++CONFIG_BLK_DEV_NULL_BLK=y
+diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
 new file mode 100644
-index 000000000000..8ff51c26fb25
+index 000000000000..5373d52d93a6
 --- /dev/null
-+++ b/block/blk-iocost-bpf.c
-@@ -0,0 +1,464 @@
++++ b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+@@ -0,0 +1,806 @@
 +// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2026 KylinSoft Corporation. */
++#define _GNU_SOURCE
++#include <test_progs.h>
++#include <fcntl.h>
++#include <sched.h>
++#include <sys/statfs.h>
++#include <linux/magic.h>
++#include <sys/mount.h>
++#include <sys/stat.h>
++#include <sys/sysmacros.h>
++#include <unistd.h>
++#include "iocost_model.skel.h"
++#include "iocost_ms.skel.h"
++
 +/*
-+ * blk-iocost: BPF struct_ops plumbing for pluggable cost models.
-+ *
-+ * Copyright (C) 2026 KylinSoft Corporation.
-+ *
-+ * Registers the "iocost_model_ops" struct_ops type. Attachment is per-device:
-+ * the target device is set in the ops from userspace before load, .reg
-+ * attaches the model to that device, creating the ioc if needed and switching
-+ * to the model with the queue frozen before rq_qos_mutex, like io.cost.qos
-+ * writes, and .unreg detaches it; enabling and disabling the controller stays
-+ * with io.cost.qos. The struct_ops core owns the program lifetime.
++ * Write val to the configfs attribute at path, returning the errno of the
++ * write negated (0 on success).
 + */
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/bpf.h>
-+#include <linux/bpf_verifier.h>
-+#include <linux/btf.h>
-+#include "blk-iocost.h"
-+#include <linux/blk-mq.h>
-+#include <linux/mutex.h>
-+#include "blk.h"
++static int configfs_write(const char *path, const char *val)
++{
++	FILE *fp;
++	int err = 0;
++
++	fp = fopen(path, "w");
++	if (!fp)
++		return -errno;
++	if (fwrite(val, 1, strlen(val), fp) != strlen(val))
++		err = ferror(fp) ? -errno : -EIO;
++	if (fclose(fp) && !err)
++		err = -errno;
++	return err;
++}
 +
 +/*
-+/*
-+ * Deliver iocg_init()/iocg_free() to the cgroups already online on the
-+ * queue: init walks q->blkg_list in reverse so parents receive it first,
-+ * like blkcg_activate_policy(); free walks it forward like the blkcg
-+ * policy teardown. The queue is frozen and quiesced; queue_lock
-+ * serializes against blkg creation and blkcg_mutex against the delayed
-+ * list removal in blkg destruction; the callbacks are called with
-+ * ioc->lock held, the same lock the attachment updates take.
++ * Read the first token of the file at path, for the dev attribute.
 + */
-+static void ioc_bpf_deliver_iocg_callbacks(struct ioc *ioc,
-+					   const struct iocost_model_ops *ops,
-+					   bool init)
++static int read_file_token(const char *path, char *tok, size_t tok_sz)
 +{
-+	struct request_queue *q = ioc->rqos.disk->queue;
-+	struct blkcg_gq *blkg;
++	char fmt[16];
++	FILE *fp;
 +
-+	lockdep_assert_held(&q->blkcg_mutex);
-+	lockdep_assert_held(&q->queue_lock);
-+	lockdep_assert_held(&ioc->lock);
-+
-+	if (init) {
-+		/* parents first, like blkcg_activate_policy() */
-+		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
-+			struct ioc_gq *iocg = blkg_to_iocg(blkg);
-+
-+			/*
-+			 * A blkg which never went online never reached the
-+			 * radix tree, so it must not receive an init either;
-+			 * the attach runs under the same queue_lock as
-+			 * blkg_create(), so pd->online is stable here. Any
-+			 * previous attachment had its delivered flags cleared
-+			 * before it went away, so none can still be set here.
-+			 */
-+			if (!iocg || !iocg->pd.online)
-+				continue;
-+			if (ops->iocg_init) {
-+				ops->iocg_init(blkg->blkcg, q);
-+				iocg->bpf_iocg_inited = true;
-+			}
-+		}
-+	} else {
-+		list_for_each_entry(blkg, &q->blkg_list, q_node) {
-+			struct ioc_gq *iocg = blkg_to_iocg(blkg);
-+
-+			if (!iocg || !iocg->bpf_iocg_inited)
-+				continue;
-+			if (ops->iocg_free)
-+				ops->iocg_free(blkg->blkcg, q);
-+			iocg->bpf_iocg_inited = false;
-+		}
++	fp = fopen(path, "r");
++	if (!fp)
++		return -errno;
++	snprintf(fmt, sizeof(fmt), "%%%zus", tok_sz - 1);
++	if (fscanf(fp, fmt, tok) != 1) {
++		fclose(fp);
++		return -EIO;
 +	}
-+}
-+
-+static int ioc_bpf_attach(struct iocost_model_ops *ops, struct bpf_link *link)
-+{
-+	struct block_device *bdev;
-+	struct request_queue *q;
-+	struct gendisk *disk;
-+	struct ioc *ioc;
-+	unsigned int memflags;
-+	int ret;
-+
-+	bdev = blkdev_get_no_open(new_decode_dev(ops->dev), false);
-+	if (!bdev)
-+		return -ENODEV;
-+	q = bdev->bd_queue;
-+	disk = bdev->bd_disk;
-+
-+	if (bdev_is_partition(bdev)) {
-+		blkdev_put_no_open(bdev);
-+		return -EINVAL;
-+	}
-+	if (!queue_is_mq(q)) {
-+		blkdev_put_no_open(bdev);
-+		return -EOPNOTSUPP;
-+	}
-+
-+	/*
-+	 * The freeze is taken before rq_qos_mutex like ioc_qos_write() does;
-+	 * holding the mutex from the disk_live() check through the model
-+	 * switch keeps the ioc from being freed under us.
-+	 */
-+	memflags = blk_mq_freeze_queue(q);
-+
-+	mutex_lock(&q->rq_qos_mutex);
-+
-+	if (!disk_live(disk)) {
-+		mutex_unlock(&q->rq_qos_mutex);
-+		blk_mq_unfreeze_queue(q, memflags);
-+		blkdev_put_no_open(bdev);
-+		return -ENODEV;
-+	}
-+	ioc = q_to_ioc(q);
-+	if (!ioc) {
-+		ret = blk_iocost_init(disk);
-+		if (ret) {
-+			mutex_unlock(&q->rq_qos_mutex);
-+			blk_mq_unfreeze_queue(q, memflags);
-+			blkdev_put_no_open(bdev);
-+			return ret;
-+		}
-+		ioc = q_to_ioc(q);
-+	}
-+
-+	blk_mq_quiesce_queue(q);
-+
-+	/*
-+	 * Scope the mutex so the tail bdev put runs with blkcg_mutex
-+	 * already released: dropping the last device reference can
-+	 * reach disk_release() -> blkcg_exit_disk() ->
-+	 * blkg_destroy_all(), which takes q->blkcg_mutex.
-+	 */
-+	{
-+		guard(mutex)(&q->blkcg_mutex);
-+		scoped_guard(spinlock_irqsave, &q->queue_lock) {
-+			spin_lock(&ioc->lock);
-+			ret = ioc_attached_model_locked(ioc) ? -EBUSY : 0;
-+			if (!ret) {
-+				/*
-+				 * Take the map reference before the attachment
-+				 * is published: the readers find the ops
-+				 * through it. get() cannot fail while .reg
-+				 * runs, as the core holds a map reference
-+				 * then, but check it anyway; on failure leave
-+				 * with no attachment set.
-+				 */
-+				if (!bpf_struct_ops_get(ops)) {
-+					ret = -ENODEV;
-+				} else {
-+					rcu_assign_pointer(ioc->attached, ops);
-+					rcu_assign_pointer(ioc->model, ops);
-+					ioc->bpf_link = link;
-+
-+					/* pair iocg_init() with the cgroups online */
-+					ioc_bpf_deliver_iocg_callbacks(ioc, ops,
-+								       true);
-+				}
-+			}
-+			spin_unlock(&ioc->lock);
-+		}
-+	}
-+
-+	blk_mq_unquiesce_queue(q);
-+	blk_mq_unfreeze_queue(q, memflags);
-+	mutex_unlock(&q->rq_qos_mutex);
-+	blkdev_put_no_open(bdev);
-+	return ret;
-+}
-+
-+/*
-+ * Detach a model: switch back to the builtin model when the attached model is
-+ * in use, clear the attachment and deliver iocg_free() to the cgroups which
-+ * still exist, under the same freeze and quiesce as the attach.
-+ */
-+static void ioc_bpf_detach(struct iocost_model_ops *ops, struct bpf_link *link)
-+{
-+	struct block_device *bdev;
-+	struct request_queue *q;
-+	struct ioc *ioc;
-+	bool matched;
-+	unsigned int memflags;
-+
-+	/*
-+	 * A failed lookup means the device is gone; the removal ejection will
-+	 * detach the model and drop the map reference when rq_qos_exit() runs,
-+	 * so there is nothing to do here.
-+	 */
-+	bdev = blkdev_get_no_open(new_decode_dev(ops->dev), false);
-+	if (!bdev)
-+		return;
-+	q = bdev->bd_queue;
-+
-+	/*
-+	 * The attachment is checked under rq_qos_mutex first, so an unmatched
-+	 * detach exits without freezing.
-+	 */
-+	mutex_lock(&q->rq_qos_mutex);
-+	spin_lock_irq(&q->queue_lock);
-+	ioc = q_to_ioc(q);
-+	if (ioc) {
-+		spin_lock(&ioc->lock);
-+		matched = ioc_attached_model_locked(ioc) == ops &&
-+			  ioc->bpf_link == link;
-+		spin_unlock(&ioc->lock);
-+	} else {
-+		matched = false;
-+	}
-+	spin_unlock_irq(&q->queue_lock);
-+	mutex_unlock(&q->rq_qos_mutex);
-+	if (!matched) {
-+		blkdev_put_no_open(bdev);
-+		return;
-+	}
-+
-+	/* the freeze is taken before rq_qos_mutex like ioc_qos_write() */
-+	memflags = blk_mq_freeze_queue(q);
-+
-+	mutex_lock(&q->rq_qos_mutex);
-+
-+	/*
-+	 * Re-check under the mutex before quiescing: the freeze itself does
-+	 * not touch the tag set, and the removal ejection holds rq_qos_mutex
-+	 * before the driver frees the tag set, so the check passing here means
-+	 * the tag set is still alive.
-+	 */
-+	spin_lock_irq(&q->queue_lock);
-+	ioc = q_to_ioc(q);
-+	if (ioc) {
-+		spin_lock(&ioc->lock);
-+		matched = ioc_attached_model_locked(ioc) == ops &&
-+			  ioc->bpf_link == link;
-+		spin_unlock(&ioc->lock);
-+	} else {
-+		matched = false;
-+	}
-+	spin_unlock_irq(&q->queue_lock);
-+	if (!matched) {
-+		mutex_unlock(&q->rq_qos_mutex);
-+		blk_mq_unfreeze_queue(q, memflags);
-+		blkdev_put_no_open(bdev);
-+		return;
-+	}
-+
-+	blk_mq_quiesce_queue(q);
-+
-+	/*
-+	 * Scope the mutex so the tail bdev put runs with blkcg_mutex
-+	 * already released: dropping the last device reference can
-+	 * reach disk_release() -> blkcg_exit_disk() ->
-+	 * blkg_destroy_all(), which takes q->blkcg_mutex.
-+	 */
-+	{
-+		guard(mutex)(&q->blkcg_mutex);
-+		scoped_guard(spinlock_irqsave, &q->queue_lock) {
-+			spin_lock(&ioc->lock);
-+			if (ioc_bpf_model_locked(ioc) == ops)
-+				rcu_assign_pointer(ioc->model, NULL);
-+			rcu_assign_pointer(ioc->attached, NULL);
-+			ioc->bpf_link = NULL;
-+
-+			ioc_bpf_deliver_iocg_callbacks(ioc, ops, false);
-+			spin_unlock(&ioc->lock);
-+		}
-+	}
-+
-+	blk_mq_unquiesce_queue(q);
-+	blk_mq_unfreeze_queue(q, memflags);
-+	mutex_unlock(&q->rq_qos_mutex);
-+
-+	blkdev_put_no_open(bdev);
-+	bpf_struct_ops_put(ops);
-+}
-+
-+/*
-+ * Eject the model on device removal. The caller holds rq_qos_mutex and
-+ * blkcg_deactivate_policy() has already run, so every existing blkg got
-+ * iocg_free() from ioc_pd_free() and no walk is needed. The ioc is freed right
-+ * after, so clearing the pointers and dropping the map reference is all that
-+ * is left to do.
-+ */
-+void ioc_bpf_eject(struct ioc *ioc)
-+{
-+	const struct iocost_model_ops *ops;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&ioc->lock, flags);
-+	ops = ioc_attached_model_locked(ioc);
-+	if (ops) {
-+		rcu_assign_pointer(ioc->attached, NULL);
-+		if (ioc_bpf_model_locked(ioc) == ops)
-+			rcu_assign_pointer(ioc->model, NULL);
-+		ioc->bpf_link = NULL;
-+	}
-+	spin_unlock_irqrestore(&ioc->lock, flags);
-+
-+	if (ops)
-+		bpf_struct_ops_put(ops);
-+}
-+
-+/* nothing to look up: the core finds the struct by name before calling */
-+static int bpf_iocost_model_init(struct btf *btf)
-+{
-+	return 0;
-+}
-+
-+static bool bpf_iocost_is_valid_access(int off, int size,
-+				       enum bpf_access_type type,
-+				       const struct bpf_prog *prog,
-+				       struct bpf_insn_access_aux *info)
-+{
-+	return bpf_tracing_btf_ctx_access(off, size, type, prog, info);
-+}
-+
-+/*
-+ * No iocost-specific helpers; bpf_base_func_proto already covers the
-+ * cgroup storage helpers under CONFIG_CGROUPS.
-+ */
-+static const struct bpf_func_proto *
-+bpf_iocost_get_func_proto(enum bpf_func_id func_id,
-+			  const struct bpf_prog *prog)
-+{
-+	return bpf_base_func_proto(func_id, prog);
-+}
-+
-+static int bpf_iocost_check_member(const struct btf_type *t,
-+				   const struct btf_member *member,
-+				   const struct bpf_prog *prog)
-+{
-+	/* every callback runs under RCU read lock or a spinlock */
-+	if (prog->sleepable)
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int bpf_iocost_init_member(const struct btf_type *t,
-+				  const struct btf_member *member,
-+				  void *kdata, const void *udata)
-+{
-+	struct iocost_model_ops *ops = kdata;
-+	const struct iocost_model_ops *uops = udata;
-+	u32 moff = __btf_member_bit_offset(t, member) / 8;
-+
-+	switch (moff) {
-+	/*
-+	 * The struct_ops core rejects a nonzero userspace value for
-+	 * non-function members this callback does not claim.
-+	 */
-+	case offsetof(struct iocost_model_ops, dev):
-+		ops->dev = uops->dev;
-+		return 1;
-+	case offsetof(struct iocost_model_ops, read_vtime_per_page):
-+		ops->read_vtime_per_page = uops->read_vtime_per_page;
-+		return 1;
-+	case offsetof(struct iocost_model_ops, write_vtime_per_page):
-+		ops->write_vtime_per_page = uops->write_vtime_per_page;
-+		return 1;
-+	}
-+
++	fclose(fp);
 +	return 0;
 +}
 +
 +/*
-+ * A complete model prices every charged IO and carries both transfer
-+ * coefficients; a missing calc_cost would be a NULL call from the
-+ * submission path and missing coefficients would silently zero the
-+ * completion-time sizing (see ioc_rqos_done()), so the model is
-+ * rejected before it can be registered. iocg_init() and iocg_free()
-+ * must come in pairs too: a model implementing only one of them would
-+ * build per-cgroup state that nothing ever tears down.
++ * Create a null_blk instance through configfs and copy its maj:min
++ * into @dev. The device appears only once power is written, and is
++ * removed by rmdir of the instance directory; the maj:min comes from
++ * the sysfs directory of the created disk, which is named after the
++ * instance.
 + */
-+static bool iocost_model_complete(const struct iocost_model_ops *ops)
++static int nullb_create(const char *name, char *dev, size_t dev_sz)
 +{
-+	return ops->calc_cost && ops->read_vtime_per_page &&
-+	       ops->write_vtime_per_page &&
-+	       !!ops->iocg_init == !!ops->iocg_free;
-+}
++	char path[128];
++	char p2[128];
++	int err;
 +
-+/*
-+ * kvalue is zeroed at map allocation and function members are only written
-+ * when the BPF side provides a prog, so a model which did not implement
-+ * calc_cost leaves it NULL, and missing coefficients read as zero. This is
-+ * reached from the map-update path of both map flavors, before the model can
-+ * be registered.
-+ */
-+static int bpf_iocost_validate(void *kdata)
-+{
-+	struct iocost_model_ops *ops = kdata;
-+
-+	/*
-+	 * Bound the transfer coefficients so that coefficient * pages cannot
-+	 * wrap u64 for any possible request size.
-+	 */
-+	if (ops->read_vtime_per_page > (VTIME_PER_SEC >> IOC_SECT_TO_PAGE_SHIFT) ||
-+	    ops->write_vtime_per_page > (VTIME_PER_SEC >> IOC_SECT_TO_PAGE_SHIFT))
-+		return -EINVAL;
-+
-+	return iocost_model_complete(ops) ? 0 : -EINVAL;
-+}
-+
-+static int bpf_iocost_reg(void *kdata, struct bpf_link *link)
-+{
-+	struct iocost_model_ops *ops = kdata;
-+
-+	/* validate() has run by now; only the device is left to check */
-+	if (!ops->dev)
-+		return -EINVAL;
-+
-+	return ioc_bpf_attach(ops, link);
-+}
-+
-+static void bpf_iocost_unreg(void *kdata, struct bpf_link *link)
-+{
-+	struct iocost_model_ops *ops = kdata;
-+
-+	/* a gone device is handled inside ioc_bpf_detach() */
-+	ioc_bpf_detach(ops, link);
-+}
-+
-+static const struct bpf_verifier_ops bpf_iocost_verifier_ops = {
-+	.get_func_proto = bpf_iocost_get_func_proto,
-+	.is_valid_access = bpf_iocost_is_valid_access,
-+};
-+
-+static u64 bpf_iocost_calc_cost_stub(struct bio *bio, u64 flags)
-+{
-+	return 0;
-+}
-+
-+static void bpf_iocost_iocg_init_stub(struct blkcg *blkcg,
-+				      struct request_queue *q)
-+{ }
-+static void bpf_iocost_iocg_free_stub(struct blkcg *blkcg,
-+				      struct request_queue *q)
-+{ }
-+
-+static struct iocost_model_ops __bpf_ops_iocost_model_ops = {
-+	.calc_cost = bpf_iocost_calc_cost_stub,
-+	.iocg_init = bpf_iocost_iocg_init_stub,
-+	.iocg_free = bpf_iocost_iocg_free_stub,
-+};
-+
-+static struct bpf_struct_ops bpf_iocost_model_ops = {
-+	.verifier_ops = &bpf_iocost_verifier_ops,
-+	.init = bpf_iocost_model_init,
-+	.check_member = bpf_iocost_check_member,
-+	.init_member = bpf_iocost_init_member,
-+	.validate = bpf_iocost_validate,
-+	.reg = bpf_iocost_reg,
-+	.unreg = bpf_iocost_unreg,
-+	.name = "iocost_model_ops",
-+	.cfi_stubs = &__bpf_ops_iocost_model_ops,
-+	.owner = THIS_MODULE,
-+};
-+
-+static int __init bpf_iocost_init(void)
-+{
-+	return register_bpf_struct_ops(&bpf_iocost_model_ops, iocost_model_ops);
-+}
-+late_initcall(bpf_iocost_init);
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 9b610734871f..1e84232e6740 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -395,8 +395,14 @@ static int ioc_autop_idx(struct ioc *ioc, struct gendisk *disk)
- 	if (idx < AUTOP_SSD_DFL)
- 		return AUTOP_SSD_DFL;
- 
--	/* if user is overriding anything, maintain what was there */
--	if (ioc->user_qos_params || ioc->user_cost_model)
-+	/*
-+	 * If user is overriding anything, or a BPF model is in use, maintain
-+	 * what was there: with a BPF model the builtin cost coefficients are
-+	 * inert, and stepping the profile would change the builtin parameters
-+	 * that apply again after switching back, for no benefit in between.
-+	 */
-+	if (ioc->user_qos_params || ioc->user_cost_model ||
-+	    ioc_bpf_model_locked(ioc))
- 		return idx;
- 
- 	/* step up/down based on the vrate */
-@@ -2178,7 +2184,9 @@ static u64 calc_vtime_cost(struct bio *bio, struct ioc_gq *iocg, bool is_merge)
- {
- 	u64 cost;
- 
--	calc_vtime_cost_builtin(bio, iocg, is_merge, &cost);
-+	if (!ioc_model_calc_cost(iocg->ioc, bio, is_merge, &cost))
-+		calc_vtime_cost_builtin(bio, iocg, is_merge, &cost);
-+
- 	return cost;
- }
- 
-@@ -2200,11 +2208,19 @@ static void calc_size_vtime_cost_builtin(struct request *rq, struct ioc *ioc,
- 	}
- }
- 
--static u64 calc_size_vtime_cost(struct request *rq, struct ioc *ioc)
-+/*
-+ * Called from the request completion path for READ and WRITE
-+ * requests, where no ioc->lock is held; the model pointer is read
-+ * under RCU, matching the bio-side calc_vtime_cost().
-+ */
-+static u64 calc_size_vtime_cost(struct request *rq, struct ioc *ioc,
-+				bool is_read)
- {
- 	u64 cost;
- 
--	calc_size_vtime_cost_builtin(rq, ioc, &cost);
-+	if (!ioc_model_size_cost(ioc, rq, is_read, &cost))
-+		calc_size_vtime_cost_builtin(rq, ioc, &cost);
-+
- 	return cost;
- }
- 
-@@ -2474,7 +2490,8 @@ static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
- 
- 	on_q_ns = blk_time_get_ns() - rq->alloc_time_ns;
- 	rq_wait_ns = rq->start_time_ns - rq->alloc_time_ns;
--	size_nsec = div64_u64(calc_size_vtime_cost(rq, ioc), VTIME_PER_NSEC);
-+	size_nsec = div64_u64(calc_size_vtime_cost(rq, ioc, pidx == QOS_RLAT),
-+			       VTIME_PER_NSEC);
- 
- 	ccs = get_cpu_ptr(ioc->pcpu_stat);
- 
-@@ -2510,6 +2527,10 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
- 
- 	timer_shutdown_sync(&ioc->timer);
- 	free_percpu(ioc->pcpu_stat);
-+
-+	/* eject the model on device removal */
-+	ioc_bpf_eject(ioc);
-+
- 	kfree(ioc);
- }
- 
-@@ -2522,7 +2543,7 @@ static const struct rq_qos_ops ioc_rqos_ops = {
- 	.exit = ioc_rqos_exit,
- };
- 
--static int blk_iocost_init(struct gendisk *disk)
-+int blk_iocost_init(struct gendisk *disk)
- {
- 	struct ioc *ioc;
- 	int i, cpu, ret;
-@@ -2660,6 +2681,35 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
- 	spin_unlock_irqrestore(&ioc->lock, flags);
- }
- 
-+/*
-+ * iocg_init() delivery for the attached model. blkg_create() calls this only
-+ * after the blkg has been inserted into the radix tree and the queue's blkg
-+ * list, so a blkg whose insertion failed is never seen here and the init/free
-+ * pairing cannot be broken by a model switch in between; the caller holds
-+ * queue_lock, the same lock the attachment updates are serialized with.
-+ */
-+static void ioc_pd_online(struct blkg_policy_data *pd)
-+{
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	struct ioc_gq *iocg = pd_to_iocg(pd);
-+	struct blkcg_gq *blkg = pd_to_blkg(pd);
-+	struct ioc *ioc = iocg->ioc;
-+	const struct iocost_model_ops *model;
-+	unsigned long flags;
-+
-+	if (!ioc)
-+		return;
-+
-+	spin_lock_irqsave(&ioc->lock, flags);
-+	model = ioc_attached_model_locked(ioc);
-+	if (model && model->iocg_init) {
-+		model->iocg_init(blkg->blkcg, ioc->rqos.disk->queue);
-+		iocg->bpf_iocg_inited = true;
-+	}
-+	spin_unlock_irqrestore(&ioc->lock, flags);
-+#endif
-+}
-+
- static void iocg_release(struct rcu_head *rcu)
- {
- 	struct blkg_policy_data *pd =
-@@ -2680,6 +2730,25 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
- 	if (ioc) {
- 		spin_lock_irqsave(&ioc->lock, flags);
- 
++	snprintf(path, sizeof(path), "/sys/kernel/config/nullb/%s", name);
++	if (mkdir(path, 0755)) {
++		if (errno != EEXIST)
++			return -errno;
 +		/*
-+		 * Gate the free on the delivered flag: a blkg which never went
-+		 * online never received iocg_init(), and bios still holding
-+		 * the blkg can be priced between its going offline and this
-+		 * free, so iocg_free() follows pd_free() rather than
-+		 * pd_offline.
++		 * a leftover instance from an earlier crashed run may
++		 * still be powered: tear it down before reusing the
++		 * name
 +		 */
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+		if (iocg->bpf_iocg_inited) {
-+			const struct iocost_model_ops *amodel =
-+				ioc_attached_model_locked(ioc);
++		snprintf(p2, sizeof(p2),
++			 "/sys/kernel/config/nullb/%s/power", name);
++		configfs_write(p2, "0");
++		if (rmdir(path) && errno != ENOENT)
++			return -errno;
++		if (mkdir(path, 0755) && errno != EEXIST)
++			return -errno;
++	}
 +
-+			if (amodel && amodel->iocg_free)
-+				amodel->iocg_free(blkg->blkcg,
-+						  ioc->rqos.disk->queue);
-+			iocg->bpf_iocg_inited = false;
++	snprintf(path, sizeof(path), "/sys/kernel/config/nullb/%s/size", name);
++	err = configfs_write(path, "128");
++	if (err)
++		return err;
++
++	snprintf(path, sizeof(path), "/sys/kernel/config/nullb/%s/power", name);
++	err = configfs_write(path, "1");
++	if (err)
++		return err;
++
++	snprintf(path, sizeof(path), "/sys/block/%s/dev", name);
++	err = read_file_token(path, dev, dev_sz);
++	if (err) {
++		/* do not leave a powered instance behind */
++		snprintf(path, sizeof(path),
++			 "/sys/kernel/config/nullb/%s/power", name);
++		configfs_write(path, "0");
++		snprintf(path, sizeof(path),
++			 "/sys/kernel/config/nullb/%s", name);
++		rmdir(path);
++	}
++	return err;
++}
++
++static int nullb_remove(const char *name)
++{
++	char path[128];
++
++	/* a powered instance cannot be removed */
++	snprintf(path, sizeof(path), "/sys/kernel/config/nullb/%s/power", name);
++	configfs_write(path, "0");
++	snprintf(path, sizeof(path), "/sys/kernel/config/nullb/%s", name);
++	if (rmdir(path))
++		return -errno;
++	return 0;
++}
++
++#define IOCOST_NULLB	"iocost_model_test"
++#define IOCOST_NULLB2	"iocost_model_test2"
++
++/*
++ * The tests run against their own null_blk instance created through configfs,
++ * so they need root, configfs and the null_blk driver.
++ */
++/*
++ * The BPF cost model needs cgroup v2 at /sys/fs/cgroup and
++ * CONFIG_BLK_CGROUP_IOCOST_BPF in the running kernel; both are environment
++ * properties, so their absence is a skip.
++ */
++static bool iocost_bpf_supported(void)
++{
++	FILE *f;
++	char line[128];
++	bool any = false, on = false;
++
++	f = popen("zcat /proc/config.gz 2>/dev/null", "r");
++	if (!f)
++		return false;
++	while (fgets(line, sizeof(line), f)) {
++		if (strstr(line, "CONFIG_"))
++			any = true;
++		if (strstr(line, "CONFIG_BLK_CGROUP_IOCOST_BPF=y"))
++			on = true;
++	}
++	pclose(f);
++	return on;
++}
++
++static bool iocost_test_env(void)
++{
++	struct statfs sf;
++
++	if (geteuid() != 0) {
++		printf("%s:SKIP:needs root\n", __func__);
++		test__skip();
++		return false;
++	}
++
++	if (statfs("/sys/fs/cgroup", &sf) ||
++	    sf.f_type != CGROUP2_SUPER_MAGIC) {
++		printf("%s:SKIP:needs cgroup v2 at /sys/fs/cgroup\n",
++		       __func__);
++		test__skip();
++		return false;
++	}
++
++	if (!iocost_bpf_supported()) {
++		printf("%s:SKIP:needs CONFIG_BLK_CGROUP_IOCOST_BPF\n",
++		       __func__);
++		test__skip();
++		return false;
++	}
++
++	/* isolate the configfs and cgroup mounts from the host */
++	if (unshare(CLONE_NEWNS)) {
++		printf("%s:SKIP:unshare(CLONE_NEWNS) failed: %s\n",
++		       __func__, strerror(errno));
++		test__skip();
++		return false;
++	}
++	mkdir("/sys/kernel/config", 0755);
++	(void)mount("none", "/sys/kernel/config", "configfs", 0, NULL);
++	SYS_NOFAIL("modprobe null_blk nr_devices=0");
++	if (access("/sys/kernel/config/nullb", W_OK)) {
++		printf("%s:SKIP:needs null_blk with configfs support\n",
++		       __func__);
++		test__skip();
++		return false;
++	}
++	return true;
++}
++
++/*
++ * Read back the io.cost.model line of dev and copy the model= value into
++ * @model. Returns 0 on success.
++ */
++static int readback_model(const char *dev, char *model, size_t model_sz)
++{
++	char line[256], word[256], *m, *end;
++	FILE *fp;
++	int found = 0;
++
++	fp = fopen("/sys/fs/cgroup/io.cost.model", "r");
++	if (!fp)
++		return -1;
++	while (fgets(line, sizeof(line), fp)) {
++		if (sscanf(line, "%255s", word) == 1 && !strcmp(word, dev)) {
++			found = 1;
++			break;
 +		}
-+#endif
++	}
++	fclose(fp);
++	if (!found)
++		return -1;
 +
- 		if (!list_empty(&iocg->active_list)) {
- 			struct ioc_now now;
- 
-@@ -3042,16 +3111,19 @@ static u64 ioc_cost_model_prfill(struct seq_file *sf,
- 	const char *dname = blkg_dev_name(pd->blkg);
- 	struct ioc *ioc = pd_to_iocg(pd)->ioc;
- 	u64 *u = ioc->params.i_lcoefs;
-+	const struct iocost_model_ops *model;
- 
- 	if (!dname)
- 		return 0;
- 
- 	spin_lock_irq(&ioc->lock);
--	seq_printf(sf, "%s ctrl=%s model=linear "
-+	model = ioc_bpf_model_locked(ioc);
-+	seq_printf(sf, "%s ctrl=%s model=%s "
- 		   "rbps=%llu rseqiops=%llu rrandiops=%llu "
- 		   "wbps=%llu wseqiops=%llu wrandiops=%llu "
- 		   "flushiops=%llu\n",
- 		   dname, ioc->user_cost_model ? "user" : "auto",
-+		   model ? "bpf" : "linear",
- 		   u[I_LCOEF_RBPS], u[I_LCOEF_RSEQIOPS], u[I_LCOEF_RRANDIOPS],
- 		   u[I_LCOEF_WBPS], u[I_LCOEF_WSEQIOPS], u[I_LCOEF_WRANDIOPS],
- 		   u[I_LCOEF_FLUSHIOPS]);
-@@ -3096,6 +3168,10 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 	bool user;
- 	char *body, *p;
- 	int ret;
-+	const struct iocost_model_ops *new_model = NULL;
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	bool model_write = false;
-+#endif
- 
- 	blkg_conf_init(&ctx, input);
- 
-@@ -3148,9 +3224,30 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 			continue;
- 		case COST_MODEL:
- 			match_strlcpy(buf, &args[0], sizeof(buf));
--			if (strcmp(buf, "linear"))
--				goto unlock;
--			continue;
-+			if (!strcmp(buf, "linear")) {
-+				/*
-+				 * Staged and committed below, so a parse
-+				 * error later in the same write leaves the
-+				 * model selection untouched.
-+				 */
-+				new_model = NULL;
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+				model_write = true;
-+#endif
-+				continue;
-+			}
-+			if (!strcmp(buf, "bpf")) {
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+				new_model = rcu_dereference_protected(
-+						ioc->attached,
-+						lockdep_is_held(&ioc->lock));
-+				model_write = true;
-+#endif
-+				if (!new_model)
-+					goto unlock;
-+				continue;
-+			}
-+			goto unlock;
- 		}
- 
- 		tok = match_token(p, i_lcoef_tokens, args);
-@@ -3168,6 +3265,10 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 	} else {
- 		ioc->user_cost_model = false;
- 	}
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	if (model_write)
-+		rcu_assign_pointer(ioc->model, new_model);
-+#endif
- 	ioc_refresh_params(ioc, true);
- 
- 	ret = 0;
-@@ -3211,6 +3312,7 @@ struct blkcg_policy blkcg_policy_iocost = {
- 	.cpd_free_fn	= ioc_cpd_free,
- 	.pd_alloc_fn	= ioc_pd_alloc,
- 	.pd_init_fn	= ioc_pd_init,
-+	.pd_online_fn	= ioc_pd_online,
- 	.pd_free_fn	= ioc_pd_free,
- 	.pd_stat_fn	= ioc_pd_stat,
- };
-diff --git a/block/blk-iocost.h b/block/blk-iocost.h
-index e4e517ef6a0f..6d62b4fd0c54 100644
---- a/block/blk-iocost.h
-+++ b/block/blk-iocost.h
-@@ -22,6 +22,79 @@
- #include <asm/local64.h>
- #include "blk-rq-qos.h"
- 
-+struct bpf_link;
++	m = strstr(line, "model=");
++	if (!m)
++		return -1;
++	m += strlen("model=");
++	end = m;
++	while (*end && *end != ' ')
++		end++;
++	snprintf(model, model_sz, "%.*s", (int)(end - m), m);
++	return 0;
++}
 +
 +/*
-+ * Pluggable cost model interface for blk-iocost.
-+ *
-+ * A BPF struct_ops implementation can take over the cost model of one device.
-+ * The device is identified by the dev member, which is set from userspace
-+ * before the program is loaded; the struct_ops core owns the program lifetime.
-+ * Attaching creates the ioc if needed, like an io.cost.model write, and
-+ * switches the device to the BPF model with the queue frozen before
-+ * rq_qos_mutex, like an io.cost.qos write, and delivers iocg_init() to the
-+ * cgroups which already exist on the device. Enabling and disabling the
-+ * controller stays with io.cost.qos.
-+ *
-+ * While a model is attached, io.cost.model selects between it and the builtin
-+ * model: "model=bpf" switches to the attached model and "model=linear" back to
-+ * the builtin. Neither detaches the struct_ops; only detaching does. The
-+ * builtin linear coefficients are kept while the BPF model is in use and take
-+ * effect again when switched back.
-+ *
-+ * While in use, the BPF model prices every charged IO on the device, including
-+ * flushes, from the bio charging path. calc_cost() is called from the IO
-+ * submission path with RCU read lock held and must not sleep. It receives the
-+ * bio itself so that the model can use what it needs (operation flags, size,
-+ * sector, the issuing cgroup through bio->bi_blkg, which is guaranteed
-+ * non-NULL) and returns the cost of the IO in vtime units, where 1 second
-+ * of device time equals VTIME_PER_SEC (2^37,
-+ * available to BPF programs through vmlinux.h). The return value is clamped to
-+ * 1 second of device time per IO.
-+ *
-+ * The struct_ops also carries the transfer cost coefficients, vtime per page
-+ * for reads and writes. While the BPF model is in use, they replace the
-+ * builtin coefficients in the completion-time request sizing of READ and
-+ * WRITE requests, with ZONE_APPEND counted as a write. Taking over the QoS
-+ * side (latency tracking, vrate control) is left for later extensions.
-+ *
-+ * The cgroup callbacks are bound to the iocg policy lifetime, one (cgroup,
-+ * device) pair per invocation. iocg_init() is delivered from ioc_pd_online()
-+ * and on attach to the cgroups already online on the device; iocg_free() on
-+ * detach to the cgroups which still exist then and at pd_free() time for the
-+ * rest, so that init and free pair up exactly. iocg_free() is gated on a
-+ * per-iocg delivered flag, as bios can still be priced between the blkg going
-+ * offline and its free. Both callbacks are called with ioc->lock held and must
-+ * not sleep; the delivery points nest inside queue_lock except for iocg_free()
-+ * from ioc_pd_free() in blkg_free_workfn().
++ * Read the cost.usage accumulator of dev from the cgroup's io.stat. Returns 0
++ * on success, -ENODEV when the device has no line yet (no charge recorded).
 + */
++static int read_cost_usage(const char *cgroup, const char *dev,
++			   unsigned long long *usage)
++{
++	char line[512];
++	FILE *fp;
++	int found = 0;
++
++	fp = fopen(cgroup, "r");
++	if (!fp)
++		return -EIO;
++	*usage = 0;
++	while (fgets(line, sizeof(line), fp)) {
++		char *tok = strtok(line, " \n");
++
++		if (!tok || strcmp(tok, dev))
++			continue;
++		found = 1;
++		while ((tok = strtok(NULL, " \n"))) {
++			if (!strncmp(tok, "cost.usage=", 11)) {
++				*usage = strtoull(tok + 11, NULL, 0);
++				fclose(fp);
++				return 0;
++			}
++		}
++	}
++	fclose(fp);
++	return found ? -ENOENT : -ENODEV;
++}
++
++/* mkdir, recovering from a leftover of an aborted earlier run */
++static int cgroup_mkdir(const char *path)
++{
++	if (!mkdir(path, 0755))
++		return 0;
++	if (errno == EEXIST && !rmdir(path))
++		return mkdir(path, 0755) ? -errno : 0;
++	return -errno;
++}
 +
 +/*
-+ * Call metadata for calc_cost()'s model_flags; the merge indicator is not a
-+ * property of the bio. An enum so that the value is exported through BTF and
-+ * usable from vmlinux.h.
++ * Write a line to io.cost.model for dev and return the errno of the write
++ * negated (0 on success), as ASSERT_ERR() expects.
 + */
-+enum {
-+	IOCOST_COST_F_MERGE	= 1 << 0,	/* called from merge path */
-+};
++static int write_cost_model(const char *dev, const char *what)
++{
++	char buf[128];
++	FILE *fp;
++	int err = 0;
 +
-+struct iocost_model_ops {
++	snprintf(buf, sizeof(buf), "%s %s", dev, what);
++	fp = fopen("/sys/fs/cgroup/io.cost.model", "w");
++	if (!fp)
++		return -EACCES;
++	if (fwrite(buf, 1, strlen(buf), fp) != strlen(buf))
++		err = ferror(fp) ? -errno : -EIO;
++	if (fclose(fp) && !err)
++		err = -errno;
++	return err;
++}
++
++/*
++ * Attach the example model to the null_blk instance the test creates: the dev
++ * member is written through the struct_ops map's initial value before load,
++ * and attaching the struct_ops attaches the model to the device. Detaching the
++ * struct_ops restores the builtin model.
++ *
++ * Requires root, cgroup v2 and null_blk with configfs support.
++ */
++void serial_test_iocost_model(void)
++{
++	struct iocost_model *skel, *second, *bad;
++	unsigned int maj, min;
++	char pidbuf[16], buf[4096], path[64], qbuf[160], dev2[32];
++	int devfd, i, err, lfd;
++	char model[32], dev[32];
++	unsigned long long u1, u2, inits1;
++
++	if (!iocost_test_env())
++		return;
++	if (!ASSERT_OK(nullb_create(IOCOST_NULLB, dev, sizeof(dev)),
++		       "nullb_create"))
++		return;
++	if (sscanf(dev, "%u:%u", &maj, &min) != 2) {
++		ASSERT_TRUE(false, "dev_parse");
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++
++	skel = iocost_model__open();
++	if (!ASSERT_OK_PTR(skel, "skel_open")) {
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++
 +	/*
-+	 * target device (major:minor), set from userspace before load
-+	 * through the struct_ops map's initial value, in the userspace
-+	 * dev_t encoding new_decode_dev() accepts
++	 * a model with a zero coefficient must fail to attach instead of
++	 * silently zeroing the completion sizing (validate rejects it on
++	 * the map update the attach performs; the link form of the
++	 * struct_ops only reaches it there)
 +	 */
-+	dev_t dev;
++	bad = iocost_model__open();
++	if (!ASSERT_OK_PTR(bad, "bad_open")) {
++		iocost_model__destroy(skel);
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++	bad->struct_ops.iocost_2x->dev = (__u32)makedev(maj, min);
++	bad->struct_ops.iocost_2x->write_vtime_per_page = 0;
++	if (ASSERT_OK(iocost_model__load(bad), "bad_load"))
++		ASSERT_EQ(iocost_model__attach(bad), -EINVAL,
++			  "attach_rejects_zero_coeff");
++	iocost_model__destroy(bad);
 +
-+	/* vtime per page for the completion-time request sizing */
-+	u64 read_vtime_per_page;
-+	u64 write_vtime_per_page;
++	/* same for the read-side transfer coefficient */
++	bad = iocost_model__open();
++	if (!ASSERT_OK_PTR(bad, "bad_read_open")) {
++		iocost_model__destroy(skel);
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++	bad->struct_ops.iocost_2x->dev = (__u32)makedev(maj, min);
++	bad->struct_ops.iocost_2x->read_vtime_per_page = 0;
++	if (ASSERT_OK(iocost_model__load(bad), "bad_read_load"))
++		ASSERT_EQ(iocost_model__attach(bad), -EINVAL,
++			  "attach_rejects_zero_read");
++	iocost_model__destroy(bad);
 +
-+	u64 (*calc_cost)(struct bio *bio, u64 model_flags);
-+	void (*iocg_init)(struct blkcg *blkcg, struct request_queue *q);
-+	void (*iocg_free)(struct blkcg *blkcg, struct request_queue *q);
++	skel->struct_ops.iocost_2x->dev = (__u32)makedev(maj, min);
++	/*
++	 * create a cgroup for the pairing checks; its blkg comes to life
++	 * when the controller is enabled and the cgroup configured below,
++	 * exercising the iocg_init()/iocg_free() pairing end to end
++	 */
++	/*
++	 * Enable the io controller for the pairing cgroup: without it
++	 * the cgroup has no io.weight/io.stat and the iocg never
++	 * activates, so the model is consulted but nothing is charged.
++	 */
++	ASSERT_OK(configfs_write("/sys/fs/cgroup/cgroup.subtree_control",
++				 "+io"), "subtree_io");
++	if (!ASSERT_OK(cgroup_mkdir("/sys/fs/cgroup/iocost_pairing"),
++		       "mkdir_cg")) {
++		iocost_model__destroy(skel);
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++	snprintf(pidbuf, sizeof(pidbuf), "%d", getpid());
++	ASSERT_OK(configfs_write("/sys/fs/cgroup/iocost_pairing/cgroup.procs",
++				  pidbuf), "cgroup_procs");
++	snprintf(path, sizeof(path), "/dev/%s", IOCOST_NULLB);
++	devfd = open(path, O_RDONLY);
++	if (!ASSERT_OK(devfd < 0 ? -errno : 0, "open_dev")) {
++		configfs_write("/sys/fs/cgroup/cgroup.procs", pidbuf);
++		rmdir("/sys/fs/cgroup/iocost_pairing");
++		iocost_model__destroy(skel);
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++	for (i = 0; i < 32; i++)
++		(void)read(devfd, buf, sizeof(buf));
++	close(devfd);
++	configfs_write("/sys/fs/cgroup/cgroup.procs", pidbuf);
++
++
++	err = iocost_model__load(skel);
++	if (!ASSERT_OK(err, "skel_load")) {
++		iocost_model__destroy(skel);
++		rmdir("/sys/fs/cgroup/iocost_pairing");
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++
++	err = iocost_model__attach(skel);
++	if (err == -EOPNOTSUPP || err == -ENODEV) {
++		printf("%s:SKIP:device is not blk-mq, has no iocost or does not exist\n",
++		       __func__);
++		iocost_model__destroy(skel);
++		rmdir("/sys/fs/cgroup/iocost_pairing");
++		nullb_remove(IOCOST_NULLB);
++		test__skip();
++		return;
++	}
++	if (ASSERT_OK(err, "attach")) {
++		/*
++		 * attached: the read path reports model=bpf until the
++		 * struct_ops is detached; ctrl keeps describing the
++		 * builtin coefficients
++		 */
++		err = readback_model(dev, model, sizeof(model));
++		if (ASSERT_OK(err, "readback"))
++			ASSERT_STREQ(model, "bpf", "model_bpf");
++
++		/*
++		 * the blkg created above was already on the blkg list
++		 * (online) when the attach walk ran, so the walk
++		 * delivered iocg_init() to it and to every other cgroup
++		 * which has a blkg on this device (the count depends on
++		 * the environment); none of them can have received
++		 * iocg_free() yet
++		 */
++		ASSERT_GT(skel->bss->iocg_inits, 0, "pair_init");
++		ASSERT_EQ(skel->bss->iocg_frees, 0, "pair_no_free");
++
++		/* a second model on the same device fails with -EBUSY */
++		second = iocost_model__open();
++		if (ASSERT_OK_PTR(second, "second_open")) {
++			second->struct_ops.iocost_2x->dev =
++				(__u32)makedev(maj, min);
++			err = iocost_model__load(second);
++			if (ASSERT_OK(err, "second_load")) {
++				struct bpf_link *l2;
++
++				/*
++				 * the kernel rejects attaching a second
++				 * model to the device with EBUSY
++				 */
++				l2 = bpf_map__attach_struct_ops(
++						second->maps.iocost_2x);
++				if (!ASSERT_ERR_PTR(l2, "second_ebusy"))
++					bpf_link__destroy(l2);
++				else
++					ASSERT_EQ(libbpf_get_error(l2), -EBUSY,
++						  "second_ebusy_errno");
++			}
++			iocost_model__destroy(second);
++		}
++
++		/*
++		 * pricing coverage: root cgroup IOs bypass the model, so
++		 * move into the pairing cgroup, enable the controller
++		 * and verify IOs actually go through calc_cost() and get
++		 * charged
++		 */
++		ASSERT_OK(configfs_write(
++				"/sys/fs/cgroup/iocost_pairing/cgroup.procs",
++				pidbuf), "procs_pairing_priced");
++		snprintf(qbuf, sizeof(qbuf), "%s 1000", dev);
++		ASSERT_OK(configfs_write(
++				"/sys/fs/cgroup/iocost_pairing/io.weight",
++				qbuf), "weight_pairing");
++		snprintf(qbuf, sizeof(qbuf),
++			 "%s enable=1 ctrl=user min=100.00 max=100.00", dev);
++		ASSERT_OK(configfs_write("/sys/fs/cgroup/io.cost.qos", qbuf),
++			  "qos_enable");
++
++		devfd = open(path, O_RDONLY);
++		if (!ASSERT_OK(devfd < 0 ? -errno : 0, "open_dev_priced")) {
++			iocost_model__destroy(skel);
++			configfs_write("/sys/fs/cgroup/cgroup.procs", pidbuf);
++			snprintf(qbuf, sizeof(qbuf), "%s enable=0", dev);
++			(void)configfs_write("/sys/fs/cgroup/io.cost.qos", qbuf);
++			if (rmdir("/sys/fs/cgroup/iocost_pairing") && errno != ENOENT)
++				printf("%s: rmdir cgroup failed: %s\n", __func__,
++				       strerror(errno));
++			nullb_remove(IOCOST_NULLB);
++			return;
++		}
++		ASSERT_OK(read_cost_usage("/sys/fs/cgroup/iocost_pairing/io.stat",
++					  dev, &u1), "cost_usage_pre");
++		for (i = 0; i < 500; i++)
++			(void)read(devfd, buf, sizeof(buf));
++		close(devfd);
++		ASSERT_GT(skel->bss->calc_costs, 0, "model_priced");
++		/*
++		 * the usage stat is flushed by the iocost timer, give
++		 * the current period a chance to end before reading
++		 */
++		sleep(3);
++		ASSERT_OK(read_cost_usage("/sys/fs/cgroup/iocost_pairing/io.stat",
++					  dev, &u2), "cost_usage_post");
++		ASSERT_GT(u2, u1, "cost_charged");
++		ASSERT_GT(skel->bss->ioc_ticks, 0, "tick_seen");
++
++		/*
++		 * a cgroup created while the model is attached gets its
++		 * iocg_init() when its first IO onlines the blkg
++		 */
++		inits1 = skel->bss->iocg_inits;
++		ASSERT_OK(cgroup_mkdir("/sys/fs/cgroup/iocost_late"),
++			  "mkdir_late");
++		ASSERT_OK(configfs_write(
++				"/sys/fs/cgroup/iocost_late/cgroup.procs",
++				pidbuf), "procs_late");
++		devfd = open(path, O_RDONLY);
++		if (ASSERT_OK(devfd < 0 ? -errno : 0, "open_dev_late")) {
++			for (i = 0; i < 32; i++)
++				(void)read(devfd, buf, sizeof(buf));
++			close(devfd);
++		}
++		ASSERT_GT(skel->bss->iocg_inits, inits1, "late_init");
++		ASSERT_OK(configfs_write("/sys/fs/cgroup/cgroup.procs",
++					 pidbuf), "procs_back");
++		rmdir("/sys/fs/cgroup/iocost_late");
++
++		/*
++		 * a second device is independent: enabling it shows
++		 * the builtin model, not the one attached to the
++		 * first
++		 */
++		if (ASSERT_OK(nullb_create(IOCOST_NULLB2, dev2,
++					   sizeof(dev2)), "nullb_create2")) {
++			snprintf(qbuf, sizeof(qbuf),
++				 "%s enable=1 ctrl=auto", dev2);
++			ASSERT_OK(configfs_write(
++					"/sys/fs/cgroup/io.cost.qos", qbuf),
++				  "qos_nullb2");
++			err = readback_model(dev2, model, sizeof(model));
++			if (ASSERT_OK(err, "readback_nullb2"))
++				ASSERT_STREQ(model, "linear",
++					     "model_linear_nullb2");
++			snprintf(qbuf, sizeof(qbuf), "%s enable=0", dev2);
++			ASSERT_OK(configfs_write(
++					"/sys/fs/cgroup/io.cost.qos", qbuf),
++				  "qos_nullb2_off");
++		}
++		nullb_remove(IOCOST_NULLB2);
++
++		/*
++		 * attachment and model selection are independent:
++		 * ctrl=bpf is never accepted, model=linear switches
++		 * back to the builtin without detaching, model=bpf
++		 * switches to the attached model again
++		 */
++		err = write_cost_model(dev, "ctrl=bpf");
++		ASSERT_ERR(err, "ctrl_bpf_rejected");
++
++		err = write_cost_model(dev, "model=linear");
++		ASSERT_OK(err, "model_linear_write");
++		err = readback_model(dev, model, sizeof(model));
++		if (ASSERT_OK(err, "readback_linear"))
++			ASSERT_STREQ(model, "linear", "model_linear");
++
++		/* still attached: the switch must not free the slot */
++		second = iocost_model__open();
++		if (ASSERT_OK_PTR(second, "second_open2")) {
++			second->struct_ops.iocost_2x->dev =
++				(__u32)makedev(maj, min);
++			err = iocost_model__load(second);
++			if (ASSERT_OK(err, "second_load2")) {
++				struct bpf_link *l2;
++
++				l2 = bpf_map__attach_struct_ops(
++						second->maps.iocost_2x);
++				if (!ASSERT_ERR_PTR(l2, "second_ebusy2"))
++					bpf_link__destroy(l2);
++				else
++					ASSERT_EQ(libbpf_get_error(l2), -EBUSY,
++						  "second_ebusy2_errno");
++			}
++			iocost_model__destroy(second);
++		}
++
++		/* still attached: switching back to the model works */
++		err = write_cost_model(dev, "model=bpf");
++		ASSERT_OK(err, "model_bpf_write");
++		err = readback_model(dev, model, sizeof(model));
++		if (ASSERT_OK(err, "readback_bpf"))
++			ASSERT_STREQ(model, "bpf", "model_bpf");
++
++		/*
++		 * detach implicitly by closing the link fd instead of
++		 * calling bpf_link__destroy() explicitly: the release
++		 * path must detach the model just like the explicit
++		 * call does
++		 */
++		lfd = bpf_link__fd(skel->links.iocost_2x);
++		bpf_link__disconnect(skel->links.iocost_2x);
++		close(lfd);
++		skel->links.iocost_2x = NULL;
++
++		/* after detach, model=bpf fails: nothing is attached */
++		err = write_cost_model(dev, "model=bpf");
++		ASSERT_ERR(err, "model_bpf_after_detach");
++
++		err = readback_model(dev, model, sizeof(model));
++		if (ASSERT_OK(err, "readback_after_detach"))
++			ASSERT_STREQ(model, "linear", "model_linear");
++
++		/* the detach walk delivered the matching iocg_free()s */
++		ASSERT_EQ(skel->bss->iocg_frees, skel->bss->iocg_inits,
++			  "pair_free");
++	}
++
++	iocost_model__destroy(skel);
++	(void)configfs_write("/sys/fs/cgroup/cgroup.procs", pidbuf);
++	snprintf(qbuf, sizeof(qbuf), "%s enable=0", dev);
++	(void)configfs_write("/sys/fs/cgroup/io.cost.qos", qbuf);
++	if (rmdir("/sys/fs/cgroup/iocost_pairing") && errno != ENOENT)
++		printf("%s: rmdir cgroup failed: %s\n", __func__,
++		       strerror(errno));
++	nullb_remove(IOCOST_NULLB);
++}
++/*
++ * Same check for the multi-stream example model. Only one model can be
++ * attached to a device at a time; each test creates its own device and
++ * attaches and detaches, so they are serial.
++ */
++void serial_test_iocost_model_streams(void)
++{
++	struct iocost_ms *skel;
++	unsigned int maj, min;
++	int err;
++	char model[32], dev[32];
++
++	if (!iocost_test_env())
++		return;
++	if (!ASSERT_OK(nullb_create(IOCOST_NULLB, dev, sizeof(dev)),
++		       "nullb_create"))
++		return;
++	if (sscanf(dev, "%u:%u", &maj, &min) != 2) {
++		ASSERT_TRUE(false, "dev_parse");
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++
++	skel = iocost_ms__open();
++	if (!ASSERT_OK_PTR(skel, "skel_open")) {
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++
++	skel->struct_ops.iocost_ms->dev = (__u32)makedev(maj, min);
++
++	err = iocost_ms__load(skel);
++	if (!ASSERT_OK(err, "skel_load")) {
++		iocost_ms__destroy(skel);
++		nullb_remove(IOCOST_NULLB);
++		return;
++	}
++
++	err = iocost_ms__attach(skel);
++	if (err == -EOPNOTSUPP || err == -ENODEV) {
++		printf("%s:SKIP:device is not blk-mq, has no iocost or does not exist\n",
++		       __func__);
++		iocost_ms__destroy(skel);
++		nullb_remove(IOCOST_NULLB);
++		test__skip();
++		return;
++	}
++	if (ASSERT_OK(err, "attach")) {
++		err = readback_model(dev, model, sizeof(model));
++		if (ASSERT_OK(err, "readback"))
++			ASSERT_STREQ(model, "bpf", "model_bpf");
++
++		bpf_link__destroy(skel->links.iocost_ms);
++		skel->links.iocost_ms = NULL;
++
++		err = readback_model(dev, model, sizeof(model));
++		if (ASSERT_OK(err, "readback_after_detach"))
++			ASSERT_STREQ(model, "linear", "model_linear");
++	}
++
++	iocost_ms__destroy(skel);
++	nullb_remove(IOCOST_NULLB);
++}
++
++/*
++ * Removal of the device while a model is attached: the test builds
++ * its own null_blk instance through configfs like the other tests,
++ * attaches to it, then removes the device out from under the model.
++ * The ejection must drop the device from the cgroup interface,
++ * down, and a recreated device must be attachable again.
++ */
++void serial_test_iocost_model_removal(void)
++{
++	struct iocost_model *skel, *skel2;
++	unsigned int maj, min;
++	char dev[32], model[32];
++	int err;
++
++	if (!iocost_test_env())
++		return;
++
++	skel = iocost_model__open();
++	if (!ASSERT_OK_PTR(skel, "skel_open"))
++		return;
++
++	err = nullb_create("iocost_removal", dev, sizeof(dev));
++	if (!ASSERT_OK(err, "nullb_create"))
++		goto out;
++	if (sscanf(dev, "%u:%u", &maj, &min) != 2) {
++		ASSERT_TRUE(false, "dev_parse");
++		goto out;
++	}
++
++	skel->struct_ops.iocost_2x->dev = (__u32)makedev(maj, min);
++	err = iocost_model__load(skel);
++	if (!ASSERT_OK(err, "skel_load"))
++		goto out;
++
++	err = iocost_model__attach(skel);
++	if (!ASSERT_OK(err, "attach"))
++		goto out;
++
++	err = readback_model(dev, model, sizeof(model));
++	if (ASSERT_OK(err, "readback"))
++		ASSERT_STREQ(model, "bpf", "model_bpf");
++
++	/* remove the device out from under the attached model */
++	if (!ASSERT_OK(nullb_remove("iocost_removal"), "nullb_remove"))
++		goto detach;
++
++	/* the ejection drops the device from the cgroup files */
++	err = readback_model(dev, model, sizeof(model));
++	ASSERT_ERR(err, "readback_after_removal");
++
++	err = write_cost_model(dev, "model=bpf");
++	ASSERT_ERR(err, "model_bpf_after_removal");
++
++	/*
++	 * the ejection path must deliver iocg_free() for every blkg
++	 * which was online on the removed device: pd_free() runs from
++	 * blkcg_deactivate_policy() before ioc_bpf_eject() drops the
++	 * map reference
++	 */
++	ASSERT_GT(skel->bss->iocg_inits, 0, "eject_had_inits");
++	ASSERT_EQ(skel->bss->iocg_frees, skel->bss->iocg_inits,
++		  "eject_balanced");
++
++detach:
++	/*
++	 * detaching after the device is gone must be a clean no-op;
++	 * this exercises the eject-then-detach ordering in the kernel
++	 */
++	bpf_link__destroy(skel->links.iocost_2x);
++	skel->links.iocost_2x = NULL;
++
++	/* the same attach and detach against a recreated device */
++	skel2 = iocost_model__open();
++	if (!ASSERT_OK_PTR(skel2, "skel2_open"))
++		goto out;
++
++	err = nullb_create("iocost_removal", dev, sizeof(dev));
++	if (!ASSERT_OK(err, "nullb_create_again"))
++		goto out2;
++	if (sscanf(dev, "%u:%u", &maj, &min) != 2) {
++		ASSERT_TRUE(false, "dev_parse_again");
++		goto out2;
++	}
++
++	skel2->struct_ops.iocost_2x->dev = (__u32)makedev(maj, min);
++	err = iocost_model__load(skel2);
++	if (!ASSERT_OK(err, "skel2_load"))
++		goto out2;
++
++	err = iocost_model__attach(skel2);
++	if (!ASSERT_OK(err, "attach_again"))
++		goto out2;
++
++	err = readback_model(dev, model, sizeof(model));
++	if (ASSERT_OK(err, "readback_again"))
++		ASSERT_STREQ(model, "bpf", "model_bpf_again");
++	ASSERT_GT(skel2->bss->iocg_inits, 0, "pair_init_again");
++
++	bpf_link__destroy(skel2->links.iocost_2x);
++	skel2->links.iocost_2x = NULL;
++
++	err = readback_model(dev, model, sizeof(model));
++	if (ASSERT_OK(err, "readback_after_detach_again"))
++		ASSERT_STREQ(model, "linear", "model_linear_again");
++
++	/* the re-attach walk delivered init for the recreated device */
++	ASSERT_EQ(skel2->bss->iocg_frees, skel2->bss->iocg_inits,
++		  "pair_balanced_again");
++
++out2:
++	iocost_model__destroy(skel2);
++out:
++	nullb_remove("iocost_removal");
++	iocost_model__destroy(skel);
++}
+diff --git a/tools/testing/selftests/bpf/progs/iocost_model.c b/tools/testing/selftests/bpf/progs/iocost_model.c
+new file mode 100644
+index 000000000000..8875fb0f4417
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/iocost_model.c
+@@ -0,0 +1,201 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2026 KylinSoft Corporation. */
++/*
++ * Example iocost cost model: the builtin linear HDD formula with all costs
++ * doubled, for one device given by the dev member of the struct_ops.
++ *
++ * The constants mirror what calc_lcoefs() derives from the AUTOP_HDD defaults
++ * (rbps=174019176 rseqiops=41708 rrandiops=370, w-side analog) in vtime units
++ * where 1s == 2^37. On a rotational device still on ctrl=auto, a device with
++ * this model attached charges twice the builtin model under the same
++ * read/write workload (the builtin prices flushes as zero and adds a fixed
++ * flush term to data-bearing preflushes, which this model omits; this model
++ * prices flushes as one-page writes), so the doubled cost is a direct check
++ * that accounting goes through the BPF path. On a non-rotational device, or
++ * one with user-pinned coefficients, the ratio to the builtin model is
++ * arbitrary.
++ *
++ * The cursor handling follows the builtin: a zero cursor means "no previous
++ * IO", and the cursor is advanced for the bios the builtin prices
++ * (READ/WRITE/ZONE_APPEND with a non-zero size), so flushes and discards leave
++ * it alone and long merged streams do not drift past the 16MB seek threshold.
++ * One known deviation, mispricing only: the builtin does not move its cursor
++ * for an IO whose cgroup fails to activate; this model does not see the
++ * activation result.
++ *
++ * The model implements the full linear formula itself, including flushes:
++ * there is no fallback to the builtin model, which prices a dataless
++ * WRITE|REQ_PREFLUSH as zero unless flushiops is configured; this model prices
++ * it as a one-page sequential write. What a flush actually costs depends on
++ * the IOs before it, which a static formula cannot express - pricing it as a
++ * small constant is a crude penalty for unnecessarily frequent flushes, and a
++ * stateful model would be the way to do better. Discards and other unpriced
++ * operations pass through at zero cost, like the builtin.
++ */
++
++#include "vmlinux.h"
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_tracing.h>
++
++/*
++ * VTIME_PER_SEC, IOC_PAGE_SIZE/SHIFT, IOC_SECT_TO_PAGE_SHIFT,
++ * LCOEF_RANDIO_PAGES (the 16MB seek threshold) and IOCOST_COST_F_MERGE
++ * come from vmlinux.h (BTF constants; the enum64 ones need pahole
++ * >= 1.23 to be emitted)
++ */
++#define IOCOST_REQ_OP_MASK	0xff		/* REQ_OP_MASK, not in BTF */
++
++/*
++ * DIV64_U64_ROUND_UP / DIV_ROUND_UP_ULL equivalents, folded at
++ * compile time
++ */
++#define RU(x, y)		((x) / (y) + (((x) % (y)) ? 1 : 0))
++
++#define RBPS	174019176ULL
++#define RSEQIOPS	41708ULL
++#define RRANDIOPS	370ULL
++#define WBPS	178075866ULL
++#define WSEQIOPS	42705ULL
++#define WRANDIOPS	378ULL
++
++#define RPAGE	(RU(VTIME_PER_SEC, RU(RBPS, IOC_PAGE_SIZE)))
++#define RSEQIO	(RU(VTIME_PER_SEC, RSEQIOPS) - RPAGE)
++#define RRANDIO	(RU(VTIME_PER_SEC, RRANDIOPS) - RPAGE)
++#define WPAGE	(RU(VTIME_PER_SEC, RU(WBPS, IOC_PAGE_SIZE)))
++#define WSEQIO	(RU(VTIME_PER_SEC, WSEQIOPS) - WPAGE)
++#define WRANDIO	(RU(VTIME_PER_SEC, WRANDIOPS) - WPAGE)
++
++/*
++ * per-cgroup cursor storage: keyed by the cgroup and freed with it,
++ * so a cgroup that comes back starts with no cursor
++ */
++struct {
++	__uint(type, BPF_MAP_TYPE_CGRP_STORAGE);
++	__uint(map_flags, BPF_F_NO_PREALLOC);
++	__type(key, int);
++	__type(value, __u64);
++} cursor_store SEC(".maps");
++
++/*
++ * cgroup callback counters: the test reads them back to verify the
++ * init/free pairing across attach, detach and device removal
++ */
++__u64 iocg_inits;
++__u64 iocg_frees;
++
++/*
++ * incremented by calc_cost(): the test asserts pricing went
++ * through the model while it is attached and the controller is
++ * enabled
++ */
++__u64 calc_costs;
++
++/* counts iocost_ioc_tick emissions observed from BPF side */
++__u64 ioc_ticks;
++
++SEC("struct_ops")
++void BPF_PROG(iocost_2x_iocg_init, struct blkcg *blkcg,
++	      struct request_queue *q)
++{
++	iocg_inits++;
++}
++
++SEC("struct_ops")
++void BPF_PROG(iocost_2x_iocg_free, struct blkcg *blkcg,
++	      struct request_queue *q)
++{
++	iocg_frees++;
++}
++
++SEC("struct_ops")
++u64 BPF_PROG(iocost_2x_calc_cost, struct bio *bio, u64 model_flags)
++{
++	u64 opf = bio->bi_opf, nbytes = bio->bi_iter.bi_size;
++	u64 sector = bio->bi_iter.bi_sector;
++	struct blkcg *blkcg = bio->bi_blkg->blkcg;
++	u64 pages, seek_pages = 0, base, coef_page, randio, cost;
++	__u64 *cursor, cur;
++	int priced;
++
++	calc_costs++;
++
++	/* builtin truncates: max(sectors >> IOC_SECT_TO_PAGE_SHIFT, 1) */
++	pages = nbytes >> IOC_PAGE_SHIFT;
++	if (!pages)
++		pages = 1;
++
++	if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ) {
++		base = RSEQIO; coef_page = RPAGE; randio = RRANDIO;
++	} else if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE ||
++		   (opf & IOCOST_REQ_OP_MASK) == REQ_OP_ZONE_APPEND) {
++		base = WSEQIO; coef_page = WPAGE; randio = WRANDIO;
++	} else {
++		/*
++		 * the builtin prices other operations at zero and
++		 * leaves them unthrottled; pass them through the same
++		 * way instead of inventing costs
++		 */
++		return 0;
++	}
++
++	/* mirror the builtin cursor semantics described above */
++	priced = (opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ ||
++		 (opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE ||
++		 (opf & IOCOST_REQ_OP_MASK) == REQ_OP_ZONE_APPEND;
++	cursor = bpf_cgrp_storage_get(&cursor_store,
++				      blkcg->css.cgroup, NULL,
++				      BPF_LOCAL_STORAGE_GET_F_CREATE);
++	if (!cursor) {
++		if (model_flags & IOCOST_COST_F_MERGE)
++			base = 0;
++		return 2 * (base + pages * coef_page);
++	}
++	cur = *cursor;
++	/*
++	 * a size-zero IO never moves the cursor, so it must not be
++	 * judged against it either; the builtin skips it entirely,
++	 * this model prices it as a one-page sequential write
++	 */
++	if (cur && priced && nbytes) {
++		seek_pages = sector > cur ? sector - cur
++					   : cur - sector;
++		seek_pages >>= IOC_SECT_TO_PAGE_SHIFT;
++		if (seek_pages > LCOEF_RANDIO_PAGES)
++			base = randio;
++	}
++	/*
++	 * the builtin moves the cursor unconditionally on submit, but
++	 * on a merge only for a back merge into the request ending at
++	 * it; a merged bio starts right at the cursor exactly then,
++	 * and a zero cursor means no history so it never matches
++	 */
++	if (priced && nbytes &&
++	    (!(model_flags & IOCOST_COST_F_MERGE) || (cur && cur == sector)))
++		*cursor = sector + (nbytes >> 9);
++
++	if (model_flags & IOCOST_COST_F_MERGE)
++		base = 0;
++
++	cost = 2 * (base + pages * coef_page);
++	return cost;
++}
++
++/* consumes the new iocost_ioc_tick tracepoint from BPF side */
++SEC("tp_btf/iocost_ioc_tick")
++__u64 BPF_PROG(iocost_2x_tick_count, struct ioc *ioc,
++	       const struct ioc_now *now, int nr_active, u64 usage_us_sum)
++{
++	ioc_ticks++;
++	return 0;
++}
++
++SEC(".struct_ops.link") /* detach on close */
++struct iocost_model_ops iocost_2x = {
++	.read_vtime_per_page = 2 * RPAGE,
++	.write_vtime_per_page = 2 * WPAGE,
++	.calc_cost = (void *)iocost_2x_calc_cost,
++	.iocg_init = (void *)iocost_2x_iocg_init,
++	.iocg_free = (void *)iocost_2x_iocg_free,
 +};
 +
- enum {
- 	MILLION			= 1000000,
- 
-@@ -260,7 +333,14 @@ struct ioc {
- 	int				autop_idx;
- 	bool				user_qos_params:1;
- 	bool				user_cost_model:1;
--
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	/* the struct_ops attached to this device, NULL = none */
-+	const struct iocost_model_ops	__rcu *attached;
-+	/* the link which owns the attachment, written with ioc->lock held */
-+	struct bpf_link			*bpf_link;
-+	/* the cost model in use, NULL = builtin linear model */
-+	const struct iocost_model_ops	__rcu *model;
-+#endif
- };
- 
- struct iocg_pcpu_stat {
-@@ -278,6 +358,10 @@ struct iocg_stat {
- struct ioc_gq {
- 	struct blkg_policy_data		pd;
- 	struct ioc			*ioc;
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	/* whether the attached model's iocg_init() was delivered */
-+	bool				bpf_iocg_inited;
-+#endif
- 
- 	/*
- 	 * A iocg can get its weight from two sources - an explicit
-@@ -433,4 +517,99 @@ static inline struct ioc_cgrp *blkcg_to_iocc(struct blkcg *blkcg)
- 			    struct ioc_cgrp, cpd);
- }
- 
++char LICENSE[] SEC("license") = "GPL";
+diff --git a/tools/testing/selftests/bpf/progs/iocost_ms.c b/tools/testing/selftests/bpf/progs/iocost_ms.c
+new file mode 100644
+index 000000000000..87d4abcbf693
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/iocost_ms.c
+@@ -0,0 +1,175 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2026 KylinSoft Corporation. */
 +/*
-+ * The attached struct_ops and the model in use. The writers hold
-+ * ioc->lock, the hot path readers are inside rcu_read_lock() and the
-+ * map is not freed until after an RCU grace period, the slow readers
-+ * hold ioc->lock.
++ * Example multi-stream sequentiality detection cost model.
++ *
++ * The builtin model keeps a single cursor per cgroup, so two interleaved
++ * sequential readers in one cgroup are all priced random (measured 89x
++ * overcharge, 12.9x throughput collapse), while random IO inside a hot window
++ * smaller than the 16MB seek threshold is priced sequential (measured 107x
++ * undercharge). This model replaces the single cursor with a per-cgroup table
++ * of stream slots: an IO is sequential iff its sector matches the expected
++ * next sector of any tracked stream. Interleaved streams keep their own slots,
++ * and windowed random IO rarely matches a moving expectation.
++ *
++ * Stream state lives in a CGRP_STORAGE map, so it is created and freed with
++ * the cgroup. The model implements the builtin linear formula itself; unlike
++ * the builtin it has no flush term, so preflushed IOs are priced as plain
++ * writes (mispricing only, the test never issues flushes).
 + */
-+static inline const struct iocost_model_ops *
-+ioc_attached_model_locked(struct ioc *ioc)
-+{
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	return rcu_dereference_protected(ioc->attached,
-+					 lockdep_is_held(&ioc->lock));
-+#else
-+	return NULL;
-+#endif
-+}
-+
-+static inline const struct iocost_model_ops *
-+ioc_bpf_model_locked(struct ioc *ioc)
-+{
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+	return rcu_dereference_protected(ioc->model,
-+					 lockdep_is_held(&ioc->lock));
-+#else
-+	return NULL;
-+#endif
-+}
++#include "vmlinux.h"
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_tracing.h>
 +
 +/*
-+ * Price one charged IO with the model in use into *@cost and return
-+ * true, or return false when no model is in use and the builtin model
-+ * must price it. The model is read under rcu_read_lock(), which the
-+ * helper takes and releases itself, and the returned cost is clamped
-+ * to one second of device time. calc_cost() may be invoked for a
-+ * (cgroup, device) pair before iocg_init() has been delivered for
-+ * it; models relying on per-pair state must tolerate that window.
++ * VTIME_PER_SEC, IOC_PAGE_SIZE/SHIFT, IOC_SECT_TO_PAGE_SHIFT and
++ * IOCOST_COST_F_MERGE come from vmlinux.h (BTF enum constants)
 + */
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+static inline bool ioc_model_calc_cost(struct ioc *ioc, struct bio *bio,
-+				       bool is_merge, u64 *cost)
-+{
-+	const struct iocost_model_ops *model;
-+
-+	rcu_read_lock();
-+	model = rcu_dereference(ioc->model);
-+	if (model)
-+		*cost = min(model->calc_cost(bio, is_merge ?
-+			    IOCOST_COST_F_MERGE : 0), VTIME_PER_SEC);
-+	rcu_read_unlock();
-+	return model;
-+}
-+#else	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
-+static inline bool ioc_model_calc_cost(struct ioc *ioc, struct bio *bio,
-+				       bool is_merge, u64 *cost)
-+{
-+	return false;
-+}
-+#endif	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
++#define IOCOST_REQ_OP_MASK	0xff		/* REQ_OP_MASK, not in BTF */
 +
 +/*
-+ * The same for the completion-time request sizing: the transfer cost
-+ * is the model's vtime per page for the request direction, and the
-+ * returned cost is clamped to one second of device time.
++ * DIV64_U64_ROUND_UP / DIV_ROUND_UP_ULL equivalents, folded at
++ * compile time
 + */
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+static inline bool ioc_model_size_cost(struct ioc *ioc, struct request *rq,
-+				       bool is_read, u64 *cost)
++#define RU(x, y)		((x) / (y) + (((x) % (y)) ? 1 : 0))
++
++#define RBPS	174019176ULL
++#define RSEQIOPS	41708ULL
++#define RRANDIOPS	370ULL
++#define WBPS	178075866ULL
++#define WSEQIOPS	42705ULL
++#define WRANDIOPS	378ULL
++
++#define RPAGE	(RU(VTIME_PER_SEC, RU(RBPS, IOC_PAGE_SIZE)))
++#define RSEQIO	(RU(VTIME_PER_SEC, RSEQIOPS) - RPAGE)
++#define RRANDIO	(RU(VTIME_PER_SEC, RRANDIOPS) - RPAGE)
++#define WPAGE	(RU(VTIME_PER_SEC, RU(WBPS, IOC_PAGE_SIZE)))
++#define WSEQIO	(RU(VTIME_PER_SEC, WSEQIOPS) - WPAGE)
++#define WRANDIO	(RU(VTIME_PER_SEC, WRANDIOPS) - WPAGE)
++
++#define NSLOTS	4
++
++struct streams {
++	__u64 expected[NSLOTS];	/* next expected sector, per stream */
++	__u64 stamp[NSLOTS];	/* LRU stamp, 0 = empty */
++};
++
++/*
++ * per-cgroup stream table: keyed by the cgroup, freed with it
++ */
++struct {
++	__uint(type, BPF_MAP_TYPE_CGRP_STORAGE);
++	__uint(map_flags, BPF_F_NO_PREALLOC);
++	__type(key, int);
++	__type(value, struct streams);
++} stream_tab SEC(".maps");
++
++SEC("struct_ops")
++u64 BPF_PROG(iocost_ms_calc_cost, struct bio *bio, u64 model_flags)
 +{
-+	const struct iocost_model_ops *model;
++	u64 opf = bio->bi_opf, nbytes = bio->bi_iter.bi_size;
++	u64 sector = bio->bi_iter.bi_sector;
++	struct blkcg *blkcg = bio->bi_blkg->blkcg;
++	struct streams *s;
++	u64 pages, base, coef_page, randio, advance, now;
++	u32 i, victim = 0, found = 0xFFFFFFFF;
 +
-+	rcu_read_lock();
-+	model = rcu_dereference(ioc->model);
-+	if (model)
-+		*cost = min((is_read ? model->read_vtime_per_page :
-+			     model->write_vtime_per_page) *
-+			    (blk_rq_stats_sectors(rq) >> IOC_SECT_TO_PAGE_SHIFT),
-+			    VTIME_PER_SEC);
-+	rcu_read_unlock();
-+	return model;
++	if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ) {
++		base = RSEQIO; coef_page = RPAGE; randio = RRANDIO;
++	} else if ((opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE ||
++		   (opf & IOCOST_REQ_OP_MASK) == REQ_OP_ZONE_APPEND) {
++		base = WSEQIO; coef_page = WPAGE; randio = WRANDIO;
++	} else {
++		/*
++		 * the builtin prices other operations at zero and
++		 * leaves them unthrottled; pass them through the same
++		 * way instead of inventing costs
++		 */
++		return 0;
++	}
++	advance = nbytes >> 9;	/* sectors, truncated like the builtin */
++
++	/*
++	 * only bios the builtin prices participate in stream tracking;
++	 * the early return below skips the merge discount, which only
++	 * applies to tracked data bios
++	 */
++	if (!(((opf & IOCOST_REQ_OP_MASK) == REQ_OP_READ ||
++	       (opf & IOCOST_REQ_OP_MASK) == REQ_OP_WRITE ||
++	       (opf & IOCOST_REQ_OP_MASK) == REQ_OP_ZONE_APPEND) && nbytes)) {
++		pages = nbytes >> IOC_PAGE_SHIFT;
++		if (!pages)
++			pages = 1;
++		return base + pages * coef_page;
++	}
++
++	s = bpf_cgrp_storage_get(&stream_tab, blkcg->css.cgroup, NULL,
++				 BPF_LOCAL_STORAGE_GET_F_CREATE);
++	if (!s) {
++		/* no storage: price per page, truncating like the builtin */
++		pages = nbytes >> IOC_PAGE_SHIFT;
++		if (!pages)
++			pages = 1;
++		return base + pages * coef_page;
++	}
++
++	/*
++	 * Slot access is lockless, mirroring the builtin single-cursor
++	 * update in ioc_rqos_throttle(): concurrent CPUs submitting for
++	 * the same cgroup can race on slot updates; mispricing is
++	 * bounded and acceptable for an example model.
++	 */
++	now = bpf_ktime_get_ns();
++	for (i = 0; i < NSLOTS; i++) {
++		if (s->expected[i] == sector && s->stamp[i]) {
++			found = i;
++			break;
++		}
++	}
++	if (found != 0xFFFFFFFF) {
++		/* sequential: keep the seq base from the op branch */
++		s->expected[found] = sector + advance;
++		s->stamp[found] = now;
++	} else {
++		/*
++		 * a merge which matches no slot is not a new stream:
++		 * replacing a slot could evict a live stream, so merged
++		 * bios are priced without touching the table (and skip
++		 * the base cost below)
++		 */
++		if (!(model_flags & IOCOST_COST_F_MERGE)) {
++			base = randio;
++			for (i = 1; i < NSLOTS; i++) {
++				if (s->stamp[i] < s->stamp[victim])
++					victim = i;
++			}
++			s->expected[victim] = sector + advance;
++			s->stamp[victim] = now;
++		}
++	}
++
++	/* builtin truncates: max(sectors >> IOC_SECT_TO_PAGE_SHIFT, 1) */
++	pages = nbytes >> IOC_PAGE_SHIFT;
++	if (!pages)
++		pages = 1;
++	if (model_flags & IOCOST_COST_F_MERGE) {
++		/*
++		 * merged bios skip the base cost but still advance
++		 * the stream position above, so a merge at the
++		 * expected sector does not make the following new IO
++		 * look random
++		 */
++		base = 0;
++	}
++
++	return base + pages * coef_page;
 +}
-+#else	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
-+static inline bool ioc_model_size_cost(struct ioc *ioc, struct request *rq,
-+				       bool is_read, u64 *cost)
-+{
-+	return false;
-+}
-+#endif	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
 +
-+int blk_iocost_init(struct gendisk *disk);
++SEC(".struct_ops.link") /* detach on close */
++struct iocost_model_ops iocost_ms = {
++	.read_vtime_per_page = RPAGE,
++	.write_vtime_per_page = WPAGE,
++	.calc_cost = (void *)iocost_ms_calc_cost,
++};
 +
-+#ifdef CONFIG_BLK_CGROUP_IOCOST_BPF
-+void ioc_bpf_eject(struct ioc *ioc);
-+#else	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
-+static inline void ioc_bpf_eject(struct ioc *ioc) { }
-+#endif	/* CONFIG_BLK_CGROUP_IOCOST_BPF */
- #endif	/* _BLK_IOCOST_H */
++char LICENSE[] SEC("license") = "GPL";
 -- 
 2.43.0
 
