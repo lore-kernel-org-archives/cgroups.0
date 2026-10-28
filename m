@@ -1,49 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793151849;
-	b=xIOdMbDeCfZBWVOdsU3xLlN0PMX795mVt8755HSTpn9wILKqMjj8sDIAVZE1xZX0Mxg1
-	 J9k/XvxnifH9KP2+7al6QZCTzo3xUhobUuwNWbM6ZphfvkwnTKOpxQzMN9Y4NHhdnUzLX
-	 CO1YwNemZSTABZTBhpONG79X7aq7zjDPqbWi1Tg+VIyigIoYwXDcFLo7K7NX3YrQPYxHl
-	 jGEQOI6Q8zJOl4oGGfgjbX+/KjttBmVlj21SjLf6hmmVSXaBNyAhO1FasJGP5CK2sSRb+
-	 IeBnpc0QnPO2ZLIJJZ/aff5LhxUHniAw67eP7UjdbkiQ5Q2UKUSH7NpjyauBHKRwGAA==
+	t=1793154256;
+	b=I+siazBoBk3ay5+fCjEEArlNcgHJ2BlxT5hHPWZZrsZDReJ23CiTTv8yprtp+Os5RSkJ
+	 JILz5amG4x1xnuQoJ3gj/rE0mtZF9wbW+el0SfWz4mdRAhCw2xkn39Dd8GAzjCZKhzIb0
+	 27ek4rrsgwSuX59pEOWwvBsSQfnJgJu9n+3RWojlVr6CcTenolu4aJbvdYxNb3fMqTf14
+	 g/lN09y3PLQqr30iBIxHOn2pFEIiSg6xhw3isWAlxpVb05FDi/NnsMjgg0Qs3e7w+sBm4
+	 uFHRl02aL0nMyHUCVM3/x+wtIVgjQKriS024POmXZ8MisU7eKt3vFw7P/7SD5MxWwjw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793151849;
-	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=p1Yu6N42P3Y33cQOaPOhdbLQI9uq3/XR1N32rLOEFTg=;
-	b=k11izktz/SaUa6N1shV9e3I8ZKx1lRUhcwCP7Th8FaxZeAB83YPCjeugk7PVu9mFmV7v
-	 8xzck1IlzVlJFl20w0dvpPHH1WzAAkWcwBM6d9KpqWxwbjUOGWzSTqGjNtBY/i5Mw7oYj
-	 R1Zw2JXi3G+N11M7/63ofgc7ckCbAEJSvx9eoiHuhR11r/kdhLedq4sqZoX/bAIg9xwAP
-	 xihUxU2cfr433Q2BcWjyQzchtQPqdPU0wtVDFX7gEj8gyKsCAMxu8BS7yKanG39dGHvNx
-	 h3z3O1eiUSv/Ji69+NEwGVHFoYbtWD0dpugSXsnmx9igz39Q9Nb4TOgulh8MWlS00fQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793154256;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
+	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=kW6mzNv9d6yhsfaYr7C1SS1O9TnPTANE1C6w87x8UOI=;
+	b=yDvYWbi36NjdCf9OLo43/83QXK23frx/zrpvN3VCtfoDz+ej+QCg0e5eGdDPSMfYLm5e
+	 nmc4p87PCmXBjtpYTetD87Kk1D1SxZc7aeqLptgSuZgA+/pQiZc7PASEYEsUyZzRxHk7f
+	 YzQ585B6RIz7GSpIZazyevDnQHkhNh99uxNTkwey6PN64g2j0QwyMHHmjhUcKk2algA0G
+	 YV/PZO+ucRsfyJC0+akyv+vJ2qLfPMsxbAajov/XqFiKqbrazAZSQ3FbQMHyRVoNn3SPR
+	 fT1e6m1ZTpRRB59O4ADHqri9M+RlXKqm0QhdHMkvz3eeTxz8w74fMNcE6TQsbnkaI9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.alibaba.com;
-	spf=pass smtp.mailfrom=linux.alibaba.com;
-	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=RAAXiMn6;
-	arc=none smtp.remote-ip=115.124.30.130
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=t7Zex76s;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F313606A31A;
-	Wed, 28 Oct 2026 01:44:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3F313606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 544D9606A31A
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 02:24:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=RAAXiMn6
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1793151845; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=p1Yu6N42P3Y33cQOaPOhdbLQI9uq3/XR1N32rLOEFTg=;
-	b=RAAXiMn6qP/RV192I7TMssizvmDGYJMtx7aLr+jFH6U4SYlci7vG1qaDZA6SzSKt7F9hkPiNTW7xaRXrRSZZq/mnMsu5W8YlPfLiMyC0bIHE76skswcBfp/BsK+S435rnH/j3sornKoUGRhPnqUCRv//ee9hcj0zDTXESEv/8+E=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037009110;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=22;SR=0;TI=SMTPD_---0XDfI.uG_1793151834;
-Received: from 30.178.68.22(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XDfI.uG_1793151834 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 28 Oct 2026 09:44:03 +0800
-Message-ID: <00410d2d-c082-4ef3-9eb7-7d7b5d3ba964@linux.alibaba.com>
-Date: Wed, 28 Oct 2026 09:43:53 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=t7Zex76s
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F1F51F01825;
+	Wed, 28 Oct 2026 02:24:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1793154255;
+	bh=kW6mzNv9d6yhsfaYr7C1SS1O9TnPTANE1C6w87x8UOI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=t7Zex76sZygL34C3bGAE/bdKfCXA/NQNhzNyXl5a34bLDu8qnEAUmyJW3fxNhw08C
+	 tbzAmjUEM+gttOp+naQ4mxx1OuMWy2NNsfLeeotgwWGP1gKVbMKuceyohlZcWvq/Bc
+	 fthpJqRPvByozPwnLn76K5SqpPFTRbAOt0lo2jro=
+Date: Tue, 27 Oct 2026 19:24:14 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song
+ <muchun.song@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v3 0/2] memcg: reduce cacheline contention from lruvec
+ stat
+Message-Id: <20261027192414.cb3318abc07232ec5f1bc937@linux-foundation.org>
+In-Reply-To: <CAJnrk1Z-zzKL9Jebk4XMpfOBtyArppGPTv3__GTbCZXGiEJjOQ@mail.gmail.com>
+References: <20261023195417.1391216-1-joannelkoong@gmail.com>
+	<20261023155407.0b519a3da7313137a0276119@linux-foundation.org>
+	<CAJnrk1Z-zzKL9Jebk4XMpfOBtyArppGPTv3__GTbCZXGiEJjOQ@mail.gmail.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -52,42 +60,26 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 0/5] mm: restore per-memcg reclaim for NONSLAB
- shrinkers under nokmem
-To: Zi Yan <ziy@nvidia.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev,
- mkoutny@suse.com, david@kernel.org, baolin.wang@linux.alibaba.com,
- usama.arif@linux.dev, david@fromorbit.com, qi.zheng@linux.dev,
- yosry@kernel.org, nphamcs@gmail.com, chengming.zhou@linux.dev,
- xlpang@linux.alibaba.com, ryncsn@gmail.com, gourry@gourry.net,
- cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
-References: <20261013031221.1997194-1-qinyuntan@linux.alibaba.com>
- <8fe2314a-ec7c-4ff0-92cf-27f7f8c9c132@linux.alibaba.com>
- <4C44AE80-1642-4808-ACF2-896E4B84EEAA@nvidia.com>
-From: Qinyun Tan <qinyuntan@linux.alibaba.com>
-In-Reply-To: <4C44AE80-1642-4808-ACF2-896E4B84EEAA@nvidia.com>
-Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 
-Hi Zi Yan,
+On Tue, 27 Oct 2026 15:57:43 -0700 Joanne Koong <joannelkoong@gmail.com> wrote:
 
-On 10/27/26 11:04 PM, Zi Yan wrote:
-> On 26 Oct 2026, at 2:26, Qinyun Tan wrote:
+> Here's an updated version of the "Fix this by moving the memcg_pn_cold
+> group..." paragraph in patch 1 that mentions this:
 > 
-> People are currently busy with reviewing various mm fixes[1][2].
-> Hopefully we will come back to this after the merge window closes.
+> Fix this by moving the memcg_pn_cold group, which is only touched when
+> the memcg is reparented or freed, right after memcg_pn_read_mostly.
+> SLAB_HWCACHE_ALIGN only aligns objects to a cacheline, and the struct
+> is 576 bytes, so depending on where an object lands, its read-mostly
+> cacheline is now paired either with its cold cacheline or with the last
+> cacheline of the preceding object, which holds the end of
+> lru_zone_size[] and the reclaim iterator. Both are rarely written
+> outside of reclaim, so either way the read-mostly cacheline is no
+> longer paired with the LRU list heads.
 > 
-> [1] https://lore.kernel.org/all/20261027-fixes_core-v1-0-6f74bec9a5bb@kernel.org/
-> [2] https://lore.kernel.org/all/20261027-fixes_shmem-v2-0-86a00952acb9@kernel.org/
-> 
+> Would you be able to swap it in or would you prefer that I send a v4?
 
-Thanks for letting me know, and thanks for taking the time to reply. 
-
-I'm happy to wait until after the merge window. Please let me know 
-if you have any feedback when you get a chance.
-
-Best,
-Qinyun Tan
+Thanks.  I'll take care of this when I process the patchset.  Which
+will be quite soon now we're all merged up.
