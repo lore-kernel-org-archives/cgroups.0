@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.28
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.54
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793154744;
-	b=MoCzA+bCowYNEyLCXy4tmSsK7y/7gKDtew+lKnmSj6g8x7C03B8tguXsuItRyhysjPG3
-	 aw0yRTVP0U04CsOGKyPZ5CZhVN9OPksGZG7LUB2MiMITVdGx9M2EE/6fKvbRQdneE+6ay
-	 lCPq0BKY8cmm4mB+uLp04iPmFl6GG92Csz34cxt2lHoPDT0V/zhhFSoPMynmGzI74GHNx
-	 qk8SQjxtJgGGsnTHSfq3eGOIkxTQY37kOejx1wVoOJjzWG3NwtCEbfKmTmT7J7QpaT5cZ
-	 XTSlh/D13yhFVJnxJSirJsa8S+pWXri2nXqqmChW58ZXzNG/5hCrBgoV3U5J61PL83Q==
+	t=1793155354;
+	b=FfVo+3g0G3OoAr0BabmILBYxF6t/aibmu/BtfJwzhxVjDEu23t8mAirAmYUsqIGo4Hya
+	 H/n+x++6EC6Ec9w0oypkrSzz5QGyUqcB4x0A47thuNks2w2ckm6A2A5I3sNgpzzN/lT2S
+	 Y/DHcS26iOrV5D1CNBOyydsNKYG1/uDqNWK5HoA3KZ9j+3ls1Ev5vQwgpSvjb7S23AOQh
+	 RskaiETOqK9GNtR9XHqg/RZR5Q7O9g1EfGEKkKV4x1+VbHvVbi2fqJ5i5KOj9HSXSb/AC
+	 p7g8RiLNzmW4fN2t9yjFc1DRWhykQaXNV84KPcbtGyRZljWwPMLzBZzforMBjm4ya3Q==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793154744;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793155354;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,55 +24,55 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=LCZc55SguUaUW/Qc9mttlPQidAeltmeG/JhdLNIZoHs=;
-	b=v0f58XVrO9QhNzDxLkH0xiInOkkJw9grFeTBKApOQ782ccE2lFTL3QVGrfvag7LE4nwp
-	 h1QY846BCPoQdBPduV4c4DXnh51tyl6uQ/yOA5d11NQCTN0YQZDTcWVo0DvXAlWpZtKu1
-	 kWbM6TNRyxYmeIqjaYl+gc7vyOioQX2qpHQzVPTRqIXD+QqnXK5gg3D0qIsbJ3S8j8/w3
-	 eersPUXvzHuYhKbFginsccN3pFMa0xc4B7QaJ+f6sd7nqlicK9jGiJ8EHMZVE9dHvyvdw
-	 3KaDuMXtbMI63X9o274g1gCCv5u8vvqXwK3OdWo0f3UKzFA/xNQ9ApoJ/klNk1ej39g==
+	bh=HQL9p3RFteYJHSpyeeyXsYlloO2LuHIDKkrEoNphPtY=;
+	b=uVKo1AlPv9T60VymzCMCahZwo4T9Xi3HoR6DPrEhqwBcTN+6lf+zVlVwM+CTJBIGrsGs
+	 rQq1ZyWsfQuz8Y0IHRBbBoLgyBAS7U+I/sAwyPiDYzig9nsYE0lxRxFbgquNBDWOa7y+0
+	 xOlwfWZEnFkyH2kWWdCBF9Yv/ONqjmfwvNkKfgQqDScdEzIZv4VjboCL+J4DmdAUwrY+b
+	 67v5v4PIn2fU2OTvG7g9nHGdY0T6KbJ8Qe+FFZ/20X94S0zGIGlexUSXkgOAvQ/3oCnpW
+	 ZqO+zEyZs+SUMXAYBGT+hz8aE7VKaevVJwrxe1hd8H/CwSlv1sbfOA8Di91oBY28yUA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=SUWw6oyi;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.28
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011028.outbound.protection.outlook.com [52.101.57.28])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=d+znapmE;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.54
+Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010054.outbound.protection.outlook.com [52.101.193.54])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91F1F606A31A;
-	Wed, 28 Oct 2026 02:32:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 91F1F606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A8A606A31E;
+	Wed, 28 Oct 2026 02:42:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3A8A606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=SUWw6oyi
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=d+znapmE
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iWG7cVHhjDwUtacFag2q3t38dOB6LdV9/mTjySYTfSaQay88HHZSmz8dD+5f0reXRuDN2Kum9i98jmn8O7vrijlABmnCZmR8eO6Fqa3RhLOtjzrF0Mq1S2QqG1L+26Y4SiQa2UNGzPHDgWEuL6pDZ5/mTQaLsElBuOA9fRqS9hYmjwPlB+Gr+vqP6TvZ7viIOJOSi+nnHU8/2AvOJpdwUW2NgcyzCZivw2QlNukCyvLrtNSs5w/6UgijWYBF6HzYGlaJwSqlNvOFmeO4b9lE/v4SEUZzfkfNrxYLVAG9Jxyr8EuUDRWr2GUVEO4DU+8ohyyngHQLn8UzTGryUlef6Q==
+ b=M/ephZvh1LCzHl4LPvVumqkfd7po3L8ii9dgTv5N/iqhz76shsnwXHLm+J4BN7F9qe30p3mBc2DMCYGbS7QmhsgeSkS/TJfkyedSRbcdT7h5/YkdhgVyYaUPkIn4Wa1vHPhZhOV166ZC3xNXPlBEDyV2iGNXGFaH6jaJQPmiB2Dkto4eazCI3psZuJBXoDcAkRaC00hvCBskD34Q5jh3Zlgw7Q3cwu6z6IVHjgYD4UOUwAjWypgX6h78G9BUPUY7i1ezSbHU/kPbnNr+b2wTGvuKWu2uzfcTwMh6X0nXn3DaBcbamghW5iXZ93beQuPOyybieNPtDCEqhrhdAFNB3A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LCZc55SguUaUW/Qc9mttlPQidAeltmeG/JhdLNIZoHs=;
- b=Bxs+kzkGQWVE5MFrOQvbFkJVcEX0163rIfW1KffzOsZDwiwp1rU5tp0148OUfbsPQKPamJsQN8h78qdxn0DXTKMDyDxL8Z1FiylDLYt3EF/NJwxJIz5FivpYYcsm1J4Y4H4862iQbULU3cwKYkAr8cUzBV1cF0ICoWvqsek92HH0Okm6dauxWkoSzo89uGw8ocUY6JHgmI3ib6/OvmpN9tN1ruvGKVNixrcgGgjRY3LSHVZxAQE2IQw68tJcT0q/qW5lZ+C55k8o8/EA4jUFOS50hV7BMcbT+dBuk/WzEnKeS0C0FdyqTrb8mB27lwAGqAvxyOXctrLcqt9xyB4DUQ==
+ bh=HQL9p3RFteYJHSpyeeyXsYlloO2LuHIDKkrEoNphPtY=;
+ b=OoI6uzax/Sa1Rthn1ZfbeP3mjyDtcJdnAwwE7tZoecf8IMrHja2CYx7Liy2KlxaRnrow3Bq8oep75nLXmeakZf6RACzmDNytk2xj/XKqojE0y75FRXpYwGVH8qd3Z6TOCUBBwRBgqlIBQnmQ0QnEP5jOiGTFfHkjdAtpI5j9ByTDjhUJ0nx3Xclx750aLngzw2IVrA46K2B8AW1hFJXYwF5/QiDybXQh/I3Wm/KMjC2wxX2V4rIRQdVGEjOsaate1q6jQ/+tD0HMQGBdWRs/iROBNtVAMKJmt0h/z9bYP5udyTyB3JYVuGi8KRX+j/1zS0CmZDYwvuhJDSs/c09Dww==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LCZc55SguUaUW/Qc9mttlPQidAeltmeG/JhdLNIZoHs=;
- b=SUWw6oyiPpbC0McCCnEJpDiVIjQvlM2bLdhAYLuz862kYhUIvWz5w5PmSoDFAhuIvsX0R7WCksjkIgb3oFuCxOHlCU3pT4h6aCR97YohOg6r7crGFSrDGDk7axd1HIOotqG49SLmo0YL4vfM+D4StA8cMHLFthUtgRy9y4cdN7AvtB0/aCaym6PBuCl2K0UgM7SMKPsTl3v7vBJW54G2Rc36yez9ZmTvYdX77ctYu9cKjB2bFvLMDN/ruE0ZZLvDBYgdNQw2xIofqlm31VyrN2f5R/GwQPcB4hMlTln95yAirw6QMbR4M3Mwef8ANgysb+GsGPkk8IEhwcF2qc+u6w==
+ bh=HQL9p3RFteYJHSpyeeyXsYlloO2LuHIDKkrEoNphPtY=;
+ b=d+znapmEb1KQgRCUnZ7aB/ym/gpluz99SVHRWseB0AjnMwM/rjHaqKbjcnsyQMNk9ZlZGZg/7mlALHnnZTTLj6jSEDdxKSNi1cRAZjGP4qEYJu3SaAnvjkBoImsoQh6tz3e68hJWRBkMfdJcuKYwj/bubRY/MZ3DjtUiGtNcd9l4avhLo+uZvpDL7MmRObxUcCWPuPj1wtUpALfGWfWtuIUbp/54tfx6+g/TXX051Bo5ggpVo501pw3kNWCndvFNsies1s8nnEJi31Ft+fotLMELj8C2vyqTRZ+TmsyXvzXLQ0uzcYNZAziucZlj7cqaJgz9WaGNp6Fp6WYDKdCLkw==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CH3PR12MB9730.namprd12.prod.outlook.com (2603:10b6:610:253::9)
- by LV9PR12MB9783.namprd12.prod.outlook.com (2603:10b6:408:2e8::21) with
+ by CH2PR12MB4278.namprd12.prod.outlook.com (2603:10b6:610:ab::17) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Wed, 28 Oct
- 2026 02:32:20 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.18; Wed, 28 Oct
+ 2026 02:42:25 +0000
 Received: from CH3PR12MB9730.namprd12.prod.outlook.com
  ([fe80::843d:c1f0:b2ed:4128]) by CH3PR12MB9730.namprd12.prod.outlook.com
  ([fe80::843d:c1f0:b2ed:4128%4]) with mapi id 15.21.0546.021; Wed, 28 Oct 2026
- 02:32:20 +0000
-Date: Wed, 28 Oct 2026 13:32:14 +1100
+ 02:42:25 +0000
+Date: Wed, 28 Oct 2026 13:42:20 +1100
 From: Balbir Singh <balbirs@nvidia.com>
 To: "T.J. Mercier" <tjmercier@google.com>
 Cc: roman.gushchin@linux.dev, muchun.song@linux.dev,
@@ -90,19 +90,22 @@ Cc: roman.gushchin@linux.dev, muchun.song@linux.dev,
 	Vlastimil Babka <vbabka@kernel.org>,
 	Mike Rapoport <rppt@kernel.org>,
 	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>,
+	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
 	Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] mm/vmscan: remove redundant !mem_cgroup_online()
- checks
-Message-ID: <auFerm6kHxeuPFpR@parvat>
+	linux-mm@kvack.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] mm/mglru: stop rotating offlined memcgs to the old
+ generation
+Message-ID: <auFhDMtwymMynf8j@parvat>
 References: <20261028010611.3929937-1-tjmercier@google.com>
- <20261028010611.3929937-2-tjmercier@google.com>
+ <20261028010611.3929937-3-tjmercier@google.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261028010611.3929937-2-tjmercier@google.com>
-X-ClientProxiedBy: ME0P300CA0013.AUSP300.PROD.OUTLOOK.COM
- (2603:10c6:220:20f::11) To CH3PR12MB9730.namprd12.prod.outlook.com
+In-Reply-To: <20261028010611.3929937-3-tjmercier@google.com>
+X-ClientProxiedBy: ME3P282CA0013.AUSP282.PROD.OUTLOOK.COM
+ (2603:10c6:220:80::23) To CH3PR12MB9730.namprd12.prod.outlook.com
  (2603:10b6:610:253::9)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -114,185 +117,212 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB9730:EE_|LV9PR12MB9783:EE_
-X-MS-Office365-Filtering-Correlation-Id: 312bd075-e986-4a2b-42d8-08df349bb0a8
+X-MS-TrafficTypeDiagnostic: CH3PR12MB9730:EE_|CH2PR12MB4278:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9b21672b-5cc8-44fe-7850-08df349d1978
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|23010399003|366016|261026140227099003|4143699003|261021123027099003|56012099006|10067099003|261021121427099003|261009223027099003|5023799004|261022105027099003|261022075727099003|11063799006|22082099003|261026121527099003|6133799003|18002099003;
+	BCL:0;ARA:13230040|366016|1800799024|376014|23010399003|7416014|261026140227099003|261021121427099003|56012099006|261009223027099003|5023799004|4143699003|11063799006|261021123027099003|18002099003|22082099003|261026121527099003|10067099003|6133799003|261022105027099003|261022075727099003;
 X-Microsoft-Antispam-Message-Info:
-	yc3J0loBpKnz60GZRVOcKcHuuM4jmSKTiZZJGkKT4vMqYq51gs4WiN2MaPY6L9naU6nKrVLPUU9wi00IRlcNnp1+FBMTnPi0WUab994u8ktQwwKLhX0ViyyX1plPK9Vw8Rhjjgo8LBNEN/w43S7+wD8m3pIj1DBU7IEwY8NJ2m4c20J2MGxlkuzClbnsW2PGRTmH6HFbYrTThARJqtFcVM/WFwnSYOITLiJOHvxyDJ7P4ROY65U+Y8H9g3LNKyg/U1JC+z8n79q9uc+TiUJBRdpDP3R1q3Ps6SMRvf6RHQGK8PlyGqcQz4TxPIsMvtD2NmCUwBrw1gjAZaEDempp+YTewXMncqSMwjFuzmFbMBkfpNOhKAor9ryATt0Mctl3oHMRVbvlPAboGIXb1Pwo2LTukLV889/R/bL2nXW2mkwR7uKuLiNPmMT31rsvYF7dI3SQdBH+VJzp4Lp5Z69WNPI/DJVoxWN9IzU8pGgAQBXk0OsOr43TtxwOUFrm252c4IKKKQeKd0PoBG8pSapwGDTR75DUIM1TTNG9d1lYLT8njuRIuBrR5rzMykGuD88nwykutLewV4WEVBF6+vuUaSZhouDWsK/zFj/gsWaXE+hv8Mb/w0W7PBzS4aul7CdXxBkHgfTW64X0qr4VJWwBEgynYufd+rUMLe6HTRxWsgc=
+	uuWX0HDSR+44vsbilm3jEqqNW1Ts8ar7zlr8zAfPvpL6f0NU4n5CV0w6naNs8ik90pq0XFL5wiSPIV2f7QovrplOs3Or2bbAXXkOob0FpCWudiZwlje5zbvKz7l+L+4aPNvDEUKd9r4uL7Y/ygq7WijYxT5kmwDx59zyDSZD1FkdkzMxcLpSUkgfdIQxDKOx+K9IpEQ6uKam+uHOcUwnSFLvUT41pmxHn48H5mLJt5fe5LxddJENKY3EHVvw64WBsFPueGYvvhLpdNc21nd0H6WwOvm6EnifyGm8MDHlznLp8QRIJzmbG8/cY0vXmB3PY0Sn3aQM8BekawPDq5LFowk7KnnoO7mjTAHigTHAFSgwOTxeEer8myaM5MBdXtayxe+z4MEsGRHml/A+xaB9/1M3ixhiyqLrDAjKJpGkrgSdDrEdTWVBEIJ4nxcWPtd2igKydaVklhH3ojYmqrb8Kr04H2WW7dP2qZmoIQ2G5HQH/DCLNpc19CFSgvNC/dZydAV5VTO/tsBenHFeGFsEHmi/XxdlhrLnLaHFvsKEIkTfqPqPPx2GyBQN46j7Y5X0ku07BI32P+THG6Y+OGy2I6IGP/hQfn5dArOATvKMgMb1KAy+RH35YwVi/5i7Q4udshv1yDC0ZVxbd8/o7apkrCaC7KcQNxHk1je+Gc5NoFw=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(23010399003)(366016)(261026140227099003)(4143699003)(261021123027099003)(56012099006)(10067099003)(261021121427099003)(261009223027099003)(5023799004)(261022105027099003)(261022075727099003)(11063799006)(22082099003)(261026121527099003)(6133799003)(18002099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(23010399003)(7416014)(261026140227099003)(261021121427099003)(56012099006)(261009223027099003)(5023799004)(4143699003)(11063799006)(261021123027099003)(18002099003)(22082099003)(261026121527099003)(10067099003)(6133799003)(261022105027099003)(261022075727099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?J8iYXGtzg6flsA7DkCusBD9kMvLGCDYWSdtGP/FLKDcL7HedLGQ8C1/LzikG?=
- =?us-ascii?Q?PbhsDkI4/In+O6lugcFi2FA11XqaiuSDP0aKtiVofCuTQ+G8rl9XnTGoGUOk?=
- =?us-ascii?Q?rc+ok4NfyzVvGsQtXpQm2VSg20zw/O7N758V9ulMCyf13OXdEjQI82dduKPn?=
- =?us-ascii?Q?FJ4i9XtvHWCBQOVFjB44dY8G1RPei8K3rEUJIIniwWK/SvuA0Mbk6Az7HdcO?=
- =?us-ascii?Q?X0sbiL7550XVykoKp6A1Kjh/FyzNgtCT46A1ZUB1SaAMSrWe5uwUNGj9eGUz?=
- =?us-ascii?Q?wEsqltJG3nhylPGlNJPAiOYz7o9quFCrHBZBcmLaUTIQh7EwDgj+7JFoVGPs?=
- =?us-ascii?Q?G7MrXCty0LwNKxzrK9FN+Ha9/Fj2p9eKpsURbUEOZUONPVrFYF/D+NLEMLMC?=
- =?us-ascii?Q?R21jr4iEP5yhMNLQKobe4Wram6pPL1ctdIdHfSlciY8cL5NhWbXDVLbZZg88?=
- =?us-ascii?Q?0FcLfRuBYen0rY0Z8RqHXWEhuVkvk9uwXJYH05cV1Nc8sRy8CTDNFUoe5Lrq?=
- =?us-ascii?Q?yyB7SHy5vKIWePQOY91bdHEI9rtmD4nXWVex+04Dct9HkFy0xB9ipWPaCHDc?=
- =?us-ascii?Q?3alcoUHl8CUendNswdR7K+cwZKvGGWFmfv9awRE4noIyvuVDH9RyyeeHjyk6?=
- =?us-ascii?Q?UY05ozBEKhz1BrNzsAWjoG44ybYzncQE/tdzsikBrW6qjPX7Gc/fzmcbAUsq?=
- =?us-ascii?Q?D3WAEPVj/5Bdg+17L/yADfSAGfTip8i8c7iTnI2vHyzpImWTi9G8+vdU1Rst?=
- =?us-ascii?Q?fVMpdcVKlhG+qVE8Cm1K1hFqIwNQgw31yu9f4F3isPSfeRYn4B54IgHNmvgY?=
- =?us-ascii?Q?FTF6tLYBu1CmbTWyJ6GrKYD7vD/DMykFGtwy3d/mzJ1xvR+WbG1hf7xtswhB?=
- =?us-ascii?Q?rBapoI14it33LEyBK++dyfsqM7A8HXrZ9UnjvZnR3Tj7SRPzAC/0jfUmoHKN?=
- =?us-ascii?Q?1Cufe9oWs3o/bLtU1ajZSzBJUBktpCzgA6KjyANyh32XrqoEoTgQ5S1goSiK?=
- =?us-ascii?Q?3UTyQQv9d8yB/6sPat2paTvCwR23TTR8E7JKxS4nnq8utllc4Bx/SRw3cthr?=
- =?us-ascii?Q?tQ0FnzYwT2jYb8s8FZDQjnqXlgkWXxGCio1aac9e99pUzee8/G8RFn0Ys5nV?=
- =?us-ascii?Q?3+RafaN1dx3hjyTpxkjfdYqZ65acXgMweYyvOq6OpIirl/cXwZcXWhVJ88r2?=
- =?us-ascii?Q?rEb/fvguB+lZfy4jsTogvlOBbxs1/MuWDC7m6e5jTeZBQzn7iRppI42mB1LM?=
- =?us-ascii?Q?K1j7K6SwZPfRztFKGL7CJX7dNwzAMa9UihfakIFVQBExO3F7gEh9wTHGZJI9?=
- =?us-ascii?Q?+mGFo+6juteXakn2O91zhKBB6otw+PBTDq5KEIvLNgYfzvBopEQVkTylXWjY?=
- =?us-ascii?Q?Excb1A1t0RgKC72JgdOlqRw8X01k3O+LOgmMRKpZLs69HuLdCVwL9qHh+yh5?=
- =?us-ascii?Q?1Q1Xa7Z8jmTfTx+O1cGDDhRgqQcxgYKMH5E2/WlMno6A0D4OWoJRJiyJz6zB?=
- =?us-ascii?Q?kpjH5PJ5Ei1uScB83xMGNrQcszrjAIR5u5vw8n6bLw95jZGcV2PhGZZmTFnb?=
- =?us-ascii?Q?NnZ5de4Xjd0TqsUVi8fEH5AN0MNYK3wOGab0uN4In7NaWpHgZjf+pdQF5MSS?=
- =?us-ascii?Q?/MlHk2K3Ta0gHlcTr/aZSBJS+THUF6WLebaQPV5Lb2avn5v7xVICD/HWZ65Q?=
- =?us-ascii?Q?FUJiVvj6uXwtO05HaEGZz/fHZ3Mz3UxxDLoH/AeLVJdBOMk8G4r2B1PXDcSY?=
- =?us-ascii?Q?2vbMn5Mrkg=3D=3D?=
+	=?us-ascii?Q?QghB/Imr3Wvc5oEyAD4m7cssR2euuSunKiQvY0U2j3Hi3nj3538Ys3MJfrvN?=
+ =?us-ascii?Q?k6aWFsYWNkrxBpn6lgpr7F1RzkEw2TtA7+G/W+8tRiIE0cqKR4XPro+gVXMy?=
+ =?us-ascii?Q?yQjBHeNyJCx4elFW3QNHwxyB3RDrcCY5/BsXMnaeg9Jx7i3eXg4rqpKGMIIo?=
+ =?us-ascii?Q?roa45xhJkXEMKTa4QZMzwDzWLr6UCYXsk2NI6EWWcHi12+xrE41ZEwDQy+k9?=
+ =?us-ascii?Q?JZNWIbGgItNmy0wjnjKO6EB9vQxKMbE/cIVqdMrXIwbO+wWnLgJaS+EaBwPV?=
+ =?us-ascii?Q?KBQXl2oKozntH0wb+r6/5NPHBmV96oBuC6DETukrGflJv+I0T3QfcI2uD9KY?=
+ =?us-ascii?Q?tnq4XcIT9ES6XTEoMfUky1F0pA7Uohz9ZK8r78NeUMHOt6Q5P51zBcUEp3Od?=
+ =?us-ascii?Q?HkBMqGT7ZlgmFEaQ2wt1ybGkYt50Fjc4uRz574iAg29Fy1ljGIR4SOMyjo8Q?=
+ =?us-ascii?Q?OyjYJwjOV1XfZjm3f36eYAf2v8oJhZ1RGLzUidom9ALgiRw5Et+rH9WzKatI?=
+ =?us-ascii?Q?3qEWhiaJNOqtJhZiq0ta2MzAYKGLIIp9H9rcisKXR2l9W/ABGtcznmsEbrm8?=
+ =?us-ascii?Q?AsFOIpEI0wRSZU3V3pMINAQaRf6PAIIp1gFiceBJ7DfvjkyAeg7mnQMJ3yTU?=
+ =?us-ascii?Q?zZD/ixxvb5TTBi+dfhXBmBkfXKKDNACeFrzO/utUN31Llac/esIkNUlR2vZ5?=
+ =?us-ascii?Q?pEKVesCn6fBZbdsv4hG1yxZ+mTRosFIkeS67QVmylBiRK+9Gc6F0P1zXfp0K?=
+ =?us-ascii?Q?C8d7aYxHOeW24FnAI4RWgEgOOvaqsQkv5g1y5Nw4Z1IBm6F9MUZF/b3JN8Nu?=
+ =?us-ascii?Q?MOwsoveKz7f3HbDoB5bAHUS7HVq8x7cE8losyTABZIp+QOphCuMn7kVwr/0f?=
+ =?us-ascii?Q?37r+LtroFMtslpivXu3M1yv8r3CJpEDLNTFohje5Rce/ojn3feuOn/ObbObe?=
+ =?us-ascii?Q?GZmFJ7oCWQ64OwyiAbd2ieYkE/hTBe606mA+4W6qSKwa/vc3qa8x4K5z6tGz?=
+ =?us-ascii?Q?gjIYT02iDLDx2mvNc1B5buNcO4TN2KZHBn8tNxAubv88xdPdmP5XOicC81ub?=
+ =?us-ascii?Q?Eek78S1kTTyB8f0K9V6t0SAIjLavdGp0ue+a13hac9msoTOJStEY2quAqxw0?=
+ =?us-ascii?Q?MixOePQAr95zna90SMnyatytnnoLePduDiiyie6mIyNyyMzSQMxJcJajkwte?=
+ =?us-ascii?Q?H/jrjSRgtP596be2EZI0NhUZS7E9iAea9Lb3dtJrOzIO13D63ofGB2oAnyIA?=
+ =?us-ascii?Q?/w3FN6sTsQYa77glwas/BXwIAzcgfqHT9AeNCvLYmOsNn2c3rEYLCRfmtEwA?=
+ =?us-ascii?Q?MZDwjCQ7FOpkmw/2OQnWkI1OFgJZ8swj9lKx0CGbj+ajzigwORnikSBNxu79?=
+ =?us-ascii?Q?gxaTmXltOYj0iCb2Nwwhm48HSjE8ol/LzRRcGIcGsU8Ey96OwJJArTwInA4b?=
+ =?us-ascii?Q?Gdruq5SS8yH/8mUAZu61hdkkhe+MZ+KXJEh7WQsBs+nr/eyMzvWGfe4N5CKP?=
+ =?us-ascii?Q?UEJFlxfoxFq8qRje3S9LHQ5VPkn00IVNQjrJWOZVTpFelekSubHxwqZAazdk?=
+ =?us-ascii?Q?XAAdcqXYw9SqHIECWWIJfzxK5P6EMCnhbPm+0FgxxTNsX/eM90gtN97zwtaA?=
+ =?us-ascii?Q?is8CgJEPKNpC1sJ0WNP84hDNXMOgTR2zhN2uqQ8hkKLtvXulW5kEcrIOPDDu?=
+ =?us-ascii?Q?8ZoCvVON+fAv8h6ja3s9nMogzUEAiz+qlN38KN2dqURe5x2OWSsmOUAEHK+T?=
+ =?us-ascii?Q?iWIOtOcKHQ=3D=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 312bd075-e986-4a2b-42d8-08df349bb0a8
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9b21672b-5cc8-44fe-7850-08df349d1978
 X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9730.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 02:32:19.9121
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 02:42:25.4808
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: +Qcn4vW8pZZw8Tz9JtCEsc3HKlrYGrXnH3mtpNzXT5edgGOeLVTU5g02QMqQcvZYM5tqZpCcA2tKlkWAB3cnQg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV9PR12MB9783
+X-MS-Exchange-CrossTenant-UserPrincipalName: YpBE/1KFuK7VsHKcdklkKCwQUtNHbagxm4jEzL6h9EwYhN3d6glbEMBqSoAukByOAtlYP8Ut6M1ERCOpYlwzCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4278
 
-On Tue, Oct 27, 2026 at 06:06:05PM -0700, T.J. Mercier wrote:
+On Tue, Oct 27, 2026 at 06:06:06PM -0700, T.J. Mercier wrote:
+> lru_gen_offline_memcg() moves an offlining memcg to the head of the old
+> generation of the memcg LRU (MEMCG_LRU_OLD), so that global reclaim
+> visits it first and evicts the folios it left behind.
+> 
 > Since commit f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of
-> dying memory cgroup for LRU folios") and commit 0e0ac326c511 ("memcg:
-> move LRU size accounting on reparenting instead of copying it"),
-> mem_cgroup_css_offline() reparents all LRU folios to the parent memcg
-> and zeroes the child's lrugen->nr_pages and lru_zone_size before the
-> memcg is offlined. Nothing can repopulate the offlined memcg's lruvec
-> afterwards. A folio that is off the LRU during reparenting looks up its
-> lruvec through its objcg, which now points to the parent so it is put
-> back on the parent's LRU.
+> dying memory cgroup for LRU folios"), those folios are reparented to the
+> parent before lru_gen_offline_memcg() runs, and nothing can be added
+> back to the offlined memcg's lruvec afterwards. Putting an empty
+> offlined memcg at the head of the old generation no longer serves any
+> purpose and only delays reclaim from the memcgs that still have memory
+> due to additional shrink_many() iteration.
 > 
-> As a result, lruvec_lru_size() and lruvec_evictable_size() are always 0
-> when !mem_cgroup_online(memcg) is true, making the offlined memcg special
-> cases in get_scan_count(), lruvec_is_sizable(), and shrink_one() dead
-> code. Remove them.
-> 
-> With the get_nr_to_scan() special case removed, an offlined memcg that
-> still has stale effective protection now has
-> apply_proportional_protection() applied like get_scan_count() does, so
-> the MGLRU and traditional LRU behavior is now the same.
+> Remove lru_gen_offline_memcg(), so that an offlined memcg is rotated
+> like any other memcg below the reclaimable size threshold until
+> lru_gen_release_memcg() takes it off the memcg LRU. MEMCG_LRU_OLD has no
+> other user, so remove the op and update the memcg LRU comment as well.
 > 
 > Signed-off-by: T.J. Mercier <tjmercier@google.com>
 > ---
->  include/linux/mmzone.h |  8 ++++----
->  mm/vmscan.c            | 28 +++++-----------------------
->  2 files changed, 9 insertions(+), 27 deletions(-)
+>  Documentation/mm/multigen_lru.rst |  4 +---
+>  include/linux/mmzone.h            | 14 +++-----------
+>  mm/memcontrol.c                   |  1 -
+>  mm/vmscan.c                       | 20 +-------------------
+>  4 files changed, 5 insertions(+), 34 deletions(-)
 > 
+> diff --git a/Documentation/mm/multigen_lru.rst b/Documentation/mm/multigen_lru.rst
+> index 52ed5092022f..b532ce961371 100644
+> --- a/Documentation/mm/multigen_lru.rst
+> +++ b/Documentation/mm/multigen_lru.rst
+> @@ -234,9 +234,7 @@ the active/inactive LRU (of folios):
+>  1. It has the young and the old (generations), i.e., the counterparts
+>     to the active and the inactive;
+>  2. The increment of ``max_seq`` triggers promotion, i.e., the
+> -   counterpart to activation;
+> -3. Other events trigger similar operations, e.g., offlining an memcg
+> -   triggers demotion, i.e., the counterpart to deactivation.
+> +   counterpart to activation.
+>  
+>  In terms of global reclaim, it has two distinct features:
+>  
 > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index 3b96d6c7123b..7f078ff0dd76 100644
+> index 7f078ff0dd76..542e465ee7a1 100644
 > --- a/include/linux/mmzone.h
 > +++ b/include/linux/mmzone.h
-> @@ -638,10 +638,10 @@ struct lru_gen_mm_walk {
->   * The events that trigger the above operations are:
->   * 1. The first attempt to reclaim a memcg below low, which triggers
->   *    MEMCG_LRU_TAIL;
-> - * 2. The first attempt to reclaim a memcg offlined or below reclaimable size
-> - *    threshold, which triggers MEMCG_LRU_TAIL;
-> - * 3. The second attempt to reclaim a memcg offlined or below reclaimable size
-> - *    threshold, which triggers MEMCG_LRU_YOUNG;
-> + * 2. The first attempt to reclaim a memcg below reclaimable size threshold,
-> + *    which triggers MEMCG_LRU_TAIL;
-> + * 3. The second attempt to reclaim a memcg below reclaimable size threshold,
-> + *    which triggers MEMCG_LRU_YOUNG;
+> @@ -626,12 +626,10 @@ struct lru_gen_mm_walk {
+>   * per-node memcg generation counter, whose reminder (mod MEMCG_NR_GENS) indexes
+>   * the old generation, is incremented when all its bins become empty.
+>   *
+> - * There are three operations:
+> + * There are two operations:
+>   * 1. MEMCG_LRU_TAIL, which moves a memcg to the tail of a random bin in its
+>   *    current generation (old or young) and updates its "seg" to "tail";
+> - * 2. MEMCG_LRU_OLD, which moves a memcg to the head of a random bin in the old
+> - *    generation, updates its "gen" to "old" and resets its "seg" to "default";
+> - * 3. MEMCG_LRU_YOUNG, which moves a memcg to the tail of a random bin in the
+> + * 2. MEMCG_LRU_YOUNG, which moves a memcg to the tail of a random bin in the
+>   *    young generation, updates its "gen" to "young" and resets its "seg" to
+>   *    "default".
+>   *
+> @@ -643,8 +641,7 @@ struct lru_gen_mm_walk {
+>   * 3. The second attempt to reclaim a memcg below reclaimable size threshold,
+>   *    which triggers MEMCG_LRU_YOUNG;
 >   * 4. Attempting to reclaim a memcg below min, which triggers MEMCG_LRU_YOUNG;
->   * 5. Finishing the aging on the eviction path, which triggers MEMCG_LRU_YOUNG;
->   * 6. Offlining a memcg, which triggers MEMCG_LRU_OLD.
+> - * 5. Finishing the aging on the eviction path, which triggers MEMCG_LRU_YOUNG;
+> - * 6. Offlining a memcg, which triggers MEMCG_LRU_OLD.
+> + * 5. Finishing the aging on the eviction path, which triggers MEMCG_LRU_YOUNG.
+>   *
+>   * Notes:
+>   * 1. Memcg LRU only applies to global reclaim, and the round-robin incrementing
+> @@ -675,7 +672,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr);
+>  void lru_gen_init_memcg(struct mem_cgroup *memcg);
+>  void lru_gen_exit_memcg(struct mem_cgroup *memcg);
+>  void lru_gen_online_memcg(struct mem_cgroup *memcg);
+> -void lru_gen_offline_memcg(struct mem_cgroup *memcg);
+>  void lru_gen_release_memcg(struct mem_cgroup *memcg);
+>  void max_lru_gen_memcg(struct mem_cgroup *memcg, int nid);
+>  bool recheck_lru_gen_max_memcg(struct mem_cgroup *memcg, int nid);
+> @@ -709,10 +705,6 @@ static inline void lru_gen_online_memcg(struct mem_cgroup *memcg)
+>  {
+>  }
+>  
+> -static inline void lru_gen_offline_memcg(struct mem_cgroup *memcg)
+> -{
+> -}
+> -
+>  static inline void lru_gen_release_memcg(struct mem_cgroup *memcg)
+>  {
+>  }
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index a05d9a8baa1b..e2ddf0680e62 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4475,7 +4475,6 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+>  	memcg_reparent_objcgs(memcg);
+>  	reparent_shrinker_deferred(memcg);
+>  	wb_memcg_offline(memcg);
+> -	lru_gen_offline_memcg(memcg);
+>  
+>  	drain_all_stock(memcg);
+>  
 > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 9959ca158ce8..636152d8c94d 100644
+> index 636152d8c94d..45a2c1021f4f 100644
 > --- a/mm/vmscan.c
 > +++ b/mm/vmscan.c
-> @@ -2754,13 +2754,6 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
->  		scan = apply_proportional_protection(memcg, sc, lruvec_size);
->  		scan >>= sc->priority;
+> @@ -4538,7 +4538,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  enum {
+>  	MEMCG_LRU_NOP,
+>  	MEMCG_LRU_TAIL,
+> -	MEMCG_LRU_OLD,
+>  	MEMCG_LRU_YOUNG,
+>  };
 >  
-> -		/*
-> -		 * If the cgroup's already been deleted, make sure to
-> -		 * scrape out the remaining cache.
-> -		 */
-> -		if (!scan && !mem_cgroup_online(memcg))
-> -			scan = min(lruvec_size, SWAP_CLUSTER_MAX);
+> @@ -4560,8 +4559,6 @@ static void lru_gen_rotate_memcg(struct lruvec *lruvec, int op)
+>  	/* see the comment on MEMCG_NR_GENS */
+>  	if (op == MEMCG_LRU_TAIL)
+>  		seg = MEMCG_LRU_TAIL;
+> -	else if (op == MEMCG_LRU_OLD)
+> -		new = get_memcg_gen(pgdat->memcg_lru.seq);
+>  	else if (op == MEMCG_LRU_YOUNG)
+>  		new = get_memcg_gen(pgdat->memcg_lru.seq + 1);
+>  	else
+> @@ -4571,11 +4568,7 @@ static void lru_gen_rotate_memcg(struct lruvec *lruvec, int op)
+>  	WRITE_ONCE(lruvec->lrugen.gen, new);
+>  
+>  	hlist_nulls_del_rcu(&lruvec->lrugen.list);
 > -
->  		switch (scan_balance) {
->  		case SCAN_EQUAL:
->  			/* Scan lists relative to size */
-> @@ -2769,14 +2762,8 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
->  			/*
->  			 * Scan types proportional to swappiness and
->  			 * their relative recent reclaim efficiency.
-> -			 * Make sure we don't miss the last page on
-> -			 * the offlined memory cgroups because of a
-> -			 * round-off error.
->  			 */
-> -			scan = mem_cgroup_online(memcg) ?
-> -			       div64_u64(scan * fraction[file], denominator) :
-> -			       DIV64_U64_ROUND_UP(scan * fraction[file],
-> -						  denominator);
-> +			scan = div64_u64(scan * fraction[file], denominator);
->  			break;
->  		case SCAN_FILE:
->  		case SCAN_ANON:
-> @@ -4355,12 +4342,11 @@ static bool lruvec_is_sizable(struct lruvec *lruvec, struct scan_control *sc)
+> -	if (op == MEMCG_LRU_OLD)
+> -		hlist_nulls_add_head_rcu(&lruvec->lrugen.list, &pgdat->memcg_lru.fifo[new][bin]);
+> -	else
+> -		hlist_nulls_add_tail_rcu(&lruvec->lrugen.list, &pgdat->memcg_lru.fifo[new][bin]);
+> +	hlist_nulls_add_tail_rcu(&lruvec->lrugen.list, &pgdat->memcg_lru.fifo[new][bin]);
+>  
+>  	pgdat->memcg_lru.nr_memcgs[old]--;
+>  	pgdat->memcg_lru.nr_memcgs[new]++;
+> @@ -4613,17 +4606,6 @@ void lru_gen_online_memcg(struct mem_cgroup *memcg)
+>  	}
+>  }
+>  
+> -void lru_gen_offline_memcg(struct mem_cgroup *memcg)
+> -{
+> -	int nid;
+> -
+> -	for_each_node(nid) {
+> -		struct lruvec *lruvec = get_lruvec(memcg, nid);
+> -
+> -		lru_gen_rotate_memcg(lruvec, MEMCG_LRU_OLD);
+> -	}
+> -}
+> -
+>  void lru_gen_release_memcg(struct mem_cgroup *memcg)
 >  {
->  	unsigned long total;
->  	int swappiness = get_swappiness(lruvec, sc);
-> -	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
->  
->  	total = lruvec_evictable_size(lruvec, swappiness);
->  
->  	/* whether the size is big enough to be helpful */
-> -	return mem_cgroup_online(memcg) ? (total >> sc->priority) : total;
-> +	return total >> sc->priority;
->  }
->  
->  static bool lruvec_is_reclaimable(struct lruvec *lruvec, struct scan_control *sc,
-> @@ -5199,10 +5185,6 @@ static long get_nr_to_scan(struct lruvec *lruvec, struct scan_control *sc,
->  
->  	evictable = lruvec_evictable_size(lruvec, swappiness);
->  
-> -	/* try to scrape all its memory if this memcg was deleted */
-> -	if (!mem_cgroup_online(memcg))
-> -		return evictable;
-> -
->  	nr_to_scan = apply_proportional_protection(memcg, sc, evictable);
->  	nr_to_scan >>= sc->priority;
->  
-> @@ -5325,13 +5307,13 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
->  
->  	flush_reclaim_state(sc);
->  
-> -	if (need_rotate && mem_cgroup_online(memcg))
-> +	if (need_rotate)
->  		return MEMCG_LRU_YOUNG;
->  
-> -	if (!need_rotate && lruvec_is_sizable(lruvec, sc))
-> +	if (lruvec_is_sizable(lruvec, sc))
->  		return 0;
->  
-> -	/* one retry if offlined or too small */
-> +	/* one retry if too small */
->  	return READ_ONCE(lruvec->lrugen.seg) != MEMCG_LRU_TAIL ?
->  	       MEMCG_LRU_TAIL : MEMCG_LRU_YOUNG;
->  }
-> -- 
-
-In some of the places do you want to consider adding a VM_WARN_ON_ONCE
-for memcg_online not being true?
+>  	int gen;
 
 Acked-by: Balbir Singh <balbirs@nvidia.com>
