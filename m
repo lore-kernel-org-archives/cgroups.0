@@ -1,141 +1,161 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793203789;
-	b=vbhIsOzUSsciStU8fEhnHs6VucJ2pwNrY2nFfHYK9kQiazh8iF+PphSjfvlEEQLcNqRq
-	 g8alIrXW83jNZ3coDhgmQNpJccqDVE5Pa+vTESdCtWS4KaDwUrdI17pbgBWecK10RtJYD
-	 XdrQELxvIz9goCv3ZkjqfBfbz3zib2GcHh076R42qMhwwsj988LuheV79Qw0CfWL3uUKQ
-	 RJsrlGO9I1lyUqB1Vz6Lq7ZOK7uPACfe2x58mHMi4iv0WBlZKcCOtFhKO0gd0fr1Lwhr3
-	 f+kHkoJ6eS1xhRHFhtiI+rnqQ8M3UQ7sYJsAT7r2m0iRI9RCEay8dAT8IGW2N0fWWbg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793203789;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=imaDU6OqxxyB3WUul5kus+HSiegxiNA7Olof0Bywi2g=;
-	b=4T2eXGmM8WzL/r+80mtHvl4u1TA20t/HurOegDTaRxHZ0c4c5SbF9ES83pDfcRAO+gRd
-	 ZlLG5KGZodhT+ASYH65bwadofZxSZG2Utxn/j6IDB9/a+wQKIplcBooNgZps8goDCx4u9
-	 IAcxSFgRCBzvtTDI6rjA/2Lqx9ac+61jS+nhZUsW8Md8uEj80MOlu5aaYaAB/sPMqlU7V
-	 xXk6HJ13S1tgusTZVVjKDkBnAkNv0czFUMgj139x417qTtO/d7mKeb2WUBA5hy+t/6acd
-	 ZUJkaLiV4dBEbA3HqQ4WzBbxSanSXX+SCh6l/9GlqB68zGC58XgBod7mHgTZfZCS+/Q==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=DktsNhsA;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=Ij4YVSTl;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.13.36
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793207091;
+	b=Ig/t+lPJOt8ZgBoYIyvYtyNMc+SQjgTW+l7gy7bQu4PEcdqPRhf2gMx9X+gIbZqt7/cX
+	 fOj3pBG+khpoBvugfoqkfnMC7o25mltynSfTNb2tSKsAl+S73V1aOunO2HSKaevj6gaaf
+	 Ubl3pU8LfNrHZYtShEQs3cRgheh+LDniTEe7hvp+Fr29gOtFUeLylzy9NOSx6D+3ewmHr
+	 cO1hHUxixlep5w5j1rZKXCCmIy17pamV1F+4iiqm9kfXjcB7gSui10a9+ukW31Ly+EpnT
+	 iUwUsogdl3qfcZskFDznUzm9V8fCp4Ku5N/pNeyS7zQ/jvaAqrLTEosIgw+V0mBcMXQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793207091;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:From:To:CC:Subject:
+	 Thread-Topic:Thread-Index:Date:Message-ID:References:In-Reply-To:
+	 Accept-Language:Content-Language:X-MS-Has-Attach:X-MS-TNEF-Correlator:
+	 x-ms-publictraffictype:x-ms-traffictypediagnostic:
+	 x-ms-office365-filtering-correlation-id:
+	 x-ms-exchange-slblob-mailprops:x-microsoft-antispam:
+	 x-microsoft-antispam-message-info:
+	 x-ms-exchange-antispam-messagedata-chunkcount:
+	 x-ms-exchange-antispam-messagedata-0:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-AuthAs:X-MS-Exchange-CrossTenant-AuthSource:
+	 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-originalarrivaltime:
+	 X-MS-Exchange-CrossTenant-fromentityheader:
+	 X-MS-Exchange-CrossTenant-id:
+	 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=cpLDyW8UkPP884hkN4EGtlrqnA++fiMEd88KHx3Un/I=;
+	b=uVJJzO51Yq8feAW5vmEWtbxCtSH+9TQy6oZtpa1cfrX9zh1Eadh+iSu5fCIg9ULdjYAD
+	 fgOoRaT59YJxwGgeKALGvUep3uRj4tfSsjMKc5roaVuyrY/hBCdojGQg8eWEaKij0LB/V
+	 IT9AaYggd6w6OiCiMVYMyGYGOP3ZIFAE6K0S88x1cmrEGNY8SjT0a2+KUfPsad8A+7jgb
+	 xXl+09x35VCkZdPBhdWjaj8YkJxfAOcaSyyQXHdylB0cnwCCWdJQn0vq6cw8UlPjZ1ebk
+	 6efbPaZCLknVGEQET1q52A15GxwWy6T/gV+SKZk6bJuxLHnv/ADR8074ZmFfTfOa1pQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=outlook.com;
+	spf=pass smtp.mailfrom=outlook.com;
+	dkim=pass header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=rxHktLEv;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.103.13.36
+Received: from DM5PR21CU001.outbound.protection.outlook.com (mail-centralusazolkn19011036.outbound.protection.outlook.com [52.103.13.36])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD67606A31A
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 16:09:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2DD67606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27970606A31D;
+	Wed, 28 Oct 2026 17:04:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 27970606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=DktsNhsA;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=Ij4YVSTl
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793203788;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=imaDU6OqxxyB3WUul5kus+HSiegxiNA7Olof0Bywi2g=;
-	b=DktsNhsA0JUkyd8+uS12ERu5PO5kVNFC3dGLSUUcJ8vNkwtSyLPFkzgcuLJcemqPttqvMe
-	GOYVbL+Hp/ol3+1O3rceSijYXt7sADYsHy3CzbxJ570e8lBV1OmepQyw6qJXhGD6eCVSZ5
-	ZOojl0kARLwejSbkRSSIWKLmqxMYJf4=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-493-ZDEyJsijMd2__qUKUopV-A-1; Wed, 28 Oct 2026 12:09:40 -0400
-X-MC-Unique: ZDEyJsijMd2__qUKUopV-A-1
-X-Mimecast-MFC-AGG-ID: ZDEyJsijMd2__qUKUopV-A_1793203780
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-48e00f3929bso1346052f8f.0
-        for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 09:09:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793203779; x=1793808579; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=imaDU6OqxxyB3WUul5kus+HSiegxiNA7Olof0Bywi2g=;
-        b=Ij4YVSTlo+S28v+Oub89zKAkV2L4XR/zDYU1v72Gna0be29bYQwS8EhScBveFcWzcu
-         OV8IgBBIONHDtI/FiB9vt4gjOgk/0nVuQjgNCuKkERgtwPvfjrNwPt/4q304V0FMz9hX
-         wjLYRdfb7M2O+YJlK0grCfU6SlWg2D51ya88dJnO86SADgvGiGb8l2QJWH4bI16W/JWu
-         /CUMqdH9BlAxcB68vVMpcFvrHFpk1863prLtYPHGPr7kSEpSmDaOPC8CnOXxGx7KLlS0
-         qeNO4/Tgny0kEnE1Q9tFEuhoERsDQ0LYLEnx5n54ukXmEBNCWriEu5IYIAYjr2EqU+Qg
-         Vl1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793203779; x=1793808579;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=imaDU6OqxxyB3WUul5kus+HSiegxiNA7Olof0Bywi2g=;
-        b=KsDPGbqBU5v1tL1a6VG9x2GggC2rN/lXsOWXih65M6A8K3/UpyZWoQpMw6W302Xauh
-         ecCARepvOTDX/vrMVpX2yZ3LU08zo1BG2SAW+dICMeTCw5MZr35yAK8GHivB3wPjBgip
-         g9/AVUMrVONKTXZ42dOO5q9S1+LGH47obcsz3tRm8pRjqEXixKPTdeOcnqeWPT0rOAlZ
-         8iH7rete8t7fMSj3XAQ2pO9Rqnci0C9FgqvFPvfIehhWRo8eSnnMzVJa6flxOXU3omW3
-         Ao/TwXKwAILXd3TMe6TBhAprQ7RD4QFDwyNKyTURkYe8dh85Fn2IskQaeisJOY7Otbzf
-         XtJw==
-X-Forwarded-Encrypted: i=1; AKwUvBzj+Jw5tUeL1BEt6t+zr4IUe1EeNZDp1yPbR3zdSrBvxlKC+nNoqxwgTAkjIK/mW6Zmc/Uwfrll@vger.kernel.org
-X-Gm-Message-State: AFq9FYLAYBb6rzzv+xw4mdbCAdT4AFVvsfWSxNNGQyM/S2CnGYOi94zs
-	GvB6HOuku8rFscqNo7KX0olVwOyhgXj8U7H9dJjULXUVb0R1d89OBKz9ml8vK1LWe9W1Tc4THvL
-	Uy0qaThfWn2mtwUH3ZADvX5y/I1y6Hvw3LSmzCZEG5/9ApgTDopaVmd8YPIw=
-X-Gm-Gg: AYBFou1bU75cvVxyCx4NPpmtxiGRrcUYiczJzZvS+wGrdlOSeZPvI7JpNW00eCAw3++
-	LeSnHWtHYrzWSr2myA/ri5Y2BaZS25p1r16cr5yj+z42DGnm9CdMhUsR7wxKqy9iqgTLP8BQWPU
-	999PzbKVcmzKyjR4CZGduPhpeJ9H/tutcudfNJ9XDcAkvltppb4CRbsUKIV4GzDSwuYfLafLr+9
-	88KMktxz+U6YkvzUHYeF06z47CexW3Am0iekqNoOPgLT2bHEvuwZrVEbXRUlg0ctOkiTua2EFTi
-	kXhk3qRK7KOYqI5ADACHwGEDmDmPOQe4hzG1FUatKt/al1DGEszGeC9IHnuhgfP/HVo6zBGvmoR
-	1tY0+scFQjQbla0JrQ53HeiJ+LCuh3Py/qZl8Z1cByWY=
-X-Received: by 2002:a05:600c:4f84:b0:4a7:72b1:c8bd with SMTP id 5b1f17b1804b1-4aa8823d762mr103845e9.15.1793203779442;
-        Wed, 28 Oct 2026 09:09:39 -0700 (PDT)
-X-Received: by 2002:a05:600c:4f84:b0:4a7:72b1:c8bd with SMTP id 5b1f17b1804b1-4aa8823d762mr103225e9.15.1793203778959;
-        Wed, 28 Oct 2026 09:09:38 -0700 (PDT)
-Received: from localhost ([139.47.30.142])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4aa7c5063e3sm3064185e9.0.2026.10.28.09.09.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Oct 2026 09:09:38 -0700 (PDT)
-Date: Wed, 28 Oct 2026 17:09:37 +0100
-From: Albert Esteve <aesteve@redhat.com>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Benjamin Gaignard <benjamin.gaignard@collabora.com>,
-	Brian Starkey <Brian.Starkey@arm.com>,
-	John Stultz <jstultz@google.com>,
-	"T.J. Mercier" <tjmercier@google.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Paul Moore <paul@paul-moore.com>, James Morris <jmorris@namei.org>,
-	"Serge E. Hallyn" <serge@hallyn.com>,
-	Stephen Smalley <stephen.smalley.work@gmail.com>,
-	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>,
-	Ondrej =?utf-8?B?TW9zbsOhxI1law==?= <omosnacek@gmail.com>,
-	Jens Wiklander <jenswi@kernel.org>,
-	Sumit Garg <sumit.garg@kernel.org>, cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org,
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, op-tee@lists.trustedfirmware.org,
-	echanude@redhat.com, mripard@kernel.org
-Subject: Re: [PATCH v3 7/8] dma-buf: transfer memcg charges via
- DMA_BUF_IOCTL_XFER_CHARGE
-Message-ID: <auIeQU0nAnOLdKUB@aesteve-thinkpadp1gen8.rmtes.csb>
-References: <20261027-v2_20230123_tjmercier_google_com-v3-0-78d2c4cb8647@redhat.com>
- <20261027-v2_20230123_tjmercier_google_com-v3-7-78d2c4cb8647@redhat.com>
- <d76d8bfe-e955-4e90-9f5f-e3e914c0869c@amd.com>
+	dkim=pass (2048-bit key, unprotected) header.d=outlook.com header.i=@outlook.com header.a=rsa-sha256 header.s=selector1 header.b=rxHktLEv
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=xnn3UHSpqrG9tQYxb+1bwEz8clWshEzi5L3odQqo4pEyHE4LomCxnWRqLcDTcTQ3XnjEwFNIBjz5ocLU8e/CAZNOFvSbj9Mzba+ayCxuFyBN1Mo2iQhfmHi5aLoZumt5hUa8IlZtzjeU/IoFx3tLM3rqXwEDv/tvClMJiWIL6D53ds6pNoJ4TjOQ+vyJ+LJgqMu7c63E7/AiypHPY9Idy8dxDVppmSOfJCsk/7M1F2BVcy3clDcS0Q0uBejiSSyhd/uolWCBwpzykW3qz89QXqHCeB4VOxNyYOstdf51VxmsqPJecQNDnyNQpUbRGPFMPDDKvyaE7T8EoPNKTBVRMg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
+ bh=cpLDyW8UkPP884hkN4EGtlrqnA++fiMEd88KHx3Un/I=;
+ b=m88eeTr+uxMdvHVqob/Pl8rQK4pyI87zC12H2P+ZN+OTNBniVyNZVoL0hc6J3co+s2e7Ntsn1QFn+Siu/w3rM2Pa6yEmLl+827BqkztL0zQfGhXqx444dwk2CoSKFEcfU3e9iWBL8ib0QkHBk/jVQKFYK2l/56CHn+Zsiaxj3ktAzje8plj9jkuF90SStPTxP6+2uJ+H79AnJX1H2l10Gubsjbj1nTOd2eKhe/dsmGDAaOlAZ0K8jefv0BmhNsNdg1mRwST7/pGPlNjD7xJo3Ah19lXyYApkjWivfq8ffd1S7fZwwCjEzZ8LIZBsQ7aHilQjsE3BTd37Fhd7CstCoQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cpLDyW8UkPP884hkN4EGtlrqnA++fiMEd88KHx3Un/I=;
+ b=rxHktLEvgo9nrhIrov2KjyNQ4CSdJkoLBXdJ0lCHR1QHc9nAPeMu5v5S8t0vfUUmcLztvP3Dcmjh3WzjQLYMKd4Z00VGzMkzCLclWRszaSOUBmoh7D8lqdvNCnXfOsPjFNbFHs6fVaZGRL/ImGVCc9CP8tPN0xje3IV1+9Z4OHtor7oSZ2kGpZ7mz1rth2Ht/THIgpDH+MLbgsSevLIHaQTmwDa9/bIzhKAz3g5Lcrkd9cczQh5qaSYEkjhOJ4EK5HU/CLgGvpgpzP+XXjuwywImGMoVmjTdwaG6z4rlFlQdxZB5+m8KIqu+J/e3hu2ZN1iB08mV2VBjaPqdadQc1Q==
+Received: from SA3PR05MB10385.namprd05.prod.outlook.com
+ (2603:10b6:806:39d::17) by MN7PR05MB211011.namprd05.prod.outlook.com
+ (2603:10b6:208:633::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.22; Wed, 28 Oct
+ 2026 17:04:03 +0000
+Received: from SA3PR05MB10385.namprd05.prod.outlook.com
+ ([fe80::e22f:a0f5:fcb0:9b0d]) by SA3PR05MB10385.namprd05.prod.outlook.com
+ ([fe80::e22f:a0f5:fcb0:9b0d%6]) with mapi id 15.21.0546.021; Wed, 28 Oct 2026
+ 17:04:03 +0000
+From: Yingjie Wang <x-professor@outlook.com>
+To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Manfred Spraul
+	<manfred@colorfullife.com>, Alexey Gladkov <legion@kernel.org>, "Eric W .
+ Biederman" <ebiederm@xmission.com>
+CC: Yingjie Wang <x-professor@outlook.com>, Vasily Averin
+	<vasily.averin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt
+	<shakeel.butt@linux.dev>, =?iso-8859-1?Q?Michal_Koutn=FD?=
+	<mkoutny@suse.com>, Michal Hocko <mhocko@suse.com>, Alejandro Colomar
+	<alx@kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
+	"linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+	"linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
+	"linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH v4 2/3] ipc/sem: reject negative SEMOPM values
+Thread-Topic: [PATCH v4 2/3] ipc/sem: reject negative SEMOPM values
+Thread-Index: AQHdZv5SqBSvVazyxU+7LHARfc+IAA==
+Date: Wed, 28 Oct 2026 17:03:59 +0000
+Message-ID:
+ <f720aa7102f44aed528b787337499592ec260a32.1793207025.git.x-professor@outlook.com>
+References: <cover.1793207025.git.x-professor@outlook.com>
+In-Reply-To: <cover.1793207025.git.x-professor@outlook.com>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SA3PR05MB10385:EE_|MN7PR05MB211011:EE_
+x-ms-office365-filtering-correlation-id: 072b9f22-1c50-488c-4408-08df35157678
+x-ms-exchange-slblob-mailprops:
+ iS5pQZgsAQDZd5pLvsexcGXRgbvG27NWraBZf1tfLtervTlbC8LWZzWdvdDy/1eMOgGmujC6dBGj1ZNibF6jyuxHGXCORkyoLgPLuw1LfXboDRnDLxHgcecJqfSQJIJZrnWQKsKev8kYpyF2cicHhowim9Z8We76oLpkZ+G6qngiQDmUaUSau/x+gTiYwCdSKwiSGTEGIf2ELWuIelHoTEmmi89DEjuGGH2t1utI/BpDk204umNdj1bTK7EHFN8njQaJD4OkXXslw3jN4vlyvqeOc7hCy2WwnY21k4eWMz+gdq6uiIFbceL1TPCihnGEyW0gMu/OV3mF4wTnVXaioyzonrl8zqQko0YuXW3Vvs+W0pYX0WzNbl7af3+GK7iQPYIqSpvZOKuIVvO6a4p8zErkfA0KthaobiGE7Y4NZSgV2bnw82pHF9+58B7m9jxMqDUVaSpSkyO4dS4bCkTGvwZUZWc7cU6Mw5rbOfWLPBKRRksaNGPw6UJVr1LJrM23iWKK46JVKxChIfe0TDLVYjDt0cgW6uApEGDDYBf2FAfWc+5U6qeMnwmoIuQUl2vejtlsZMAz5b5tLkZOlQ0NbfvdvjK2cFOw/ji2dS7sqlVoQzzQ5WylGYp4iCpm1JDNKuafK5C6obzmwDqWyztPlfNH+RiqYRl9CG/b3M9ACp7QsvVgTTEo1lL1SR12kyQ8bOJW/3otkhFIQsXaLx2QeFCrjSuBnpySEmtGi34Q6nqYmmu5VgGtI4HYxcByWZ5N1Fh1SGxb11iLhjVK2d78dSl2RwYTbExM9COp37amZYUfrqY2XwS7zRiEb3MlvL+l
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|22091999003|15080799012|24121999003|24021099003|31061999003|8062599012|12121999013|8060799015|41001999006|38102599003|4140399003|25010399006|19110799012|102099032|3412199025|4302099013|440099028|1602099012|12091999003|52005399003|40105399003|26121999007|10035399007|1710799026;
+x-microsoft-antispam-message-info:
+ =?iso-8859-1?Q?8SWMCtlBeOURuCCPDi5CkYvwmwe7W5dWZYekOSzAeDvJWMCny3QSXX8RYE?=
+ =?iso-8859-1?Q?hyZElxL7lFw4prI+xP7Gq9Tt5JfeMNLfRFGodSRbZ+pdBG+GnnzMViIwdI?=
+ =?iso-8859-1?Q?A+v59Fust/Nq0VHZHB0iFKNsz0CJRrgnF8E3nRQliO9yqc1HDlWwcCxXmR?=
+ =?iso-8859-1?Q?tWYm/aMEa0Pt73u5n+fwlsMPX+0Zm8Tf9JojPhrtBM+rtwm9Ta8NVu09xU?=
+ =?iso-8859-1?Q?L41QwmnDXBm7IRlQt1Aawwuc6zYBJ08lXnt7gRwXWi/43GXzwEevkjREpy?=
+ =?iso-8859-1?Q?vmaB8wqOqoIimq4kd3yJQ4w8tDu8C9vylTYS0+SM/9vbHimMGK/EE5TbJ4?=
+ =?iso-8859-1?Q?mSVEfR/+Lf8s2bGxrQSaiKvy8nG3zPWgJOuSKF3+04STEmwFvin3KoqrBz?=
+ =?iso-8859-1?Q?//DlW8Jv2ZS40N58IKakuNt72vnU7Epsrli6bQ3bK3Pp3hWFo/hpo5gHb+?=
+ =?iso-8859-1?Q?vA7blX5xOzpoQyuInGpTZTOcK0gnIFklHCErFuTG6ez8UMfS5TLKmJfrIM?=
+ =?iso-8859-1?Q?jc+P3iGDuagVRIeiPNAsKV28f1n0ZUiSpoocL2quEAqg15oIlw+I4vkmG0?=
+ =?iso-8859-1?Q?Lp+FhpAZbj+1KjcYstWzdj6Yp7DZJjsqHfJTsn4ub/rr4Bhg8r9FlbIjvp?=
+ =?iso-8859-1?Q?3Me9ZbDJUzqqxpzlwz/FHMhX5FalsobNzU8A8fDP7KhUOqQWE5TT8yHCgU?=
+ =?iso-8859-1?Q?q+Riv2dfI5EtpfVzyZVb+amv19YIKLC9K2Bc45IlgMaUhItTsMOF/xjpsv?=
+ =?iso-8859-1?Q?g+H9VQ8L5OfhfRWDngfIrh0cbvSLbGRTOycKH5y1w53Vztbz7jvI8yu/px?=
+ =?iso-8859-1?Q?PSzmEoms8EUBbZVtI67yZOPQsE/zq+deaBsJ/WAPkIOShdbdBcqFSkiSko?=
+ =?iso-8859-1?Q?kxZLVtARsMDceGvDYjXYviz985zwj3c8mJxdTWPZgzWABxljRu17AUGyVS?=
+ =?iso-8859-1?Q?9gHKDI7hOiCZB0ABirAd3tkIE+BkfDX4yhJYTFCAqQQbudldvEVqhp4HIp?=
+ =?iso-8859-1?Q?sZklRs0v+qTo9meLSiXbml8GyLncJO9XiQRZwNm8gzaHFU36rn1ciDXsf2?=
+ =?iso-8859-1?Q?1Oxkl/zMK/xtYnUuGH3e2CoknqCTsThBp7n0Kykw9K7aKpkwE7n1JBc2c/?=
+ =?iso-8859-1?Q?rLz+3oO6qH0C+kn3kD/SHktjy2UXsBdvrmxbWQmX3s24ux8wjE+3c1uh+d?=
+ =?iso-8859-1?Q?3f6E3Xjx9mRpBfPetP7HsTBXZwOqj/KGEat+Hs+OcDoew1BMPHzeN4kkbG?=
+ =?iso-8859-1?Q?T8hzGq7txYALykPtT/zOv/EI2DqDsCueZVWnij8hk=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?tHGBtT95vmOhFzGP5LygOpCyFH9LaGmOlzU/jgzW4NE0N4kYi1H6Be57Ev?=
+ =?iso-8859-1?Q?l5iY27Bq7flVGexaqD5OFgNPpGaIgc40Z4/uokgDmG7/Ofoa4g4FZ2u+ak?=
+ =?iso-8859-1?Q?9V7d1EAQCbdDECxLZov6UgzRZPlnDJXUW81MYsIavAPSglOkTP/9/MLvZq?=
+ =?iso-8859-1?Q?WSeGQRPSUUWASyjGuS4LqVYM5onlW+zEVeMyV6Uugr8U5AgsHoolOe3sCs?=
+ =?iso-8859-1?Q?sERNuoxvoIQuOHSIKiUrgCI6y1f2FJhNhMkA8j40IBXzQ8U2v5dgrdM0Dt?=
+ =?iso-8859-1?Q?gXf3a7j6J3TSLctil+arfAdCX09xStPnpgHhHzgQcNaUe8c4Md+l/m2Naj?=
+ =?iso-8859-1?Q?oxf1iyKMEstG5gyF3dXIaZOauDhAKvLrxt0pfXxr8HvYhcya0AYjK1xA7S?=
+ =?iso-8859-1?Q?u12gK6pLsiCUEmTlQd4uDNwZhkA5yejnKBzzKwpALimY3HXDeM3JQ4ZSL/?=
+ =?iso-8859-1?Q?mU8V5uoVw8aPuFt6aLa8GcZUYcSTQWdIcSJdU87WxQFiaDAENamWiWYvPV?=
+ =?iso-8859-1?Q?MOTMQ/z5Lg7k85PGYnB1tFHAtoi4Eg+Z405RyVYSk6Mq5ovJ5eTcwL/VIK?=
+ =?iso-8859-1?Q?sgFiumuOz9Zrxj+bTOPf/GTGdlb9bTi6WLPjNTKEGTpQ1+x11Ttgz6O0wd?=
+ =?iso-8859-1?Q?Rc9VdX6r3F/nNQE2sgv8SYaqi7jDpAhkko4IiH5SC/zK5iSLun0/0xZL1X?=
+ =?iso-8859-1?Q?QlPOVaMKKABAMdjupKZ7TqfuD2W4KUkwh5QxPZ4tpLpvqqoSED0EmAzIfl?=
+ =?iso-8859-1?Q?uacx7UxOpjX4gydDwIsAEh3CY+HYXtfsrk7RONxk+fVykCkXejPaGcEXzk?=
+ =?iso-8859-1?Q?rya7tEJcwsX6nUVk6fIfYvxJxISEh8GF/1tpEcaz1SOiuevG7XR2CxX0G2?=
+ =?iso-8859-1?Q?yvaktLq8xPtUKRkZ+ITAjs3uLEaeC+o9bFzTyFS7Lb3gtAUItldJ58mw+I?=
+ =?iso-8859-1?Q?a1/wQ8OWVVx+aACYh6ra5OV2ogEvJWHqEnw0/t1lPFT7IBliGFtutMHWqN?=
+ =?iso-8859-1?Q?kVi2mbapyHAIZLjOHsYTyPDbj2HJ7KFwq7cAk9b1N4t46dS/ZljbSXZr6h?=
+ =?iso-8859-1?Q?Kuoj9W15/6x5fZwJeV36Oz8fFbhA+CySwcifgV/TbZ8wgOSENGv6IZtDJZ?=
+ =?iso-8859-1?Q?HmdbZEAXWY9QdIMazNJIskTENUc0LiIyRv4Rq7CaOpCzdYHpE8H2hhhx6M?=
+ =?iso-8859-1?Q?4Jo1Q0u4eSYGHdrLfi3LsqLUY6dW4oIbIt2OTvo+NAImG2XLst5++MaMU1?=
+ =?iso-8859-1?Q?gINAgBV/YVJ0H+uKrzkGbl/XTr6GyvTXT984nzDeSlbTM68nW3sp/+SDnm?=
+ =?iso-8859-1?Q?9aABWL0KluxjP6WQzoj5IFle6x19eqs7XMnjy2AHSDS5LPOtpU28GK+d84?=
+ =?iso-8859-1?Q?QR9T/oblWm9K1hvdqU/OaVuHCyVJTytt+u/H/mTFXkqI/egvJ+hbhA2ApE?=
+ =?iso-8859-1?Q?U/h0Ax7sF/aHHmxL?=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -145,319 +165,172 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <d76d8bfe-e955-4e90-9f5f-e3e914c0869c@amd.com>
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SA3PR05MB10385.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 072b9f22-1c50-488c-4408-08df35157678
+X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Oct 2026 17:03:59.1056
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN7PR05MB211011
 
-On Wed, Oct 28, 2026 at 10:08:19AM +0100, Christian König wrote:
-> On 10/27/26 16:02, Albert Esteve wrote:
-> > dma-heap already supports charging a specific cgroup at allocation
-> > time via charge_fd in DMA_HEAP_IOCTL_ALLOC. However, dma-bufs can
-> > originate from any exporter (DRM, V4L2, etc.), and the allocator may
-> > not know the final owner at allocation time.
-> > 
-> > Add DMA_BUF_IOCTL_XFER_CHARGE to transfer a dma-buf's memcg charge
-> > to a different cgroup after allocation. The target is identified by
-> > charge_fd, which may be a cgroupfd or a pidfd.
-> > 
-> > The transfer charges the new cgroup before uncharging the old one,
-> > preserving the original charge on failure. An atomic cmpxchg on
-> > dmabuf->memcg prevents races with concurrent transfers.
-> > 
-> > Not all dma-buf exporters back their buffers with reclaimable system
-> > memory. Some represent device registers, VRAM, or carved-out pools
-> > where size is not a meaningful memory cost. Add a memcg_account flag
-> > to dma_buf_export_info that exporters set when their buffers should
-> > participate in memcg accounting. The xfer ioctl returns -EOPNOTSUPP
-> > for buffers that do not set the flag. Currently only the system heap
-> > sets it, other exporters can opt in as needed.
-> > 
-> > Usage example:
-> >   int cg_fd = open("/sys/fs/cgroup/clients/app1", O_RDONLY | O_DIRECTORY);
-> > 
-> >   struct dma_buf_transfer_charge xfer = {
-> >       .charge_fd = cg_fd,
-> >   };
-> >   ioctl(dmabuf_fd, DMA_BUF_IOCTL_XFER_CHARGE, &xfer);
-> >   /* charge now on app1's cgroup */
-> >   close(cg_fd);
-> > 
-> > Signed-off-by: Albert Esteve <aesteve@redhat.com>
-> > ---
-> >  drivers/dma-buf/dma-buf.c           | 43 +++++++++++++++++++++++++++++++++++++
-> >  drivers/dma-buf/heaps/system_heap.c |  1 +
-> >  include/linux/dma-buf.h             |  5 +++++
-> >  include/linux/memcontrol.h          |  9 ++++++++
-> >  include/uapi/linux/dma-buf.h        | 26 ++++++++++++++++++++++
-> >  mm/memcontrol.c                     | 41 +++++++++++++++++++++++++++++++++++
-> >  6 files changed, 125 insertions(+)
-> > 
-> > diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-> > index f31f49ebd0af..07513ecedc10 100644
-> > --- a/drivers/dma-buf/dma-buf.c
-> > +++ b/drivers/dma-buf/dma-buf.c
-> > @@ -540,6 +540,45 @@ static long dma_buf_import_sync_file(struct dma_buf *dmabuf,
-> >  }
-> >  #endif
-> >  
-> > +/* Transfer a dma-buf's memcg charge; see struct dma_buf_transfer_charge */
-> > +static long dma_buf_xfer_charge(struct dma_buf *dmabuf,
-> > +				const void __user *user_data)
-> > +{
-> > +	struct dma_buf_transfer_charge arg;
-> > +	struct mem_cgroup *memcg;
-> > +	int ret = 0;
-> > +
-> > +	if (copy_from_user(&arg, user_data, sizeof(arg)))
-> > +		return -EFAULT;
-> > +
-> > +	if (!IS_ENABLED(CONFIG_MEMCG))
-> > +		return 0;
-> > +
-> > +	if (arg.flags != 0)
-> > +		return -EINVAL;
-> > +
-> > +	if (!dmabuf->memcg_account)
-> > +		return -EOPNOTSUPP;
-> > +
-> > +	memcg = mem_cgroup_get_from_fd(arg.charge_fd);
-> > +	if (IS_ERR(memcg))
-> > +		return PTR_ERR(memcg);
-> > +
-> > +	if (dmabuf->memcg == memcg)
-> > +		goto skip_transfer;
-> > +
-> > +	if (!mem_cgroup_transfer_dmabuf_charge(dmabuf, memcg)) {
-> > +		ret = -ENOMEM;
-> > +		goto skip_transfer;
-> > +	}
-> > +
-> > +	return 0;
-> > +
-> > +skip_transfer:
-> > +	mem_cgroup_put(memcg);
-> > +	return ret;
-> > +}
-> > +
-> >  static long dma_buf_ioctl(struct file *file,
-> >  			  unsigned int cmd, unsigned long arg)
-> >  {
-> > @@ -590,6 +629,9 @@ static long dma_buf_ioctl(struct file *file,
-> >  		return dma_buf_import_sync_file(dmabuf, (const void __user *)arg);
-> >  #endif
-> >  
-> > +	case DMA_BUF_IOCTL_XFER_CHARGE:
-> > +		return dma_buf_xfer_charge(dmabuf, (const void __user *)arg);
-> > +
-> >  	default:
-> >  		return -ENOTTY;
-> >  	}
-> > @@ -750,6 +792,7 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
-> >  	dmabuf->size = exp_info->size;
-> >  	dmabuf->exp_name = exp_info->exp_name;
-> >  	dmabuf->owner = exp_info->owner;
-> > +	dmabuf->memcg_account = exp_info->memcg_account;
-> 
-> The initial charging should probably be done here as well.
-> 
-> This way DMA-buf heaps only needs to pass in the charge_fd and we can re-use the functionality for other DMA-buf exporters as well.
-
-The problem with doing the charge here is that it happens too late.
-That is the reasoning for this proposal to move all the charging logic
-into heap allocators before pages are allocated.
-
-What we could do is fill the dmabuf->memcg field when the flag is set
-(i.e., committing into the dmabuf in the patch semantics). But for that
-we'd need adding the memcg we want to charge it to into exp_info in
-order to support charging to cgroups other than the allocator's (for
-the common case would be simpler as we can just look at current).
-Maybe that's what you meant?
-
-> 
-> >  	spin_lock_init(&dmabuf->name_lock);
-> >  	init_waitqueue_head(&dmabuf->poll);
-> >  	dmabuf->cb_in.poll = dmabuf->cb_out.poll = &dmabuf->poll;
-> > diff --git a/drivers/dma-buf/heaps/system_heap.c b/drivers/dma-buf/heaps/system_heap.c
-> > index adeea8cd328b..a764167167ba 100644
-> > --- a/drivers/dma-buf/heaps/system_heap.c
-> > +++ b/drivers/dma-buf/heaps/system_heap.c
-> > @@ -479,6 +479,7 @@ static struct dma_buf *system_heap_allocate(struct dma_heap *heap,
-> >  	exp_info.size = buffer->len;
-> >  	exp_info.flags = fd_flags;
-> >  	exp_info.priv = buffer;
-> > +	exp_info.memcg_account = true;
-> >  	dmabuf = dma_buf_export(&exp_info);
-> >  	if (IS_ERR(dmabuf)) {
-> >  		ret = PTR_ERR(dmabuf);
-> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> > index 23ec0ff23fba..ac0ec88cab93 100644
-> > --- a/include/linux/dma-buf.h
-> > +++ b/include/linux/dma-buf.h
-> > @@ -433,6 +433,9 @@ struct dma_buf {
-> >  
-> >  	/** @memcg: the cgroup to which this buffer is currently attributed */
-> >  	struct mem_cgroup *memcg;
-> > +
-> > +	/** @memcg_account: account buffer memory to cgroup */
-> > +	bool memcg_account;
-> >  };
-> >  
-> >  /**
-> > @@ -505,6 +508,7 @@ struct dma_buf_attachment {
-> >   * @flags:	mode flags for the file
-> >   * @resv:	reservation-object, NULL to allocate default one
-> >   * @priv:	Attach private data of allocator to this buffer
-> > + * @memcg_account:	account buffer memory to cgroup
-> >   *
-> >   * This structure holds the information required to export the buffer. Used
-> >   * with dma_buf_export() only.
-> > @@ -517,6 +521,7 @@ struct dma_buf_export_info {
-> >  	int flags;
-> >  	struct dma_resv *resv;
-> >  	void *priv;
-> > +	bool memcg_account;
-> >  };
-> >  
-> >  /**
-> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > index 6b30baa79fa9..36fddafbef4e 100644
-> > --- a/include/linux/memcontrol.h
-> > +++ b/include/linux/memcontrol.h
-> > @@ -679,6 +679,9 @@ bool mem_cgroup_reserve_dmabuf(struct mem_cgroup *memcg, gfp_t gfp,
-> >  void mem_cgroup_commit_dmabuf(struct dma_buf *dmabuf, struct mem_cgroup *memcg,
-> >  			      unsigned int nr_pages);
-> >  
-> > +bool mem_cgroup_transfer_dmabuf_charge(struct dma_buf *dmabuf,
-> > +				       struct mem_cgroup *new_memcg);
-> > +
-> >  void __mem_cgroup_uncharge(struct folio *folio);
-> >  
-> >  /**
-> > @@ -1206,6 +1209,12 @@ static inline void mem_cgroup_cancel_dmabuf(struct mem_cgroup *memcg,
-> >  {
-> >  }
-> >  
-> > +static inline bool mem_cgroup_transfer_dmabuf_charge(struct dma_buf *dmabuf,
-> > +						     struct mem_cgroup *new_memcg)
-> > +{
-> > +	return true;
-> > +}
-> > +
-> >  static inline void mem_cgroup_uncharge(struct folio *folio)
-> >  {
-> >  }
-> > diff --git a/include/uapi/linux/dma-buf.h b/include/uapi/linux/dma-buf.h
-> > index e827c9d20c5d..ea957f4b1d38 100644
-> > --- a/include/uapi/linux/dma-buf.h
-> > +++ b/include/uapi/linux/dma-buf.h
-> > @@ -168,6 +168,31 @@ struct dma_buf_import_sync_file {
-> >  	__s32 fd;
-> >  };
-> >  
-> > +/**
-> > + * struct dma_buf_transfer_charge - Transfer a dma-buf's memcg charge
-> > + *
-> > + * Any holder of a dma-buf file descriptor can perform a
-> > + * DMA_BUF_IOCTL_XFER_CHARGE to attribute the buffer's memory
-> > + * cost to a specific cgroup, or move it from one cgroup to
-> > + * another.  The ioctl charges the new cgroup before uncharging
-> > + * the old one atomically.  On failure the original charge is
-> > + * preserved.  If the buffer has no existing charge, a new
-> > + * charge is established.
-> > + */
-> > +struct dma_buf_transfer_charge {
-> > +	/** @flags: Reserved, must be zero */
-> > +	__u32 flags; /* unused for now */
-> > +	/**
-> > +	 * @charge_fd: File descriptor identifying the target cgroup.
-> > +	 *
-> > +	 * May be either a pidfd, in which case the charge moves to the
-> > +	 * memory cgroup of the referenced process, or a cgroupfd obtained
-> > +	 * by opening a cgroup v2 directory, in which case the charge moves
-> > +	 * directly to that cgroup's memory controller.
-> > +	 */
-> > +	__u32 charge_fd;
-> > +};
-> > +
-> >  #define DMA_BUF_BASE		'b'
-> >  #define DMA_BUF_IOCTL_SYNC	_IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
-> >  
-> > @@ -179,5 +204,6 @@ struct dma_buf_import_sync_file {
-> >  #define DMA_BUF_SET_NAME_B	_IOW(DMA_BUF_BASE, 1, __u64)
-> >  #define DMA_BUF_IOCTL_EXPORT_SYNC_FILE	_IOWR(DMA_BUF_BASE, 2, struct dma_buf_export_sync_file)
-> >  #define DMA_BUF_IOCTL_IMPORT_SYNC_FILE	_IOW(DMA_BUF_BASE, 3, struct dma_buf_import_sync_file)
-> > +#define DMA_BUF_IOCTL_XFER_CHARGE	_IOW(DMA_BUF_BASE, 4, struct dma_buf_transfer_charge)
-> >  
-> >  #endif
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 7b841b905759..3adc84fe6668 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -5786,6 +5786,47 @@ void mem_cgroup_cancel_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages)
-> >  		refill_stock(memcg, nr_pages);
-> >  }
-> >  
-> > +/**
-> > + * mem_cgroup_transfer_dmabuf_charge - move a dma-buf charge
-> > + * @dmabuf: buffer to transfer charge
-> > + * @new_memcg: target memcg; caller must hold a reference
-> > + *
-> > + * Transfers the charge for @dmabuf to @new_memcg and, on
-> > + * success, stores @new_memcg in @dmabuf->memcg.
-> > + * Returns %true on success, %false if the charge against @new_memcg
-> > + * failed or a concurrent transfer raced on @dmabuf->memcg.
-> > + * On failure the caller retains its reference to @new_memcg.
-> > + */
-> > +bool mem_cgroup_transfer_dmabuf_charge(struct dma_buf *dmabuf,
-> > +				       struct mem_cgroup *new_memcg)
-> 
-> I would make that more generic instead of dmabuf specific. E.g. something like this:
-> 
-> bool mem_cgroup_transfer_charge(struct struct mem_cgroup **ptr_memcg, struct mem_cgroup *new_memcg, enum memcg_stat_item item, unsigned int nr_pages)
-
-Ah yes, I like this generalization. And the implementation remains
-mostly the same. Thanks!
-
-> 
-> > +{
-> > +	struct mem_cgroup *old_memcg = READ_ONCE(dmabuf->memcg);
-> 
-> > +	unsigned int nr_pages = PAGE_ALIGN(dmabuf->size) >> PAGE_SHIFT;
-> 
-> This way we can also document in the DMA-buf caller that this conversation must be ok when memcg_account is true.
-> 
-> Regards,
-> Christian.
-> 
-> > +
-> > +	if (mem_cgroup_disabled())
-> > +		return true;
-> > +
-> > +	if (!mem_cgroup_reserve_dmabuf(new_memcg, GFP_KERNEL, nr_pages))
-> > +		return false;
-> > +
-> > +	mod_memcg_state(new_memcg, MEMCG_DMABUF, nr_pages);
-> > +
-> > +	if (cmpxchg(&dmabuf->memcg, old_memcg, new_memcg) != old_memcg) {
-> > +		mod_memcg_state(new_memcg, MEMCG_DMABUF, -nr_pages);
-> > +		mem_cgroup_cancel_dmabuf(new_memcg, nr_pages);
-> > +		return false;
-> > +	}
-> > +
-> > +	if (old_memcg) {
-> > +		/* Uncharge old cgroup */
-> > +		mod_memcg_state(old_memcg, MEMCG_DMABUF, -nr_pages);
-> > +		mem_cgroup_cancel_dmabuf(old_memcg, nr_pages);
-> > +		mem_cgroup_put(old_memcg);
-> > +	}
-> > +
-> > +	return true;
-> > +}
-> > +
-> >  /**
-> >   * mem_cgroup_uncharge_dmabuf - uncharge a dma-buf from its memcg
-> >   * @dmabuf: buffer to uncharge
-> > 
-> 
-
+The SEMOPM field has been stored as an int while semop() receives an=0A=
+unsigned operation count since the beginning of Git history. A negative=0A=
+SEMOPM accepted by proc_dointvec() is converted to a large unsigned value=
+=0A=
+in the comparison, defeating the intended operation-count limit.=0A=
+=0A=
+Commit 50ec499b9a43 ("sysctl: allow change system v ipc sysctls inside ipc=
+=0A=
+namespace") made kernel.sem writable by IPC namespace owners without=0A=
+capabilities in the initial user namespace.=0A=
+=0A=
+Parse writes against a temporary copy and validate SEMOPM and SEMMNI=0A=
+before changing the live settings. Hold a per-namespace mutex from the=0A=
+snapshot through publication so concurrent sysctl writers cannot publish=0A=
+stale values for fields they did not supply. Access the live fields with=0A=
+READ_ONCE() and WRITE_ONCE(), preserving the per-field access semantics of=
+=0A=
+proc_dointvec(). Read requests continue to use proc_dointvec() directly.=0A=
+=0A=
+Failed writes leave the live settings unchanged. Successful partial writes=
+=0A=
+change only the supplied fields relative to the latest locked snapshot.=0A=
+The writer mutex retains the existing per-field visibility for readers.=0A=
+=0A=
+Keep zero and positive SEMOPM values valid. Zero continues to reject every=
+=0A=
+non-empty semop() request.=0A=
+=0A=
+Suggested-by: Andrew Morton <akpm@linux-foundation.org>=0A=
+Link: https://lore.kernel.org/r/20261016155905.2a659b7bb7d61f33467a3263@lin=
+ux-foundation.org=0A=
+Link: https://lore.kernel.org/r/51c93c19-f1dd-455f-8698-6b1ee30eb630@colorf=
+ullife.com=0A=
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")=0A=
+Cc: stable@vger.kernel.org=0A=
+Reviewed-by: Manfred Spraul <manfred@colorfullife.com>=0A=
+Signed-off-by: Yingjie Wang <x-professor@outlook.com>=0A=
+---=0A=
+ include/linux/ipc_namespace.h |  3 +++=0A=
+ ipc/ipc_sysctl.c              | 35 ++++++++++++++++++++++++++---------=0A=
+ ipc/sem.c                     |  1 +=0A=
+ ipc/util.h                    |  9 ---------=0A=
+ 4 files changed, 30 insertions(+), 18 deletions(-)=0A=
+=0A=
+diff --git a/include/linux/ipc_namespace.h b/include/linux/ipc_namespace.h=
+=0A=
+index 12faca29bbb9c..c06568ccfca88 100644=0A=
+--- a/include/linux/ipc_namespace.h=0A=
++++ b/include/linux/ipc_namespace.h=0A=
+@@ -4,6 +4,7 @@=0A=
+ =0A=
+ #include <linux/err.h>=0A=
+ #include <linux/idr.h>=0A=
++#include <linux/mutex.h>=0A=
+ #include <linux/rwsem.h>=0A=
+ #include <linux/notifier.h>=0A=
+ #include <linux/nsproxy.h>=0A=
+@@ -31,6 +32,8 @@ struct ipc_ids {=0A=
+ struct ipc_namespace {=0A=
+ 	struct ipc_ids	ids[3];=0A=
+ =0A=
++	/* Serialize kernel.sem writers. */=0A=
++	struct mutex	sem_ctls_mutex;=0A=
+ 	int		sem_ctls[4];=0A=
+ 	int		used_sems;=0A=
+ =0A=
+diff --git a/ipc/ipc_sysctl.c b/ipc/ipc_sysctl.c=0A=
+index d038d944257f6..0e3608258fe29 100644=0A=
+--- a/ipc/ipc_sysctl.c=0A=
++++ b/ipc/ipc_sysctl.c=0A=
+@@ -51,21 +51,38 @@ static int proc_ipc_auto_msgmni(const struct ctl_table =
+*table, int write,=0A=
+ static int proc_ipc_sem_dointvec(const struct ctl_table *table, int write,=
+=0A=
+ 	void *buffer, size_t *lenp, loff_t *ppos)=0A=
+ {=0A=
++	struct ctl_table ipc_table;=0A=
+ 	struct ipc_namespace *ns =3D=0A=
+ 		container_of(table->data, struct ipc_namespace, sem_ctls);=0A=
+-	int ret, semmni;=0A=
++	int sem_ctls[ARRAY_SIZE(ns->sem_ctls)];=0A=
++	size_t i;=0A=
++	int ret;=0A=
++=0A=
++	if (!write)=0A=
++		return proc_dointvec(table, write, buffer, lenp, ppos);=0A=
+ =0A=
+-	semmni =3D ns->sem_ctls[3];=0A=
+-	ret =3D proc_dointvec(table, write, buffer, lenp, ppos);=0A=
++	mutex_lock(&ns->sem_ctls_mutex);=0A=
++	for (i =3D 0; i < ARRAY_SIZE(sem_ctls); i++)=0A=
++		sem_ctls[i] =3D READ_ONCE(ns->sem_ctls[i]);=0A=
+ =0A=
+-	if (!ret)=0A=
+-		ret =3D sem_check_semmni(ns);=0A=
++	ipc_table =3D *table;=0A=
++	ipc_table.data =3D sem_ctls;=0A=
+ =0A=
+-	/*=0A=
+-	 * Reset the semmni value if an error happens.=0A=
+-	 */=0A=
++	ret =3D proc_dointvec(&ipc_table, write, buffer, lenp, ppos);=0A=
+ 	if (ret)=0A=
+-		ns->sem_ctls[3] =3D semmni;=0A=
++		goto out_unlock;=0A=
++=0A=
++	if (sem_ctls[2] < 0 ||=0A=
++	    sem_ctls[3] < 0 || sem_ctls[3] > ipc_mni) {=0A=
++		ret =3D -ERANGE;=0A=
++		goto out_unlock;=0A=
++	}=0A=
++=0A=
++	for (i =3D 0; i < ARRAY_SIZE(sem_ctls); i++)=0A=
++		WRITE_ONCE(ns->sem_ctls[i], sem_ctls[i]);=0A=
++=0A=
++out_unlock:=0A=
++	mutex_unlock(&ns->sem_ctls_mutex);=0A=
+ 	return ret;=0A=
+ }=0A=
+ =0A=
+diff --git a/ipc/sem.c b/ipc/sem.c=0A=
+index a8c9807175520..0f7d32c12993f 100644=0A=
+--- a/ipc/sem.c=0A=
++++ b/ipc/sem.c=0A=
+@@ -249,6 +249,7 @@ static int sysvipc_sem_proc_show(struct seq_file *s, vo=
+id *it);=0A=
+ =0A=
+ void sem_init_ns(struct ipc_namespace *ns)=0A=
+ {=0A=
++	mutex_init(&ns->sem_ctls_mutex);=0A=
+ 	ns->sc_semmsl =3D SEMMSL;=0A=
+ 	ns->sc_semmns =3D SEMMNS;=0A=
+ 	ns->sc_semopm =3D SEMOPM;=0A=
+diff --git a/ipc/util.h b/ipc/util.h=0A=
+index a55d6cebe6d3b..51b4efa3d6db0 100644=0A=
+--- a/ipc/util.h=0A=
++++ b/ipc/util.h=0A=
+@@ -245,15 +245,6 @@ int ipcget(struct ipc_namespace *ns, struct ipc_ids *i=
+ds,=0A=
+ void free_ipcs(struct ipc_namespace *ns, struct ipc_ids *ids,=0A=
+ 		void (*free)(struct ipc_namespace *, struct kern_ipc_perm *));=0A=
+ =0A=
+-static inline int sem_check_semmni(struct ipc_namespace *ns) {=0A=
+-	/*=0A=
+-	 * Check semmni range [0, ipc_mni]=0A=
+-	 * semmni is the last element of sem_ctls[4] array=0A=
+-	 */=0A=
+-	return ((ns->sem_ctls[3] < 0) || (ns->sem_ctls[3] > ipc_mni))=0A=
+-		? -ERANGE : 0;=0A=
+-}=0A=
+-=0A=
+ #ifdef CONFIG_COMPAT=0A=
+ #include <linux/compat.h>=0A=
+ struct compat_ipc_perm {=0A=
+-- =0A=
+2.43.0=0A=
+=0A=
