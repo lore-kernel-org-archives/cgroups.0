@@ -1,76 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.212
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793161999;
-	b=F2EFbbWPErYSZAn4z38j6K/Yba8FHU2b2YXZQKSHPRCIuNGJuRFHcK9y681KrjMfaNu2
-	 v3ur+qCIiJxE2u1kKHSISdI4joBIXoW3KUZO3OKFdUse37RIN8Cj30BPwFXVA47w0q/m2
-	 gBWPS5e4H02lNasgGr6P9NI9cWAXvmkSHjT43S/Vyhg0bdGkW5VaFhLauqdPT8gR0zL1i
-	 fpyUbYSllHsoxWuDbP+cZefyhaxUMOuWfwCugW+BmYv63wnkxM6gUbCC2rpck+suns3pz
-	 /UVtfz1bHLSuak4TVIjFMH2YytGlJ9zdUdaLu13lW+oUAHFHrFQIJH7ZqLC9ratEm3w==
+	t=1793166694;
+	b=vzximMnfZZQTP7he9zWTn3muQXrJiqv9WaB1ORJetqRMB7erAfuLXxsaJQW3sowKnv9X
+	 udCdPAEMI2Dl2bXyku8CMEWQPJYqCqW7Jcuai6kM38BrSGljIBtoFEzJ99LRDRlkih14/
+	 qAmQViPXyFeHqv8y/gSGzbn+Y0HhaOqYWVsB7PcYAmcr0pEsoKdkMIoB77eozJ0gdYWLW
+	 0/LrjV6CvwRhchzjMnPmkbP6IXx3QoWJOpWtZwwzIqRLN8ej21OTZBlA/iUF68AfjtTfF
+	 8teKjPYUR2NR7pNhZjdlWzrLZEaX+/fXF2ftQr1K98JtFLgTm9n7kO4ZbG2URnk3hqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793161999;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:User-Agent;
-	bh=WfnqcrCpuxj50VfncsHqF7C2iBwpseSuBPC9ldBjWYU=;
-	b=JCOKLIE55K4kJHPVrmYVf0qNIiEdGDxbx/Jlwqa9gVAfvMTMPNUHxgeO2ap+AvRkIQLW
-	 i01KPSFvDFVGTjD9ImtLfkmgeIz0aRqARpsW5e/vpaiP7hetHssw1zLtTbC9zFxuFKvKR
-	 9YjHlgewoG0fv4vGpoZOa5+omSFpDQASfPzwLm84gqgHigj+VbSohl8tf6ap/jCYHDKOs
-	 1AOCZYcBizaBtxI0fHv0JV24SFGvAhNBKCVmIhFn0w7l0byWfhWCx6g5FwVE73CQq7c5d
-	 IpzZN4e6w8u8pJXtUr0HgaVriFhojjnUZcCNMFSyYQydM5GyWHrqr37iT8RjDh59tjw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793166694;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:From:To:Cc:References:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=QxYGNtJl3UaYfq3/WJ+CGsHBD9RzKd7TuJpv6lSGbGw=;
+	b=O8xixxxx5ZXvscxBHUql/KQy8X/D46gUI4pAawSncrhKJqtjDkt7J4H6PLzU3DnvDRcx
+	 n3vawQQ8szn6qPzaXjgTvJOsDw/mZAtc5qZqWQWvTsCCVS2Ka34oaeC+9DM78pen/BH77
+	 i+PMJ+hInhtjmjOizDbRZosXE7RCAQ4QLW3hnNWbsU9SNwuRtTAbE2yXSkuQeph0a2b8z
+	 UjqKA2OoYWDiWr6cB7FglNw30v2WLIbM+Pb2JJq16g/YOI5oweb2bCtWdhuAxE2KfGSJY
+	 sjSMOKfSBGMdn0boSJewsNIR41Ud9y1p+xwBavHTLCfOYfVC3nXkWXihWfHqkbE0M2g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=loOYe6kg;
-	arc=none smtp.remote-ip=198.175.65.12
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="xm4OPG/H";
+	arc=none smtp.remote-ip=95.215.58.212
+Received: from mta1.migadu.com (out-212.mta1.migadu.com [95.215.58.212])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5207C606A31D
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 04:33:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5207C606A31D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A6C6606A31D
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 05:51:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A6C6606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=loOYe6kg
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793161998; x=1824697998;
-  h=date:from:to:cc:subject:message-id;
-  bh=K0Y7ge1lWOfOq2FHFl4lnTENkHmXtowJxnaDWXYKzsA=;
-  b=loOYe6kgrnOklX5nXKQKDgEtGaoiA5FD6EaUyt0CyNm9CpAxW5NwsfLg
-   Pc4dT+mCbtFZL/yFY0ISq8OyymcQIbdb1v6G69uRI3oUxoI5R0vnZtDJJ
-   F+LxXCVz+CdztPZw2t3XlhI17AnJczmy2ZGFrMu/GvAhf+kUK1GOl9hg4
-   rNJ5rkfg5S7Wx88Xc++LTC2UjEMUKh2sSS/dH7zERcmFdO0Y3jCzfl+9e
-   mV2r3gH7sM92y4iiIvrOESYPqMxguyGakcw5opjMojm3vqeji+08NfTIc
-   8bTJxGPqUbCf6MdRQ7fF+FlBaM/eF/1C65qi+zM/bmM1fgxNEBmnWF31f
-   w==;
-X-CSE-ConnectionGUID: 2+izfTxJRI+HXlDGSHVzVQ==
-X-CSE-MsgGUID: TeAQA7btSLyXonUB+IEcTQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11948"; a="1756658"
-X-IronPort-AV: E=Sophos;i="6.27,182,1787036400"; 
-   d="scan'208";a="1756658"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2026 21:33:18 -0700
-X-CSE-ConnectionGUID: +HLarr+xRhaEt0rCYCjA+A==
-X-CSE-MsgGUID: jBSt5bmGQM+pckRpywDABw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,182,1787036400"; 
-   d="scan'208";a="5053938"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 27 Oct 2026 21:33:17 -0700
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xLvLe-00000000YD8-0dB5;
-	Wed, 28 Oct 2026 04:33:14 +0000
-Date: Wed, 28 Oct 2026 12:32:23 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 09f4ddd1b4bc653838f92c4874a402dc09e7ee2d
-Message-ID: <202610281220.QaOBHslA-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=xm4OPG/H
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=b/8VMC+UaG0sCWwgu0lRA8UALea4PTGevJoP4P93JR8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793166691; v=1; x=1793771491;
+ b=xm4OPG/HxzZCSOzfP9lFl66bQ4tG/bg66+/rYXsJClWKKXDlV3aEKei/Eit1o3wYGRlWv+4Y
+ wJ0+XN+h6qW4Q8nGiwEH8xyFuOIKZUZAD9zC3hgw67tF0uyzSFF560QG/wSLPCumTgeX60tkvRI
+ SfwUuLUt9ekOfyqHWRkYQ0xs=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 4fcc30824bc3b8e7;
+	Wed, 28 Oct 2026 05:51:31 +0000
+X-Mizu-Trace-ID: 4fcc30824bc3b8e7
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <43d07d41-6597-4979-b99d-bd87dddc36b0@linux.dev>
+Date: Wed, 28 Oct 2026 13:51:16 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -79,480 +57,230 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] cgroup/cpuset: Fix missing effective_xcpus accounting of
+ child partitions
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: longman@redhat.com
+Cc: ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
+ mkoutny@suse.com, shuah@kernel.org, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20261027123837.100909-1-guopeng.zhang@linux.dev>
+ <8cd8d3e9-da10-4201-ba76-e1ce8ae5d50a@linux.dev>
+Content-Language: en-US
+In-Reply-To: <8cd8d3e9-da10-4201-ba76-e1ce8ae5d50a@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 09f4ddd1b4bc653838f92c4874a402dc09e7ee2d  Merge branch 'for-7.4-fixes' into for-next
 
-elapsed time: 5279m
 
-configs tested: 460
-configs skipped: 18
+在 2026/10/27 21:44, Guopeng Zhang 写道:
+> 
+> 
+> 在 2026/10/27 20:38, Guopeng Zhang 写道:
+>> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>>
+>> When a partition root expands its exclusive CPUs, a valid child
+>> partition will be able to claim more CPUs from its parent. As
+>> update_cpumasks_hier() always updates a cpuset before its descendants,
+>> the parent has already been committed when the child partition is
+>> reached. Its effective_cpus is computed with the child's old
+>> effective_xcpus subtracted and no further adjustment is made
+>> after the child commits its new effective_xcpus.
+>>
+>> The additional CPUs are thus granted to both the parent and the child
+>> partitions. generate_sched_domains() then emits the warning below
+>> about the overlapping sched domains:
+>>
+>>   WARNING: kernel/cgroup/cpuset.c:919 at rebuild_sched_domains_locked+0x1ec/0x2e0, CPU#21: bash/1225
+>>
+>> Fix that by taking the CPUs newly added to a valid child partition
+>> away from its parent at the commit point of update_cpumasks_hier()
+>> right before the new effective_xcpus is committed. The tasks in the
+>> parent cpuset as well as its other children will be updated if its
+>> effective_cpus is changed.
+>>
+>> A new test case is added to test_cpuset_prs.sh to test this patch.
+>>
+>> Fixes: e2ffe502ba45 ("cgroup/cpuset: Add cpuset.cpus.exclusive for v2")
+>> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>> ---
+>>  kernel/cgroup/cpuset.c                        | 25 +++++++++++++++++++
+>>  .../selftests/cgroup/test_cpuset_prs.sh       |  4 +++
+>>  2 files changed, 29 insertions(+)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 3219f927c35e..ec0ef3ad0726 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -2241,6 +2241,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+>>  		struct cpuset *parent = parent_cs(cp);
+>>  		bool remote = is_remote_partition(cp);
+>>  		bool update_parent = false;
+>> +		bool xcpus_added = false;
+>>  
+>>  		old_prs = new_prs = cp->partition_root_state;
+>>  
+>> @@ -2356,6 +2357,19 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+>>  		}
+>>  
+>>  		spin_lock_irq(&callback_lock);
+>> +		/*
+>> +		 * A child partition may claim more CPUs when its parent expands
+>> +		 * the exclusive CPUs. Take the newly granted CPUs away from the
+>> +		 * parent which was committed earlier in this walk.
+>> +		 */
+>> +		if (!remote && new_prs > 0) {
+>> +			compute_excpus(cp, tmp->addmask);
+>> +			if (cpumask_andnot(tmp->delmask, tmp->addmask,
+>> +					   cp->effective_xcpus)) {
+>> +				partition_xcpus_add(new_prs, parent, tmp->delmask);
+>> +				xcpus_added = true;
+>> +			}
+>> +		}
+>>  		cpumask_copy(cp->effective_cpus, tmp->new_cpus);
+>>  		cp->partition_root_state = new_prs;
+>>  		/*
+>> @@ -2375,6 +2389,17 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+>>  
+>>  		cpuset_update_tasks_cpumask(cp, tmp->new_cpus);
+>>  
+>> +		/*
+>> +		 * The parent's effective_cpus may have been changed by
+>> +		 * partition_xcpus_add() above. Update the tasks in the parent
+>> +		 * cpuset and its other children, if necessary.
+>> +		 */
+>> +		if (xcpus_added) {
+>> +			cpumask_copy(tmp->addmask, parent->effective_cpus);
+>> +			cpuset_update_tasks_cpumask(parent, tmp->addmask);
+>> +			update_sibling_cpumasks(parent, cp, tmp);
+>> +		}
+>> +
+>>  		/*
+>>  		 * On default hierarchy, inherit the CS_SCHED_LOAD_BALANCE
+>>  		 * from parent if current cpuset isn't a valid partition root
+>> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+>> index 83ef6c781af3..09e430570815 100755
+>> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+>> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+>> @@ -437,6 +437,10 @@ TEST_MATRIX=(
+>>  	" CX1-4:P1 CX3-4:P1 .     .     X1-2     .      .      .     0 A1:1-2|A2:1-2|XA2: A1:P1|A2:P-1"
+>>  	" CX1-4:P1 CX3-4:P1 .     .  X1-2:X1-4   .      .      .     0 A1:1-2|A2:3-4|XA2:3-4 A1:P1|A2:P1"
+>>  
+>> +	# The extra CPUs gained by a child partition when its parent expands the
+>> +	# exclusive CPUs have to be taken away from the parent.
+>> +	" C2-6:X2-5:P1 C3-6:X3-6:P1 .      .      X2-6     .      .      .     0 A1:2|A2:3-6|XA2:3-6 A1:P1|A2:P1 ."
+>> +
+>>  	# Taking away all CPUs from parent or itself if there are tasks
+>>  	# will make the partition invalid.
+>>  	"  C2-3:P1   C3:P1  .      .      T     C2-3    .      .     0 A1:2-3|A2:2-3 A1:P1|A2:P-1"
+> 
+> Hi Longman,
+> 
+> I thought of another way to fix this problem that attacks the stale
+> value at its source. The comment in
+> update_parent_effective_cpumask() says:
+> 
+>     When both cs and parent remain valid, parent's
+>     compute_partition_effective_cpumask() call would have removed cs's
+>     effective_xcpus from the parent's effective_cpus. So there is no
+>     need to adjust parent's effective_cpus here.
+> 
+> That is the design intent, but compute_partition_effective_cpumask()
+> subtracts the child's old effective_xcpus, which hasn't been updated
+> yet when the parent is processed. What if the parent subtracts the
+> CPUs the child can claim from the newly computed parent mask instead?
+> The rework (on top of the same base as the posted patch) looks like:
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 3219f927c35e..cd02b6b74ca2 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1602,10 +1602,14 @@ static int compute_trialcs_excpus(struct cpuset *trialcs, struct cpuset *cs)
+>  static void compute_partition_effective_cpumask(struct cpuset *cs,
+>  						struct cpumask *new_ecpus)
+>  {
+> +	static cpumask_t child_xcpus;
+>  	struct cgroup_subsys_state *css;
+>  	struct cpuset *child;
+>  	bool populated = partition_is_populated(cs, NULL);
+>  
+> +	lockdep_assert_cpuset_lock_held();
+> +
+>  	/*
+>  	 * Check child partition roots to see if they should be invalidated
+>  	 * when all the effective_cpus will be used up and cs is populated.
+> @@ -1628,7 +1632,16 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>  		 * partition root.
+>  		 */
+>  		WARN_ON_ONCE(is_remote_partition(child));
+> -		if (populated && cpumask_subset(new_ecpus, child->effective_xcpus)) {
+> +		/*
+> +		 * The child has not been updated yet. Compute the CPUs it
+> +		 * can take from this newly computed parent mask, without
+> +		 * overwriting its old effective_xcpus.
+> +		 */
+> +		cpumask_and(&child_xcpus, new_ecpus, user_xcpus(child));
+> +		if (cpumask_empty(child->exclusive_cpus))
+> +			rm_siblings_excl_cpus(cs, child, &child_xcpus);
+> +
+> +		if (populated && cpumask_subset(new_ecpus, &child_xcpus)) {
+>  			int old_prs = child->partition_root_state;
+>  			int parent_prs = cs->partition_root_state;
+>  
+> @@ -1646,8 +1659,7 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>  			notify_partition_change(child, old_prs);
+>  			continue;
+>  		}
+> -		cpumask_andnot(new_ecpus, new_ecpus,
+> -			       child->effective_xcpus);
+> +		cpumask_andnot(new_ecpus, new_ecpus, &child_xcpus);
+>  	}
+>  	rcu_read_unlock();
+>  }
+> 
+> compute_excpus() is not directly reused here as it reads
+> parent->effective_xcpus which hasn't been updated yet at this point.
+> 
+> This fixes the double grant in one step and keeps the accounting
+> inside compute_partition_effective_cpumask(). I boot tested it on a
+> 32-CPU VM with the whole test_cpuset_prs.sh suite and it passes, same
+> as the posted patch.
+> 
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Sorry, the rework I suggested has a problem. I kept testing it and
+found that it fixes the effective_cpus overlap, but misses the
+isolated_cpus accounting.
 
-tested configs:
-alpha                              allnoconfig    gcc-16.2.0
-alpha                             allyesconfig    gcc-16.2.0
-alpha                                defconfig    gcc-16.2.0
-arc                               alldefconfig    clang-17
-arc                               allmodconfig    clang-24
-arc                               allmodconfig    gcc-16.2.0
-arc                                allnoconfig    gcc-16.2.0
-arc                               allyesconfig    clang-24
-arc                               allyesconfig    gcc-16.2.0
-arc                           axs101_defconfig    gcc-16.2.0
-arc                       axs103_smp_defconfig    clang-17
-arc                                  defconfig    gcc-16.2.0
-arc                             hsdk_defconfig    clang-24
-arc                   randconfig-1000-20261025    clang-24
-arc                   randconfig-1000-20261026    clang-24
-arc                   randconfig-1000-20261027    gcc-10.5.0
-arc                   randconfig-1001-20261025    clang-24
-arc                   randconfig-1001-20261026    clang-24
-arc                   randconfig-1001-20261027    gcc-10.5.0
-arm                                allnoconfig    gcc-16.2.0
-arm                               allyesconfig    clang-24
-arm                               allyesconfig    gcc-16.2.0
-arm                      am200epdkit_defconfig    gcc-16.2.0
-arm                        aspeed_g4_defconfig    gcc-16.2.0
-arm                                  defconfig    gcc-16.2.0
-arm                           exynos_defconfig    gcc-16.2.0
-arm                       footbridge_defconfig    gcc-16.2.0
-arm                             hisi_defconfig    gcc-16.2.0
-arm                        imx_v4_v5_defconfig    gcc-16.2.0
-arm                            imxrt_defconfig    clang-17
-arm                    milbeaut_m10v_defconfig    gcc-16.2.0
-arm                             mmp2_defconfig    clang-24
-arm                             mmp2_defconfig    gcc-16.2.0
-arm                        multi_v4t_defconfig    gcc-16.2.0
-arm                         multi_v7_defconfig    gcc-16.2.0
-arm                          mv78xx0_defconfig    gcc-16.2.0
-arm                         mvebu_v7_defconfig    gcc-16.2.0
-arm                              mxs_defconfig    clang-17
-arm                            omap1_defconfig    clang-24
-arm                          orion5x_defconfig    clang-17
-arm                           pxa910_defconfig    gcc-16.2.0
-arm                              pxa_defconfig    gcc-16.2.0
-arm                   randconfig-1000-20261025    clang-24
-arm                   randconfig-1000-20261026    clang-24
-arm                   randconfig-1000-20261027    gcc-10.5.0
-arm                   randconfig-1001-20261025    clang-24
-arm                   randconfig-1001-20261026    clang-24
-arm                   randconfig-1001-20261027    gcc-10.5.0
-arm                   randconfig-1002-20261025    clang-24
-arm                   randconfig-1002-20261026    clang-24
-arm                   randconfig-1002-20261027    gcc-10.5.0
-arm                   randconfig-1003-20261025    clang-24
-arm                   randconfig-1003-20261026    clang-24
-arm                   randconfig-1003-20261027    gcc-10.5.0
-arm                        spear13xx_defconfig    gcc-16.2.0
-arm                            tegra_defconfig    clang-24
-arm                        versatile_defconfig    clang-24
-arm                        versatile_defconfig    gcc-16.2.0
-arm                     vt8500_v6_v7_defconfig    gcc-16.2.0
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.2.0
-arm64                                defconfig    gcc-16.2.0
-arm64                 randconfig-1000-20261025    clang-24
-arm64                 randconfig-1000-20261026    clang-24
-arm64                 randconfig-1000-20261027    gcc-8.5.0
-arm64                 randconfig-1001-20261025    clang-24
-arm64                 randconfig-1001-20261026    clang-24
-arm64                 randconfig-1001-20261027    gcc-8.5.0
-arm64                 randconfig-1002-20261025    clang-24
-arm64                 randconfig-1002-20261026    clang-24
-arm64                 randconfig-1002-20261027    gcc-8.5.0
-arm64                 randconfig-1003-20261025    clang-24
-arm64                 randconfig-1003-20261026    clang-24
-arm64                 randconfig-1003-20261027    gcc-8.5.0
-csky                              allmodconfig    gcc-16.2.0
-csky                               allnoconfig    gcc-16.2.0
-csky                                 defconfig    gcc-16.2.0
-csky                  randconfig-1000-20261025    clang-24
-csky                  randconfig-1000-20261026    clang-24
-csky                  randconfig-1000-20261027    gcc-8.5.0
-csky                  randconfig-1001-20261025    clang-24
-csky                  randconfig-1001-20261026    clang-24
-csky                  randconfig-1001-20261027    gcc-8.5.0
-hexagon                           allmodconfig    gcc-16.2.0
-hexagon                            allnoconfig    gcc-16.2.0
-hexagon                              defconfig    gcc-16.2.0
-hexagon               randconfig-1000-20261025    clang-24
-hexagon               randconfig-1000-20261026    clang-24
-hexagon               randconfig-1000-20261027    clang-24
-hexagon               randconfig-1001-20261025    clang-24
-hexagon               randconfig-1001-20261026    clang-24
-hexagon               randconfig-1001-20261027    clang-24
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.2.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20261025    gcc-14
-i386        buildonly-randconfig-1000-20261026    clang-22
-i386        buildonly-randconfig-1000-20261027    clang-22
-i386        buildonly-randconfig-1001-20261025    gcc-14
-i386        buildonly-randconfig-1001-20261026    clang-22
-i386        buildonly-randconfig-1001-20261027    clang-22
-i386        buildonly-randconfig-1002-20261025    gcc-14
-i386        buildonly-randconfig-1002-20261026    clang-22
-i386        buildonly-randconfig-1002-20261027    clang-22
-i386        buildonly-randconfig-1003-20261025    gcc-14
-i386        buildonly-randconfig-1003-20261026    clang-22
-i386        buildonly-randconfig-1003-20261027    clang-22
-i386        buildonly-randconfig-1004-20261025    gcc-14
-i386        buildonly-randconfig-1004-20261026    clang-22
-i386        buildonly-randconfig-1004-20261027    clang-22
-i386        buildonly-randconfig-1005-20261025    gcc-14
-i386        buildonly-randconfig-1005-20261026    clang-22
-i386        buildonly-randconfig-1005-20261027    clang-22
-i386                                 defconfig    gcc-16.2.0
-i386                  randconfig-1000-20261025    clang-22
-i386                  randconfig-1000-20261026    gcc-14
-i386                  randconfig-1000-20261027    gcc-14
-i386                  randconfig-1001-20261025    clang-22
-i386                  randconfig-1001-20261026    gcc-14
-i386                  randconfig-1001-20261027    gcc-14
-i386                  randconfig-1002-20261025    clang-22
-i386                  randconfig-1002-20261026    gcc-14
-i386                  randconfig-1002-20261027    gcc-14
-i386                  randconfig-1003-20261025    clang-22
-i386                  randconfig-1003-20261026    gcc-14
-i386                  randconfig-1003-20261027    gcc-14
-i386                  randconfig-1004-20261025    clang-22
-i386                  randconfig-1004-20261026    gcc-14
-i386                  randconfig-1004-20261027    gcc-14
-i386                  randconfig-1005-20261025    clang-22
-i386                  randconfig-1005-20261026    gcc-14
-i386                  randconfig-1005-20261027    gcc-14
-i386                  randconfig-1006-20261025    clang-22
-i386                  randconfig-1006-20261026    gcc-14
-i386                  randconfig-1006-20261027    gcc-14
-i386                  randconfig-1007-20261025    gcc-14
-i386                  randconfig-1007-20261026    clang-22
-i386                  randconfig-1007-20261027    gcc-14
-i386                  randconfig-1008-20261025    gcc-14
-i386                  randconfig-1008-20261026    clang-22
-i386                  randconfig-1008-20261027    gcc-14
-i386                  randconfig-1009-20261025    gcc-14
-i386                  randconfig-1009-20261026    clang-22
-i386                  randconfig-1009-20261027    gcc-14
-i386                  randconfig-1010-20261025    gcc-14
-i386                  randconfig-1010-20261026    clang-22
-i386                  randconfig-1010-20261027    gcc-14
-i386                  randconfig-1011-20261025    gcc-14
-i386                  randconfig-1011-20261026    clang-22
-i386                  randconfig-1011-20261027    gcc-14
-i386                  randconfig-1012-20261025    gcc-14
-i386                  randconfig-1012-20261026    clang-22
-i386                  randconfig-1012-20261027    gcc-14
-i386                  randconfig-1013-20261025    gcc-14
-i386                  randconfig-1013-20261026    clang-22
-i386                  randconfig-1013-20261027    gcc-14
-loongarch                         alldefconfig    gcc-16.2.0
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.2.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20261025    clang-24
-loongarch             randconfig-1000-20261026    clang-24
-loongarch             randconfig-1000-20261027    clang-24
-loongarch             randconfig-1001-20261025    clang-24
-loongarch             randconfig-1001-20261026    clang-24
-loongarch             randconfig-1001-20261027    clang-24
-m68k                              alldefconfig    gcc-16.2.0
-m68k                              allmodconfig    gcc-16.2.0
-m68k                               allnoconfig    gcc-16.2.0
-m68k                              allyesconfig    clang-24
-m68k                              allyesconfig    gcc-16.2.0
-m68k                          apollo_defconfig    clang-17
-m68k                                 defconfig    clang-24
-m68k                        m5249evb_defconfig    gcc-16.2.0
-m68k                        m5275evb_defconfig    clang-17
-m68k                        m5275evb_defconfig    gcc-16.2.0
-m68k                        m5329evb_defconfig    clang-17
-m68k                        m5329evb_defconfig    gcc-16.2.0
-m68k                         mvme147_defconfig    gcc-16.2.0
-m68k                         stmark2_defconfig    gcc-16.2.0
-microblaze                        alldefconfig    gcc-16.2.0
-microblaze                         allnoconfig    gcc-16.2.0
-microblaze                        allyesconfig    gcc-16.2.0
-microblaze                           defconfig    clang-24
-mips                              allmodconfig    gcc-16.2.0
-mips                               allnoconfig    gcc-16.2.0
-mips                              allyesconfig    gcc-16.2.0
-mips                         bcm47xx_defconfig    clang-17
-mips                       bmips_stb_defconfig    clang-17
-mips                            ci20_defconfig    clang-17
-mips                          cobalt_defconfig    gcc-16.2.0
-mips                   decstation_64_defconfig    gcc-16.2.0
-mips                      decstation_defconfig    gcc-16.2.0
-mips                  decstation_r4k_defconfig    gcc-16.2.0
-mips                 econet_en751221_defconfig    gcc-16.2.0
-mips                            gcw0_defconfig    clang-17
-mips                            gcw0_defconfig    clang-24
-mips                       loongson1_defconfig    gcc-16.2.0
-mips                       maltaaprp_defconfig    clang-17
-mips                    sb1250_swarm_defconfig    gcc-16.2.0
-mips                            xway_defconfig    gcc-16.2.0
-nios2                             allmodconfig    clang-20
-nios2                             allmodconfig    gcc-11.5.0
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20261025    clang-24
-nios2                 randconfig-1000-20261026    clang-24
-nios2                 randconfig-1000-20261027    clang-24
-nios2                 randconfig-1001-20261025    clang-24
-nios2                 randconfig-1001-20261026    clang-24
-nios2                 randconfig-1001-20261027    clang-24
-openrisc                          alldefconfig    gcc-16.2.0
-openrisc                          allmodconfig    clang-20
-openrisc                          allmodconfig    gcc-11.5.0
-openrisc                           allnoconfig    clang-24
-openrisc                             defconfig    gcc-16.2.0
-openrisc                     or1ksim_defconfig    gcc-16.2.0
-openrisc                        virt_defconfig    clang-24
-parisc                            allmodconfig    gcc-16.2.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.2.0
-parisc                randconfig-1000-20261025    clang-24
-parisc                randconfig-1000-20261026    gcc-14.4.0
-parisc                randconfig-1000-20261027    clang-22
-parisc                randconfig-1001-20261025    clang-24
-parisc                randconfig-1001-20261026    gcc-14.4.0
-parisc                randconfig-1001-20261027    clang-22
-parisc64                          alldefconfig    gcc-16.2.0
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.2.0
-powerpc                            allnoconfig    clang-24
-powerpc                     amigaone_defconfig    gcc-16.2.0
-powerpc                       bamboo_defconfig    clang-17
-powerpc                       bamboo_defconfig    clang-24
-powerpc                        eiger_defconfig    clang-24
-powerpc                      ep8248e_defconfig    gcc-16.2.0
-powerpc                     ge_imp3a_defconfig    gcc-16.2.0
-powerpc                  linkstation_defconfig    clang-17
-powerpc                    microwatt_defconfig    gcc-16.2.0
-powerpc                      mpc5200_defconfig    clang-17
-powerpc                      mpc5200_defconfig    clang-24
-powerpc                  mpc8315_rdb_defconfig    clang-17
-powerpc                  mpc836x_rdk_defconfig    clang-17
-powerpc                      mpc83xx_defconfig    gcc-16.2.0
-powerpc                     mvme5100_defconfig    gcc-16.2.0
-powerpc                      powernv_defconfig    gcc-16.2.0
-powerpc                       ppc44x_defconfig    gcc-16.2.0
-powerpc                       ppc64e_defconfig    gcc-16.2.0
-powerpc               randconfig-1000-20261025    clang-24
-powerpc               randconfig-1000-20261026    gcc-14.4.0
-powerpc               randconfig-1000-20261027    clang-22
-powerpc               randconfig-1001-20261025    clang-24
-powerpc               randconfig-1001-20261026    gcc-14.4.0
-powerpc               randconfig-1001-20261027    clang-22
-powerpc                     sam440ep_defconfig    clang-17
-powerpc                      skiroot_defconfig    gcc-16.2.0
-powerpc                      tqm8540_defconfig    clang-24
-powerpc                      tqm8540_defconfig    gcc-16.2.0
-powerpc                      tqm8548_defconfig    gcc-16.2.0
-powerpc                      tqm8555_defconfig    gcc-16.2.0
-powerpc                      tqm8560_defconfig    clang-17
-powerpc                         warp_defconfig    gcc-16.2.0
-powerpc64             randconfig-1000-20261025    clang-24
-powerpc64             randconfig-1000-20261026    gcc-14.4.0
-powerpc64             randconfig-1000-20261027    clang-22
-powerpc64             randconfig-1001-20261025    clang-24
-powerpc64             randconfig-1001-20261026    gcc-14.4.0
-powerpc64             randconfig-1001-20261027    clang-22
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.2.0
-riscv                     nommu_k210_defconfig    gcc-16.2.0
-riscv                     nommu_virt_defconfig    gcc-16.2.0
-riscv                 randconfig-1000-20261025    gcc-10.5.0
-riscv                 randconfig-1000-20261026    gcc-13.5.0
-riscv                 randconfig-1000-20261027    gcc-16.2.0
-riscv                 randconfig-1001-20261025    gcc-10.5.0
-riscv                 randconfig-1001-20261026    gcc-13.5.0
-riscv                 randconfig-1001-20261027    gcc-16.2.0
-s390                              alldefconfig    gcc-16.2.0
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.2.0
-s390                                 defconfig    gcc-16.2.0
-s390                  randconfig-1000-20261025    gcc-10.5.0
-s390                  randconfig-1000-20261026    gcc-13.5.0
-s390                  randconfig-1000-20261027    gcc-16.2.0
-s390                  randconfig-1001-20261025    gcc-10.5.0
-s390                  randconfig-1001-20261026    gcc-13.5.0
-s390                  randconfig-1001-20261027    gcc-16.2.0
-sh                                allmodconfig    gcc-16.2.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                          ap325rxa_defconfig    clang-24
-sh                          apsh4a3a_defconfig    clang-24
-sh                         apsh4ad0a_defconfig    gcc-16.2.0
-sh                                   defconfig    gcc-14
-sh                         dreamcast_defconfig    gcc-16.2.0
-sh                         edosk7705_defconfig    gcc-16.2.0
-sh                                j2_defconfig    gcc-16.2.0
-sh                           polaris_defconfig    gcc-16.2.0
-sh                           r7780mp_defconfig    clang-17
-sh                    randconfig-1000-20261025    gcc-10.5.0
-sh                    randconfig-1000-20261026    gcc-13.5.0
-sh                    randconfig-1000-20261027    gcc-16.2.0
-sh                    randconfig-1001-20261025    gcc-10.5.0
-sh                    randconfig-1001-20261026    gcc-13.5.0
-sh                    randconfig-1001-20261027    gcc-16.2.0
-sh                           sdk7786_defconfig    gcc-16.2.0
-sh                            se7343_defconfig    clang-24
-sh                            se7705_defconfig    clang-24
-sh                            se7712_defconfig    gcc-16.2.0
-sh                            se7721_defconfig    gcc-16.2.0
-sh                            se7722_defconfig    gcc-16.2.0
-sh                            se7724_defconfig    gcc-16.2.0
-sh                            se7780_defconfig    gcc-16.2.0
-sh                            sh2007_defconfig    clang-17
-sh                    sh7770_generic_defconfig    clang-17
-sh                         sh7785lcr_defconfig    gcc-16.2.0
-sh                             shmin_defconfig    gcc-16.2.0
-sh                             titan_defconfig    gcc-16.2.0
-sh                               ul2_defconfig    gcc-16.2.0
-sh                           urquell_defconfig    gcc-16.2.0
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.2.0
-sparc                 randconfig-1000-20261025    gcc-14
-sparc                 randconfig-1000-20261026    gcc-14
-sparc                 randconfig-1000-20261027    clang-20
-sparc                 randconfig-1001-20261025    gcc-14
-sparc                 randconfig-1001-20261026    gcc-14
-sparc                 randconfig-1001-20261027    clang-20
-sparc                        sparc32_defconfig    gcc-16.2.0
-sparc                        sparc64_defconfig    gcc-16.2.0
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20261025    gcc-14
-sparc64               randconfig-1000-20261026    gcc-14
-sparc64               randconfig-1000-20261027    clang-20
-sparc64               randconfig-1001-20261025    gcc-14
-sparc64               randconfig-1001-20261026    gcc-14
-sparc64               randconfig-1001-20261027    clang-20
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.2.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                    randconfig-1000-20261025    gcc-14
-um                    randconfig-1000-20261026    gcc-14
-um                    randconfig-1000-20261027    clang-20
-um                    randconfig-1001-20261025    gcc-14
-um                    randconfig-1001-20261026    gcc-14
-um                    randconfig-1001-20261027    clang-20
-um                            x86_64_defconfig    gcc-14
-x86_64                            alldefconfig    clang-24
-x86_64                            alldefconfig    gcc-16.2.0
-x86_64                            allmodconfig    clang-22
-x86_64                             allnoconfig    clang-24
-x86_64                            allyesconfig    clang-22
-x86_64      buildonly-randconfig-1000-20261025    gcc-14
-x86_64      buildonly-randconfig-1000-20261026    clang-22
-x86_64      buildonly-randconfig-1000-20261027    gcc-14
-x86_64      buildonly-randconfig-1001-20261025    gcc-14
-x86_64      buildonly-randconfig-1001-20261026    clang-22
-x86_64      buildonly-randconfig-1001-20261027    gcc-14
-x86_64      buildonly-randconfig-1002-20261025    gcc-14
-x86_64      buildonly-randconfig-1002-20261026    clang-22
-x86_64      buildonly-randconfig-1002-20261027    gcc-14
-x86_64      buildonly-randconfig-1003-20261025    gcc-14
-x86_64      buildonly-randconfig-1003-20261026    clang-22
-x86_64      buildonly-randconfig-1003-20261027    gcc-14
-x86_64      buildonly-randconfig-1004-20261025    gcc-14
-x86_64      buildonly-randconfig-1004-20261026    clang-22
-x86_64      buildonly-randconfig-1004-20261027    gcc-14
-x86_64      buildonly-randconfig-1005-20261025    gcc-14
-x86_64      buildonly-randconfig-1005-20261026    clang-22
-x86_64      buildonly-randconfig-1005-20261027    gcc-14
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20261024    gcc-14
-x86_64                randconfig-1000-20261025    clang-22
-x86_64                randconfig-1000-20261026    clang-22
-x86_64                randconfig-1000-20261027    gcc-14
-x86_64                randconfig-1001-20261024    gcc-14
-x86_64                randconfig-1001-20261025    clang-22
-x86_64                randconfig-1001-20261026    clang-22
-x86_64                randconfig-1001-20261027    gcc-14
-x86_64                randconfig-1002-20261024    gcc-14
-x86_64                randconfig-1002-20261025    clang-22
-x86_64                randconfig-1002-20261026    clang-22
-x86_64                randconfig-1002-20261027    gcc-14
-x86_64                randconfig-1003-20261024    gcc-14
-x86_64                randconfig-1003-20261025    clang-22
-x86_64                randconfig-1003-20261026    clang-22
-x86_64                randconfig-1003-20261027    gcc-14
-x86_64                randconfig-1004-20261024    gcc-14
-x86_64                randconfig-1004-20261025    clang-22
-x86_64                randconfig-1004-20261026    clang-22
-x86_64                randconfig-1004-20261027    gcc-14
-x86_64                randconfig-1005-20261024    gcc-14
-x86_64                randconfig-1005-20261025    clang-22
-x86_64                randconfig-1005-20261026    clang-22
-x86_64                randconfig-1005-20261027    gcc-14
-x86_64                randconfig-1006-20261025    clang-22
-x86_64                randconfig-1006-20261026    gcc-14
-x86_64                randconfig-1006-20261027    clang-22
-x86_64                randconfig-1007-20261025    clang-22
-x86_64                randconfig-1007-20261026    gcc-14
-x86_64                randconfig-1007-20261027    clang-22
-x86_64                randconfig-1008-20261025    clang-22
-x86_64                randconfig-1008-20261026    gcc-14
-x86_64                randconfig-1008-20261027    clang-22
-x86_64                randconfig-1009-20261025    clang-22
-x86_64                randconfig-1009-20261026    gcc-14
-x86_64                randconfig-1009-20261027    clang-22
-x86_64                randconfig-1010-20261025    clang-22
-x86_64                randconfig-1010-20261026    gcc-14
-x86_64                randconfig-1010-20261027    clang-22
-x86_64                randconfig-1011-20261025    clang-22
-x86_64                randconfig-1011-20261026    gcc-14
-x86_64                randconfig-1011-20261027    clang-22
-x86_64                randconfig-1012-20261025    clang-22
-x86_64                randconfig-1012-20261026    gcc-14
-x86_64                randconfig-1012-20261027    clang-22
-x86_64                randconfig-1013-20261025    clang-22
-x86_64                randconfig-1013-20261026    gcc-14
-x86_64                randconfig-1013-20261027    clang-22
-x86_64                randconfig-1014-20261025    clang-22
-x86_64                randconfig-1014-20261026    gcc-14
-x86_64                randconfig-1014-20261027    clang-22
-x86_64                randconfig-1015-20261025    clang-22
-x86_64                randconfig-1015-20261026    gcc-14
-x86_64                randconfig-1015-20261027    clang-22
-x86_64                randconfig-1016-20261025    clang-22
-x86_64                randconfig-1016-20261026    gcc-14
-x86_64                randconfig-1016-20261027    clang-22
-x86_64                randconfig-1017-20261025    clang-22
-x86_64                randconfig-1017-20261026    gcc-14
-x86_64                randconfig-1017-20261027    clang-22
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                   audio_kc705_defconfig    gcc-16.2.0
-xtensa                 generic_kc705_defconfig    gcc-16.2.0
-xtensa                randconfig-1000-20261025    gcc-14
-xtensa                randconfig-1000-20261026    gcc-14
-xtensa                randconfig-1000-20261027    clang-20
-xtensa                randconfig-1001-20261025    gcc-14
-xtensa                randconfig-1001-20261026    gcc-14
-xtensa                randconfig-1001-20261027    clang-20
-xtensa                          virt_defconfig    gcc-16.2.0
-xtensa                     xip_kc705_defconfig    clang-17
-xtensa                     xip_kc705_defconfig    gcc-16.2.0
+Test setup (CPUs 2-6, A is a root partition, B is an isolated child):
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+    A:  cpuset.cpus = 2-6, cpuset.cpus.exclusive = 2-5
+    B:  cpuset.cpus = 3-6, cpuset.cpus.exclusive = 3-6 (clamped to 3-5)
+
+    echo 2-6 > A/cpuset.cpus.exclusive
+
+Expected after the expansion: B holds 3-6 and cpuset.cpus.isolated
+becomes 3-6.
+
+    current code:   B = 3-6, isolated = 3-5, A effective = 2,6
+    rework:         B = 3-6, isolated = 3-5, A effective = 2
+    posted patch:   B = 3-6, isolated = 3-6, A effective = 2
+
+The rework subtracts the child's claim from the parent's effective_cpus
+in one step, but the accounting for a growing child partition isn't
+only about the parent's effective_cpus. partition_xcpus_add() also
+updates subpartitions_cpus and isolated_cpus, e.g. a CPU newly gained
+by an isolated child has to be added to isolated_cpus.
+
+Note that the isolated_cpus miss above exists in the current code too:
+an isolated child that gains CPUs from a parent expansion updates its
+effective_xcpus, but isolated_cpus is never updated. The posted patch
+fixes that as well.
+
+Sorry again for the noise.
+
+Thanks,
+Guopeng
+
