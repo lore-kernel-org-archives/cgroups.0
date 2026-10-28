@@ -1,64 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.121
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793211500;
-	b=Nd9XNT6p/Ka+M+EGTPc5D75sHU+hLA/mHFQ78STLHNvKfQxmrjJiyg6qHUTOJhkFEobd
-	 I3VB2YmCwIN2Za5bptoCNR3fiZ7nMSsS48169SvEqXBXz1sQxVRJgq0FVQpybMOoxWFFs
-	 5mKxPDq9Mcr5TtEWuebBwruhr1N1T2oXUUCwKmii/GZFBci/+11I9ccYODZBe8wd5N+ez
-	 yOtz5LqrAozFMeW+ZvNYYGcD++xcTCn8VOhq8QevEPwTTqOmwS7ZdMwrN0qBwV4RRF9U+
-	 gPnURWEZZR5/RqeTlmJ7XYlTvbDcLBX3KVdvNOrp3o5s8xXlLEuptTqgg6n4yfMLynQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793211500;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=0oiry0ZaDpBozgKs3Yn0AN+r5C81GF5EHZ1wjFVYL/k=;
-	b=1k39fPvezK8zV2lxJE8tqMpJyrgQqAV6noptAZZpQ6mli2puUFBrkXTyrOAsdkEH6ZwZ
-	 6DbDStXWXLj/IX+BH7JGoGt+MrbdqotvqD5HsyYSiDGqAuXEtKmwxSj30qfmWL/Lp20kJ
-	 2UXSRXJWin/hOX4gXEJ2fmHQsgL9Pb8GKOQEZi2LwI2YCZbz8YR2gvqR/gpmOxH/lGlNm
-	 iB7Mit+cC0lSik4dXQfQWfyi1QAP9xUxmX9g2Ggdthns1UbwMsHD6QtrZTkvW+epHnJat
-	 CNQKUKs7bJOjcDfaYKfw4I//OAWBzfKs8gdA9ntvHMHJENtlRp++utdZOBCro4n7uZw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.121
-Received: from mta0.migadu.com (out-121.mta0.migadu.com [91.218.175.121])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.53
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793212420;
+	b=d2oHkCnBqEHq3BKIMwzNT4W2F1qyIBA8ztWRA2519DQmOG0A6p0wqJQ0cj5alpJ/8C3K
+	 65kxZcAZpg0cz0JVxbImQj6ODZbXq55fSxgZt/36V4F0dWp8SXSTqiZp7dIVH+14oDseY
+	 DU3z35zoCCZHu/IzzpKntllH3BpeP5dPg4mNKxsQoxJNjeKyWlImIKYxx0tj1bzq5vNsV
+	 l7dD0+35B6F4S04lvlwn6rxsYnQg5f6aB78Lvi+CY9yKqpnZAFTyCETjarfHFlEgyo4C6
+	 R4fXZF3vLXOHy+kkmyFJKNPGGZiGcpLG3zwoWQKv18fuJxO0Lc9x8oiwo3kGP0FDz4w==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793212420;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=WLy4iM7sjMurHn68gexgh9d6giJhTKkJQBRBvB3l3v4=;
+	b=xFSs+PSWF3OeFObdwMnR+oW/+eBvnIC+/Zqbd+jJ0zwyR6r2sEQUxboeaPBa5Tvvq0L/
+	 WE3X3iZ4P1F0WAppaPzq5GKAugm808DnRolDGLw/JP+a5OBWtZjzXfVwxQWI2rjIsIq+H
+	 BU2nWkJN2cxYWb7T1W3RetRJOFLIx6pwd739lJA90zljSKk6JMiEptr7kmA6a60w8Ec8D
+	 BzmxEYmpaZr8mTIG5IY6/ntD9EnKKqHgOhyHbZDSqfGlLMEy3NWUuj94px+taewdGa6Xq
+	 vVWao5l2zvuSj4/2Sgu+EJ+CZ/c8wGrGCj6LZQv9CwLjCC0PQwCyU1avWzmkoY1O6FQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LPEm6PbC;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.53
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA678606A31A
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 18:18:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA678606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=FzSLDoLL3l9c7gMzSXMHTUPkCis4CHxPNrJyJmMFlpk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793211490; v=1; x=1793816290;
- b=gU0j6S5lCSGrqFK3BVUBPVUpoJjMru/bTOQUq6k4s8hYE7pyHyjgIVQVNpixe8IGEYsHiSTo
- Sa9tQgmS5tlXViRJaa2x65+OMlfI5V623xi1qnOcoJVUKz1oQgC6LPcveWygQ0GXNgY6TXjxYXu
- B7nX71X6/VXlzdJeHTaUT5fQ=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5ad5a2eaaa496885;
-	Wed, 28 Oct 2026 18:18:10 +0000
-X-Mizu-Trace-ID: 5ad5a2eaaa496885
-X-Migadu-Flow: FLOW_OUT
-Date: Wed, 28 Oct 2026 11:18:08 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Yingjie Wang <x-professor@outlook.com>
-Cc: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, 
-	Manfred Spraul <manfred@colorfullife.com>, Alexey Gladkov <legion@kernel.org>, 
-	"Eric W . Biederman" <ebiederm@xmission.com>, Vasily Averin <vasily.averin@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Michal Hocko <mhocko@suse.com>, Alejandro Colomar <alx@kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, 
-	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, 
-	"linux-man@vger.kernel.org" <linux-man@vger.kernel.org>, 
-	"linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH v4 1/3] ipc/sem: account enlarged sops arrays to memcg
-Message-ID: <auI8CyIxjbLEMeEZ@linux.dev>
-References: <cover.1793207025.git.x-professor@outlook.com>
- <565d855cbd81e0f49018da21df00ff0308f646b1.1793207025.git.x-professor@outlook.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C983606A31D
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 18:33:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0C983606A31D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=LPEm6PbC
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-48e20ed3b9dso1010775f8f.2
+        for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 11:33:39 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1793212418; cv=none;
+        d=google.com; s=arc-20260327;
+        b=pJD+w3i3E1FxZX+cYe0tu4aeiE3Zy7kumRNA7Uoy8zd0REcSljT4o5Mxn09wbyifgC
+         o6zLn3IuoV276By+YHxlA6tkgGL2zvIeaCeU7S5N7858G8bq55LgCdJQQfPBv2+sCQn7
+         I6ZFkvGSD/jiWz1IsRTD7rh7Ggb7u37/1jfuiYW0pccWm6yny7gXlYaRaAmcbbSFTHuE
+         uthKVY4Ghss3XzemlWQBYtsYmvbI85ZF2b+psx7Z0o5vIkSt9JHQ4kosMuXvAQ10gEjk
+         4+DtWNslpyJb9usQDaBlWnEyhN/Kp2ifkMtiu0C6cb+LMf6y5kzMq5NAMy84U7yxyD9Z
+         j7lQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=WLy4iM7sjMurHn68gexgh9d6giJhTKkJQBRBvB3l3v4=;
+        fh=2crsJVTdMKXZi4Wcn/fGcbZhURyBVrLmyT6aDumVIpI=;
+        b=onnPUsvD4tCmaXrj1ms4Xw/MtM0qiV2l5cTVGIU8MIhE9k6bZS4+5AnEx1kS/tImkR
+         iKvgaGQGJPukLUBSfqib4M0suxYhBFJrRMYEPcf4C/9U0zarS6Jaz3mr2UTB06r4k50F
+         9xqMd588osGc8F6gbYbZLEa+JO5t0AwtOICm85s5ruAB3NI6dr3GZKToPkqCJ9wbbqqR
+         we47TagCZfked4/m2wlWQOxFug0IYXdA+fQDOopwMypjhAwFcSNm963DjOvu1IY1bghY
+         p7PLxNFXT5lucqB+F7lZOLM6vto05ZPbNFLPIB9Lc4iWtEPQwM/NfOnt4s5aM11viHBk
+         9Gbw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793212418; x=1793817218; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=WLy4iM7sjMurHn68gexgh9d6giJhTKkJQBRBvB3l3v4=;
+        b=LPEm6PbCoEAoWvFRLIh4jElq4sPGvjZkdLl+6s83uv8965ADij1KbtiXrQGIWpLGvU
+         4LwbP+jhYn879IiRg+L0B6IzOj03unawJ0n0pKwwTaaxdvWxDTT1lV619XsiKsrZPWNL
+         LrQDhSJJmhfZFeHwM3N0AkSCtiOowMy2PX7JC6di3VvAPY7zLo282VzntJvYuMfy3PFi
+         RR4SwRw1X9duisJELOFdBPhBvbEyLLsewYgwJcfrVFDBtav1QE95T+w+fOFuzlNQ9mnR
+         pEVo3ADWmMZRQfPjxBw+7BZv8gewIfAyPZG1Wo3xFTw+znFacK143CxAYK0LNAWnjqJZ
+         W0dg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793212418; x=1793817218;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=WLy4iM7sjMurHn68gexgh9d6giJhTKkJQBRBvB3l3v4=;
+        b=fSsm7s7mACtk4GH/r0znA0aHzFa62iTXPxyjvvnpYH97kprUQ2Hxx/ZC+YBkFTttyC
+         lmI9+EyiWOLIIQO6gF0rvtLwCCQstWk0MPckIOMOok8gKWVzqarI9uap2r7jPqRFQJq5
+         zQ74LAMGvA8Exw6vS2Z+w/VVeW3Dz+U3ca0eERagGJX1lQvwEL7EqSZLoUVRFAhQWGrq
+         y8as26G/U+cpF0pWjru4K+BvDODRG5Yb1et5AsZkfpS8zNdb8bC9vFBzOjm2ViNik80B
+         4SutwREA6Yu707jrsX9/t9Uls1lHwVaHDgMs6RQPGMHqWW1X39TOs9LqfVuASr/cda+T
+         O94Q==
+X-Forwarded-Encrypted: i=1; AKwUvBz5Xa+FCnWCkj3CxbIQU2ojYEmrg9qAYAjzUY2zuKy72NNGGQiKqSRNkdh5IBLiqtQFkY+eQZHy@vger.kernel.org
+X-Gm-Message-State: AFq9FYKr/3x5ByTl/UYKd/HbBgqJsX/jpo5UV+Y5pnpY1REma4D1LW7z
+	Wp40s5F3xWLlmHcA98EuD2UwWh1D85h9+d7BH3O0xCxJ/7YREbdkjU9AnG9ZlfLTAiiGtCzUpda
+	+4Drgiv8z9G3vjGoAKb030wxRYcRTYZY=
+X-Gm-Gg: AYBFou36YIqzEB8V8Z/cVznfLHZMIE/EQPROmd+azSEHDSUX/9pyqt7vcA/lPFedTeR
+	tjRkQkYBWHf8k2Rp6NnQ1rO9G/1PRfIIRFW1NFEhv80+YvhaTfjwhPhxmlllaI/l6nEf3HcgM+R
+	PzVkiZLzVMUslvGV36O7Dv9FJ+FMjrWeCTooeOitGu27Du/8c/FinONUgt+dq86zsgpNdvXH1ro
+	Wh/KiF7jd6DqmeDTRGE6KMxiQjsIFzLmwQjhXFhuq00NbmeNZmAfRNC3h5FTHYFhK7lbRG0nNAn
+	RnbvkSsmQwR6nr8KdwGvbmESmh4fUnx13NhDZxeXpIyUzPvbDe3hM+qz/jX0YpPrf7yoJKhRDYf
+	EEWrU26TxH9rV4jsk2vYjsCQ/ho+FmHMcTLHRii1NjNAwIaTMCWFcXY/fA1pj9FrQavTewRdM/u
+	4Xolu7R6QLPAfDH4vW1g==
+X-Received: by 2002:a05:6000:24c5:b0:48d:fbdd:4132 with SMTP id
+ ffacd0b85a97d-48e5d2e735fmr7896834f8f.18.1793212418278; Wed, 28 Oct 2026
+ 11:33:38 -0700 (PDT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -68,58 +105,45 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <565d855cbd81e0f49018da21df00ff0308f646b1.1793207025.git.x-professor@outlook.com>
+References: <20261023195417.1391216-1-joannelkoong@gmail.com>
+ <20261023155407.0b519a3da7313137a0276119@linux-foundation.org>
+ <CAJnrk1Z-zzKL9Jebk4XMpfOBtyArppGPTv3__GTbCZXGiEJjOQ@mail.gmail.com> <20261027192414.cb3318abc07232ec5f1bc937@linux-foundation.org>
+In-Reply-To: <20261027192414.cb3318abc07232ec5f1bc937@linux-foundation.org>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Wed, 28 Oct 2026 11:33:25 -0700
+X-Gm-Features: AclHuK88Lp-URHNAJMmVOulPZwNOZDWdUu5bfn4DmWPf6pmLBXKAO1fN5Zvq1ww
+Message-ID: <CAJnrk1Zxwn8W4w5-rJw9DNPvZU0Or6Z26nL47RGxRHhFCKu=ag@mail.gmail.com>
+Subject: Re: [PATCH v3 0/2] memcg: reduce cacheline contention from lruvec stat
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 28, 2026 at 05:03:57PM +0000, Yingjie Wang wrote:
-> Commit 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in
-> do_semtimedop()") removed accounting based on the assumption that sops
-> arrays would remain small, describing a maximum cost of two pages.
-> 
-> SEMOPM is a UAPI default that can be changed when rebuilding the kernel.
-> It must not also define the accounting policy, since changing that default
-> would enlarge the unaccounted range.
-> 
-> Keep the historical small-array range unaccounted with a fixed internal
-> threshold of 1000 operations, and use GFP_KERNEL_ACCOUNT when the actual
-> nsops exceeds it. Requests within that range retain the existing allocation
-> behavior, while larger user-controlled arrays are charged to the caller's
-> memory cgroup.
-> 
-> Commit 50ec499b9a43 ("sysctl: allow change system v ipc sysctls inside ipc
-> namespace") later made the per-namespace limit tunable by IPC namespace
-> owners without capabilities in the initial user namespace.
-> 
-> Link: https://lore.kernel.org/r/20261016152609.2528805-1-x-professor@outlook.com
-> Fixes: 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in do_semtimedop()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yingjie Wang <x-professor@outlook.com>
-> ---
->  ipc/sem.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/ipc/sem.c b/ipc/sem.c
-> index 5ec41de7e85b2..a8c9807175520 100644
-> --- a/ipc/sem.c
-> +++ b/ipc/sem.c
-> @@ -176,6 +176,7 @@ static int sysvipc_sem_proc_show(struct seq_file *s, void *it);
->  
->  #define SEMMSL_FAST	256 /* 512 bytes on stack */
->  #define SEMOPM_FAST	64  /* ~ 372 bytes on stack */
-> +#define SEMOPM_NOACCOUNT	1000 /* ~ 2 pages for struct sembuf */
->  
->  /*
->   * Switching from the mode suitable for simple ops
-> @@ -2234,7 +2235,10 @@ static long do_semtimedop(int semid, struct sembuf __user *tsops,
->  		return -EINVAL;
->  
->  	if (nsops > SEMOPM_FAST) {
-> -		sops = kvmalloc_objs(*sops, nsops);
-> +		gfp_t gfp = nsops > SEMOPM_NOACCOUNT ?
+On Tue, Oct 27, 2026 at 7:24=E2=80=AFPM Andrew Morton <akpm@linux-foundatio=
+n.org> wrote:
+>
+> On Tue, 27 Oct 2026 15:57:43 -0700 Joanne Koong <joannelkoong@gmail.com> =
+wrote:
+>
+> > Here's an updated version of the "Fix this by moving the memcg_pn_cold
+> > group..." paragraph in patch 1 that mentions this:
+> >
+> > Fix this by moving the memcg_pn_cold group, which is only touched when
+> > the memcg is reparented or freed, right after memcg_pn_read_mostly.
+> > SLAB_HWCACHE_ALIGN only aligns objects to a cacheline, and the struct
+> > is 576 bytes, so depending on where an object lands, its read-mostly
+> > cacheline is now paired either with its cold cacheline or with the last
+> > cacheline of the preceding object, which holds the end of
+> > lru_zone_size[] and the reclaim iterator. Both are rarely written
+> > outside of reclaim, so either way the read-mostly cacheline is no
+> > longer paired with the LRU list heads.
+> >
+> > Would you be able to swap it in or would you prefer that I send a v4?
+>
+> Thanks.  I'll take care of this when I process the patchset.  Which
+> will be quite soon now we're all merged up.
 
-Instead of making this conditional, can you just GFP_KERNEL_ACCOUNT
-unconditionally and benchmark it. The kmem accounting has changed a lot since
-that patch. If the performance impact is fine then we should just use
-GFP_KERNEL_ACCOUNT.
-
+Sounds great. Thanks, Andrew!
