@@ -1,52 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.119
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793183263;
-	b=vos0MvL6h+rnZu4etv3O0SIJh326ZDGYk1tYO5u5awjIxdkKtoEh8EOKTBRumztCn/6b
-	 +myeMytl9rDZSLHXlFo0pneGSutmo89vUybA32BkAcr4eB97mvma3RinQc3/ZhT72EIpX
-	 LwGEuUJNqh74UsVNx5oPjseyjrpys1S9k8wKjH4C2zVbs2Ur3TGxf6P/YRnF4QGFlk5db
-	 VL7M9bOOQ0tHCgRNkw3e9S9nT+aymT83XVq24FOfk8WqabMlR06e9zWzpGfLsrzYU8Ppr
-	 gqthPZDTeBTc2ShXGKNXNDhzKUnlAdyHhTh9nUgrvvN5WiU1O1+GMAAyvovF7JBuzqA==
+	t=1793184225;
+	b=G/qf/opRdOEjocdJJqxD2031qK4YjkUoygVfBpA4IIsLY58PU/iYirHlV+QPYIvRDRFW
+	 Ewm+UiPgSCIrny3l8Hxlx/uWSL/H5wZf5AU4RVNGpGf86018cGFGFkw1I5dHHIS++gLHl
+	 buQb+C3Xmc0zCJeJnGuX+rL1bvqkfb9hSIXiBLhQT4EvD9nKT+61QbztpuHMQjXA3frC4
+	 TlGAZQMUDb1Rp8mbBhqnzI/p5HXmVpK/mlz6pe71kiHUwMhU5acBMLVmkpSYHIsWr2LLc
+	 BHE8YOTCxYwafUMXgkG88usOnFrBHhjq/BFPUpo7TksDATK2JDtOjCTsrpwDnZP1lHw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793183263;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=CAsQNlvEQewVVFce1WqlpSDwej6JOKTiJP6Vd2oTTAg=;
-	b=NS6ENpZUW8Yx07vq10Uk115KuCgWSeLe+V6I6fv+D7Ymv1svH9NMyvsH6O/KQxadyuDs
-	 Z+zHaS5k3Ir5TUon7SQRYLpDN2uEKgzFXZCnBnemlUgqDXWdpk2FZpkpl/qnfuYGw/ie/
-	 hsbooumtbd28mAg55QLb+6cP6q0F0qGTspCTjpb8vR7lbwjcECot+YUy9NmgJIj6ufSrY
-	 3xwKa0C95JYCjm/XYT8BgixwSvbonOvxlKjBQwQwnLj3T1Q5Xml6pIcybphB0sh3UGZnX
-	 6rRE7dSyJmaaZo1Qb5F3LERKccuRVTNPLfaMNIwiKC+qyQZ/agRf68O+TOvItzjxoGA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793184225;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=9PEXPx1f1v6I2CjAMNLRcdHwCcztH0pJkRVk37TqP40=;
+	b=wszob4H9UlARchEpRSgwlKbwgjgoqp6OX3I6ckjDkU2Q4ILP53jFsZHdch80ukvvS++5
+	 EHr5w7PWa7ng4pEcWx/F0yqXBkdQ28TXfVcdLMZfe9l8z+MEJ/UlzhagRHXXfW0g7B+/u
+	 +PMtBDdvRmVZrT2CC5qXTMNGFpolHMUNoUZgzwaex8MQ2mPIZH0JOIG1keRXpBV3yusdO
+	 KC/YzAABGFF4Qsu2DwQ/TD0fRXUQq042UGj2JfMoyGto5pS3+Cme5P6qCvEshlO/Lf39T
+	 3r17P/7gbaJ38p8saP9bAXXVAI8A8u2F8xUJt/MQS2hp/elZr20R2mnYUjh3/PepKtw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="Jmwex/kK";
-	arc=none smtp.remote-ip=91.218.175.119
-Received: from mta0.migadu.com (out-119.mta0.migadu.com [91.218.175.119])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tgz+LzV+;
+	arc=none smtp.remote-ip=209.85.214.181
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF45606A31A
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 10:27:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6EF45606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E3D1606A323
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 10:43:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7E3D1606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Jmwex/kK
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=OSNgAFP+VgQv9q7o9VlptAb+MUtYzG3jKiN7D8DtKj8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793183254; v=1; x=1793788054;
- b=Jmwex/kK7FpuCV4bqSsS5FCwcMt+EqZgDLePJZ4dvcrpEr4L/YHoyx7QKjmO1CIocO5OCbGr
- tkZmoFbOPWPIzOshnL3/DpTiXzlghHbrudm38WhVc3KkL5yD0mKtIroNlIaYfbth6p94x+Qcx/Q
- vj7/M3C4X89z4qZWGeENzS/M=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ee56cd7c32368443;
-	Wed, 28 Oct 2026 10:27:33 +0000
-X-Mizu-Trace-ID: ee56cd7c32368443
-X-Migadu-Flow: FLOW_OUT
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tgz+LzV+
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2e5378b281aso3938965ad.2
+        for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 03:43:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793184225; x=1793789025; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=9PEXPx1f1v6I2CjAMNLRcdHwCcztH0pJkRVk37TqP40=;
+        b=tgz+LzV+dwEKJDmG74Pr1aGCyv4LebV50v6CwuWqxRNOW1XFP43YJgPlVeyyQEpAbL
+         tIIYI7wazhn0HNcl0IUX4DJq9T6YHUoFt6RRDHwg53aoTtO0IJ1FYfEJhU/PNP86qd0R
+         WYW49tX9/ZiemyGoOxBVfnXeYMlgVxABNxm+Kk3mvVAacSLf00/NyUglTB6/XGZuXYzN
+         aFfS0AHdEtecypjIRHhZXOhJ6S2IXn/YPNmnjKWriJyGuQetBs2f6QRt2VqMC1EPCq2d
+         i1YKLh8ssu/KZV+bsxOysgUfq0eiOMkfNCn7AuCzPtEdA4blRTX00rwMC1PuZubvmtQw
+         Cy5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793184225; x=1793789025;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9PEXPx1f1v6I2CjAMNLRcdHwCcztH0pJkRVk37TqP40=;
+        b=DCdIq26lvSI+6zM7M+iTGaJTT+HvkxQeNbOvBNfnfCT4vaVupa7dIMP/gh+qUJxbkG
+         oq0Vh1uqin839FZcjWwDZZRuEzjEotqvltQLbr3GBJocduPbgtNWSIV5l9eNSjASmWOy
+         VTC3BUMqWKBJYBtuva1+kD13hH5rD8LDooaRP8bpAlL320FOuY1+2gGOUeJUU27532P6
+         dcQwcYACbIH5e9Whgt1fDEQTDirV0wTrIEMnqw8vOlPIthCULdjaJZG2iiGCIBkl80O7
+         nFeIk/I6KHVxKKHjB4ecz9QOZ1gmnxQRN2zqkipD0NE+TuhfbH8TN0meJgQQAk4yff7Q
+         JA3A==
+X-Forwarded-Encrypted: i=1; AKwUvBxqs5RlSkO28DF28mpBmbgWvvbDrwodQbgcj2yoces3JbeqkggJx35nrJqCgZ4hsEQJRKWFNKfn@vger.kernel.org
+X-Gm-Message-State: AFq9FYIaj/CzZOK72dA0CP6fs8pX5WgmvfIOTwkRJQIApSMtYreYQE3B
+	gR1E++ocSwsXKj5Ejgtb1SRzeFEy7E7iXHJwfSkcKqEeObznDnRKRhJl
+X-Gm-Gg: AYBFou3fbvK7QtBWnfqgOymfC4HK/AhHbm+yhtv8mEa2+iTK2N+hUjnSEoiY6iTzoQ+
+	v1CuPNfEaocmhQpY6HT3ZcX6S13N5Duavohh8Dk4uF7Jx9cN0REgdTs6uReXMcvygAT7qypHP7d
+	BEHNIV9HZ9Lv9oCmrM8gfQc4VFKcMxSDC6Gb3QMdF8j26RdYGNe6MutUgVLhr/b2gh5L0WjUxkO
+	cA8S7LP8SdbEby/oiY6Ka9AnJool1fklw/gIBSnNTE/NmWh6Txu5GJ3BeRFRhju1pg6MMX2vP17
+	Tfx+4NbqfMdwU3p1veop2L54m4066cRxzf6KpYHDA7cdaW33gGDsI+hAYkSTVk4RaE5/AOXbnDb
+	DLkaSauyX1O3CIeKRvYixMAwEMRPsT89xf58cfLFR8NZd2l0RWEVK0EFhJZHNsQ5n1l9mcDnWvt
+	yO6pkssOnJIB0ZZV1tBWEV36afaUrTjzw4tO16yE6BJUCkk5I1a08qFfcx2npKbFxyXQsDuAFFQ
+	A2eaKpXBPno6UfTkDtNOf+G724aa6rz6c75U9qsZ/TxqSag2vMmEfDF8PSX8MSt8j9hpJysmrvS
+	tRlD7TuGsee1ZAhTWz26F3EK0OGsnpVzMkUeKZqUy7EoQE8mvrQK/b23qxYnWFq3rYEtMpFH
+X-Received: by 2002:a17:902:ec8f:b0:2dd:c100:4b76 with SMTP id d9443c01a7336-2eb003e9b1bmr20590075ad.45.1793184224783;
+        Wed, 28 Oct 2026 03:43:44 -0700 (PDT)
+Received: from KASONG-MC4 ([114.246.239.200])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eae6c34c27sm19889165ad.50.2026.10.28.03.43.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Oct 2026 03:43:44 -0700 (PDT)
+Date: Wed, 28 Oct 2026 18:43:34 +0800
+From: Kairui Song <ryncsn@gmail.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: roman.gushchin@linux.dev, muchun.song@linux.dev, 
+	Andrew Morton <akpm@linux-foundation.org>, Kairui Song <kasong@tencent.com>, Qi Zheng <qi.zheng@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Barry Song <baohua@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] mm/mglru: stop rotating offlined memcgs to the old
+ generation
+Message-ID: <auHMXBwnwuRwHLmo@KASONG-MC4>
+References: <20261028010611.3929937-1-tjmercier@google.com>
+ <20261028010611.3929937-3-tjmercier@google.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -56,138 +108,54 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Wed, 28 Oct 2026 10:27:33 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Hui Zhu" <hui.zhu@linux.dev>
-Message-ID: <c652f3e6198b143fcf29f5540a769228f3d8470c@linux.dev>
-TLS-Required: No
-Subject: Re: [RFC PATCH 0/2] memcg_ext: dynamic memory.low and memory.min
- protection
-To: "Tejun Heo" <tj@kernel.org>
-Cc: "Alexei Starovoitov" <ast@kernel.org>, "Daniel Borkmann"
- <daniel@iogearbox.net>, "John Fastabend" <john.fastabend@gmail.com>,
- "Andrii Nakryiko" <andrii@kernel.org>, "Martin KaFai Lau"
- <martin.lau@linux.dev>, "Eduard Zingerman" <eddyz87@gmail.com>, "Kumar
- Kartikeya Dwivedi" <memxor@gmail.com>, "Song Liu" <song@kernel.org>,
- "Yonghong Song" <yonghong.song@linux.dev>, "Jiri Olsa"
- <jolsa@kernel.org>, "Johannes Weiner" <hannes@cmpxchg.org>, "Michal
- Hocko" <mhocko@kernel.org>, "Roman Gushchin" <roman.gushchin@linux.dev>,
- "Shakeel Butt" <shakeel.butt@linux.dev>, "Muchun Song"
- <muchun.song@linux.dev>, "JP Kobryn" <jp.kobryn@linux.dev>, "Andrew
- Morton" <akpm@linux-foundation.org>, "Shuah Khan" <shuah@kernel.org>,
- davem@davemloft.net, "Jakub Kicinski" <kuba@kernel.org>, "Jesper Dangaard
- Brouer" <hawk@kernel.org>, "Stanislav Fomichev" <sdf@fomichev.me>, "KP
- Singh" <kpsingh@kernel.org>, "Tao Chen" <chen.dylane@linux.dev>, "Mykyta
- Yatsenko" <yatsenko@meta.com>, "Leon Hwang" <leon.hwang@linux.dev>,
- "Anton Protopopov" <a.s.protopopov@gmail.com>, "Amery Hung"
- <ameryhung@gmail.com>, "Tobias Klauser" <tklauser@distanz.ch>, "Eyal
- Birger" <eyal.birger@gmail.com>, "Rong Tao" <rongtao@cestc.cn>, "Hao Luo"
- <haoluo@google.com>, "Peter Zijlstra" <peterz@infradead.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Nathan Chancellor" <nathan@kernel.org>, "Kees
- Cook" <kees@kernel.org>, "Jeff Xu" <jeffxu@chromium.org>,
- mkoutny@suse.com, "Jan Hendrik Farr" <kernel@jfarr.cc>, "Christian
- Brauner" <brauner@kernel.org>, "Randy Dunlap" <rdunlap@infradead.org>,
- "Brian Gerst" <brgerst@gmail.com>, "Masahiro Yamada"
- <masahiroy@kernel.org>, "Willem de Bruijn" <willemb@google.com>, "Jason
- Xing" <kerneljasonxing@gmail.com>, "Paul Chaignon"
- <paul.chaignon@gmail.com>, "Lance Yang" <lance.yang@linux.dev>, "Jiayuan
- Chen" <jiayuan.chen@linux.dev>, "Emil Tsalapatis" <emil@etsalapatis.com>,
- "Ihor Solodrai" <ihor.solodrai@linux.dev>, "Barry Song"
- <baohua@kernel.org>, "Geliang Tang" <geliang@kernel.org>,
- linux-kernel@vger.kernel.org, bpf@vger.kernel.org,
- cgroups@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org,
- linux-kselftest@vger.kernel.org, "Hui Zhu" <zhuhui@kylinos.cn>
-In-Reply-To: <769e80ffa618327ac03c13c4657e7229@kernel.org>
-References: <cover.1793086858.git.zhuhui@kylinos.cn>
- <769e80ffa618327ac03c13c4657e7229@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261028010611.3929937-3-tjmercier@google.com>
 
-"Tejun Heo" <tj@kernel.org mailto:tj@kernel.org?to=3D%22Tejun%20Heo%22%20=
-%3Ctj%40kernel.org%3E > :
+On Tue, Oct 27, 2026 at 06:06:06PM +0800, T.J. Mercier wrote:
+> lru_gen_offline_memcg() moves an offlining memcg to the head of the old
+> generation of the memcg LRU (MEMCG_LRU_OLD), so that global reclaim
+> visits it first and evicts the folios it left behind.
+> 
+> Since commit f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of
+> dying memory cgroup for LRU folios"), those folios are reparented to the
+> parent before lru_gen_offline_memcg() runs, and nothing can be added
+> back to the offlined memcg's lruvec afterwards. Putting an empty
+> offlined memcg at the head of the old generation no longer serves any
+> purpose and only delays reclaim from the memcgs that still have memory
+> due to additional shrink_many() iteration.
+> 
+> Remove lru_gen_offline_memcg(), so that an offlined memcg is rotated
+> like any other memcg below the reclaimable size threshold until
+> lru_gen_release_memcg() takes it off the memcg LRU. MEMCG_LRU_OLD has no
+> other user, so remove the op and update the memcg LRU comment as well.
+> 
+> Signed-off-by: T.J. Mercier <tjmercier@google.com>
+> ---
+>  Documentation/mm/multigen_lru.rst |  4 +---
+>  include/linux/mmzone.h            | 14 +++-----------
+>  mm/memcontrol.c                   |  1 -
+>  mm/vmscan.c                       | 20 +-------------------
+>  4 files changed, 5 insertions(+), 34 deletions(-)
+> 
 
+...
 
->=20
->=20Hello, Hui.
->=20
->=20On Tue, Oct 27, 2026 at 05:11:58PM +0800, Hui Zhu wrote:
->=20
->=20>=20
->=20> Why it matters: memory.low and memory.min protect a cgroup by a fix=
-ed
-> >  threshold and have no idea whether it is using the memory. A
-> >  high-priority cgroup that holds a large working set and then goes id=
-le
-> >  keeps suppressing reclaim on its siblings, and that memory is wasted=
-.
-> >  A policy program sees the real activity - page faults, charges - and
-> >  can grant or withdraw protection as it changes.
-> >=20
->=20This doesn't justify the changes. Why can't the same be achieved by
-> adjusting memory.low and memory.min from userspace? The arguments made
-> so far are neither convincing nor proven.
->=20
->=20Thanks.
->=20
->=20--
-> tejun
->
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 636152d8c94d..45a2c1021f4f 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -4538,7 +4538,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
+>  enum {
+>  	MEMCG_LRU_NOP,
+>  	MEMCG_LRU_TAIL,
+> -	MEMCG_LRU_OLD,
+>  	MEMCG_LRU_YOUNG,
+>  };
 
-Hi Tejun,
+I think there could be other usage of this LRU_OLD macro, but indeed
+offline is the only user currently, removing it is cleaner.
 
-Thanks for taking a look.
+And everything looks good to me, thanks!
 
-You are right about that paragraph.  It describes what dynamic
-protection does rather than saying why it has to happen in the kernel,
-and at the timescale I described a userspace agent writing memory.low
-would keep up fine.  I will drop it.
-
-Let me try to say what I was reaching for, from the code rather than
-from a benchmark - a comparison between BPF and a userspace agent would
-say at least as much about how well I wrote the agent as about the
-interface, so I am not sure it would settle much.
-
-memory.low is a request, and what reclaim honors is elow, which
-page_counter_calculate_protection() derives on each pass from the
-parent's elow, the siblings' requests and the tree's usage.  At the
-first level below the reclaim root that comes out equal to what was
-written, and there the knob is enough.  Deeper down it is capped by the
-parent's budget and shared out between siblings according to what they
-claimed and what they use, so what a cgroup wrote and what it ends up
-with can differ.  As far as I can tell none of that is visible from
-userspace: memory.low reads back the declared value, and I could not
-find anything that exports elow.
-
-Exporting elow would not help, because elow is not a property of the
-cgroup alone.  It depends on the reclaim root as well, which is why
-page_counter_calculate_protection() warns that it is not stateless and
-is only valid as part of a top-down tree iteration, and why
-mem_cgroup_protection() carries the example of a concurrent global and
-targeted reclaim driving a child's elow to zero.  A file would show
-whichever value the last reclaim happened to leave there.
-
-So the derived value seems to be usable only where it is derived,
-inside the check, and that is where low_policy() sits: it is evaluated
-per pass and is handed that pass's own inputs - the memcg, the reclaim
-target, the elow just computed, the usage - instead of being state that
-is read at the check.
-
-The other half is what a policy can key on.  memory.low has one
-dimension, bytes.  A policy program is not limited to the ctx it is
-handed; it can also use state that other BPF programs keep, so
-protection can be a function of activity rather than of size - a
-workingset refault rate, for instance.  [1] reads those counters from
-BPF and acts on them; it drives reclaim rather than answering a
-protection hook, but the signal it reads is the one such a policy would
-want.  The limit is on the output rather than the input: the hook
-returns a boolean, so it cannot grant anything memory.low cannot.
-
-I would be interested in how you see this - in particular whether the
-nested case is worth supporting at all, and if it is, whether this is
-the right shape for it.  I am happy to rework the patches, and to add a
-demonstration of one concrete policy if that would make it easier to
-judge.
-
-[1] https://github.com/teawater/memcg-async-reclaim/tree/memcg_ext_plus
-
-Thanks,
-Hui
+Reviewed-by: Kairui Song <kasong@tencent.com>
