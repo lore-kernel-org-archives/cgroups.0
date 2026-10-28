@@ -1,47 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.148
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.158
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793198153;
-	b=1BJtP+q52fXghzmSOLfWHB9go1rHQ9mWuRx4SJjwhwsvjBLPKhSqSQJR37OPjZSSRDAb
-	 T1w8fNCvaHMF4an61QwPU1IzOac6drlxo1jWuRLoaUpmlLrtNVcvSHT7u6gaqkOrCtDM2
-	 yJPh/bYPWgum2kY30c7MWKO8MWA2uQbHZF/iN+Saki5Amapj5X2LeKYWEmSqjPQ1fYkMu
-	 Kc43FciL9ClPtwncSkU4XZ4Bkclvk8sna9fxq3v7OkdFENpcgpZcWsKJZ372tF28LkBl9
-	 7lI6tei9AJp4Z3tkJJTIzGixZ6xYPT6LZvC9XgEy5u9I6QkeKUF69NT2e8TBjCY58SQ==
+	t=1793198160;
+	b=KEzPzDEkGUTm6Sl01zrR7Y4vJrQ0QvkI/9rYInU3bmHI+yWUX0Nwino0YSRoJGwbDFMs
+	 y6p90EPPjoADPV5nSX3HYKiQ/jaKkXJp3hJEQXK+4CIMLQxAXDzC5rSJ0XjmLl/EiXkve
+	 UFx8X+Wgi/uF/Z9V6sm7U81GkqKQr7kKDKbtVSyNdVTj8efnN4jGEPAEKNq2dyR6k4euW
+	 Ua+Kv7rdcaeA/v9qjqwR6Ha570dixJ4tmli70yQphzrlX6lJoMJ5y2UPMfC+W2SDn2Skk
+	 5UT1ilhKWWp/zfl241HWTJkFiGnmYU9N8jljlcjqf0TIE8nMZkXEFHoQvkQRYVf7CQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793198153;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793198160;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=/cOdVCceQMyxF9eQVGHJxq9WXtZGLQYuPH3jLzLx5e0=;
-	b=0YCZNzDL4vmUMhg06w1+OzgsT4CHHFpIxvnq2x0u5OobJ5okWAs+C2xVdWYzbnrrge/h
-	 R34oFgtikgPDEIV5tcJkqFUI9g7s4Tt2jMAdeoAO6HTOeJxgBy1ajMjP/zl/VQB38YeF5
-	 71iQwoh5Y7YBqcWYhCgMfAv6HjkhMdSTxF22/YBTM8FGF6sJ2ozYiZJohUeXme4R0P63a
-	 5L2DpFsBcIzy4Yeey3qsQnM/jS2lvyX52/UaN7KEt04nSp8o377m2ZATFsrjWH3uaz/DJ
-	 jyRPH0O0UzDkdcXnxg0Onmh9s/4bMBpU4/LVDRxkC5LZXextMqCoxiyyFGh6fgueKMg==
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=gsK8/dZw9QUoJyEt3ULExQZ9fof1doakw3TyRykSoZg=;
+	b=aOJuUu7tIGdOoBQabctkO1ydjPkxio6WywB6pz3KXbVUfqr8pYh9wfLGZN+guTfCVxn9
+	 oPjX52CyTdhuToQPsoAuOZYTowNw1dFjbcFdqiENp8NrmaYlAWDLnqwvkLZRrM4nS+LEa
+	 +BjZ8D+9qkFOYRgPKa2QllmqyghNQBbgPe1VOH6raTIpAz0zJWUVCpGWhr8lPpoqqUf5W
+	 ykAuJVWzCSIy9io3qv48u1EGzfb2r30a8SK4MeeP3Nzft9Q9ThuFYTcf1cSh8YV34xLNb
+	 4gbCBLbtYSNGtRbg/36w0fZVpfRguAatJqF597xPbofIhBUvLs5oiShxbLoliDXS4zw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.148
-Received: from mta0.migadu.com (out-148.mta0.migadu.com [91.218.175.148])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qeqX59Ml;
+	arc=none smtp.remote-ip=91.218.175.158
+Received: from mta0.migadu.com (out-158.mta0.migadu.com [91.218.175.158])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13261606A338
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 14:35:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 13261606A338
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827D1606A321
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 14:35:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 827D1606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qeqX59Ml
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=q+FPEfXDf0kP/KjAGMszz3QZmEeMJHPbH/N3uGejpZw=;
+DKIM-Signature: a=rsa-sha256; bh=vEuc0L6KiHMXKPufKyBruOEI+Llu990u2CSIR74swUA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793198148; v=1; x=1793802948;
- b=gmMxlXiOehJcknvNl50IQr8TgD/xYQomLbHIA0Gu8+nCm6F6rOUQ8L4lNQR7yw6KGyuTRcPI
- HVNXicXgF7FRWc0oD5tXJi7n8xw1gIn11n5THvsFIa3tazQA2xE7DKB/MKNkLfgbsExyujZlUIC
- UHg9IsNGtGFc2OeAZBsFR6Jg=
+ t=1793198157; v=1; x=1793802957;
+ b=qeqX59Ml5K4S/Sl4NtgfhSoXMvOdBgeVDqDVC7kr/mXIwzSJfW2eWJ8liFgIVmkpiHxYOP2Q
+ xYoS5Klmem/B1ob4IypJeNYZr9tLlEzdVCpdrcHnh0CVLZmAChtqN10boLkiDRh9Hr5LqN0q4o9
+ JxfAE46JdowSDFvsqoPr9JK0=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 003a82a7ac85abae;
-	Wed, 28 Oct 2026 14:35:48 +0000
-X-Mizu-Trace-ID: 003a82a7ac85abae
+Received: by smtp.migadu.com with ESMTPS id e3e6b4354e7799b4;
+	Wed, 28 Oct 2026 14:35:56 +0000
+X-Mizu-Trace-ID: e3e6b4354e7799b4
 X-Migadu-Flow: FLOW_OUT
 From: Tao Cui <cui.tao@linux.dev>
 To: tj@kernel.org,
@@ -60,10 +64,12 @@ Cc: cgroups@vger.kernel.org,
 	cuitao@kylinos.cn,
 	ameryhung@gmail.com,
 	alexei.starovoitov@gmail.com
-Subject: [RFC PATCH v11 0/5] blk-iocost: BPF struct_ops cost model
-Date: Wed, 28 Oct 2026 22:35:29 +0800
-Message-ID: <20261028143534.135968-1-cui.tao@linux.dev>
+Subject: [PATCH 1/5] blk-iocost: move shared definitions to blk-iocost.h
+Date: Wed, 28 Oct 2026 22:35:30 +0800
+Message-ID: <20261028143534.135968-2-cui.tao@linux.dev>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261028143534.135968-1-cui.tao@linux.dev>
+References: <20261028143534.135968-1-cui.tao@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -77,326 +83,932 @@ Content-Transfer-Encoding: 8bit
 
 From: Tao Cui <cuitao@kylinos.cn>
 
-This is v11 of the RFC.  A BPF program can now take over the cost
-model of one device: attaching an iocost_model_ops struct_ops creates
-the ioc if needed and switches the device to the model, io.cost.model
-selects between the attached and the builtin model, and detaching or
-device removal restores the builtin one.  The attachment, the cgroup
-callback pairing and the removal paths are serialized with what blkg
-creation and destruction actually use.
+The BPF cost model code to be added in the following patch needs the
+ioc/ioc_gq definitions and the queue accessors which are private to
+blk-iocost.c.  Move the enums, the structs and the accessors into a
+private blk-iocost.h so that everything can go where it belongs.
+blkcg_policy_iocost becomes an extern declaration in the header so
+that the inline accessors can be used from both translation units.
 
-The series is based on next-20261027, which includes flush cost support
-(LCOEF_FLUSH) in the builtin model: once a model is attached, the BPF
-path takes over flushes like every other charged IO, and the builtin
-flush coefficients stay for the linear model.  The definitions shared
-between blk-iocost.c and the new BPF file moved to a private
-block/blk-iocost.h, and the model cost path lives in inline helpers
-which compile away completely when the BPF support is disabled.
+No functional change intended.
 
-Why a pluggable model at all
-----------------------------
-
-When iocost landed in 2019, its commit message already promised that
-"a later patch will also allow using bpf progs for cost models", and
-the code has carried the split for it ever since: calc_vtime_cost()
-is a dispatcher whose only implementation is calc_vtime_cost_builtin().
-Seven years later the builtin linear model is still the only one.
-This series fills that slot: builtin algorithms remain the default
-while new ones can be prototyped in BPF.
-
-The measured problems
----------------------
-
-The builtin model prices each IO with a binary sequential/random base
-picked by a single per-cgroup cursor and a 16MB seek threshold, plus
-a per-page cost.  On a virtio-blk device with the HDD autop profile,
-a 4k IO costs ~24us when judged sequential and ~2.7ms when judged
-random, a 112x spread, so a wrong judgement becomes a wrong price.
-Three classes of mispricing, all measured:
-
- 1. Heuristic rigidity.  Two legitimate sequential readers in one
-    cgroup (a database with multiple tablespaces, a threaded backup)
-    ping-pong the single cursor and are all priced random: a
-    measured 89x overcharge collapses throughput under the same
-    weight.  Random IO within a hot window smaller than the 16MB
-    threshold is priced sequential: measured 107x undercharge, an
-    accounting escape for hotspot workloads.  No setting of the six
-    builtin parameters seems able to fix this: telling the streams
-    apart requires per-IO state tracking, which looks like logic
-    rather than coefficients.
-
- 2. Device nonlinearity.  SLC-cache phases, SMR band placement and
-    shared controllers (multiple NVMe namespaces multiplexing one
-    device) make the real cost of an identical IO vary by an order
-    of magnitude over time or across namespaces.  A static
-    6-parameter linear model has no way to express that.
-
- 3. Unpriced operations.  Flush and zone append fall through to a
-    cost of zero and bypass throttling entirely on the pre-LCOEF_FLUSH
-    model, and the same pattern extends to device quirks the builtin
-    model was never taught.
-
-Mispricing feeds directly into the control loop: vtime budgets,
-surplus donation and the vrate feedback all consume the model's
-output, so a wrong model can skew the whole controller.
-
-How
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tao Cui <cuitao@kylinos.cn>
 ---
+ MAINTAINERS        |   1 +
+ block/blk-iocost.c | 415 +-----------------------------------------
+ block/blk-iocost.h | 436 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 439 insertions(+), 413 deletions(-)
+ create mode 100644 block/blk-iocost.h
 
-Attachment is per device: the target device is set
-in the dev member of the struct_ops from userspace before load; the
-device is looked up with blkdev_get_no_open() and disk_live() is
-checked under rq_qos_mutex, like blkg_conf_open_bdev().  Attaching
-creates the ioc if needed, like an io.cost.model write does, and
-switches the model with the queue frozen; the attach and detach
-take the freeze before rq_qos_mutex, the order ioc_qos_write()
-uses.  Enabling stays with io.cost.qos and wbt stays with it too.
-The ops carries no device state: the attachment records the owning
-link in the ioc and holds a map reference, so a stale link cannot
-tear down a newer attachment, and a second attach of an attached
-map fails with -EBUSY.  When the disk goes away, the model is
-ejected completely.
-
-Attachment is independent of the model selection and of the
-controller state: while a model is attached, "model" selects between
-it and the builtin model - "model=bpf" switches to the attached
-model, "model=linear" switches back to the builtin model, and
-neither detaches the struct_ops; only detaching removes the model,
-after which "model=bpf" fails.  "ctrl" keeps describing the builtin
-coefficients, which are kept while the BPF model is in use and take
-effect again when switched back.  Enabling and disabling the
-controller, and with it the wbt handover, remains with io.cost.qos.
-
-A model in use owns pricing for every charged IO on the device: it
-is called from the bio charging path and prices every operation
-including flushes.  The completion-time request sizing which feeds
-the latency met/missed accounting uses the transfer cost
-coefficients the struct_ops carries (vtime per page for reads and
-writes), so the builtin latency tracking and vrate adjustment
-follow the model's pricing while it is in use; extending the
-model to the QoS side itself is left for a later interface.
-
-The cgroup callbacks are bound to the iocg policy lifetime and pair
-up exactly: iocg_init() is delivered from ioc_pd_online(), which
-blkg_create() only calls after the blkg has been inserted into the
-radix tree and the queue's blkg list, and on attach to every cgroup
-which is already online on the device; iocg_free() is delivered at
-detach to the cgroups which still exist then and at pd_free() time
-for the rest, gated per iocg on a delivered flag.  The attach and
-detach walks go over q->blkg_list under q->blkcg_mutex and
-q->queue_lock, the same locking blkg creation and destruction use.
-
-    u64 calc_cost(struct bio *bio, u64 model_flags)
-
-The model reads whatever it needs from the bio itself: the
-operation flags (the operation must be extracted with a mask, and
-the REQ_* flag bits, including PREFLUSH/FUA, are part of it), the
-size, the start sector and the issuing cgroup through
-bio->bi_blkg.  model_flags carries iocost-specific metadata which
-is not a property of the bio, such as whether the cost calculation
-is for a merged request; the return value is vtime, clamped to 1
-second of device time per IO.  Per-cgroup state can be stored in
-BPF_MAP_TYPE_CGRP_STORAGE keyed by the cgroup of bi_blkg; it
-follows the cgroup lifetime.  Sleepable models are rejected at
-verification, since calc_cost() runs under RCU read lock.
-
-Patch overview:
-
- 1/5: blk-iocost: move shared definitions to blk-iocost.h; the
-      enums, structs and accessors private to blk-iocost.c move to
-      a private header, with no functional change
- 2/5: the BPF struct_ops cost model support: Kconfig, ops
-      definition, per-device attachment, unified dispatch and
-      verifier checks
- 3/5: selftests with two example models (the full builtin linear
-      HDD formula at double cost, and a multi-stream sequentiality
-      model) plus a runner and the selftest kernel config entries
- 4/5: add an iocost_ioc_tick tracepoint emitting the per-period
-      controller state, so model quality can be evaluated without
-      drgn (existing events are state-change driven and silent in
-      steady state)
- 5/5: document the attachment in cgroup-v2.rst
-
-Does it work
-------------
-
-Mechanism, verified functionally on a virtio-blk device (HDD
-profile, sequential-read workload from a 1%-weight cgroup, builtin
-vs the 2x example model):
-
- - per-IO charge: 2882us -> 5722us, a factor of 1.985x; the
-   completed IO count halves and total cost.usage is conserved,
-   i.e. the model output drives both charging and budgeting
- - attachment: model=bpf readback while in use (ctrl keeps
-   describing the builtin coefficients), EBUSY for a second model
-   on the same device, a second device attaches an independent
-   model, "model=linear"/"model=bpf" switch between the attached
-   model and the builtin without detaching, detaching removes the
-   model and "model=bpf" fails afterwards
- - edge cases: writing an unknown device fails and nothing is
-   applied; the selftest runner checks the write error and errno
-   of every step, including the restoration
-
-Workload-shape verification (same setup, 4k IOs at weight 1000,
-builtin vs the 2x example model):
-
- - flush-heavy workload (read/write/fsync alternating): priced
-   1.99x the builtin, i.e. flushes no longer reset the cursor
-   and misjudge the following IO as random
- - non-page-multiple IO (6 KiB): priced ~2x, matching the
-   builtin's truncating page count
- - first IO from a high LBA (past 16 MiB): priced 2.01x, i.e.
-   a fresh cgroup's zero cursor no longer misjudges the first IO
-   as random
-
-Payoff, demonstrated with the multi-stream example model (3/5) on
-the same setup, 4k IOs at weight 1000, builtin vs the model:
-
- - two sequential readers in one cgroup: priced 1961us/op by builtin
-   (both judged random by the single cursor) and 23us/op by the
-   model (each stream keeps its own slot); the completed IO count
-   rises by two orders of magnitude
- - random IO inside an 8M window: priced 24us/op by builtin
-   (undercharge, an accounting escape) and 2607us/op by the model
- - single-stream sequential and whole-disk random pricing are
-   unchanged, so the model fixes both directions of mispricing
-   without introducing a new one
-
-Non-interference, measured on enterprise NVMe: no measurable
-overhead when the BPF model is not attached.
-
-On next-20261027 (qemu x86_64 with null_blk) the selftests pass,
-including the device-removal case, and the 2x example model doubles
-the charged cost over the builtin, returning to ~1.1x after
-"model=linear".
-
-Changes in v9:
-- the attach holds rq_qos_mutex from the disk_live() check through
-  the unfreeze, like an io.cost.model write does, instead of
-  releasing it between creating the ioc and switching the model;
-  the queue reference, the second q_to_ioc() and the lockless
-  traversal it needed are gone
-- the attachment is published, cleared and the blkg list is walked
-  under blkcg_mutex and queue_lock: blkg creation runs ioc_pd_init()
-  and adds to q->blkg_list under queue_lock only, so the previous
-  blkcg_mutex-only serialization could double-deliver iocg_init() or
-  deliver iocg_free() without iocg_init().  The init walk now goes
-  parents first, like blkcg_activate_policy()
-- the device removal ejection reads ops->bdev before clearing ops->q:
-  once q is NULL .unreg returns without a lock and the map can be
-  freed, so touching ops afterwards was a use-after-free window.  The
-  ejection moved to an ioc_bpf_eject() helper
-- .unreg only detaches when the closing link is the one which owns
-  the attachment, so a map re-attached to a new device through a
-  newer link is not torn down by an old link; the v8 ops->q re-entry
-  guard at .reg is gone, a second attach of an attached map now
-  fails with -EBUSY like any other model would
-- the ioc->attached and ioc->model pointers are unconditional and
-  blk_get_queue_rcu() is declared in block/blk.h without an export,
-  which drops the local prototypes and the remaining #ifdefs
-- the unused struct_ops .init name lookup, the bdev/q cases in
-  .init_member (the core already rejects nonzero non-function members
-  it does not claim) and the unused write_cost_model() buffers are
-  gone; the -EOPNOTSUPP selftest paths call test__skip()
-- the selftest writes the dev member through the skeleton's typed
-  struct_ops access instead of assuming it is the first member, and
-  the maps are ".struct_ops.link" so closing the fd detaches; the
-  example model's seek judgement is gated on a non-zero IO size so a
-  dataless flush is priced sequentially, and write_cost_model()
-  returns the negated errno ASSERT_ERR() expects
-- the tick tracepoint's running field reports the active iocg list
-  instead of ioc->running, which has not transitioned to IOC_IDLE at
-  the emit point, so the final tick reads active=0 running=0
-- the attach and detach take the queue freeze before rq_qos_mutex,
-  like ioc_qos_write() does; taking the mutex around the freeze
-  instead formed a lockdep cycle with the io.cost.qos write path,
-  and .unreg's link recheck moved under the mutex inside
-  ioc_bpf_detach()
-- the io.cost.model documentation states that detaching restores the
-  builtin model and that ctrl only accepts "auto" and "user" and
-  never selects the model, says attaching rather than loading binds
-  the model, and that removing the device removes the model as well,
-  with the struct_ops link still having to be closed afterwards
-
-Changes in v10:
-- one map binds one device at a time: the attach rejects a second
-  attach while the ops is still bound, which the v9 owning-link
-  rework had dropped.  Without it, attaching the same map to a
-  second device clobbered the single device slot, leaked the first
-  bdev reference and left the first device pointing at the ops
-- the detach takes the queue the caller holds a reference on as an
-  argument instead of re-reading ops->q, fetches the ioc under
-  rq_qos_mutex, and re-checks the owning link under the mutex, so
-  closing an old link after an ejection and a re-attach no longer
-  tears down the newer attachment
-- iocg_free() is only delivered to a cgroup which received
-  iocg_init(), tracked per iocg, so a blkg appearing between the
-  attach walk and its own pd_init no longer gets an unpaired
-  iocg_free(); a blkg whose radix_tree_insert() failed may still
-  keep an iocg_init() without iocg_free(), which is now documented
-  in the interface comment
-
-Changes in v11:
-- the shared definitions move to a private block/blk-iocost.h: the
-  pluggable model interface has no users outside the two block
-  files and no longer sits in include/linux; the model cost path
-  lives in inline helpers and the ioc/iocg state is #ifdef'd, so a
-  kernel without the BPF support compiles the whole thing away
-- the ops carries no device state: the bdev/q members are gone, the
-  attachment records the owning link in the ioc and holds a map
-  reference for as long as it is set, and detaching re-checks the
-  attachment under rq_qos_mutex and only freezes the queue when it
-  still matches, so a removal ejection racing a detach cannot
-  quiesce a queue whose tag set is already being freed
-- reg validates completeness: calc_cost and both transfer
-  coefficients are required, and zero coefficients are rejected
-  before the model can be registered, with a selftest for it
-- iocg_init()/iocg_free() pair exactly: init is delivered from
-  ioc_pd_online(), which runs only after the radix tree insert, so
-  the v10 caveat about a blkg keeping an init without a free after
-  a failed radix_tree_insert() is gone; free is additionally gated
-  on the per-iocg delivered flag
-- the ioc_tick tracepoint drops the running field: the lock is held
-  from the active count to the emission, so running would always
-  equal active != 0
-- the documentation uses "linear" or "bpf" for the model readback
-  and the attachment paragraph is split into attaching, model
-  selection and detaching
-- selftests: added a device-removal test (attach, remove the
-  null_blk device out from under the model, verify the ejection
-  and the re-attach pairing) and pairing assertions
-- ioc_bpf_attach() and ioc_bpf_detach() are goto-free: every error
-  path unwinds inline and the blkcg_mutex is scoped to the walks,
-  so the tail bdev put runs outside of it - dropping the last
-  device reference can reach disk_release() -> blkg_destroy_all(),
-  which takes q->blkcg_mutex
-- the transfer coefficients are bounded at validate time (at most
-  VTIME_PER_SEC >> IOC_SECT_TO_PAGE_SHIFT per page) and the
-  completion-time sizing result is clamped to VTIME_PER_SEC, so a
-  broken model cannot wrap the pricing arithmetic
-- reg() only checks the device: validate() runs on the map-update
-  path of both map flavors, so repeating the completeness check
-  there was unreachable
-- the interface comment states that calc_cost() may run for a
-  (cgroup, device) pair before iocg_init() has been delivered for
-  it, so models relying on per-pair state must tolerate that
-  window
-- the nr_active counting moved to the tracepoint patch which reads
-  it, MAINTAINERS gains include/trace/events/iocost.h, and the
-  documentation now states the -EBUSY exclusivity, that the
-  builtin coefficients stay readable and writable but inert while
-  the BPF model is in use, that attaching does not enable the
-  controller, and that the profile selected from the device class
-  still applies while the BPF model is in use
-
-Link: https://lore.kernel.org/r/20260908100143.47598-1-cui.tao@linux.dev # v1
-Link: https://lore.kernel.org/r/20260910125817.223354-1-cui.tao@linux.dev # v2
-Link: https://lore.kernel.org/r/20260914073356.791518-1-cui.tao@linux.dev # v3
-Link: https://lore.kernel.org/r/20260916072302.1068871-1-cui.tao@linux.dev # v4
-Link: https://lore.kernel.org/r/20260918031751.1255420-1-cui.tao@linux.dev # v5
-Link: https://lore.kernel.org/r/20260918055001.1273840-1-cui.tao@linux.dev # v6
-Link: https://lore.kernel.org/r/20260924054549.2271705-1-cui.tao@linux.dev # v7
-Link: https://lore.kernel.org/r/20260930075154.189958-1-cui.tao@linux.dev # v8
-Link: https://lore.kernel.org/r/20261003013033.149288-1-cui.tao@linux.dev # v9
-Link: https://lore.kernel.org/r/20261003124045.1289305-1-cui.tao@linux.dev # v10
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 365bec8eb7fb..b3b421ee262e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6827,6 +6827,7 @@ F:	Documentation/admin-guide/cgroup-v1/blkio-controller.rst
+ F:	block/bfq-cgroup.c
+ F:	block/blk-cgroup.c
+ F:	block/blk-iocost.c
++F:	block/blk-iocost.h
+ F:	block/blk-iolatency.c
+ F:	block/blk-throttle.c
+ F:	include/linux/blk-cgroup.h
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index a81488c755ca..9b610734871f 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -184,6 +184,7 @@
+ #include "blk-stat.h"
+ #include "blk-wbt.h"
+ #include "blk-cgroup.h"
++#include "blk-iocost.h"
+ 
+ #ifdef CONFIG_TRACEPOINTS
+ 
+@@ -209,374 +210,6 @@ static char trace_iocg_path[TRACE_IOCG_PATH_LEN];
+ #define TRACE_IOCG_PATH(type, iocg, ...)	do { } while (0)
+ #endif	/* CONFIG_TRACE_POINTS */
+ 
+-enum {
+-	MILLION			= 1000000,
+-
+-	/* timer period is calculated from latency requirements, bound it */
+-	MIN_PERIOD		= USEC_PER_MSEC,
+-	MAX_PERIOD		= USEC_PER_SEC,
+-
+-	/*
+-	 * iocg->vtime is targeted at 50% behind the device vtime, which
+-	 * serves as its IO credit buffer.  Surplus weight adjustment is
+-	 * immediately canceled if the vtime margin runs below 10%.
+-	 */
+-	MARGIN_MIN_PCT		= 10,
+-	MARGIN_LOW_PCT		= 20,
+-	MARGIN_TARGET_PCT	= 50,
+-
+-	INUSE_ADJ_STEP_PCT	= 25,
+-
+-	/* Have some play in timer operations */
+-	TIMER_SLACK_PCT		= 1,
+-
+-	/* 1/64k is granular enough and can easily be handled w/ u32 */
+-	WEIGHT_ONE		= 1 << 16,
+-};
+-
+-enum {
+-	/*
+-	 * As vtime is used to calculate the cost of each IO, it needs to
+-	 * be fairly high precision.  For example, it should be able to
+-	 * represent the cost of a single page worth of discard with
+-	 * suffificient accuracy.  At the same time, it should be able to
+-	 * represent reasonably long enough durations to be useful and
+-	 * convenient during operation.
+-	 *
+-	 * 1s worth of vtime is 2^37.  This gives us both sub-nanosecond
+-	 * granularity and days of wrap-around time even at extreme vrates.
+-	 */
+-	VTIME_PER_SEC_SHIFT	= 37,
+-	VTIME_PER_SEC		= 1LLU << VTIME_PER_SEC_SHIFT,
+-	VTIME_PER_USEC		= VTIME_PER_SEC / USEC_PER_SEC,
+-	VTIME_PER_NSEC		= VTIME_PER_SEC / NSEC_PER_SEC,
+-
+-	/* bound vrate adjustments within two orders of magnitude */
+-	VRATE_MIN_PPM		= 10000,	/* 1% */
+-	VRATE_MAX_PPM		= 100000000,	/* 10000% */
+-
+-	VRATE_MIN		= VTIME_PER_USEC * VRATE_MIN_PPM / MILLION,
+-	VRATE_CLAMP_ADJ_PCT	= 4,
+-
+-	/* switch iff the conditions are met for longer than this */
+-	AUTOP_CYCLE_NSEC	= 10LLU * NSEC_PER_SEC,
+-};
+-
+-enum {
+-	/* if IOs end up waiting for requests, issue less */
+-	RQ_WAIT_BUSY_PCT	= 5,
+-
+-	/* unbusy hysterisis */
+-	UNBUSY_THR_PCT		= 75,
+-
+-	/*
+-	 * The effect of delay is indirect and non-linear and a huge amount of
+-	 * future debt can accumulate abruptly while unthrottled. Linearly scale
+-	 * up delay as debt is going up and then let it decay exponentially.
+-	 * This gives us quick ramp ups while delay is accumulating and long
+-	 * tails which can help reducing the frequency of debt explosions on
+-	 * unthrottle. The parameters are experimentally determined.
+-	 *
+-	 * The delay mechanism provides adequate protection and behavior in many
+-	 * cases. However, this is far from ideal and falls shorts on both
+-	 * fronts. The debtors are often throttled too harshly costing a
+-	 * significant level of fairness and possibly total work while the
+-	 * protection against their impacts on the system can be choppy and
+-	 * unreliable.
+-	 *
+-	 * The shortcoming primarily stems from the fact that, unlike for page
+-	 * cache, the kernel doesn't have well-defined back-pressure propagation
+-	 * mechanism and policies for anonymous memory. Fully addressing this
+-	 * issue will likely require substantial improvements in the area.
+-	 */
+-	MIN_DELAY_THR_PCT	= 500,
+-	MAX_DELAY_THR_PCT	= 25000,
+-	MIN_DELAY		= 250,
+-	MAX_DELAY		= 250 * USEC_PER_MSEC,
+-
+-	/* halve debts if avg usage over 100ms is under 50% */
+-	DFGV_USAGE_PCT		= 50,
+-	DFGV_PERIOD		= 100 * USEC_PER_MSEC,
+-
+-	/* don't let cmds which take a very long time pin lagging for too long */
+-	MAX_LAGGING_PERIODS	= 10,
+-
+-	/*
+-	 * Count IO size in 4k pages.  The 12bit shift helps keeping
+-	 * size-proportional components of cost calculation in closer
+-	 * numbers of digits to per-IO cost components.
+-	 */
+-	IOC_PAGE_SHIFT		= 12,
+-	IOC_PAGE_SIZE		= 1 << IOC_PAGE_SHIFT,
+-	IOC_SECT_TO_PAGE_SHIFT	= IOC_PAGE_SHIFT - SECTOR_SHIFT,
+-
+-	/* if apart further than 16M, consider randio for linear model */
+-	LCOEF_RANDIO_PAGES	= 4096,
+-};
+-
+-enum ioc_running {
+-	IOC_IDLE,
+-	IOC_RUNNING,
+-	IOC_STOP,
+-};
+-
+-/* io.cost.qos controls including per-dev enable of the whole controller */
+-enum {
+-	QOS_ENABLE,
+-	QOS_CTRL,
+-	NR_QOS_CTRL_PARAMS,
+-};
+-
+-/* io.cost.qos params */
+-enum {
+-	QOS_RPPM,
+-	QOS_RLAT,
+-	QOS_WPPM,
+-	QOS_WLAT,
+-	QOS_MIN,
+-	QOS_MAX,
+-	NR_QOS_PARAMS,
+-};
+-
+-/* io.cost.model controls */
+-enum {
+-	COST_CTRL,
+-	COST_MODEL,
+-	NR_COST_CTRL_PARAMS,
+-};
+-
+-/* builtin linear cost model coefficients */
+-enum {
+-	I_LCOEF_RBPS,
+-	I_LCOEF_RSEQIOPS,
+-	I_LCOEF_RRANDIOPS,
+-	I_LCOEF_WBPS,
+-	I_LCOEF_WSEQIOPS,
+-	I_LCOEF_WRANDIOPS,
+-	I_LCOEF_FLUSHIOPS,
+-	NR_I_LCOEFS,
+-};
+-
+-enum {
+-	LCOEF_RPAGE,
+-	LCOEF_RSEQIO,
+-	LCOEF_RRANDIO,
+-	LCOEF_WPAGE,
+-	LCOEF_WSEQIO,
+-	LCOEF_WRANDIO,
+-	LCOEF_FLUSH,
+-	NR_LCOEFS,
+-};
+-
+-enum {
+-	AUTOP_INVALID,
+-	AUTOP_HDD,
+-	AUTOP_SSD_QD1,
+-	AUTOP_SSD_DFL,
+-	AUTOP_SSD_FAST,
+-};
+-
+-struct ioc_params {
+-	u32				qos[NR_QOS_PARAMS];
+-	u64				i_lcoefs[NR_I_LCOEFS];
+-	u64				lcoefs[NR_LCOEFS];
+-	u32				too_fast_vrate_pct;
+-	u32				too_slow_vrate_pct;
+-};
+-
+-struct ioc_margins {
+-	s64				min;
+-	s64				low;
+-	s64				target;
+-};
+-
+-struct ioc_missed {
+-	local_t				nr_met;
+-	local_t				nr_missed;
+-	u32				last_met;
+-	u32				last_missed;
+-};
+-
+-struct ioc_pcpu_stat {
+-	struct ioc_missed		missed[2];
+-
+-	local64_t			rq_wait_ns;
+-	u64				last_rq_wait_ns;
+-};
+-
+-/* per device */
+-struct ioc {
+-	struct rq_qos			rqos;
+-
+-	bool				enabled;
+-
+-	struct ioc_params		params;
+-	struct ioc_margins		margins;
+-	u32				period_us;
+-	u32				timer_slack_ns;
+-	u64				vrate_min;
+-	u64				vrate_max;
+-
+-	spinlock_t			lock;
+-	struct timer_list		timer;
+-	struct list_head		active_iocgs;	/* active cgroups */
+-	struct ioc_pcpu_stat __percpu	*pcpu_stat;
+-
+-	enum ioc_running		running;
+-	atomic64_t			vtime_rate;
+-	u64				vtime_base_rate;
+-	s64				vtime_err;
+-
+-	seqcount_spinlock_t		period_seqcount;
+-	u64				period_at;	/* wallclock starttime */
+-	u64				period_at_vtime; /* vtime starttime */
+-
+-	atomic64_t			cur_period;	/* inc'd each period */
+-	int				busy_level;	/* saturation history */
+-
+-	bool				weights_updated;
+-	atomic_t			hweight_gen;	/* for lazy hweights */
+-
+-	/* debt forgivness */
+-	u64				dfgv_period_at;
+-	u64				dfgv_period_rem;
+-	u64				dfgv_usage_us_sum;
+-
+-	u64				autop_too_fast_at;
+-	u64				autop_too_slow_at;
+-	int				autop_idx;
+-	bool				user_qos_params:1;
+-	bool				user_cost_model:1;
+-};
+-
+-struct iocg_pcpu_stat {
+-	local64_t			abs_vusage;
+-};
+-
+-struct iocg_stat {
+-	u64				usage_us;
+-	u64				wait_us;
+-	u64				indebt_us;
+-	u64				indelay_us;
+-};
+-
+-/* per device-cgroup pair */
+-struct ioc_gq {
+-	struct blkg_policy_data		pd;
+-	struct ioc			*ioc;
+-
+-	/*
+-	 * A iocg can get its weight from two sources - an explicit
+-	 * per-device-cgroup configuration or the default weight of the
+-	 * cgroup.  `cfg_weight` is the explicit per-device-cgroup
+-	 * configuration.  `weight` is the effective considering both
+-	 * sources.
+-	 *
+-	 * When an idle cgroup becomes active its `active` goes from 0 to
+-	 * `weight`.  `inuse` is the surplus adjusted active weight.
+-	 * `active` and `inuse` are used to calculate `hweight_active` and
+-	 * `hweight_inuse`.
+-	 *
+-	 * `last_inuse` remembers `inuse` while an iocg is idle to persist
+-	 * surplus adjustments.
+-	 *
+-	 * `inuse` may be adjusted dynamically during period. `saved_*` are used
+-	 * to determine and track adjustments.
+-	 */
+-	u32				cfg_weight;
+-	u32				weight;
+-	u32				active;
+-	u32				inuse;
+-
+-	u32				last_inuse;
+-	s64				saved_margin;
+-
+-	sector_t			cursor;		/* to detect randio */
+-
+-	/*
+-	 * `vtime` is this iocg's vtime cursor which progresses as IOs are
+-	 * issued.  If lagging behind device vtime, the delta represents
+-	 * the currently available IO budget.  If running ahead, the
+-	 * overage.
+-	 *
+-	 * `vtime_done` is the same but progressed on completion rather
+-	 * than issue.  The delta behind `vtime` represents the cost of
+-	 * currently in-flight IOs.
+-	 */
+-	atomic64_t			vtime;
+-	atomic64_t			done_vtime;
+-	u64				abs_vdebt;
+-
+-	/* current delay in effect and when it started */
+-	u64				delay;
+-	u64				delay_at;
+-
+-	/*
+-	 * The period this iocg was last active in.  Used for deactivation
+-	 * and invalidating `vtime`.
+-	 */
+-	atomic64_t			active_period;
+-	struct list_head		active_list;
+-
+-	/* see __propagate_weights() and current_hweight() for details */
+-	u64				child_active_sum;
+-	u64				child_inuse_sum;
+-	u64				child_adjusted_sum;
+-	int				hweight_gen;
+-	u32				hweight_active;
+-	u32				hweight_inuse;
+-	u32				hweight_donating;
+-	u32				hweight_after_donation;
+-
+-	struct list_head		walk_list;
+-	struct list_head		surplus_list;
+-
+-	struct wait_queue_head		waitq;
+-	struct hrtimer			waitq_timer;
+-
+-	/* timestamp at the latest activation */
+-	u64				activated_at;
+-
+-	/* statistics */
+-	struct iocg_pcpu_stat __percpu	*pcpu_stat;
+-	struct iocg_stat		stat;
+-	struct iocg_stat		last_stat;
+-	u64				last_stat_abs_vusage;
+-	u64				usage_delta_us;
+-	u64				wait_since;
+-	u64				indebt_since;
+-	u64				indelay_since;
+-
+-	/* this iocg's depth in the hierarchy and ancestors including self */
+-	int				level;
+-	struct ioc_gq			*ancestors[];
+-};
+-
+-/* per cgroup */
+-struct ioc_cgrp {
+-	struct blkcg_policy_data	cpd;
+-	unsigned int			dfl_weight;
+-};
+-
+-struct ioc_now {
+-	u64				now_ns;
+-	u64				now;
+-	u64				vnow;
+-};
+-
+-struct iocg_wait {
+-	struct wait_queue_entry		wait;
+-	struct bio			*bio;
+-	u64				abs_cost;
+-	bool				committed;
+-};
+-
+-struct iocg_wake_ctx {
+-	struct ioc_gq			*iocg;
+-	u32				hw_inuse;
+-	s64				vbudget;
+-};
+-
+ static const struct ioc_params autop[] = {
+ 	[AUTOP_HDD] = {
+ 		.qos				= {
+@@ -656,49 +289,6 @@ static const u32 vrate_adj_pct[] =
+ 	  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+ 	  4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8, 16 };
+ 
+-static struct blkcg_policy blkcg_policy_iocost;
+-
+-/* accessors and helpers */
+-static struct ioc *rqos_to_ioc(struct rq_qos *rqos)
+-{
+-	return container_of(rqos, struct ioc, rqos);
+-}
+-
+-static struct ioc *q_to_ioc(struct request_queue *q)
+-{
+-	return rqos_to_ioc(rq_qos_id(q, RQ_QOS_COST));
+-}
+-
+-static const char __maybe_unused *ioc_name(struct ioc *ioc)
+-{
+-	struct gendisk *disk = ioc->rqos.disk;
+-
+-	if (!disk)
+-		return "<unknown>";
+-	return disk->disk_name;
+-}
+-
+-static struct ioc_gq *pd_to_iocg(struct blkg_policy_data *pd)
+-{
+-	return pd ? container_of(pd, struct ioc_gq, pd) : NULL;
+-}
+-
+-static struct ioc_gq *blkg_to_iocg(struct blkcg_gq *blkg)
+-{
+-	return pd_to_iocg(blkg_to_pd(blkg, &blkcg_policy_iocost));
+-}
+-
+-static struct blkcg_gq *iocg_to_blkg(struct ioc_gq *iocg)
+-{
+-	return pd_to_blkg(&iocg->pd);
+-}
+-
+-static struct ioc_cgrp *blkcg_to_iocc(struct blkcg *blkcg)
+-{
+-	return container_of(blkcg_to_cpd(blkcg, &blkcg_policy_iocost),
+-			    struct ioc_cgrp, cpd);
+-}
+-
+ /*
+  * Scale @abs_cost to the inverse of @hw_inuse.  The lower the hierarchical
+  * weight, the more expensive each IO.  Must round up.
+@@ -3150,7 +2740,6 @@ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
+ 	return 0;
+ }
+ 
+-
+ static int ioc_weight_show(struct seq_file *sf, void *v)
+ {
+ 	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
+@@ -3616,7 +3205,7 @@ static struct cftype ioc_files[] = {
+ 	{}
+ };
+ 
+-static struct blkcg_policy blkcg_policy_iocost = {
++struct blkcg_policy blkcg_policy_iocost = {
+ 	.dfl_cftypes	= ioc_files,
+ 	.cpd_alloc_fn	= ioc_cpd_alloc,
+ 	.cpd_free_fn	= ioc_cpd_free,
+diff --git a/block/blk-iocost.h b/block/blk-iocost.h
+new file mode 100644
+index 000000000000..e4e517ef6a0f
+--- /dev/null
++++ b/block/blk-iocost.h
+@@ -0,0 +1,436 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * blk-iocost private definitions, shared between blk-iocost.c and
++ * blk-iocost-bpf.c. Not for direct inclusion by other files.
++ */
++#ifndef _BLK_IOCOST_H
++#define _BLK_IOCOST_H
++
++#include <linux/types.h>
++#include <linux/blk_types.h>
++#include <linux/blkdev.h>
++#include "blk-cgroup.h"
++#include <linux/blk-mq.h>
++#include <linux/timer.h>
++#include <linux/hrtimer.h>
++#include <linux/seqlock.h>
++#include <linux/atomic.h>
++#include <linux/minmax.h>
++#include <linux/time64.h>
++#include <linux/wait.h>
++#include <asm/local.h>
++#include <asm/local64.h>
++#include "blk-rq-qos.h"
++
++enum {
++	MILLION			= 1000000,
++
++	/* timer period is calculated from latency requirements, bound it */
++	MIN_PERIOD		= USEC_PER_MSEC,
++	MAX_PERIOD		= USEC_PER_SEC,
++
++	/*
++	 * iocg->vtime is targeted at 50% behind the device vtime, which
++	 * serves as its IO credit buffer.  Surplus weight adjustment is
++	 * immediately canceled if the vtime margin runs below 10%.
++	 */
++	MARGIN_MIN_PCT		= 10,
++	MARGIN_LOW_PCT		= 20,
++	MARGIN_TARGET_PCT	= 50,
++
++	INUSE_ADJ_STEP_PCT	= 25,
++
++	/* Have some play in timer operations */
++	TIMER_SLACK_PCT		= 1,
++
++	/* 1/64k is granular enough and can easily be handled w/ u32 */
++	WEIGHT_ONE		= 1 << 16,
++};
++
++enum {
++	/*
++	 * As vtime is used to calculate the cost of each IO, it needs to
++	 * be fairly high precision.  For example, it should be able to
++	 * represent the cost of a single page worth of discard with
++	 * suffificient accuracy.  At the same time, it should be able to
++	 * represent reasonably long enough durations to be useful and
++	 * convenient during operation.
++	 *
++	 * 1s worth of vtime is 2^37.  This gives us both sub-nanosecond
++	 * granularity and days of wrap-around time even at extreme vrates.
++	 */
++	VTIME_PER_SEC_SHIFT	= 37,
++	VTIME_PER_SEC		= 1LLU << VTIME_PER_SEC_SHIFT,
++	VTIME_PER_USEC		= VTIME_PER_SEC / USEC_PER_SEC,
++	VTIME_PER_NSEC		= VTIME_PER_SEC / NSEC_PER_SEC,
++
++	/* bound vrate adjustments within two orders of magnitude */
++	VRATE_MIN_PPM		= 10000,	/* 1% */
++	VRATE_MAX_PPM		= 100000000,	/* 10000% */
++
++	VRATE_MIN		= VTIME_PER_USEC * VRATE_MIN_PPM / MILLION,
++	VRATE_CLAMP_ADJ_PCT	= 4,
++
++	/* switch iff the conditions are met for longer than this */
++	AUTOP_CYCLE_NSEC	= 10LLU * NSEC_PER_SEC,
++};
++
++enum {
++	/* if IOs end up waiting for requests, issue less */
++	RQ_WAIT_BUSY_PCT	= 5,
++
++	/* unbusy hysterisis */
++	UNBUSY_THR_PCT		= 75,
++
++	/*
++	 * The effect of delay is indirect and non-linear and a huge amount of
++	 * future debt can accumulate abruptly while unthrottled. Linearly scale
++	 * up delay as debt is going up and then let it decay exponentially.
++	 * This gives us quick ramp ups while delay is accumulating and long
++	 * tails which can help reducing the frequency of debt explosions on
++	 * unthrottle. The parameters are experimentally determined.
++	 *
++	 * The delay mechanism provides adequate protection and behavior in many
++	 * cases. However, this is far from ideal and falls shorts on both
++	 * fronts. The debtors are often throttled too harshly costing a
++	 * significant level of fairness and possibly total work while the
++	 * protection against their impacts on the system can be choppy and
++	 * unreliable.
++	 *
++	 * The shortcoming primarily stems from the fact that, unlike for page
++	 * cache, the kernel doesn't have well-defined back-pressure propagation
++	 * mechanism and policies for anonymous memory. Fully addressing this
++	 * issue will likely require substantial improvements in the area.
++	 */
++	MIN_DELAY_THR_PCT	= 500,
++	MAX_DELAY_THR_PCT	= 25000,
++	MIN_DELAY		= 250,
++	MAX_DELAY		= 250 * USEC_PER_MSEC,
++
++	/* halve debts if avg usage over 100ms is under 50% */
++	DFGV_USAGE_PCT		= 50,
++	DFGV_PERIOD		= 100 * USEC_PER_MSEC,
++
++	/* don't let cmds which take a very long time pin lagging for too long */
++	MAX_LAGGING_PERIODS	= 10,
++
++	/*
++	 * Count IO size in 4k pages.  The 12bit shift helps keeping
++	 * size-proportional components of cost calculation in closer
++	 * numbers of digits to per-IO cost components.
++	 */
++	IOC_PAGE_SHIFT		= 12,
++	IOC_PAGE_SIZE		= 1 << IOC_PAGE_SHIFT,
++	IOC_SECT_TO_PAGE_SHIFT	= IOC_PAGE_SHIFT - SECTOR_SHIFT,
++
++	/* if apart further than 16M, consider randio for linear model */
++	LCOEF_RANDIO_PAGES	= 4096,
++};
++
++enum ioc_running {
++	IOC_IDLE,
++	IOC_RUNNING,
++	IOC_STOP,
++};
++
++/* io.cost.qos controls including per-dev enable of the whole controller */
++enum {
++	QOS_ENABLE,
++	QOS_CTRL,
++	NR_QOS_CTRL_PARAMS,
++};
++
++/* io.cost.qos params */
++enum {
++	QOS_RPPM,
++	QOS_RLAT,
++	QOS_WPPM,
++	QOS_WLAT,
++	QOS_MIN,
++	QOS_MAX,
++	NR_QOS_PARAMS,
++};
++
++/* io.cost.model controls */
++enum {
++	COST_CTRL,
++	COST_MODEL,
++	NR_COST_CTRL_PARAMS,
++};
++
++/* builtin linear cost model coefficients */
++enum {
++	I_LCOEF_RBPS,
++	I_LCOEF_RSEQIOPS,
++	I_LCOEF_RRANDIOPS,
++	I_LCOEF_WBPS,
++	I_LCOEF_WSEQIOPS,
++	I_LCOEF_WRANDIOPS,
++	I_LCOEF_FLUSHIOPS,
++	NR_I_LCOEFS,
++};
++
++enum {
++	LCOEF_RPAGE,
++	LCOEF_RSEQIO,
++	LCOEF_RRANDIO,
++	LCOEF_WPAGE,
++	LCOEF_WSEQIO,
++	LCOEF_WRANDIO,
++	LCOEF_FLUSH,
++	NR_LCOEFS,
++};
++
++enum {
++	AUTOP_INVALID,
++	AUTOP_HDD,
++	AUTOP_SSD_QD1,
++	AUTOP_SSD_DFL,
++	AUTOP_SSD_FAST,
++};
++
++struct ioc_params {
++	u32				qos[NR_QOS_PARAMS];
++	u64				i_lcoefs[NR_I_LCOEFS];
++	u64				lcoefs[NR_LCOEFS];
++	u32				too_fast_vrate_pct;
++	u32				too_slow_vrate_pct;
++};
++
++struct ioc_margins {
++	s64				min;
++	s64				low;
++	s64				target;
++};
++
++struct ioc_missed {
++	local_t				nr_met;
++	local_t				nr_missed;
++	u32				last_met;
++	u32				last_missed;
++};
++
++struct ioc_pcpu_stat {
++	struct ioc_missed		missed[2];
++
++	local64_t			rq_wait_ns;
++	u64				last_rq_wait_ns;
++};
++
++/* per device */
++struct ioc {
++	struct rq_qos			rqos;
++
++	bool				enabled;
++
++	struct ioc_params		params;
++	struct ioc_margins		margins;
++	u32				period_us;
++	u32				timer_slack_ns;
++	u64				vrate_min;
++	u64				vrate_max;
++
++	spinlock_t			lock;
++	struct timer_list		timer;
++	struct list_head		active_iocgs;	/* active cgroups */
++	struct ioc_pcpu_stat __percpu	*pcpu_stat;
++
++	enum ioc_running		running;
++	atomic64_t			vtime_rate;
++	u64				vtime_base_rate;
++	s64				vtime_err;
++
++	seqcount_spinlock_t		period_seqcount;
++	u64				period_at;	/* wallclock starttime */
++	u64				period_at_vtime; /* vtime starttime */
++
++	atomic64_t			cur_period;	/* inc'd each period */
++	int				busy_level;	/* saturation history */
++
++	bool				weights_updated;
++	atomic_t			hweight_gen;	/* for lazy hweights */
++
++	/* debt forgivness */
++	u64				dfgv_period_at;
++	u64				dfgv_period_rem;
++	u64				dfgv_usage_us_sum;
++
++	u64				autop_too_fast_at;
++	u64				autop_too_slow_at;
++	int				autop_idx;
++	bool				user_qos_params:1;
++	bool				user_cost_model:1;
++
++};
++
++struct iocg_pcpu_stat {
++	local64_t			abs_vusage;
++};
++
++struct iocg_stat {
++	u64				usage_us;
++	u64				wait_us;
++	u64				indebt_us;
++	u64				indelay_us;
++};
++
++/* per device-cgroup pair */
++struct ioc_gq {
++	struct blkg_policy_data		pd;
++	struct ioc			*ioc;
++
++	/*
++	 * A iocg can get its weight from two sources - an explicit
++	 * per-device-cgroup configuration or the default weight of the
++	 * cgroup.  `cfg_weight` is the explicit per-device-cgroup
++	 * configuration.  `weight` is the effective considering both
++	 * sources.
++	 *
++	 * When an idle cgroup becomes active its `active` goes from 0 to
++	 * `weight`.  `inuse` is the surplus adjusted active weight.
++	 * `active` and `inuse` are used to calculate `hweight_active` and
++	 * `hweight_inuse`.
++	 *
++	 * `last_inuse` remembers `inuse` while an iocg is idle to persist
++	 * surplus adjustments.
++	 *
++	 * `inuse` may be adjusted dynamically during period. `saved_*` are used
++	 * to determine and track adjustments.
++	 */
++	u32				cfg_weight;
++	u32				weight;
++	u32				active;
++	u32				inuse;
++
++	u32				last_inuse;
++	s64				saved_margin;
++
++	sector_t			cursor;		/* to detect randio */
++
++	/*
++	 * `vtime` is this iocg's vtime cursor which progresses as IOs are
++	 * issued.  If lagging behind device vtime, the delta represents
++	 * the currently available IO budget.  If running ahead, the
++	 * overage.
++	 *
++	 * `vtime_done` is the same but progressed on completion rather
++	 * than issue.  The delta behind `vtime` represents the cost of
++	 * currently in-flight IOs.
++	 */
++	atomic64_t			vtime;
++	atomic64_t			done_vtime;
++	u64				abs_vdebt;
++
++	/* current delay in effect and when it started */
++	u64				delay;
++	u64				delay_at;
++
++	/*
++	 * The period this iocg was last active in.  Used for deactivation
++	 * and invalidating `vtime`.
++	 */
++	atomic64_t			active_period;
++	struct list_head		active_list;
++
++	/* see __propagate_weights() and current_hweight() for details */
++	u64				child_active_sum;
++	u64				child_inuse_sum;
++	u64				child_adjusted_sum;
++	int				hweight_gen;
++	u32				hweight_active;
++	u32				hweight_inuse;
++	u32				hweight_donating;
++	u32				hweight_after_donation;
++
++	struct list_head		walk_list;
++	struct list_head		surplus_list;
++
++	struct wait_queue_head		waitq;
++	struct hrtimer			waitq_timer;
++
++	/* timestamp at the latest activation */
++	u64				activated_at;
++
++	/* statistics */
++	struct iocg_pcpu_stat __percpu	*pcpu_stat;
++	struct iocg_stat		stat;
++	struct iocg_stat		last_stat;
++	u64				last_stat_abs_vusage;
++	u64				usage_delta_us;
++	u64				wait_since;
++	u64				indebt_since;
++	u64				indelay_since;
++
++	/* this iocg's depth in the hierarchy and ancestors including self */
++	int				level;
++	struct ioc_gq			*ancestors[];
++};
++
++/* per cgroup */
++struct ioc_cgrp {
++	struct blkcg_policy_data	cpd;
++	unsigned int			dfl_weight;
++};
++
++struct ioc_now {
++	u64				now_ns;
++	u64				now;
++	u64				vnow;
++};
++
++struct iocg_wait {
++	struct wait_queue_entry		wait;
++	struct bio			*bio;
++	u64				abs_cost;
++	bool				committed;
++};
++
++struct iocg_wake_ctx {
++	struct ioc_gq			*iocg;
++	u32				hw_inuse;
++	s64				vbudget;
++};
++
++extern struct blkcg_policy blkcg_policy_iocost;
++
++static inline struct ioc *rqos_to_ioc(struct rq_qos *rqos)
++{
++	return container_of(rqos, struct ioc, rqos);
++}
++
++static inline struct ioc *q_to_ioc(struct request_queue *q)
++{
++	return rqos_to_ioc(rq_qos_id(q, RQ_QOS_COST));
++}
++
++static inline const char __maybe_unused *ioc_name(struct ioc *ioc)
++{
++	struct gendisk *disk = ioc->rqos.disk;
++
++	if (!disk)
++		return "<unknown>";
++	return disk->disk_name;
++}
++
++static inline struct ioc_gq *pd_to_iocg(struct blkg_policy_data *pd)
++{
++	return pd ? container_of(pd, struct ioc_gq, pd) : NULL;
++}
++
++static inline struct ioc_gq *blkg_to_iocg(struct blkcg_gq *blkg)
++{
++	return pd_to_iocg(blkg_to_pd(blkg, &blkcg_policy_iocost));
++}
++
++static inline struct blkcg_gq *iocg_to_blkg(struct ioc_gq *iocg)
++{
++	return pd_to_blkg(&iocg->pd);
++}
++
++static inline struct ioc_cgrp *blkcg_to_iocc(struct blkcg *blkcg)
++{
++	return container_of(blkcg_to_cpd(blkcg, &blkcg_policy_iocost),
++			    struct ioc_cgrp, cpd);
++}
++
++#endif	/* _BLK_IOCOST_H */
+-- 
+2.43.0
 
