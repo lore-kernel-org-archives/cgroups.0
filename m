@@ -1,53 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793218169;
-	b=jnIwFKwYKrBHGgI6tlUiH9WSr+MgmtbO0Q5T13w6xESJDgYzkBFMTuBU7rUkFmm2u7Qd
-	 SQbPzmBd8Bi5qaCImtV17KFJGZs6yRfKpatZFql9Okl0v1M/3F7+vhSJvVZm62elRAUBz
-	 d5qegE9KTuEE5WmihQO73DGiySWaxXAfQKZXjZ9DaG5OwhR1WD9hHMMSdE2pP4uoCINNg
-	 XicEfaFvRYkjfWv2DJLLNOJ4cZWS1n5/3nh/FdGmyrtfhgxjhH0/Tlh9iYz6nGoMRLiJw
-	 0x70L+4zzm2rFB2gEwtqwQcysppZH1DeMcRAniCwjvoFz7g+hn6/fnu53U3nCe3bN9Q==
+	t=1793218170;
+	b=Dn/vkiQtRqk1NwG1B+EEq8YZRJylmodEg6zVtPceww5Mb2UKZEkxQylnL5cf/jIqD2Ep
+	 4+N2syeFELGJQSqHqOs3+Xriw1//N7r7+TKQrGCR8rj361sOgufBXKLn6Cb+lEe+OjBUR
+	 U6X8YIbxXPCJkCw8f2Kek5aBTG/AmEKPLQCtKnrVcsbnc/06+bo/JKzG/jKI30Bv9N/ka
+	 dwSaTKsLrrXizsslbHftY3kTsGw87tXg/vF3pT+yEBwPgqL2ldI+gGzGb7ulBWXWUXd9O
+	 qO1etKMrnAOGB+c6S1Fa/HaYn0Qcb/bA/aBrfZ4mA6hRUh1THRQrn6LKKHZe4Tvw4mw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793218169;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793218170;
 	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=Wp+0Yj0Lz4BPqvrq9eW7Lj8ytJ+Vwq7ZAYHHcFtuB+4=;
-	b=WO+4QJEWn6cHJOgeBX1wW8348gCqtjw7Tj43r/w3WhPUchpKhlBqPtGiVG3o/yAkW+6y
-	 fkNvgMj6B0nvY6iGFdLQ+lGjY4Mb2EQxOvxnaedVTUaZPcyPOM6OMmJ9FarYlMVnWmQMS
-	 7ftz5PCjP4KymKl4J0S8VCDyko3MWVCbCM8GRVSRZOjNqy9cfUSVoaq7spJ2PtsSLuXBv
-	 EGs1HVnOz2KMz/oFb03nhfoDwpP1H/G435TW/Uqu2pzT7hgugWIn3gs3aig7r5G10WnzN
-	 FnzD11t+ceRg9dQARrYXVxTiyOcKw1SrCrKFuYlqExTjHItlsYJxOm/DgmCKeGxys4g==
+	bh=A0SoP+W2Ylzai32YncZqgehMd2spWJOL4Ra8zJeBLMc=;
+	b=O8k1Cad0vc9VyfZrnsADeq2Oi+YxRmr15eyPSXYb89yeyHrsdWCzFX/Ttd+bc/MSt44d
+	 PaNpA4ySY+TCIAE1nOm9xhgfNrqm0SsxCe/gQ2CngDZUJc9FZA1XGyRnedAMZ6j+3oZgc
+	 0T/7yKxygNDQPrqQO5Lb0ienHikaqWL4vanRLS0H9aE+iIRAJgjK+rqoj+wg8xuXR8Yqr
+	 ncnX1OQxzS1xYWjzqORydDZ+4ebi3FNR+cWDqUMQqRNK8f3icZt5eQvndEHkp2dmznuPC
+	 evlzAX6VKxCSYykw3nuXDKl7QGi9neVyhitWJnj4wfVjRbDsSFnMUva2rzw+XiZotLg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iTbtDjsx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 632A460A261E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F06060A2631;
+	Wed, 28 Oct 2026 20:09:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C3CAC1F031E2;
 	Wed, 28 Oct 2026 20:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iTbtDjsx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0C0E1F031E6;
-	Wed, 28 Oct 2026 20:09:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793218168;
-	bh=Wp+0Yj0Lz4BPqvrq9eW7Lj8ytJ+Vwq7ZAYHHcFtuB+4=;
+	s=k20260515; t=1793218170;
+	bh=A0SoP+W2Ylzai32YncZqgehMd2spWJOL4Ra8zJeBLMc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=iTbtDjsx8xqclN4kfgdZjY1XlF0KJH7Pf3J9Fwf4+BT+f8ztEniqCbg7VMRZixZJ+
-	 ZfWEyso0onDCn77mMrpLV7e6ndxvet/04YcytET/gC9XjS0b4PfIj7KcGMbVbJrPLN
-	 IMYiqB6XrykokxWhKqmqBjk3FGIndep9I6OKXljXHC4ucd2NIXBymfn2TVkI63gHM2
-	 eDL4V/W2QNw/l3tUmmTSG14ncwEGlQ/xf3fMkEF3zVV55D2eIIdtw4fBcZeI9kCDZ2
-	 Ebo9yBzwnVrZt+AdCYsVAqBj+/Y9Btl+CEO49oqvTIivpDAzGsp3tbyIdWdjnXAcpp
-	 JWDEuKzpiuRsw==
-Date: Wed, 28 Oct 2026 10:09:28 -1000
-Message-ID: <0753eaa990c954aa56a0c5fa8ba302e2@kernel.org>
+	b=VGy58csZN31r8aoABGjrMS2S8VmwRqqyzOjc+yh6KtZj6Qb5kvGENOJfz5MKyZac0
+	 +96HIAVZJAFeZJ6zoZU3i7udNRXHp9sPOPWd5mK/M7XTWKpC+Ov/TW51gu6uX0u0IQ
+	 gQBxNRU9IeP3Phe59HrsUBj+npbiuTycUJfFW20GyKRX0Tb0kA5CPekQhaFIb+HyMG
+	 9HVfO+hC9fwiOQOjBUwa1Dx4vQ8qFfvyNYKtXKhPy95ScSfQliyU1ihruvcsCNbm3g
+	 A4KrSsQBbSYXVmop1yhEEaDOue97Hz3deALG4jRfiyVOkczASwgmF22h4u5DbtRXsV
+	 kOGE0Mk3Fi6yw==
+Date: Wed, 28 Oct 2026 10:09:29 -1000
+Message-ID: <b69d96a507aec382c279d62cfb038fa9@kernel.org>
 From: Tejun Heo <tj@kernel.org>
 To: Tao Cui <cui.tao@linux.dev>
 Cc: josef@toxicopanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org, eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net, linux-kselftest@vger.kernel.org, cuitao@kylinos.cn, ameryhung@gmail.com, alexei.starovoitov@gmail.com
-Subject: Re: [PATCH 2/5] blk-iocost: add BPF struct_ops cost model support
-In-Reply-To: <20261028143534.135968-3-cui.tao@linux.dev>
-References: <20261028143534.135968-1-cui.tao@linux.dev> <20261028143534.135968-3-cui.tao@linux.dev>
+Subject: Re: [PATCH 3/5] selftests/bpf: add iocost cost model test
+In-Reply-To: <20261028143534.135968-4-cui.tao@linux.dev>
+References: <20261028143534.135968-1-cui.tao@linux.dev> <20261028143534.135968-4-cui.tao@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -62,75 +59,75 @@ Content-Transfer-Encoding: 7bit
 
 Hello, Tao.
 
-On Wed, Oct 28, 2026 at 10:35:31PM +0800, Tao Cui wrote:
-> +/*
-> +/*
-> + * Deliver iocg_init()/iocg_free() to the cgroups already online on the
-
-The comment opens with "/*" twice. clang warns "'/*' within block comment
-[-Wcomment]" and CONFIG_WERROR builds break.
-
-> +			/*
-> +			 * A blkg which never went online never reached the
-> +			 * radix tree, so it must not receive an init either;
+On Wed, Oct 28, 2026 at 10:35:32PM +0800, Tao Cui wrote:
+> +static bool iocost_bpf_supported(void)
+> +{
+> +	FILE *f;
+> +	char line[128];
+> +	bool any = false, on = false;
 > ...
-> +			if (!iocg || !iocg->pd.online)
-> +				continue;
-
-blkg_create() adds a blkg to q->blkg_list only after radix_tree_insert()
-succeeds, so the blkgs skipped here are the ones blkg_destroy() already
-took offline, not ones that never reached the radix tree.
-
-> +	if (!disk_live(disk)) {
-> +		mutex_unlock(&q->rq_qos_mutex);
-> +		blk_mq_unfreeze_queue(q, memflags);
-> +		blkdev_put_no_open(bdev);
-> +		return -ENODEV;
-> +	}
-
-The guard() suggestion from v10 was only partly applied. This unlock,
-unfreeze and put sequence is repeated on three error paths.
-
-> +	/*
-> +	 * Scope the mutex so the tail bdev put runs with blkcg_mutex
-> +	 * already released: dropping the last device reference can
-> +	 * reach disk_release() -> blkcg_exit_disk() ->
-> +	 * blkg_destroy_all(), which takes q->blkcg_mutex.
-> +	 */
-> +	{
-> +		guard(mutex)(&q->blkcg_mutex);
-
-The bare { } block isn't necessary, and ioc_bpf_detach() has the same
-block with the same comment. Can you drop them?
-
-> +	/*
-> +	 * The attachment is checked under rq_qos_mutex first, so an unmatched
-> +	 * detach exits without freezing.
-> +	 */
-> +	mutex_lock(&q->rq_qos_mutex);
-> +	spin_lock_irq(&q->queue_lock);
-> +	ioc = q_to_ioc(q);
-> +	if (ioc) {
-> +		spin_lock(&ioc->lock);
-> +		matched = ioc_attached_model_locked(ioc) == ops &&
-> +			  ioc->bpf_link == link;
+> +		if (strstr(line, "CONFIG_"))
+> +			any = true;
 > ...
+> +	return on;
 
-The same 11 lines check the attachment again after the freeze. The check
-under rq_qos_mutex after the freeze is the one that matters.
+any is set but never read, so every test skips without /proc/config.gz.
 
-> +/*
-> + * Pluggable cost model interface for blk-iocost.
-> + *
-> + * A BPF struct_ops implementation can take over the cost model of one device.
+> +	/* isolate the configfs and cgroup mounts from the host */
+> +	if (unshare(CLONE_NEWNS)) {
+
+unshare(CLONE_NEWNS) alone doesn't make the mounts private, so the
+configfs mount propagates to the host, one more per test.
+
+> +	ASSERT_OK(configfs_write("/sys/fs/cgroup/cgroup.subtree_control",
+> +				 "+io"), "subtree_io");
+> +	if (!ASSERT_OK(cgroup_mkdir("/sys/fs/cgroup/iocost_pairing"),
+
+The "+io" write to the root cgroup's cgroup.subtree_control is never
+reverted, the cgroups are created directly under /sys/fs/cgroup and
+test_progs stays in the root cgroup. cgroup_helpers handles all of this.
+
+> +	err = iocost_model__attach(skel);
+> +	if (err == -EOPNOTSUPP || err == -ENODEV) {
 > ...
-> + * offline and its free. Both callbacks are called with ioc->lock held and must
-> + * not sleep; the delivery points nest inside queue_lock except for iocg_free()
-> + * from ioc_pd_free() in blkg_free_workfn().
-> + */
+> +		test__skip();
 
-This restates the attach mechanics and lists the call sites. The comments
-and descriptions in general are still long and narrate mechanics.
+-ENODEV and -EOPNOTSUPP from attaching to the test's own null_blk device
+are failures, not skips. The same goes for
+serial_test_iocost_model_streams().
+
+> +		ASSERT_GT(skel->bss->iocg_inits, 0, "pair_init");
+
+This passes on the root blkg alone, so it doesn't show that the test
+cgroup got iocg_init(). The same goes for eject_had_inits and
+pair_init_again.
+
+> +		/*
+> +		 * detach implicitly by closing the link fd instead of
+> +		 * calling bpf_link__destroy() explicitly: the release
+> +		 * path must detach the model just like the explicit
+> +		 * call does
+> +		 */
+> +		lfd = bpf_link__fd(skel->links.iocost_2x);
+> +		bpf_link__disconnect(skel->links.iocost_2x);
+> +		close(lfd);
+> +		skel->links.iocost_2x = NULL;
+
+This leaks libbpf's link struct. The reason in the comment doesn't hold
+either. bpf_link__destroy() on a struct_ops link does the same close().
+
+> +void serial_test_iocost_model_streams(void)
+> ...
+> +	if (ASSERT_OK(err, "attach")) {
+> +		err = readback_model(dev, model, sizeof(model));
+> +		if (ASSERT_OK(err, "readback"))
+> +			ASSERT_STREQ(model, "bpf", "model_bpf");
+> +
+> +		bpf_link__destroy(skel->links.iocost_ms);
+
+The test never enables the controller, so iocost_ms's calc_cost() never
+runs. The multi-stream results in the cover letter aren't exercised by
+the test.
 
 Thanks.
 
