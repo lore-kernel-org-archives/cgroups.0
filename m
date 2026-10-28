@@ -1,74 +1,74 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.198
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793213439;
-	b=mWzLcoQTaRhVXIF5ChIPahXF4eUu9zBowCz/8Hy5ym43rYrG69fQslklc8jUvJygQSvy
-	 ZRpvQHPZsXT3H1ML5tFxNsOy8ESsdK6p7lMQxLnJBbCM5684abvuPUGXg9V2C+ayjJQZa
-	 r/BcGDufNavKB9Gs9ZQQW//yA1wTATiJfixAEm5mwB0qtJOGq71yFPHEWc8pYkNBE5H5t
-	 LUjcxhFzlW/xJ7spN+Q0yXghRFYih2glYsFdbgmsGNsH6gONLasy2RR65kRTZyRtyvtdZ
-	 tBhGSKXkyqwI6+xhFJFLTn+vpE1wC5srdd9Cs1gAue1TQea6uMEj9Dzc+FklSu3Nt+g==
+	b=wRB3ZJj2o1KGCNdI8Q6P4hhka2ZQ7rt2Eu1P2YqHGlM+LzH/jJlmlisJlIMUr6dGarTy
+	 i8wxv9F8WmXtfzaKZsZx9l57HnDKUMYlicePpFU3GirS29OGcrWqPmRckqQ70RPNvwbYa
+	 NMYfIPcew+xSQAQ0LJ9MTF+CJWz1hz1NM2Z0xXfNABGheWgE9/RHob6yElJ6ov8Tw8TiK
+	 H8Pi/bwP+DDzYuMbTEPuXSvtdjJrJUIrCLNsiGw1ftfcepGmfBl9WXmO/Cd/Uhj3M1gy3
+	 Qa5SGMm/JNAU8rgo8eZlIODwcGTfMR0JXfIDRFv6gh/YwFylrFciiLl/yUy/2F+QVyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793213439;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
 	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
 	 Content-Type;
-	bh=EpQRB08l5UZSujvvwukdQkP4PzBe/9iZhbN3mOIOr3E=;
-	b=iaFtTyK132dnahU3ejoHEMoMSzoCUNxUsFuPbzhic9fjiv34ekPUGH7FZv/4UMTdyNVf
-	 Kp2DgXzu06YhGfWMdcGIeVCvLppTEdIAXED1v9b0C3BpA3z5rOkConnvnmaPeoX7+mnLi
-	 IpqatTOy3WklEf8OYwn0OYUbckBjcSMX0285vky/Be4ffuOz33M+mbgoDc8+wIDZYCpEu
-	 P03xrb/kSHBcEscU7cL9Y4Z6ufoY9EHccxt6lximiEbaY6Qsx8ANp5KYd5Vj7IdXFR3nv
-	 w3G7xW150WLGJz+SW9o2fBbNYqL6kJu/gfXU7QM7HBIq/pTT9qhVqM9i0gZznyvVYbQ==
+	bh=BPbbcuxF5q+RLuJiJ+mLQFtZWtmapi1mjMk7ap+q2GY=;
+	b=hI2VLMsn7cNVYkuo+0EgHn1x3GEiNqO90wBWkOGVELsQFQQTu6hIoB+GAh1Y2eewWgfR
+	 Y26vlEkQc5ez/3iYVZynejpItuqR7L8rNWwhckyfNQmOovBuShkX6Gcv9bLpy4+VJKRzS
+	 bDHiCIAoSwhxqxMd6NLoVQbaE9N6fcyZbauwWj+8el5MoTdaqr1IKZZfTqi3+JeX+3SEU
+	 f1AdLAMRzroxdC1LqSvejBkQGVQTKGctqFlkA7FskXY20jcAx18I64hrwsRgl9tj0AE0H
+	 SGwpADXKo1+id//TE0aMdfGKXHS/BwQqykWJoiYUs87Lq2GdgCDh1uEmBqz/2n9A2iA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XAtRkBzz;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=P9XPvb3X;
 	arc=none smtp.remote-ip=209.85.210.198
 Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com [209.85.210.198])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8C42606A322
-	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 18:50:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E8C42606A322
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AE04606A325
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 18:50:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7AE04606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=XAtRkBzz
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a05c820ecbso1845853b3a.0
-        for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 11:50:38 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=P9XPvb3X
+Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-8a08903566dso1751082b3a.0
+        for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 11:50:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793213438; x=1793818238; darn=vger.kernel.org;
+        d=google.com; s=20260707; t=1793213439; x=1793818239; darn=vger.kernel.org;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=EpQRB08l5UZSujvvwukdQkP4PzBe/9iZhbN3mOIOr3E=;
-        b=XAtRkBzzyZFDyh4sfpfRt8rDPmaVNzlY3SFoiJt3RjR5mFfFJJ0w9g851dse6EdMB4
-         h/Mua17vy7VtQbhFnDv8WylQk78nus5rjizbaIzhKk748P8Jv0tjdg4BlWelF0YzAQgx
-         Csw6D7xVQGkhk1AhjkBgRuN/CHyRWf70AHK8ksp4Bk7a01EQhHujnsOQlJgC0OCSzrUv
-         Mc76BDs2SdTWcXEST6TqRAgyLFMmz/ZHsETJ2Ksax95yNaKFr40VMRghsL5kmJxLUTwx
-         QtNK+ebOguGpzC2Jx7JaTougAeUwSsD403U9kIFwRB2cOoS+6roBvQzwPmXJJpBs1ato
-         6XSQ==
+        bh=BPbbcuxF5q+RLuJiJ+mLQFtZWtmapi1mjMk7ap+q2GY=;
+        b=P9XPvb3XuBfIpL3+QAh3DBVpWoybf654bp0KmTnoZr3+Xay74syzXniZGS5aF4EFk6
+         i/cyrYYOx6iBZ7xdwdnZ+bGP9T2x2fUX692CSGCY0OmL0JFp+6bxDxWJ0NxixQ4l6hZl
+         XwzDVtyb4lGh4Opbx7K6+H8U/u0PmcOcSKcxvqC6V0a71OMRi7dWLBD99K5TzvEhSflQ
+         iMbTWVEOkbjnb6d9vnDxlThnB0iy6tNP2PfpKPryRCNsq1VqB7abKbTqncO9tj0+HUVB
+         f7YjbVHi0sueQXCaw86yuEpF3CSJME0vwDqQ7hPEiWavDpPZUj4hgPsiGgmhGdwBhtdt
+         8SFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793213438; x=1793818238;
+        d=1e100.net; s=20260707; t=1793213439; x=1793818239;
         h=content-type:cc:to:from:subject:message-id:references:mime-version
          :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=EpQRB08l5UZSujvvwukdQkP4PzBe/9iZhbN3mOIOr3E=;
-        b=igiMFbs6WV/jhxiWDjxRFFjroJRaQ34+93rc0PYDOpYY0pfPwACsmiUQWv8uShTxiX
-         1xe+xwY1gbSSjpcUFa4TF7QRCHEYq51iZG7CLBe01MCW1a5gQC05/T15R0+jBukiII54
-         eRU2Rl9uWPG+2SxiMSk9GUK+0W2uladBCz+9R+CN/1/6RljxcHvJRyHBnfFCZDZ+HWtf
-         vIY4gX4nsbMioDD4JYarSuvFISW3cJCLgiht0P59Ktd8KRAffxscK4oON9XCaKQxP991
-         WJMeae5J8AmnUS2iHrvvXeDEBfPCQ601afn1jfSh0WIbmqA+N56FxWdVGoQAJ+jWwGJc
-         c8hA==
-X-Forwarded-Encrypted: i=1; AKwUvBybHU1U12AiddbNSqTNCYZr9NiQKhyABur6KEEZRGr8CRrLFpqsF6Im84SlPBR+l4+R+5JzOscC@vger.kernel.org
-X-Gm-Message-State: AFq9FYLz2mQU4gPFiCpRBvYdKsRKGJwW5Znko4DnzQgfOhFL0jArPGfh
-	nEdyss1OXUEaqYllurX4xgKgCLbXSIkUaG1IPXlqrjOsIetE282YupHpaHw8J8NYsnM5qnHrsH9
-	F5CLaHA==
+        bh=BPbbcuxF5q+RLuJiJ+mLQFtZWtmapi1mjMk7ap+q2GY=;
+        b=PXGCgaRNXTOu/tq42hJ+L9+POtG1ex9DPhpRcXTkWZaq4SoUOA45YphNZyVcnnY+C0
+         hYUKB2SrLMnjMHbbKAGP+1aiFko4ipIH7/OmOoF+UvZ+kaSoK0epFLSZl28sbS9VtIdj
+         xZ/nmMPbRAWjnk9sAO0RXLMS/zlpN6Mp6oZRTJ73MUgVCiGu71k1z4EXGdXy3GrWX+dr
+         58qZgXFgp9qabKaHKY6XxHBZBOQ5nPMfqBOOXiUjea4rkaoq9lbtTeL0BW1L+D1V/SnC
+         yOcI71P0BWeQZb5u/AFOdl477In2sul4JfljHNmwumoIeJz4SMYJUwUk+qNV5pNERcHQ
+         G74w==
+X-Forwarded-Encrypted: i=1; AKwUvBy5wZfmLHbEGGx+yYPHGuCpz9MosLsNzd4zEJnIuLZc1DtbGzHjPPb78uQhnSprTHaKqJBY+sv+@vger.kernel.org
+X-Gm-Message-State: AFq9FYIwsue4+L/AZjrymDWT6pQPyZSSE6d5WRasQYTPFRkom0XpIby9
+	DtW8/cY0me1jSSADquY/Pg8HwbuVjdt3I+wAvSsQ8cbrnpHyJJZ2XyZwXjp1M2DSOL5P8Jl6AUX
+	2GUvbWQ==
 X-Received: from pgbm14-n1.prod.google.com ([2002:a05:6a02:618e:10b0:cd8:b247:590f])
- (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a20:9d8f:b0:3d3:aec2:4dcd
- with SMTP id adf61e73a8af0-3e9023310b2mr2741331637.25.1793213437872; Wed, 28
- Oct 2026 11:50:37 -0700 (PDT)
-Date: Wed, 28 Oct 2026 18:50:13 +0000
+ (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a05:6a21:3b8d:b0:3e1:def0:1052
+ with SMTP id adf61e73a8af0-3e913d30b6dmr223055637.43.1793213438611; Wed, 28
+ Oct 2026 11:50:38 -0700 (PDT)
+Date: Wed, 28 Oct 2026 18:50:14 +0000
 In-Reply-To: <20261028185034.3607746-1-kuniyu@google.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -81,8 +81,8 @@ Precedence: list
 Mime-Version: 1.0
 References: <20261028185034.3607746-1-kuniyu@google.com>
 X-Mailer: git-send-email 2.56.0.313.g2479322e68-goog
-Message-ID: <20261028185034.3607746-2-kuniyu@google.com>
-Subject: [PATCH v2 1/6] memcg: Remove unnecessary READ_ONCE() under memcg_stock.lock.
+Message-ID: <20261028185034.3607746-3-kuniyu@google.com>
+Subject: [PATCH v2 2/6] memcg: Reduce nesting in consume_stock() and refill_stock().
 From: Kuniyuki Iwashima <kuniyu@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
@@ -91,88 +91,111 @@ Cc: Muchun Song <muchun.song@linux.dev>, Kuniyuki Iwashima <kuniyu@google.com>,
 	Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-this_cpu_ptr(&memcg_stock) is always modified under
-local_lock(&memcg_stock.lock).
+A later patch adds more code to the most nested block in
+consume_stock() and refill_stock().
 
-Unlike is_memcg_drain_needed() under RCU, consume_stock(),
-drain_stock(), and refill_stock() do not need READ_ONCE().
-
-Especially, in refill_stock(), READ_ONCE() is used twice for
-stock->cached[i], which forces the compiler to emit two volatile
-loads from stock->cached[i].
-
-Let's remove the unnecessary READ_ONCE() and eliminate the
-redundant loads in refill_stock():
-
-Before:
-
-  cached = READ_ONCE(stock->cached[i]);
-   4c 8b 80 88 d7 bd 84 	movq	-0x7b422878(%rax), %r8
-  if (memcg == READ_ONCE(stock->cached[i])) {
-   48 3b 98 88 d7 bd 84 	cmpq	-0x7b422878(%rax), %rbx
-   0f 84 86 01 00 00    	je	0xffffffff817d01e0 <refill_stock+0x210>
-
-After:
-
-  cached = stock->cached[i];
-   4c 8b 88 88 d7 bd 84 	movq	-0x7b422878(%rax), %r9
-  if (memcg == stock->cached[i]) {
-   4c 39 cb             	cmpq	%r9, %rbx
-   0f 84 7a 01 00 00    	je	0xffffffff817d01d0 <refill_stock+0x200>
+Let's reduce the nesting to make the later change cleaner.
 
 Signed-off-by: Kuniyuki Iwashima <kuniyu@google.com>
 ---
- mm/memcontrol.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ mm/memcontrol.c | 64 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 34 insertions(+), 30 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 84f4a8fd4d16..8a401550dfaa 100644
+index 8a401550dfaa..6666acc9cee8 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2164,10 +2164,10 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	stock = this_cpu_ptr(&memcg_stock);
- 
- 	for (i = 0; i < NR_MEMCG_STOCK; ++i) {
--		if (memcg != READ_ONCE(stock->cached[i]))
-+		if (memcg != stock->cached[i])
+@@ -2168,15 +2168,17 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
  			continue;
  
--		stock_pages = READ_ONCE(stock->nr_pages[i]);
-+		stock_pages = stock->nr_pages[i];
- 		if (stock_pages >= nr_pages) {
- 			stock_pages -= nr_pages;
- 			WRITE_ONCE(stock->nr_pages[i], stock_pages);
-@@ -2197,13 +2197,13 @@ static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages)
-  */
- static void drain_stock(struct memcg_stock_pcp *stock, int i)
- {
--	struct mem_cgroup *old = READ_ONCE(stock->cached[i]);
-+	struct mem_cgroup *old = stock->cached[i];
- 	uint8_t stock_pages;
+ 		stock_pages = stock->nr_pages[i];
+-		if (stock_pages >= nr_pages) {
+-			stock_pages -= nr_pages;
+-			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+-			if (!stock_pages) {
+-				WRITE_ONCE(stock->cached[i], NULL);
+-				css_put(&memcg->css);
+-			}
+-			ret = true;
++		if (stock_pages < nr_pages)
++			break;
++
++		stock_pages -= nr_pages;
++		WRITE_ONCE(stock->nr_pages[i], stock_pages);
++		if (!stock_pages) {
++			WRITE_ONCE(stock->cached[i], NULL);
++			css_put(&memcg->css);
+ 		}
++
++		ret = true;
+ 		break;
+ 	}
  
- 	if (!old)
- 		return;
+@@ -2258,7 +2260,6 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	struct memcg_stock_pcp *stock;
+ 	struct mem_cgroup *cached;
+ 	unsigned int stock_pages;
+-	bool success = false;
+ 	int empty_slot = -1;
+ 	int i;
  
--	stock_pages = READ_ONCE(stock->nr_pages[i]);
-+	stock_pages = stock->nr_pages[i];
- 	if (stock_pages) {
- 		memcg_uncharge(old, stock_pages);
- 		WRITE_ONCE(stock->nr_pages[i], 0);
-@@ -2284,11 +2284,11 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 
- 	stock = this_cpu_ptr(&memcg_stock);
- 	for (i = 0; i < NR_MEMCG_STOCK; ++i) {
--		cached = READ_ONCE(stock->cached[i]);
-+		cached = stock->cached[i];
+@@ -2287,32 +2288,35 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 		cached = stock->cached[i];
  		if (!cached && empty_slot == -1)
  			empty_slot = i;
--		if (memcg == READ_ONCE(stock->cached[i])) {
--			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
-+		if (memcg == stock->cached[i]) {
-+			stock_pages = stock->nr_pages[i] + nr_pages;
- 			if (stock_pages > MEMCG_STOCK_HIGH) {
- 				memcg_uncharge(memcg,
- 					       stock_pages - MEMCG_STOCK_LOW);
+-		if (memcg == stock->cached[i]) {
+-			stock_pages = stock->nr_pages[i] + nr_pages;
+-			if (stock_pages > MEMCG_STOCK_HIGH) {
+-				memcg_uncharge(memcg,
+-					       stock_pages - MEMCG_STOCK_LOW);
+-				stock_pages = MEMCG_STOCK_LOW;
+-			}
+-			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+-			success = true;
+-			break;
++
++		if (memcg != cached)
++			continue;
++
++		stock_pages = stock->nr_pages[i] + nr_pages;
++		if (stock_pages > MEMCG_STOCK_HIGH) {
++			memcg_uncharge(memcg,
++				       stock_pages - MEMCG_STOCK_LOW);
++			stock_pages = MEMCG_STOCK_LOW;
+ 		}
++
++		WRITE_ONCE(stock->nr_pages[i], stock_pages);
++
++		local_unlock(&memcg_stock.lock);
++		return;
+ 	}
+ 
+-	if (!success) {
+-		i = empty_slot;
+-		if (i == -1) {
+-			i = stock->drain_idx++;
+-			if (stock->drain_idx == NR_MEMCG_STOCK)
+-				stock->drain_idx = 0;
+-			drain_stock(stock, i);
+-		}
+-		css_get(&memcg->css);
+-		WRITE_ONCE(stock->cached[i], memcg);
+-		WRITE_ONCE(stock->nr_pages[i], nr_pages);
++	i = empty_slot;
++	if (i == -1) {
++		i = stock->drain_idx++;
++		if (stock->drain_idx == NR_MEMCG_STOCK)
++			stock->drain_idx = 0;
++		drain_stock(stock, i);
+ 	}
+ 
++	css_get(&memcg->css);
++	WRITE_ONCE(stock->cached[i], memcg);
++	WRITE_ONCE(stock->nr_pages[i], nr_pages);
++
+ 	local_unlock(&memcg_stock.lock);
+ }
+ 
 -- 
 2.56.0.313.g2479322e68-goog
 
