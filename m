@@ -1,112 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.54
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793155354;
-	b=FfVo+3g0G3OoAr0BabmILBYxF6t/aibmu/BtfJwzhxVjDEu23t8mAirAmYUsqIGo4Hya
-	 H/n+x++6EC6Ec9w0oypkrSzz5QGyUqcB4x0A47thuNks2w2ckm6A2A5I3sNgpzzN/lT2S
-	 Y/DHcS26iOrV5D1CNBOyydsNKYG1/uDqNWK5HoA3KZ9j+3ls1Ev5vQwgpSvjb7S23AOQh
-	 RskaiETOqK9GNtR9XHqg/RZR5Q7O9g1EfGEKkKV4x1+VbHvVbi2fqJ5i5KOj9HSXSb/AC
-	 p7g8RiLNzmW4fN2t9yjFc1DRWhykQaXNV84KPcbtGyRZljWwPMLzBZzforMBjm4ya3Q==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793155354;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=HQL9p3RFteYJHSpyeeyXsYlloO2LuHIDKkrEoNphPtY=;
-	b=uVKo1AlPv9T60VymzCMCahZwo4T9Xi3HoR6DPrEhqwBcTN+6lf+zVlVwM+CTJBIGrsGs
-	 rQq1ZyWsfQuz8Y0IHRBbBoLgyBAS7U+I/sAwyPiDYzig9nsYE0lxRxFbgquNBDWOa7y+0
-	 xOlwfWZEnFkyH2kWWdCBF9Yv/ONqjmfwvNkKfgQqDScdEzIZv4VjboCL+J4DmdAUwrY+b
-	 67v5v4PIn2fU2OTvG7g9nHGdY0T6KbJ8Qe+FFZ/20X94S0zGIGlexUSXkgOAvQ/3oCnpW
-	 ZqO+zEyZs+SUMXAYBGT+hz8aE7VKaevVJwrxe1hd8H/CwSlv1sbfOA8Di91oBY28yUA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=d+znapmE;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.193.54
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010054.outbound.protection.outlook.com [52.101.193.54])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.219
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793155543;
+	b=j2H5qJUg5VRwgfE/fYNJMqdE8XLl01FRaVoZLG3mU3Kx3dvu7E8kEJWI8R/RBWhAwfX4
+	 3pbQWKgATyLO84ydkIcgqiCRejnrLFN7xcW1+N92A5Z6Gw8emltt5gYRJQa3Hjzx6Kdo9
+	 NH719BcPjwaOrIajboOfqhltHzYOoxXy12J5S4W4TlQof4cx/2St3nsbeYz7fmL8im5Bv
+	 QqpwH0yeEbbDJ9MALEQUTGQz9WWIGa5En+O3CYghwc7lVmhfr4LhWM/PLtu8dTua16qKU
+	 2Kw79Z8CseBVGu35wQvjYEwLZxjvBWAlxfv3mliQakkYylKfP6Ep3ix7es/e6rKmB3w==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793155543;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
+	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
+	 To:X-Mailer;
+	bh=Pzifb9DGH5oVeEHmO9xeHY8G1nYs/tTXaM3a6nLgoI8=;
+	b=mXoAiGScRREhtmecIpNpPvtIXCT9fCct6FR42D4zp5CxSviMiTT9RXxV/I7uNcQE8vFn
+	 c1xVtUt9YeGc3O4U+cY8c3wo+hqoRHojQB1u7OhEiTJaR9mLWJ1tU/U1P4U8uwShj/P6h
+	 xjds6Z2Z7cCFkS6NcoXw9Q935NOIUDEMVPtTTQqHlrmvb2MZwjvOQpRH/ug9XPdSuUyMf
+	 hhFRtToQ9lkp68lttQeMxU0tdgjGtaob/J91nohbb6ppWGjEdbdf/tKxkOjwmSUw8FllN
+	 tHkeOeY7mEUPtf+ZzWsvU/h3BmaCCwVMKWN7qCg1KFdAj9a5GHfEwlydd3FE/NTfDpQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=WLtaUbKc;
+	arc=none smtp.remote-ip=95.215.58.219
+Received: from mta1.migadu.com (out-219.mta1.migadu.com [95.215.58.219])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3A8A606A31E;
-	Wed, 28 Oct 2026 02:42:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B3A8A606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74E64606A31A
+	for <cgroups@vger.kernel.org>; Wed, 28 Oct 2026 02:45:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74E64606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=d+znapmE
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=M/ephZvh1LCzHl4LPvVumqkfd7po3L8ii9dgTv5N/iqhz76shsnwXHLm+J4BN7F9qe30p3mBc2DMCYGbS7QmhsgeSkS/TJfkyedSRbcdT7h5/YkdhgVyYaUPkIn4Wa1vHPhZhOV166ZC3xNXPlBEDyV2iGNXGFaH6jaJQPmiB2Dkto4eazCI3psZuJBXoDcAkRaC00hvCBskD34Q5jh3Zlgw7Q3cwu6z6IVHjgYD4UOUwAjWypgX6h78G9BUPUY7i1ezSbHU/kPbnNr+b2wTGvuKWu2uzfcTwMh6X0nXn3DaBcbamghW5iXZ93beQuPOyybieNPtDCEqhrhdAFNB3A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HQL9p3RFteYJHSpyeeyXsYlloO2LuHIDKkrEoNphPtY=;
- b=OoI6uzax/Sa1Rthn1ZfbeP3mjyDtcJdnAwwE7tZoecf8IMrHja2CYx7Liy2KlxaRnrow3Bq8oep75nLXmeakZf6RACzmDNytk2xj/XKqojE0y75FRXpYwGVH8qd3Z6TOCUBBwRBgqlIBQnmQ0QnEP5jOiGTFfHkjdAtpI5j9ByTDjhUJ0nx3Xclx750aLngzw2IVrA46K2B8AW1hFJXYwF5/QiDybXQh/I3Wm/KMjC2wxX2V4rIRQdVGEjOsaate1q6jQ/+tD0HMQGBdWRs/iROBNtVAMKJmt0h/z9bYP5udyTyB3JYVuGi8KRX+j/1zS0CmZDYwvuhJDSs/c09Dww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HQL9p3RFteYJHSpyeeyXsYlloO2LuHIDKkrEoNphPtY=;
- b=d+znapmEb1KQgRCUnZ7aB/ym/gpluz99SVHRWseB0AjnMwM/rjHaqKbjcnsyQMNk9ZlZGZg/7mlALHnnZTTLj6jSEDdxKSNi1cRAZjGP4qEYJu3SaAnvjkBoImsoQh6tz3e68hJWRBkMfdJcuKYwj/bubRY/MZ3DjtUiGtNcd9l4avhLo+uZvpDL7MmRObxUcCWPuPj1wtUpALfGWfWtuIUbp/54tfx6+g/TXX051Bo5ggpVo501pw3kNWCndvFNsies1s8nnEJi31Ft+fotLMELj8C2vyqTRZ+TmsyXvzXLQ0uzcYNZAziucZlj7cqaJgz9WaGNp6Fp6WYDKdCLkw==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH3PR12MB9730.namprd12.prod.outlook.com (2603:10b6:610:253::9)
- by CH2PR12MB4278.namprd12.prod.outlook.com (2603:10b6:610:ab::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.546.18; Wed, 28 Oct
- 2026 02:42:25 +0000
-Received: from CH3PR12MB9730.namprd12.prod.outlook.com
- ([fe80::843d:c1f0:b2ed:4128]) by CH3PR12MB9730.namprd12.prod.outlook.com
- ([fe80::843d:c1f0:b2ed:4128%4]) with mapi id 15.21.0546.021; Wed, 28 Oct 2026
- 02:42:25 +0000
-Date: Wed, 28 Oct 2026 13:42:20 +1100
-From: Balbir Singh <balbirs@nvidia.com>
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: roman.gushchin@linux.dev, muchun.song@linux.dev,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kairui Song <kasong@tencent.com>, Qi Zheng <qi.zheng@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	Baoquan He <baoquan.he@linux.dev>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>, Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] mm/mglru: stop rotating offlined memcgs to the old
- generation
-Message-ID: <auFhDMtwymMynf8j@parvat>
-References: <20261028010611.3929937-1-tjmercier@google.com>
- <20261028010611.3929937-3-tjmercier@google.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261028010611.3929937-3-tjmercier@google.com>
-X-ClientProxiedBy: ME3P282CA0013.AUSP282.PROD.OUTLOOK.COM
- (2603:10c6:220:80::23) To CH3PR12MB9730.namprd12.prod.outlook.com
- (2603:10b6:610:253::9)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=WLtaUbKc
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=mXTPaQxw8eOvyMaMU78vJQsektczjVENB5s0wOZjHaY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793155540; v=1; x=1793760340;
+ b=WLtaUbKcMFSmR/V9Fk87tany1r9QjVrIyZSXVsOlVC3F3qJkpZhxXLhiVmdTC2R32g/U3nF2
+ vNklbotP3azN9kEIbOpfE3MI9VWafagRqvy8aftAVjg/1/PFhBJvILVs9pQsqAgzadOD5e/1dE3
+ w5vf2GuM+4kgq5IA3AXVA24Y=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by mta12.migadu.com with ESMTPS id 91429c3f323fe2c4;
+	Wed, 28 Oct 2026 02:45:30 +0000
+X-Mizu-Trace-ID: 91429c3f323fe2c4
+X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain;
+	charset=utf-8
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -115,214 +57,323 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB9730:EE_|CH2PR12MB4278:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9b21672b-5cc8-44fe-7850-08df349d1978
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|376014|23010399003|7416014|261026140227099003|261021121427099003|56012099006|261009223027099003|5023799004|4143699003|11063799006|261021123027099003|18002099003|22082099003|261026121527099003|10067099003|6133799003|261022105027099003|261022075727099003;
-X-Microsoft-Antispam-Message-Info:
-	uuWX0HDSR+44vsbilm3jEqqNW1Ts8ar7zlr8zAfPvpL6f0NU4n5CV0w6naNs8ik90pq0XFL5wiSPIV2f7QovrplOs3Or2bbAXXkOob0FpCWudiZwlje5zbvKz7l+L+4aPNvDEUKd9r4uL7Y/ygq7WijYxT5kmwDx59zyDSZD1FkdkzMxcLpSUkgfdIQxDKOx+K9IpEQ6uKam+uHOcUwnSFLvUT41pmxHn48H5mLJt5fe5LxddJENKY3EHVvw64WBsFPueGYvvhLpdNc21nd0H6WwOvm6EnifyGm8MDHlznLp8QRIJzmbG8/cY0vXmB3PY0Sn3aQM8BekawPDq5LFowk7KnnoO7mjTAHigTHAFSgwOTxeEer8myaM5MBdXtayxe+z4MEsGRHml/A+xaB9/1M3ixhiyqLrDAjKJpGkrgSdDrEdTWVBEIJ4nxcWPtd2igKydaVklhH3ojYmqrb8Kr04H2WW7dP2qZmoIQ2G5HQH/DCLNpc19CFSgvNC/dZydAV5VTO/tsBenHFeGFsEHmi/XxdlhrLnLaHFvsKEIkTfqPqPPx2GyBQN46j7Y5X0ku07BI32P+THG6Y+OGy2I6IGP/hQfn5dArOATvKMgMb1KAy+RH35YwVi/5i7Q4udshv1yDC0ZVxbd8/o7apkrCaC7KcQNxHk1je+Gc5NoFw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(23010399003)(7416014)(261026140227099003)(261021121427099003)(56012099006)(261009223027099003)(5023799004)(4143699003)(11063799006)(261021123027099003)(18002099003)(22082099003)(261026121527099003)(10067099003)(6133799003)(261022105027099003)(261022075727099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?QghB/Imr3Wvc5oEyAD4m7cssR2euuSunKiQvY0U2j3Hi3nj3538Ys3MJfrvN?=
- =?us-ascii?Q?k6aWFsYWNkrxBpn6lgpr7F1RzkEw2TtA7+G/W+8tRiIE0cqKR4XPro+gVXMy?=
- =?us-ascii?Q?yQjBHeNyJCx4elFW3QNHwxyB3RDrcCY5/BsXMnaeg9Jx7i3eXg4rqpKGMIIo?=
- =?us-ascii?Q?roa45xhJkXEMKTa4QZMzwDzWLr6UCYXsk2NI6EWWcHi12+xrE41ZEwDQy+k9?=
- =?us-ascii?Q?JZNWIbGgItNmy0wjnjKO6EB9vQxKMbE/cIVqdMrXIwbO+wWnLgJaS+EaBwPV?=
- =?us-ascii?Q?KBQXl2oKozntH0wb+r6/5NPHBmV96oBuC6DETukrGflJv+I0T3QfcI2uD9KY?=
- =?us-ascii?Q?tnq4XcIT9ES6XTEoMfUky1F0pA7Uohz9ZK8r78NeUMHOt6Q5P51zBcUEp3Od?=
- =?us-ascii?Q?HkBMqGT7ZlgmFEaQ2wt1ybGkYt50Fjc4uRz574iAg29Fy1ljGIR4SOMyjo8Q?=
- =?us-ascii?Q?OyjYJwjOV1XfZjm3f36eYAf2v8oJhZ1RGLzUidom9ALgiRw5Et+rH9WzKatI?=
- =?us-ascii?Q?3qEWhiaJNOqtJhZiq0ta2MzAYKGLIIp9H9rcisKXR2l9W/ABGtcznmsEbrm8?=
- =?us-ascii?Q?AsFOIpEI0wRSZU3V3pMINAQaRf6PAIIp1gFiceBJ7DfvjkyAeg7mnQMJ3yTU?=
- =?us-ascii?Q?zZD/ixxvb5TTBi+dfhXBmBkfXKKDNACeFrzO/utUN31Llac/esIkNUlR2vZ5?=
- =?us-ascii?Q?pEKVesCn6fBZbdsv4hG1yxZ+mTRosFIkeS67QVmylBiRK+9Gc6F0P1zXfp0K?=
- =?us-ascii?Q?C8d7aYxHOeW24FnAI4RWgEgOOvaqsQkv5g1y5Nw4Z1IBm6F9MUZF/b3JN8Nu?=
- =?us-ascii?Q?MOwsoveKz7f3HbDoB5bAHUS7HVq8x7cE8losyTABZIp+QOphCuMn7kVwr/0f?=
- =?us-ascii?Q?37r+LtroFMtslpivXu3M1yv8r3CJpEDLNTFohje5Rce/ojn3feuOn/ObbObe?=
- =?us-ascii?Q?GZmFJ7oCWQ64OwyiAbd2ieYkE/hTBe606mA+4W6qSKwa/vc3qa8x4K5z6tGz?=
- =?us-ascii?Q?gjIYT02iDLDx2mvNc1B5buNcO4TN2KZHBn8tNxAubv88xdPdmP5XOicC81ub?=
- =?us-ascii?Q?Eek78S1kTTyB8f0K9V6t0SAIjLavdGp0ue+a13hac9msoTOJStEY2quAqxw0?=
- =?us-ascii?Q?MixOePQAr95zna90SMnyatytnnoLePduDiiyie6mIyNyyMzSQMxJcJajkwte?=
- =?us-ascii?Q?H/jrjSRgtP596be2EZI0NhUZS7E9iAea9Lb3dtJrOzIO13D63ofGB2oAnyIA?=
- =?us-ascii?Q?/w3FN6sTsQYa77glwas/BXwIAzcgfqHT9AeNCvLYmOsNn2c3rEYLCRfmtEwA?=
- =?us-ascii?Q?MZDwjCQ7FOpkmw/2OQnWkI1OFgJZ8swj9lKx0CGbj+ajzigwORnikSBNxu79?=
- =?us-ascii?Q?gxaTmXltOYj0iCb2Nwwhm48HSjE8ol/LzRRcGIcGsU8Ey96OwJJArTwInA4b?=
- =?us-ascii?Q?Gdruq5SS8yH/8mUAZu61hdkkhe+MZ+KXJEh7WQsBs+nr/eyMzvWGfe4N5CKP?=
- =?us-ascii?Q?UEJFlxfoxFq8qRje3S9LHQ5VPkn00IVNQjrJWOZVTpFelekSubHxwqZAazdk?=
- =?us-ascii?Q?XAAdcqXYw9SqHIECWWIJfzxK5P6EMCnhbPm+0FgxxTNsX/eM90gtN97zwtaA?=
- =?us-ascii?Q?is8CgJEPKNpC1sJ0WNP84hDNXMOgTR2zhN2uqQ8hkKLtvXulW5kEcrIOPDDu?=
- =?us-ascii?Q?8ZoCvVON+fAv8h6ja3s9nMogzUEAiz+qlN38KN2dqURe5x2OWSsmOUAEHK+T?=
- =?us-ascii?Q?iWIOtOcKHQ=3D=3D?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9b21672b-5cc8-44fe-7850-08df349d1978
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9730.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2026 02:42:25.4808
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YpBE/1KFuK7VsHKcdklkKCwQUtNHbagxm4jEzL6h9EwYhN3d6glbEMBqSoAukByOAtlYP8Ut6M1ERCOpYlwzCw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4278
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
+Subject: Re: [PATCH] mm: memcontrol: fix NULL pointer deref in
+ high_work_func() on dying memcg
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <CABdmKX3DEDwgO_wj3JDYvx15FYPKGCav8HKvHC-u_EHdGhWwLg@mail.gmail.com>
+Date: Wed, 28 Oct 2026 10:45:11 +0800
+Cc: hannes@cmpxchg.org,
+ mhocko@kernel.org,
+ roman.gushchin@linux.dev,
+ shakeel.butt@linux.dev,
+ zhengqi.arch@bytedance.com,
+ akpm@linux-foundation.org,
+ cgroups@vger.kernel.org,
+ linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org,
+ stable@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <47089233-E973-4F25-B64F-DBBBE0F31FC0@linux.dev>
+References: <20261023222313.3979455-1-tjmercier@google.com>
+ <DF7DBE4B-E0BA-423B-BDA7-DB07D1C9E564@linux.dev>
+ <CABdmKX3-XKWXwZe5f=VwZeSuKH6xM0dsK7TvY7u9B1hgaPOm4g@mail.gmail.com>
+ <CABdmKX3DEDwgO_wj3JDYvx15FYPKGCav8HKvHC-u_EHdGhWwLg@mail.gmail.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
-On Tue, Oct 27, 2026 at 06:06:06PM -0700, T.J. Mercier wrote:
-> lru_gen_offline_memcg() moves an offlining memcg to the head of the old
-> generation of the memcg LRU (MEMCG_LRU_OLD), so that global reclaim
-> visits it first and evicts the folios it left behind.
-> 
-> Since commit f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of
-> dying memory cgroup for LRU folios"), those folios are reparented to the
-> parent before lru_gen_offline_memcg() runs, and nothing can be added
-> back to the offlined memcg's lruvec afterwards. Putting an empty
-> offlined memcg at the head of the old generation no longer serves any
-> purpose and only delays reclaim from the memcgs that still have memory
-> due to additional shrink_many() iteration.
-> 
-> Remove lru_gen_offline_memcg(), so that an offlined memcg is rotated
-> like any other memcg below the reclaimable size threshold until
-> lru_gen_release_memcg() takes it off the memcg LRU. MEMCG_LRU_OLD has no
-> other user, so remove the op and update the memcg LRU comment as well.
-> 
-> Signed-off-by: T.J. Mercier <tjmercier@google.com>
-> ---
->  Documentation/mm/multigen_lru.rst |  4 +---
->  include/linux/mmzone.h            | 14 +++-----------
->  mm/memcontrol.c                   |  1 -
->  mm/vmscan.c                       | 20 +-------------------
->  4 files changed, 5 insertions(+), 34 deletions(-)
-> 
-> diff --git a/Documentation/mm/multigen_lru.rst b/Documentation/mm/multigen_lru.rst
-> index 52ed5092022f..b532ce961371 100644
-> --- a/Documentation/mm/multigen_lru.rst
-> +++ b/Documentation/mm/multigen_lru.rst
-> @@ -234,9 +234,7 @@ the active/inactive LRU (of folios):
->  1. It has the young and the old (generations), i.e., the counterparts
->     to the active and the inactive;
->  2. The increment of ``max_seq`` triggers promotion, i.e., the
-> -   counterpart to activation;
-> -3. Other events trigger similar operations, e.g., offlining an memcg
-> -   triggers demotion, i.e., the counterpart to deactivation.
-> +   counterpart to activation.
->  
->  In terms of global reclaim, it has two distinct features:
->  
-> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index 7f078ff0dd76..542e465ee7a1 100644
-> --- a/include/linux/mmzone.h
-> +++ b/include/linux/mmzone.h
-> @@ -626,12 +626,10 @@ struct lru_gen_mm_walk {
->   * per-node memcg generation counter, whose reminder (mod MEMCG_NR_GENS) indexes
->   * the old generation, is incremented when all its bins become empty.
->   *
-> - * There are three operations:
-> + * There are two operations:
->   * 1. MEMCG_LRU_TAIL, which moves a memcg to the tail of a random bin in its
->   *    current generation (old or young) and updates its "seg" to "tail";
-> - * 2. MEMCG_LRU_OLD, which moves a memcg to the head of a random bin in the old
-> - *    generation, updates its "gen" to "old" and resets its "seg" to "default";
-> - * 3. MEMCG_LRU_YOUNG, which moves a memcg to the tail of a random bin in the
-> + * 2. MEMCG_LRU_YOUNG, which moves a memcg to the tail of a random bin in the
->   *    young generation, updates its "gen" to "young" and resets its "seg" to
->   *    "default".
->   *
-> @@ -643,8 +641,7 @@ struct lru_gen_mm_walk {
->   * 3. The second attempt to reclaim a memcg below reclaimable size threshold,
->   *    which triggers MEMCG_LRU_YOUNG;
->   * 4. Attempting to reclaim a memcg below min, which triggers MEMCG_LRU_YOUNG;
-> - * 5. Finishing the aging on the eviction path, which triggers MEMCG_LRU_YOUNG;
-> - * 6. Offlining a memcg, which triggers MEMCG_LRU_OLD.
-> + * 5. Finishing the aging on the eviction path, which triggers MEMCG_LRU_YOUNG.
->   *
->   * Notes:
->   * 1. Memcg LRU only applies to global reclaim, and the round-robin incrementing
-> @@ -675,7 +672,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr);
->  void lru_gen_init_memcg(struct mem_cgroup *memcg);
->  void lru_gen_exit_memcg(struct mem_cgroup *memcg);
->  void lru_gen_online_memcg(struct mem_cgroup *memcg);
-> -void lru_gen_offline_memcg(struct mem_cgroup *memcg);
->  void lru_gen_release_memcg(struct mem_cgroup *memcg);
->  void max_lru_gen_memcg(struct mem_cgroup *memcg, int nid);
->  bool recheck_lru_gen_max_memcg(struct mem_cgroup *memcg, int nid);
-> @@ -709,10 +705,6 @@ static inline void lru_gen_online_memcg(struct mem_cgroup *memcg)
->  {
->  }
->  
-> -static inline void lru_gen_offline_memcg(struct mem_cgroup *memcg)
-> -{
-> -}
-> -
->  static inline void lru_gen_release_memcg(struct mem_cgroup *memcg)
->  {
->  }
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a05d9a8baa1b..e2ddf0680e62 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4475,7 +4475,6 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
->  	memcg_reparent_objcgs(memcg);
->  	reparent_shrinker_deferred(memcg);
->  	wb_memcg_offline(memcg);
-> -	lru_gen_offline_memcg(memcg);
->  
->  	drain_all_stock(memcg);
->  
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 636152d8c94d..45a2c1021f4f 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -4538,7 +4538,6 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
->  enum {
->  	MEMCG_LRU_NOP,
->  	MEMCG_LRU_TAIL,
-> -	MEMCG_LRU_OLD,
->  	MEMCG_LRU_YOUNG,
->  };
->  
-> @@ -4560,8 +4559,6 @@ static void lru_gen_rotate_memcg(struct lruvec *lruvec, int op)
->  	/* see the comment on MEMCG_NR_GENS */
->  	if (op == MEMCG_LRU_TAIL)
->  		seg = MEMCG_LRU_TAIL;
-> -	else if (op == MEMCG_LRU_OLD)
-> -		new = get_memcg_gen(pgdat->memcg_lru.seq);
->  	else if (op == MEMCG_LRU_YOUNG)
->  		new = get_memcg_gen(pgdat->memcg_lru.seq + 1);
->  	else
-> @@ -4571,11 +4568,7 @@ static void lru_gen_rotate_memcg(struct lruvec *lruvec, int op)
->  	WRITE_ONCE(lruvec->lrugen.gen, new);
->  
->  	hlist_nulls_del_rcu(&lruvec->lrugen.list);
-> -
-> -	if (op == MEMCG_LRU_OLD)
-> -		hlist_nulls_add_head_rcu(&lruvec->lrugen.list, &pgdat->memcg_lru.fifo[new][bin]);
-> -	else
-> -		hlist_nulls_add_tail_rcu(&lruvec->lrugen.list, &pgdat->memcg_lru.fifo[new][bin]);
-> +	hlist_nulls_add_tail_rcu(&lruvec->lrugen.list, &pgdat->memcg_lru.fifo[new][bin]);
->  
->  	pgdat->memcg_lru.nr_memcgs[old]--;
->  	pgdat->memcg_lru.nr_memcgs[new]++;
-> @@ -4613,17 +4606,6 @@ void lru_gen_online_memcg(struct mem_cgroup *memcg)
->  	}
->  }
->  
-> -void lru_gen_offline_memcg(struct mem_cgroup *memcg)
-> -{
-> -	int nid;
-> -
-> -	for_each_node(nid) {
-> -		struct lruvec *lruvec = get_lruvec(memcg, nid);
-> -
-> -		lru_gen_rotate_memcg(lruvec, MEMCG_LRU_OLD);
-> -	}
-> -}
-> -
->  void lru_gen_release_memcg(struct mem_cgroup *memcg)
->  {
->  	int gen;
 
-Acked-by: Balbir Singh <balbirs@nvidia.com>
+
+> On Oct 28, 2026, at 07:11, T.J. Mercier <tjmercier@google.com> wrote:
+>=20
+> On Tue, Oct 27, 2026 at 10:42=E2=80=AFAM T.J. Mercier =
+<tjmercier@google.com> wrote:
+>>=20
+>> On Mon, Oct 26, 2026 at 7:42=E2=80=AFPM Muchun Song =
+<muchun.song@linux.dev> wrote:
+>>>=20
+>>>=20
+>>>=20
+>>>> On Oct 24, 2026, at 06:23, T.J. Mercier <tjmercier@google.com> =
+wrote:
+>>>>=20
+>>>> When memory.high is exceeded in non-task context, =
+try_charge_memcg()
+>>>> schedules memcg->high_work without taking a CSS reference on the =
+memcg,
+>>>> and high_work_func() invokes reclaim_high() without pinning the =
+memcg.
+>>>>=20
+>>>> Before commit f1cf8d2f36dc ("mm: memcontrol: eliminate the problem =
+of
+>>>> dying memory cgroup for LRU folios"), memory usage above =
+memory.high
+>>>> kept the memcg's refcount non-zero. With reparenting, folios and =
+objcgs
+>>>> charged to a child memcg are reparented to its parent in
+>>>> mem_cgroup_css_offline(), leaving the offlined child's memory usage
+>>>> permanently above its memory.high even after its last reference is
+>>>> dropped.
+>>>>=20
+>>>> cancel_work_sync(&memcg->high_work) only runs at the end of =
+teardown in
+>>>> mem_cgroup_css_free(), so high_work_func() can start or still be =
+running
+>>>> reclaim_high() after mem_cgroup_css_released() or shrink_many() has
+>>>> called lru_gen_release_memcg() and unhashed lruvec->lrugen.list. =
+This
+>>>> causes lru_gen_rotate_memcg() to dereference a NULL pprev pointer.
+>>>>=20
+>>>> Fix this by acquiring a reference with css_tryget_online() in
+>>>> high_work_func() before calling reclaim_high(), and by resetting
+>>>> memory.high and swap.high to PAGE_COUNTER_MAX in
+>>>> mem_cgroup_css_offline() so that charges via references on an =
+offlined
+>>>> memcg do not trigger high_work on the dead child or skip checking =
+live
+>>>> ancestors in try_charge_memcg().
+>>>>=20
+>>>> Oops: general protection fault, probably for non-canonical address =
+0xdffffc0000000000: 0000 [#1] SMP KASAN NOPTI
+>>>> KASAN: null-ptr-deref in range =
+[0x0000000000000000-0x0000000000000007]
+>>>> CPU: 1 UID: 0 PID: 27 Comm: kworker/1:0 Tainted: G    B   W         =
+  7.3.0-rc5-g2bba28e98578 #284 PREEMPT(full) <- Taint from =
+lru_gen_rotate_memcg() VM_WARN_ON_ONCE
+>>>> Tainted: [B]=3DBAD_PAGE, [W]=3DWARN
+>>>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS =
+1.17.0-debian-1.17.0-1 04/01/2014
+>>>> Workqueue: events high_work_func
+>>>> RIP: 0010:lru_gen_rotate_memcg+0x1a3/0xe90
+>>>> Code: fd 7f 09 45 84 ed 0f 85 64 0c 00 00 48 89 cf c6 83 6a 07 00 =
+00 00 48 c1 ef 03 88 83 69 07 00 00 48 b8 00 00 00 00 00 fc ff df <80> =
+3c 07 00 0f 85 ec 0b 00 00 48 89 31 40 f6 c6 01 0f 85 4e 00
+>>>> RSP: 0018:ffa00000001ef4c8 EFLAGS: 00010046
+>>>> RAX: dffffc0000000000 RBX: ff1100000779e440 RCX: 0000000000000000
+>>>> RDX: 0000000000000001 RSI: ff1100000779b9b0 RDI: 0000000000000000
+>>>> RBP: ff110000bffd8e40 R08: 0000000000000000 R09: ff1100000779ebb8
+>>>> R10: ff1100000779ebb0 R11: 0000000000000246 R12: 0000000000000000
+>>>> R13: 0000000000000000 R14: ffa00000001efb30 R15: 0000000000000002
+>>>> FS:  0000000000000000(0000) GS:ff1100011c0e7000(0000) =
+knlGS:0000000000000000
+>>>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>>> CR2: 000000000251ac88 CR3: 0000000009d6c000 CR4: 0000000000751ef0
+>>>> PKRU: 55555554
+>>>> Call Trace:
+>>>> <TASK>
+>>>> ? read_ctrl_pos+0x22f/0x3f0
+>>>> shrink_lruvec+0x16cb/0x1b80
+>>>> ? ret_from_fork_asm+0x1a/0x30
+>>>> ? lapic_next_event+0x15/0x20
+>>>> ? clockevents_program_event+0x2bb/0x6f0
+>>>> ? lapic_next_event+0x15/0x20
+>>>> ? __pfx_shrink_lruvec+0x10/0x10
+>>>> ? __pfx_clockevents_program_event+0x10/0x10
+>>>> ? _raw_spin_lock+0x84/0xe0
+>>>> ? __pfx__raw_spin_lock+0x10/0x10
+>>>> ? kasan_save_stack+0x30/0x50
+>>>> ? psi_group_change+0x381/0x740
+>>>> ? __pfx_sched_clock_cpu+0x10/0x10
+>>>> ? save_fpregs_to_fpstate+0xc4/0x2c0
+>>>> ? finish_task_switch.isra.0+0x1de/0xac0
+>>>> ? __schedule+0xf62/0x42c0
+>>>> ? __pfx___schedule+0x10/0x10
+>>>> ? __pfx___irq_work_queue_local+0x10/0x10
+>>>> ? shrink_node+0x626/0x31e0
+>>>> shrink_node+0x626/0x31e0
+>>>> ? ring_buffer_unlock_commit+0x11d/0x5c0
+>>>> ? kswapd_clear_hopeless+0xa0/0x150
+>>>> ? __pfx_shrink_node+0x10/0x10
+>>>> ? 0xffffffffc0000095
+>>>> do_try_to_free_pages+0x255/0x13b0
+>>>> ? ring_buffer_unlock_commit+0x11d/0x5c0
+>>>> ? reclaim_high+0x10a/0x1b0
+>>>> try_to_free_mem_cgroup_pages+0x1f9/0x5a0
+>>>> ? __pfx_try_to_free_mem_cgroup_pages+0x10/0x10
+>>>> ? irqentry_exit+0xc6/0x670
+>>>> reclaim_high+0x10a/0x1b0
+>>>> ? __pfx_reclaim_high+0x10/0x10
+>>>> ? process_one_work+0x5ff/0x1030
+>>>> ? __pfx_high_work_func+0x10/0x10
+>>>> process_one_work+0x6e2/0x1030
+>>>> ? __pfx___schedule+0x10/0x10
+>>>> ? __pfx_process_one_work+0x10/0x10
+>>>> worker_thread+0x422/0xbb0
+>>>> ? __pfx_worker_thread+0x10/0x10
+>>>> kthread+0x2cd/0x3a0
+>>>> ? recalc_sigpending+0x15c/0x200
+>>>> ? __pfx_kthread+0x10/0x10
+>>>> ret_from_fork+0x368/0x590
+>>>> ? __pfx_ret_from_fork+0x10/0x10
+>>>> ? __switch_to+0x588/0xf50
+>>>> ? __pfx_kthread+0x10/0x10
+>>>> ret_from_fork_asm+0x1a/0x30
+>>>> </TASK>
+>>>>=20
+>>>> Fixes: f1cf8d2f36dc ("mm: memcontrol: eliminate the problem of =
+dying memory cgroup for LRU folios")
+>>>=20
+>>> Hi T.J.,
+>>>=20
+>>> Thanks for fixing this.
+>>>=20
+>>> I have one question about the Fixes tag.
+>>>=20
+>>> The changelog says that, before f1cf8d2f36dc, memory usage above
+>>> memory.high kept the memcg reference count non-zero. This is true =
+for
+>>> LRU folios: before that commit, each charged LRU folio held a CSS
+>>> reference until it was uncharged.
+>>>=20
+>>> However, I wonder whether objcg-based kmem already provided a =
+reachable
+>>> path before f1cf8d2f36dc.
+>>>=20
+>>> In particular, BPF alloc_bulk() mostly runs from irq_work. It =
+obtains a
+>>> temporary memcg reference from a persistent objcg, uses =
+set_active_memcg()
+>>> while performing __GFP_ACCOUNT allocations, and drops the temporary
+>>> reference after the allocation. The charge can therefore queue
+>>> memcg->high_work in non-task context without transferring a CSS
+>>> reference to the work item.
+>>>=20
+>>> If this races with memcg offlining, objcg reparenting can redirect =
+the
+>>> objcg to the parent while the old child's page-counter usage remains
+>>> above memory.high. Once the temporary CSS reference is dropped,
+>>> mem_cgroup_css_released() can call lru_gen_release_memcg() before =
+the
+>>> queued high_work runs. The worker can then enter reclaim_high() and
+>>> rotate an already removed lrugen.list.
+>>>=20
+>>> This path appears to have all the required pieces after:
+>>>=20
+>>>  e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
+>>>=20
+>>> Commit 6867c7a33206 later changed the release operation to
+>>> hlist_nulls_del_init_rcu(), which explains the exact NULL pprev seen =
+in
+>>> the reported crash. Before that, the same invalid second deletion =
+would
+>>> instead encounter LIST_POISON2.
+>>>=20
+>>> So f1cf8d2f36dc clearly broadens the problem to ordinary LRU folios, =
+but
+>>> I am not very sure it is the first commit after which the underlying =
+race is
+>>> reachable.
+>>>=20
+>>> Is there an additional lifetime guarantee that prevents the pre-f1cf
+>>> objcg/kmem path above? If no, would the following be more =
+appropriate?
+>>>=20
+>>> Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio =
+lists")
+>>>=20
+>>> Thanks,
+>>> Muchun
+>>=20
+>> Hi Muchun,
+>>=20
+>> Everything you said sounds correct to me. I don't think there's
+>> anything preventing kmem from keeping the memcg above high while the
+>> refcount hits 0, and hitting the same problem in
+>> lru_gen_rotate_memcg() from lru_gen_shrink_lruvec().
+>>=20
+>> So using Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node
+>> lru_gen_folio lists") sounds good to me.
+>>=20
+>> Thanks,
+>> T.J.
+>=20
+> I was able to get a reproduction on e4dde56cd208. Fortunately this
+> patch applies cleanly on e4dde56cd208, so I expect the stable
+> backports to be straightforward.
+
+Excellent job. Yeah, we need this backported.
+
+Thanks,
+Muchun
+
+>=20
+> general protection fault, probably for non-canonical address
+> 0xfbd59c0000000024: 0000 [#1] PREEMPT SMP KASAN NOPTI
+> KASAN: maybe wild-memory-access in range =
+[0xdead000000000120-0xdead000000000127]
+> CPU: 1 PID: 37 Comm: kworker/1:1 Not tainted =
+6.2.0-rc4-00108-ge4dde56cd208 #1
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+> 1.17.0-debian-1.17.0-1 04/01/2014
+> Workqueue: events high_work_func
+> RIP: 0010:lru_gen_rotate_memcg+0x147/0xef0
+> Code: 49 c1 ea 03 41 80 3c 3a 00 0f 85 a5 09 00 00 48 89 f7 4c 8b 93
+> 08 07 00 00 48 c1 ef 03 48 89 fa 48 bf 00 00 00 00 00 fc ff df <80> 3c
+> 3a 00 0f 85 2a 07 00 00 4c 89 16 41 f6 c2 01 0f 85 72 00
+> RSP: 0018:ffa00000002a75e0 EFLAGS: 00010206
+> RAX: ff11000008d46701 RBX: ff11000008d46000 RCX: 0000000000000000
+> RDX: 1bd5a00000000024 RSI: dead000000000122 RDI: dffffc0000000000
+> RBP: ff110000bfe54000 R08: ff11000008d46708 R09: ff11000008d46710
+> R10: ff11000009a5a708 R11: 0000000000000000 R12: 0000000000000006
+> R13: 0000000000000004 R14: 1ff4000000054ee4 R15: 0000000000000001
+> FS:  0000000000000000(0000) GS:ff110000a3480000(0000) =
+knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000000 CR3: 0000000007d5c000 CR4: 0000000000751ee0
+> PKRU: 55555554
+> Call Trace:
+> <TASK>
+> ? reset_ctrl_pos+0x10f/0x460
+> shrink_lruvec+0x19e0/0x2000
+> ? kasan_set_track+0x25/0x30
+> ? __kasan_slab_alloc+0x66/0x80
+> ? kmem_cache_alloc+0x165/0x310
+> ? __kernfs_new_node+0xd3/0x590
+> ? __kernfs_create_file+0x2d/0x280
+> ? sysfs_add_file_mode_ns+0x12b/0x3a0
+> ? internal_create_group+0x286/0x940
+> ? internal_create_groups+0x84/0x110
+> ? really_probe+0x223/0x690
+> ? unwind_next_frame+0xa9a/0x2040
+> ? arch_stack_walk+0x7a/0x110
+> ? unwind_next_frame+0xa9a/0x2040
+> ? arch_stack_walk+0x7a/0x110
+> ? __pfx_shrink_lruvec+0x10/0x10
+> ? preempt_count_add+0x83/0x180
+> ? unwind_next_frame+0xb2/0x2040
+> ? unwind_next_frame+0x212/0x2040
+> ? ret_from_fork+0x2c/0x50
+> ? __pfx_stack_trace_consume_entry+0x10/0x10
+> ? arch_stack_walk+0xa2/0x110
+> ? sched_clock_local+0x132/0x210
+> ? __pfx_sched_clock_local+0x10/0x10
+> ? unwind_next_frame+0x212/0x2040
+> ? __pfx_shrink_slab+0x10/0x10
+> ? sched_clock_cpu+0x232/0x2c0
+> ? __pfx_sched_clock_local+0x10/0x10
+> ? __pfx_sched_clock_cpu+0x10/0x10
+> ? mem_cgroup_iter+0x269/0x600
+> ? vmpressure+0x30/0x3b0
+> shrink_node+0xb39/0x26a0
+> ? __pfx_shrink_node+0x10/0x10
+> ? kasan_save_stack+0x42/0x60
+> ? ring_buffer_lock_reserve+0x2fb/0xe30
+> do_try_to_free_pages+0x31a/0x1880
+> ? __pfx_do_try_to_free_pages+0x10/0x10
+> try_to_free_mem_cgroup_pages+0x282/0x5f0
+> ? try_to_free_mem_cgroup_pages+0x4/0x5f0
+> ? reclaim_high.constprop.0+0x191/0x250
+> ? __pfx_try_to_free_mem_cgroup_pages+0x10/0x10
+> ? try_to_free_mem_cgroup_pages+0x9/0x5f0
+> reclaim_high.constprop.0+0x191/0x250
+> ? __pfx_reclaim_high.constprop.0+0x10/0x10
+> ? __pfx_high_work_func+0x10/0x10
+> process_one_work+0x641/0x1010
+> worker_thread+0x424/0xec0
+> ? __kthread_parkme+0x89/0x160
+> ? __pfx_worker_thread+0x10/0x10
+> kthread+0x26c/0x300
+> ? __pfx_kthread+0x10/0x10
+> ret_from_fork+0x2c/0x50
+> </TASK>
+
