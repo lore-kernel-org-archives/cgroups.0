@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793201613;
-	b=eIZoujZd5py4RCHo9vBKjOz2NYAUXYKHDT+NOAQYzeGDW1LDh94adlDdNNbbwTROJos3
-	 e2ffvodl6BdvjP2gf4opF7XX50NbkatYQUlB//3BVOfDy+Jnyi4Rtp37+rbApsXeSVJ6n
-	 w70fQvmAbEP3XgsCLJFbrpOP4bl1uDot3iC+100VpDQv6IAY7ksOTplYZOZvLnYNh/vvP
-	 b53cVFl0SXHv8WDkY6yZWu13bGJhEvbdPR2l8eaLgdHqsVF/S+Wy15yd/IT5/Ggo50B9f
-	 WCgg2MT6PBLIZMrAcIdmrvHeEvNvO0IBLrEvWoV0xrNeIVJB8kKxYpk0I19930b6qIw==
+	t=1793201612;
+	b=XcEev5z4icnxQdfmipPfL7zelk281fhKt/dMpDTIoGj0kEKfM+T5VboV3I07eMyUff2n
+	 pH9llUXrd/eAatyOUC32c/KVCGUdQYpJs58oKgLjzDYHLOSrFAVWPqdmbQ3DW22k3gZDa
+	 4zokQy0m0Oil3Vienq5oAyeMKxF8MHE4cgx9D2KK+kZ7M6rRsb1vSae1uJTApNJiASDuh
+	 xSJb/M7ooD2i4rNp6BkUYDxrAahnZlbt5Maxa6f1ceih87cG/5FuthcIXjxv7j2Ulg4Za
+	 lPZJkLMjFXpcICnNR1LyfKlxRPBocQ4DfhxTBtC3P/1mHOQYmYqlNHFcBl/uRuMZp0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793201613;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793201612;
 	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
 	 In-Reply-To:References:Subject:From:To:Cc:Date;
-	bh=Mk3iDJt5T50uHOGaKewojk6ij6AnqevT7e8ze4YGhNg=;
-	b=kdgQDJHG2UX8FOCbcSkJjibZDyFbmFuWk9pPh3U6mbhsWc1u7m96obmm7NeMyXCz+sPe
-	 PAv7LmfeamBg4803RRZKQheiQzVPvqA2LmCzAjqeZw/biAd4aLX4+bLCX73oWtuMW3gYy
-	 bvDDTJQu9j1MGcBfxG83HU3WaxKsyOAsO/9HXpjf9u+iQ1KpOsjgYLRakwufhzP6Xv+wE
-	 qYb5WcydghJkZDDrmugu02Mv1Z1JR+7F/QX1Q3LDSskwaWxMSokGc2PsuH+MpLi1v6p3t
-	 615UPOp+vUQPXtvEZ6wJwu7yBY5x8P+53Xuq4WAHLNgUNQ50IRMvC71cdUtNQNUy/xw==
+	bh=Sc6OK2gaP5PHJJL+FHAqB8O3d7CSsEQRTSfxIIRDKaA=;
+	b=plVMsBHuAO6KMRV0KFx5yEL7afRHNBFgXw8Vg0ZkiUCCnfwdFcqf7EBzbfhPOYPnmZwf
+	 8sd42g/hD/BPWSR+h4c5aXuWawtlLVwHIj5j847L3TpRYI736J8JR+dxPJd5+6D2yveO8
+	 NWYlYNXhcV4zmkqZSdaBo1n/e3C0QgIlQO7//iZGq/xvDeRd30K/3ELfiriK2REldqP9f
+	 4XWqKd+Pj8eGI7b0l1+smlhi/lBeqhk9aATFjSb6uQ4YAFJswXUe2HHFxVAMBAWamRt5c
+	 kA822nND64EwciiNSLDXASPotfDyzZQUI5hXNUGuc55R1map8Fbjw8npuPRTurTkxgw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="onWJ/2mf";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DuvAgA6i;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 803BC606A329;
-	Wed, 28 Oct 2026 15:33:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 085D8606A31A;
+	Wed, 28 Oct 2026 15:33:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=onWJ/2mf
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07E5C1F031E3;
-	Wed, 28 Oct 2026 15:33:33 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DuvAgA6i
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45AE61F01825;
+	Wed, 28 Oct 2026 15:33:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793201613;
-	bh=Mk3iDJt5T50uHOGaKewojk6ij6AnqevT7e8ze4YGhNg=;
+	s=k20260515; t=1793201611;
+	bh=Sc6OK2gaP5PHJJL+FHAqB8O3d7CSsEQRTSfxIIRDKaA=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=onWJ/2mfsPmFOOalwByl3eXDdbjjgJ2gN/7iWzacAbLDdGhGigpYF8+cSJqokvBbW
-	 aSUJCOId+FNB98f848eq+C5Ym/hmPnZ6ovYb6zuKOG5mtycnRe2zYZXcVSQBDhbt3/
-	 8rW09EUBpaQ3LqWT9mBnxpjAlr3IGxwnamy3gLoIn3atvQm6DQPU4LNaXgNQ+KM4KB
-	 zoYIzro3bcyWt7uTd+ahPoOLsECrA1y0esopsT6B5JFoLQaR/J7YwVrWaQsKqNBUCv
-	 M64AlWYAvA5+DuJirYEyPPjRyvmsOjjtsGHZDrQ2LL+3r+t5ClkpliCmAR6V2E18RG
-	 fv1HDgVqPIhDg==
-Content-Type: multipart/mixed; boundary="===============5957388155132648867=="
+	b=DuvAgA6isxh7sOCl6pmimmq5UMQ3yHst6k3mAnooGpLlX5GSth0mRCqtpLusVny2P
+	 OqMnW9qDwC4bmOsg+7NBX5W7JEL+IO5W1SU40Lig/PVE7TMiLCbiQDX2f8IeN1aKrV
+	 NEJpt2rkI0v10RdLBOiCvFDFN9JwqXeXhNcu2C6iZ4Ykp6+CJf73mJsN2rLMW9yeCw
+	 d8qqr76kCfpeiNAxmhtfkQAUHpTml6HD/WJbt/M/5f7od8ySY/HfAm16e444qSBLda
+	 f68tou3HNUIjsCPdBn8FcwKTOWmIBfx3OxqCSTo+g6HZPpse7QLWkatl8DvyVj0e+2
+	 JwcVzaqKy8zww==
+Content-Type: multipart/mixed; boundary="===============5448043565086908133=="
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -49,106 +49,72 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-Id: <db337130fec9f342fe80debfe2b9e4fb4310456bf9a639785e34c931a81e4bbc@mail.kernel.org>
-In-Reply-To: <20261028143534.135968-3-cui.tao@linux.dev>
-References: <20261028143534.135968-3-cui.tao@linux.dev>
-Subject: Re: [PATCH 2/5] blk-iocost: add BPF struct_ops cost model support
+Message-Id: <6e0cec7622bf79c97ff108b4c1499e28b0109ecc8fa9cc8f72cb3c4f1ba47ee8@mail.kernel.org>
+In-Reply-To: <20261028143534.135968-4-cui.tao@linux.dev>
+References: <20261028143534.135968-4-cui.tao@linux.dev>
+Subject: Re: [PATCH 3/5] selftests/bpf: add iocost cost model test
 From: bot+bpf-ci@kernel.org
 To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk
 Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,alexei.starovoitov@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Wed, 28 Oct 2026 15:33:33 +0000 (UTC)
+Date: Wed, 28 Oct 2026 15:33:31 +0000 (UTC)
 
---===============5957388155132648867==
+--===============5448043565086908133==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> blk-iocost: add BPF struct_ops cost model support
+> selftests/bpf: add iocost cost model test
 
-TL;DR: Nit only, not a bug: the long iocost_model_ops interface comment in
-blk-iocost.h repeats attach/teardown details documented elsewhere and names
-call sites; suggests trimming it to the model-author contract.
+TL;DR: Nit only: in the iocost_model selftest, the comment before the final
+"pair_balanced_again" assertion describes the re-attach init check, not the
+detach-time init/free pairing it actually tests.
 
-> diff --git a/block/blk-iocost.h b/block/blk-iocost.h
-> index e4e517ef6a0f..6d62b4fd0c54 100644
-> --- a/block/blk-iocost.h
-> +++ b/block/blk-iocost.h
-> @@ -22,6 +22,79 @@
->  #include <asm/local64.h>
->  #include "blk-rq-qos.h"
->
-> +struct bpf_link;
-> +
-> +/*
-> + * Pluggable cost model interface for blk-iocost.
-> + *
-> + * A BPF struct_ops implementation can take over the cost model of one device.
-> + * The device is identified by the dev member, which is set from userspace
-> + * before the program is loaded; the struct_ops core owns the program lifetime.
-> + * Attaching creates the ioc if needed, like an io.cost.model write, and
-> + * switches the device to the BPF model with the queue frozen before
-> + * rq_qos_mutex, like an io.cost.qos write, and delivers iocg_init() to the
-> + * cgroups which already exist on the device. Enabling and disabling the
-> + * controller stays with io.cost.qos.
-> + *
-> + * While a model is attached, io.cost.model selects between it and the builtin
-> + * model: "model=bpf" switches to the attached model and "model=linear" back to
-> + * the builtin. Neither detaches the struct_ops; only detaching does. The
-> + * builtin linear coefficients are kept while the BPF model is in use and take
-> + * effect again when switched back.
-> + *
-> + * While in use, the BPF model prices every charged IO on the device, including
-> + * flushes, from the bio charging path. calc_cost() is called from the IO
-> + * submission path with RCU read lock held and must not sleep. It receives the
-> + * bio itself so that the model can use what it needs (operation flags, size,
-> + * sector, the issuing cgroup through bio->bi_blkg, which is guaranteed
-> + * non-NULL) and returns the cost of the IO in vtime units, where 1 second
-> + * of device time equals VTIME_PER_SEC (2^37,
-> + * available to BPF programs through vmlinux.h). The return value is clamped to
-> + * 1 second of device time per IO.
-> + *
-> + * The struct_ops also carries the transfer cost coefficients, vtime per page
-> + * for reads and writes. While the BPF model is in use, they replace the
-> + * builtin coefficients in the completion-time request sizing of READ and
-> + * WRITE requests, with ZONE_APPEND counted as a write. Taking over the QoS
-> + * side (latency tracking, vrate control) is left for later extensions.
-> + *
-> + * The cgroup callbacks are bound to the iocg policy lifetime, one (cgroup,
-> + * device) pair per invocation. iocg_init() is delivered from ioc_pd_online()
-> + * and on attach to the cgroups already online on the device; iocg_free() on
-> + * detach to the cgroups which still exist then and at pd_free() time for the
-> + * rest, so that init and free pair up exactly. iocg_free() is gated on a
-> + * per-iocg delivered flag, as bios can still be priced between the blkg going
-> + * offline and its free. Both callbacks are called with ioc->lock held and must
-> + * not sleep; the delivery points nest inside queue_lock except for iocg_free()
-> + * from ioc_pd_free() in blkg_free_workfn().
-> + */
+> diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+> new file mode 100644
+> index 000000000000..5373d52d93a6
+> --- /dev/null
+> +++ b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+> @@ -0,0 +1,806 @@
 
 [ ... ]
 
-this isn't a bug, but could this interface comment be cut down to the
-contract a model author needs (calling context, units, clamping, locking)?
+> +void serial_test_iocost_model_removal(void)
+> +{
 
-The attach description repeats what is already at the top of
-block/blk-iocost-bpf.c:
+[ ... ]
 
- * attaches the model to that device, creating the ioc if needed and switching
- * to the model with the queue frozen before rq_qos_mutex, like io.cost.qos
- * writes, and .unreg detaches it; enabling and disabling the controller stays
- * with io.cost.qos.
+> +	err = iocost_model__attach(skel2);
+> +	if (!ASSERT_OK(err, "attach_again"))
+> +		goto out2;
+> +
+> +	err = readback_model(dev, model, sizeof(model));
+> +	if (ASSERT_OK(err, "readback_again"))
+> +		ASSERT_STREQ(model, "bpf", "model_bpf_again");
+> +	ASSERT_GT(skel2->bss->iocg_inits, 0, "pair_init_again");
+> +
+> +	bpf_link__destroy(skel2->links.iocost_2x);
+> +	skel2->links.iocost_2x = NULL;
+> +
+> +	err = readback_model(dev, model, sizeof(model));
+> +	if (ASSERT_OK(err, "readback_after_detach_again"))
+> +		ASSERT_STREQ(model, "linear", "model_linear_again");
+> +
+> +	/* the re-attach walk delivered init for the recreated device */
+> +	ASSERT_EQ(skel2->bss->iocg_frees, skel2->bss->iocg_inits,
+> +		  "pair_balanced_again");
 
-The init/free pairing rules and the "bios can still be priced between
-the blkg going offline and its free" reasoning are repeated in the comments
-above ioc_pd_online(), ioc_pd_free() and ioc_bpf_deliver_iocg_callbacks().
+This isn't a bug, but the comment above the final assertion doesn't seem to
+describe the check below it.
 
-The comment also names implementation call sites:
+The comment says "the re-attach walk delivered init for the recreated
+device", while the assertion that follows compares iocg_frees against
+iocg_inits after bpf_link__destroy(), which is the detach walk delivering a
+matching iocg_free() for every iocg_init().  The init side is the
+ASSERT_GT(skel2->bss->iocg_inits, 0, "pair_init_again") check a few lines
+earlier, right after the attach.
 
- * not sleep; the delivery points nest inside queue_lock except for iocg_free()
- * from ioc_pd_free() in blkg_free_workfn().
-
-Would it be better to leave the attach and teardown mechanics to the
-comments next to that code, so this one does not go stale when those paths
-change?
+Should this comment sit next to the "pair_init_again" check, or say that the
+detach walk paired every init with a free?
 
 
 ---
@@ -156,4 +122,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/40710751825
---===============5957388155132648867==--
+--===============5448043565086908133==--
