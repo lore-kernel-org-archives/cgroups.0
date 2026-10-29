@@ -1,59 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.240
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.197
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793305298;
-	b=wZendkL04XsiBiOF/akIWTrthUvhnOTJWjl3M5GvqxwxoICnHRt5qE17wVAb4Lb7qrLO
-	 tv9pElGxwy4HFl+c0IU+1DgeQBDPAhPbb9/6loxltp7S36okjNVyoQYRwGm2fGo607Sy2
-	 FcjDnbfRs1c9zH6qbiEnr8JTMkxDtZEHSA9ZmCGaUNKWCyff7JizrP1xAe1/azL7RSnm7
-	 OOAXMPVU3LuCooXtufB6AEc+pIx7xvBxx0uwROVk2Xds2waIFm26mK2Dxd/JEF2D69zn3
-	 KTa3awEBTz2nSfbfRNYIhkPUe91CzTsHhEG4aD01+AEfqem87ybhZ0LdVFksRT0D97Q==
+	t=1793305583;
+	b=BBvv93DsKQXjgctBuTX63PPkVYaEN1BcOCMW2yf7v7NFQ3c3I8Ogi5y0ALg4nYYMDdaz
+	 IsfymAqqtAjif0XMMWbnlJi5MHeiW/OXeWpiMexS4Ceu5Ey2WvW2gH4m4xevDtHTSAKu5
+	 Is3mQcZxMiIAweg4kkU+o1YMukcZZnPp56LPVCRyJTThd4aUbhdKuhlsPq6jNoDFUWlK0
+	 qqj8ztwQMZj3YGdvWL3t3XzcrepFDYAAA6mYrE7L+a2YD+vfHQUgpMINsg6JDI9stHq6m
+	 cG1hl545oSmBgrtxG468CYtu6P1VSi9SnFczUyu2Vnr5EKwE/W/wd8OmuslzCZI1Smw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793305298;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=sxeoRDyZbXsp21/9MeO6A2aaiq2+hlIXpRLxI4zLeDQ=;
-	b=peRHr+SiVmLJhKmIYZhf62ESI8ZSWTFxRmdB/2nZvS4KtUNllKAcMS5foAAhP4+NcHVw
-	 0hVDzzNgHhDOj4a12nyyKmf8dHTrrLYhiXCFbM91i16did523wq7LiDCUIEQ1TDsWjAgo
-	 OgdaJ1Amr384oGlzP2G9INuG0V8O5H4m/1x81NmEe6RUTGBFLsi8CDuOCvip+VaaVjzxx
-	 OP8uIQFkW5pZAmKU9YiaKsNzn6YNcKRyDr8ztMCkWUUy6hfkhvfDmGhQG7F46uhjyIyu8
-	 sTOBAyre6AAEmLaV+BoSWGKMgFS/5PYE40pP0kGwfLsKPAR/Bf6iPJt8X1eioknysXw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793305583;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=+Zf7vPuAui7AiGHPzQyxnXwHIH3exNXs4Kg6yy+enNY=;
+	b=Wo6gjKb43HvHn3ZCZ+CCigtVcpppErnHuxwNik8KP4XvY9xt9HgDyeV2kp0iKlnMS5bg
+	 1aDrT+W3ya6gNZ+X0xzSpmnH35r30OR/cTi9Gb6jIOEe6BJc4y+vNk2+RXFWOEgoFoTd6
+	 fLz4E0Es9WABpdSllfwfRMM+UsZnBeL7TrC5vUuv6LH+a+lrgncviDtW7Yt9kC17E+MKs
+	 EPVrAJdLmRRYatPdgdNS8nh6SjfXv3FVcmV3vDZv+EFXbRjthFowgq207j8ga3/4YdelY
+	 XxKguPhsYpxaS7Z9p9hodZst7wkJEigKmqJPqMJBFNGWtvzhntRAH85MeWDZyzJCmXg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=95.215.58.240
-Received: from mta1.migadu.com (out-240.mta1.migadu.com [95.215.58.240])
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ej4U7WWN;
+	arc=none smtp.remote-ip=209.85.215.197
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com [209.85.215.197])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56503606A31E
-	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 20:21:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 56503606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=FJhtU1xpH0NBjch92Ltx/yhaAPmDS8a/U1CLjsXM7/s=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793305295; v=1; x=1793910095;
- b=ssV03S9kgAXb1E4HdWgJ7iMY4bFad++jClMYusrwwCiIQZZwu1OZSPegc/+GZFjjT51I99hy
- 5DykCLZbFWFB6zCieW/Tsqa1l0XzkJZdHiBSJvOFFSKA4h8FgRFCCoeFDNehFl5mbDfu3e+WGmC
- ytkXA9qhujcR0xzsY4ZSF4vw=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6ce485be16b92af5;
-	Thu, 29 Oct 2026 20:21:34 +0000
-X-Mizu-Trace-ID: 6ce485be16b92af5
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 29 Oct 2026 13:21:32 -0700
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	muchun.song@linux.dev, zhengqi.arch@bytedance.com, jp.kobryn@linux.dev, 
-	akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3] mm: memcontrol: fix NULL pointer deref and UAF from
- high_work_func() on dying memcg
-Message-ID: <auOqqI6SxvpzUNI7@linux.dev>
-References: <20261029201858.2932905-1-tjmercier@google.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28FE4606A31A
+	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 20:26:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28FE4606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=ej4U7WWN
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-cd67466211bso1445470a12.1
+        for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 13:26:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1793305582; x=1793910382; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=+Zf7vPuAui7AiGHPzQyxnXwHIH3exNXs4Kg6yy+enNY=;
+        b=ej4U7WWNppvWDCGavjnZ4+M6E6/Jn48wsgNKkkls8+h25IF+LDm197G6K5vHN30er/
+         n+gRK1z413vVd5IUdYPKKAfsWoqOSnSz1Or6hLuFPlvZ8BXGVDODHjrLm7rX3vWewZOz
+         1C9AI/ZGZIHTyWF3EOMdjYfeIokVyY9u3caIfgxIzJHapi+XOCBRRB2lK3XahbiLFD7t
+         Rj7Q0UwxSqGnA02hcO6YJRBi4xGlCcLjC2nLpuP7t/S5Hy76Jdca2Md20ki2n003Rs9t
+         2hfPDPYXKDD20N63xsMeZDIjNyMVHA6m9iRsHk6wwwWBiHzj4Tr45Dt+b3/bWXDV1OmF
+         vY9w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793305582; x=1793910382;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=+Zf7vPuAui7AiGHPzQyxnXwHIH3exNXs4Kg6yy+enNY=;
+        b=mFwYT0ynnIRsPVGDgbDnOZvZOdpIZcqi8zBimpsuu/aGBBLQpGbCVOg5JV6dqlzJV3
+         Q5ff9tUY9jpMAenSENLWLVHPd0ItTyEC8B2MdqFDZK7YPeVJeCcc4Aa3URN3pYH9GeIO
+         SYpniJixlJoKZglUDDOG156mW1/InF6hlsbXwsXa9kEeh3X24t8ZY3zVpRJhhlzZXPac
+         LTXs1o59BctQpCISXvKqfy45dkfnoL07Uof5gqqOSmUPTsMzcR56VRlzZoAMvfxRdRds
+         yQZYn8WC6VqrqzdR8LNhRFFBqiLiK6xET9yLLabhH5gogudJFceCMQMLetioH9PvHMzF
+         0YTg==
+X-Forwarded-Encrypted: i=1; AKwUvBxDc3hrgEl/L95Y3dDERPG7TlKSnJSD8X4la4ZH9957dn9GfIAYIatq4Pb/WsJk8imUp+cYworg@vger.kernel.org
+X-Gm-Message-State: AFq9FYLDi26X4FRIBHEti4N8Wol3gEF5SYPSSXipMQYSEDPSPKvYgDJ9
+	co+fAPCplYa7AON4fbaFsWtj1OmKvHa7Bk3nM+NpMK2ktfkplTH6vrX8QADGNbVgX5Ap92ua1S7
+	FUBREYw==
+X-Received: from pjblj14.prod.google.com ([2002:a17:90b:344e:b0:3ac:2cdc:a8ca])
+ (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:3b51:b0:3a0:cbe2:9e0c
+ with SMTP id 98e67ed59e1d1-3ae897c8800mr87140a91.63.1793305582207; Thu, 29
+ Oct 2026 13:26:22 -0700 (PDT)
+Date: Thu, 29 Oct 2026 20:26:21 +0000
+In-Reply-To: <auOlmxtQ5-EZTj62@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -62,123 +77,45 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261029201858.2932905-1-tjmercier@google.com>
+Mime-Version: 1.0
+References: <20261028185034.3607746-1-kuniyu@google.com> <auKSeCFvsWzP-XYy@linux.dev>
+ <auKYs_ucslI-tdar@linux.dev> <auKcNvAizn-B92xB@google.com> <auOlmxtQ5-EZTj62@linux.dev>
+Message-ID: <auOqQJQUKitt86XJ@google.com>
+Subject: Re: [PATCH v2 0/6] memcg: Batch mod_memcg_state() for MEMCG_SOCK.
+From: Kuniyuki Iwashima <kuniyu@google.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, yosry@kernel.org, joannelkoong@gmail.com
+Content-Type: text/plain; charset="us-ascii"
 
-On Thu, Oct 29, 2026 at 01:18:58PM -0700, T.J. Mercier wrote:
-> When memory.high is exceeded in non-task context, try_charge_memcg()
-> schedules memcg->high_work without taking a reference on the memcg, and
-> high_work_func() invokes reclaim_high() without pinning the memcg.
+On Thu, 29 Oct 2026 13:02:08 -0700, Shakeel Butt wrote:
+> On Thu, Oct 29, 2026 at 01:35:18AM +0000, Kuniyuki Iwashima wrote:
+> > On Wed, 28 Oct 2026 17:52:32 -0700, Shakeel Butt wrote:
+> [...]
+> > > > 
+> > > > For the 4th patch, I would prefer we first try to move the network sockets
+> > > > from memcg to objcg path.
+> > 
+> > sk_forward_alloc is already batched per page, and I think
+> > migrating to objcg would just add an indirect layer and some
+> > costs for css_tryget() / css_put(), and still inlining
+> > __consume_stock() or batching in memcg_stock would be crucial.
+> > 
 > 
-> With obj_cgroup reparenting, introduced in commit bf4f059954dc ("mm:
-> memcg/slab: obj_cgroup API"), objects charged to a child memcg are
-> reparented to its parent in mem_cgroup_css_offline() instead of holding
-> a reference on the child until uncharged. Subsequent uncharges of those
-> objects go to the parent, which can leave the child's memory use
-> permanently above its high limit, so any later charge on the offlined
-> memcg in non-task context schedules high_work. This was later widened
-> from kernel memory to LRU folios when commit f1cf8d2f36dc ("mm:
-> memcontrol: eliminate the problem of dying memory cgroup for LRU
-> folios") converted LRU folios to use obj_cgroup reparenting.
-> 
-> cancel_work_sync(&memcg->high_work) only runs at the end of teardown in
-> mem_cgroup_css_free(), so high_work_func() can start or still be running
-> reclaim_high() after mem_cgroup_css_released() or shrink_many() has
-> called lru_gen_release_memcg() and unhashed lruvec->lrugen.list. If
-> reclaim tries to rotate the memcg, lru_gen_rotate_memcg() dereferences a
-> NULL pprev pointer. This issue is specific to MGLRU and was introduced
-> with the memcg LRU in commit e4dde56cd208 ("mm: multi-gen LRU: per-node
-> lru_gen_folio lists").
-> 
-> With either traditional LRU or MGLRU, css_free_rwork_fn() calls
-> css_rstat_exit() which frees per-CPU rstat data before calling
-> mem_cgroup_css_free(). If reclaim_high() is still running, rstat updates
-> via mod_lruvec_state() -> __css_rstat_updated() cause a use-after-free
-> on the per-CPU rstat data. This was introduced when commit 5da3bfa029d6
-> ("cgroup: use separate rstat trees for each subsystem") moved
-> css_rstat_exit() ahead of ss->css_free().
-> 
-> Fix both problems by acquiring a reference with css_tryget_online() in
-> high_work_func() before calling reclaim_high(), and by resetting
-> memory.high and swap.high to PAGE_COUNTER_MAX in
-> mem_cgroup_css_offline() so that charges via references on an offlined
-> memcg do not trigger high_work on the dead child and skip checking live
-> ancestors in try_charge_memcg().
-> 
-> Acquiring the reference in high_work_func() rather than before
-> scheduling high_work is safe because mem_cgroup_css_free() calls
-> irq_work_sync() and cancel_work_sync() which cancels pending work and
-> waits for an already running high_work_func() to complete before
-> mem_cgroup_free() frees the memcg. css_tryget_online() uses
-> percpu_ref_tryget_live() and is safe to call after percpu_ref_exit()
-> before the cgroup is freed unlike css_tryget().
-> 
-> Oops: general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] SMP KASAN NOPTI
-> KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
-> CPU: 1 UID: 0 PID: 27 Comm: kworker/1:0 Tainted: G    B   W           7.3.0-rc5-g2bba28e98578 #284 PREEMPT(full)
-> Tainted: [B]=BAD_PAGE, [W]=WARN  <-- Taint from lru_gen_rotate_memcg() VM_WARN_ON_ONCE
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.17.0-debian-1.17.0-1 04/01/2014
-> Workqueue: events high_work_func
-> RIP: 0010:lru_gen_rotate_memcg+0x1a3/0xe90
-> Call Trace:
->  <TASK>
->  ? read_ctrl_pos+0x22f/0x3f0
->  shrink_lruvec+0x16cb/0x1b80
->  ? ret_from_fork_asm+0x1a/0x30
->  ? lapic_next_event+0x15/0x20
->  ? clockevents_program_event+0x2bb/0x6f0
->  ? lapic_next_event+0x15/0x20
->  ? __pfx_shrink_lruvec+0x10/0x10
->  ? __pfx_clockevents_program_event+0x10/0x10
->  ? _raw_spin_lock+0x84/0xe0
->  ? __pfx__raw_spin_lock+0x10/0x10
->  ? kasan_save_stack+0x30/0x50
->  ? psi_group_change+0x381/0x740
->  ? __pfx_sched_clock_cpu+0x10/0x10
->  ? save_fpregs_to_fpstate+0xc4/0x2c0
->  ? finish_task_switch.isra.0+0x1de/0xac0
->  ? __schedule+0xf62/0x42c0
->  ? __pfx___schedule+0x10/0x10
->  ? __pfx___irq_work_queue_local+0x10/0x10
->  ? shrink_node+0x626/0x31e0
->  shrink_node+0x626/0x31e0
->  ? ring_buffer_unlock_commit+0x11d/0x5c0
->  ? kswapd_clear_hopeless+0xa0/0x150
->  ? __pfx_shrink_node+0x10/0x10
->  ? 0xffffffffc0000095
->  do_try_to_free_pages+0x255/0x13b0
->  ? ring_buffer_unlock_commit+0x11d/0x5c0
->  ? reclaim_high+0x10a/0x1b0
->  try_to_free_mem_cgroup_pages+0x1f9/0x5a0
->  ? __pfx_try_to_free_mem_cgroup_pages+0x10/0x10
->  ? irqentry_exit+0xc6/0x670
->  reclaim_high+0x10a/0x1b0
->  ? __pfx_reclaim_high+0x10/0x10
->  ? process_one_work+0x5ff/0x1030
->  ? __pfx_high_work_func+0x10/0x10
->  process_one_work+0x6e2/0x1030
->  ? __pfx___schedule+0x10/0x10
->  ? __pfx_process_one_work+0x10/0x10
->  worker_thread+0x422/0xbb0
->  ? __pfx_worker_thread+0x10/0x10
->  kthread+0x2cd/0x3a0
->  ? recalc_sigpending+0x15c/0x200
->  ? __pfx_kthread+0x10/0x10
->  ret_from_fork+0x368/0x590
->  ? __pfx_ret_from_fork+0x10/0x10
->  ? __switch_to+0x588/0xf50
->  ? __pfx_kthread+0x10/0x10
->  ret_from_fork_asm+0x1a/0x30
->  </TASK>
-> 
-> Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
-> Fixes: 5da3bfa029d6 ("cgroup: use separate rstat trees for each subsystem")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: T.J. Mercier <tjmercier@google.com>
-> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Muchun Song <muchun.song@linux.dev>
+> We are over time moving kernel objects holding direct reference to memcg to the
+> objcg infra and the reason is such objects can become source of zombie memcgs.
+> There is no urgency for the network sockets but eventually it will happen. We
+> will see if indirection is really measurable at that time.
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+I tried it yesterday and saw ~5% regression w/ tcp_rr 10k/20k flows,
+https://github.com/q2ven/linux/commit/7407580c37784bf594fede4d6da6b266d8c7a11d
+
+but optimising stats limited it to ~2%.
+https://github.com/q2ven/linux/commit/1ffc01395156b278c3d1c9c5fff7b9484f632be8
+
+Given the perf gain by this series, I guess it's acceptable
+and I can post it to net-next once merge window opens.
+(rstats patch will be a follow-up after v3)
 
