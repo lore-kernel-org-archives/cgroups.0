@@ -1,73 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793292554;
-	b=FE4MX0fuK9vKkLaIlxo5lIDQDaCZ0Atx14cMIjML04LAlQg2d535zUp7N/gLdQxEDHGa
-	 uo6pq4dTCc5hqu/IB/XHQWoS8gz5a0KdfdpfzKggibs1FH9n0JyT/XTrWuP0ZWNzME918
-	 OhWAPiXh+ceAcg+62ATlC3hZaos3SFTK/QxzwrWRj63j6PU03pDJ1tillznbcHSXBWEkL
-	 F8bZ1469vW72mPyV7mCamkS3rcSlY3tktLQTB0acMF9KVCtUoYZah91rza+y8zx8XuyUn
-	 Henjs5lkZuLI0OBf/eBHhIInWqO2pY6K/V7sTvBz0AMq8nEjgcrJtarVCf5chUorn8A==
+	t=1793294041;
+	b=aUT6+d8lcUluFDhb/01V3+xhroXXk5rkEHMcJLLrbvVSS/y2Xt09lX0+/BHP56aEklqq
+	 AADTHbeZrIyZRbDeWJNvAPobcohq34wuCzigq4oUkp/LmaCIkX/lGnDuJ9/8Bx2oRK1VD
+	 kUsq2dWr2Q09bAbqYR3soomJ0NdazsIOVsS+GuOigLo9d9rWePmYNVKktGcGVAlAytWE/
+	 PL9eQaBBZ/d5PiHBuW2VZLmB5mrJcnNM+KAPQKX5a0AXzOrC+Cv74vMAxlhSUimbK1Umx
+	 dMxLFDaSG1d5uwuy4Y5JpC2HTP//5+BIkokxgPPs+oSsDhDo5mDP3v3NplD1T/o7mFA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793292554;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=5wi6r2Bh1Iv9QLbnNFqtqG0uwuLtzn/pkDXD94Z+vfY=;
-	b=k5gVCJOWbrHdytBdkHQcBnlNqANwRa7Xp5iy0CCVoVHwLAR1U5Jh6YQpf7kccXnB03bp
-	 ga09urW2SnKnLLobEVuH4UiN+Cv1+UXT0W8s+rBzTcLlnEoIqZwipu+7YNvtKJZ8aZy8U
-	 AO2qkDPYc4gjQBxOEriAD1QoAvyNMWVi+9fJCm79kVBOw6qUUkPpGL5TcPpoecwdazgCp
-	 AmeRkSqR0fcT8Q+AwViTUopQWzWi90i4VBtGTiDOuHyqwTSDV0JC5pFU1hR3GFkULn+C4
-	 +tCbVlKwZQsadVU66a54QAlFKA8deP8LpCgp0+XGS2X6xCqmd04eUdPTUpdeeu+7FRg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793294041;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=S3Gl2OroIqDa23QeZD7GwfXWPordKgg+mwTbLTbPPpU=;
+	b=3oU4jVI70EQNrQrGbBn0T5LEDrTkgzTFKwS1jNMSTldLBruE6jvJw8eYzL7JNk5NglEE
+	 Pp/gAdAPuof2m5EM3UQlpYTsVrVraIrVlbGPJDjFjiuejz1roTbwHdmrPuFDH6ikGi8dE
+	 bk8bqpb71FAoOdIdguDUfO2W/CFaiFuS+fx/8Gypl609X4U//6jbM94OdfgcQymxdiyTS
+	 g4sSRLWjcEPfH8ZEnrGdER/RGgIBfSUl0eLavYI77poX0C5sbThhi4nvaPsUGnvj8c9aK
+	 URs57Jx8cGbf613jG/UXbkYvaAklYIReTYzoMAarS3zvwGv6We4vpKEG7Un7vTQzgdA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jo8fCLzQ;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="dklw/hck";
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2D14606A31A;
-	Thu, 29 Oct 2026 16:49:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12A90606A31A;
+	Thu, 29 Oct 2026 17:14:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jo8fCLzQ
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E314D1F01816;
-	Thu, 29 Oct 2026 16:49:12 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dklw/hck
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F0D51F01824;
+	Thu, 29 Oct 2026 17:14:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793292553;
-	bh=5wi6r2Bh1Iv9QLbnNFqtqG0uwuLtzn/pkDXD94Z+vfY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=jo8fCLzQXKF02wU2RYT3THNRYIo6oYKarU7ZSxQMGfgseSFX22gAow3w3didTfBiN
-	 IDtqFugaiIQBFdhlXyAlM9Hb+KbjcnS4Kh0WQ5OePvIjoe35IpI5JqjQ/RB4Ad1rDg
-	 LQieX2k5UTDQqOazFftaFHd/HB56LjtJIg9PwAuDvcnuRwtga0nV8oUsThcSBImJYt
-	 mhEi7EM1F8PUgGauhXwwZ9LiiEF9fqBXghIsvYfiBpyUArpgidd/n4P2eB6/ronNaC
-	 qX1DjrimPuZpkw77rx3TVi4ThEGAufAa/w5ag8O75EfYgjhfpT9lmIdAagdu0RrbSU
-	 I5uBDOmRqYoIQ==
-Date: Thu, 29 Oct 2026 17:49:10 +0100
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Peng Wang <peng_wang@linux.alibaba.com>
-Cc: Anna-Maria Behnsen <anna-maria@linutronix.de>,
-	Ingo Molnar <mingo@kernel.org>, Thomas Gleixner <tglx@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
-	He Rongguang <herongguang@linux.alibaba.com>,
-	linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
-	driver-core@lists.linux.dev, linux-trace-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: Re: [RFC PATCH v2 1/2] tick/nohz: Add a policy dependency for full
- dynticks
-Message-ID: <auN5Bku9w2VDZFFX@localhost.localdomain>
-References: <cover.1792242566.git.peng_wang@linux.alibaba.com>
- <58bc33cb018a2651e9cc3fc02baad7de4d543705.1792242566.git.peng_wang@linux.alibaba.com>
- <att2hiYaaHTIkzG9@localhost.localdomain>
- <atuMJiJEwbzGjiu4@MacBook-Pro.local>
- <auIbt5JAC2cHw5jr@localhost.localdomain>
- <auLqmMdd8RIdf6st@U-3K7XLPQ6-0046.local>
- <auNR5c6hXlb_FFkB@localhost.localdomain>
- <auNuLZiBZyHLFYUr@MacBook-Pro.local>
+	s=k20260515; t=1793294040;
+	bh=S3Gl2OroIqDa23QeZD7GwfXWPordKgg+mwTbLTbPPpU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=dklw/hckDPqsP3hbKsG8Z0lkLe3LYbM85KdYJM5+G3JM7SDYhNoXiSjJ/atqqiN7p
+	 EToWWos9Xpco8uzVCQXZQLnGAwTdSA3urq7yTrD43sQsWT/rbVgnpIt+prM+mwHz5o
+	 Lq48GClWoVIB/Bivil290QKWWKFoDpIyswQGAP2qqn9ZdC5+P14Nl2hG1lTw78xCDE
+	 AIdNPRv/gvPNDZW5eC4Lf1hLpyMLegSLhvin7u/WbrrbChurosRJHtyhmDXP7dE1Xn
+	 Fi9Sor2YHrpwjF+/t/1lm1saU8O0JcoI01y3jrD/F985awygGl/umaZ7EZtlNewoTd
+	 dz5TkdeAGwetw==
+Date: Thu, 29 Oct 2026 07:13:59 -1000
+Message-ID: <1aa24cac216bd57faf861684ed93edc8@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Zhe Liu <liuzhe1@kylinos.cn>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] blk-iocost: account flush sequence latency only once
+In-Reply-To: <20261029092424.764545-1-liuzhe1@kylinos.cn>
+References: <20261029092424.764545-1-liuzhe1@kylinos.cn>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -77,50 +57,18 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <auNuLZiBZyHLFYUr@MacBook-Pro.local>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
-Le Fri, Oct 30, 2026 at 12:02:53AM +0800, Peng Wang a écrit :
-> > Ok in that case, do you know about the current work in progress
-> > to make nohz_full opt-able through cpusets? It implies taking the
-> > target CPUs offline shortly but the policy is to be setup before VM
-> > is launched, right?
-> 
-> Not always. Waiman mentioned the cpuset work earlier; it could
-> cover selecting the policy before a new VM starts.
-> 
-> Some customers express a preference for host tick suppression
-> through the management interface when changing workloads within
-> a running VM. The host operator decides whether to allow
-> suppression on the CPUs backing that VM.
+On Thu, Oct 29, 2026 at 05:24:24PM +0800, Zhe Liu wrote:
+> +	if (rq->rq_flags & RQF_FLUSH_SEQ)
+> +		return;
 
-I think people should know ahead if they will run latency critical workloads
-or common workloads in their VMs. Because those are completely different.
+Can you please wrap the test in unlikely()?
 
-> 
-> We want to support revisiting that decision while keeping those
-> CPUs online and the VM running, with nohz_full membership
-> unchanged. Could such an operation fit into the cpuset work?
-
-If that is really necessary then I guess we can have a file to control that
-in cpuset once the nohz_full interface is ready. Though I'm a bit skeptical due
-to the overhead of user <-> kernel transitions and housekeeping.
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
-> 
-> Thanks,
-> Peng
-> 
-> > 
-> > Thanks.
-> > 
-> > -- 
-> > Frederic Weisbecker
-> > SUSE Labs
-
--- 
-Frederic Weisbecker
-SUSE Labs
+--
+tejun
