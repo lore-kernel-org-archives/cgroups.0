@@ -1,72 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.70
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.72
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793303095;
-	b=m8xTv7NoeAWAR5Qx9CJaefk9l2TMEE1ndkTpW6mcxflCEBNqwsS4j2VOV/UrCHtW+Fwc
-	 3dWLox5fgrnlWH0zCSQ6C+Qo0eoH7ZPywoTtmUdKaeHydfWvZ7m9X0osqKquThlB3KODd
-	 /p9YIQMEhsEGS+TyIiPEtwc4TGA2YCeZaPMXKd9DfaNxrBdQcr4H1MELxGNDwC0Fks6Qf
-	 /g62UafDoM+Ppl8ao6Q2Mqto0eGRVexuDLwY0ARVfCHjiDMM1M9dMC6y3RtLbzrJNIzgg
-	 0DqrWQ85gr2+g00wGl/4bkXX8vPPiHV654hasmTNp7oWnL0WJ986Foj2kZXegRL8Yog==
+	b=BMkWhEaW2iA3jRG6mO7d1WPscZWau4hvk+JEuedO9Wanxds+2OwZIHxC2NENgwisBxzQ
+	 FOy4pV61OD3bXVlrcI82P2ZQ9F+QQeTVQubAjarZc/2Z1u7YQ36NSGPpYSKCjLge9tLI+
+	 y2j5B1uOu7AEqzGHA+I/Ma7CDMQJA4oGYRKX1cESo6OGaXsdv/yHmlt+M4MUD8AIBw06T
+	 dUd9qJ9pzicsoN73THELs7UvB1aTFO7mCaycygUTea2yTHEWyIg0nvilxkXRuCn1J4qNn
+	 3N3d9MA+V3JFaJFVW8ybRY1AAruKOLzhgyZMvFaZ6IYu60RPXhxp5D4GNlYyU6dVB5A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793303095;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
-	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
-	bh=xzpdASVHedhqOKgMw1KD3RU+Tfm1fLmwQdc26sVHTJY=;
-	b=yWLEyPC5IiMrwhRgBD4pZHFJUOcwkL4K0l2SNVmHfZLtBXbrhRktKfPnymunheKSX0RT
-	 6TB25PyUwwvX4SLbUIt8v1x9DEQ/9zpnxR2ubYOsVEAOxgk9MM/zEsfWnBBu2Xh/VziBH
-	 kGdFsiKQCnmhLyu7vu8DQn4mdjQI6XGmBBUxsR7TvNeusiDtS4jJ06DDOO7IYw9Qa70i9
-	 lCL5I2cPNWtxm5Utci4nVCavITlFPqjsry6fHLqrOtG5uYCpzSUifF5qdf55qKWE13eDl
-	 F+Wp1QzakUVBshVedVyflf49UyO9FBLJpLnK5SzE2lp5idonlGKDiNCiLeEtzSwjJDA==
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
+	 Content-Type;
+	bh=XKP9XqF6WNttRjhAQCndRzAJLGq8oPUqGtmSvk9voCs=;
+	b=T/TX5M8EHXnm+H000sTliVK30z/WMINJ3+SjONCI8gDUnjmCNce7v1pIbrtmos5+oiHf
+	 ozPfPoxWYbCqA25CZ2OeitCnrPhHzWHBqHCGZxmBOyH20gvkOb/ZtSme9wOGJIhdTYofk
+	 5TrPE39z9NDq9WNBoPv1rTc4Y4vytrzkpMt8Q5uU5CPtG9+H8nX4DqCHpiN4oxwXymPbh
+	 yfvfwfeDXm+37LvjJziM6REpOEcmHdiNo5M8emtrcbLwQb9sMI9qywi3csRDaChrCliML
+	 nA2qBP9o5aWhw8Jiv2rMIF+IwsvW4NNvcDj+JGKvrWeX4nihKT3dxGuQZqg8htAPWmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=google.com;
 	spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=cbrgW8KS;
-	arc=none smtp.remote-ip=209.85.216.70
-Received: from mail-pj1-f70.google.com (mail-pj1-f70.google.com [209.85.216.70])
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b="PHk/O5qm";
+	arc=none smtp.remote-ip=209.85.216.72
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC491606A327
-	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 19:44:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EC491606A327
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86F13606A31C
+	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 19:44:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86F13606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=cbrgW8KS
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-3ac8f449d1bso2204279a91.3
-        for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 12:44:54 -0700 (PDT)
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=PHk/O5qm
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-3abfcf726dcso3140313a91.2
+        for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 12:44:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793303094; x=1793907894; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=xzpdASVHedhqOKgMw1KD3RU+Tfm1fLmwQdc26sVHTJY=;
-        b=cbrgW8KSDQrU5+G1phw9auRm0KBhsNOrkkuRmv0LrT8MMEUxFdheMqH9drkzcc7hN/
-         evq/4T5/FoIL/bZ5acdou81vyAjiGAakHYwRODHJMqZXBzJYyBkQXtTaoy42yT5eHu/E
-         d7ToCFNyLgqOgnjG7CqxbhZD/d3elcOjL9roNhPwYa2toWhj+1WjHL8JRd2bP/te84To
-         oivIVMWdgt09Q+rm4zh8rOr4RF2KSrLU3saTGa0QAIO8LN/5BgM10zZ07HUtam44sxoJ
-         BAj9X0kYEYy31h01tlWXmntKxgMG3uAi0k47WM1fBM2hYBCXy9Fs9/oAAkQ+lD/+nSGS
-         N4ng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793303094; x=1793907894;
-        h=content-type:cc:to:from:subject:message-id:mime-version:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=google.com; s=20260707; t=1793303095; x=1793907895; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=xzpdASVHedhqOKgMw1KD3RU+Tfm1fLmwQdc26sVHTJY=;
-        b=lSvfD0S9Z4BwEzbTLyOT5w/zFEu8VjZ567Qzdqir+P4Cf7boJsqI5Mkqx9nbISCelt
-         9Hcfm7mCOAusxRc2wHR2acOYNwi/kXW6qZPQ+E6ZZdi+1eAosuRohpU+GsmYC9OYKdiE
-         LYfL8Ky2iX3MM6crZ7ZN7/2q/0A4bF2MNCD2CrAf0EFA3WzysNu3GoX3+3d4C4gp+6GW
-         /rcyqj3UeuKgOvmtbltJoqIBWcwT64jvCtBmBcr4H2qz+syHN0iH9rVFnurG2oyIADgh
-         c4/Pf31sZOhOuvPb4NCMHYFJ5uKVUpfMwuJdmcBO1NvxPb9lNYE6v/lI+1k4p/5J+s/6
-         u5tQ==
-X-Forwarded-Encrypted: i=1; AKwUvBx9kmm7t6TnqPms8mwvxKQNxt+whErS0SoZ+ezgXBd6t+oWoBP7Ty6R+o7kaFFKLkp2+7TX2KK5@vger.kernel.org
-X-Gm-Message-State: AFq9FYII2Fz67BH8gAExOd/xlsjNDSvvS3jAHhijRTy/id5SGSZbE9Sc
-	o2Ld7NXYZ39JZBTgAea/MNlF4+eVj2xiHRSZNIon3/6hdLJFHstup0vPoO7dcR7RlcuhG6XBjB3
-	9M8eEjw==
-X-Received: from pjl16.prod.google.com ([2002:a17:90b:2f90:b0:3ae:825a:57e3])
- (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:4e83:b0:3aa:f4af:1e0f
- with SMTP id 98e67ed59e1d1-3ae89536c2emr24913a91.8.1793303094029; Thu, 29 Oct
- 2026 12:44:54 -0700 (PDT)
-Date: Thu, 29 Oct 2026 19:44:11 +0000
+        bh=XKP9XqF6WNttRjhAQCndRzAJLGq8oPUqGtmSvk9voCs=;
+        b=PHk/O5qmk5YY4MwgzyP5kDRJYH0QvBF/BvMdOCkTenMNmSxo5Z5qz4f/JS2WDd8Pqo
+         /+kXXtmr3RT570OMq9asXku7rhfS1mBLUGv1Np72bf3QO+6eYBMOHAn8BMQIWBplQ40e
+         9KHvVdWWEIEh+8+vcL8FDmR6LnJpyiQOUNXg7Y6QfICHQ8HWwv0WDeZxFJdlkq6AGZt+
+         WEXhVlV2DiQQv9bZuRFbwaG6ZmODIKaI2LYLeJ8NcePs7vFTV5gbjN4nkyvKWszgYX9k
+         YP+QuOXqAnR2HWmwzbjSdmtucen9f/wVGw68wi81Fy5tbDQMfC3vTcGCdfCEl5pEdWcb
+         vQcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793303095; x=1793907895;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=XKP9XqF6WNttRjhAQCndRzAJLGq8oPUqGtmSvk9voCs=;
+        b=nOV6mIgLwI8G98na452uMXiUT0ENKKCIwlrxUVwN3/yMJUBuFoe/fMhFsXNPfBcmBz
+         fhhAcYhcVPXm2ikVGEs7+E2n+j6/j/pUQ4tjjxdoMGAnh97C7BuQH8rEJiY7ett6fTGf
+         bAM3eHC0QxNSr08Op7xEwDa4yoDZv44XrQ6e6AhhEWFC+RL+hULzzppI6oikCHFkhmSa
+         TkfoM48eeXV8dtS6n+rpoeKkCoH5wt8e+i2G9HQ9CrTVSbarGSwBfTEt5dIiEHTZi/8y
+         57DNLqZP4m2bFWudn7HkVHmm253DRQEOgp7GwxKC18qe3z0n0568dnNB5GPiooJqRYgT
+         /WFA==
+X-Forwarded-Encrypted: i=1; AKwUvBwoxm5DtdNcVsLcjh6sC9j7BzAX7H7z+BSog0lkw1K2J3NHeMrXnBYSGIh6coXUzqMQm88tC9u5@vger.kernel.org
+X-Gm-Message-State: AFq9FYJ8Uu5Xgx2Kx++iOaEi2n7ZTLAucTCTtmnpiHLSujK6gRaLKW4J
+	a0lJRFmWANlbmaHZfERIbpCtpayraED1PG2/kXOLWhspxWD8FltqYv7VhhR0ELTqXwhVUuL+Wnr
+	P8lBomA==
+X-Received: from pjso24.prod.google.com ([2002:a17:90a:c098:b0:3a8:837d:95c7])
+ (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:2891:b0:3ab:2c2b:1026
+ with SMTP id 98e67ed59e1d1-3ae580a1c9dmr5741824a91.34.1793303094831; Thu, 29
+ Oct 2026 12:44:54 -0700 (PDT)
+Date: Thu, 29 Oct 2026 19:44:12 +0000
+In-Reply-To: <20261029194452.3189365-1-kuniyu@google.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -76,9 +79,10 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
+References: <20261029194452.3189365-1-kuniyu@google.com>
 X-Mailer: git-send-email 2.56.0.317.g454f8302e1-goog
-Message-ID: <20261029194452.3189365-1-kuniyu@google.com>
-Subject: [PATCH v3 0/4] memcg: Misc cleanup and perf improvement for TCP.
+Message-ID: <20261029194452.3189365-2-kuniyu@google.com>
+Subject: [PATCH v3 1/4] memcg: Remove unnecessary READ_ONCE() under memcg_stock.lock.
 From: Kuniyuki Iwashima <kuniyu@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
 	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
@@ -87,63 +91,90 @@ Cc: Muchun Song <muchun.song@linux.dev>, Kuniyuki Iwashima <kuniyu@google.com>,
 	Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-On host w/ AMD EPYC 9B45 128-Core Processor (Zen 5 Turin,
-2 sockets, 512 vCPUs), tcp_rr w/ 20000 flows throughput often
-degrades by ~50%, 32M -> 17M~27M.
+this_cpu_ptr(&memcg_stock)->{cached[],nr_pages[]} are always
+modified under local_lock(&memcg_stock.lock).
 
-In the bad case, the number of involuntary context switches
-was extremely high by 12x (241733 -> 3093367).
+Unlike is_memcg_drain_needed() under RCU, consume_stock(),
+drain_stock(), and refill_stock() do not need READ_ONCE().
 
-The root cause was that refill_stock() calls memcg_uncharge()
-or drain_stock() while holding memcg_stock.lock.
+Especially, in refill_stock(), READ_ONCE() is used twice for
+stock->cached[i], which forces the compiler to emit two volatile
+loads from stock->cached[i].
 
-Patch 1~3 are misc cleanup for better asm output and patch 4
-moves heavy operations to out of local_lock(&memcg_stock.lock).
+Let's remove the unnecessary READ_ONCE() and eliminate the
+redundant loads in refill_stock():
 
-This series removes the flakiness and gives ~3% gain on the
-512 vCPU platform.
+Before:
 
-In addition, on machine w/ AMD EPYC 7B12 64-Core Processor
-(Zen 2 Rome, 2 sockets, 256 vCPU), tcp_rr w/ 10000 flows achieves
-36% more throughput with lower latency.
+  cached = READ_ONCE(stock->cached[i]);
+   4c 8b 80 88 d7 bd 84 	movq	-0x7b422878(%rax), %r8
+  if (memcg == READ_ONCE(stock->cached[i])) {
+   48 3b 98 88 d7 bd 84 	cmpq	-0x7b422878(%rax), %rbx
+   0f 84 86 01 00 00    	je	0xffffffff817d01e0 <refill_stock+0x210>
 
-  tcp_rr (10000 flows, 128 threads, 60s, average of 3 runs):
+After:
 
-  Metric                     |       Baseline |    Patched |    Diff
-  ---------------------------+----------------+------------+--------
-  Throughput (RPS)           |     20,884,499 | 28,453,051 | +36.24%
-  Latency Mean (us)          |         478.46 |     351.07 | -26.63%
-  Latency p50 (us)           |         453.96 |     343.04 | -24.43%
-  Latency p90 (us)           |         669.00 |     479.57 | -28.32%
-  Latency p99 (us)           |         969.38 |     593.92 | -38.73%
+  cached = stock->cached[i];
+   4c 8b 88 88 d7 bd 84 	movq	-0x7b422878(%rax), %r9
+  if (memcg == stock->cached[i]) {
+   4c 39 cb             	cmpq	%r9, %rbx
+   0f 84 7a 01 00 00    	je	0xffffffff817d01d0 <refill_stock+0x200>
 
+Signed-off-by: Kuniyuki Iwashima <kuniyu@google.com>
+---
+v3: Be more specific in sentence 1
+---
+ mm/memcontrol.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Changes:
-  v3:
-    * Drop MEMCG_SOCK batching patch
-    * Patch 1: Be more specific in sentence 1
-    * Patch 3: Mention Clang 23 and restore asm output
-    * Patch 4: Add a new benchmark result without batching stats patch.
-
-  v2: https://lore.kernel.org/linux-mm/20261028185034.3607746-1-kuniyu@google.com/
-    * Rebased on mm.git/mm-new
-    * Add patch 5 for flaky throughput issue
-    * Patch 4:
-      * Benchmark again after rebase and update numbers
-      * Check in_nmi() in __refill_stock()
-
-  v1: https://lore.kernel.org/linux-mm/20261016052811.3085635-1-kuniyu@google.com/
-
-
-Kuniyuki Iwashima (4):
-  memcg: Remove unnecessary READ_ONCE() under memcg_stock.lock.
-  memcg: Reduce nesting in consume_stock() and refill_stock().
-  memcg: Annotate slow paths in consume_stock() and refill_stock().
-  memcg: Uncharge pages outside memcg_stock.lock in refill_stock().
-
- mm/memcontrol.c | 95 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 57 insertions(+), 38 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 84f4a8fd4d16..8a401550dfaa 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2164,10 +2164,10 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 
+ 	for (i = 0; i < NR_MEMCG_STOCK; ++i) {
+-		if (memcg != READ_ONCE(stock->cached[i]))
++		if (memcg != stock->cached[i])
+ 			continue;
+ 
+-		stock_pages = READ_ONCE(stock->nr_pages[i]);
++		stock_pages = stock->nr_pages[i];
+ 		if (stock_pages >= nr_pages) {
+ 			stock_pages -= nr_pages;
+ 			WRITE_ONCE(stock->nr_pages[i], stock_pages);
+@@ -2197,13 +2197,13 @@ static void memcg_uncharge(struct mem_cgroup *memcg, unsigned int nr_pages)
+  */
+ static void drain_stock(struct memcg_stock_pcp *stock, int i)
+ {
+-	struct mem_cgroup *old = READ_ONCE(stock->cached[i]);
++	struct mem_cgroup *old = stock->cached[i];
+ 	uint8_t stock_pages;
+ 
+ 	if (!old)
+ 		return;
+ 
+-	stock_pages = READ_ONCE(stock->nr_pages[i]);
++	stock_pages = stock->nr_pages[i];
+ 	if (stock_pages) {
+ 		memcg_uncharge(old, stock_pages);
+ 		WRITE_ONCE(stock->nr_pages[i], 0);
+@@ -2284,11 +2284,11 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	for (i = 0; i < NR_MEMCG_STOCK; ++i) {
+-		cached = READ_ONCE(stock->cached[i]);
++		cached = stock->cached[i];
+ 		if (!cached && empty_slot == -1)
+ 			empty_slot = i;
+-		if (memcg == READ_ONCE(stock->cached[i])) {
+-			stock_pages = READ_ONCE(stock->nr_pages[i]) + nr_pages;
++		if (memcg == stock->cached[i]) {
++			stock_pages = stock->nr_pages[i] + nr_pages;
+ 			if (stock_pages > MEMCG_STOCK_HIGH) {
+ 				memcg_uncharge(memcg,
+ 					       stock_pages - MEMCG_STOCK_LOW);
 -- 
 2.56.0.317.g454f8302e1-goog
 
