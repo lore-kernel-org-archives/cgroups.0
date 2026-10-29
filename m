@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.148
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.20
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793268697;
-	b=AzHaQ9Ml5coWfGaKVFZYwig0LnU6NtIqhhEnXkMULAvwkqz0nqhHM+LKWFJIK78zPUR+
-	 56jMLCuD9xlgivgfLL/c1fz9ZJeV0vWxHRq+GywyaI8BBE1D4ZysR61CFBRfHr4g8a8o6
-	 1A1OgAFE0mWuW+4KKOxjI5HBNEGUT6rUpDEoKwaWrfX1VXsSnzKRXJv/p8RGK4gjIAZGH
-	 GN5DCMBNRm5zwRy1t35jecg4OcMIwWmieUNBbVuBkXYouCvrUmXlYxD4wf2tzPKDJsmUo
-	 7jA1u7KlYkk2OdujqFK1fptConPDk0y+tZHy5AcdYmah207Y7Mzz37jY99K8AKUcm1Q==
+	t=1793269842;
+	b=RmnjcPXzkoeFQz3JyJxS6yBeZ40NDmY42zl7pMszBn6ePkrkjCslYfDmkg2W9xmlPSp1
+	 jEFjlUvcQ4D8WgTF8FNRYphrae2SH6mCsj/PFsnUE/iDy0YZO25113ycr0f6voSDX47CY
+	 1aWrWH8bQG7hMaEI3gO9g1nCROlt0Q+93JRhvHxl9+aSDrkUg31VO/ykAs/pMgkuiviqn
+	 ac75c8LaZ86FNW8yFDcYFiLrCCm8jad4cJ42CdZydvnRICLT4iE9cDGOvSmYM6gHPq5xo
+	 GzWGNDTRdOx+I/PVqHuOi+HrrbDaniu9euMhj7783Ti5PNDd/Se7EEn4CtuuhhetKsw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793268697;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793269842;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=FAoeFjOhHMIomvSZEyPcUceFOZEousEjiVEkUk7cB2Y=;
-	b=XQ2u6Nf96uYvp7ZKR1v3iABenTLJEOfgDuGc6YxZorpd7Ion2JaU9ZHg9wM0V1Ofm31X
-	 WoFrc8zfV+0ogGdSz9sEEq9CE+t9e/E4fVOa7fIkS3dmOw5QziS5MrHKuMs65ZnJUxBHk
-	 qLxrJPajUSxujf+G3xYOHRFizuJVkYcWpCRtFt3c0TqHqbYEBDXWBluWi/0RuBjH+Qhrf
-	 HO/YZ+t8O1Y+kF3oFqfTeiZLZGGbFbnrgJG6DT8gm0pVIPDMLulk35BX3FugrQaBk0vH5
-	 5rj+sAfJ7PZO1KrMYJE8QD72uKV0u9zzXHwDUWvj5tQeMXm05qrfS+B5SHtGHrxS5Iw==
+	bh=giSLGDpNSYIJMqLP2qZuiYCwNonV14bhLRPCEf4xLns=;
+	b=aZV/UDgbya55xN6xN/xH/8+ZuJYhvSVSWvHvPc5VfRqzx8NnuycHOSDlK+X21SOZ5170
+	 L36XH+/cyKZPpYXH2pnFenhybjIBYNCeIpLxpv8N56jIdxf+j1QMFyUuFLFRV8KF0Mifm
+	 6FE6i1bek6e8uQ3f9O8CAewAvMxYP7/SrDZ1UF/lBOhw0TcgEIdNobLTsEMj6TLuT2nPy
+	 oOS3ojU3nHKph8eUhWLDsX4GArD18Z+V6g/0e3RPRbEmLpmTSJ15uaRA/a+Z1UW56DnIo
+	 2mUG2gzEvP7N2C2oRiZ9FviiU2s1+Q6IVPLNd39TSQqNS7VgjVabVimWT+aVLG5AaHw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ZeoDW+IX;
-	arc=none smtp.remote-ip=91.218.175.148
-Received: from mta0.migadu.com (out-148.mta0.migadu.com [91.218.175.148])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=jrgR7Mjy;
+	arc=none smtp.remote-ip=91.218.175.20
+Received: from mta0.migadu.com (out-20.mta0.migadu.com [91.218.175.20])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF7ED606A31D
-	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 10:11:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF7ED606A31D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BB8D606A31F
+	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 10:30:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3BB8D606A31F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ZeoDW+IX
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=jrgR7Mjy
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=O6pECeJaIkk7IfSov1GVY8i4R6cQbSZNmIkkj1P7D6Q=;
+DKIM-Signature: a=rsa-sha256; bh=rBETPjh7f4oGgIsPGjEmPX6QCVG6xJt6OgxbpYhh3Wo=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793268694; v=1; x=1793873494;
- b=ZeoDW+IX8pJ0xoQ4rjQaOdRjv3XntVFyg1mljQ462gjJ8QtHberIy8I3vN25HJSYU3X+jRU5
- riZGSX3aklA63YpJ1ez6SWmybO1uIcDLwx48LUChThpcH1hdcBGof0khT+0ucFuokpWFGrkkr9F
- pCQRBFS7YYyAih+hEKv4I2LQ=
+ t=1793269833; v=1; x=1793874633;
+ b=jrgR7MjyyAT5L7x2fUlit3g0DEpIOcb1qWLM8Aaw27Fl1queNchzcw+OFLJggkf14D/hMKOV
+ 5ecI1TbvpxUqkP6vhrpOUUu1AiGIQ342Fmh68dQWBqveFo00ejp743tj/alhBfzH5f9THzz6i8J
+ CNdecxdJCk0I1CRVpzT6ybpM=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 73988b42a70c48c5;
-	Thu, 29 Oct 2026 10:11:34 +0000
-X-Mizu-Trace-ID: 73988b42a70c48c5
+Received: by smtp.migadu.com with ESMTPS id 9e1c02ad49984eea;
+	Thu, 29 Oct 2026 10:30:30 +0000
+X-Mizu-Trace-ID: 9e1c02ad49984eea
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <895cb52c-1542-4ff7-abaf-844a73126fa8@linux.dev>
-Date: Thu, 29 Oct 2026 18:11:25 +0800
+Message-ID: <049090ed-48f8-4360-91f2-381357a0d40f@linux.dev>
+Date: Thu, 29 Oct 2026 18:30:16 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -65,13 +65,13 @@ Cc: cui.tao@linux.dev, josef@toxicopanda.com, axboe@kernel.dk,
  eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net,
  linux-kselftest@vger.kernel.org, cuitao@kylinos.cn, ameryhung@gmail.com,
  alexei.starovoitov@gmail.com
-Subject: Re: [PATCH 2/5] blk-iocost: add BPF struct_ops cost model support
+Subject: Re: [PATCH 3/5] selftests/bpf: add iocost cost model test
 To: Tejun Heo <tj@kernel.org>
 References: <20261028143534.135968-1-cui.tao@linux.dev>
- <20261028143534.135968-3-cui.tao@linux.dev>
- <0753eaa990c954aa56a0c5fa8ba302e2@kernel.org>
+ <20261028143534.135968-4-cui.tao@linux.dev>
+ <b69d96a507aec382c279d62cfb038fa9@kernel.org>
 From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <0753eaa990c954aa56a0c5fa8ba302e2@kernel.org>
+In-Reply-To: <b69d96a507aec382c279d62cfb038fa9@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
@@ -80,88 +80,92 @@ Hello Tejun,
 在 2026/10/29 04:09, Tejun Heo 写道:
 > Hello, Tao.
 > 
-> On Wed, Oct 28, 2026 at 10:35:31PM +0800, Tao Cui wrote:
->> +/*
->> +/*
->> + * Deliver iocg_init()/iocg_free() to the cgroups already online on the
-> 
-> The comment opens with "/*" twice. clang warns "'/*' within block comment
-> [-Wcomment]" and CONFIG_WERROR builds break.
-> 
-A stray line was left over from an earlier edit. Sorry about that.
->> +			/*
->> +			 * A blkg which never went online never reached the
->> +			 * radix tree, so it must not receive an init either;
+> On Wed, Oct 28, 2026 at 10:35:32PM +0800, Tao Cui wrote:
+>> +static bool iocost_bpf_supported(void)
+>> +{
+>> +	FILE *f;
+>> +	char line[128];
+>> +	bool any = false, on = false;
 >> ...
->> +			if (!iocg || !iocg->pd.online)
->> +				continue;
+>> +		if (strstr(line, "CONFIG_"))
+>> +			any = true;
+>> ...
+>> +	return on;
 > 
-> blkg_create() adds a blkg to q->blkg_list only after radix_tree_insert()
-> succeeds, so the blkgs skipped here are the ones blkg_destroy() already
-> took offline, not ones that never reached the radix tree.
+> any is set but never read, so every test skips without /proc/config.gz.
 > 
-You're right, the comment described the wrong blkgs. It goes away with
-the walk, which I'll drop in v12 together with the callbacks.
+I'll make the probe return whether CONFIG_BLK_CGROUP_IOCOST_BPF=y was
+seen.
 
->> +	if (!disk_live(disk)) {
->> +		mutex_unlock(&q->rq_qos_mutex);
->> +		blk_mq_unfreeze_queue(q, memflags);
->> +		blkdev_put_no_open(bdev);
->> +		return -ENODEV;
->> +	}
+>> +	/* isolate the configfs and cgroup mounts from the host */
+>> +	if (unshare(CLONE_NEWNS)) {
 > 
-> The guard() suggestion from v10 was only partly applied. This unlock,
-> unfreeze and put sequence is repeated on three error paths.
+> unshare(CLONE_NEWNS) alone doesn't make the mounts private, so the
+> configfs mount propagates to the host, one more per test.
 > 
-I'll fold the reg error path into a single out label. Detach no longer
-needs the freeze after the v12 rework.
+I'll follow unshare() with mount(NULL, "/", NULL,
+MS_REC | MS_PRIVATE, NULL).
 
->> +	/*
->> +	 * Scope the mutex so the tail bdev put runs with blkcg_mutex
->> +	 * already released: dropping the last device reference can
->> +	 * reach disk_release() -> blkcg_exit_disk() ->
->> +	 * blkg_destroy_all(), which takes q->blkcg_mutex.
->> +	 */
->> +	{
->> +		guard(mutex)(&q->blkcg_mutex);
+>> +	ASSERT_OK(configfs_write("/sys/fs/cgroup/cgroup.subtree_control",
+>> +				 "+io"), "subtree_io");
+>> +	if (!ASSERT_OK(cgroup_mkdir("/sys/fs/cgroup/iocost_pairing"),
 > 
-> The bare { } block isn't necessary, and ioc_bpf_detach() has the same
-> block with the same comment. Can you drop them?
+> The "+io" write to the root cgroup's cgroup.subtree_control is never
+> reverted, the cgroups are created directly under /sys/fs/cgroup and
+> test_progs stays in the root cgroup. cgroup_helpers handles all of this.
 > 
-I'll drop both.
->> +	/*
->> +	 * The attachment is checked under rq_qos_mutex first, so an unmatched
->> +	 * detach exits without freezing.
->> +	 */
->> +	mutex_lock(&q->rq_qos_mutex);
->> +	spin_lock_irq(&q->queue_lock);
->> +	ioc = q_to_ioc(q);
->> +	if (ioc) {
->> +		spin_lock(&ioc->lock);
->> +		matched = ioc_attached_model_locked(ioc) == ops &&
->> +			  ioc->bpf_link == link;
+I'll restore the "+io" setting on exit and move the test process back
+to the root cgroup before removing the test cgroups. I'll also switch
+the test over to cgroup_helpers.
+
+>> +	err = iocost_model__attach(skel);
+>> +	if (err == -EOPNOTSUPP || err == -ENODEV) {
 >> ...
+>> +		test__skip();
 > 
-> The same 11 lines check the attachment again after the freeze. The check
-> under rq_qos_mutex after the freeze is the one that matters.
+> -ENODEV and -EOPNOTSUPP from attaching to the test's own null_blk device
+> are failures, not skips. The same goes for
+> serial_test_iocost_model_streams().
 > 
-This goes away with the freeze removal: detach becomes a single
-mutex-critical section.
->> +/*
->> + * Pluggable cost model interface for blk-iocost.
->> + *
->> + * A BPF struct_ops implementation can take over the cost model of one device.
+Both become ASSERT_OK failures.
+>> +		ASSERT_GT(skel->bss->iocg_inits, 0, "pair_init");
+> 
+> This passes on the root blkg alone, so it doesn't show that the test
+> cgroup got iocg_init(). The same goes for eject_had_inits and
+> pair_init_again.
+> 
+Gone with the callbacks.
+>> +		/*
+>> +		 * detach implicitly by closing the link fd instead of
+>> +		 * calling bpf_link__destroy() explicitly: the release
+>> +		 * path must detach the model just like the explicit
+>> +		 * call does
+>> +		 */
+>> +		lfd = bpf_link__fd(skel->links.iocost_2x);
+>> +		bpf_link__disconnect(skel->links.iocost_2x);
+>> +		close(lfd);
+>> +		skel->links.iocost_2x = NULL;
+> 
+> This leaks libbpf's link struct. The reason in the comment doesn't hold
+> either. bpf_link__destroy() on a struct_ops link does the same close().
+> 
+I'll use bpf_link__destroy() instead.
+
+>> +void serial_test_iocost_model_streams(void)
 >> ...
->> + * offline and its free. Both callbacks are called with ioc->lock held and must
->> + * not sleep; the delivery points nest inside queue_lock except for iocg_free()
->> + * from ioc_pd_free() in blkg_free_workfn().
->> + */
+>> +	if (ASSERT_OK(err, "attach")) {
+>> +		err = readback_model(dev, model, sizeof(model));
+>> +		if (ASSERT_OK(err, "readback"))
+>> +			ASSERT_STREQ(model, "bpf", "model_bpf");
+>> +
+>> +		bpf_link__destroy(skel->links.iocost_ms);
 > 
-> This restates the attach mechanics and lists the call sites. The comments
-> and descriptions in general are still long and narrate mechanics.
+> The test never enables the controller, so iocost_ms's calc_cost() never
+> runs. The multi-stream results in the cover letter aren't exercised by
+> the test.
 > 
-v12 folds everything back into blk-iocost.c, so the private header and
-the long interface comment both go away.
+I'll enable the controller, move the test into a cgroup, drive IO
+through the device, and assert that the model is exercised.
 
 Thanks,
 Tao
