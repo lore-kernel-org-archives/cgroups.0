@@ -1,63 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.116
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.132
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793303450;
-	b=YzY+vzkBOHka6xqylEkkHHla1h4A+plToLjG+zBmr5qKxaZFYPJqcQL7J9Dk/yYRT7y9
-	 Fir/T6pSWn5GxNPJeZOY16Qkfg6TAy3VK+wj+EfN0JtAkOYUO/Hlmax9acIb0SO8c8epJ
-	 0BAnfQ2f/YhJBvidS7uOhvc+UxEysyipxSAwzDBq3WZ8l58UM14aSFuOdnZ6nYM3drdpV
-	 jJ8R2qtXab5C71iGUaZTZJX/3di7nAIYuoNg0nSqiMmc+0jjPWrnw7xz1aaXTQ5XelLuN
-	 NuILNzKyOU5M6lNDeJhGAG8qtsDq7UncnNAAd+oJDY0gHMJurKbMCIFovVmn3SueJKw==
+	t=1793303560;
+	b=sFywXMS1Mw/mrErvQsCQF1RtyhGM6lODC0Ej4FuPMwQoZ2XfWh8huU576f6uIwjOMYq5
+	 UPIHDe7cEEhPAF5LzNGtB/f95LgY18VToj5Lsy3vXWj1+zC/9upFcVellJXE7TgKktyl8
+	 PufPrQCY+sb8it3uO5wxOTXTxH46N0ZLB0//Ezk2fdIyYSJYn+a4ZxP1O/Z84J6lOMntp
+	 l1s3WfPs7soMS4a3CcPkTx6lADQYMRr+yEqZVNyMs+LNlxiXv570i/IRf292bLUZSQbIL
+	 eeq5XeU5hsAFEdOtl3q44/TcgDG1w+4G7mtAZ/yyNEW6hE+m38sdD2x4yW2DvUu6+Cw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793303450;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793303560;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=VtEOaWfP8tv9g+g92adSRdR2qBq/UBZnhwhpMjBubc8=;
-	b=uz18V3/oZ02eJ9FmpiiY27rWqKfybwgOogrRWIf9vFxq0mfhNGDosT0TGNJJ2twQ5HFc
-	 lX1PO2zVuuLN4A2SHwY36lFRqzhb36VipwEFVpiUUxgVNOXejWjDEEprb52MTIPsmRPts
-	 6gweUoqzJZ7iVWFkVtwvCOAsZ6PbzRP1lWg23WyyHkb0wuKVKqjlI7hRFNClD8I6VJL+K
-	 8mvKbTK/DFFO3Y7blx/dh0BRHkVOPYd4OtbUbUCz/bKbJVTZlY+dYiIwjSxQ0xu5hLBJ+
-	 f8f3gfKGLu9xIzR6FV4XHRPrTxaLJNbDe6Kvi6HbNMYKbgrWsCIR5xbf1p3Z7BucQqw==
+	bh=a447cVMtdkqcUJRY7pb6L3o51fer89SCf7m7k3ULuN8=;
+	b=XRqbrABLUNbXBoSOxETWO/tJ1/kPuWl5m1Vy22OdPNhPdRtdz8gZe+KQEvxG04teB5VN
+	 r6ekQMyLpeYgTMN2Vx2kjjFavpj5wJCGgwZc6lW3P6CIOdaACAdKo3wKSq57SDEGPg3aA
+	 CRFTEqvPB5L/qyXu0gxI5rNaXobpJO1m+zU+zXuoXbN/zI+0mt46LqZq2NQJN0FLe5b98
+	 AM5KR15WOa99AeDVGhZyzOkYPyfgxXyYh+dJY++2XNmvMuQsypypDYyJE7lrZ4zMH48Yy
+	 mQtw1RKoaQH0YSTftX6s5suW9m7BZE36KmRH+ML+E8SHs3tT1nK4WW/804XLzQmubEg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=uRciS9rC;
-	arc=none smtp.remote-ip=91.218.175.116
-Received: from mta0.migadu.com (out-116.mta0.migadu.com [91.218.175.116])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BJLkrOXZ;
+	arc=none smtp.remote-ip=91.218.175.132
+Received: from mta0.migadu.com (out-132.mta0.migadu.com [91.218.175.132])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4ADCF606A323
-	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 19:50:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4ADCF606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1391606A31A
+	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 19:52:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1391606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=uRciS9rC
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BJLkrOXZ
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=oCF7P8x0NM5ij/TruM3+Ta2vikeg2OnPaSW/zqp0m6w=;
+DKIM-Signature: a=rsa-sha256; bh=XZ2azTUUWfrxKE1K4J2pw0GmPL2WGA3CYY9gqmtHK18=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793303446; v=1; x=1793908246;
- b=uRciS9rCWJvjIvL53tFhY+unPeSonBJ9hhSlAeP3crnJZn12wyxCH5y3Mc24ALrA8I7/WS6V
- yX0r++CQPnNXsok4cZUiy26ASibkVTP4q5ybrQUuaAjQ53wcqPSywSTIyFp72w9AEXZEYVVW2cg
- w1bGm4rKF6L0fegR5WCV9reo=
+ t=1793303557; v=1; x=1793908357;
+ b=BJLkrOXZx/1vobWi+dAYt72zpfjVKP52ixGzQxuNg5bTSwDs/wGRXzmwdqhf2jIHhWav8q4s
+ GNGJy1yDmOp5m1OqjeANl8gOfVeCqVh9L3cMEl/qLibkW3BR83L7EnAHpVECAR/3PJSqotAedBa
+ w4HH65LOIdY9hipBf3AHflLc=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 796089e730b762cd;
-	Thu, 29 Oct 2026 19:50:21 +0000
-X-Mizu-Trace-ID: 796089e730b762cd
+Received: by smtp.migadu.com with ESMTPS id 682a9705787ec960;
+	Thu, 29 Oct 2026 19:52:37 +0000
+X-Mizu-Trace-ID: 682a9705787ec960
 X-Migadu-Flow: FLOW_OUT
-Date: Thu, 29 Oct 2026 12:50:15 -0700
+Date: Thu, 29 Oct 2026 12:52:34 -0700
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Kuniyuki Iwashima <kuniyu@google.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, 
 	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
 	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
 	Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH v3 3/4] memcg: Annotate slow paths in consume_stock() and
+Subject: Re: [PATCH v3 4/4] memcg: Uncharge pages outside memcg_stock.lock in
  refill_stock().
-Message-ID: <auOjX_O3vwou-lJ6@linux.dev>
+Message-ID: <auOj3mC-J9QC0hCx@linux.dev>
 References: <20261029194452.3189365-1-kuniyu@google.com>
- <20261029194452.3189365-4-kuniyu@google.com>
+ <20261029194452.3189365-5-kuniyu@google.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -69,81 +69,88 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261029194452.3189365-4-kuniyu@google.com>
+In-Reply-To: <20261029194452.3189365-5-kuniyu@google.com>
 
-On Thu, Oct 29, 2026 at 07:44:14PM +0000, Kuniyuki Iwashima wrote:
-> In consume_stock() and refill_stock(), each per-CPU stock slot
-> holds up to MEMCG_STOCK_HIGH (64) pages, so depleting a slot in
-> consume_stock() (!stock_pages) or trimming a slot in refill_stock()
-> (stock_pages > MEMCG_STOCK_HIGH) happens at most once per batch.
+On Thu, Oct 29, 2026 at 07:44:15PM +0000, Kuniyuki Iwashima wrote:
+> On host w/ AMD EPYC 9B45 128-Core Processor (Zen 5 Turin,
+> 2 sockets, 512 vCPUs), tcp_rr w/ 20000 flows throughput often
+> degrades by ~50%, 32M -> 17M~27M.
 > 
-> Similarly, requests larger than MEMCG_CHARGE_BATCH, local_trylock()
-> failure, and insufficient cached pages (stock_pages < nr_pages)
-> are all slow paths.
+> In the bad case, the number of involuntary context switches
+> was extremely high by 12x (241733 -> 3093367).
 > 
-> Without unlikely() annotations (when building without FDO, or
-> when an FDO profile does not cover a caller), Clang 23 treats
-> these branches as likely and inlines css_put() in consume_stock()
-> and memcg_uncharge() in refill_stock() right into the middle of
-> the hot path.
+> In perf record, 96% samples had the same pattern, where the
+> thread was interrupted during page_counter_uncharge() by softirq,
+> and later ksoftirqd was woken up:
 > 
-> Consequently, the fast path has to jump over the inlined slow
-> path and jump again to the function epilogue after local_unlock().
+>   # perf record -C 0-15 -e sched:sched_wakeup -g \
+>       -o /tmp/sched_wakeup.data -- sleep 1
+>   # perf report -i /tmp/sched_wakeup.data --stdio --no-children
+>     96.36%  tcp_rr   [kernel.kallsyms]  [k] wake_up_process
+>             |
+>             ---wake_up_process
+>                |
+>                 --96.00%--irq_exit_rcu
+>                           |
+>                            --95.82%--sysvec_call_function_single
+>                                      asm_sysvec_call_function_single
+>                                      |
+>                                       --95.58%--page_counter_uncharge
+>                                                 mem_cgroup_sk_uncharge
+>                                                 sock_rfree
+>                                                 tcp_recvmsg
+>                                                 __x64_sys_recvfrom
+>                                                 do_syscall_64
+>                                                 entry_SYSCALL_64_after_hwframe
 > 
-> Let's annotate the slow paths in consume_stock() and refill_stock()
-> with unlikely() so that the compiler keeps css_put() and
-> memcg_uncharge() out-of-line at the cold tail and lets local_unlock()
-> and the function epilogue fall through on the fast path:
+>   # perf script -i /tmp/sched_wakeup.data | grep -A 20 "comm=ksoftirqd"
+>   tcp_rr  101952 [001]  9679.340985: sched:sched_wakeup: comm=ksoftirqd/1 pid=23 prio=120 target_cpu=001
+>   	ffffffffb64cd0cc wake_up_process+0xe6c ([kernel.kallsyms])
+>   	ffffffffb64cb034 irq_exit_rcu+0x264 ([kernel.kallsyms])
+>   	ffffffffb68ad31c sysvec_call_function_single+0xcc ([kernel.kallsyms])
+>   	ffffffffb560158a asm_sysvec_call_function_single+0x1a ([kernel.kallsyms])
+>   	ffffffffb653c4ce page_counter_uncharge+0x2e ([kernel.kallsyms])
+>   	ffffffffb6541b28 mem_cgroup_sk_uncharge+0x3c8 ([kernel.kallsyms])
+>   	ffffffffb6561383 sock_rfree+0x83 ([kernel.kallsyms])
+>   	ffffffffb6577faf tcp_recvmsg+0x2ff ([kernel.kallsyms])
+>   	ffffffffb65604d9 __x64_sys_recvfrom+0x159 ([kernel.kallsyms])
 > 
-> Before (refill_stock):
+> The problem is that when stock_pages exceeds MEMCG_STOCK_HIGH
+> or all slots in struct memcg_stock_pcp are full, refill_stock()
+> calls memcg_uncharge() or drain_stock() while holding
+> memcg_stock.lock.
 > 
->   stock_pages = stock->nr_pages[i] + nr_pages;
->    7ab2: 43 0f b6 44 26 01       movzbl  0x1(%r14,%r12), %eax
->    7ab8: 01 c6                   addl    %eax, %esi
->   if (stock_pages > MEMCG_STOCK_HIGH) {
->    7aba: 83 fe 41                cmpl    $0x41, %esi
->    7abd: 72 1d                   jb      0x7adc <refill_stock+0x21c>
->   memcg_uncharge(memcg, stock_pages - MEMCG_STOCK_LOW);   # inlined
->    7abf: 41 89 f7                movl    %esi, %r15d
->    7ac2: 41 83 c7 e0             addl    $-0x20, %r15d
->    7ac6: 48 8d bb 00 01 00 00    leaq    0x100(%rbx), %rdi
->    7acd: 4c 89 fe                movq    %r15, %rsi
->    7ad0: e8 00 00 00 00          callq   <page_counter_uncharge>
->    7ad5: be 20 00 00 00          movl    $0x20, %esi
->    7ada: eb 41                   jmp     0x7b1d <refill_stock+0x25d>
->   WRITE_ONCE(stock->nr_pages[i], stock_pages);
->    7adc: 43 88 74 26 01          movb    %sil, 0x1(%r14,%r12)
->   local_unlock(&memcg_stock.lock);
->    7ae1: 65 48 8b 05 00 00 00 00 movq    %gs:(%rip), %rax
->    7ae9: c6 80 00 00 00 00 00    movb    $0x0, (%rax)
->    7af0: e9 03 fe ff ff          jmp     0x78f8 <refill_stock+0x38>
+> Because local_trylock() only disables preemption and leaves
+> interrupts and softirqs enabled, an RPS IPI arriving while
+> refill_stock() stalls on page_counter_uncharge() invokes
+> NET_RX_SOFTIRQ (process_backlog()) on the same CPU while
+> memcg_stock.lock is held.
 > 
-> After (refill_stock):
+> Every incoming packet in process_backlog() then fails
+> local_trylock() in consume_stock() and falls back to
+> try_charge_memcg() and refill_stock(), hammering the global
+> page_counter atomic twice per packet, and slow processing
+> finally wakes up ksoftirqd.
 > 
->   stock_pages = stock->nr_pages[i] + nr_pages;
->    7b76: 42 0f b6 44 33 01       movzbl  0x1(%rbx,%r14), %eax
->    7b7c: 01 c6                   addl    %eax, %esi
->   if (unlikely(stock_pages > MEMCG_STOCK_HIGH)) {
->    7b7e: 83 fe 41                cmpl    $0x41, %esi
->    7b81: 73 20                   jae     0x7ba3 <refill_stock+0x233>
->   WRITE_ONCE(stock->nr_pages[i], stock_pages);
->    7b83: 42 88 74 33 01          movb    %sil, 0x1(%rbx,%r14)
->   local_unlock(&memcg_stock.lock);
->    7b88: 65 48 8b 05 00 00 00 00 movq    %gs:(%rip), %rax
->    7b90: c6 80 00 00 00 00 00    movb    $0x0, (%rax)
->   }
->    7b97: 5b                      popq    %rbx
->    7b98: 41 5e                   popq    %r14
->    7b9a: 41 5f                   popq    %r15
->    7b9c: 5d                      popq    %rbp
->    7b9d: 2e e9 00 00 00 00       jmp     <__x86_return_thunk>
->   memcg_uncharge(memcg, stock_pages - MEMCG_STOCK_LOW);
->    7ba3: 83 c6 e0                addl    $-0x20, %esi
->    7ba6: e8 15 f2 ff ff          callq   0x6dc0 <memcg_uncharge>
->    7bab: be 20 00 00 00          movl    $0x20, %esi
->    7bb0: eb d1                   jmp     0x7b83 <refill_stock+0x213>
+> Let's move memcg_uncharge() and css_put() outside
+> local_unlock(&memcg_stock.lock) in refill_stock().
+> 
+> With the change, the flakiness disappeared on the 512 vCPU platform.
+> 
+> In addition, on machine w/ AMD EPYC 7B12 64-Core Processor (Zen 2
+> Rome, 2 sockets, 256 vCPU), tcp_rr w/ 10000 flows achieves 36% more
+> throughput with lower latency.
+> 
+>   tcp_rr (10000 flows, 128 threads, 60s, average of 3 runs):
+> 
+>   Metric                     |       Baseline |    Patched |    Diff
+>   ---------------------------+----------------+------------+--------
+>   Throughput (RPS)           |     20,884,499 | 28,453,051 | +36.24%
+>   Latency Mean (us)          |         478.46 |     351.07 | -26.63%
+>   Latency p50 (us)           |         453.96 |     343.04 | -24.43%
+>   Latency p90 (us)           |         669.00 |     479.57 | -28.32%
+>   Latency p99 (us)           |         969.38 |     593.92 | -38.73%
 > 
 > Signed-off-by: Kuniyuki Iwashima <kuniyu@google.com>
 
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-
