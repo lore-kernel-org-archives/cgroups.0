@@ -1,50 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.189
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.119
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793353959;
-	b=2USbB8EY1GAsRsb8Bl6QFkpMwD0gwylSwAp3qycH2ZCl1XU22Lv5o4Mu6ojToPG5gCd5
-	 5+1oJXl0CqCL2KwTUz+f7KaLdLYyaYOB+uHRMDVieD6sybDNAUyoglYk+cg/H53Dmvrqv
-	 C8SYBir+m9MQu4IYKw8ZQynxIL7xC9jBN+fclQ9h6Ewys2SKeycHjpbaZnJ/HTNhesFP9
-	 tdwpy6ArlJYP5hNceR9YKufauiWkV7kdOjePSA8pq/MpSbmlRWfXHbxdqACXBscrDtD55
-	 yMsm2dhneibQE6H2HfsthWx1PjMaiRSFHbtahQhTpZWPtLveMUTafWmb5nayayw/6AA==
+	t=1793353970;
+	b=LqJAQSvIqbqHHHssAiZSz4u3qr021GL0BGrY8DE/5s0MkXYx//ptkKZQYKnIVseTfikx
+	 hUI1UaKg8xWqz1u2VxsWmAevSliE/wZDiiLkjlBwqvvVbwSzVp/rRM26fAk3pKPEqDY6W
+	 H4mOZv5zk8ccKyvIO8setkbT/S0PTLUpOYR3cvV5tMg1PoFUWgTJHq1xdZY97CrNjVkub
+	 evTUPud7qkTPZEGD9b6pQyFtcw8Fu4YmEcCLcWxQTTEZjYiiWzAc6SOWoQeCmPyREd9ut
+	 pr4JHWx5A1pzStBG7vP4yyQtIMSgW4xlCkvptwPKMkYZ84Z8gn2wwEnioPM44q4+Iaw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793353959;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793353970;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=H3pdNgV2kIMazb8X+rUUMyHlKbuV+ZiZTksRXL4D6lI=;
-	b=EiLkMaoiHJNrQl20rRpwcgeUFKxNpANNnZZRHwkU0FY2YHoSbXOt67pXlLu+aNunakOA
-	 ITiwlu8uAJ9Y2tSXz7m2dcAjwGo7NkYg/d3GEK7toWPN1US3cGtxnFIPMYqZcraCRagzi
-	 1eaxteexXWTsb2sdSmzwoE20hwKIejFBMDjyeVDg1LS1gV0ny/3ytDoXoU+s8ddRDr9mr
-	 QWIBHco8trLpQdme480QoP9HkIjcYfWAQBrJPtmkTQ+NYRoefDfoTJnezvFEkNDJ0DCcm
-	 sl6Gz2iSNkTZaZEg6XlhNmy61FnhLl55htKggo+DeIIir7L+/5/Z1/JA4ZlblhXKyuQ==
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=a5h34MN+qOPMphkpctmq7PgnicM+ioLs6tA1qYi+SyA=;
+	b=ek9spPyN4kBMsofqWG+2SuvDetdIunPlyLa6G2cHISMBut2Ts9SiCr4H6MvEo/2xaYwD
+	 0FU6L3st84GdR1r0Qp5m/TtDW4li+j45h19hefk+d6cEBZlLTsakYzk+vXKn+mQ9SxpJv
+	 vlcRQrD8inScnIJXOG+mlmvWoqqK8GnR6bqp5ZwQ97+0CwXvhGw6ZPwDDOFVYRbMcy17M
+	 w9pCYwv3KVaaRiodCtg6jmWPpGxMVCacbK2bM4ZZH1VjLUUQFU6IZMsOZs76yRY80L6vs
+	 /IKKRY5y28N15CCHBaaELCfOfCLrOk+KE27x6Ye8Dseom+oLUcKSF7fA/8ZfcCplpKQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SpdV53ga;
-	arc=none smtp.remote-ip=95.215.58.189
-Received: from mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=e7ZtoHmT;
+	arc=none smtp.remote-ip=91.218.175.119
+Received: from mta0.migadu.com (out-119.mta0.migadu.com [91.218.175.119])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A21B1606A31C
-	for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 09:52:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A21B1606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDA72606A329
+	for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 09:52:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BDA72606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SpdV53ga
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=e7ZtoHmT
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=1p2vPcKyuahPiXCpBK1Tm8nVn5slemcow3+ebdFu0mI=;
+DKIM-Signature: a=rsa-sha256; bh=foVTesr/V5lJ4MJRpdzJaGLpzqZmZIMatmV4b2e35so=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793353954; v=1; x=1793958754;
- b=SpdV53gaDoeTngFa7y6FaAQdRKpkiOm5tM2wSWFWy98yAZlWdEwaGoxv4LBdM+RWAGrANlvb
- jaLhxCYw+uLQN2JZdWAMIunuToWU5dp1rASctC1jrhuZIe0Q/BBG5joTMcQuFpqypHLbE4Wbxub
- DpYTALbNaUUDx7OaSPdt4JaQ=
+ t=1793353967; v=1; x=1793958767;
+ b=e7ZtoHmTO5KUTXLAQ+JZAKb7lcSrMohTBaA2G1mfILdQDyCAG7ETgPeUItwiTj8Y+UudbeeL
+ gkOKM7+uoVfERNo66453F5aFgUchwU291ViOH8J2LgK1dppw+vfDwRV++VRNYcJDsiXdb+srAkV
+ iAVrx+Vk1PP7MsTO9HvfVOio=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id df75d9a41b4a335a;
-	Fri, 30 Oct 2026 09:52:34 +0000
-X-Mizu-Trace-ID: df75d9a41b4a335a
+Received: by smtp.migadu.com with ESMTPS id c362bb1e45826fc4;
+	Fri, 30 Oct 2026 09:52:47 +0000
+X-Mizu-Trace-ID: c362bb1e45826fc4
 X-Migadu-Flow: FLOW_OUT
 From: Jiayuan Chen <jiayuan.chen@linux.dev>
 To: linux-mm@kvack.org
@@ -73,10 +74,12 @@ Cc: Jiayuan Chen <jiayuan.chen@linux.dev>,
 	Baolin Wang <baolin.wang@linux.alibaba.com>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH mm-new v1 0/2] mm: vmscan: skip anon folios zswap would refuse when writeback is off
-Date: Fri, 30 Oct 2026 17:52:16 +0800
-Message-ID: <20261030095223.325309-1-jiayuan.chen@linux.dev>
+Subject: [PATCH mm-new v1 1/2] mm: memcontrol: split mem_cgroup_may_zswap() out of obj_cgroup_may_zswap()
+Date: Fri, 30 Oct 2026 17:52:17 +0800
+Message-ID: <20261030095223.325309-2-jiayuan.chen@linux.dev>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20261030095223.325309-1-jiayuan.chen@linux.dev>
+References: <20261030095223.325309-1-jiayuan.chen@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -88,56 +91,100 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-memory.zswap.writeback=0 is what we set for latency sensitive services:
-their cold anon pages may go to zswap, but never to disk, a swapin
-from disk is a latency spike they cannot afford. Such a memcg can only
-swap into zswap. When zswap stops taking its pages, because the pool
-hit max_pool_percent or the memcg hit memory.zswap.max, reclaim still
-goes through the motions on its anon LRU: every folio it picks gets a
-swap slot, is unmapped, is refused by zswap_store() and is activated
-again. Nothing is freed, the folio now sits in the swap cache holding
-a slot, and the owner takes a minor fault on the next access.
+zswap_store() asks obj_cgroup_may_zswap() whether the memcg is under
+its zswap limit. The next patch wants to ask the same question from
+reclaim, where it has a memcg but no objcg.
 
-memory.reclaim below is just the easiest way to trigger it. The same
-loop runs whenever the memcg is reclaimed: when it hits memory.max, or
-when kswapd walks it under node pressure. Neither is something the
-service can opt out of.
+Move the walk into mem_cgroup_may_zswap() taking a memcg and make
+obj_cgroup_may_zswap() a wrapper around it. Either way the answer is
+the one zswap_store() gets.
 
-Patch 1 is a refactor so the memcg zswap check can be reused from
-reclaim. Patch 2 adds the check to shrink_folio_list(). It cannot go
-into can_reclaim_anon_pages(): zero-filled folios never reach zswap
-and must stay reclaimable.
+No functional change.
 
-Numbers from a 16-CPU, 32G QEMU guest on mm-new, zswap with
-max_pool_percent=2 (~640M), a memcg with memory.zswap.writeback=0
-holding 3G of 2:1 compressible anon. The pool fills up after ~300k
-pages. Then 5 x "echo 512M > memory.reclaim", and the task walks its
-3G once:
-
-                     minor faults on the walk
-                     MGLRU        classic LRU
-  before             786,454      786,452
-  after              301,168      301,158
-
-The ~300k after the patch are the pages that really are in zswap
-(stored_pages was 301,133 / 301,165), swapped back in once each. The
-other ~485k before the patch are pages zswap refused: unmapped, left
-in the swap cache, mapped again on the next touch.
-
-Jiayuan Chen (2):
-  mm: memcontrol: split mem_cgroup_may_zswap() out of
-    obj_cgroup_may_zswap()
-  mm: vmscan: skip anon folios zswap would refuse when writeback is off
-
+Signed-off-by: Jiayuan Chen <jiayuan.chen@linux.dev>
+---
  include/linux/memcontrol.h |  5 +++++
- include/linux/zswap.h      |  5 +++++
  mm/memcontrol.c            | 26 ++++++++++++++++++--------
- mm/page_io.c               | 15 ++++++++++++++-
- mm/swap.h                  | 12 ++++++++++++
- mm/vmscan.c                | 17 +++++++++++++++++
- mm/zswap.c                 | 11 +++++++++++
- 7 files changed, 82 insertions(+), 9 deletions(-)
+ 2 files changed, 23 insertions(+), 8 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 74110a324f9e..dab15db2c61a 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1943,11 +1943,16 @@ static inline void mem_cgroup_calculate_protection_path(struct mem_cgroup *root,
+ #endif
+ 
+ #if defined(CONFIG_MEMCG) && defined(CONFIG_ZSWAP)
++bool mem_cgroup_may_zswap(struct mem_cgroup *memcg);
+ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg);
+ void obj_cgroup_charge_zswap(struct obj_cgroup *objcg, size_t size);
+ void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size);
+ bool mem_cgroup_zswap_writeback_enabled(const struct mem_cgroup *memcg);
+ #else
++static inline bool mem_cgroup_may_zswap(struct mem_cgroup *memcg)
++{
++	return true;
++}
+ static inline bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
+ {
+ 	return true;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index aad0498a7bd6..f32105a08a91 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6261,8 +6261,8 @@ static struct cftype swap_files[] = {
+ 
+ #ifdef CONFIG_ZSWAP
+ /**
+- * obj_cgroup_may_zswap - check if this cgroup can zswap
+- * @objcg: the object cgroup
++ * mem_cgroup_may_zswap - check if this cgroup can zswap
++ * @memcg: the memory cgroup
+  *
+  * Check if the hierarchical zswap limit has been reached.
+  *
+@@ -6272,17 +6272,14 @@ static struct cftype swap_files[] = {
+  * spending cycles on compression when there is already no room left
+  * or zswap is disabled altogether somewhere in the hierarchy.
+  */
+-bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
++bool mem_cgroup_may_zswap(struct mem_cgroup *memcg)
+ {
+-	struct mem_cgroup *memcg, *original_memcg;
+ 	bool ret = true;
+ 
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		return true;
+ 
+-	original_memcg = get_mem_cgroup_from_objcg(objcg);
+-	for (memcg = original_memcg; !mem_cgroup_is_root(memcg);
+-	     memcg = parent_mem_cgroup(memcg)) {
++	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
+ 		unsigned long max = READ_ONCE(memcg->zswap_max);
+ 		unsigned long pages;
+ 
+@@ -6301,7 +6298,20 @@ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
+ 		ret = false;
+ 		break;
+ 	}
+-	mem_cgroup_put(original_memcg);
++	return ret;
++}
++
++bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
++{
++	struct mem_cgroup *memcg;
++	bool ret;
++
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
++		return true;
++
++	memcg = get_mem_cgroup_from_objcg(objcg);
++	ret = mem_cgroup_may_zswap(memcg);
++	mem_cgroup_put(memcg);
+ 	return ret;
+ }
+ 
 -- 
 2.43.0
 
