@@ -1,55 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.61
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793307781;
-	b=2lHQPubWerhkVw15y87Ypd8iQTAVEEfc0KtiN2+wj97ng7qWxy3BQUNTpV7HiDyZioI6
-	 o11Mj4swypvskHj+us/x9nO8Jwa5Upc/dh2mI6z/h4HioupSSHjlOBVpx+2yvS5soLHbI
-	 YUprCmylsC/UupsprWyboOH819mr8+uXyHNzf9O6gTRbyWVwiVAvvszJNBCtTfIY7iH2W
-	 vZz6icJD6MaAl+ZF6/AaPpYh54DRh0lqXEl9buINu0mkz56XW0c/0GvgW/21wZAs3b7JT
-	 zYI5YcezoyMYHlvUlrclJjUT3YxQ7u0OvDBdFh9avGFaITc56c93ahL9g/Bi/e0trkg==
+	t=1793319564;
+	b=KTTm8QZDwX0E9LTuDmEbvaUjztEyyb7YzAcxG0J1SRg9aAAnAb4Jq2xs3x6dR1GEwN0a
+	 ZSNl71D0lEy6lyYQf5uCy82f1Mldh1B8KJ+QjlEjk4z5iGK0FjTVAq5y6muw6CPNxA7K0
+	 EpEAWri9CGPIaQZ/Zx0hpZcPFOjHHwljpsWmWLg0ficsCjdNL7L2JYbPs4eqq13ubF/p6
+	 S7tW6WDdPP6LLqGdbbQNkAIMWlMSjZJ3sx+aP8kfBm8vSNLsJJNvb8zPAWhBHym+SGxUs
+	 9pSg0jTraBZGyV3WyOWAppPCXFI3Yqoj0IiPSfR15xSToUpK7D9jnjmTlWHUwQX8BmA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793307781;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=pFdMJCwen6N9JrBbr+moXA8rlsyaQPsNKoYeVLEHUfA=;
-	b=wScWnsiRSgkIYf64Tid8I+l+cznJLIfaBmuAq2Ew1Y6b/GgXYUf0y9o7+VinyPLVDcFa
-	 YT0hOzTmz9M3k/plzDaj++zUl+tOrT56xh1La7omCr3UkJAheSuXZOryasCPV6qQgXRek
-	 2ATKu6xcL990T5QF8Zj3S463GNdGUuMas8LAEQV9EjfoDoLwlH/oWeI2kO+/ow4pZ6PHL
-	 lVBrcI7bOy7vmU0ddrdMc32PzckPy3+FRc7z9OkIpVs/r22yDN114puOClZeMf+Dyzk/Q
-	 KmFCwkh0QwUFeYeQiLbPBXVnSw49pzsc8pH9Qgii/KrwVYmz6hLHx0zSQB6cMmkvhSg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793319564;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=EvTEWT4tzbsI9cJ16jquNJfiv3JAh46yKR+2DLJfzKk=;
+	b=bND+KJ+LK02TYoVkxd28PxenEgm8Fx8h+oPPEMABt7QV+aMb1KDsLeOnsNSJv0kQqxKw
+	 Z9QaSE2lOr3ukTgXv+JiICvznf69fNmpZkLsTJZiIpB2vNoX1c2TwHT+OTG8phYgB8wSO
+	 wSKe0venGd+KKK9iDZz0sPanSB86Nm24gsUHB0nKSxvb6shwyozdJwEDfk57vplLwaBJP
+	 h/lw9pg2RzbUcYHTucUITof/QfxI6b5jldjKrzDodb3uhU1uJ8lIts2pHBmmXMDjzQ0os
+	 bZERRlwfDfyDTgIB4qh1OxAsU+ZS1uTTCSUNZWolCnTpVL2M8ZpKijp+MvKVuOWPeoA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cUxhcSPi;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=KDUPZmYP;
+	arc=none smtp.remote-ip=95.215.58.61
+Received: from mta1.migadu.com (out-61.mta1.migadu.com [95.215.58.61])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86AFA606B7FF
-	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 21:03:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A91D606A31A
+	for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 00:19:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4A91D606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=cUxhcSPi
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F6511F01462
-	for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 21:03:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793307781;
-	bh=pFdMJCwen6N9JrBbr+moXA8rlsyaQPsNKoYeVLEHUfA=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=cUxhcSPi/tITdJen6fvOKkVtsXBb2MCcrCpPnkgTOWvdakP0TbT0tYFgdo2A0VH9v
-	 Hhev/qm82oNN/H428O0soZv6TAmZb5OkNu0eTQXCKwgciEzMkLgaeFq2H1hyC9HOEh
-	 zjXUmVuo1pAa6yVNj0RkvexznWCRRO0SiIvY6Ss2TYPlutNrh96KrtdOzQ2o2PjiGU
-	 kWQ8BmBGS80kgIVrug2jckdtW6b1a3J1pwBoVZKEmZPgY0yU9zbR/XyzRYFthrnA6l
-	 DAFHNiyHUJgM0MAvCAqnQ8p4U5hLyvOV0QXmsGvGy1Z2sYlop4zOl0rcwzYd1Nlx0J
-	 oXfMA5s5v6bKw==
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-91c19fc50abso760946d6.1
-        for <cgroups@vger.kernel.org>; Thu, 29 Oct 2026 14:03:01 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AKwUvBzXkxEGh1zhdlBMyLRpoZOxPuuCzI2WzHWC1A/FnbmvgBYtjK6NAuPUJFP2Z9i95CZbD9/RVIZ4@vger.kernel.org
-X-Gm-Message-State: AFq9FYLoWhKue1ddQt+fLaNPWRPxSUmg/5gluAV7UpQLupwaEWHOnnfM
-	MOjiepctqstnAQqEiJ3H4ajVjgnYOUAuXvgeqajYmwcn6LMXTbEGvYUUyHk2zi1MPQL/hX6CjWI
-	Pxqj92UNs/glZuqQf9znLBtr+d2kwwww=
-X-Received: by 2002:a05:620a:439f:b0:939:b099:d52f with SMTP id
- af79cd13be357-9442171b930mr72138385a.20.1793307780343; Thu, 29 Oct 2026
- 14:03:00 -0700 (PDT)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=KDUPZmYP
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Z5Bh+KyvVIFM4C1bFYYm95MahEVzuEtoL1Ii4Fx+x8w=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793319560; v=1; x=1793924360;
+ b=KDUPZmYPkk0etsF5vk9qRRVxKTYD8EzUIKCdPb6EubtP3Cl09P3Imioey7zbHsKEtg7YAhqQ
+ gPS4J9eJ5znUjmyWVwmm+XBiHnp8fTmUG6FhZ+Gnxd6k8Tsms2Fw7dqtbbpeRkJu7XWJgg+vw/7
+ W6Bt3AbPP/qQucrT7q9Azels=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 174ca938c3421467;
+	Fri, 30 Oct 2026 00:19:20 +0000
+X-Mizu-Trace-ID: 174ca938c3421467
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 29 Oct 2026 17:19:15 -0700
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: akpm@linux-foundation.org, yosry@kernel.org, hannes@cmpxchg.org, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
+	david@kernel.org, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, 
+	rppt@kernel.org, surenb@google.com, kasong@tencent.com, qi.zheng@linux.dev, 
+	baohua@kernel.org, baolin.wang@linux.alibaba.com, axelrasmussen@google.com, 
+	yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v2] mm: move LRU size stat updates out of lru_lock in
+ folio batches
+Message-ID: <auPhT70GU-Zqe9Qy@linux.dev>
+References: <20261029204157.117879-1-joannelkoong@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,101 +69,64 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261028010611.3929937-1-tjmercier@google.com>
- <20261028010611.3929937-3-tjmercier@google.com> <auHMXBwnwuRwHLmo@KASONG-MC4>
- <CAGsJ_4zuGRjH+=1JxH4BYEC-vJumKjkhXPse0jW_nKEzQXXVmg@mail.gmail.com> <CABdmKX1PvZjnJkqD48_Pb64Je_oZVO3F-oaxMsBYzHmY-GjbDQ@mail.gmail.com>
-In-Reply-To: <CABdmKX1PvZjnJkqD48_Pb64Je_oZVO3F-oaxMsBYzHmY-GjbDQ@mail.gmail.com>
-From: Barry Song <baohua@kernel.org>
-Date: Fri, 30 Oct 2026 05:02:49 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4xggGnAhguPkCJ5k08v3QYKUv07_MhF-acXdBczMAEpdA@mail.gmail.com>
-X-Gm-Features: AclHuK9dc7QMnH9xT-OkQ4nOME9fLgwIUxGnHM4PmofBeJVL-x30ExOe2tYWoAE
-Message-ID: <CAGsJ_4xggGnAhguPkCJ5k08v3QYKUv07_MhF-acXdBczMAEpdA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] mm/mglru: stop rotating offlined memcgs to the old generation
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: Kairui Song <ryncsn@gmail.com>, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	Andrew Morton <akpm@linux-foundation.org>, Kairui Song <kasong@tencent.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, 
-	linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029204157.117879-1-joannelkoong@gmail.com>
 
-On Thu, Oct 29, 2026 at 5:22=E2=80=AFAM T.J. Mercier <tjmercier@google.com>=
- wrote:
-[...]
-> > > > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > > > index 636152d8c94d..45a2c1021f4f 100644
-> > > > --- a/mm/vmscan.c
-> > > > +++ b/mm/vmscan.c
-> > > > @@ -4538,7 +4538,6 @@ bool lru_gen_look_around(struct page_vma_mapp=
-ed_walk *pvmw, unsigned int nr)
-> > > >  enum {
-> > > >       MEMCG_LRU_NOP,
-> > > >       MEMCG_LRU_TAIL,
-> > > > -     MEMCG_LRU_OLD,
-> > > >       MEMCG_LRU_YOUNG,
-> > > >  };
-> > >
-> > > I think there could be other usage of this LRU_OLD macro, but indeed
-> > > offline is the only user currently, removing it is cleaner.
-> >
-> > I'm imagining an Android use case where, after LMKD or similar
-> > userspace killers implemented by various OEMs kill an application,
-> > we may want to prioritize reclaiming its memory by making it more
-> > likely to be scanned and reclaimed, while the killed application's
-> > memcg still exists - not offlined.
->
-> I think it's an idea worth investigating. I had a similar idea which
-> is proactive instead of depending on reclaim hints. The code is behind
-> a currently inactive flag - it runs memory.reclaim on an application
-> cgroup before offlining it (so no zombie or reparenting), but I
-> haven't had time to properly test it yet.
-> https://cs.android.com/android/platform/superproject/+/android-latest-rel=
-ease:system/core/libprocessgroup/include_platform/processgroup/processgroup=
-_platform.h;drc=3D2ed7b05ab42dd67391ad2819b0ee399d89128ead;l=3D33-34
+On Thu, Oct 29, 2026 at 01:41:57PM -0700, Joanne Koong wrote:
+> folio_batch_move_lru() and folios_put_refs() take the lruvec's lru_lock
+> once per batch, but they update the node and memcg lruvec stats for
+> every folio in the batch while holding the lock. Only the LRU lists and
+> the memcg lru_zone_size need lru_lock. Updating the stats while holding
+> the lru_lock is unnecessary, and they make up a large part of the
+> critical section, as seen in [1] where a change that added just a few
+> instructions to the memcg stat update path cost about 2% throughput
+> because the LRU stat updates run under lru_lock, and the overhead went
+> away once they were moved outside of the lock.
+> 
+> With many threads faulting and freeing memory in a single memcg, about
+> half of all cycles are spent waiting for lru_lock, and the hold time of
+> the lru_lock directly limits throughput. A perf profile with 80 threads
+> faulting in and freeing shmem in a single memcg shows 52.8% of all
+> cycles spent spinning on lru_lock, split evenly between
+> folio_batch_move_lru() and folios_put_refs(). About 25% of the time
+> spent holding lru_lock in those two paths goes to the LRU stat updates,
+> mostly cache misses loading pn->memcg, pn->lruvec_stats_percpu and the
+> per-cpu counters. The stat updates are only 0.7% of all cycles, but they
+> lengthen the critical section that the other threads are waiting on.
+> 
+> Accumulate the stat changes per LRU list while holding the lock instead,
+> and only apply them after dropping the lock (while still inside
+> the RCU read section that keeps the lruvec's memcg alive). This moves
+> the stat updates out of the lru_lock critical section and turns the
+> per-folio updates into at most one update per LRU list per batch.
 
-Thanks! I know Minchan Kim has explored something
-similar: releasing exclusive file memory when processes exit:
-https://lore.kernel.org/linux-mm/20260421230239.172582-1-minchan@kernel.org=
-/
+This updating of stats after dropping the lru lock does introduce one behavior
+change i.e. race between reparenting on offlining and stats update. I think it
+is safe and correct though. Better to document it.
 
-The idea probably wasn't well received because Android
-workloads are quite different from typical server and desktop
-workloads.
+> 
+> The batch is attached to the lruvec while lru_lock is held so that the
+> LRU add/del helpers don't need to pass it down. To keep struct lruvec
+> from growing, cost_lock is moved into the hole after lru_lock, which
+> leaves room for the batch pointer in the same cacheline as lru_lock.
+> 
+> The stats can now lag behind the LRU lists by one batch, which is well
+> within the per-cpu batching they already have.
+> 
+> On a 2-socket Skylake (80 CPUs, 2 NUMA nodes), with threads pinned to
+> CPUs repeatedly faulting in and freeing memory in a single memcg,
+> average pages per second over 7 freshly created memcgs per run, 2 boots
+> each:
+> 
+>                      before    after
+>   shmem, 20 threads  4.74M     5.47M   (+15%)
+>   shmem, 80 threads  7.94M    10.33M   (+30%)
+>   anon,  20 threads  3.04M     3.35M   (+10%)
+>   anon,  80 threads  3.23M     3.41M   (+5%)
+> 
+> Link: https://lore.kernel.org/linux-fsdevel/CAJnrk1ZezmmzrYdf8KP6re_a76izMS=qGPeC8ZZXiteHyZZC-Q@mail.gmail.com/ [1]
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 
-The fundamental assumption is that a killed app is unlikely
-to be restarted shortly, so its memory is expected to lose
-recency. In practice, this is usually true.
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 
-There are some exceptions, though. Some badly behaved apps
-have monitors that keep restarting them whenever they are
-killed. We might regress these cases by reclaiming their
-memory, only for them to restart immediately and have to
-read the data back from storage.
-
-That said, this may not be common among apps on Google
-Play.
-
->
-> > Similarly, a foreground application might benefit from a lower
-> > chance of being scanned and reclaimed. This suggests that Android
-> > background-to-foreground transitions, or LMKD itself, could
-> > potentially leverage the reordering of memcg LRUs.
->
-> We are planning to use memory.low/min for foreground protection.
-
-Thanks! I guess the challenge is figuring out what value
-works best for different apps. Should we collect data in the
-lab, learn the appropriate value dynamically on the device,
-or simply hardcode a relatively large value?
-
-Any thoughts on this?
-
-Best,
-Barry
