@@ -1,50 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.120
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.64
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793393671;
-	b=vJ7+MdglJwQO0KjQsWltfgWaQ96F8aKS9gefylWwTxAi/F/zTEcMQBTKtp/7XDtyFVBP
-	 buLy0Ocn678GqSx3T+q8Edvg+XFuWtfiGl4mut3PA9L82InZoSTvaBvkvz/cMxt8r5zK+
-	 FJQJeg3qBX052FK2UTZyx1LWNQCql7EG5/fRR/7lAKRLNvs665LvGafqFH1/7EHmhybEP
-	 zpQzxaAbj23Ygavk2tBJPr9GPVvOie0Zj3RWO90d6kp+RSwma2xEN6MGv8eknACcQJerv
-	 A8RajrdsCRbgBQv6PUTTuy9+KMMTvSH3sE4iZBz4yaggSjBdVd8xkng76onxnhdskCA==
+	t=1793393679;
+	b=XN/s8RVH/czWJalEvqJVxYdlzkMDCQaxiFbI2hpcZLhdM7mhi2XyOPnys0+23HEKpjpz
+	 CqNBZ0tP+1NMDH0pGYqFqmkVO6qT82wmmm/uuXYqze/DwjBWXgzEgsp01BbLZnQdVi1GW
+	 y0rvC+4WhP0N/YScg2sb/ZUYwCTywgtBBgwYT5Js+XOpLu9CtaPIlT7lp8RJOQ23SDxXi
+	 hRpL12suSlz5YCHxyfTqSa5O4VcZmLz//hwOVyINMyBhNooYL3OvXfgpBR0+yAgiGU4dK
+	 9hUlaQIjpf6+yMPK6oeIOvN3q2s6CB7fsHfM9MGdOELvqTBwc6/FQVPZLEcx7Cf4Wpg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793393671;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793393679;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=STYotNoZgg8knNd9pb1oCT8l0qfH9UiTH6m2MFo1QdM=;
-	b=UNV4byHiWsRw4OxmK92TtHISsUsuMDaT6yx3ilvHfCFsYFk7lIHNLtSVx846inHc2tog
-	 kQBZm8woTblX+UJ2IGKGsqWLW+V9Ed3/1IxR8qGf1H8MRSEM+CggmKvlUiFGnn93ALV+P
-	 UXYnUao1LGOn2pdgMFAJuZmqF+IUFSQ0iZ++7ge7s6y5Syof+zGDj3zCQ8KKVLaeZdBnU
-	 QM38bT+tRN7qfwnOggZRYoOuJuUrnJO3wiRvW3hdGRO0Uhp+C3BY2xcbnfx5UcWfjEHHe
-	 YfWYv9b+Aba/tdgPx0kcxGZaNl0eeOPmkWdjjy7wIX0XN7NGNugX3u8AetQUHY6mZ9Q==
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=KR9I261kTrsqtzc7fnfrlPtlTPG2hb9NkIOztRWBktc=;
+	b=X12aKd1HpXrOTVkh7Y2RlQOtaWGnUO69VQGjTibITh6s8Syw9MJ+Q23kdfUQZpaLdvVG
+	 +EUB+39slMF2rYwLpejeU3L0n4KYcYGsSxQ2fEAMhx+cFJVpi+AhN5TLXeWWAWjm0rCWd
+	 mctMnz5cYD007OWZBXdiFiiEcyQPMhXu7zYcG9qWYZX0BR9khDK+GdEHHi44xWPB8NByS
+	 lrIkL15lFoc+3LO+L9Ia8MiNEicotfwDJFRbMkiQkUB7chPh/vMBcH8sw3POVkk6+waz3
+	 h+OUG/4FuLTHniar3kH+6t9Xlc5RxJH9DmF9vGj+5QbBUoTnf/Wdi9/ADtpk4zzCkSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=flNFtnST;
-	arc=none smtp.remote-ip=95.215.58.120
-Received: from mta1.migadu.com (out-120.mta1.migadu.com [95.215.58.120])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=posSsXvV;
+	arc=none smtp.remote-ip=91.218.175.64
+Received: from mta0.migadu.com (out-64.mta0.migadu.com [91.218.175.64])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4198F606A31E
-	for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 20:54:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4198F606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1C0B606A326
+	for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 20:54:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1C0B606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=flNFtnST
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=posSsXvV
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=8clnnUmUC8q777oCgAvC8M6C04u5+OxxMaV3Uhj9mK4=;
+DKIM-Signature: a=rsa-sha256; bh=rrc83QUVCEKjAuO1Psc8BzjH8gymP25jq76cd3gkcmA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793393667; v=1; x=1793998467;
- b=flNFtnSTl9wJzPFeGhajh+eZ5PWtuKFwlQJ/4gTTrkkHaepXb9UfmWHG0qxXFk/79wWXCWZV
- UjOupzlBz/SZ9J7KJSIp8hh72CLDI+TXr6HjamiM5XUCoaCrHdR55Lg+uwAeqhADvsqBek916sP
- U8SWk5gl2nGVuSnMzQs90cMA=
+ t=1793393675; v=1; x=1793998475;
+ b=posSsXvVXjEAaZaa0oR9bQKlIo/bHUN4IQyorG+PQGNbEuIPcIyTSLRPtkrGTYIn41NZMrQt
+ t/hnK4dFo6wHtUtVHWJI/sbzPPfXQBamtdjZVwkTK0S6YDiGYLNpVQzngdGNc1gfOAlkjd1/Qez
+ 2HOHlGkH3opotEnH+p2lDDHY=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6fa3195e4235a3b9;
-	Fri, 30 Oct 2026 20:54:27 +0000
-X-Mizu-Trace-ID: 6fa3195e4235a3b9
+Received: by smtp.migadu.com with ESMTPS id f4708c483aea1fb8;
+	Fri, 30 Oct 2026 20:54:35 +0000
+X-Mizu-Trace-ID: f4708c483aea1fb8
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
@@ -57,11 +58,14 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	Meta kernel team <kernel-team@meta.com>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/5] memcg: clean up memory.high enforcement
-Date: Fri, 30 Oct 2026 13:54:11 -0700
-Message-ID: <20261030205418.341214-1-shakeel.butt@linux.dev>
+	linux-kernel@vger.kernel.org,
+	Michal Hocko <mhocko@suse.com>
+Subject: [PATCH v2 1/5] memcg: move memory.high enforcement out of try_charge_memcg()
+Date: Fri, 30 Oct 2026 13:54:12 -0700
+Message-ID: <20261030205418.341214-2-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261030205418.341214-1-shakeel.butt@linux.dev>
+References: <20261030205418.341214-1-shakeel.butt@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -73,81 +77,167 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This series cleans up memory.high enforcement and uses a worker for
-kernel threads and remote charges.
+try_charge_memcg() does a lot. It charges the page counters, reclaims
+when a limit is hit, may call the OOM killer, and at the end it checks
+and enforces memory.high. Move the memory.high part into a new function,
+memcg_enforce_high(), so that try_charge_memcg() is shorter and the
+memory.high code is easier to read and change.
 
-Kernel threads never return to userspace to run deferred reclaim.
-Reclaiming and sleeping during a charge can also delay work they do for
-other tasks.
+The code and its comments move as they are. The only difference is that
+the new function gets allow_spinning from gfp_mask itself.
 
-Remote charges can go to a different cgroup from the caller's mm, for
-example through filesystem notifications or faults in another process's
-memory. The high handler uses current->mm, so it can check the caller's
-limits instead of the limits of the charged cgroup.
+No functional change.
 
-Use high_work to reclaim from the charged hierarchy in these cases.
-mm_match_cgroup() identifies charges outside the current mm's cgroup
-and its ancestors. Local user charges keep their current handling.
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+Reviewed-by: Harry Yoo (Meta) <harry@kernel.org>
+Acked-by: Michal Hocko <mhocko@suse.com>
+---
+ mm/memcontrol.c | 125 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 69 insertions(+), 56 deletions(-)
 
-Before that, force charges from PF_MEMALLOC tasks before trying the
-limits, so they skip memory.high enforcement. Reclaim can charge memory
-itself, for example when zswap stores a page, and the high_work worker
-must not queue itself from its own reclaim. These charges still raise
-MEMCG_MAX for the same cgroup as before.
-
-This is best effort. A fast allocator can keep usage well above
-memory.high; memory.max stays the hard limit, as it already is for
-interrupts. The worker paths also skip memory.swap.high throttling and
-its high-event reporting. memory.swap.high only throttles the charging
-task, and a worker has no task to throttle. The cgroup's own tasks are
-still throttled on their own charges, and memory.swap.max still caps
-swap.
-
-The first patch moves enforcement into memcg_enforce_high(). The second
-forces charges from reclaim before the limit checks. The next two add
-kernel thread and remote charge handling. The last simplifies the scan
-and comments. The first and last patches have no intended behavior
-change.
-
-Based on mm-everything-2026-10-29-04-31. v1 was tested in an x86-64 VM
-with loop writes, threaded NAPI, remote faults, notifications, and both
-vhost worker modes. For v2, each patch was built with GCC and Clang
-(W=1). In a VM test with incompressible zswap data and remote faults,
-the high_work worker queued itself from its own reclaim in 118 of 284
-runs without the PF_MEMALLOC patch, and never with the series. The runs
-were counted with bpftrace on queue_work_on() inside high_work_func().
-In another test, a parent cgroup was over memory.max while its child
-was reclaimed. The child's zswap charges raised MEMCG_MAX on the parent
-7133 times with the series and 7124 times without it.
-
-Changes in v2:
-- Rebased on mm-everything-2026-10-29-04-31.
-- Collected Reviewed-by and Acked-by tags.
-- Patch 1: add the missing Signed-off-by (Harry).
-- Patch 2 (was 4): replaced with Michal's suggestion. Charges from
-  PF_MEMALLOC tasks are now forced before trying the limits, instead of
-  skipping enforcement in memcg_enforce_high(). MEMCG_MAX is still
-  raised for the first cgroup whose limit the charge goes over. Moved
-  before the kernel thread patch, so that no commit lets the worker
-  queue itself. (Michal)
-- Patch 4: say more clearly which charges keep the local path.
-- Patch 5: drop locals that are no longer needed, and update the
-  comments.
-
-v1: https://lore.kernel.org/20261010210957.1350874-1-shakeel.butt@linux.dev
-
-Shakeel Butt (5):
-  memcg: move memory.high enforcement out of try_charge_memcg()
-  memcg: force charges from reclaim before trying the limits
-  memcg: use high_work for kernel threads
-  memcg: use high_work for remote charges
-  memcg: simplify high limit handling after a charge
-
- mm/memcontrol.c | 157 +++++++++++++++++++++++++++---------------------
- 1 file changed, 87 insertions(+), 70 deletions(-)
-
-
-base-commit: 7e12256cff20c704fd5c0fbbd6a070fda8c341c9
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 84f4a8fd4d16..0e484f7f823a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2699,6 +2699,74 @@ void __mem_cgroup_handle_over_high(gfp_t gfp_mask)
+ 	css_put(&memcg->css);
+ }
+ 
++/*
++ * Called after @nr_pages were charged to @memcg. If @memcg or one of its
++ * ancestors is over memory.high or memory.swap.high, start reclaim or slow
++ * down the task.
++ */
++static void memcg_enforce_high(struct mem_cgroup *memcg, unsigned int nr_pages,
++			       gfp_t gfp_mask)
++{
++	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
++
++	/*
++	 * If the hierarchy is above the normal consumption range, schedule
++	 * reclaim on returning to userland.  We can perform reclaim here
++	 * if __GFP_RECLAIM but let's always punt for simplicity and so that
++	 * GFP_KERNEL can consistently be used during reclaim.  @memcg is
++	 * not recorded as it most likely matches current's and won't
++	 * change in the meantime.  As high limit is checked again before
++	 * reclaim, the cost of mismatch is negligible.
++	 */
++	do {
++		bool mem_high, swap_high;
++
++		mem_high = page_counter_read(&memcg->memory) >
++			READ_ONCE(memcg->memory.high);
++		swap_high = page_counter_read(&memcg->swap) >
++			READ_ONCE(memcg->swap.high);
++
++		/* Don't bother a random interrupted task */
++		if (!in_task()) {
++			if (mem_high) {
++				if (allow_spinning)
++					schedule_work(&memcg->high_work);
++				else
++					irq_work_queue(&memcg->high_irq_work);
++				break;
++			}
++			continue;
++		}
++
++		if (mem_high || swap_high) {
++			/*
++			 * The allocating tasks in this cgroup will need to do
++			 * reclaim or be throttled to prevent further growth
++			 * of the memory or swap footprints.
++			 *
++			 * Target some best-effort fairness between the tasks,
++			 * and distribute reclaim work and delay penalties
++			 * based on how much each task is actually allocating.
++			 */
++			current->memcg_nr_pages_over_high += nr_pages;
++			set_notify_resume(current);
++			break;
++		}
++	} while ((memcg = parent_mem_cgroup(memcg)));
++
++	/*
++	 * Reclaim is set up above to be called from the userland
++	 * return path. But also attempt synchronous reclaim to avoid
++	 * excessive overrun while the task is still inside the
++	 * kernel. If this is successful, the return path will see it
++	 * when it rechecks the overage and simply bail out.
++	 */
++	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
++	    !(current->flags & PF_MEMALLOC) &&
++	    gfpflags_allow_blocking(gfp_mask))
++		__mem_cgroup_handle_over_high(gfp_mask);
++}
++
+ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 			    unsigned int nr_pages)
+ {
+@@ -2856,62 +2924,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (batch > nr_pages)
+ 		refill_stock(memcg, batch - nr_pages);
+ 
+-	/*
+-	 * If the hierarchy is above the normal consumption range, schedule
+-	 * reclaim on returning to userland.  We can perform reclaim here
+-	 * if __GFP_RECLAIM but let's always punt for simplicity and so that
+-	 * GFP_KERNEL can consistently be used during reclaim.  @memcg is
+-	 * not recorded as it most likely matches current's and won't
+-	 * change in the meantime.  As high limit is checked again before
+-	 * reclaim, the cost of mismatch is negligible.
+-	 */
+-	do {
+-		bool mem_high, swap_high;
+-
+-		mem_high = page_counter_read(&memcg->memory) >
+-			READ_ONCE(memcg->memory.high);
+-		swap_high = page_counter_read(&memcg->swap) >
+-			READ_ONCE(memcg->swap.high);
+-
+-		/* Don't bother a random interrupted task */
+-		if (!in_task()) {
+-			if (mem_high) {
+-				if (allow_spinning)
+-					schedule_work(&memcg->high_work);
+-				else
+-					irq_work_queue(&memcg->high_irq_work);
+-				break;
+-			}
+-			continue;
+-		}
+-
+-		if (mem_high || swap_high) {
+-			/*
+-			 * The allocating tasks in this cgroup will need to do
+-			 * reclaim or be throttled to prevent further growth
+-			 * of the memory or swap footprints.
+-			 *
+-			 * Target some best-effort fairness between the tasks,
+-			 * and distribute reclaim work and delay penalties
+-			 * based on how much each task is actually allocating.
+-			 */
+-			current->memcg_nr_pages_over_high += batch;
+-			set_notify_resume(current);
+-			break;
+-		}
+-	} while ((memcg = parent_mem_cgroup(memcg)));
+-
+-	/*
+-	 * Reclaim is set up above to be called from the userland
+-	 * return path. But also attempt synchronous reclaim to avoid
+-	 * excessive overrun while the task is still inside the
+-	 * kernel. If this is successful, the return path will see it
+-	 * when it rechecks the overage and simply bail out.
+-	 */
+-	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
+-	    !(current->flags & PF_MEMALLOC) &&
+-	    gfpflags_allow_blocking(gfp_mask))
+-		__mem_cgroup_handle_over_high(gfp_mask);
++	memcg_enforce_high(memcg, batch, gfp_mask);
+ 	return ret;
+ }
+ 
 -- 
 2.53.0-Meta
 
