@@ -1,82 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793366090;
-	b=wVlD71ZSCsvi4prtpCcIXvFpnctBwRT2wiEOGwGvy011vASlylZSkdJty5SXNzI9fn05
-	 wGorAVcaMVpzpWGywSbyJZehny2aSrK3OYsKE63Jig83mefHt7dekKCWimViiOMkDX+C7
-	 RnT1cNXeCLL8cz8cf0BjijW6yX9MMA3f49XwS/5fX/cV0X9G5/cVOUQIoHOkKYtdxH1T5
-	 gZVC8+BiK5TWzNpxPwct+1V8l61MLMASDMsO93Ff739ZzB2UW1qmKifU2Rm+9FVywVUrz
-	 Y4MiyG5c8/9vyYdhOMmfiNCenAKje03+ICanC1AzqARcHoBzovONIUBgA5oAV3VH9+w==
+	t=1793377889;
+	b=vTDaUzVOglOwXWx/2G/yefmY//hiCSg3yWDjjlBv1iN9syAFDT2L1x5FG4P50iZgDRgK
+	 jhGa1lVQnv84GvZjKm70biKCimQjDXDycoKiK4m5Y6ye9jdnzV1BAs5yqAqfW/M2ekUzO
+	 4CmzMqxU2PYckTP5r10hU+uB31Qi2eYRG932UxymaP0oemJxj7j0gSvG74sjK1UhayKt+
+	 33+ZKSVVRAFUxjyTSDUzd9pvTuaQr0Xo0zTvRBUbRfKvhv1n1bmnSuENbcjHA1IthRRSl
+	 H/gWex4KkEV7W0TmATqISSdT8bCX+arw5qjfHNLprkQL2RbM4EDXghn1IsNlAkMZMlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793366090;
-	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=6VORSQYAD9hkgCjYkMujVkvIAUlg8MP5kdg3x4OHjys=;
-	b=AKCxtfkmCOK00yjujSDf1sUvrmqvJ/KmgwubeohOc32x88w1o50VE2Z73bTpPC5Hl5aH
-	 +7iGuaurVkijLkFbwlZ6s0b21Gb8pyYkSAQV1Ce0olgOtzumt/NCGmeFz4Qj2ltqz7w3C
-	 2WWGn4SN7tJaKFnJZ971KppYPvVXhxsS7VLuIwMESDEE5Qt3wsGCHWuIYyRpJM/fHi4Ol
-	 q3OEHRpo8U132SrSjlEaSxckSzX3TLsyVtGd8ObnQEafZVtW+dWdg9uqJFM3Luw0OSnln
-	 t2rez+32Hko7A0SjehjT1u+C7ONYnTSxQTLqdMBf5Ww1R74IUZoP7X+b6KUxW3D4xcw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793377889;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=trsHnVMI6YDWj7rsoQPF0JN2z6GWW+nTgXWERqdG0yk=;
+	b=JQFj3ujAQ6n8fO37T+3b7NjvEpTeLvg9229DbmSbDjGOmeVq2fCbip+9vwPFvDOiv1Gp
+	 tAFefSJE8OpqiNd4z8mci3XP6UDiaWKCQSErSW3nAuA2Dij7+lxQj5EUtYe3CPRK3WH1z
+	 PSaklftt2liD8g8fkomvat4bukizJSVEmW9+XGBkVSMtf4/sX99eF1O5ZRI3p8BaZok/i
+	 pn7Lug2vk2rnSNcGo+Kw44huWAiIENDewyG3AaW4CX+ghviohn6+g16Lsd1Sn6zhSr7Q7
+	 G5DevZACcCoZOVxfK/LsuF+tW0ZKKY1ak5Qj1+2vlsHMk/XNnJv9sYwlcxQEpzZEYKg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=kylinos.cn;
-	arc=none smtp.remote-ip=124.126.103.232
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=GEHo4ZEB;
+	arc=none smtp.remote-ip=209.85.221.52
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A505606A31A;
-	Fri, 30 Oct 2026 13:14:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A505606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: d76768b4d46311f19a56ed5b684f684d-20261030
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
-	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD
-	HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
-	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_CHARSET
-	HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME, IP_UNTRUSTED
-	SRC_UNTRUSTED, IP_LOWREP, SRC_LOWREP, SA_TRUSTED, SA_EXISTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
-	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
-	AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:69b5ee93-52ae-4c4a-9985-d8c17c632739,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.19,REQID:69b5ee93-52ae-4c4a-9985-d8c17c632739,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:7db8b62,CLOUDID:34c42cb444fc9590b091253d6743d438,BulkI
-	D:261030211439NJ1LLJM9,BulkQuantity:0,SF:10|38|66|78|102|127|136|865|898,T
-	C:nil,Content:0|15|50|99,EDM:-3|-100,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,
-	QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0
-	,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: d76768b4d46311f19a56ed5b684f684d-20261030
-X-User: sunshaojie@kylinos.cn
-Received: from sunshaojie-pc [(114.244.3.119)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1702212056; Fri, 30 Oct 2026 21:14:30 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: Tejun Heo <tj@kernel.org>,
-	Waiman Long <longman@redhat.com>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH] cgroup/cpuset: Drop redundant no-cpu check in partcmd_update with newmask
-Date: Fri, 30 Oct 2026 21:14:08 +0800
-Message-ID: <20261030131408.1054507-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.50.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0C48606A327
+	for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 16:31:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E0C48606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=GEHo4ZEB
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48bbb06e746so469628f8f.3
+        for <cgroups@vger.kernel.org>; Fri, 30 Oct 2026 09:31:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1793377887; x=1793982687; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=trsHnVMI6YDWj7rsoQPF0JN2z6GWW+nTgXWERqdG0yk=;
+        b=GEHo4ZEBbPgIqvKH/esYl4bKEwIgrqYul6cG5ju2hvDLzsBHXTbzLIiQof86MeshRT
+         0ccaU+Crjup3egqCgGqPwbBMF/SS5dnC+03U0HRLqdK8p6QCiKO7dEQFBlnPlS0xfXZj
+         SbBbAE9WGm2wyHttP9/9yCtzN9YFhBUPOdvJIRMwxZgFLqcwzm8jmeYRExcBIGXaXWwk
+         uB6rnPnnxrsmdrLUEg7DRr9LI7bOjPuFmI3t7aMuh6GeX/gg0Fy+aG4w8iHa64aeeDb4
+         3y1LRVwrhxbt2pHJ0H8U9bIWcLF8FU3QjUR3HvgyEZMQuQS9JcJoYOOZ7s6gXaykSEdc
+         yZvg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793377887; x=1793982687;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=trsHnVMI6YDWj7rsoQPF0JN2z6GWW+nTgXWERqdG0yk=;
+        b=qBzm1cyh2LC5do/Ua4WqjJIXZVKLHQw7lzKnVY8Nd/BcSyutTCOghYZI2xOPOKte8+
+         CTucPB1Po1KmpTMPJ3BV8QbZ3ujZdHQsdWzYPVi88OCYTmqgtoBNTXkuqBnh4tDf1wtz
+         NyrcnMsei/Mvc7eT0g5ajplaaedo449hN7KnU6AYM3s5fhJs1JQv4dzjjaNNEYL+RcKv
+         vxr4l18wyadUeMkyzLudJcFrpqE6LBJL/QZluXte2dZLrDmeC4VZwBlqYDtCMGUanJ2g
+         Xld0MbXrgfLu3MfpffVj5pBx/jWjtwFeQI5j8RVMHiLi54uWm2vHsfb1NEQXYDCtIG6g
+         eaGw==
+X-Forwarded-Encrypted: i=1; AKwUvBybjQWgH2vcDMnJT0dIR7bm5GMA71L7xOpVhgCxhxJs3Y29oQvaHa3HVcbuIFjMp3/j4bg5qNvY@vger.kernel.org
+X-Gm-Message-State: AFq9FYLwUnvZYk7d9ptqd+yttWiZ2CrYOJ0duL6+cZfaBAK/BsNHux14
+	DvXtEPRITM9C/djp3RUljZHYcuyEICGZSoICV2q/I1kYO1S4cR+D3eXxdCUgmWVU2g0=
+X-Gm-Gg: AYBFou0exMPxIGHYP+aYBLFFBTr8hk2CSdp371tS/m7rVflosvJMmq4HPzTfN+obbsS
+	bSdHWB0O2YmesaFkHd8MzO4pIXj8HIeXT08roUX4J0XYKofaYRRvbpZ15uR41aXEnSfgm9E8Gyg
+	7V9OQL5aRKEnol7SDA/BHtnj8KVhhqheQJ77jlkHn9IjtzJf+rfmruQDjwQeEuMVoz3Aber2mVO
+	oP0zGL84eAB/pSjptBjRDi6ucRaQuqn7suqGI/JbJi5tG+q1Gl9DA+FnDYWJL/kYFMFTJco3s+l
+	irecCNhZocbx3rPhOBYWk7zyBvimc7ENBSGJgtM7eOhFbEFAFrFsEY/7PPU6hdmkRdHOt6sHvYV
+	Noz22U3OtV7ceZ9FhBE85JZUXAoumY18MiCyrQGZDyKC2hdJwaJLV9Z8hkJme8WR+1GW46xunFs
+	DL+NEfGwav8t2jVx4Y4Cw0INnFMhZk8lc5sm7Zx91dFAsatr5RxJU3szQ7s7hjE2lxlfhreLfFA
+	gFEmoe/+2YY2zfPC45+f67d0cgionLQRW8geV/f1bZrxuhBT+fZjwxXXsHzj1OB5wl03gkh2oTo
+	z3OUFYZbbJSuUHUgvSG5tE2tHotqBNfBE99qTb7gLorYI3xd8se5O1WoUPtTUDAM
+X-Received: by 2002:a05:6000:2282:b0:48d:f14a:9188 with SMTP id ffacd0b85a97d-48e73851611mr3804299f8f.17.1793377887133;
+        Fri, 30 Oct 2026 09:31:27 -0700 (PDT)
+Received: from localhost (109-81-92-234.rct.o2.cz. [109.81.92.234])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b728ddsm4025629f8f.9.2026.10.30.09.31.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Oct 2026 09:31:26 -0700 (PDT)
+Date: Fri, 30 Oct 2026 17:31:25 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, zhengqi.arch@bytedance.com,
+	jp.kobryn@linux.dev, akpm@linux-foundation.org,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3] mm: memcontrol: fix NULL pointer deref and UAF from
+ high_work_func() on dying memcg
+Message-ID: <auTGXWh2uGK_slxF@tiehlicka>
+References: <20261029201858.2932905-1-tjmercier@google.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -86,88 +100,126 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261029201858.2932905-1-tjmercier@google.com>
 
-update_parent_effective_cpumask() with a non-NULL newmask is only ever
-reached from partition_cpus_change(), and only after validate_partition()
-has checked the very same condition with the very same arguments:
+On Thu 29-10-26 13:18:58, T.J. Mercier wrote:
+> When memory.high is exceeded in non-task context, try_charge_memcg()
+> schedules memcg->high_work without taking a reference on the memcg, and
+> high_work_func() invokes reclaim_high() without pinning the memcg.
+> 
+> With obj_cgroup reparenting, introduced in commit bf4f059954dc ("mm:
+> memcg/slab: obj_cgroup API"), objects charged to a child memcg are
+> reparented to its parent in mem_cgroup_css_offline() instead of holding
+> a reference on the child until uncharged. Subsequent uncharges of those
+> objects go to the parent, which can leave the child's memory use
+> permanently above its high limit, so any later charge on the offlined
+> memcg in non-task context schedules high_work. This was later widened
+> from kernel memory to LRU folios when commit f1cf8d2f36dc ("mm:
+> memcontrol: eliminate the problem of dying memory cgroup for LRU
+> folios") converted LRU folios to use obj_cgroup reparenting.
+> 
+> cancel_work_sync(&memcg->high_work) only runs at the end of teardown in
+> mem_cgroup_css_free(), so high_work_func() can start or still be running
+> reclaim_high() after mem_cgroup_css_released() or shrink_many() has
+> called lru_gen_release_memcg() and unhashed lruvec->lrugen.list. If
+> reclaim tries to rotate the memcg, lru_gen_rotate_memcg() dereferences a
+> NULL pprev pointer. This issue is specific to MGLRU and was introduced
+> with the memcg LRU in commit e4dde56cd208 ("mm: multi-gen LRU: per-node
+> lru_gen_folio lists").
+> 
+> With either traditional LRU or MGLRU, css_free_rwork_fn() calls
+> css_rstat_exit() which frees per-CPU rstat data before calling
+> mem_cgroup_css_free(). If reclaim_high() is still running, rstat updates
+> via mod_lruvec_state() -> __css_rstat_updated() cause a use-after-free
+> on the per-CPU rstat data. This was introduced when commit 5da3bfa029d6
+> ("cgroup: use separate rstat trees for each subsystem") moved
+> css_rstat_exit() ahead of ss->css_free().
+> 
+> Fix both problems by acquiring a reference with css_tryget_online() in
+> high_work_func() before calling reclaim_high(), and by resetting
+> memory.high and swap.high to PAGE_COUNTER_MAX in
+> mem_cgroup_css_offline() so that charges via references on an offlined
+> memcg do not trigger high_work on the dead child and skip checking live
+> ancestors in try_charge_memcg().
+> 
+> Acquiring the reference in high_work_func() rather than before
+> scheduling high_work is safe because mem_cgroup_css_free() calls
+> irq_work_sync() and cancel_work_sync() which cancels pending work and
+> waits for an already running high_work_func() to complete before
+> mem_cgroup_free() frees the memcg. css_tryget_online() uses
+> percpu_ref_tryget_live() and is safe to call after percpu_ref_exit()
+> before the cgroup is freed unlike css_tryget().
+> 
+> Oops: general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] SMP KASAN NOPTI
+> KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+> CPU: 1 UID: 0 PID: 27 Comm: kworker/1:0 Tainted: G    B   W           7.3.0-rc5-g2bba28e98578 #284 PREEMPT(full)
+> Tainted: [B]=BAD_PAGE, [W]=WARN  <-- Taint from lru_gen_rotate_memcg() VM_WARN_ON_ONCE
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.17.0-debian-1.17.0-1 04/01/2014
+> Workqueue: events high_work_func
+> RIP: 0010:lru_gen_rotate_memcg+0x1a3/0xe90
+> Call Trace:
+>  <TASK>
+>  ? read_ctrl_pos+0x22f/0x3f0
+>  shrink_lruvec+0x16cb/0x1b80
+>  ? ret_from_fork_asm+0x1a/0x30
+>  ? lapic_next_event+0x15/0x20
+>  ? clockevents_program_event+0x2bb/0x6f0
+>  ? lapic_next_event+0x15/0x20
+>  ? __pfx_shrink_lruvec+0x10/0x10
+>  ? __pfx_clockevents_program_event+0x10/0x10
+>  ? _raw_spin_lock+0x84/0xe0
+>  ? __pfx__raw_spin_lock+0x10/0x10
+>  ? kasan_save_stack+0x30/0x50
+>  ? psi_group_change+0x381/0x740
+>  ? __pfx_sched_clock_cpu+0x10/0x10
+>  ? save_fpregs_to_fpstate+0xc4/0x2c0
+>  ? finish_task_switch.isra.0+0x1de/0xac0
+>  ? __schedule+0xf62/0x42c0
+>  ? __pfx___schedule+0x10/0x10
+>  ? __pfx___irq_work_queue_local+0x10/0x10
+>  ? shrink_node+0x626/0x31e0
+>  shrink_node+0x626/0x31e0
+>  ? ring_buffer_unlock_commit+0x11d/0x5c0
+>  ? kswapd_clear_hopeless+0xa0/0x150
+>  ? __pfx_shrink_node+0x10/0x10
+>  ? 0xffffffffc0000095
+>  do_try_to_free_pages+0x255/0x13b0
+>  ? ring_buffer_unlock_commit+0x11d/0x5c0
+>  ? reclaim_high+0x10a/0x1b0
+>  try_to_free_mem_cgroup_pages+0x1f9/0x5a0
+>  ? __pfx_try_to_free_mem_cgroup_pages+0x10/0x10
+>  ? irqentry_exit+0xc6/0x670
+>  reclaim_high+0x10a/0x1b0
+>  ? __pfx_reclaim_high+0x10/0x10
+>  ? process_one_work+0x5ff/0x1030
+>  ? __pfx_high_work_func+0x10/0x10
+>  process_one_work+0x6e2/0x1030
+>  ? __pfx___schedule+0x10/0x10
+>  ? __pfx_process_one_work+0x10/0x10
+>  worker_thread+0x422/0xbb0
+>  ? __pfx_worker_thread+0x10/0x10
+>  kthread+0x2cd/0x3a0
+>  ? recalc_sigpending+0x15c/0x200
+>  ? __pfx_kthread+0x10/0x10
+>  ret_from_fork+0x368/0x590
+>  ? __pfx_ret_from_fork+0x10/0x10
+>  ? __switch_to+0x588/0xf50
+>  ? __pfx_kthread+0x10/0x10
+>  ret_from_fork_asm+0x1a/0x30
+>  </TASK>
+> 
+> Fixes: e4dde56cd208 ("mm: multi-gen LRU: per-node lru_gen_folio lists")
+> Fixes: 5da3bfa029d6 ("cgroup: use separate rstat trees for each subsystem")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: T.J. Mercier <tjmercier@google.com>
+> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Muchun Song <muchun.song@linux.dev>
 
-  tasks_nocpu_error(parent_cs(cs), cs, trialcs->effective_xcpus)
+Acked-by: Michal Hocko <mhocko@suse.com>
+Thanks!
 
-since newmask is exactly trialcs->effective_xcpus and both functions use
-parent_cs(cs) as the parent. cs, parent and cpu_active_mask cannot change
-in between either, as cpuset_mutex and cpu_read_lock are held for the
-whole operation. Hence
-
-  nocpu = tasks_nocpu_error(parent, cs, newmask);
-
-is always false here and the block that turns a "nocpu" condition into
-PERR_NOCPUS is dead code. A new CPU list that would drain the parent is
-fully handled by validate_partition(), which routes the write to
-partcmd_invalidate and hands the partition's CPUs back to the parent.
-
-The "!adding || !cpumask_intersects(addmask, cpu_active_mask)" test that
-guards the block does not change this: the block can only be entered when
-nocpu is true, and that never happens here.
-
-Drop the redundant check and the dead PERR_NOCPUS block, and leave a
-comment pointing at where the "parent could be drained" case is handled.
-The empty-newmask check in the same branch is left alone: it validates
-the newmask argument of this function, while what is removed here is a
-decision that belongs to validate_partition().
-
-No functional change.
-
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- kernel/cgroup/cpuset.c | 20 +++++---------------
- 1 file changed, 5 insertions(+), 15 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 3219f927c35e..c7b3a734cda8 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2016,9 +2016,6 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 			goto write_error;
- 		}
- 
--		/* Check newmask whether cpus are available for parent/cs */
--		nocpu = tasks_nocpu_error(parent, cs, newmask);
--
- 		/*
- 		 * partcmd_update with newmask:
- 		 *
-@@ -2033,6 +2030,11 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 		 * For invalid partition:
- 		 *   delmask = newmask & parent->effective_xcpus
- 		 *   The partition may become valid soon.
-+		 *
-+		 * Note that the no-cpu check is not repeated here:
-+		 * validate_partition() has already evaluated
-+		 * tasks_nocpu_error() with this very mask, and a failing
-+		 * write is routed to partcmd_invalidate instead.
- 		 */
- 		if (is_partition_invalid(cs)) {
- 			adding = false;
-@@ -2056,18 +2058,6 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 			cpumask_and(tmp->new_cpus, tmp->delmask, cpu_active_mask);
- 			WARN_ON_ONCE(!cpumask_subset(tmp->new_cpus, parent->effective_cpus));
- 		}
--
--		/*
--		 * Make partition invalid if parent's effective_cpus could
--		 * become empty and there are tasks in the parent.
--		 */
--		if (nocpu && (!adding ||
--		    !cpumask_intersects(tmp->addmask, cpu_active_mask))) {
--			part_error = PERR_NOCPUS;
--			deleting = false;
--			adding = cpumask_and(tmp->addmask,
--					     cs->effective_xcpus, parent->effective_xcpus);
--		}
- 	} else {
- 		/*
- 		 * partcmd_update w/o newmask
 -- 
-2.50.1
-
+Michal Hocko
+SUSE Labs
