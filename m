@@ -1,54 +1,57 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.94
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793407721;
-	b=XKMU+b2GICzPcxsHfPefkkcjB+xh62mrv/aBa2lgYK5yL5Zr4wYS6B6aMbabn16uQxxK
-	 tn/mr8VeyYjrSFGYzfnOPqFfJ6D/8OK+W9flH7hjfje5h8e9hjAkiJ/CIJ25tZClQkHkT
-	 6Hh55GusSdol+SfPO8tGYsLBDYJqxqPL8BWQUgSzRaEAJm1X7VPe9wTTvF2fdNEykN/Ij
-	 jaQjWKuxzKs/vXzqLkCLIVnTNGDX3zfvZ17MhJvVITSu5e6E/KrX2U48j2FdOvChsXjpE
-	 iapFtNSxYFMjdLN0AhJfiJh5dnzdYLU1giubiVtcEzLX8/3qd6Yg6Cql3n8vDCiozYA==
+	t=1793410735;
+	b=hylUzcs6B130NFrPZ0Z+uTSmvJXp6cuA63PGhWxUo/ds2qI75cMnZ6qxw5QGDGGJznLI
+	 WezBu1E2cgG7Cj4n0DOLyPRx+75QKe2ee3RGEKE0+b/sgnD0BlTzQpDTDEkfGqJk5un1+
+	 M/pzRJq2KT774RNul2XzhnY+xY2+vw5bXExkWDdIBP86VIOG+ivsmyW9xDsPUt/lqfplX
+	 ZxBiTj6x2ZAZbdysCN10KRr4+NTQeY8SAQmjl6G0Ieue1ekbT9nR8AhCICmh5NWgCQLYa
+	 igE94mtm3ZXLUr11ZTHMPZ4T/HRB59aZA7qEH5UE0TFNwyLXGPbO+eTXGmHYTR0fjtQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793407721;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
-	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
-	 To:X-Mailer;
-	bh=HU/ADiEQ4yElXdERdWH8C62mg8dV+VZgpatRQy1+Ol0=;
-	b=zEb2nyZTMf0QAUiRtSV6YjfC6ybnRXOYyvj+tQsJthYsg68q8V3Zu9eUYur5iWOeGhce
-	 0vhLdObN3m7pVxkZ38fPp2vFrB48tEcpt2SsR2v53vNxnSKa/2MPMtqbhqe5AMzZltYLe
-	 tSqoajx95uaVRnK2t8qwIDST0SHEOrPd1uqgZdbUSbMLpHPBRIIhw++AejTwo1ryQ46EQ
-	 ziLcx4JS0kRJR2iszyfO+V7Re494VDUI6lUUyauqEbpqevUvkGKYAz2FuEjK96Gw1MH8j
-	 zEF72K8YzIwX4uLt6dUXF0XWLpn6QhhC738EoXFvW0jFHIe01SoFCLb1CUMSpu9uLcQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793410735;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=YF9JeAjw7ywzUc5725kV5oNhe84X6aq4bRPeCdn4wqc=;
+	b=Xah3VRZtQYZYqVFMJ6fx+azpgN6Je11JCUVJwQcUv9dEm3+Gx1qtEo4WQcU50McrULyg
+	 ywGt7MQkcR2Cw89MR4RhymiTc833r93HASaTxtS1qvSEUwFP0MJy+96GqXLAE6fUSxIeJ
+	 1twSwvbiF3eR8+tV/DOChku8+z1s21X664CsdFAP755YwHyhVuHdA0ah0D48Tbzo/ztg0
+	 NiKbjDlDVXlTL06LmyLjguVlHo4Jj6zx4LqbVkRUe1qtq7yf+4UhC24dcFqytn6xVWVgw
+	 T2qQ320swKtrBKLcEYdK6gi3J1MPXLZB5GAX6i6YOL1uxBKLz/anf/L+rOYoF0H2HzQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cyqyhyGl;
-	arc=none smtp.remote-ip=95.215.58.94
-Received: from mta1.migadu.com (out-94.mta1.migadu.com [95.215.58.94])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LT4pTZHV;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C21A606A31C
-	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 00:48:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C21A606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1B28606A31A;
+	Sat, 31 Oct 2026 01:38:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cyqyhyGl
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=FL3rfgpnw9CP8lcTq4Q038BNConm9rfhH/vECDAX41Q=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793407718; v=1; x=1794012518;
- b=cyqyhyGlFMgmCD/YaWRr8xXEVNHxuVgYODv04hI98i88AwsTpkvxphUlhrBCbj53L71/NPsa
- wgwuTjOfT8zJW+6ozKaYGiI70xyjDpufl+HoJtKo1i6lsAfJUkx+Coh7I+E5odRCpNgivaahyyL
- /mO0xmm94u82XLPcNGSeUH5I=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta10.migadu.com with ESMTPS id 8d4b375cdaecd94c;
-	Sat, 31 Oct 2026 00:48:38 +0000
-X-Mizu-Trace-ID: 8d4b375cdaecd94c
-X-Migadu-Flow: FLOW_OUT
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LT4pTZHV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0709F1F000C1;
+	Sat, 31 Oct 2026 01:38:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793410734;
+	bh=YF9JeAjw7ywzUc5725kV5oNhe84X6aq4bRPeCdn4wqc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=LT4pTZHVscN+EITJPxmbM4Y25TUXjJlFxE8rpz+EmrA4EvFYMBuw3Wnw+209zhHby
+	 yn+/LHmPjpTrI24PCJSEPZi0Jd0kQ4PM35VFOinGZ4e24QUC/km+jHQyNgxK4vpPVp
+	 kRdy9pkgqjfrvRAYdYFZ9esyHscFE8q8EZTtZ4biekypGogqrJDsRhPXldIeCMPKqE
+	 OUjQjhBuawBOKePpETi5oVrpSORg26tYZpp0O9Nj7WBMt7RvlhmSOvEagVy59gVNBw
+	 sSRrdD/PgcqrsvpR6E9xD+RyZ5ekosJbwg+pjHo3LHWJUfnCl3OdFSPB7RfTTw2YVn
+	 nO8b60JDG7a4g==
+Date: Fri, 30 Oct 2026 15:38:53 -1000
+Message-ID: <9a22597fa0533c7f1c1a5afe4553e1c6@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Shaojie Sun <sunshaojie@kylinos.cn>
+Cc: Waiman Long <longman@redhat.com>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] cgroup/cpuset: Drop redundant no-cpu check in partcmd_update with newmask
+In-Reply-To: <20261030131408.1054507-1-sunshaojie@kylinos.cn>
+References: <20261030131408.1054507-1-sunshaojie@kylinos.cn>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,53 +60,15 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH v2 4/5] memcg: use high_work for remote charges
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20261030205418.341214-5-shakeel.butt@linux.dev>
-Date: Sat, 31 Oct 2026 08:48:21 +0800
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Tejun Heo <tj@kernel.org>,
- Harry Yoo <harry@kernel.org>,
- Meta kernel team <kernel-team@meta.com>,
- cgroups@vger.kernel.org,
- linux-mm@kvack.org,
- linux-kernel@vger.kernel.org,
- Michal Hocko <mhocko@suse.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Message-Id: <C6F1CC60-B4EC-4C83-BF03-61577CF4A0F4@linux.dev>
-References: <20261030205418.341214-1-shakeel.butt@linux.dev>
- <20261030205418.341214-5-shakeel.butt@linux.dev>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
+Applied to cgroup/for-7.5 with the following tags added:
 
-
-> On Oct 31, 2026, at 04:54, Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> 
-> Some charges go to a cgroup outside the current mm's cgroup and its
-> ancestors. The high handler uses current->mm, so it cannot handle these
-> overages. Filesystem notifications and remote page faults can take
-> this path.
-> 
-> Use mm_match_cgroup() before checking the high limits. If it does not
-> match, use high_work instead of recording task overage or doing
-> synchronous reclaim and throttling. Charges to the current mm's cgroup
-> or one of its ancestors keep their current handling. Tasks without an
-> mm also use the worker.
-> 
-> Like kernel threads, remote chargers skip memory.swap.high throttling
-> and its high-event reporting, and a fast allocator can outrun the worker.
-> The memory.max and memory.swap.max checks stay the same.
-> 
-> Suggested-by: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Acked-by: Michal Hocko <mhocko@suse.com>
-
-Acked-by: Muchun Song <muchun.song@linux.dev>
+  Reviewed-by: Waiman Long <longman@redhat.com>
 
 Thanks.
 
+--
+tejun
