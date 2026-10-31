@@ -1,51 +1,48 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.93
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.82
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793439042;
-	b=Cv66j4rJ0apmToKSYZMuSEZ6LbWQd5J8t2cOQ0vBYAupRhj+0d/SXtFshAnzvA01H/uR
-	 NAeSLquc548W9mu5oOmD5P76EDgRD84Yy1iNZaBlDBzfP5hmODQYPyncvVdOveYSjtfVz
-	 5BUwbNYCUfockiT1JZLTyNFgCjU/Cn22vOWwfrf5K3YrB2ZxPTSmx3VuZJv+S5EGy9yfn
-	 LzC0Nrm03lyX0Rh+9QLSe2uW69PlhwqfSNEtbM58yc4nWzMctWsFnF03571dPRt2VY8qf
-	 H4oZCl12fBkl9EcQI+rtnchofc+qQt8dqHCGa+am+H12rQP0CGMX2gMTNzNyg+n0OVg==
+	t=1793441579;
+	b=NR/6OLpvPI4Q2UA2EZVucHBqXT+xXLs1B501dvX9UqormOvsgykxIRvjMF7gnKD7hDlO
+	 aapu6XpAXxs3ltaP47+DZiEHX/HrkbrJ9RgqCnWQljFMYJepK1jYA3rdK3eyG8rftFiAr
+	 W4pKn76mXB5dtqiZSe+WoBd5iY9+j7HB21SwgVJ1JMtjnlueL91kNa8+zdIve5Rd6tpB8
+	 tU+it+iBDiQ3f5+9v1T2zueZ2E/KXAqyZd5JXJnBcNOpFAq1G3UJwfa7eMjG56+VHZk8v
+	 wFq/HoCUARu9WUZDo2cFJbT6T4zGFaZmWAqbQwtn/pC6Wac4lk8SdXjw5Y/MQkbSUnA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793439042;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793441579;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
 	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
 	 To:X-Mailer;
-	bh=znrLCuEJJGmNbO1Yhr6pNkt2XZN+PDlviOAs+EksPeM=;
-	b=jpAkYEe/n6x8uzAyc38rwlkDiABKAx5JSq1ub8ZWD8vHbYvsF4j9Jy/jXSyxhPaiRdBa
-	 WL/mHhjbuOh9uEmYU7Woi/vFWWvyPXsJVmpwgSiURHkymiKVpRQVst1Iyq0VHofWM+up0
-	 0tCInFniL/nwOV1KtqTEE25+Zsy0/Dtncx5BPFvCHiWADPo3ixZ/QadL+Mwm1h4NrJL6f
-	 8VWpmDmVvJjeRLw40bACXVi/2Crw+eYci2oswQzUfrEHxufKhVTPvL8MwFA6oTmoSc7xB
-	 7kbUGOYCQqtZTATjFXn64w6u9U9dtPfsFRXXL4PL8QfoC2Og0BrZ+6Wsg/IHOVsjzVA==
+	bh=dDCOuaNWdFHWDg4eo0if1LTvwbtTxO+pnWs7/GHeHF8=;
+	b=s+JB8p27p6qE0MrHWYf3dxf6BsvPZGmnxBMwhdGFQGHS6woXPbsPaJU2d7xeWY/mPj8p
+	 DJgrVzaakPwxIHSkXY0rK+Doj8YyESjzkuPU6t4MM9lNQL5j2wJuoFzgHdfPVGYNWTs1Y
+	 xyIvz9vPmLlgAWZKfUXuXR+WzpogjNgBYtrDMOhse9ykxEDY/2uE4x+9x7yAEdHoqCOXX
+	 Ao2twUoXvIhHG4+DRW+qQBBPVFp5rgmOtcZBE8+LGnhokYFe/Vswczto22tAPAhRc/dHI
+	 U7vn+PcAPNfi7TR5rFDWvSJRARffPNcodAsjYKJgAkpajO7eRQHXz9xT+6qG/pnmzcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=onn1sehd;
-	arc=none smtp.remote-ip=95.215.58.93
-Received: from mta1.migadu.com (out-93.mta1.migadu.com [95.215.58.93])
+	arc=none smtp.remote-ip=91.218.175.82
+Received: from mta0.migadu.com (out-82.mta0.migadu.com [91.218.175.82])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7668606A31E
-	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 09:30:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7668606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3884606A31E
+	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 10:12:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3884606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=onn1sehd
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=PvpE2xVkJZQp9Z5Dmn2rK7a3rOZLgmd/wYqlMX90kr4=;
+DKIM-Signature: a=rsa-sha256; bh=lZTmGrotgsDGI65tFXKRdBILlZ1ISbBZpIj7+K9DZDI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793439039; v=1; x=1794043839;
- b=onn1sehdzhf2xVt9I5V0tDQ5w9aAfRk0sOy/O9MWDjUCaWL8OHQphb5kYXw9lprgNKlkr/MS
- yocmdX1yyu4yR+KFfILxLldFXdGYjd9gx/6b43A2Zc+p2/kh4Dr2f8mKdfMkwsgEkWOdiGpuCX+
- 7ItVumMlQ8COOuay8M73TH1s=
+ t=1793441574; v=1; x=1794046374;
+ b=oLB06oPtTuGAdIRr8hXKWIyuAE/VFfRZ2aSmX+nn2L9fhl77u8r1uFIBARMhGEesrc4oTcLk
+ Ny18QOASskvHzGJGUQU9J9Xr62mA/lMG67loRk4XIPBfwTHygeyAP57pQtg+X9uScl77eSjNhc9
+ ynBvjhd1WXGHSz4P5Yf3JqXA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id 9f95f1fa206c4141;
-	Sat, 31 Oct 2026 09:30:09 +0000
-X-Mizu-Trace-ID: 9f95f1fa206c4141
+Received: by mta11.migadu.com with ESMTPS id 3800c739b860db0f;
+	Sat, 31 Oct 2026 10:12:54 +0000
+X-Mizu-Trace-ID: 3800c739b860db0f
 X-Migadu-Flow: FLOW_OUT
 Content-Type: text/plain;
 	charset=us-ascii
@@ -58,11 +55,11 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH v5 3/6] mm/vmscan: move struct scan_control to a dedicated
- header
+Subject: Re: [PATCH v5 4/6] mm/vmscan: pass scan_control to the vmscan
+ tracepoints
 From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20261031090041.58574-4-ridong.chen@linux.dev>
-Date: Sat, 31 Oct 2026 17:29:49 +0800
+In-Reply-To: <20261031090041.58574-5-ridong.chen@linux.dev>
+Date: Sat, 31 Oct 2026 18:12:27 +0800
 Cc: Steven Rostedt <rostedt@goodmis.org>,
  Masami Hiramatsu <mhiramat@kernel.org>,
  Andrew Morton <akpm@linux-foundation.org>,
@@ -90,9 +87,9 @@ Cc: Steven Rostedt <rostedt@goodmis.org>,
  Ridong Chen <chenridong@xiaomi.com>,
  "open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org (ope>)
 Content-Transfer-Encoding: 7bit
-Message-Id: <CB3856A6-C6D5-41E1-B6BB-B263BB63BCD6@linux.dev>
+Message-Id: <DBDE2024-5586-4938-A8A5-B6247E2B2BF2@linux.dev>
 References: <20261031090041.58574-1-ridong.chen@linux.dev>
- <20261031090041.58574-4-ridong.chen@linux.dev>
+ <20261031090041.58574-5-ridong.chen@linux.dev>
 To: Ridong Chen <ridong.chen@linux.dev>
 X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
@@ -102,20 +99,31 @@ X-Mailer: Apple Mail (2.3901.100.1.1.12)
 > 
 > From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> The definition of struct scan_control has lived inline at the top of
-> mm/vmscan.c. Move it out to a new mm/vmscan.h so the reclaim-internal
-> state can be referenced from other reclaim translation units without
-> duplicating the definition.
+> Several vmscan tracepoints spell out reclaim state as individual
+> arguments, all of which the caller already holds in struct scan_control.
+> Now that the struct is visible from the trace header, pass sc directly
+> and pick the fields out in TP_fast_assign instead of spelling them out
+> at every callsite:
 > 
-> The header uses an ordinary include guard and pulls in only what the
-> struct needs (nodemask_t, gfp_t and struct reclaim_state).
+> - mm_vmscan_direct_reclaim_begin, mm_vmscan_memcg_reclaim_begin and
+>  mm_vmscan_node_reclaim_begin: gfp_mask and order.
 > 
-> mm/trace_vmscan.h includes the new header directly so that any
-> translation unit pulling in the trace events (mm/vmscan.c, mm/shrinker.c)
-> sees the full definition of struct scan_control regardless of include
-> order.
+> - mm_vmscan_lru_isolate, mm_vmscan_lru_shrink_inactive and
+>  mm_vmscan_lru_shrink_active: reclaim_idx, order and priority.
 > 
-> No functional change.
+> - mm_vmscan_reclaim_pages: nr_scanned. nr_reclaimed stays a separate
+>  argument: it is the return value of shrink_folio_list(), which does
+>  not update sc->nr_reclaimed.
+> 
+> - mm_vmscan_balance_pgdat_end: order and nr_reclaimed. highest_zoneidx
+>  stays a separate argument: it is a balance_pgdat() parameter, and
+>  sc.reclaim_idx may differ from it by the time the end event fires.
+> 
+> No functional change. The tracefs event format (TP_STRUCT__entry and
+> TP_printk) is unchanged, so tracefs-based consumers are unaffected.
+> BPF programs attached via raw_tp/tp_btf see the new TP_PROTO and need
+> to be adjusted; tracepoints are not a stable ABI (see
+> Documentation/bpf/bpf_design_QA.rst).
 > 
 > Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 
