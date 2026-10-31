@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.140
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.85
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793437293;
-	b=CE9y21gnoYCWbixGHtHy94z44WyyX+ux37UKEaE3mtDUGwtjVrOxU1lkid2RNLWEQwG9
-	 qyjJjmtGaE1TXSqCv+SYVt9XwvVl1j5EwdOsyVxk0eBAtAg/Q7JN4Lw5f8HWuijaXyxc7
-	 Hmn5TODGoUSMwzzSNn040dAmBxJtZ8HW6Ipoau9UXcEtMAD1pVNmzdnU0kqvfccR3sfdh
-	 StRGu0K3E6jwW+f/FvHab8pKu4cBjqoZxt/XeokakCj0k9HFvpKgxQkFWd8oDntwy1znY
-	 Us+FqKzrjIKZQI4635+TLbBM2ZiBPPJfr/ZTqsruvZ44/6htRW7pkdqchQiLBap9njg==
+	t=1793437304;
+	b=5befniehUxEj/4VenYcGyMQKCex8G68MMvlCWBlP+TI4OpSJUIznbJ4wkdYTyTdqx5mF
+	 CaeT8mG8+mdl/6/YEgYkRVUTqd7HjvA2R9HwXrQg5qDLNOnwaDc7+D70nmzpXz5XOr3Zm
+	 Xi3mCzSGF+WGKMHg9USmaGg1589XpzwhKVN0HVF5F/zB1YFayHDqHSYUd4x8SN+9g6Nyh
+	 RvXFJ3Kq5HuaRmmb/efYFSZs7XuIWN9hGMy0nSiQwP5tnxmQf5z4A8yzFFALmFIAzY4QP
+	 m/RkaOPo8IqTAZc/gqSdmwVi9lqVw3K/Mreyb0Cf0xnVgNo/KVO0LYauiftxtIO/F4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793437293;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793437304;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=fiiKrBCpHUYOHtqd9WqUWhp2nvmCUlooq/peEHqO4Go=;
-	b=rbZPCfy6DZ3Q7FhZRUbGJGm3I7aVofsQSqjhkgIhUH3qwn5o6HSZMGzXYtTgwvdEKwY6
-	 4/G9AeQ4YXsx0zc59Fe/eNjsIIdWVKvkKRhTxuGlCeQy7P3b+TaM4TexIAYIfFIGFOJtm
-	 zX0UvwenULEBiQgMl7FO1xR2K/FDwkq4t7c+aDT9fxXWy5RyLqunM9oU8CwPnnhFPN+Ix
-	 LnSGgkbVom5h3K1cwF159CQ5WrAeaoUgLlIOg6g9IVE5Qc6eEC1Xi+ZfmNUZUOyCambpU
-	 mlsyr/ppSlNR8A2mOMQvsxy/mjolk89j1mVp39Po/bOlGVp0Jkl23WR/EkYR9qdOS3A==
+	bh=A6UAB49Z1LpHBU8b1xWt4+XwxaM2AkGaEn6Zvnkg/3M=;
+	b=HoSQwhZWtqzRIamRNDuf5OqZY/Ba+Qq2MJ3OlronAnaLgr7jt9PWd1dofGVyj7dpIo7i
+	 JgcUv8JT3JBzRwL++kUxhvibK868OvdnMn3iHHhvGNhD5rvNnoJNaCfsBP8NQIkyr1M26
+	 5mHQGFadNttnoW2HPqSzxz/SUs2+2GOrKBldo7VApIWC13GlwDt9n/0VvzbgzvgU+grGg
+	 Kbdy+040IuveZSRmwWT/qa8Pl0gSI5HpftSdtt/AH6zsqe5dfalcVb1xpbRlZNtEy2blQ
+	 cRv4oyYGD6+8Ai8gWFLMfDMdkqsvY01XFA2jo6dfGjY6N59HzC6G2jfrO/lONEeGZHw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=tozsAYZQ;
-	arc=none smtp.remote-ip=91.218.175.140
-Received: from mta0.migadu.com (out-140.mta0.migadu.com [91.218.175.140])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="DpkU7/06";
+	arc=none smtp.remote-ip=95.215.58.85
+Received: from mta1.migadu.com (out-85.mta1.migadu.com [95.215.58.85])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4362606A31C
-	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 09:01:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E4362606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BB4F606A31E
+	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 09:01:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BB4F606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=tozsAYZQ
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=DpkU7/06
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Ef7uDXCWASIprI+9tULZE2dA/Lb+54sHHrZJ8AHqF0o=;
+DKIM-Signature: a=rsa-sha256; bh=63F/H5y9zeyyPdztUvgYmzYCRYIWeUoSfig5jcwoZ88=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793437290; v=1; x=1794042090;
- b=tozsAYZQlWfc8MmPR1dbsAqTWJhTZ8NmRXZXD4xx7CZEfONDAItng6jipxhZBC6xc7OJpUyA
- ZF6A88vaAecXXnZtEV4UAmi7NNuw461Ul7c6Ymi2OFx0fF2127gBOlkwNQ/PvYO2kAW0YI9R6GJ
- CFnDhIeg20qynC3EinLYnfP0=
+ t=1793437301; v=1; x=1794042101;
+ b=DpkU7/06df2towDpOzvyARYPBT/KwMemZLI7CmDsXRIV5PwgjRvjEAfLz6E0kbQhuZtq2bmK
+ 7k6bmrMoszYV6lHgpUF7qqlZfqPv7Xxt3vNymvn8MG9tnWylKZnb5W33ULgYgH0WgN3gBqF/XRB
+ rJhoEdbM1WPeP180GJzxy+qs=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d33284fd3119d6cd;
-	Sat, 31 Oct 2026 09:01:29 +0000
-X-Mizu-Trace-ID: d33284fd3119d6cd
+Received: by smtp.migadu.com with ESMTPS id 15492aafd9b08072;
+	Sat, 31 Oct 2026 09:01:41 +0000
+X-Mizu-Trace-ID: 15492aafd9b08072
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Steven Rostedt <rostedt@goodmis.org>,
@@ -75,9 +75,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	bpf@vger.kernel.org (open list:BPF [MISC]:Keyword:(?:\b|_)bpf(?:\b|_)),
 	Ridong Chen <ridong.chen@linux.dev>,
 	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH v5 3/6] mm/vmscan: move struct scan_control to a dedicated header
-Date: Sat, 31 Oct 2026 17:00:38 +0800
-Message-ID: <20261031090041.58574-4-ridong.chen@linux.dev>
+Subject: [PATCH v5 4/6] mm/vmscan: pass scan_control to the vmscan tracepoints
+Date: Sat, 31 Oct 2026 17:00:39 +0800
+Message-ID: <20261031090041.58574-5-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261031090041.58574-1-ridong.chen@linux.dev>
 References: <20261031090041.58574-1-ridong.chen@linux.dev>
@@ -94,306 +94,336 @@ Content-Transfer-Encoding: 8bit
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-The definition of struct scan_control has lived inline at the top of
-mm/vmscan.c. Move it out to a new mm/vmscan.h so the reclaim-internal
-state can be referenced from other reclaim translation units without
-duplicating the definition.
+Several vmscan tracepoints spell out reclaim state as individual
+arguments, all of which the caller already holds in struct scan_control.
+Now that the struct is visible from the trace header, pass sc directly
+and pick the fields out in TP_fast_assign instead of spelling them out
+at every callsite:
 
-The header uses an ordinary include guard and pulls in only what the
-struct needs (nodemask_t, gfp_t and struct reclaim_state).
+- mm_vmscan_direct_reclaim_begin, mm_vmscan_memcg_reclaim_begin and
+  mm_vmscan_node_reclaim_begin: gfp_mask and order.
 
-mm/trace_vmscan.h includes the new header directly so that any
-translation unit pulling in the trace events (mm/vmscan.c, mm/shrinker.c)
-sees the full definition of struct scan_control regardless of include
-order.
+- mm_vmscan_lru_isolate, mm_vmscan_lru_shrink_inactive and
+  mm_vmscan_lru_shrink_active: reclaim_idx, order and priority.
 
-No functional change.
+- mm_vmscan_reclaim_pages: nr_scanned. nr_reclaimed stays a separate
+  argument: it is the return value of shrink_folio_list(), which does
+  not update sc->nr_reclaimed.
+
+- mm_vmscan_balance_pgdat_end: order and nr_reclaimed. highest_zoneidx
+  stays a separate argument: it is a balance_pgdat() parameter, and
+  sc.reclaim_idx may differ from it by the time the end event fires.
+
+No functional change. The tracefs event format (TP_STRUCT__entry and
+TP_printk) is unchanged, so tracefs-based consumers are unaffected.
+BPF programs attached via raw_tp/tp_btf see the new TP_PROTO and need
+to be adjusted; tracepoints are not a stable ABI (see
+Documentation/bpf/bpf_design_QA.rst).
 
 Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
- MAINTAINERS       |   2 +
- mm/trace_vmscan.h |   2 +
- mm/vmscan.c       | 108 ------------------------------------------
- mm/vmscan.h       | 118 ++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 122 insertions(+), 108 deletions(-)
- create mode 100644 mm/vmscan.h
+ mm/trace_vmscan.h | 74 +++++++++++++++++++++++------------------------
+ mm/vmscan.c       | 26 ++++++++---------
+ 2 files changed, 48 insertions(+), 52 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2ad01107fa05..724791bb779f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -17655,6 +17655,7 @@ F:	include/linux/mm_inline.h
- F:	include/linux/mmzone.h
- F:	mm/trace_vmscan.h
- F:	mm/vmscan.c
-+F:	mm/vmscan.h
- F:	mm/workingset.c
- 
- MEMORY MANAGEMENT - MIGRATION
-@@ -17805,6 +17806,7 @@ L:	linux-mm@kvack.org
- S:	Maintained
- F:	mm/trace_vmscan.h
- F:	mm/vmscan.c
-+F:	mm/vmscan.h
- F:	mm/workingset.c
- 
- MEMORY MANAGEMENT - RMAP (REVERSE MAPPING)
 diff --git a/mm/trace_vmscan.h b/mm/trace_vmscan.h
-index ad90f0e9bf2e..3917e1b62dfa 100644
+index 3917e1b62dfa..b2ad83e5f25e 100644
 --- a/mm/trace_vmscan.h
 +++ b/mm/trace_vmscan.h
-@@ -11,6 +11,8 @@
- #include <linux/memcontrol.h>
- #include <trace/events/mmflags.h>
+@@ -124,10 +124,9 @@ TRACE_EVENT(mm_vmscan_balance_pgdat_begin,
  
-+#include "vmscan.h"
-+
- #define RECLAIM_WB_ANON		0x0001u
- #define RECLAIM_WB_FILE		0x0002u
- #define RECLAIM_WB_MIXED	0x0010u
+ TRACE_EVENT(mm_vmscan_balance_pgdat_end,
+ 
+-	TP_PROTO(int nid, int order, int highest_zoneidx,
+-		 unsigned long nr_reclaimed),
++	TP_PROTO(int nid, struct scan_control *sc, int highest_zoneidx),
+ 
+-	TP_ARGS(nid, order, highest_zoneidx, nr_reclaimed),
++	TP_ARGS(nid, sc, highest_zoneidx),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(int, nid)
+@@ -138,9 +137,9 @@ TRACE_EVENT(mm_vmscan_balance_pgdat_end,
+ 
+ 	TP_fast_assign(
+ 		__entry->nid = nid;
+-		__entry->order = order;
++		__entry->order = sc->order;
+ 		__entry->highest_zoneidx = highest_zoneidx;
+-		__entry->nr_reclaimed = nr_reclaimed;
++		__entry->nr_reclaimed = sc->nr_reclaimed;
+ 	),
+ 
+ 	TP_printk("nid=%d order=%d highest_zoneidx=%-8s nr_reclaimed=%lu",
+@@ -178,9 +177,9 @@ TRACE_EVENT(mm_vmscan_wakeup_kswapd,
+ 
+ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_begin_template,
+ 
+-	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
++	TP_PROTO(struct scan_control *sc, struct mem_cgroup *memcg),
+ 
+-	TP_ARGS(gfp_flags, order, memcg),
++	TP_ARGS(sc, memcg),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(	unsigned long,	gfp_flags	)
+@@ -189,8 +188,8 @@ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_begin_template,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__entry->gfp_flags	= (__force unsigned long)gfp_flags;
+-		__entry->order		= order;
++		__entry->gfp_flags	= (__force unsigned long)sc->gfp_mask;
++		__entry->order		= sc->order;
+ 		__entry->memcg_id	= mem_cgroup_id(memcg);
+ 	),
+ 
+@@ -204,17 +203,17 @@ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_begin_template,
+ 
+ DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_direct_reclaim_begin,
+ 
+-	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
++	TP_PROTO(struct scan_control *sc, struct mem_cgroup *memcg),
+ 
+-	TP_ARGS(gfp_flags, order, memcg)
++	TP_ARGS(sc, memcg)
+ );
+ 
+ #ifdef CONFIG_MEMCG
+ DEFINE_EVENT(mm_vmscan_direct_reclaim_begin_template, mm_vmscan_memcg_reclaim_begin,
+ 
+-	TP_PROTO(gfp_t gfp_flags, int order, struct mem_cgroup *memcg),
++	TP_PROTO(struct scan_control *sc, struct mem_cgroup *memcg),
+ 
+-	TP_ARGS(gfp_flags, order, memcg)
++	TP_ARGS(sc, memcg)
+ );
+ #endif /* CONFIG_MEMCG */
+ 
+@@ -350,15 +349,14 @@ TRACE_EVENT(mm_shrink_slab_end,
+ );
+ 
+ TRACE_EVENT(mm_vmscan_lru_isolate,
+-	TP_PROTO(int highest_zoneidx,
+-		int order,
+-		unsigned long nr_requested,
+-		unsigned long nr_scanned,
+-		unsigned long nr_skipped,
+-		unsigned long nr_taken,
+-		int lru),
++	TP_PROTO(struct scan_control *sc,
++		 unsigned long nr_requested,
++		 unsigned long nr_scanned,
++		 unsigned long nr_skipped,
++		 unsigned long nr_taken,
++		 int lru),
+ 
+-	TP_ARGS(highest_zoneidx, order, nr_requested, nr_scanned, nr_skipped, nr_taken, lru),
++	TP_ARGS(sc, nr_requested, nr_scanned, nr_skipped, nr_taken, lru),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(int, highest_zoneidx)
+@@ -371,8 +369,8 @@ TRACE_EVENT(mm_vmscan_lru_isolate,
+ 	),
+ 
+ 	TP_fast_assign(
+-		__entry->highest_zoneidx = highest_zoneidx;
+-		__entry->order = order;
++		__entry->highest_zoneidx = sc->reclaim_idx;
++		__entry->order = sc->order;
+ 		__entry->nr_requested = nr_requested;
+ 		__entry->nr_scanned = nr_scanned;
+ 		__entry->nr_skipped = nr_skipped;
+@@ -419,11 +417,11 @@ TRACE_EVENT(mm_vmscan_write_folio,
+ 
+ TRACE_EVENT(mm_vmscan_reclaim_pages,
+ 
+-	TP_PROTO(int nid,
+-		unsigned long nr_scanned, unsigned long nr_reclaimed,
+-		struct reclaim_stat *stat),
++	TP_PROTO(int nid, struct scan_control *sc,
++		 unsigned long nr_reclaimed,
++		 struct reclaim_stat *stat),
+ 
+-	TP_ARGS(nid, nr_scanned, nr_reclaimed, stat),
++	TP_ARGS(nid, sc, nr_reclaimed, stat),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(int, nid)
+@@ -441,7 +439,7 @@ TRACE_EVENT(mm_vmscan_reclaim_pages,
+ 
+ 	TP_fast_assign(
+ 		__entry->nid = nid;
+-		__entry->nr_scanned = nr_scanned;
++		__entry->nr_scanned = sc->nr_scanned;
+ 		__entry->nr_reclaimed = nr_reclaimed;
+ 		__entry->nr_dirty = stat->nr_dirty;
+ 		__entry->nr_writeback = stat->nr_writeback;
+@@ -466,9 +464,9 @@ TRACE_EVENT(mm_vmscan_lru_shrink_inactive,
+ 
+ 	TP_PROTO(int nid,
+ 		unsigned long nr_scanned, unsigned long nr_reclaimed,
+-		struct reclaim_stat *stat, int priority, int file),
++		struct reclaim_stat *stat, struct scan_control *sc, int file),
+ 
+-	TP_ARGS(nid, nr_scanned, nr_reclaimed, stat, priority, file),
++	TP_ARGS(nid, nr_scanned, nr_reclaimed, stat, sc, file),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(int, nid)
+@@ -498,7 +496,7 @@ TRACE_EVENT(mm_vmscan_lru_shrink_inactive,
+ 		__entry->nr_activate1 = stat->nr_activate[1];
+ 		__entry->nr_ref_keep = stat->nr_ref_keep;
+ 		__entry->nr_unmap_fail = stat->nr_unmap_fail;
+-		__entry->priority = priority;
++		__entry->priority = sc->priority;
+ 		__entry->reclaim_flags = trace_reclaim_flags(file);
+ 	),
+ 
+@@ -517,9 +515,9 @@ TRACE_EVENT(mm_vmscan_lru_shrink_active,
+ 
+ 	TP_PROTO(int nid, unsigned long nr_taken,
+ 		unsigned long nr_active, unsigned long nr_deactivated,
+-		unsigned long nr_referenced, int priority, int file),
++		unsigned long nr_referenced, struct scan_control *sc, int file),
+ 
+-	TP_ARGS(nid, nr_taken, nr_active, nr_deactivated, nr_referenced, priority, file),
++	TP_ARGS(nid, nr_taken, nr_active, nr_deactivated, nr_referenced, sc, file),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(int, nid)
+@@ -537,7 +535,7 @@ TRACE_EVENT(mm_vmscan_lru_shrink_active,
+ 		__entry->nr_active = nr_active;
+ 		__entry->nr_deactivated = nr_deactivated;
+ 		__entry->nr_referenced = nr_referenced;
+-		__entry->priority = priority;
++		__entry->priority = sc->priority;
+ 		__entry->reclaim_flags = trace_reclaim_flags(file);
+ 	),
+ 
+@@ -551,9 +549,9 @@ TRACE_EVENT(mm_vmscan_lru_shrink_active,
+ 
+ TRACE_EVENT(mm_vmscan_node_reclaim_begin,
+ 
+-	TP_PROTO(int nid, int order, gfp_t gfp_flags),
++	TP_PROTO(int nid, struct scan_control *sc),
+ 
+-	TP_ARGS(nid, order, gfp_flags),
++	TP_ARGS(nid, sc),
+ 
+ 	TP_STRUCT__entry(
+ 		__field(int, nid)
+@@ -563,8 +561,8 @@ TRACE_EVENT(mm_vmscan_node_reclaim_begin,
+ 
+ 	TP_fast_assign(
+ 		__entry->nid = nid;
+-		__entry->order = order;
+-		__entry->gfp_flags = (__force unsigned long)gfp_flags;
++		__entry->order = sc->order;
++		__entry->gfp_flags = (__force unsigned long)sc->gfp_mask;
+ 	),
+ 
+ 	TP_printk("nid=%d order=%d gfp_flags=%s",
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 79d2d614afd0..49677464fc9a 100644
+index 49677464fc9a..15e9184a580a 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -73,114 +73,6 @@
- #define CREATE_TRACE_POINTS
- #include "trace_vmscan.h"
+@@ -1764,7 +1764,7 @@ static unsigned long isolate_lru_folios(unsigned long nr_to_scan,
+ 		}
+ 	}
+ 	*nr_scanned = total_scan;
+-	trace_mm_vmscan_lru_isolate(sc->reclaim_idx, sc->order, nr_to_scan,
++	trace_mm_vmscan_lru_isolate(sc, nr_to_scan,
+ 				    total_scan, skipped, nr_taken, lru);
+ 	update_lru_sizes(lruvec, lru, nr_zone_taken);
+ 	return nr_taken;
+@@ -2053,7 +2053,7 @@ static unsigned long shrink_inactive_list(unsigned long nr_to_scan,
  
--struct scan_control {
--	/* How many pages shrink_list() should reclaim */
--	unsigned long nr_to_reclaim;
--
--	/*
--	 * Nodemask of nodes allowed by the caller. If NULL, all nodes
--	 * are scanned.
--	 */
--	const nodemask_t *nodemask;
--
--	/*
--	 * The memory cgroup that hit its limit and as a result is the
--	 * primary target of this reclaim invocation.
--	 */
--	struct mem_cgroup *target_mem_cgroup;
--
--	/*
--	 * Scan pressure balancing between anon and file LRUs
--	 */
--	unsigned long	anon_cost;
--	unsigned long	file_cost;
--
--	/* Swappiness value for proactive reclaim. Always use sc_swappiness()! */
--	int *proactive_swappiness;
--
--	/* Can active folios be deactivated as part of reclaim? */
--#define DEACTIVATE_ANON 1
--#define DEACTIVATE_FILE 2
--	unsigned int may_deactivate:2;
--	unsigned int force_deactivate:1;
--	unsigned int skipped_deactivate:1;
--
--	/* zone_reclaim_mode, boost reclaim */
--	unsigned int may_writepage:1;
--
--	/* zone_reclaim_mode */
--	unsigned int may_unmap:1;
--
--	/* zone_reclaim_mode, boost reclaim, cgroup restrictions */
--	unsigned int may_swap:1;
--
--	/* Not allow cache_trim_mode to be turned on as part of reclaim? */
--	unsigned int no_cache_trim_mode:1;
--
--	/* Has cache_trim_mode failed at least once? */
--	unsigned int cache_trim_mode_failed:1;
--
--	/* Proactive reclaim invoked by userspace */
--	unsigned int proactive:1;
--
--	/*
--	 * Cgroup memory below memory.low is protected as long as we
--	 * don't threaten to OOM. If any cgroup is reclaimed at
--	 * reduced force or passed over entirely due to its memory.low
--	 * setting (memcg_low_skipped), and nothing is reclaimed as a
--	 * result, then go back for one more cycle that reclaims the protected
--	 * memory (memcg_low_reclaim) to avert OOM.
--	 */
--	unsigned int memcg_low_reclaim:1;
--	unsigned int memcg_low_skipped:1;
--
--	/* Shared cgroup tree walk failed, rescan the whole tree */
--	unsigned int memcg_full_walk:1;
--
--	unsigned int hibernation_mode:1;
--
--	/* One of the zones is ready for compaction */
--	unsigned int compaction_ready:1;
--
--	/* There is easily reclaimable cold cache in the current node */
--	unsigned int cache_trim_mode:1;
--
--	/* The file folios on the current node are dangerously low */
--	unsigned int file_is_tiny:1;
--
--	/* Always discard instead of demoting to lower tier memory */
--	unsigned int no_demotion:1;
--
--	/* Allocation order */
--	s8 order;
--
--	/* Scan (total_size >> priority) pages at once */
--	s8 priority;
--
--	/* The highest zone to isolate folios for reclaim from */
--	s8 reclaim_idx;
--
--	/* This context's GFP mask */
--	gfp_t gfp_mask;
--
--	/* Incremented by the number of inactive pages that were scanned */
--	unsigned long nr_scanned;
--
--	/* Number of pages freed so far during a call to shrink_zones() */
--	unsigned long nr_reclaimed;
--
--	struct {
--		unsigned int dirty;
--		unsigned int congested;
--		unsigned int writeback;
--		unsigned int immediate;
--		unsigned int taken;
--	} nr;
--
--	/* for recording the reclaimed slab by now */
--	struct reclaim_state reclaim_state;
--};
--
- #ifdef ARCH_HAS_PREFETCHW
- static inline void prefetchw_prev_lru_folio(struct folio *folio,
- 		struct list_head *base)
-diff --git a/mm/vmscan.h b/mm/vmscan.h
-new file mode 100644
-index 000000000000..adb22e80d760
---- /dev/null
-+++ b/mm/vmscan.h
-@@ -0,0 +1,118 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _MM_VMSCAN_H
-+#define _MM_VMSCAN_H
-+
-+#include <linux/gfp_types.h>
-+#include <linux/nodemask.h>
-+#include <linux/swap.h>
-+#include <linux/types.h>
-+
-+struct scan_control {
-+	/* How many pages shrink_list() should reclaim */
-+	unsigned long nr_to_reclaim;
-+
-+	/*
-+	 * Nodemask of nodes allowed by the caller. If NULL, all nodes
-+	 * are scanned.
-+	 */
-+	const nodemask_t *nodemask;
-+
-+	/*
-+	 * The memory cgroup that hit its limit and as a result is the
-+	 * primary target of this reclaim invocation.
-+	 */
-+	struct mem_cgroup *target_mem_cgroup;
-+
-+	/*
-+	 * Scan pressure balancing between anon and file LRUs
-+	 */
-+	unsigned long	anon_cost;
-+	unsigned long	file_cost;
-+
-+	/* Swappiness value for proactive reclaim. Always use sc_swappiness()! */
-+	int *proactive_swappiness;
-+
-+	/* Can active folios be deactivated as part of reclaim? */
-+#define DEACTIVATE_ANON 1
-+#define DEACTIVATE_FILE 2
-+	unsigned int may_deactivate:2;
-+	unsigned int force_deactivate:1;
-+	unsigned int skipped_deactivate:1;
-+
-+	/* zone_reclaim_mode, boost reclaim */
-+	unsigned int may_writepage:1;
-+
-+	/* zone_reclaim_mode */
-+	unsigned int may_unmap:1;
-+
-+	/* zone_reclaim_mode, boost reclaim, cgroup restrictions */
-+	unsigned int may_swap:1;
-+
-+	/* Not allow cache_trim_mode to be turned on as part of reclaim? */
-+	unsigned int no_cache_trim_mode:1;
-+
-+	/* Has cache_trim_mode failed at least once? */
-+	unsigned int cache_trim_mode_failed:1;
-+
-+	/* Proactive reclaim invoked by userspace */
-+	unsigned int proactive:1;
-+
-+	/*
-+	 * Cgroup memory below memory.low is protected as long as we
-+	 * don't threaten to OOM. If any cgroup is reclaimed at
-+	 * reduced force or passed over entirely due to its memory.low
-+	 * setting (memcg_low_skipped), and nothing is reclaimed as a
-+	 * result, then go back for one more cycle that reclaims the protected
-+	 * memory (memcg_low_reclaim) to avert OOM.
-+	 */
-+	unsigned int memcg_low_reclaim:1;
-+	unsigned int memcg_low_skipped:1;
-+
-+	/* Shared cgroup tree walk failed, rescan the whole tree */
-+	unsigned int memcg_full_walk:1;
-+
-+	unsigned int hibernation_mode:1;
-+
-+	/* One of the zones is ready for compaction */
-+	unsigned int compaction_ready:1;
-+
-+	/* There is easily reclaimable cold cache in the current node */
-+	unsigned int cache_trim_mode:1;
-+
-+	/* The file folios on the current node are dangerously low */
-+	unsigned int file_is_tiny:1;
-+
-+	/* Always discard instead of demoting to lower tier memory */
-+	unsigned int no_demotion:1;
-+
-+	/* Allocation order */
-+	s8 order;
-+
-+	/* Scan (total_size >> priority) pages at once */
-+	s8 priority;
-+
-+	/* The highest zone to isolate folios for reclaim from */
-+	s8 reclaim_idx;
-+
-+	/* This context's GFP mask */
-+	gfp_t gfp_mask;
-+
-+	/* Incremented by the number of inactive pages that were scanned */
-+	unsigned long nr_scanned;
-+
-+	/* Number of pages freed so far during a call to shrink_zones() */
-+	unsigned long nr_reclaimed;
-+
-+	struct {
-+		unsigned int dirty;
-+		unsigned int congested;
-+		unsigned int writeback;
-+		unsigned int immediate;
-+		unsigned int taken;
-+	} nr;
-+
-+	/* for recording the reclaimed slab by now */
-+	struct reclaim_state reclaim_state;
-+};
-+
-+#endif /* _MM_VMSCAN_H */
+ 	handle_reclaim_writeback(nr_taken, pgdat, sc, &stat);
+ 	trace_mm_vmscan_lru_shrink_inactive(pgdat->node_id,
+-			nr_scanned, nr_reclaimed, &stat, sc->priority, file);
++			nr_scanned, nr_reclaimed, &stat, sc, file);
+ 	return nr_reclaimed;
+ }
+ 
+@@ -2160,7 +2160,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 		mod_lruvec_state(lruvec, PGROTATE_ANON + file, nr_rotated);
+ 
+ 	trace_mm_vmscan_lru_shrink_active(pgdat->node_id, nr_taken, nr_activate,
+-			nr_deactivate, nr_rotated, sc->priority, file);
++			nr_deactivate, nr_rotated, sc, file);
+ }
+ 
+ static unsigned int reclaim_folio_list(struct list_head *folio_list,
+@@ -2183,7 +2183,7 @@ static unsigned int reclaim_folio_list(struct list_head *folio_list,
+ 		list_del(&folio->lru);
+ 		folio_putback_lru(folio);
+ 	}
+-	trace_mm_vmscan_reclaim_pages(pgdat->node_id, sc.nr_scanned, nr_reclaimed, &stat);
++	trace_mm_vmscan_reclaim_pages(pgdat->node_id, &sc, nr_reclaimed, &stat);
+ 
+ 	return nr_reclaimed;
+ }
+@@ -4849,9 +4849,9 @@ static int scan_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	mod_lruvec_state(lruvec, item, isolated);
+ 	mod_lruvec_state(lruvec, PGREFILL, sorted);
+ 	mod_lruvec_state(lruvec, PGSCAN_ANON + type, isolated);
+-	trace_mm_vmscan_lru_isolate(sc->reclaim_idx, sc->order, nr_to_scan,
+-				scanned, skipped, isolated,
+-				type ? LRU_INACTIVE_FILE : LRU_INACTIVE_ANON);
++	trace_mm_vmscan_lru_isolate(sc, nr_to_scan,
++				    scanned, skipped, isolated,
++				    type ? LRU_INACTIVE_FILE : LRU_INACTIVE_ANON);
+ 
+ 	*isolatedp = isolated;
+ 	return scanned;
+@@ -4993,7 +4993,7 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	if (isolated)
+ 		handle_reclaim_writeback(isolated, pgdat, sc, &stat);
+ 	trace_mm_vmscan_lru_shrink_inactive(pgdat->node_id,
+-			type_scanned, reclaimed, &stat, sc->priority,
++			type_scanned, reclaimed, &stat, sc,
+ 			type ? LRU_INACTIVE_FILE : LRU_INACTIVE_ANON);
+ 
+ 	list_for_each_entry_safe_reverse(folio, next, &list, lru) {
+@@ -6889,7 +6889,7 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 		return 1;
+ 
+ 	set_task_reclaim_state(current, &sc.reclaim_state);
+-	trace_mm_vmscan_direct_reclaim_begin(sc.gfp_mask, order, NULL);
++	trace_mm_vmscan_direct_reclaim_begin(&sc, NULL);
+ 
+ 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
+ 
+@@ -6930,7 +6930,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 	struct zonelist *zonelist = node_zonelist(numa_node_id(), sc.gfp_mask);
+ 
+ 	set_task_reclaim_state(current, &sc.reclaim_state);
+-	trace_mm_vmscan_memcg_reclaim_begin(sc.gfp_mask, 0, memcg);
++	trace_mm_vmscan_memcg_reclaim_begin(&sc, memcg);
+ 	noreclaim_flag = memalloc_noreclaim_save();
+ 
+ 	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
+@@ -7407,8 +7407,7 @@ static int balance_pgdat(pg_data_t *pgdat, int order, int highest_zoneidx)
+ 	psi_memstall_leave(&pflags);
+ 	set_task_reclaim_state(current, NULL);
+ 
+-	trace_mm_vmscan_balance_pgdat_end(pgdat->node_id, sc.order,
+-					  highest_zoneidx, sc.nr_reclaimed);
++	trace_mm_vmscan_balance_pgdat_end(pgdat->node_id, &sc, highest_zoneidx);
+ 
+ 	/*
+ 	 * Return the order kswapd stopped reclaiming at as
+@@ -7886,8 +7885,7 @@ static unsigned long __node_reclaim(struct pglist_data *pgdat,
+ 	unsigned int noreclaim_flag;
+ 	unsigned long pflags;
+ 
+-	trace_mm_vmscan_node_reclaim_begin(pgdat->node_id, sc->order,
+-					   sc->gfp_mask);
++	trace_mm_vmscan_node_reclaim_begin(pgdat->node_id, sc);
+ 
+ 	cond_resched();
+ 	if (!sc->proactive)
 -- 
 2.43.0
 
