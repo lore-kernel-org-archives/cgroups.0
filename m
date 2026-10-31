@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.63
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.94
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793407669;
-	b=i1CZquHYhfpZBCmW1+DEWoCXOWLYfBtuTV8go84Rhro+ZkugU+Z3LZd4hSHsoEJdKD2p
-	 5kgxOozmAvOHG3u8MZT3L95L+3JkpoduNuyqNxM6JaSlP6jmXJjeVyAm9s9tsEvcjw7j1
-	 eKWKfylOw7Pj7IB42fIp2UAgdtgIyR1nppxiHpVoeeuXSO595Zv2cgE1gdHBu84vIxzRJ
-	 btq1KG08kv0+1NIeoKb3+h1Fj7JkMzVUhmCq6Nho24XGHcPlFvX7vrQz2f+6Obaw72pBE
-	 YWS5CXPAXhf9XuF8P1ruRIiFerGbU0Yo0/zC0sE9VWXdv3TRQDhhT9hL+99n2G+Hvsg==
+	t=1793407721;
+	b=XKMU+b2GICzPcxsHfPefkkcjB+xh62mrv/aBa2lgYK5yL5Zr4wYS6B6aMbabn16uQxxK
+	 tn/mr8VeyYjrSFGYzfnOPqFfJ6D/8OK+W9flH7hjfje5h8e9hjAkiJ/CIJ25tZClQkHkT
+	 6Hh55GusSdol+SfPO8tGYsLBDYJqxqPL8BWQUgSzRaEAJm1X7VPe9wTTvF2fdNEykN/Ij
+	 jaQjWKuxzKs/vXzqLkCLIVnTNGDX3zfvZ17MhJvVITSu5e6E/KrX2U48j2FdOvChsXjpE
+	 iapFtNSxYFMjdLN0AhJfiJh5dnzdYLU1giubiVtcEzLX8/3qd6Yg6Cql3n8vDCiozYA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793407669;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793407721;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
 	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
 	 To:X-Mailer;
-	bh=6fhD2qwAKEE8buFW7sdA+FNaQmZ6JEgXK/EobNzcOWg=;
-	b=BQt476U8LWEslDYH7uh8FWRQsfMqd59dOkYSIaMfq7bnOuBkD155UjEW8R6nxfmRtApw
-	 S29OyhUkdZFDtILzRmWBfzIs+Yvu99MrprrwIRMLThOp3CVGZ36MqNaXxkH3nMv0fx5V1
-	 PVG4fej0vkuqnot2ut4zQOwuR2HfKWhfuKH6Ohca/nYJQ5bb+DfT9lgzt+QfjtCrYMBrH
-	 GaPe6Qg6MK+UMiDC7yjEkUAaO8suwMzCRQAEpI9Y7HfXzVI+6eJMc6bZ4DlSyYsOOrYXc
-	 VQAQdOXkVXyhDErUnBv3f9rVmz28qUigZeaw5/U19m7vwke/5rfJ6SbnaL8uLs7yvHg==
+	bh=HU/ADiEQ4yElXdERdWH8C62mg8dV+VZgpatRQy1+Ol0=;
+	b=zEb2nyZTMf0QAUiRtSV6YjfC6ybnRXOYyvj+tQsJthYsg68q8V3Zu9eUYur5iWOeGhce
+	 0vhLdObN3m7pVxkZ38fPp2vFrB48tEcpt2SsR2v53vNxnSKa/2MPMtqbhqe5AMzZltYLe
+	 tSqoajx95uaVRnK2t8qwIDST0SHEOrPd1uqgZdbUSbMLpHPBRIIhw++AejTwo1ryQ46EQ
+	 ziLcx4JS0kRJR2iszyfO+V7Re494VDUI6lUUyauqEbpqevUvkGKYAz2FuEjK96Gw1MH8j
+	 zEF72K8YzIwX4uLt6dUXF0XWLpn6QhhC738EoXFvW0jFHIe01SoFCLb1CUMSpu9uLcQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="KJ2P6A/7";
-	arc=none smtp.remote-ip=95.215.58.63
-Received: from mta1.migadu.com (out-63.mta1.migadu.com [95.215.58.63])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cyqyhyGl;
+	arc=none smtp.remote-ip=95.215.58.94
+Received: from mta1.migadu.com (out-94.mta1.migadu.com [95.215.58.94])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E6BF606A31F
-	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 00:47:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6E6BF606A31F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C21A606A31C
+	for <cgroups@vger.kernel.org>; Sat, 31 Oct 2026 00:48:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C21A606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=KJ2P6A/7
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cyqyhyGl
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=kevExdvvHDN/m+BeEtkCzD1iYaSMM0hTbZZ7U+mTrjc=;
+DKIM-Signature: a=rsa-sha256; bh=FL3rfgpnw9CP8lcTq4Q038BNConm9rfhH/vECDAX41Q=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793407666; v=1; x=1794012466;
- b=KJ2P6A/7SyWAEKeg/sUN955X1AFHrN4ldIplQ8ZR+pkcpvFMmfOse4BQcy8rsBauzU9l0oVy
- HHEXfu4WxwfQ1p9dfG5Yc2k4aRN+Iri9cGb26AnVZDdupSdtyzKzXjdG4vC9E1c0E2DY7jnRrx3
- SCex0gAHMSObJvuw2P+V8zZ4=
+ t=1793407718; v=1; x=1794012518;
+ b=cyqyhyGlFMgmCD/YaWRr8xXEVNHxuVgYODv04hI98i88AwsTpkvxphUlhrBCbj53L71/NPsa
+ wgwuTjOfT8zJW+6ozKaYGiI70xyjDpufl+HoJtKo1i6lsAfJUkx+Coh7I+E5odRCpNgivaahyyL
+ /mO0xmm94u82XLPcNGSeUH5I=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 5b6af64fea02a9fd;
-	Sat, 31 Oct 2026 00:47:46 +0000
-X-Mizu-Trace-ID: 5b6af64fea02a9fd
+Received: by mta10.migadu.com with ESMTPS id 8d4b375cdaecd94c;
+	Sat, 31 Oct 2026 00:48:38 +0000
+X-Mizu-Trace-ID: 8d4b375cdaecd94c
 X-Migadu-Flow: FLOW_OUT
 Content-Type: text/plain;
 	charset=us-ascii
@@ -58,10 +58,10 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.100.1.1.12\))
-Subject: Re: [PATCH v2 3/5] memcg: use high_work for kernel threads
+Subject: Re: [PATCH v2 4/5] memcg: use high_work for remote charges
 From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20261030205418.341214-4-shakeel.butt@linux.dev>
-Date: Sat, 31 Oct 2026 08:47:30 +0800
+In-Reply-To: <20261030205418.341214-5-shakeel.butt@linux.dev>
+Date: Sat, 31 Oct 2026 08:48:21 +0800
 Cc: Andrew Morton <akpm@linux-foundation.org>,
  Johannes Weiner <hannes@cmpxchg.org>,
  Michal Hocko <mhocko@kernel.org>,
@@ -74,9 +74,9 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  linux-kernel@vger.kernel.org,
  Michal Hocko <mhocko@suse.com>
 Content-Transfer-Encoding: 7bit
-Message-Id: <D333E657-EFA5-49CE-B7EE-3B89F758BB1E@linux.dev>
+Message-Id: <C6F1CC60-B4EC-4C83-BF03-61577CF4A0F4@linux.dev>
 References: <20261030205418.341214-1-shakeel.butt@linux.dev>
- <20261030205418.341214-4-shakeel.butt@linux.dev>
+ <20261030205418.341214-5-shakeel.butt@linux.dev>
 To: Shakeel Butt <shakeel.butt@linux.dev>
 X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
@@ -84,22 +84,20 @@ X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
 > On Oct 31, 2026, at 04:54, Shakeel Butt <shakeel.butt@linux.dev> wrote:
 > 
-> Kernel threads never return to userspace, so deferred memory.high
-> reclaim does not run. Reclaim and throttling during a charge can also
-> delay work they do for other tasks.
+> Some charges go to a cgroup outside the current mm's cgroup and its
+> ancestors. The high handler uses current->mm, so it cannot handle these
+> overages. Filesystem notifications and remote page faults can take
+> this path.
 > 
-> Treat kernel threads like interrupts. Queue high_work for the first
-> cgroup over memory.high and skip reclaim and throttling in the charging
-> thread.
+> Use mm_match_cgroup() before checking the high limits. If it does not
+> match, use high_work instead of recording task overage or doing
+> synchronous reclaim and throttling. Charges to the current mm's cgroup
+> or one of its ancestors keep their current handling. Tasks without an
+> mm also use the worker.
 > 
-> User workers created by create_io_thread() and vhost_task_create() keep
-> their current behavior. Vhost kernel threads use the new path, even when
-> they borrow the owner's mm.
-> 
-> The worker requests a fixed batch of pages each time. A fast allocator
-> can keep usage well above memory.high. Kernel threads also skip
-> memory.swap.high throttling and its high-event reporting. The memory.max
-> and memory.swap.max checks stay the same.
+> Like kernel threads, remote chargers skip memory.swap.high throttling
+> and its high-event reporting, and a fast allocator can outrun the worker.
+> The memory.max and memory.swap.max checks stay the same.
 > 
 > Suggested-by: Tejun Heo <tj@kernel.org>
 > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
@@ -107,5 +105,5 @@ X-Mailer: Apple Mail (2.3901.100.1.1.12)
 
 Acked-by: Muchun Song <muchun.song@linux.dev>
 
-THanks.
+Thanks.
 
