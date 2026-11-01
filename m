@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.134
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793533489;
-	b=141LR1ebHKgWBQGta1ronnwAIz68BWx6C2gv0rExw3OKfUCZol1wYrFjpgUEm/kSjD10
-	 1QsAemMEbBLbiryauFoDYYAqythc9NIRG7RYkesz2E+kZmYoyIlFqsedoxeSnUlw8U01P
-	 4qx3JznJrmO964vk0KR1mXifLZH2DOYdwYiGPovN4OLEZ35ypLzBfmUl/XdwqHnjeHxbY
-	 sXlhiftDjZbNZqJMURUQ8oi+v3FrWrFajV/f1U9HLVZS2tpQvYpFeFn5vmxigXkVhwse5
-	 L+XqRP2GtzkpfXAaefqHLue+p8wTjdVLGGmZdr8j8QwlNxnQS2Ruy1eDL/49fVtZIZQ==
+	t=1793533493;
+	b=ayYzL5Qz+n4mYwVmVtDK4BueqVcuO/DPB0c2VelWVKj5krAJ99KU4gGZGCw6/f+DddnX
+	 GPabU/vj4vgjfz1/7g+cbzOvYTTrqWPRJWiFNYLwHc5o1Y/YI7WJSNw4cTdgk4OuaRRj5
+	 JPzoHTespdPM4bwy7TCgPS8WOpJAOJKnGIPbiKcOHjBnuQcrFcsiXADjlr0LO6TWNaR3W
+	 IiyrTWI3JUXICtWvKVSv+v9hQQDFNQouUnJKiq/CbXOUNAUNJC0V+h+sdTfpXzI9RRqtB
+	 IzVW0aT2YS/UY0hB15UygUIEVmYGEdy3G4YO8/AjDhEIdjfPpFABFUQZx/7M16Wfs3A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793533489;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793533493;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=iqwwcy52VO5DZGBLLQ3hXkLYL2mE2/lsqfCFZoXvqEs=;
-	b=z5EDcp+kn6XRKrHUXp64WKVPf2+eJuWWSNwu4VzD/rvRkbCBI3rEYhK+2PEtcNV3i8Rd
-	 hUhZGSvYfTORgT4mhMzyBdlu6Ebj5jGNJhcB+B2sEMH1K7LPwaiGogxDgEI1ERUU6vls6
-	 rWUEuJ6yq4vBJlvCcnUmp05NXsfq4Ih5tEdulX6nn6nvonnXJ6Be2ozCLccCmwhgZz48A
-	 2oKo6/wD6K2hixE9bceZYnkQiSq8+5MdVKWUAqnum9GykMKz4zfYFNY5tmy0zoo1PM9ID
-	 NIvcb08WrBgtKYlykHGZjfM+4RFsJrc245aRKVL5N7E5froSW1uBVj07CFc0wfYWhlg==
+	bh=SgPeae5FR8AKYR+cqJ8LniPaynZax+1NBzY1l0HxzXA=;
+	b=usiWcV78wOj1Mn9bnb13n6y1gUm1txBcuc/uu3k+4Ptjhk77MsLZdccIAkhBkkjKeshr
+	 nG0EhumItY1i/83hvnlgyQm87xPMqXhSpKp6pJGbMj58lbpuW6Er1GSF/Qpw6lG4y61kk
+	 ChFa0rguXaULC2c9KGorPz1Iyyy8xsQn5I0LmvkAAoZi2aLVDYlcZERoqKxkXmWkhqcnC
+	 jkSQbvK8jA9bQ2zj2YUyqlHa+HoVyxpmh1sflqtfksEWMCSDKmnhJPwhBlww/kDfQcVWc
+	 cHgjSrW5ZufGQ10qleEcCnqZe4PmRLr0e3Xrj2buf4KFRYc2o68BRuJFrav+kWRfevg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=t2DWzzhc;
-	arc=none smtp.remote-ip=91.218.175.131
-Received: from mta0.migadu.com (out-131.mta0.migadu.com [91.218.175.131])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="Bmm5Cdw/";
+	arc=none smtp.remote-ip=91.218.175.134
+Received: from mta0.migadu.com (out-134.mta0.migadu.com [91.218.175.134])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12F13606A326
-	for <cgroups@vger.kernel.org>; Sun,  1 Nov 2026 11:44:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12F13606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CB3606A325
+	for <cgroups@vger.kernel.org>; Sun,  1 Nov 2026 11:44:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 81CB3606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=t2DWzzhc
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Bmm5Cdw/
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=ILvCOnm6sZIe7jHPsMN2rND8Zblf82VDQt6Vsn3VCoo=;
+DKIM-Signature: a=rsa-sha256; bh=mL+VSMKvosNWxodxBsZwD/158/cLUJtG4STuPcpFN7g=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793533486; v=1; x=1794138286;
- b=t2DWzzhcADOv6QhwnCIiFKw//OTrS87m8cFJoxgPJtFm8GIzkaX9+l9T5Wvn4EtK10DzkUIV
- l7NDO0rLwTeuJHEFVh3GcqT59wAEq5c2PFmu9euru4k4fo5eyxGpnsiNPl2ihfdMmgMrrLh+H2e
- qaxAt58OkKgAdRIrgrUlACsM=
+ t=1793533490; v=1; x=1794138290;
+ b=Bmm5Cdw/1KF4SQW4SY9X+5Nih3SDHkgcd7tKMns4r+YYbV+MLp4cC8KdBCPV9t/31kyt0tnt
+ 8nmLuQgUa8+7OtrbbCYL/OICC8KPv3N1bzJYcX9K7IMAIKuTZcxeSKTBWAH/bllVIrnmdf6iNIs
+ bJjjyqPnoMupfPSr4hrSCrUA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 219c12c4e3c1b043;
-	Sun, 01 Nov 2026 11:44:46 +0000
-X-Mizu-Trace-ID: 219c12c4e3c1b043
+Received: by smtp.migadu.com with ESMTPS id ff244251a2aa9d47;
+	Sun, 01 Nov 2026 11:44:50 +0000
+X-Mizu-Trace-ID: ff244251a2aa9d47
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Waiman Long <longman@redhat.com>,
@@ -58,9 +58,9 @@ Cc: Guopeng Zhang <guopeng.zhang@linux.dev>,
 	linux-kernel@vger.kernel.org,
 	Chen Ridong <chenridong@huawei.com>,
 	Ridong Chen <chenridong@xiaomi.com>
-Subject: [RFC PATCH -v4 18/22] cpuset: use validate_local_partition in local_partition_enable
-Date: Sun,  1 Nov 2026 19:42:02 +0800
-Message-Id: <20261101114206.2434398-19-ridong.chen@linux.dev>
+Subject: [RFC PATCH -v4 19/22] cpuset: introduce validate_remote_partition
+Date: Sun,  1 Nov 2026 19:42:03 +0800
+Message-Id: <20261101114206.2434398-20-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261101114206.2434398-1-ridong.chen@linux.dev>
 References: <20261101114206.2434398-1-ridong.chen@linux.dev>
@@ -77,193 +77,248 @@ Content-Transfer-Encoding: 8bit
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Replace the partition error checks within local_partition_enable() by
-utilizing the common validate_local_partition() function.
+This introduces validate_remote_partition() to consolidate validation
+logic for remote partition operations. It is used by both
+remote_partition_enable() and remote_cpus_update().
 
-As validate_local_partition() already rejects a root partition under an
-isolated parent, the PERR_ISOPARENT check in update_prstate() is no
-longer needed and is removed.
+The new function performs the following checks:
+1. Empty check: the new effective exclusive CPUs must not be empty.
+2. Privilege requirement: only CAP_SYS_ADMIN can add CPUs to a
+   remote partition.
+3. Online check: a new remote partition must have at least one
+   active CPU. An existing remote partition is allowed to have all
+   its CPUs offline, the same as before.
+4. Resource check: the added CPUs can't use up all the top cpuset's
+   effective CPUs, and must not be in any existing sub-partitions.
+5. Common partition validation via validate_partition(), including
+   the housekeeping conflict and tasks_nocpu_error() checks.
 
-validate_local_partition() and is_user_xcpus_exclusive() are moved
-before local_partition_enable() without change.
+As a result, remote_cpus_update() reports PERR_INVCPUS instead of
+PERR_NOCPUS when the added CPUs would use up the top cpuset's effective
+CPUs, and checks housekeeping conflicts even when no CPU is added.
+
+Additionally, remote_partition_disable() takes the partition error as
+a parameter so that cs->prs_err can be updated centrally by
+partition_disable(), instead of being written by each caller
+beforehand.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
- kernel/cgroup/cpuset.c | 131 ++++++++++++++++++-----------------------
- 1 file changed, 56 insertions(+), 75 deletions(-)
+ kernel/cgroup/cpuset.c | 120 ++++++++++++++++++++++-------------------
+ 1 file changed, 65 insertions(+), 55 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index af42666d4530..ecb7fd378a3f 100644
+index ecb7fd378a3f..1ff5f9e4c2fb 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1978,6 +1978,61 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
- 	remote_partition_disable(cs, tmp);
+@@ -1837,6 +1837,51 @@ static void partition_update(struct cpuset *cs, int prs, struct cpumask *xcpus,
+ 	cpuset_force_rebuild();
  }
  
-+static bool is_user_xcpus_exclusive(struct cpuset *cs)
-+{
-+	struct cpuset *parent = parent_cs(cs);
-+	struct cgroup_subsys_state *css;
-+	struct cpuset *child;
-+	bool exclusive = true;
-+
-+	rcu_read_lock();
-+	cpuset_for_each_child(child, css, parent) {
-+		if (child == cs)
-+			continue;
-+		if (!cpusets_are_exclusive(cs, child)) {
-+			exclusive = false;
-+			break;
-+		}
-+	}
-+	rcu_read_unlock();
-+	return exclusive;
-+}
-+
 +/**
-+ * validate_local_partition - Validate for local partition
++ * validate_remote_partition - Validate for remote partition
 + * @cs: Target cpuset to validate
 + * @new_prs: New partition root state to validate
-+ * @excpus: New effective exclusive CPUs mask to validate
-+ * @excl_check: Flag to enable exclusive CPUs ownership validation
-+ * @tmp: Temporary masks
++ * @excpus: New exclusive effective CPUs mask to validate
++ * @add: exclusive CPUs to be added
++ * @del: exclusive CPUs to be deleted, can be NULL
 + *
 + * Return: PERR_NONE if validation passes, appropriate error code otherwise
-+ *
-+ * Important: The caller must ensure that @cs's cpu mask is updated before
-+ * invoking this function when exclusive CPU validation is required.
 + */
-+static enum prs_errcode validate_local_partition(struct cpuset *cs, int new_prs,
-+			struct cpumask *excpus, bool excl_check, struct tmpmasks *tmp)
++static enum prs_errcode validate_remote_partition(struct cpuset *cs,
++	int new_prs, struct cpumask *excpus, struct cpumask *add, struct cpumask *del)
 +{
-+	struct cpuset *parent = parent_cs(cs);
++	if (cpumask_empty(excpus))
++		return PERR_CPUSEMPTY;
 +
-+	/* The parent must be a partition root */
-+	if (!is_partition_valid(parent)) {
-+		return is_partition_invalid(parent)
-+			? PERR_INVPARENT : PERR_NOTPART;
++	/*
++	 * The user must have sysadmin privilege.
++	 */
++	if (!cpumask_empty(add) && !capable(CAP_SYS_ADMIN))
++		return PERR_ACCESS;
++
++	/*
++	 * The effective_xcpus mask can contain offline CPUs, but there must
++	 * be at least one or more online CPUs present before it can be enabled.
++	 */
++	if (!is_remote_partition(cs) &&
++	    !cpumask_intersects(excpus, cpu_active_mask))
++		return PERR_INVCPUS;
++
++	/*
++	 * Additions of remote CPUs is only allowed if those CPUs are
++	 * not allocated to other partitions and there are effective_cpus
++	 * left in the top cpuset.
++	 */
++	if (!cpumask_empty(add)) {
++		if (cpumask_subset(top_cpuset.effective_cpus, add))
++			return PERR_INVCPUS;
++		if (cpumask_intersects(add, subpartitions_cpus))
++			return PERR_NOCPUS;
 +	}
 +
-+	/* A root partition is not allowed under an isolated parent */
-+	if (new_prs == PRS_ROOT && parent->partition_root_state == PRS_ISOLATED)
-+		return PERR_ISOPARENT;
-+
-+	if (excl_check && !is_user_xcpus_exclusive(cs))
-+		return PERR_NOTEXCL;
-+
-+	return validate_partition(cs, parent, new_prs, excpus,
-+				  tmp ? tmp->delmask : NULL);
++	return validate_partition(cs, NULL, new_prs, excpus, del);
 +}
 +
- /**
-  * local_partition_enable - Enable local partition for a cpuset
-  * @cs: Target cpuset to become a local partition root
-@@ -1995,18 +2050,8 @@ static int local_partition_enable(struct cpuset *cs,
- 	lockdep_assert_cpuset_lock_held();
- 	WARN_ON_ONCE(is_remote_partition(cs));	/* For local partition only */
+ /*
+  * remote_partition_enable - Enable current cpuset as a remote partition root
+  * @cs: the cpuset to update
+@@ -1850,30 +1895,17 @@ static void partition_update(struct cpuset *cs, int prs, struct cpumask *xcpus,
+ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+ 				   struct tmpmasks *tmp)
+ {
+-	/*
+-	 * The user must have sysadmin privilege.
+-	 */
+-	if (!capable(CAP_SYS_ADMIN))
+-		return PERR_ACCESS;
++	enum prs_errcode err;
+ 
+ 	/*
+-	 * The requested exclusive_cpus must not be allocated to other
+-	 * partitions and it can't use up all the root's effective_cpus.
+-	 *
+-	 * The effective_xcpus mask can contain offline CPUs, but there must
+-	 * be at least one or more online CPUs present before it can be enabled.
+-	 *
+ 	 * Note that creating a remote partition with any local partition root
+ 	 * above it or remote partition root underneath it is not allowed.
+ 	 */
+ 	compute_excpus(cs, tmp->new_cpus);
+-	if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
+-	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
+-		return PERR_INVCPUS;
+-	if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
+-		return PERR_NOCPUS;
+-	if (prstate_housekeeping_conflict(new_prs, PRS_ROOT, tmp->new_cpus, NULL))
+-		return PERR_HKEEPING;
++	err = validate_remote_partition(cs, new_prs, tmp->new_cpus,
++					tmp->new_cpus, NULL);
++	if (err)
++		return err;
+ 
+ 	partition_enable(cs, NULL, new_prs, tmp->new_cpus);
+ 	/*
+@@ -1887,13 +1919,15 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+ /*
+  * remote_partition_disable - Remove current cpuset from remote partition list
+  * @cs: the cpuset to update
++ * @prs_err: partition error, PERR_NONE when switching back to member
+  * @tmp: temporary masks
+  *
+  * The effective_cpus is also updated.
+  *
+  * cpuset_mutex must be held by the caller.
+  */
+-static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
++static void remote_partition_disable(struct cpuset *cs,
++		enum prs_errcode prs_err, struct tmpmasks *tmp)
+ {
+ 	int new_prs;
+ 
+@@ -1907,8 +1941,8 @@ static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
+ 	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
+ 		     !cpumask_empty(subpartitions_cpus));
+ 
+-	new_prs = cs->prs_err ? -cs->partition_root_state : PRS_MEMBER;
+-	partition_disable(cs, NULL, new_prs, cs->prs_err);
++	new_prs = prs_err ? -cs->partition_root_state : PRS_MEMBER;
++	partition_disable(cs, NULL, new_prs, prs_err);
+ 
+ 	/*
+ 	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
+@@ -1931,37 +1965,20 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+ 			       struct cpumask *excpus, struct tmpmasks *tmp)
+ {
+ 	int prs = cs->partition_root_state;
++	enum prs_errcode err;
+ 
+ 	if (WARN_ON_ONCE(!is_remote_partition(cs)))
+ 		return;
+ 
+ 	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus));
+-
+-	if (cpumask_empty(excpus)) {
+-		WRITE_ONCE(cs->prs_err, PERR_CPUSEMPTY);
+-		goto invalidate;
+-	}
+-
+ 	cpumask_andnot(tmp->addmask, excpus, cs->effective_xcpus);
+ 	cpumask_andnot(tmp->delmask, cs->effective_xcpus, excpus);
  
 -	/*
--	 * The parent must be a partition root.
--	 * The new cpumask, if present, or the current cpus_allowed must
--	 * not be empty.
+-	 * Additions of remote CPUs is only allowed if those CPUs are
+-	 * not allocated to other partitions and there are effective_cpus
+-	 * left in the top cpuset.
 -	 */
--	if (!is_partition_valid(parent)) {
--		return is_partition_invalid(parent)
--		       ? PERR_INVPARENT : PERR_NOTPART;
--	}
--
- 	compute_excpus(cs, tmp->new_cpus);
--	err = validate_partition(cs, parent, new_prs, tmp->new_cpus, NULL);
-+	err = validate_local_partition(cs, new_prs, tmp->new_cpus, false, NULL);
- 	if (err)
- 		return err;
+-	if (!cpumask_empty(tmp->addmask)) {
+-		WARN_ON_ONCE(cpumask_intersects(tmp->addmask, subpartitions_cpus));
+-		if (!capable(CAP_SYS_ADMIN))
+-			WRITE_ONCE(cs->prs_err, PERR_ACCESS);
+-		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
+-			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
+-			WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
+-		else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
+-						       excpus, tmp->delmask))
+-			WRITE_ONCE(cs->prs_err, PERR_HKEEPING);
+-		if (cs->prs_err)
+-			goto invalidate;
++	err = validate_remote_partition(cs, prs, excpus, tmp->addmask,
++					tmp->delmask);
++	if (err) {
++		remote_partition_disable(cs, err, tmp);
++		return;
+ 	}
  
-@@ -2054,61 +2099,6 @@ static void local_partition_disable(struct cpuset *cs, enum prs_errcode part_err
- 	update_sibling_cpumasks(parent, cs, tmp);
+ 	cs->remote_partition_updating = true;
+@@ -1972,10 +1989,6 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+ 	cpuset_update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
+ 	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
+ 	cs->remote_partition_updating = false;
+-	return;
+-
+-invalidate:
+-	remote_partition_disable(cs, tmp);
  }
  
--static bool is_user_xcpus_exclusive(struct cpuset *cs)
--{
--	struct cpuset *parent = parent_cs(cs);
--	struct cgroup_subsys_state *css;
--	struct cpuset *child;
--	bool exclusive = true;
--
--	rcu_read_lock();
--	cpuset_for_each_child(child, css, parent) {
--		if (child == cs)
--			continue;
--		if (!cpusets_are_exclusive(cs, child)) {
--			exclusive = false;
--			break;
--		}
--	}
--	rcu_read_unlock();
--	return exclusive;
--}
--
--/**
-- * validate_local_partition - Validate for local partition
-- * @cs: Target cpuset to validate
-- * @new_prs: New partition root state to validate
-- * @excpus: New effective exclusive CPUs mask to validate
-- * @excl_check: Flag to enable exclusive CPUs ownership validation
-- * @tmp: Temporary masks
-- *
-- * Return: PERR_NONE if validation passes, appropriate error code otherwise
-- *
-- * Important: The caller must ensure that @cs's cpu mask is updated before
-- * invoking this function when exclusive CPU validation is required.
-- */
--static enum prs_errcode validate_local_partition(struct cpuset *cs, int new_prs,
--			struct cpumask *excpus, bool excl_check, struct tmpmasks *tmp)
--{
--	struct cpuset *parent = parent_cs(cs);
--
--	/* The parent must be a partition root */
--	if (!is_partition_valid(parent)) {
--		return is_partition_invalid(parent)
--			? PERR_INVPARENT : PERR_NOTPART;
--	}
--
--	/* A root partition is not allowed under an isolated parent */
--	if (new_prs == PRS_ROOT && parent->partition_root_state == PRS_ISOLATED)
--		return PERR_ISOPARENT;
--
--	if (excl_check && !is_user_xcpus_exclusive(cs))
--		return PERR_NOTEXCL;
--
--	return validate_partition(cs, parent, new_prs, excpus,
--				  tmp ? tmp->delmask : NULL);
--}
--
- /**
-  * __local_partition_update - Update local partition configuration
-  * @cs: Target cpuset to update
-@@ -2918,7 +2908,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	int err = PERR_NONE, old_prs = cs->partition_root_state;
- 	struct cpuset *parent = parent_cs(cs);
- 	struct tmpmasks tmpmask;
--	int parent_prs = parent->partition_root_state;
- 	bool isolcpus_updated = false;
- 	bool disable_partition = false;
+ static bool is_user_xcpus_exclusive(struct cpuset *cs)
+@@ -2471,14 +2484,12 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
  
-@@ -2961,14 +2950,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		 * Otherwise, enable a remote partition.
- 		 */
- 		if (is_partition_valid(parent)) {
--			/*
--			 * It is not allowed to create a root partition under
--			 * an isolated parent partition.
--			 */
--			if ((new_prs == PRS_ROOT) && (parent_prs == PRS_ISOLATED)) {
--				err = PERR_ISOPARENT;
--				goto out;
--			}
- 			err = local_partition_enable(cs, new_prs, &tmpmask);
- 		} else {
- 			err = remote_partition_enable(cs, new_prs, &tmpmask);
+ 	prs_err = validate_partition(cs, parent, trialcs->partition_root_state,
+ 				     trialcs->effective_xcpus, tmp->delmask);
+-	if (prs_err) {
+-		WRITE_ONCE(cs->prs_err, prs_err);
++	if (prs_err)
+ 		trialcs->prs_err = prs_err;
+-	}
+ 
+ 	if (is_remote_partition(cs)) {
+ 		if (trialcs->prs_err)
+-			remote_partition_disable(cs, tmp);
++			remote_partition_disable(cs, trialcs->prs_err, tmp);
+ 		else
+ 			remote_cpus_update(cs, trialcs->exclusive_cpus,
+ 					   trialcs->effective_xcpus, tmp);
+@@ -2982,7 +2993,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 
+ 	if (disable_partition) {
+ 		if (is_remote_partition(cs))
+-			remote_partition_disable(cs, &tmpmask);
++			remote_partition_disable(cs, PERR_NONE, &tmpmask);
+ 		else
+ 			local_partition_disable(cs, PERR_NONE, &tmpmask);
+ 		/*
+@@ -3928,8 +3939,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ 		if (cpumask_empty(subpartitions_cpus) ||
+ 		    (cpumask_empty(&new_cpus) &&
+ 		     partition_is_populated(cs, NULL))) {
+-			WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
+-			remote_partition_disable(cs, tmp);
++			remote_partition_disable(cs, PERR_HOTPLUG, tmp);
+ 			compute_effective_cpumask(&new_cpus, cs, parent);
+ 		}
+ 		goto update_tasks;
 -- 
 2.34.1
 
