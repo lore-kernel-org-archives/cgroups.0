@@ -1,23 +1,23 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793622353;
-	b=MA5t32qICNqO7Y3dSKIHoHNZXQwtBcXkAp1TOlLEkhTi/2FfE+6sOp/Ok2+Su27ZRSe1
-	 HQOQ0rG9+JJsvqRA2Q7J5B2oCffHe/2HQjw0q5xFBiox4nbVnWTR2Pv9AesDH1LtRhxXg
-	 03hZ1W6GDl8Ni0Akbi1NRnBnLpl0/71slWPhoQR+P+JwnLxZsXJZkMDSod+ZfPymHfP/l
-	 N6t/cgkrqvnmq0/x0QiaP6vt/PE+8NGG738P4n1CutkRN7K6hS/awDe3vp+H6JEQN5GP1
-	 AfRLVmKLZ74Gtly+BQ5lFIwnM3M/pmDVZmRU2k7sRfkz4XX1UrBPDfk0JkzVfGZTf8A==
+	t=1793622351;
+	b=SZYYU99jGAyzZGRafmvIFOI8mWwKi3Gzd2ycvg5jNTTJeMNxKtsrAcoYsQD4rdO6AAjs
+	 j6/XTmJfuEbwFn7mRlMq34fUXvZFj0tHxMFDRSiFwNMKcf+2BqepUw24VPmH7wnhDxftG
+	 WzSm2I8aTWwcFSa9XPUJ3LvY8HCH5sOcCHnmvErwDTK/CVfaxFux23XbXJqEJidB3kW1s
+	 GsPKO7FWoLC6jqvKRb3CAPgBqOjMhM6Ip5EnW5DsLo4LhN6GMVgo9mtH72SqUVvOzrJKL
+	 6Jxgra2CuMh9LkovL6hiXMP2hXSxHh3BocbQT2l7vlUDtiSLr86Mw8vDF3tIMyiPemg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793622353;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793622351;
 	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
 	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
 	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
 	 References:MIME-Version:Content-Transfer-Encoding;
-	bh=N/e8F7vO1qlhJjWmiyga+ERkoaVaWC5pSbm4ZBAVLeM=;
-	b=pCztKouUuurrjUcsdKjRnyhgLh26+jq2CXFY7oLWz4aYHafuB3ohSsLpaca9cj/ZmeJk
-	 aApwLdsBOufAn360Fm50IWvBJR3xrXyWYA0s2uWUjmvm5fzqPoSSlNbruRmVAFV1VPBBh
-	 77eSy4nS4iTYfqUABp/SSUmfpLq802mZqoEp1VVWHMYb4VsNM8ns6Qv7NebH+DSDYGrth
-	 1v5ibQFnQFZsr18IkdRtpxSz3kAglkiXJiBW/7zO8ZSZcQc1bGXhB3uQAhBtx/9UXGglp
-	 V7FiVioE6+1DuxuRmvRzVvAu1++kv3DE5gXpw96djEDnICaizoWXgUETIKcshcrDEBw==
+	bh=cP8HlbLPqyhqKuqna0qVGWoiHPYWTx182iscTSCNW3k=;
+	b=nkSU7jHhWC4Wx2aipghsx+IFxJ2r+Tk1h8RvmcZUI48qOx5UHca2a/1HU3JiUlxEEMpI
+	 mBMv1C/04nL0rl3Ed+QDX7WmCj7QAyJ0Xs7K/b7cw1EXylJUH+o/r0SCNK6bCzfxVYar1
+	 S6Dv/EJlE/DpR2XDBZgNo2uy70GG4IeDKd4wq2lfI+7kjyvk6AQi6YTup5DVk5OeYVzj/
+	 plXC8+uWufc1GnhRnT9oiSrrAauze1IWhMRxHv0H8IuLCcTpsvDAhhXellLByZPi1M5MP
+	 y71D3V249CUEgMa/qy3nxJIlFDyHMeCjRi90kIjddFsC4P1QDYEJkWWY3dFU9Vp39vQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=kylinos.cn;
 	spf=pass smtp.mailfrom=kylinos.cn;
@@ -26,12 +26,12 @@ Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3FAD606A786;
-	Mon,  2 Nov 2026 12:25:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A3FAD606A786
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 730F0606A781;
+	Mon,  2 Nov 2026 12:25:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 730F0606A781
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 858d10bed6b811f19a56ed5b684f684d-20261102
+X-UUID: 8434b474d6b811f19a56ed5b684f684d-20261102
 X-CTIC-Tags:
 	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
 	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
@@ -42,14 +42,14 @@ X-CTIC-Tags:
 	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD
 	ABX_MISS_RDNS
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:c03703fe-cec2-447d-b4f6-b032501b1e87,IP:10,
-	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:10
-X-CID-INFO: VERSION:1.3.19,REQID:c03703fe-cec2-447d-b4f6-b032501b1e87,IP:10,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:10
-X-CID-META: VersionHash:7db8b62,CLOUDID:ba1fe32e8b8323372cef97d932a82e0e,BulkI
-	D:261102202546DIMLN7R4,BulkQuantity:0,SF:17|19|38|66|78|81|82|102|127|136|
+X-CID-O-INFO: VERSION:1.3.19,REQID:1b6cca05-a92b-449a-a34e-de6d2eda1270,IP:10,
+	URL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:5
+X-CID-INFO: VERSION:1.3.19,REQID:1b6cca05-a92b-449a-a34e-de6d2eda1270,IP:10,UR
+	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:5
+X-CID-META: VersionHash:7db8b62,CLOUDID:65a68b027f359fed935768789d1ab6df,BulkI
+	D:261102202544D32HOMG5,BulkQuantity:0,SF:17|19|38|66|78|81|82|102|127|136|
 	153|865|898,TC:nil,Content:0|15|50|99,EDM:-3|-100,IP:-2,URL:0,File:nil,RT:
 	nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:
 	0,BRR:0,BRE:0,ARC:0
@@ -57,12 +57,12 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 858d10bed6b811f19a56ed5b684f684d-20261102
+X-UUID: 8434b474d6b811f19a56ed5b684f684d-20261102
 X-User: husong@kylinos.cn
 Received: from ctao-book [(114.244.3.119)] by mailgw.kylinos.cn
 	(envelope-from <husong@kylinos.cn>)
 	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1779435450; Mon, 02 Nov 2026 20:25:42 +0800
+	with ESMTP id 322983919; Mon, 02 Nov 2026 20:25:40 +0800
 From: Song Hu <husong@kylinos.cn>
 To: hannes@cmpxchg.org,
 	mhocko@kernel.org,
@@ -77,9 +77,9 @@ Cc: tj@kernel.org,
 	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	Song Hu <husong@kylinos.cn>
-Subject: [PATCH 3/4] samples/cgroup: arm the inotify watch before reading the baseline
-Date: Mon,  2 Nov 2026 20:25:27 +0800
-Message-ID: <20261102122528.1498193-4-husong@kylinos.cn>
+Subject: [PATCH 1/4] samples/cgroup: fix poll error handling in memcg_event_listener
+Date: Mon,  2 Nov 2026 20:25:25 +0800
+Message-ID: <20261102122528.1498193-2-husong@kylinos.cn>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20261102122528.1498193-1-husong@kylinos.cn>
 References: <20261102122528.1498193-1-husong@kylinos.cn>
@@ -94,53 +94,36 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The listener reads the initial counter state first and arms the
-inotify watch afterwards, so any event firing in between is lost:
-it is already included in the baseline (no diff will ever be reported)
-and no watch existed to queue a notification.
+The poll error guard tests "errno != EAGAIN", an error poll() never
+reports.  The one benign failure the loop does hit is an interrupted
+poll (EINTR) when a signal arrives; with this guard the listener
+exits via err() instead of resuming.
 
-Arm the watch first, then read the baseline.
+Continue on EINTR and only bail out on real errors.
 
 Signed-off-by: Song Hu <husong@kylinos.cn>
 ---
- samples/cgroup/memcg_event_listener.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
+ samples/cgroup/memcg_event_listener.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/samples/cgroup/memcg_event_listener.c b/samples/cgroup/memcg_event_listener.c
-index 996bf6fb117c..c23af43bf6cc 100644
+index 41425edbd88a..ec7c03fa7887 100644
 --- a/samples/cgroup/memcg_event_listener.c
 +++ b/samples/cgroup/memcg_event_listener.c
-@@ -293,12 +293,6 @@ static int initialize_memcg_events(struct memcg_events *events,
- 		return ret;
- 	}
+@@ -234,8 +234,11 @@ static void monitor_events(struct memcg_events *events)
  
--	ret = read_memcg_events(events, /* show_diff = */false);
--	if (ret) {
--		warnx("Failed to read initial memcg events state (%d)", ret);
--		return ret;
--	}
--
- 	events->inotify_fd = inotify_init();
- 	if (events->inotify_fd < 0) {
- 		warn("Failed to setup new inotify device");
-@@ -313,6 +307,17 @@ static int initialize_memcg_events(struct memcg_events *events,
- 		return -EIO;
- 	}
+ 	for (;;) {
+ 		ret = poll(fds, ARRAY_SIZE(fds), -1);
+-		if (ret < 0 && errno != EAGAIN)
+-			err(EXIT_FAILURE, "Can't poll memcg events (%d)", ret);
++		if (ret < 0) {
++			if (errno == EINTR)
++				continue;
++			err(EXIT_FAILURE, "Can't poll memcg events");
++		}
  
-+	/*
-+	 * Read the initial state only after the watch is armed, so no
-+	 * event can slip through the window between the baseline read and
-+	 * the watch creation.
-+	 */
-+	ret = read_memcg_events(events, /* show_diff = */false);
-+	if (ret) {
-+		warnx("Failed to read initial memcg events state (%d)", ret);
-+		return ret;
-+	}
-+
- 	printf("Initialized MEMCG events with counters:\n");
- 	print_memcg_counters(&events->counters);
- 
+ 		if (fds[0].revents & POLLERR)
+ 			err(EXIT_FAILURE, "Got POLLERR during monitor events");
 -- 
 2.53.0
 
