@@ -1,101 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.53
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793643390;
-	b=Rfsu+Wlu+TTDAsbgDWZUXjJt9eIdjk9GXwJFL6kosCqIbhTwb7yccOlIjTzDFUmAdHxG
-	 6Ac0WBl5A5A+gP0mmi06QcmHAVnxHz7MgjD8+ZY/BAro4hgeXYiu58FXSEOtA9pPBu0yO
-	 ao1730WtZeFyuZCXq4178FpDFyp3S2pl5OIOSaFDOGpHI6Z96MnSHuEpL1XBZlouW/d+d
-	 rCvEBW0+RO79Th7CZjvUgvNoKyuFZzFeEH7ukEDZe0HK6fTNlrcQkP+8i3QJnUeaG/5JU
-	 O0r9w/fDCzTdoeCuJoOUxy3pGKHVnTKufueISiItySMKVYoZ5Ji6XRQfUzSDV2MSjvQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793643390;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.181
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793646973;
+	b=IX/8bTDN/KS8/PQ96AXK2YxFad0VF92nlKypcLs4cZzVUFSZk5sfFbZU5hxvdRviH7Kk
+	 7Tfr4yRq805/Ae4IUfB3JUtwIgFwWCpYHqYTHznGwT/z35z1scZTCHorM52f8+pTC7Hb7
+	 pUcWVSXe9uAcrIn/csKCD12J7Dxy1lnar7EISUiKEW6xYH4Q2PfIZ1lqQazYFSdc27Xmo
+	 w33yWxxWmZ8qYtEOgFXlsTmIbnTm2dkLg8rQb3x51T7wwRUGQKMgVc7NWf20b6MxORIZ7
+	 3AtvKF2Pq8eG3gWWjY6FGZeXaZKQPrfA9FLBuAxORuHu8U0VlymISrtIJ/tgEQGIYyQ==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793646973;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=T9ICWzy7eh1ZDcwlW7hKp1lrYbcuv/hAuIABl4o9hxM=;
-	b=tx857rrtqIEYaNPT1tF811WHzh5+5LY6rjgdX/B9g2v+z4XFl9BFAnCzdSQQyLuj3exi
-	 3FgZeiJnNEDtffH0aQARAv3zgfhVIlfl3NbZMNdMs4yscuiLQ1G6fE4OBVNA9nKnio2Js
-	 TVR177xaZppRk2jBzqGuFXpdS/WAmfubrBmZ6C98EshGwVqKkWPzRk5Iz9dK8eOvXL0a0
-	 K9QrkQpN5eBdFJbw7uo5nIgHj7yICXT3Iw/zT3i2rqJ1WCO1K/7v/sao6G0HCCb78KYO2
-	 A1x8i3tXd7w29Pa1njfyAI4Z+o1BcK8pr69/7pmJ9/WhgL53XvDuiKoxFvU2PvL1+dw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="MV/9PO20";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.53
-Received: from mail-ua1-f53.google.com (mail-ua1-f53.google.com [209.85.222.53])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
+	 In-Reply-To;
+	bh=xSwUt1ejfmZqGDfLTWVnhEyPBYCa77Ql8jnQXRCQM2M=;
+	b=Y6N5kcf9bkduYvNHJISOA0d67eD0lQ+jfyR7DX1NV04etHcR/y000fLHofGz58tMKzdm
+	 CuIQbCl7J8OBpolCfojMdgMYTHmzDuXiWlp1UrS9mKjJwzzmtN7rjviixeL3bNAfpGOAz
+	 i1pjPa95WMpGdTr6mmMlvRUq980QgXprkQs/FNuXAx8/b9Whc2t0m5Ag8HlLXcu+14FM6
+	 mmlgqawA3iLSpE+WruCeh//rJquc24TbalokN/qt94MNlFTFWycbf/BQGWlQQ4tqx/vFp
+	 M8DG62wgkaLLE+20KBcdkbsOskxve2MLutiz/WKbEreDRDQk/K3iQ/xjbm8oBwsAt/w==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=cmpxchg.org;
+	spf=pass smtp.mailfrom=cmpxchg.org;
+	dkim=pass header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=UOioP1aR;
+	arc=none smtp.remote-ip=209.85.128.181
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC44606A330
-	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 18:16:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4EC44606A330
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA0E2606D82D
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 19:16:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA0E2606D82D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MV/9PO20
-Received: by mail-ua1-f53.google.com with SMTP id a1e0cc1a2514c-9950a7530d9so848182241.2
-        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 10:16:30 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793643389; cv=none;
-        d=google.com; s=arc-20260327;
-        b=CFL0xc5q6T6i7C+ud1v6kn9BpfjN+9Yy0actCm+up29mV52h8bkof/zUfvVVcKj2Y8
-         anPbaevXqDRpJTV06yq/EofART3lB7W2Q/IZ/y10VjZsIJDzihVFB9sTfAVY41wS00zI
-         AfNBhmeRM+nURmrnwj6gKA7BBBIoKCbKptkTefPFtlIx30Y84AYHaOg8+LtGmF2F25o6
-         Zp5lqg6s/iLJFoy5AM+lxC8dpUoWt+j/yI40lnp62Of5yzdn8U+shzNPHRd6RNvh2YTD
-         e/9+8PYwcXBzLPWo09Glm3EVB5SeK11ysdTz052vCH4xEARxGlvJcJqJNwWpyQ+KGTxQ
-         bGvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=T9ICWzy7eh1ZDcwlW7hKp1lrYbcuv/hAuIABl4o9hxM=;
-        fh=KLzh/Z1lnsEBE94KPO3dzSVJgGgL6tWb6hMT1U58xDc=;
-        b=ewMig4zAx97Z6A0DMDvTMsm23HPNNlfEJFeeHPyIz81M49Z6XMgHhmmdEeUYQ9rphg
-         0gHAkCJSW8VLRmGpHJd1Nb7D1o3Iu94CkUpMyit+JlbUqdy1u35RU1tgYT8DC1Dvhtlb
-         zh606af5u9cCz/TkD4vSlpvTLVbpagwMx5pZPk6DiLDZaiuGNkyn/XnJeswJG6IiXgJe
-         eP0qajm62/oa8dB2R5mLhuyIHVtdfwF1zYiGOyczdU1pqe9lh/VyB5P8EgxziV1YdCAc
-         lVxspxUppjL/EHHPFzB7RbJx65ixszfToyCXbCRQ8HyzjHhPaO7jc6v85NPGu88VPCgG
-         4NhQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=UOioP1aR
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-8ab3d3c5761so32144717b3.1
+        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 11:16:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793643389; x=1794248189; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=T9ICWzy7eh1ZDcwlW7hKp1lrYbcuv/hAuIABl4o9hxM=;
-        b=MV/9PO20iTv/IbWrD4hFexyIGZZNqdsY5fggwZvmD41h+5Pw2hmnxnCC0ByLAJgOmN
-         L9B2aZFYygwucrR/n9M3yuI10kX6ktGciuq2wBBy96XtooJwnNVogS5PPFM7fafTIUo6
-         V1pwseLy6CyoWnePc+ZsGOA3J/8VsK4n8UzYGxR3S82/QjgxvOdU/RZW6LC5egXqNqjA
-         Lh8F4ut8zlhnnVhU1oTCGiHwjfNoacEt1mZsZ7EsLXWcN10JSgFW34xjytg8gNVlidw+
-         Y4ZkJku7Ka6TZ/LFzB9Ex96ukzXyZaBViOU+gScstg9XcfyoZxFqIasEbJbuaZItVBt/
-         sIrw==
+        d=cmpxchg.org; s=google; t=1793646967; x=1794251767; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=xSwUt1ejfmZqGDfLTWVnhEyPBYCa77Ql8jnQXRCQM2M=;
+        b=UOioP1aRX+ng7fQt90I3I7lPAuhsKrdkNHsgPY3jQrIPnM1M1whRaCshqEpYerLoVS
+         Vb3sBlSgNgQNmfR2dafkirCXTn2zckbDU4vg4VWf4Bks3VJeQ3KvIq4Ac4ieWAjoC3M9
+         TVHxSZF9g6Z3OAoKOyEoT6wjVd8oUJSylcA7krfbtrnBPMmmMLXFse1Z0MSvXUvGMdBy
+         l09Uco5QfpGgegpgEI++HFOG/x+8gxhhQuEYB6MiwGfWow/nG6hDqWz2Jb0VRNfpOiMu
+         Myq+QrSQeu4fKyiBvaJQdU+754o+ApUDj692D1MAKDanYf2on4+BhkfmAnOKcovO6BX7
+         B1kg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793643389; x=1794248189;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=T9ICWzy7eh1ZDcwlW7hKp1lrYbcuv/hAuIABl4o9hxM=;
-        b=L6994GMRsDv9eqB+cxgeyRehYJ95nZSUuN3D96YkfYfRuMiVNhCPiwbWtUF6BQZ6Ca
-         LOU1uTVB7q7iR2o5pzrcgrb8pldXVehqCAR3tpp38I+HJC39AycE9aVf9LuNm7peP9dY
-         MMdqmPoKTXNIboobJGFF1Z4emgWjCFZBaGIoPGhUKDI0qePLxEyp1SgVGdBs6bdMFMbw
-         PsJZ7zpeSxlJYUl+t66S7MxWv/HbGisJNX5dKNHsAh60BN9ZUctl1x24OXSv3RIHM3Ct
-         eC2jfynDVvaiNgsqg1o7nhQseV2LEhS6Ocp3fWl7FrTya1pMHLU3POSoPkBXK+c6FcAZ
-         4HcA==
-X-Forwarded-Encrypted: i=1; AKwUvBzjGAKpoFL03DSrzpawmjEbb+d/sCEzi1cc9Mm00t+n9TKYTPyumrVsYC6V+YcBEo/VuUalQBta@vger.kernel.org
-X-Gm-Message-State: APuU4Z8tVZ/pQ2ifNsYBRo8YmWbbYU2F/Y0aJFAR/k18WsBIKdhsNecV
-	UFKlgkpYMWxaT/zeM3y59KVdh/aKHbUVOAz7kIHx1xsOnCgktZ8XT1dPhnwaEuU9NEae4h7sXvf
-	Tl6sm0YjYwRlIrECTQbY8qIXuMU6vejY=
-X-Gm-Gg: AYBFou30vih/y0GGqDU8H2/QIucTDvyUXVfkSGDzmpG1C9TsQTg+EGDMvMwAo0pMLkp
-	vzxpnXnSZEBEvhIP34KnYQqPDzOJ4bk9EHegNuES1WJ4UXur5lM0NoAo0IHYF03iY/j40Avfj60
-	YndmtNIv/GjziHNH1YwGEjGtDwqtMyLj+km77f1okefYs8WymUYMqYcAZiOgjpfjusCQxTXxM/y
-	c12110zeCPfxF2vpFL+g0SThdzuLhbDIDKBylW1b2pG1lpHhzzWB/6GA/ywrPv4YKvuTkEMZnur
-	/FHkpsJI0BqHaAj96uL+hnUGqv8QXkVLX5+i/bp1GjA3uC9zvAMkg8VBsDoMKMwzIE236h6bUSg
-	69tJbygisVzkjSYCGc3EWVq6acKtGhVLzMRzPLeG9ylv3w7JeeTs/DNnZ9xnSba7j6MPiPcl1Kb
-	X74q73q/aR
-X-Received: by 2002:a05:6102:e0c:b0:7cc:2bb7:1335 with SMTP id
- ada2fe7eead31-7d07276121fmr4390550137.33.1793643389113; Mon, 02 Nov 2026
- 10:16:29 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793646967; x=1794251767;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=xSwUt1ejfmZqGDfLTWVnhEyPBYCa77Ql8jnQXRCQM2M=;
+        b=DEfwj+WkIOD1ZixnMCXPL2QGs2/eDAZ+mhwmPc+JhWRdYqtaHbefbk/K6X/jvrUa5U
+         bJ+0V8RBtjN9V9UjSdC0dxKt3qFOd/ByM6N9PPJCCzthzOiF1g91SMYv4ntlk/22M9ua
+         XSHCQ2pxMuTm9FguO0t42cq+SYPjIziN8FFbP5iC2sBFre/TELWlCo/CcczXkxonnRoL
+         82+Khk8mB3cGpQ23V5K6Gru4h9HYH0D3UoaPLuLOwaPNqVwXPrniUcdu7jx5w0cAp6kb
+         7VgvIZadNQ7/K38SsbCSfGY6oZi7iDmlTi6qASy9Vw/Sq911OvGID3M80AM8ikeGPL7R
+         eCGg==
+X-Forwarded-Encrypted: i=1; AKwUvBxpFDIPUnkjQdX53cHutIC7ab9XswRQsKPb9OwrytVlwILZvUSGSSkrpBatHEqnbhywTcTlLq/6@vger.kernel.org
+X-Gm-Message-State: APuU4Z+KEsNwNLfxSBWS+QY7kEFRbzWnfto7cj9wYHKqEmhWQ0u+7Jaa
+	Gmyhjbmqfp/a6L8igiKr7heZ0x2Kqij0H2SB8EmO+AlXB3N+4BcwKZYS6aDeTZsZwRI=
+X-Gm-Gg: AYBFou3vWBgUoFce+fhg7hVjA2vjIl5YRwneTVofkmlMlBOOUpo1cEiuFIuJCnN1QPU
+	5aIPcC2jhV9hNtECE/h7bTb5engOxnS9UdXV7R7mY0J+AAAum7pViot4FC02A17FN7cXm9YqiKS
+	dzFFmigxg4H6AmG8XyYwEGhSA11BcZsajYQ+1gSk0XyUfwrNy/jpW44qnmVLe4mda0CrytjKHux
+	BOV9OjOESJuwJmrp+4hpC7XsQBHb6QcVbh1WAJk4mRE9sc1AxcsstN/xTIdhYklbDfGK48tST/L
+	Mmj85BJvu9ox3yOTDxCpMv5NrTJWSGybqcZRBBD7WYGQmpJFML6Py+JyybGUTQ8LVY7XAMA9nct
+	HPj818yXsspewkhXxewW/3ost0geOla2Idy4wE45KUhuNhWwUO1rjSfBFb7l2X7qvS89WZel7Ad
+	Ja8xjnssO3ml1j5v9rxDnlp3OTkt6XvTdpxBjMtyLr4Q8zFmbirn83LOMwEVNrKhNXPrD6lrsJV
+	WkEfmzh1KkS72fGLdWvr/I9WNPkl1bAnX7N6g31+xd0SVGr7ChIQmfvJYdSAGyxBIu6I2pPRsVZ
+	qCJNsKhPDmmrcT2oEm2WZxBOkPzcJvdsojMR3Z8n0fki856x
+X-Received: by 2002:a05:690e:191a:b0:67b:9a76:cd0b with SMTP id 956f58d0204a3-67ba4edd88fmr8834059d50.28.1793646966752;
+        Mon, 02 Nov 2026 11:16:06 -0800 (PST)
+Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67baf147246sm5737296d50.1.2026.11.02.11.15.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Nov 2026 11:16:00 -0800 (PST)
+Date: Mon, 2 Nov 2026 14:15:52 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Tao Cui <cui.tao@linux.dev>, Michal Hocko <mhocko@suse.com>,
+	Shakeel Butt <shakeel.butt@linux.dev>, muchun.song@linux.dev,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [RFC PATCH 0/3] mm, memcg: isolate deprecated v1 state from
+ struct mem_cgroup
+Message-ID: <aujhaEfimB0S5Msu@cmpxchg.org>
+References: <b36ab4a7-b692-49e8-92b5-1dc4d76dee00@linux.dev>
+ <0BEF7489-16EC-44EE-847B-A6AA380BE11F@linux.dev>
+ <32e80536-64e4-4ae3-a7da-4a37ed415f0a@linux.dev>
+ <7ia41p9341lv.fsf@castle.c.googlers.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,108 +103,51 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <aui3TJqadHUv-4RW@tiehlicka> <20261102163014.237806-1-joshua.hahnjy@gmail.com>
- <aujCcqKKyio7oZ0x@tiehlicka> <CAN+CAwOwRJUDXHj0RMr4p2+sdA1V9bX-OgOH1PpER+u_cB2fAg@mail.gmail.com>
- <aujSP_sfbasQaKu7@tiehlicka>
-In-Reply-To: <aujSP_sfbasQaKu7@tiehlicka>
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-Date: Mon, 2 Nov 2026 13:16:16 -0500
-X-Gm-Features: AclHuK9EkEv8FL6xfP3eWXeFQa1t-cPp0lrx5vZ8E-g9cOqfGbbE6u5P1MgVKZ0
-Message-ID: <CAN+CAwNVuxqHxbaEuu2n8BmUtXhuVeX5v-v5Gu7eegyV0sT+=g@mail.gmail.com>
-Subject: Re: [PATCH v7 0/5] mm/page_counter: move stock from mem_cgroup to page_counter
-To: Michal Hocko <mhocko@suse.com>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R . Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
-	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, Michal Koutny <mkoutny@suse.com>, 
-	Oscar Salvador <osalvador@suse.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, kernel-team@meta.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7ia41p9341lv.fsf@castle.c.googlers.com>
 
-On Mon, Nov 2, 2026 at 1:11=E2=80=AFPM Michal Hocko <mhocko@suse.com> wrote=
-:
->
-> On Mon 02-11-26 12:40:33, Joshua Hahn wrote:
-> > > > > > Personally I am a big fan of how try_charge_memcg looks after t=
-his
-> > > > > > series, what do you think?
-> > > > > >
-> > > > > > > Quite honestly I am still not convinced this move
-> > > > > > > is the right thing but I would like to fully understand the m=
-echanics
-> > > > > > > first. Having discrepancies among different counters just sou=
-nds like a
-> > > > > > > potential source of future problems.
-> > > > > >
-> > > > > > I hope that I can present a good argument for why this is not a=
-s
-> > > > > > concern as it may seem initially.
-> > > > > >
-> > > > > > My first point is that the memory usage counters were always fu=
-zzy, as
-> > > > > > specified in the memcg v1 documentation too:
-> > > > > >
-> > > > > > usage_in_bytes ... doesn't show 'exact' value of memory (and sw=
-ap)
-> > > > > > usage, it's a fuzz value for efficient access.
-> > > > > >
-> > > > > > Secondly, the raw value of the usage is actually always accurat=
-e. It is
-> > > > > > just the stock portion that overcharge the memory at times, mak=
-ing it
-> > > > > > seem like there is a discrepancy. Flushing the memcg stock imme=
-diately
-> > > > > > bring the counters to their real values (like what happens righ=
-t now).
-> > > > > >
-> > > > > > Finally, this is a change that is only limited to cgroup v1 use=
-rs.
-> > > > >
-> > > > > Right but is there any actual point in adding caching for memsw c=
-harges
-> > > > > now? If you have a way to opt-in to caching then you can simply d=
-isabled
-> > > > > that for memsw counter altogether. Fewer problems to deal with, e=
-xplain
-> > > > > etc...
-> > > >
-> > > > I think the problem actually still exists, unfortunately. In fact I
-> > > > think the issue becomes bigger if you remove stocking for memsw.
-> > >
-> > > Yes, you are right. We do actually cache memsw through the charging p=
-ath
-> > > which charges both mem and memsw with the batch.
+On Mon, Nov 02, 2026 at 04:52:44PM +0000, Roman Gushchin wrote:
+> Tao Cui <cui.tao@linux.dev> writes:
+> 
+> > Hi Roman,
 > >
-> > Thanks, Michal! So it seems like we are in alignment on everything
-> > except the cgroup v1 implications for fuzziness. FWIW I think nothing
-> > really changes from the userspace POV. memsw and memory usage has
-> > always been fuzzy due to stocking, so all this series does is to
-> > change "why" and "when" the stocking becomes fuzzy.
->
-> Right. The discrepancy was not so obvious but I agree that this change
-> doesn't fundamentally change the picture.
+> > 在 2026/10/30 14:05, Roman Gushchin 写道:
+> >> I believe we want to delete this code sooner than later, why would we rewrite it before that?
+> >> 
+> >
+> > My assumption was that v1 would still be maintained for some time
+> > before its eventual removal, and the goal was to reduce the coupling
+> > between the remaining v1 code and the shared core structures during
+> > that period, rather than to rewrite the implementation for its own
+> > sake.
+> 
+> I understand. But personally I don't see big issues with the current
+> code caused by the v1 stuff. Maybe I miss something...
+> 
+> The proposed changes on the other hand create difficulties for those
+> who use v1 and maintain some local changes or simple backport upstream
+> fixes. Of course, it's not a reason to not change the upstream code if
+> it's justified, but in this case I'm hardly convinced.
+> 
+> > If the expectation is that the remaining v1 implementation will be
+> > removed in the near future, then I agree this work becomes much harder
+> > to justify.
+> >
+> > Am I being too optimistic about how long the remaining v1 code is
+> > expected to stay around?
+> 
+> Well, Idk, it was considered deprecated for quite some time already,
+> so maybe announcing that it will be deleted in a year is reasonable?
 
-Thanks!
+That might be tougher for v1 users than the member placement :-)
 
-> > What do you think about this? The other alternative would be to remove
-> > stocking for cgroup v1 users completely. But I am not sure that is a
-> > good solution either. For the record, I tried making the stock tied
-> > together so that they refill together, but that was a nightmare in
-> > terms of added complexity.
->
-> Nah, that seems overreaching without much added value. While we do not
-> support new features in v1 we shouldn't cripple performance for those
-> users unless there is no other way around.
+My understanding is that there are still a few heavy v1 users out
+there. I'm not sure they can move within that timeframe. Personally I
+think the cost of the v1 code now is kind of negligible now?
 
-Sounds good with me, and I also agree here. OK! I think it seems like
-we are in alignment with everything. Let me spin up a new cover letter
-being more explicit about everything we've covered here and send it
-out soon. This was really helpful for me, thank you for your time
-Michal : -)
+> Shakeel, Johannes, Michal, wdyt?
 
-Have a great day!!
-Joshua
+I was a weak yes on Tao's patch. Happy to keep it out with you and
+Michal not being fans of it.
