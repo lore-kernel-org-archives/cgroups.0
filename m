@@ -1,54 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.83
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.202
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793583024;
-	b=F0LlADzq1lHckJhovLgttnkqfLwtBMeY9JftB+c/Tw2+rWGpDdsD27KCo3L6+LTLFm7j
-	 PUWu+RTLFTLZYy7O8J0NeOx+cTfCeSKzN5gXTl9UFnxIN1NNpEbioWWBwcyBcYkMoxk0p
-	 ciifFDH/kkWVN6Sq9Cihk/nvO7mbdZT4xM2e2/tbBFBPpK2ycYPEuev+jBtbEDDH8lTfR
-	 yMOv9jqIGCQFBgdwJi1wVTA2HMBK/+uT0Q0Z/12v2rb2F7QzIG2eJFwsTf42eNXsTqAuv
-	 JwzUeATF40+EuObF8yL7RN2SKBFiu2maDKMsFp/dSIjIu7EN/G/TTHIRTRLgWoiFf6g==
+	t=1793583433;
+	b=ZDIVYA+80ooF20WRVhAC/XVFJTouttYKHzO2MnG0ye1HqbsMDHvwQseN8Rr0FkVhB6qM
+	 Y4iYMr+V3WW1PgYevk4AP6UayU/bQ6BO0wJ7KqPT+mOtXhNy3FwDX6l9GBR+LeIGANeyY
+	 Pv3OT+RZjBNaOZDhFRVvCM/p/5J2WlRN7IyWK7gs8reHk9tmrGdqQGh+TjrNpxMBhYMHE
+	 d8MKgk+ORB61TdTA69tQJSiTi2MqjXWKnsovwBjKH1s6g0hnepc0K2XLEZH8yyIp55uwk
+	 G0PVin9LGxcehLQFdzMZ+B5Fme+K5Qt65SPGpoidXWv35MB0acYw3mgXIpf9q2IyVSg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793583024;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793583433;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=5SySUHGvWAaNRa+9l2Aa4RYt/iIP1exv/hf2wqHind8=;
-	b=BLwdauOOTScQtp+Jt1tXW8XnNv7zA83KX3wwpzoD0HPsMTOTYkT79Wuqw16SKE/14Kot
-	 2AvR8MnwQfgTE7pfx6T/i7iV2iQ7iImFn+zAzBkpk0RUP9a0uJTCvhuz2IS3YOnu55EsR
-	 zN+b3bI/FaMc1g4Mul4BBBh03vr423MtY70pdhomkHL4SHbbXMEwIlfqpmV4P1h9Go348
-	 s4jJnoLG+FnhpkbcObdP6FYsjUKVm29NCE3QmNkhb2/7NQgJ9QXvy9O3k/5sewn50yw1T
-	 UAi7LlAfk6ipqsyVstUU7g4mHT2je2d0cK5NldROvpK03qsFNLlShlcZRfUczC7ndKw==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=60rYsd/AjRckt1lyvYj4vtHp2+NMHTUyTXpQRwJ1gH8=;
+	b=E9fZ6zhS4KQoPRihBhiKZRSTeoXtt47q7kIrwjGTxk2Onrl2K78v8nBPHyGK7FStlUNt
+	 Da1SxVTVT1rnxIQL0mxzkKkBenK/GT6c2iPWnaYS+UO/u+uP5OJ4r0WLnLQ0FGcdivLZB
+	 UAJvF8M4oyE45/atIZKb8lgA05lnHMbIt1woNeat3/oxomMBjoEcFakH8hfIMl1Ai93Zu
+	 +Lx9v4HmFb2nAjdtOitqflUeCLRkYLbfVz7UWyFdeSmcR1Si5bt0mOJYYWBgfpCwtoNnm
+	 nBoqPQBNkKKzhUvzNg1EAbKoKZoJrevD2NN9xAdVoGqa9F+DB29MogYwyiS1cIH634Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=S742eBVt;
-	arc=none smtp.remote-ip=91.218.175.83
-Received: from mta0.migadu.com (out-83.mta0.migadu.com [91.218.175.83])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=EIUPFzWs;
+	arc=none smtp.remote-ip=95.215.58.202
+Received: from mta1.migadu.com (out-202.mta1.migadu.com [95.215.58.202])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1120C606A329
-	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 01:30:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1120C606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8942F606A326
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 01:37:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8942F606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=S742eBVt
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=EIUPFzWs
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=/4x3xaBdJewuJgQAldBK7xykAEYVDrVN8pq+tde6EgA=;
+DKIM-Signature: a=rsa-sha256; bh=mF5HCW1rYzYU+/byn7lpiTMdUmKESV7ryiW//mc/fP0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793583022; v=1; x=1794187822;
- b=S742eBVt4xT0ItcYmJaD5FIfSyTLlXXGmrcQolUi+0/LzkBxDCyHM3NmJ0mF30x5We8YZisb
- NpTrocsfAbOAVpsEVTdTiY8kkqSVH7/p1zJ4Wp7VcU7P5Y0cDGLqUK7IN0mVtxnSitBKF1BKqxD
- shYzvAeteW8s0ID+bJujASgo=
+ t=1793583429; v=1; x=1794188229;
+ b=EIUPFzWsp6gKLfS2+RhRYiXCqrdqUabhe/sOw3lewqSPsFfLEKGo9dyTZGA7Fc4FdWkDngVW
+ uOkrdFdJBaFlmqIFKOqBFznjvBuCiH2Cw7P/jUJ9wqaqdfkQFktp6gO2FhQKyvT23ovTOEAd0zB
+ cctPkGPMsGXw39Hy7JgaCc8I=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 02c042eb4f586f3f;
-	Mon, 02 Nov 2026 01:30:10 +0000
-X-Mizu-Trace-ID: 02c042eb4f586f3f
+Received: by mta10.migadu.com with ESMTPS id 7b95e43db45818e8;
+	Mon, 02 Nov 2026 01:37:09 +0000
+X-Mizu-Trace-ID: 7b95e43db45818e8
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <7f98f3d6-07f0-4117-92e7-91d9bb802972@linux.dev>
-Date: Mon, 2 Nov 2026 09:30:05 +0800
+Date: Mon, 2 Nov 2026 09:37:05 +0800
+From: Baoquan He <baoquan.he@linux.dev>
+To: Ridong Chen <ridong.chen@linux.dev>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Dave Chinner <david@fromorbit.com>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org, linux-mm@kvack.org,
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
+	"open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: Re: [PATCH v5 2/6] mm/vmscan: move vmscan tracepoints to a local
+ header
+Message-ID: <aufpQS0XL-CD9YW_@bogon>
+References: <20261031090041.58574-1-ridong.chen@linux.dev>
+ <20261031090041.58574-3-ridong.chen@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,120 +83,124 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] cgroup/cpuset: Do housekeeping check when isolated
- child with root parent may get more xcpus
-To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20261030190701.78308-1-longman@redhat.com>
- <20261030190701.78308-4-longman@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20261030190701.78308-4-longman@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261031090041.58574-3-ridong.chen@linux.dev>
 
-
-
-在 2026/10/31 03:07, Waiman Long 写道:
-> It is reported by sashiko and Guopeng that when an isolated child with
-> root parent gets more isolated CPUs from the expansion of the parent's
-> effective_xcpus, it is possible that all the active housekeeping CPUs
-> may be gone. So a prstate_housekeeping_conflict() should be performed
-> when that happens. Add the check to make sure that we can't exhaust
-> all the active housekeeping CPUs.
+On 10/31/26 at 05:00pm, Ridong Chen wrote:
+> From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> Test cases are added to the NOHZ_FULL_TEST_MATRIX of test_cpuset_prs.sh
-> to test that.
+> Move include/trace/events/vmscan.h to mm/trace_vmscan.h so that the
+> tracepoints can be extended to reference vmscan-internal structures such
+> as struct scan_control, which is not visible outside mm/.  This mirrors
+> what several other subsystems already do with their trace headers (e.g.
+> fs/fuse/fuse_trace.h, fs/gfs2/trace_gfs2.h, fs/lockd/trace.h).  As they
+> do, set TRACE_INCLUDE_PATH to "." and add mm/ to the include path of
+> vmscan.o, the only user that defines CREATE_TRACE_POINTS.
 > 
-> Reported-by: Guopeng Zhang <guopeng.zhang@linux.dev>
-> Link: https://lore.kernel.org/lkml/ed6fecb4-38e9-4a73-8c1a-7bdd80175a69@linux.dev
-> Fixes: e2ffe502ba45 ("cgroup/cpuset: Add cpuset.cpus.exclusive for v2")
-> Signed-off-by: Waiman Long <longman@redhat.com>
+> No functional change.
+> 
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> Reviewed-by: Barry Song <baohua@kernel.org>
 > ---
->  kernel/cgroup/cpuset.c                         | 18 +++++++++++++++---
->  .../selftests/cgroup/test_cpuset_prs.sh        | 10 ++++++++--
->  2 files changed, 23 insertions(+), 5 deletions(-)
+>  MAINTAINERS                                        | 2 ++
+>  mm/Makefile                                        | 1 +
+>  mm/shrinker.c                                      | 2 +-
+>  include/trace/events/vmscan.h => mm/trace_vmscan.h | 4 ++++
+>  mm/vmscan.c                                        | 2 +-
+>  5 files changed, 9 insertions(+), 2 deletions(-)
+>  rename include/trace/events/vmscan.h => mm/trace_vmscan.h (99%)
 > 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index ed014ecb770c..6e136888fc8e 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2119,10 +2119,22 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->  			 * If there is an expansion of parent's effective_xcpus,
->  			 * we may take more xcpus from parent. The parent's
->  			 * effective_cpus should still have active CPUs or nocpu
-> -			 * should have been set.
-> +			 * should have been set. We also need to do a
-> +			 * housekeeping check for an isolated child with root
-> +			 * parent to make sure that it won't exhaust all the
-> +			 * active housekeeping CPUs.
->  			 */
-> -			deleting = cpumask_andnot(tmp->delmask, tmp->delmask,
-> -						  cs->effective_xcpus);
-> +			cpumask_andnot(tmp->addmask, cs->effective_xcpus, tmp->delmask);
-> +			if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED) &&
-> +			    prstate_housekeeping_conflict(old_prs, parent_prs,
-> +							  tmp->delmask, tmp->addmask)) {
-> +				adding = cpumask_and(tmp->addmask, cs->effective_xcpus,
-> +						     tmp->delmask);
-> +				part_error = PERR_HKEEPING;
-> +			} else {
-> +				deleting = cpumask_andnot(tmp->delmask, tmp->delmask,
-> +							  cs->effective_xcpus);
-> +			}
->  		} else if (is_partition_invalid(cs)) {
->  			struct cgroup_subsys_state *css;
->  			struct cpuset *child;
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index 844efdf029cd..bdca6c471f87 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -137,7 +137,8 @@ LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
->  # If isolated CPUs have been reserved at boot time (as shown in
->  # /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
->  # CPUs 0-8 that will be used by this script for testing purpose. If not, some
-> -# of the tests may fail incorrectly.
-> +# of the tests may fail incorrectly. The first boot isolated CPU should be
-> +# 10 or above.
->  #
->  # The current set of isolated CPUs (as shown in cpuset.cpus.isolated) should
->  # be the same as the boot value. If not, wait a bit and retry again just in
-> @@ -156,7 +157,7 @@ TEST_ISOLCPUS=
->  [[ -n "$BOOT_ISOLCPUS" ]] && {
->  	FIRST_ISOLCPUS=$(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//")
->  	echo "Boot isolated CPUs: $BOOT_ISOLCPUS"
-> -	[[ $FIRST_ISOLCPUS -le 8 ]] &&
-> +	[[ $FIRST_ISOLCPUS -le 9 ]] &&
->  		skip_test "Boot isolated CPUs overlap CPUs to be tested"
->  }
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index aaf2825ac945..2ad01107fa05 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -17653,6 +17653,7 @@ F:	Documentation/admin-guide/mm/multigen_lru.rst
+>  F:	Documentation/mm/multigen_lru.rst
+>  F:	include/linux/mm_inline.h
+>  F:	include/linux/mmzone.h
+> +F:	mm/trace_vmscan.h
+>  F:	mm/vmscan.c
+>  F:	mm/workingset.c
 >  
-> @@ -602,6 +603,7 @@ ISOLCPUS_TEST_MATRIX=(
->  )
+> @@ -17802,6 +17803,7 @@ R:	Shakeel Butt <shakeel.butt@linux.dev>
+>  R:	Lorenzo Stoakes <ljs@kernel.org>
+>  L:	linux-mm@kvack.org
+>  S:	Maintained
+> +F:	mm/trace_vmscan.h
+>  F:	mm/vmscan.c
+>  F:	mm/workingset.c
 >  
->  # Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
-> +# This also means that CPU 8 is available and is a nohz_full CPU.
->  NOHZ_FULL_TEST_MATRIX=(
->  	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
->  	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-> @@ -610,6 +612,10 @@ NOHZ_FULL_TEST_MATRIX=(
->  	" C2-7:P2    .      .      .     C0-4    .      .      .     0 A1:0-4 A1:P2 0-4"
->  	" C1-7:P2 C5-7:P2   .      .       .     .      .    C0:P2   0 A1:1-4|A2:5-7|B1:0
->  								       A1:P2|A2:P2|B1:P-2 1-7"
-> +	# An isolated child partition cannot grow to take over the last
-> +	# housekeeping CPU when its parent expands the exclusive CPUs.
-> +	" C0-8:X1-8:P1 CX0-8:P2 .  .     X0-7    .      .      .     0 A1:0-7|A2:0-7 A1:P1|A2:P-2 ."
-> +	" C0-8:X0-6:P1 CX0-8:P2 .  .     X2-8    .      .      .     0 A1:|A2:2-8 A1:P1|A2:P2 2-8"
->  )
+> diff --git a/mm/Makefile b/mm/Makefile
+> index 2a3ec53d62ee..277b97f7f8d7 100644
+> --- a/mm/Makefile
+> +++ b/mm/Makefile
+> @@ -32,6 +32,7 @@ KCOV_INSTRUMENT_vmstat.o := n
+>  KCOV_INSTRUMENT_failslab.o := n
 >  
->  #
+>  CFLAGS_init-mm.o += -Wno-override-init
+> +CFLAGS_vmscan.o += -I$(src)
 
-Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+One nit:
 
-Thanks,
-Guopeng
+Does it really need the above line? It affects mm/shrinker.c too, did your
+shrinker.o building fail?
+
+Seems it's redundant because kbuild adds -I$(src) -I$(obj) for every object
+in the directory since commit cdd750bfb1f7 ("kbuild: remove 'addtree' and
+'flags' magic for header search paths"). Please correct me if I am
+wrong.
+
+Other than the nit, this patch looks good to me,
+
+Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+
+Thanks.
+>  
+>  mmu-y			:= nommu.o
+>  mmu-$(CONFIG_MMU)	:= highmem.o memory.o mincore.o \
+> diff --git a/mm/shrinker.c b/mm/shrinker.c
+> index 4fb424e721bc..4fbdade6d2f6 100644
+> --- a/mm/shrinker.c
+> +++ b/mm/shrinker.c
+> @@ -3,7 +3,7 @@
+>  #include <linux/rwsem.h>
+>  #include <linux/shrinker.h>
+>  #include <linux/rculist.h>
+> -#include <trace/events/vmscan.h>
+> +#include "trace_vmscan.h"
+>  
+>  #include "internal.h"
+>  
+> diff --git a/include/trace/events/vmscan.h b/mm/trace_vmscan.h
+> similarity index 99%
+> rename from include/trace/events/vmscan.h
+> rename to mm/trace_vmscan.h
+> index 8a872990b4be..ad90f0e9bf2e 100644
+> --- a/include/trace/events/vmscan.h
+> +++ b/mm/trace_vmscan.h
+> @@ -648,4 +648,8 @@ TRACE_EVENT(mm_vmscan_kswapd_clear_hopeless,
+>  #endif /* _TRACE_VMSCAN_H */
+>  
+>  /* This part must be outside protection */
+> +#undef TRACE_INCLUDE_FILE
+> +#undef TRACE_INCLUDE_PATH
+> +#define TRACE_INCLUDE_PATH .
+> +#define TRACE_INCLUDE_FILE trace_vmscan
+>  #include <trace/define_trace.h>
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 9959ca158ce8..79d2d614afd0 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -71,7 +71,7 @@
+>  #include "swap.h"
+>  
+>  #define CREATE_TRACE_POINTS
+> -#include <trace/events/vmscan.h>
+> +#include "trace_vmscan.h"
+>  
+>  struct scan_control {
+>  	/* How many pages shrink_list() should reclaim */
+> -- 
+> 2.43.0
+> 
