@@ -1,101 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.41
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793640915;
-	b=hX8Mjb+OhRd7vUHSjtIylGuuk/fuVv5qVHDmcivr8/orfQJO4coY1PQxYWN6dY31YR4s
-	 7azWwMQVPCVRN0GUM5JqsD+XFrUv/SmcdcKV82cwMgR4tqWFW2pHR3L55FsqjEivjdZL+
-	 XCCUXz1teuju34EbdBTsx7LcMViAzXQMLZcLSP7eC7LAAPBctHJt0T67jZzLNzlCkXVnV
-	 dbgteobOwZwB8kjBaxrN6RG2C/ngbZX9Zx8zW0vDGGKnL51Nj3bk5aO7mCJsz9JM4Yjho
-	 FaOSgTFV4OZ9boEwC6qm6TrS0Pqlw9EmFEM5gwffKwhEfZ6fG/ODwE4Pbgf167RkxfQ==
+	t=1793641247;
+	b=tSHhvXFLSiVlE/0Q/z3J4vAE/4kAvt7Nf+fVCedduq1C3jkcFXF/JaHw+/ZAVzb5RTpJ
+	 Q5HWfS7qg9MGZ8FQ9eDbdyDRUixSUFjesz3GGkri11/upmpfga65BAhfJ1L7x9BhNMcep
+	 8cYGfQC0sGdsAEBAIxBoZbbHZFwlVetK3Kh3lTT6hw1pOy2EOJylbSLLh8JrSNBJarxiS
+	 ZwnZmYk8dMRJCqXdrwhSFqRTIROWpJA4nMZr3wqHavGPWzugqKm32ydkL3TrZCr99zv+b
+	 0uhVXw6O4ChlYptV5ZwLKL1qiFPRM22qKk/7QkUS+KRZwCoqSsRyXDIkQMAYtaZxMFA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793640915;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793641247;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=VnBhs1QNRjF1grEs77jlwblGRfEeujN01d/Qt9621rs=;
-	b=1fcoDK+go1Tdam7BGo5FWeCrIOwDgsojw7gbUnO/Av9zqJpWBuYS6Z835A+MPOzv71gx
-	 EmkvzXCHzSpF94qHyALae1k5YqNsZr/Ryo+9m7sVz1LUha4cGRwA7/7hOZSFAOAGgZYct
-	 oAuVmq/M4fC0GfbOixX/RGWV6Pt8Gu9HMOgho/COlxriKq8ejFJuF+GKZ3+HZ85RfKtaB
-	 c+wcBz4bjJojSp4vf2oBTPaAUFLZBqFI7TzeqFYwPU7ncuaiQQXxxP6AjS42zSmc8QvGt
-	 JbsUxMyO0W99RBSR2y3ZUG9YgrJPXCXEw/CWgQ+6vYM1V+dB1YNqkKx4UcAfDx8oZCg==
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=TlWIVwA/UXKyoa6jSw1HPI+XreVDEaVcyeg+VBHTtLE=;
+	b=onIS2DxWZXY1F1PSTVz5iLnQKlrTpOFI7woug5cbA5vcuiS9rdt8+yCiupeYkRqZP/aP
+	 9cEKRS+NP5jGVxHtJr1QcBEowwzelhxwaF59ERuE4iWc5ZY6rUkn4BdwREbJY2tofeWPb
+	 8LjE0D3GiN11HAHadY4a9nB1m/Pj6eSuR1GPKFKTFe3wuMSZH5+Dk4Yul/84T0IFkPAMB
+	 lr5r5/mi68eA+bN0lj+RHrAg07el82jde02ly+SWo3pVEgjIKLVtAg4SivQ4j9XMeGxfU
+	 qQRUa93/LTdi0mn5wJYZRaxB2p15HR41VlrvmpqQZ6pxNOLQkP2YeM3lXyvrv/ewXYw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=DRIDPLph;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.51
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XXFUDEQU;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.41
+Received: from mail-ua1-f41.google.com (mail-ua1-f41.google.com [209.85.222.41])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17756606C3FB
-	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 17:35:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 17756606C3FB
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA64606B0CA
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 17:40:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1CA64606B0CA
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=DRIDPLph
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4a018493d57so113345e9.0
-        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 09:35:13 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793640912; cv=none;
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XXFUDEQU
+Received: by mail-ua1-f41.google.com with SMTP id a1e0cc1a2514c-97ccbba8e86so768655241.3
+        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 09:40:46 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793641246; cv=none;
         d=google.com; s=arc-20260327;
-        b=d7vGCGPTIaSvAjnSf2NrKqWeAqUP/i0VAkePGzWGRoDzNmIpFfcgA+P4Pjo1tGHV5v
-         pY/flKr9z9LxFPMOvC6/blblNDk6apwMNYrX9AMWS8SR5WttKjUtdjRpBXo+XTVncKuD
-         iPtgQyEgEJbUIaoNOfH4cR8T0THWBVRytlxgyD0I7Ve76iuCc/LkZW/JWnntJWp4VrvT
-         U7AcCleEJ1S6ddXB7KQPO99/T2gtk6fgEzvWXPmcna79kCh1ozHGTTNt+xV0NWrJxO42
-         ZOOT6cC4FwmBcBlnp0DdFvitb1VmWv0oZJEarfCk8xQibCt5v+LbxNVddngX+6sz1y6W
-         FUaw==
+        b=ShoWUyyIgwiOHPdm1GpZgIo9WlQ1hMp4J1wqUFheUxXRnHmFDudw0OUMl211ZS48bF
+         uAWwfOxPWadThenPJUxe5t8WDjDIYuC0/wVtNpekAVDbjkXS4/ZgaePNEJd33drmuMeP
+         vZI0CJ9V7saMfuXy70IwSLSS8QhEdVeVYVbZ8YAHeNIf4k5Vw/dStZ8e5/7DAIMo9ouf
+         ISLMCly4I0f3yDyZ+uyDgCMIX05jXkmGNIw2VI3pwST5LoR38yDMaJP1NHqJqNnhCHb4
+         ZK0wstNEJSYivqFuJSjM+lhd0C2AngzUA4ZzAq8M7yAkdYwiD76+fwpVtuqazOJ02XVO
+         LmLQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=VnBhs1QNRjF1grEs77jlwblGRfEeujN01d/Qt9621rs=;
-        fh=5Rjt4iFLdQ8T8jZMDhVP9TU31Bq8E8aNElkltMFSOPU=;
-        b=bWk/sswPTb7m3cYvrz7TUKOzxHHMj3mJZjJeJg1gkriZsOfd1o9LpZ8pFw7yARsTZB
-         dgBk/Z5YSQLkFhmNQZSFAxXtGn1Q2davhq9vRMYIzS/89dfEKjWqYIYEMwUSvspfkBCy
-         VPF9Cn4DYA/ZCqAnyD9gIrUCDtFcsIUGt90B77azI/Ko/7+Odl6JMGDgCPj4gKC1X81M
-         J+PqtRL9OFQo/vG1p6jiZ//4ISEekSjsTBOcjEj5+Wxtm3p5zyfj28aOwr6NJs3WH1Dn
-         k67VNojjDNzDFHQ70CKDi3YoAovSYHnq1S4rJp9mNcIAFC/5CSwkg+m/cIo7OecrGJZa
-         mTlw==;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=TlWIVwA/UXKyoa6jSw1HPI+XreVDEaVcyeg+VBHTtLE=;
+        fh=09ht1uKBmxmqs9KL4sYqtP56sHszH5aYA+Ng8eYRdrc=;
+        b=Bh3R4qT7Usso4yQ1/u+WeZbveJZc9XKXUOSU8Z72uD2Y5cuUI+0rO6B6RJbp0Ldi1p
+         M1bczen5PMJ+i2uNROlRt/seGqs/Y02aCh1BN1/Emyi88r+zq9XnGB2iQ/M9jGyIYXjk
+         HJV+h204CeYLzvObUg/S7IQ5ZQ/s4YCmI3W5xtqpm+i3QBGDc/NtFV9aSL4Ed9E6Pfzl
+         iq8ePnMTWJnnENLQjei4lXPFUyWYj8NbQEif5gddvWPCqoNySFzeUtaaI2ykio/E6t52
+         qHnSQhdVVSvZPZ4ofCx2+vxvUIE9Jmm9NU1FoGahj/Gv2EWnPaqm7nbino8WDPCYpH1Q
+         jPCA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793640912; x=1794245712; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=VnBhs1QNRjF1grEs77jlwblGRfEeujN01d/Qt9621rs=;
-        b=DRIDPLph/lguA/rSUZf1caJpDBqkcoxGpAcCBv+EgFTzkpEor/Yqg//nc+FmPvDOBf
-         ZjbWdjsBoW3joAzgrPToaz3e2DyamggT+yHvnSo8fL9WLfTgUdhczNJAwMeJjG2S8cD4
-         SIAoaOVUswyON7/m8cKvSVgGa7YYF/hqCEyZHe1cgvFwOLjYIySxhnLH7ax6/oDaYcSm
-         FVCXQ1AsO264FYWSSoXoka3aO7ZBNR6qrDRDE+LCqGNrRs9btMiH95l2U/S1IpbUk3Er
-         X0qn7xmTgoIdZZzT0dGPz3Xe6oYvg3/lMPNG7zl3ThJhMYV8f2TEkrLBKdHCggvo/jCi
-         HeiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793640912; x=1794245712;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20260707; t=1793641246; x=1794246046; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=VnBhs1QNRjF1grEs77jlwblGRfEeujN01d/Qt9621rs=;
-        b=kkd7ABcZSj/kpH7hpKvgDGEDxXlLs6GuCzIrcSCEb+vMGn3RBWPpG09sf7pEV/bfAt
-         Dy70jliKfMDO8dsO9Z0rDcax16fU3tKm5e3e1Ant3xAt3G4Z0vu8kkvFdMlTjavLdccv
-         LIz8pXspK3XiY48VO0Qoz5ByStDAynbvrPW8fvuJs0cI+tpTvz8HZyE95qoUpxxVKcff
-         wiEgAepPlSqsDPyiOdZorqPtJ0JGDmoYaxRAXfjMsV3Vt5dDBjA2K7fZYh/L4ZDW6G5o
-         wvmtPVQiiOkSeuPUVO3AZyW03KZVHeH0gHRXq9casF1rucnS3jHOb8zlpahHSU5NaMMo
-         +cgg==
-X-Forwarded-Encrypted: i=1; AKwUvBxhTZM2jjtf08au1zyVzPCLDJHErjdW4YBigYtwhzxWrLMxPnO3ie7MSxlGOywEMaovwaJybipL@vger.kernel.org
-X-Gm-Message-State: AFq9FYIH741zMi8C53krpN+1i10cJwB4Wpeo50oonQhgxGg78JAdv6pf
-	05K3ihIuT+AFeDt+xzv04cQsqT/3jrPpFqyrOyuULXGRonryzVcD13ZrVd/ZgupwoI/CkCgmzgb
-	ekyitCrXtp2vPJ1Y7fXLQeRiW55XAHxQNztTegbup
-X-Gm-Gg: AYBFou3irj9hmIH0yAVq8zTK04NqnuxnLAGeGBDc4QB+ob5XWNZVZS/lCQ27DyqNsn8
-	AzReT9OMbE3gFCJ1nhUJs0eezzAj1RbIBt1rY/ISwaXmgU8hfu6auMpbvYiMQcvq7zOrHNOKdav
-	j5YcdpJzMF5912WrZgYQybUyAdaDCbBoM5RN8BV0HPdra2VMIWs4q/BQgoE1zZp/jlW989YPQfD
-	+SwPIKeWtZySktYqyitNaJeHctz31YM5S1iWKCQYNVTgnQBRtQUxNAuz2A0KOuyW/+Yw5baIgSR
-	D/OHjfqAgP/C4phvTEj3G8hA1aeQxzVSz4jjo2Ovwyi+erT2i0wAg7BdMx4W/Q00P8nXLOr9+JZ
-	ShTowvx5UixiDJ2CSBFJnyVU8OGQ/I86IVuqF5vTnmghhmx/zpdlJibqTYERROhsiiNJnhdY46J
-	tAUiFhnIIbvGIUaHabJddC6qlYYfu39WJ1ewb/F2yRSfia
-X-Received: by 2002:a05:600d:8:b0:4a1:e728:2915 with SMTP id
- 5b1f17b1804b1-4abf8764faemr3392105e9.9.1793640911875; Mon, 02 Nov 2026
- 09:35:11 -0800 (PST)
+        bh=TlWIVwA/UXKyoa6jSw1HPI+XreVDEaVcyeg+VBHTtLE=;
+        b=XXFUDEQUt/RMwmcuNPfKQeIT1xPpcppGrlw5ABGLmtU7yZAJ6n902Ihf0F9RqyoXGQ
+         w5eXCYiY/h4klsDQOLtleFyi9PYc6hcxhB4hQlh7tOmhsWfuuyZw+nswEinQ26obyRnW
+         7+qQskOy9D8z+w1Kd/RBd58h7ZIlpS2gqO5InM7u23y6TzzOK2YmqVtTCNLL0xUcvxL0
+         tOjn0gXV2Qipm97u81+wczAuVYIszmor5UqnbJ1QuoqPCV8Pg4fjPeNWbenBLcvnWeik
+         6mH90Wo+WohV6CURPrdk1l+EWP8YfAOsyuAqWQ0CsVcpFu40p5AcD10OTDMAv9K2TE0r
+         nYNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793641246; x=1794246046;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=TlWIVwA/UXKyoa6jSw1HPI+XreVDEaVcyeg+VBHTtLE=;
+        b=kYGdozhzaqJ6bY7+SYU3Kb/FrXqZ53TDzmISg18/tMsyVEtZYihDoxeFESzW8CDRy2
+         ZpdLng9I8nC4ymeXojWmZW9sGkawN5uTpaJ6tPFF2i0WrAQ5V0Vv8w6xgAf9l0DhlkKj
+         A1xleOG3N1euUcOJ+mqWBVc2zasRBKQH+pcrHcsnb2SUTDciNZF/eAbHw/o0C415OuZe
+         hQYLDP7acg2b5hVbiLsG0f9sEWC6ytPDygujAER7nFxOONfrf2D/k3mxNMQu4ZplvI1J
+         3gSUrwo8l8kIUPhpgosaFMN0et2WyDyjoPxcq5YnpoCC/x5GzzJN0mbLEAUhlj0jncsx
+         KS7w==
+X-Forwarded-Encrypted: i=1; AKwUvBxSUhgbrZ4cDI+pJDd4T5Me2r54Hj2UbcPAMRTTzBqss0JzLtSuYiqfefzwWruaFEUlSfbkmkFi@vger.kernel.org
+X-Gm-Message-State: APuU4Z+6vgjh4RkDVz3lIAUuEXLjA5KPur8qyUjI+ZpC08uFXYIDoDUe
+	LN/Iq7NTdornkFoTp7yc0XYhVXeyEM27y3nRxl+01g+mn1hP90QwgSFzF5cLzRY1iUvSkstRkjm
+	sZpzINp8iLU0jnbvrFnyY/FkaRYhxX9s=
+X-Gm-Gg: AYBFou35uu1ZwlyKcbAwNoi4mGiJSoYwk++voSjYZ8yjH6CgxoLhuYcH30CtnZY3oAb
+	W8JtNFqhglfM38BpOaeN0YDUriwARcEDxP5Yq/x+eEMYiIU8OfybEjofhHk5cgCzQg+Wq7J1xhX
+	Cg1CGa0h6MeXtnEjDP+jD0aQ70Q22k/tYgtbRqlzQkG6zwxHUhHtJmQHaerPN5jQe+VRvFyW8bL
+	rXMKNih9mjzPyNPtPWBCANNqd2uDVQm3xAwGe4x2BK0VebPWYT1q3ZxkcZrbBuUQbuENjhpWiDQ
+	lmOUJQ106TlElK0rkDyEEZctEvh007cEPuV936uTsVmcb53z6D7Bn8sw6tMVelSdWyaomHALUN8
+	egtgd4gdX1KTLl06zGIWjsPRzMZEW+sFs3PHHKca8lMdtXkFtMmgnLVPFPR5bua/GVJlTQxdAU7
+	WjFj4bvSk=
+X-Received: by 2002:a05:6102:6cc:b0:7b5:7cd5:2a1b with SMTP id
+ ada2fe7eead31-7d072634fbamr3742461137.10.1793641245530; Mon, 02 Nov 2026
+ 09:40:45 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,123 +104,69 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261028010611.3929937-1-tjmercier@google.com>
- <20261028010611.3929937-3-tjmercier@google.com> <auHMXBwnwuRwHLmo@KASONG-MC4>
- <CAGsJ_4zuGRjH+=1JxH4BYEC-vJumKjkhXPse0jW_nKEzQXXVmg@mail.gmail.com>
- <CABdmKX1PvZjnJkqD48_Pb64Je_oZVO3F-oaxMsBYzHmY-GjbDQ@mail.gmail.com> <CAGsJ_4xggGnAhguPkCJ5k08v3QYKUv07_MhF-acXdBczMAEpdA@mail.gmail.com>
-In-Reply-To: <CAGsJ_4xggGnAhguPkCJ5k08v3QYKUv07_MhF-acXdBczMAEpdA@mail.gmail.com>
-From: "T.J. Mercier" <tjmercier@google.com>
-Date: Mon, 2 Nov 2026 09:34:59 -0800
-X-Gm-Features: AclHuK8o-leCSnae7wNuTxaZ91TaEx6wKMCDX7_41RuiJN7yC-g4TVBlixhIwdY
-Message-ID: <CABdmKX17z8146_dTxMuBT5_rKtdvGGHdYvgNg-7eSqobEaCyqg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] mm/mglru: stop rotating offlined memcgs to the old generation
-To: Barry Song <baohua@kernel.org>
-Cc: Kairui Song <ryncsn@gmail.com>, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	Andrew Morton <akpm@linux-foundation.org>, Kairui Song <kasong@tencent.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
-	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Randy Dunlap <rdunlap@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, 
-	linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <aui3TJqadHUv-4RW@tiehlicka> <20261102163014.237806-1-joshua.hahnjy@gmail.com>
+ <aujCcqKKyio7oZ0x@tiehlicka>
+In-Reply-To: <aujCcqKKyio7oZ0x@tiehlicka>
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Mon, 2 Nov 2026 12:40:33 -0500
+X-Gm-Features: AclHuK8Kcc-o5KfW3KwHQal0BbNJdxHPlCZpE8gC1XELnC_g5cw3VrvhXhvc0MA
+Message-ID: <CAN+CAwOwRJUDXHj0RMr4p2+sdA1V9bX-OgOH1PpER+u_cB2fAg@mail.gmail.com>
+Subject: Re: [PATCH v7 0/5] mm/page_counter: move stock from mem_cgroup to page_counter
+To: Michal Hocko <mhocko@suse.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R . Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+	Mike Rapoport <rppt@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
+	Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, Michal Koutny <mkoutny@suse.com>, 
+	Oscar Salvador <osalvador@suse.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, kernel-team@meta.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, Oct 29, 2026 at 2:03=E2=80=AFPM Barry Song <baohua@kernel.org> wrot=
-e:
->
-> On Thu, Oct 29, 2026 at 5:22=E2=80=AFAM T.J. Mercier <tjmercier@google.co=
-m> wrote:
-> [...]
-> > > > > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > > > > index 636152d8c94d..45a2c1021f4f 100644
-> > > > > --- a/mm/vmscan.c
-> > > > > +++ b/mm/vmscan.c
-> > > > > @@ -4538,7 +4538,6 @@ bool lru_gen_look_around(struct page_vma_ma=
-pped_walk *pvmw, unsigned int nr)
-> > > > >  enum {
-> > > > >       MEMCG_LRU_NOP,
-> > > > >       MEMCG_LRU_TAIL,
-> > > > > -     MEMCG_LRU_OLD,
-> > > > >       MEMCG_LRU_YOUNG,
-> > > > >  };
+> > > > Personally I am a big fan of how try_charge_memcg looks after this
+> > > > series, what do you think?
 > > > >
-> > > > I think there could be other usage of this LRU_OLD macro, but indee=
-d
-> > > > offline is the only user currently, removing it is cleaner.
+> > > > > Quite honestly I am still not convinced this move
+> > > > > is the right thing but I would like to fully understand the mechanics
+> > > > > first. Having discrepancies among different counters just sounds like a
+> > > > > potential source of future problems.
+> > > >
+> > > > I hope that I can present a good argument for why this is not as
+> > > > concern as it may seem initially.
+> > > >
+> > > > My first point is that the memory usage counters were always fuzzy, as
+> > > > specified in the memcg v1 documentation too:
+> > > >
+> > > > usage_in_bytes ... doesn't show 'exact' value of memory (and swap)
+> > > > usage, it's a fuzz value for efficient access.
+> > > >
+> > > > Secondly, the raw value of the usage is actually always accurate. It is
+> > > > just the stock portion that overcharge the memory at times, making it
+> > > > seem like there is a discrepancy. Flushing the memcg stock immediately
+> > > > bring the counters to their real values (like what happens right now).
+> > > >
+> > > > Finally, this is a change that is only limited to cgroup v1 users.
 > > >
-> > > I'm imagining an Android use case where, after LMKD or similar
-> > > userspace killers implemented by various OEMs kill an application,
-> > > we may want to prioritize reclaiming its memory by making it more
-> > > likely to be scanned and reclaimed, while the killed application's
-> > > memcg still exists - not offlined.
+> > > Right but is there any actual point in adding caching for memsw charges
+> > > now? If you have a way to opt-in to caching then you can simply disabled
+> > > that for memsw counter altogether. Fewer problems to deal with, explain
+> > > etc...
 > >
-> > I think it's an idea worth investigating. I had a similar idea which
-> > is proactive instead of depending on reclaim hints. The code is behind
-> > a currently inactive flag - it runs memory.reclaim on an application
-> > cgroup before offlining it (so no zombie or reparenting), but I
-> > haven't had time to properly test it yet.
-> > https://cs.android.com/android/platform/superproject/+/android-latest-r=
-elease:system/core/libprocessgroup/include_platform/processgroup/processgro=
-up_platform.h;drc=3D2ed7b05ab42dd67391ad2819b0ee399d89128ead;l=3D33-34
+> > I think the problem actually still exists, unfortunately. In fact I
+> > think the issue becomes bigger if you remove stocking for memsw.
 >
-> Thanks! I know Minchan Kim has explored something
-> similar: releasing exclusive file memory when processes exit:
-> https://lore.kernel.org/linux-mm/20260421230239.172582-1-minchan@kernel.o=
-rg/
->
-> The idea probably wasn't well received because Android
-> workloads are quite different from typical server and desktop
-> workloads.
->
-> The fundamental assumption is that a killed app is unlikely
-> to be restarted shortly, so its memory is expected to lose
-> recency. In practice, this is usually true.
->
-> There are some exceptions, though. Some badly behaved apps
-> have monitors that keep restarting them whenever they are
-> killed. We might regress these cases by reclaiming their
-> memory, only for them to restart immediately and have to
-> read the data back from storage.
+> Yes, you are right. We do actually cache memsw through the charging path
+> which charges both mem and memsw with the batch.
 
-That's just abuse and I do not care about restart costs in that case.
-I was made aware of one of the strategies apps use for this in 2022
-and closed it by freezing the app cgroup before killing with:
-https://cs.android.com/android/_/android/platform/frameworks/base/+/79825c6=
-f2f8b46808e4b431fe52b3be78f1e8ac8
+Thanks, Michal! So it seems like we are in alignment on everything
+except the cgroup v1 implications for fuzziness. FWIW I think nothing
+really changes from the userspace POV. memsw and memory usage has
+always been fuzzy due to stocking, so all this series does is to
+change "why" and "when" the stocking becomes fuzzy.
 
-However there are also cases where apps are restarted by system or
-vendor components after kills (quicksearchbox comes to mind) and I
-don't think we'd want to zap all that memory proactively. Arguably
-they shouldn't even be killed in the first place, but if they leak
-that'd be a problem.
-
-> That said, this may not be common among apps on Google
-> Play.
->
-> >
-> > > Similarly, a foreground application might benefit from a lower
-> > > chance of being scanned and reclaimed. This suggests that Android
-> > > background-to-foreground transitions, or LMKD itself, could
-> > > potentially leverage the reordering of memcg LRUs.
-> >
-> > We are planning to use memory.low/min for foreground protection.
->
-> Thanks! I guess the challenge is figuring out what value
-> works best for different apps. Should we collect data in the
-> lab, learn the appropriate value dynamically on the device,
-> or simply hardcode a relatively large value?
->
-> Any thoughts on this?
-
-Yeah per-app profiling doesn't really scale to millions of apps. I
-think our approach for foreground apps will probably be to use a
-large-ish memory.low value that is scaled by total device memory. For
-system services we're experimenting with service-specific values
-closer to their actual working sets since there's a limited number of
-them and we control the code. Even there I think some scaling with
-device memory will still be required, since more RAM and heavier
-device use mean more state for system services to manage.
+What do you think about this? The other alternative would be to remove
+stocking for cgroup v1 users completely. But I am not sure that is a
+good solution either. For the record, I tried making the stock tied
+together so that they refill together, but that was a nightmare in
+terms of added complexity.
