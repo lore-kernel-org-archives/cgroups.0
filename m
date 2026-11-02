@@ -1,97 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.58
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793614368;
-	b=0QB/MSlOUolXXxP+8bD9dStNqnv/YtKt9BONoEazoOGRspl78yOt2GHtzorEso+Kxlsi
-	 aqENHlkbqUTkXypgsgErpeW5FTmJ/BZ2maW2ga9BfXdu3LpQ7SbKaNGuFCT5kF664EAda
-	 hF61C4BP/VpvKlScSxWX/swB6aCOFDNp3mnIYAe/pN2rxB6GF5EFfT7enCg8YkrHOJxhC
-	 Emd59xzCRB4C1Y7WmIEuukiNZQp0fmSc/NSxYs0b6gKVBn7u2ZiKWKfoaR26w8hL4IO3U
-	 qOKEYXF6j7mDqopu5ZHR8ty3txIUcH7Jc4gept/ULwQSFgKxjRKyXI8Zmm+XA7tEbvQ==
+	t=1793616376;
+	b=TLrTVW4zvF81ha9mi8AVgz2H7Ym0a97dJihlRaQKL1jDXtOOUnVNYJA0h61IczINssIR
+	 mlwq30gdsYoAZx7Q6OI3POT51HGJ+YWHEzF0w3P/JjoZr1IgjGu+DLLhJ2E5a87YXQLZC
+	 hJmiPiugHLgWE63e2RQlbbX8ann567HmPkiVvdTzDnjqHhjt/EndfowyoEyB4p1pE5fm7
+	 BhlIJ/TYlMAXIDnn+SWMTKQRIrlzB/xmQdCzk5HzVE/gDs0pJNipWrjxGQP89goDqazSc
+	 70CzXAz1352Pk/UJVYO46uDQtILi2cszvsMNlepSlG5silzhXkoiC7CGMjSXavzhuAg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793614368;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=zhAJG7RoUXOoz7M+qXiobMg1MbFShww69uh/kTjgH68=;
-	b=3HoiKJsaeeO43hf0yAyn7n1blaz2HAhzMreXRncys9sxMPr26KufSlk0f0w+CU+W/56m
-	 HTZLYkDUSRP0DWdJC1Gf/YVy7SpRcXYKRzYeIuYF6Akv0iQxoK9HSdSlfLr7lPbYNpMV9
-	 iN220lVdgmrBZ3Dn3DJ7RgDyHfkgDZtbxKYG9KoQWJvjGjydibuGDd0sGpUItiA2HSRIw
-	 R+lFItNeWz5uSnV1Y0ztYDsBgp8ZgM/TooEDIuQSueXKHddFCOgzqW2p1NfVa6zmtDjiL
-	 FML2XieD02qkRa9YlpqXoSislF43JykigBf2Qd6hsxjWK4MDp38Nok8mNgmpGR8n4ng==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793616376;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=lxWH9yX4Vl4mKtXKvGkvQaa05rH5ZKTvpkSa847Tggg=;
+	b=qv6il/gVqCldsg/yVbQ+IoJ3+uBqW8qnb2bm6d/qY/gPPruL0Yg0wyI4cipsLgirgKyi
+	 JrHdAN2mhdyVc9bry7U215uOUZAguQUJ2JF0lJEJq1oRmbl+xscs8G+s3j02ChT62RcFP
+	 DFqQZsOnvvNN5ux+U9jDCzv4CZv+EMjEpsglnDxCaTcv/CQO1XtkmU84cmaOZmWTMnL8P
+	 lKf4zSLSQUHQznstPxSbo50m8Z20pSapse/VyCXmxo76ucqE8+eeMPpokdhkRV83e4IA7
+	 n3irrmglGO1lQJWbicmLMArrZO5s/VF2OM2pt/q0qIbBPiYtAuwjRCto1lavaImU+7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=VmuCN7+4;
-	arc=none smtp.remote-ip=209.85.128.43
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QYtjFkK8;
+	arc=none smtp.remote-ip=91.218.175.58
+Received: from mta0.migadu.com (out-58.mta0.migadu.com [91.218.175.58])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A837606A327
-	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 10:12:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A837606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86E2960A2601
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 10:46:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86E2960A2601
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=VmuCN7+4
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a5036bbac7so16362695e9.3
-        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 02:12:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1793614366; x=1794219166; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=zhAJG7RoUXOoz7M+qXiobMg1MbFShww69uh/kTjgH68=;
-        b=VmuCN7+4AZROpo0l32qa7fIa38GzCV9C5RE7VWKIVqzBzIm8UL5G2FotGfej9c1OcM
-         d+100dYvuuHHZ0DjCCpo9jjJ2fVhZzrXeM4uIDsoYltVvF9/YOv3EYWquqtbS5eJqSwf
-         4dv4PJB4Xr1nR6H4EBRh9oQzkDrntLwyEKVPhMGGLx8ydJK9mxEIeRSbishj8frkFwWP
-         k5J5B3xN93hnv5gX1ouoySBr3tjvb5zuCkTRlySP9nv6oRR79H5I+cyM5FoRwlU2yY4w
-         rt65w5HFcdZi3Sp7dCrV+bT6avv1cp1nXwNTOgr71kCtFEzB4pSYcFq7AO47cM9DxB+i
-         SqzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793614366; x=1794219166;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=zhAJG7RoUXOoz7M+qXiobMg1MbFShww69uh/kTjgH68=;
-        b=ZeKXazkWf6H6nXix9KrBHbl9DorwYykrOqR5h5RTxX3/8KDUpTPt7UdU0lStyfPxE9
-         XhHHZqNCpZJS2LZWHyBGN3/UHtzHKN6tyw9DLAY3tTUuWd5pPrsBJXdajYLz8i2XeR+t
-         E2/NXkA+kSPFRg+ibMOwKtAScavcFX0l0p4BpFo3gyfkR8YfC97Jh15p8dZkrFP7te5n
-         BZ7r0SZHLfWWjPxJLGdPvr3JCOTw+RAfOu4r/eK4hz9eB+/0MxybepucDZlU0IriMGsn
-         kWJp/nDjDike3g9SjEc9qfK3CTL7FxLJGZGZw4g2tiw2F+tAziJ7sjQyOaGGc/jdmKJY
-         gB1g==
-X-Forwarded-Encrypted: i=1; AKwUvBzUJNQ9a8OKykyzcYMinSJDknCuF2iEgArtAXSFUNjAHXMIJVRHnAEbzjDwnIPXRiA5o6wNvH6G@vger.kernel.org
-X-Gm-Message-State: AFq9FYJS7rMrOZ5yHEr1qpCTjyLDcMSEb24AX1Orc6ty0L4KkO6IhTGT
-	09zbvXIeFtI8UGsSCDjUacqgCsAb+I/Z2zyEK81fteIejqsNuIVVquaDuVFsTSEtKLI=
-X-Gm-Gg: AYBFou2tk4XmorvIHoi5xbcpohX9/gdu0KgsaLMOjQgSXu7nCjO7wRJX0+YW5Cuo67e
-	LSxaZLOiu3/Ln/gnvfCTplNMSRpg1BQRu2z8Zg87X7xf6hszSAxzVVVugVetHcr5os1eiZZo13I
-	PXNnbsxH3+AL4a1bevmyJjWZm4YGvm/nstMzIYw1xo4l6fnLv4y0cfVqepC2YnTTQotBYKYXZgT
-	BRkfBcau6Zu8eucM+KZ3nd9AOgU6tAe362TEFEMzPDgjH2wvJY/J7HouoOPC/TXbsoT98mHt+4p
-	C0yT7DAx1wBFLED1CCjdiqwq6MGPee6W+wcnF/Jwk8gvS1QHnuSu36f6GtptUYeggFrobAgAWlV
-	niN0t00dbPj/hK0EjNebmDYUkJyh6OpbrTAWMB88HiAyzlnS9YtlGXh7+A8hKPUxGGwi4E4lzvr
-	wAt1bYu0rahZV2L+8hsaGELGbNEO+kQYdRDAeYqRiB17OemNCfpLDcShXlYdev8YQHFDwuHBXpZ
-	kELneZofrX/fK8NdTMyc2DMybswVoTEZ15V6YhKUOlKvFESsA0l1+qfC1Ole/j7bdLVZ5Wrj5u4
-	gAQ1gYMtpqCq15yRFW5q8sRI9fkxP9j3KxmGN1I=
-X-Received: by 2002:a05:600c:19d1:b0:4a2:677:ad8e with SMTP id 5b1f17b1804b1-4ac1970b9f7mr217205325e9.34.1793614365911;
-        Mon, 02 Nov 2026 02:12:45 -0800 (PST)
-Received: from localhost (109-81-32-81.rct.o2.cz. [109.81.32.81])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b9a3b1sm20935867f8f.44.2026.11.02.02.12.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 02:12:45 -0800 (PST)
-Date: Mon, 2 Nov 2026 11:12:42 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: Zhan Xusheng <zhanxusheng1024@gmail.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	penguin-kernel@i-love.sakura.ne.jp, tj@kernel.org, mkoutny@suse.com,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, zhanxusheng@xiaomi.com,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] mm: memcontrol: don't miss processes whose leader has
- exited in OOM scans
-Message-ID: <auhiGqKJeukk7t3P@tiehlicka>
-References: <20261026120248.2188024-1-zhanxusheng1024@gmail.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QYtjFkK8
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=JxbpZPWbvfuRPXcn2jrt5kFSz35KdLS4+oLLTN6f2mY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793616373; v=1; x=1794221173;
+ b=QYtjFkK8hdk8uOiuA9MT2L7rULzj6PvZ/woEcPBaMxFOK9IyGKXj46if9X4hA8tRUNGFiCjg
+ C7HPhZDSQMLBvF21fWEp+ecXXpS1KL5mc/FMg6wEgebAVov0Exmd0UzZGDodA18lK0sjro9d8Eg
+ Qor1mDKFyw2GLZhqJ7x4CPwc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 92e7062bea360beb;
+	Mon, 02 Nov 2026 10:46:13 +0000
+X-Mizu-Trace-ID: 92e7062bea360beb
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <2f272a9b-ea83-4157-8968-0081990cb709@linux.dev>
+Date: Mon, 2 Nov 2026 18:46:00 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -101,57 +58,200 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261026120248.2188024-1-zhanxusheng1024@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 2/6] mm/vmscan: move vmscan tracepoints to a local
+ header
+To: Baoquan He <baoquan.he@linux.dev>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Dave Chinner <david@fromorbit.com>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+ Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>,
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
+ Wei Xu <weixugc@google.com>, Baolin Wang <baolin.wang@linux.alibaba.com>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-mm@kvack.org,
+ "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)"
+ <cgroups@vger.kernel.org>,
+ "open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <20261031090041.58574-1-ridong.chen@linux.dev>
+ <20261031090041.58574-3-ridong.chen@linux.dev> <aufpQS0XL-CD9YW_@bogon>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <aufpQS0XL-CD9YW_@bogon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon 26-10-26 20:02:48, Zhan Xusheng wrote:
-> From: Zhan Xusheng <zhanxusheng@xiaomi.com>
+
+
+On 11/2/2026 9:37 AM, Baoquan He wrote:
+> On 10/31/26 at 05:00pm, Ridong Chen wrote:
+>> From: Ridong Chen <chenridong@xiaomi.com>
+>>
+>> Move include/trace/events/vmscan.h to mm/trace_vmscan.h so that the
+>> tracepoints can be extended to reference vmscan-internal structures such
+>> as struct scan_control, which is not visible outside mm/.  This mirrors
+>> what several other subsystems already do with their trace headers (e.g.
+>> fs/fuse/fuse_trace.h, fs/gfs2/trace_gfs2.h, fs/lockd/trace.h).  As they
+>> do, set TRACE_INCLUDE_PATH to "." and add mm/ to the include path of
+>> vmscan.o, the only user that defines CREATE_TRACE_POINTS.
+>>
+>> No functional change.
+>>
+>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+>> Reviewed-by: Barry Song <baohua@kernel.org>
+>> ---
+>>   MAINTAINERS                                        | 2 ++
+>>   mm/Makefile                                        | 1 +
+>>   mm/shrinker.c                                      | 2 +-
+>>   include/trace/events/vmscan.h => mm/trace_vmscan.h | 4 ++++
+>>   mm/vmscan.c                                        | 2 +-
+>>   5 files changed, 9 insertions(+), 2 deletions(-)
+>>   rename include/trace/events/vmscan.h => mm/trace_vmscan.h (99%)
+>>
+>> diff --git a/MAINTAINERS b/MAINTAINERS
+>> index aaf2825ac945..2ad01107fa05 100644
+>> --- a/MAINTAINERS
+>> +++ b/MAINTAINERS
+>> @@ -17653,6 +17653,7 @@ F:	Documentation/admin-guide/mm/multigen_lru.rst
+>>   F:	Documentation/mm/multigen_lru.rst
+>>   F:	include/linux/mm_inline.h
+>>   F:	include/linux/mmzone.h
+>> +F:	mm/trace_vmscan.h
+>>   F:	mm/vmscan.c
+>>   F:	mm/workingset.c
+>>   
+>> @@ -17802,6 +17803,7 @@ R:	Shakeel Butt <shakeel.butt@linux.dev>
+>>   R:	Lorenzo Stoakes <ljs@kernel.org>
+>>   L:	linux-mm@kvack.org
+>>   S:	Maintained
+>> +F:	mm/trace_vmscan.h
+>>   F:	mm/vmscan.c
+>>   F:	mm/workingset.c
+>>   
+>> diff --git a/mm/Makefile b/mm/Makefile
+>> index 2a3ec53d62ee..277b97f7f8d7 100644
+>> --- a/mm/Makefile
+>> +++ b/mm/Makefile
+>> @@ -32,6 +32,7 @@ KCOV_INSTRUMENT_vmstat.o := n
+>>   KCOV_INSTRUMENT_failslab.o := n
+>>   
+>>   CFLAGS_init-mm.o += -Wno-override-init
+>> +CFLAGS_vmscan.o += -I$(src)
 > 
-> mem_cgroup_scan_tasks() walks with CSS_TASK_ITER_PROCS, so it sees only
-> thread group leaders, plus a dying leader that still has live threads.
-> Moving a process whose leader has exited, by writing its PID to
-> cgroup.procs, moves the live threads but leaves the leader behind, as
-> cgroup_migrate_add_task() skips exiting tasks.
-
-Is this a desirable/intended behavior? Shouldn't we move the dead leader
-along with the rest?
-
-> The destination's OOM killer then cannot see the process.  If it is
-> alone there, every attempt ends with "Out of memory and no killable
-> processes..." and the charge is retried indefinitely, and
-> memory.oom.group kills nothing; otherwise another process is killed in
-> its place.  The source's OOM killer still finds the leader, reaches the
-> moved threads' mm through find_lock_task_mm(), and kills a process that
-> has left the memcg.
-
-While you patch works around this seems like something to address in the
-cgroup core. Should CSS_TASK_ITER_PROCS iteration see all processes
-regardless leader being alive after or prior the migration? AFAIU the
-thread group belongs to the new cgroup in both cases.
-
+> One nit:
 > 
-> @@ -1452,9 +1482,10 @@ void mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
->  		struct css_task_iter it;
->  		struct task_struct *task;
->  
-> -		css_task_iter_start(&iter->css, CSS_TASK_ITER_PROCS, &it);
-> +		css_task_iter_start(&iter->css, 0, &it);
-
-Shouldn't this be CSS_TASK_ITER_THREADED instead of 0?
-
->  		while (!ret && (task = css_task_iter_next(&it))) {
-> -			ret = fn(task, arg);
-> +			if (!mem_cgroup_scan_skip(task))
-> +				ret = fn(task, arg);
->  			/* Avoid potential softlockup warning */
->  			cond_resched();
->  		}
+> Does it really need the above line? It affects mm/shrinker.c too, did your
+> shrinker.o building fail?
 > 
-> base-commit: 6b4b543fa18757297ac756a6fe6e64f506b7844a
-> -- 
-> 2.43.0
+> Seems it's redundant because kbuild adds -I$(src) -I$(obj) for every object
+> in the directory since commit cdd750bfb1f7 ("kbuild: remove 'addtree' and
+> 'flags' magic for header search paths"). Please correct me if I am
+> wrong.
+> 
+
+Hi Baoquan,
+
+Thanks for the review.
+
+The line is needed for vmscan.o, and mm/shrinker.c is fine without it,
+because the two files include trace_vmscan.h in different ways.
+
+mm/shrinker.c only does a plain #include "trace_vmscan.h". The lookup
+starts from mm/, where the header lives, so no -I is needed.
+
+mm/vmscan.c defines CREATE_TRACE_POINTS before including the header.
+In that case <trace/define_trace.h>, included at the end of
+trace_vmscan.h, includes the header again to generate the tracepoint
+definitions:
+
+#include TRACE_INCLUDE(TRACE_INCLUDE_FILE)  /* -> "./trace_vmscan.h" */
+
+This #include is in include/trace/define_trace.h, so the lookup starts
+from include/trace/ and only finds the header through -I. Without the
+flag, vmscan.o fails to build:
+
+./include/trace/define_trace.h:118:42: fatal error: ./trace_vmscan.h: No such 
+file or directory
+
+As for cdd750bfb1f7, it doesn't add -I$(src) for every build. kbuild
+only adds -I$(src) -I$(obj) automatically when building with O=
+(see "ifdef building_out_of_srctree" in scripts/Makefile.lib). So
+with O= the line is indeed redundant and vmscan.o builds fine without
+it, but a plain in-tree "make" fails with the error above. The
+explicit flag keeps both working.
+
+To be honest, I had the same worry at first: I thought every .c file
+that includes the header would need a Makefile change. That's why v3
+used a relative TRACE_INCLUDE_PATH (../../mm) instead. Steven corrected
+me and pointed out that the proper way is TRACE_INCLUDE_PATH "." plus
+-I$(src) for the one object that defines CREATE_TRACE_POINTS [1]. That
+turned out to need only this one line. Thanks again to Steven for
+that.
+
+[1] https://lore.kernel.org/all/20261014124914.21c21559@gandalf.local.home/
+
+
+> Other than the nit, this patch looks good to me,
+> 
+> Reviewed-by: Baoquan He <baoquan.he@linux.dev>
+> 
+> Thanks.
+>>   
+>>   mmu-y			:= nommu.o
+>>   mmu-$(CONFIG_MMU)	:= highmem.o memory.o mincore.o \
+>> diff --git a/mm/shrinker.c b/mm/shrinker.c
+>> index 4fb424e721bc..4fbdade6d2f6 100644
+>> --- a/mm/shrinker.c
+>> +++ b/mm/shrinker.c
+>> @@ -3,7 +3,7 @@
+>>   #include <linux/rwsem.h>
+>>   #include <linux/shrinker.h>
+>>   #include <linux/rculist.h>
+>> -#include <trace/events/vmscan.h>
+>> +#include "trace_vmscan.h"
+>>   
+>>   #include "internal.h"
+>>   
+>> diff --git a/include/trace/events/vmscan.h b/mm/trace_vmscan.h
+>> similarity index 99%
+>> rename from include/trace/events/vmscan.h
+>> rename to mm/trace_vmscan.h
+>> index 8a872990b4be..ad90f0e9bf2e 100644
+>> --- a/include/trace/events/vmscan.h
+>> +++ b/mm/trace_vmscan.h
+>> @@ -648,4 +648,8 @@ TRACE_EVENT(mm_vmscan_kswapd_clear_hopeless,
+>>   #endif /* _TRACE_VMSCAN_H */
+>>   
+>>   /* This part must be outside protection */
+>> +#undef TRACE_INCLUDE_FILE
+>> +#undef TRACE_INCLUDE_PATH
+>> +#define TRACE_INCLUDE_PATH .
+>> +#define TRACE_INCLUDE_FILE trace_vmscan
+>>   #include <trace/define_trace.h>
+>> diff --git a/mm/vmscan.c b/mm/vmscan.c
+>> index 9959ca158ce8..79d2d614afd0 100644
+>> --- a/mm/vmscan.c
+>> +++ b/mm/vmscan.c
+>> @@ -71,7 +71,7 @@
+>>   #include "swap.h"
+>>   
+>>   #define CREATE_TRACE_POINTS
+>> -#include <trace/events/vmscan.h>
+>> +#include "trace_vmscan.h"
+>>   
+>>   struct scan_control {
+>>   	/* How many pages shrink_list() should reclaim */
+>> -- 
+>> 2.43.0
+>>
 
 -- 
-Michal Hocko
-SUSE Labs
+Best regards
+Ridong
+
