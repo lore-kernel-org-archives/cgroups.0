@@ -1,88 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.62
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793622353;
-	b=P1aXVyIKZZHx8D2YLzp5dzsAfV3v3QXMIbRKxMaH56TNTt4/a1TvLiezFtOxlXuu63bI
-	 HNgw765+jXaoCgmJHrqzDYcMYgi96MNgEWbNweFhzCgpEjBEo7yFNKFMSC12TzCPVgUsS
-	 Ysag1Q/P926HJ1pdHS1DMFPL3BN0y52lxXYDbItXXOlb2uIt9VCqfpMFWzIwmfjQx0Mhm
-	 wTaMTdeP9ATsaUqYkryouwM8d4AL6ICzwbylGL5gmCdAjsEtCyx8ROauB6dr1I6+mNI7a
-	 vxx7sfZws4bAVE1QSVh3abwAZlmqTJbLDG7LjvtsXHs6IGyEgJpKB7yh+fFxv/ROapw==
+	t=1793624600;
+	b=iixImQaJ3mGWM3aqL6aXqy/azy6yNmms5CWb4oGgdQXf5t2qwMuBR+sZ1VyJlb2wM+lY
+	 OK5gyOxboe+Bh9K8p35i+r1H0M1o/homS0MNo6hRj6T0PIItOcx/ZElshQ8/+SuNTsalX
+	 4DrGq79BjDp6If07yEIQOsgyOCoCe/HBXZde42znEf7pSTxOi//Dsj5tpHjhE/FD0sX4V
+	 P5hGENcl3srMiIROAqGRyQJsGtJUoQmf0/t8E8P1tbgGu0Q9a+/OMY4Bba77AhI5EtOq6
+	 x5n9souL8Etynl+D+okd56z4dNoQmxr1TjJrGMUeZ8jBUB/Qbet7vc7WkGqmpaVKrpQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793622353;
-	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding;
-	bh=LMJynhb5MPftogfmT9tk2MR+IArvvhmjJkMrR0rvjaw=;
-	b=ym8YmwXna7ldYfNHv0pfFA8kxg6A9FEoYtgjKFDZ1PIXyrOoaAjjkdpU/ClcPagP8anU
-	 9HvrhSATkK559dDFlr2fFm+sw6e28q61qpBJJfSsiMTk54oZb3GhcnAl+qa8EI9WuHj+J
-	 ju8UuS2nAw5PxNVMU1eAKNGpHtWPqa4ui5kAE4gRJc3/4t57xkmM/ze4Ebt6pv+uAkz79
-	 q3MESU0fNiWFxSJR9UfrIPZB3qLxj0tS9OriekhLs+08UGyVUBfMUlHXkdxBI/f3htukK
-	 qLsr5AO2DoOV17ubmCczNhp/qIOhO5eQl2dqTL27LSEjuWSGtUj3ZBZ1UVff7w1s+cQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793624600;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=FXUqkUNHxYE2NGpJQs5al5RvPwIjMfRnSOyTuQqz9ps=;
+	b=RezTW8gFX8MIb7GCFCycDq5b9OIktCGfipvPGhJd3k6Qye0Q3SHI9TTBticLQ8EK5qRW
+	 nnNbiEXabLZjL00RRv03fimboqUhHdFtiA2cZlwntUPWmWyEZjaLX9X1MCsZL44qQm1tc
+	 nLSxOBMHk/UbtjD0vVjTkqubKnF8a7CQKVJNrhjVRjBJf3YK8V+coMQdchTxGkkU2KtmN
+	 xrlJinUSArgs4f/hf586bbM5ArRFBhqSzTJGWR3B6j0H0DRFKrN8mIffZtI9NVdu2TRs2
+	 TIXUG/dfHhaS7bWOBe0BbBNOxgLerBxXG5s6rEfvbM6DPFZzQ4wFQZ4URrdJkivr7wQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=kylinos.cn;
-	arc=none smtp.remote-ip=124.126.103.232
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=GqIPqxUf;
+	arc=none smtp.remote-ip=91.218.175.62
+Received: from mta0.migadu.com (out-62.mta0.migadu.com [91.218.175.62])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72C4B606A792;
-	Mon,  2 Nov 2026 12:25:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 72C4B606A792
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 86323e2cd6b811f19a56ed5b684f684d-20261102
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
-	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
-	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
-	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
-	HR_TO_NO_NAME, SA_TRUSTED, SA_EXISTED, SN_TRUSTED, SN_EXISTED
-	SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD
-	CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD
-	ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:4e2633df-6343-43c4-8e5e-81c356af623c,IP:10,
-	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:35
-X-CID-INFO: VERSION:1.3.19,REQID:4e2633df-6343-43c4-8e5e-81c356af623c,IP:10,UR
-	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:35
-X-CID-META: VersionHash:7db8b62,CLOUDID:77a413587497340d9a585fb3ded6dfa9,BulkI
-	D:261102202547G39DAL8J,BulkQuantity:0,SF:17|19|38|66|78|81|82|102|127|153|
-	865|898,TC:nil,Content:0|15|50|99,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:n
-	il,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BR
-	E:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 86323e2cd6b811f19a56ed5b684f684d-20261102
-X-User: husong@kylinos.cn
-Received: from ctao-book [(114.244.3.119)] by mailgw.kylinos.cn
-	(envelope-from <husong@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1357426714; Mon, 02 Nov 2026 20:25:43 +0800
-From: Song Hu <husong@kylinos.cn>
-To: hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeelb@google.com,
-	muchun.song@linux.dev,
-	akpm@linux-foundation.org
-Cc: tj@kernel.org,
-	tjmercier@google.com,
-	ddrokosov@salutedevices.com,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	Song Hu <husong@kylinos.cn>
-Subject: [PATCH 4/4] samples/cgroup: don't let dirname() clobber the monitored path
-Date: Mon,  2 Nov 2026 20:25:28 +0800
-Message-ID: <20261102122528.1498193-5-husong@kylinos.cn>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261102122528.1498193-1-husong@kylinos.cn>
-References: <20261102122528.1498193-1-husong@kylinos.cn>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A64F60A261E
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 13:03:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A64F60A261E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=GqIPqxUf
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=ReST3cWLqWrD/t1sA1J8bJ67KuQOqTddHpAzRisO018=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793624592; v=1; x=1794229392;
+ b=GqIPqxUfLfW7mSUNjHodoC2JNe5t6hFUMQgYL22fCM2tZQyOnaGgGP3RC6UReR655Qj/SKsD
+ BzAoJI75o5CvVAA+tJBk0Lsb5rKxw5yZXAmUpWosbPLWvracM6vQOrbqjbAh8DiGzvDD6gHZxRS
+ ZS2fMbo2RVsmx5OnsnjK8eNA=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 2247600f0cc60053;
+	Mon, 02 Nov 2026 13:03:12 +0000
+X-Mizu-Trace-ID: 2247600f0cc60053
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <32e80536-64e4-4ae3-a7da-4a37ed415f0a@linux.dev>
+Date: Mon, 2 Nov 2026 21:03:05 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -92,69 +58,103 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@suse.com>, Shakeel Butt <shakeel.butt@linux.dev>,
+ muchun.song@linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [RFC PATCH 0/3] mm, memcg: isolate deprecated v1 state from
+ struct mem_cgroup
+To: Roman Gushchin <roman.gushchin@linux.dev>
+References: <b36ab4a7-b692-49e8-92b5-1dc4d76dee00@linux.dev>
+ <0BEF7489-16EC-44EE-847B-A6AA380BE11F@linux.dev>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <0BEF7489-16EC-44EE-847B-A6AA380BE11F@linux.dev>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-dirname(3) is allowed to modify its argument in place, and the libc
-implementations do: after building event_control_path, argv[1] has
-been truncated to the parent directory.  Every subsequent "crossed"
-event line therefore reports the cgroup directory instead of the
-monitored file, and the two-listener setup taught by
-Documentation/admin-guide/cgroup-v1/memory.rst (usage_in_bytes plus
-memsw.usage_in_bytes) produces indistinguishable output lines.
+Hi Roman,
 
-Work on a strdup() copy so event reports keep naming the monitored
-file.
+在 2026/10/30 14:05, Roman Gushchin 写道:
+> I believe we want to delete this code sooner than later, why would we rewrite it before that?
+> 
 
-Fixes: 60433a9d038d ("samples: introduce new samples subdir for cgroup")
-Signed-off-by: Song Hu <husong@kylinos.cn>
----
- samples/cgroup/cgroup_event_listener.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+My assumption was that v1 would still be maintained for some time
+before its eventual removal, and the goal was to reduce the coupling
+between the remaining v1 code and the shared core structures during
+that period, rather than to rewrite the implementation for its own
+sake.
 
-diff --git a/samples/cgroup/cgroup_event_listener.c b/samples/cgroup/cgroup_event_listener.c
-index 3d70dc831a76..308cacec80a8 100644
---- a/samples/cgroup/cgroup_event_listener.c
-+++ b/samples/cgroup/cgroup_event_listener.c
-@@ -26,17 +26,27 @@ int main(int argc, char **argv)
- 	int event_control = -1;
- 	char event_control_path[PATH_MAX];
- 	char line[LINE_MAX];
-+	char *path;
- 	int ret;
- 
- 	if (argc != 3)
- 		errx(1, "%s", USAGE_STR);
- 
--	cfd = open(argv[1], O_RDONLY);
-+	/*
-+	 * dirname(3) may modify its argument in place; work on a copy so
-+	 * argv[1] still refers to the monitored file when events are
-+	 * reported.
-+	 */
-+	path = strdup(argv[1]);
-+	if (!path)
-+		err(1, "Cannot duplicate %s", argv[1]);
-+
-+	cfd = open(path, O_RDONLY);
- 	if (cfd == -1)
--		err(1, "Cannot open %s", argv[1]);
-+		err(1, "Cannot open %s", path);
- 
- 	ret = snprintf(event_control_path, PATH_MAX, "%s/cgroup.event_control",
--			dirname(argv[1]));
-+			dirname(path));
- 	if (ret >= PATH_MAX)
- 		errx(1, "Path to cgroup.event_control is too long");
- 
-@@ -76,7 +86,7 @@ int main(int argc, char **argv)
- 		if (ret == -1)
- 			err(1, "cgroup.event_control is not accessible any more");
- 
--		printf("%s %s: crossed\n", argv[1], argv[2]);
-+		printf("%s %s: crossed\n", path, argv[2]);
- 	}
- 
- 	return 0;
--- 
-2.53.0
+If the expectation is that the remaining v1 implementation will be
+removed in the near future, then I agree this work becomes much harder
+to justify.
+
+Am I being too optimistic about how long the remaining v1 code is
+expected to stay around?
+
+Thanks,
+Tao
+
+>> On Oct 29, 2026, at 10:40 PM, Tao Cui <cui.tao@linux.dev> wrote:
+>>
+>> ﻿Hi Johannes, Shakeel, Michal,
+>>
+>>> 在 2026/9/19 00:24, Johannes Weiner 写道:
+>>>> On Fri, Sep 18, 2026 at 11:41:09AM +0200, Michal Hocko wrote:
+>>>> On Thu 17-09-26 13:26:40, Shakeel Butt wrote:
+>>>>> On Wed, Sep 16, 2026 at 08:57:34PM +0800, Tao Cui wrote:
+>>>>>> From: Tao Cui <cuitao@kylinos.cn>
+>>>>>>
+>>>>>> The legacy cgroup v1 memory controller has already been moved out of
+>>>>>> the shared implementation at the file level (mm/memcontrol-v1.c) and at
+>>>>>> the Kconfig level (CONFIG_MEMCG_V1, default n since 6.11).  Its
+>>>>>> per-cgroup state, however, still sits as individual members inside
+>>>>>> struct mem_cgroup, guarded by #ifdefs.
+>>>>>>
+>>>>>> This series isolates the deprecated implementation from the shared hot
+>>>>>> structure: all v1-only members are grouped into a dedicated
+>>>>>> struct mem_cgroup_v1, and every access goes through memcg->v1.X.
+>>>>>>
+>>>>>> With this in place the v1 implementation is self-contained: its
+>>>>>> interface in mm/memcontrol-v1.c, its state in struct mem_cgroup_v1, and
+>>>>>> its eventual removal becomes a localized deletion of this struct
+>>>>>> together with mm/memcontrol-v1.c, instead of unwinding
+>>>>>> ifdef-scattered members across the shared header.
+>>>>>
+>>>>> Sorry I don't see any benefit of this code churn. The code is already behind
+>>>>> config. What exactly this code churn is giving us?
+>>>>
+>>>> The only arguable upside is that this would make it ever so slightly
+>>>> easier to track v1 specific stuff (once that s@v1@memcg1@ or similar).
+>>>
+>>> I had the same thought. It's kiiind of nice to see which members are
+>>> completely specific to memcg1.
+>>>
+>>>> I am not convinced this is sufficient to justify the churn either.
+>>>
+>>> IMO it helps that it's mostly in memcontrol-v1.c where the chances of
+>>> interfering with other work are pretty slim.
+>>>
+>>> The patch 1 + patch 2 split is a bit bothersome: indenting everything
+>>> into a union, only to then move it out in the next patch.
+>>>
+>>> Tao, if you folded these two patches to make it one clean extraction
+>>> and changed over the sites at the same time, I would probably lean
+>>> supportive on this.
+>>
+>> Sorry for the late reply.
+>>
+>> Thanks for the feedback.  Looking back, I think Johannes' point about
+>> the patch split is fair.  I split the first two patches to keep the
+>> initial step semantically neutral, but it also made the series look
+>> like churn for the sake of churn.
+>>
+>> I'll fold the first two patches into a single extraction in the next
+>> revision.  That should present the change more directly and hopefully
+>> make it easier to judge whether the resulting boundary is worthwhile.
+>>
+>> Thanks,
+>> Tao
+>>
+>>
 
