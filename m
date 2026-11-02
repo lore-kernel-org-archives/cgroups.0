@@ -1,104 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.174
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793619637;
-	b=a/RsotudmtQmAJdd0BM2Uor7Y4jqPOLIQQPjBxAZy6Zgry7oC+W/7m3UUMavV3oQDK79
-	 +ic9EfexpmEGPwEcer5wm0KxRdy2yDxQbEvFD+wAJHpGOphmUsKk3rFHBn4w2U6iRQAyz
-	 0Q9swodgkA2+VQQbE4AxD4XIHyIgglOVkYG0Ad0nPbO2wt2YKDpSz+QYQM9NFJFqo5X7f
-	 VscxsIt+fxUn2SL0Z8DgZDAsoUSRjOcz8bd8SY1AuUqkT1aeP18lCio3ijlIvDIsnwtmW
-	 6gh9WCLVC0+aHoTlDASwJjq88crVWGP9n9k0xpQGrA2yK2qqSsZpiGMU/2vBY+eVHAw==
+	t=1793622112;
+	b=fP7a1fblK8Q4WuG0Z1MMolG4EpnBtJ9RA21yHXiKJ3l4z7b3BHgTYPh+zkIcgm6JIbOA
+	 DHUkwG9QmBr/Sq6loYK0YmMWV6RnqOij414s6WymdGWVVa2TCvqj+hbfruc1KPWKEQI2V
+	 hXZGQjXXfzYYF9KEvQQVJYG341OC9Z3aySdm56832/9/WHprLYaNySyPgWmM5ZdCFzJv0
+	 WWuFvv1N8/CdymfjmCcub4LYJQIJCmyh28jQw9KohGcsNaE6gShGJL2INnfhJUl0lNurc
+	 ajlFtf9gyId4bU4qAtzpz3Hr5aEv50RSdwaKxGfbO1WQBK/yId/8F+i9AMZtk1sWd4g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793619637;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=5smmWE+vGhxqhwgGmPR4F8hVHSCwizeNx+PLtfEMP9Q=;
-	b=mjHAYPOVH6Xiak6LIy1qMCURkIXliFROFW/sfRIkXfV5sdP7VB2z2y5xAEG2Jrb4Ip2m
-	 J8A6U66TLWc+wU65TYDScEIkxEY0dZsTn2DqRxvB5hmlFy7fY46H+oUH9UqfmXmkFboUl
-	 n3TO42V2wBBr27oEy7a23z9XBYt/d5wcRrqGRVD96xOcL78A4De5VLuJ8AC2wIx06Jmuu
-	 XpPiT90J+KrchRcEKb5Lgq9QbU0qnmjfQ0Mpyghg6oZBU8xQKYuy3SVw0RwQTjN+v4CXU
-	 SGeJPEARp2okvvcDBiCmalK30OGbFSQ+PPEwQXdnXICnX0MLqRAt84/nwEF3Fsbjrnw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793622112;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=lJSyYvwSTzmhS0c4ngcLjWN7ivwDuselzLolPFvY7As=;
+	b=rW8LPJEIyn0sRG8cLOYI1hYDQJ0P4s/BKRA2J9bpcy4GVDyz6mg3A4wIU6spilZZrgKY
+	 Q8T8Ld/lN6MuRxFiwsS6RxSYdHzBomcGMDdbNnUdIS12BzoAhKqKE4vHc4uoLHyeZUJO3
+	 zKp2kNtZ6gMcvY+AxdJ/HygKW8CFVgiE+JobTx4dj2nVrZ5Ekosau3FAr06KPN2rmytO9
+	 +XWSixdQhRO+I7zbFY4goXeeSY14/UI8LBJXDZknEMeaqBLsMPQk+v4uWyjdHvscz9szA
+	 po1ALe+/dUJvex04PCpsIfP5wdifTRXSq1r7XO3sR0bRxxscOxojvLV9efo+ZWDHITQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=iYrOIihm;
-	arc=none smtp.remote-ip=209.85.214.174
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cElEVmNU;
+	arc=none smtp.remote-ip=91.218.175.52
+Received: from mta0.migadu.com (out-52.mta0.migadu.com [91.218.175.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E392260A381B
-	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 11:40:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E392260A381B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF70660A6F74
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 12:21:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BF70660A6F74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=iYrOIihm
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2e8da6ef7ddso16236285ad.3
-        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 03:40:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793619636; x=1794224436; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=5smmWE+vGhxqhwgGmPR4F8hVHSCwizeNx+PLtfEMP9Q=;
-        b=iYrOIihmmWOs9SPq4jDKL7HzWHnQCHPuGaIb0AnxDCuAklvQaLIIdwSPfsKbbLikb4
-         iVpn1+fae3ccR9Ipe6bW/9aLIbIAV1/jxX5cZRlpT/OT1n/2vZEzNI3ppnTtRdxgqLhT
-         NA/IT5jr6Oq3330YAtpTQX8g1euRnlTjJdNUaylITRB8ks9tEzV7IxNqhDng7LF9koWg
-         OQ3PhiXWzo38nvLiyO+vUT4vSxLK0anAJko1IRxKv4Ii9vFTmExTZ8jflVfce2kSYyFE
-         TCHxubALTrvkXc2hBpFpsG3pIezMuTYBbNMNi9ImFe9wHtMPHKvKQdH+Jq7UteApQJpl
-         vErA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793619636; x=1794224436;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=5smmWE+vGhxqhwgGmPR4F8hVHSCwizeNx+PLtfEMP9Q=;
-        b=MsyjlcryMa3skaViYAf+74kvDJrV1Nh1wpH8FknQUpoVPALBaC4B4t1BoQ3TAeHYSR
-         g4gF7vHODgQO927N28bcqCF4gFdFGwUiYYT8JC8HBuEAIqfQTotuCusE7Onjfb6B3TWN
-         pKOYM8q1mX++or8naD5smX/FRo3/HUZkBLk6WicxqkX6y5qdoEHXBeJxpPjxB2nEN1LD
-         tGesssZV8JxIzYNJtQYrqKm2Iijh+p9Wtr2BwLz/BcEXY25/bfLXiim9XXdQuO6yCKym
-         jQID1lkaQA2Juw8dL7E89EB97u4fZEGb/g7pfUQc3SXjK/3f5PECH5y2K78a1B0+UDKr
-         JiPQ==
-X-Forwarded-Encrypted: i=1; AKwUvByPrdaLV8+sYLSmVcPBuwiDfRDBxdd0YG1JyfqXTWkqJt4PLBt5Xusvh3k8kK5dHf3/RG+pbJtC@vger.kernel.org
-X-Gm-Message-State: APuU4Z+Bbkc8w1p9+8Nu9BxignZ3KffKmOpzJBaokCJZ9kSZnG5hu7rh
-	/JizVezijdNPuS5FrJXimlFqD4K9q3BGDVF3qzHy8HeHJgNVA4Tn66OobAXo88JA
-X-Gm-Gg: AYBFou31uux6O/NoL1Vsts8JsXSqFLHDvxtIKWRvkVhfzIdgQphsnzBJODS8dsITZ9B
-	7bZIZTXqqRBBvMvLL5gtikLROA21HOu6ZNvkcNv8jxiCr/JAbtZ+F2crucI7YaBHsI1v4iNb9WX
-	cKwa39zMfPxFPgtoixuIOL869xYUDGnCo85BbCYuNmPCCIK6yIeI+XvBVjRiVmMb6Sew+KbKOOi
-	mbNvpcBDGmwP7FrgxjDEh7xISnMMLr0Ui9ijaCR1xGhvaO7uQdbxjnFSQ2uNgAS1dlVC9f6uZEW
-	Xj19N+uE/aHxDMIq5JKURpfw/6wdwndqYLkoBSCeTzpHFG9Cwe7wfERDe2ZvGT9vatE16MT6b0e
-	j3fYjFnypyGfqHKtmEd4UpW1m5rA9gBdLO/EWXjtd2sq83GjAH9dzTCJ2mFzZjiiBE/yflNS/e8
-	IClzFhu7mztKSyy/UDJJFe3ibwt/dGp/L7fSaoow1qZWNoNx/J9em6TxeV1o6LwlplencQ4vPwC
-	wQTZJur4uNPW4ziYxzkjIPaNqCF15gA3/CwAK3uydhODPbJyL+7aTNV/J7jKUFnb4ogOgxM9ejM
-	h3b3VcY+TmQbe0EDArzba/4Ozd63eUBkc/hn0+U68ieZCJKa839ziw8riB9fEaAUfoBa
-X-Received: by 2002:a17:902:f607:b0:2e9:a090:dd69 with SMTP id d9443c01a7336-2eb3646e967mr97761995ad.39.1793619636155;
-        Mon, 02 Nov 2026 03:40:36 -0800 (PST)
-Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2eb39262c47sm26652745ad.38.2026.11.02.03.40.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 03:40:35 -0800 (PST)
-From: Zhan Xusheng <zhanxusheng1024@gmail.com>
-To: mhocko@suse.com
-Cc: akpm@linux-foundation.org,
-	hannes@cmpxchg.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	penguin-kernel@i-love.sakura.ne.jp,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	zhanxusheng@xiaomi.com
-Subject: Re: [PATCH] mm: memcontrol: don't miss processes whose leader has exited in OOM scans
-Date: Mon,  2 Nov 2026 19:40:29 +0800
-Message-ID: <20261102114029.1259655-1-zhanxusheng1024@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <auhiGqKJeukk7t3P@tiehlicka>
-References: <auhiGqKJeukk7t3P@tiehlicka>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cElEVmNU
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=lJSyYvwSTzmhS0c4ngcLjWN7ivwDuselzLolPFvY7As=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793622110; v=1; x=1794226910;
+ b=cElEVmNU937nh44jKlu5viOPZ2Kt6mygyHlA41x4Ijf4x6Jik9yWSQGWcppeiFXLHZHA5Inr
+ Xx/F+p29wmDcZzSWxQ3vOWEJxQhc9ae/WEEU/c5Z2wVIzmCNbpjZUkJpfwlb4boIWdAoB7oay/x
+ X50CRGrVeZDkwslztUyX45gI=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 98fd0dfb40fe473a;
+	Mon, 02 Nov 2026 12:21:49 +0000
+X-Mizu-Trace-ID: 98fd0dfb40fe473a
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <0368f299-52e5-451f-b1f9-19524af0e931@linux.dev>
+Date: Mon, 2 Nov 2026 20:21:39 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -108,47 +58,76 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH mm-new v1 2/2] mm: vmscan: skip anon folios zswap would
+ refuse when writeback is off
+To: Yosry Ahmed <yosry@kernel.org>, Barry Song <baohua@kernel.org>
+Cc: Usama Arif <usama.arif@linux.dev>, linux-mm@kvack.org,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Nhat Pham <nphamcs@gmail.com>, Chengming Zhou <chengming.zhou@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>, Chris Li <chrisl@kernel.org>,
+ Kairui Song <kasong@tencent.com>, Kemeng Shi <shikemeng@huaweicloud.com>,
+ Baoquan He <baoquan.he@linux.dev>, Youngjun Park <youngjun.park@lge.com>,
+ David Hildenbrand <david@kernel.org>, Qi Zheng <qi.zheng@linux.dev>,
+ Lorenzo Stoakes <ljs@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20261030095223.325309-1-jiayuan.chen@linux.dev>
+ <20261030095223.325309-3-jiayuan.chen@linux.dev>
+ <CAO9r8zMF-cj4StEz9okWGROGjBhQ1XFVW3H2nJj3b8i5Jj=zAA@mail.gmail.com>
+ <CAGsJ_4y52-hyd=JrPaX-isNWNFUfX30aLCgbsiCAFjxDzhYs8Q@mail.gmail.com>
+ <auUZPZfxNNBCH5uf@google.com>
+From: Jiayuan Chen <jiayuan.chen@linux.dev>
+In-Reply-To: <auUZPZfxNNBCH5uf@google.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi Michal,
 
-This is v1. v2 [1] reworked the check, but your questions apply to
-both.
+On 10/31/26 6:32 AM, Yosry Ahmed wrote:
+> On Sat, Oct 31, 2026 at 03:03:26AM +0800, Barry Song wrote:
+>> On Sat, Oct 31, 2026 at 1:52 AM Yosry Ahmed <yosry@kernel.org> wrote:
+>>> On Fri, Oct 30, 2026 at 2:53 AM Jiayuan Chen <jiayuan.chen@linux.dev> wrote:
+>>>> A memcg with memory.zswap.writeback=0 can only swap into zswap. Once
+>>>> zswap stops taking its pages, because the pool is at its limit or the
+>>>> memcg is at memory.zswap.max, swap_writeout() has nowhere to put a
+>>>> dirty folio and returns AOP_WRITEPAGE_ACTIVATE.
+>>>>
+>>>> shrink_folio_list() only learns that at the very end. Every folio it
+>>>> picks gets a swap slot, is unmapped, fails in swap_writeout() and goes
+>>>> back to the active list, to be aged and tried again. Each round costs
+>>>> a slot, an rmap walk, a TLB flush and a minor fault for the owner, and
+>>>> frees nothing. The folio also stays in the swap cache holding its slot.
+>>>>
+>>>> The obvious place for a zswap check is can_reclaim_anon_pages(), but
+>>>> it cannot go there. Zero-filled folios never reach zswap:
+>>>> swap_writeout() marks them in the swap table and returns before
+>>>> zswap_store() is called. They need no pool space, they are common, and
+>>>> a memcg-wide "no anon" decision would keep them in memory for as long
+>>>> as zswap is full. With zswap full they must still be reclaimable.
+>>> I really wonder if we should revisit not swapping zero-filled pages at
+>>> all, and instead mapping them to the zero page read-only (and whatever
+>>> the equivalent for shmem could be), because yes, the right place is
+>>> can_reclaim_anon_pages(). I don't remember what happened to that
+>>> proposal, Usama do you remember?
+>> Hi Yosry,
+>>
+>> FYI, I recalled that we discussed something similar in this
+>> thread too:
+>> https://lore.kernel.org/linux-mm/20241212073711.82300-1-21cnbao@gmail.com/
+>>
+>> It would be nice to see an implementation that maps
+>> zero-filled pages to the shared zero page.
+> Yeah I also found Usama's attempt and the complication that were found,
+> unfortunately it's not simple:
+>
+> https://lore.kernel.org/linux-mm/20240604105950.1134192-1-usamaarif642@gmail.com/.
 
-On Mon, Nov 02, 2026 at 11:12:42AM +0100, Michal Hocko wrote:
-> Is this a desirable/intended behavior? Shouldn't we move the dead leader
-> along with the rest?
 
-Userspace sees it too. After writing the PID of such a process to
-dst/cgroup.procs:
 
-  src: cgroup.procs = 85       cgroup.threads = (empty)
-  dst: cgroup.procs = (empty)  cgroup.threads = 86 87
+Exactly, it is complicated.
+Taking zero-filled pages out of the swap path doesn't look like an
+easy thing to do.
 
-Moving the leader would fix that, and memcg would then need no change,
-as the PROCS walk already returns a dying leader with live threads.
-The catch is that the leader has already gone through
-cgroup_task_dead() and is still accounted by controllers: pids, for
-one, uncharges it through task_css() when it is reaped, so the move
-would also have to transfer its pids charge. Tejun, would that be
-acceptable in the core?
-
-> Should CSS_TASK_ITER_PROCS iteration see all processes
-> regardless leader being alive after or prior the migration?
-
-With the leader moved, it would. Otherwise PROCS would have to pick a
-stand-in thread, which is what this patch does inside memcg.
-
-> Shouldn't this be CSS_TASK_ITER_THREADED instead of 0?
-
-No. Walking a memcg css goes over e_csets[memory], which already
-includes the csets of threaded descendants, as memory is not a
-threaded controller. THREADED also walks each cset's threaded_csets,
-so those would be visited twice. It is meant for walks over
-cgrp->self, like cgroup.procs. 0 is also what this function used
-before f168a9a54ec3.
-
-[1] https://lore.kernel.org/all/20261027144016.2582880-1-zhanxusheng1024@gmail.com/
-
-Thanks,
-Zhan Xusheng
