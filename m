@@ -1,53 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.46
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793606680;
-	b=xINWoqEShLNG/YM7rHsP7S3xVP4n4H4aG7ja6FD9JRGtQObiC7Z8tcPTRyd1SOmVbVyF
-	 jPGGnzQbwFkqwmPiyHMLleSSrJ86vi/rsA6lg20WguXaDVVceOa44Z1HbZ3aFsv8/TbWZ
-	 5vjIm4yklabn5HjNgDPhREhG6Jv0qxQzlzTTxQkIQcY/8DY/oWb0ItQnsIKJLG9LA2a5Z
-	 zZoLM/o8hLfaFu9y7eLfyc9DZ5/Nl+6xTQeCLuWHZ+QZvRmhxg9uhNfjtC1m8OMb4ZvIG
-	 5nKm6lkuDqkAtJWJ9yKzQy+ZZVZas0Z8FmVDeiaQ/4dnsRRxRanSczs0dWOeppmH9cw==
+	t=1793606865;
+	b=T+GnQXDfShPgG5IRXdLNxX/P8/7lMbTsHLp6aXUKCweK3tUmr6KGaPO+6WCm9d3mHzqT
+	 gbSzoSt5z2f71VPIwMLskj4piGdsWRJgJWRq39ApLbuwCHXFNNZtBvt/73CZT36+ex6V4
+	 zwbSZcJxeMgKAxG/+9tv+OWXTM/QmJMdzfU39DWnlSB+q8SiDQXxf0sRBah8dD2WU8g22
+	 W7B289dXNg/CZolyOhJaffk7+6C22fhXPp6qr6lWDNQnIgVHCDISQ1A746KrQpvSCZrr8
+	 FGj1dK0wXgQvAWTnvg/UKkfsKr+nGq5MJ+yxEWMjKoSkDevCt6WFmBo831/tQLnSj2A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793606680;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793606865;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=2L+ohgxyjbLh2g6cH+17iLDMyNDlNDzKguTVvdoexPA=;
-	b=r8Y3XWe0H4WHCNhYJjLBAEpm7M5NTrNufJXbNpS7f8xaAtf4mVdbvRw4KC3iWZN50IkL
-	 SWRO0wQoUIj3yyjjZG3bQ0zgeOfnWk5zskrj2L9O3elqQp2GvBTAxfKJO2ZkVQ/xxOmSp
-	 oGhx0oFTDZ1AbI+r2Eg19zHW1s3KY0xdI95vvudl3y+2s3SOq6PdND2VdGrd2UJTdEcJN
-	 KEnfMfS8cgvdFI2MKmIHz5gxJszXDsti3IGpqZzrg/wUhvp2tUEeFPJrYddIEpsTMn8ph
-	 KgKUkZtSreg8NUWBzKqDTZ+0Rykgu1cyV/JlJlHBXhCP7cSfxwdPdygtZzuqI8Tm//g==
+	bh=RmW9W+b2NUCMbTNqn6LeM8cKiTUqHkz3gaeuB+SxxjQ=;
+	b=s30hElsIwzXl4KQT8pMoZW6PNADKW4nBdeDpuWoP3YhjWIxQIiao/p0oK/MfhIqeA93o
+	 aZW3QvBxcgcTJOn+DXpEXTiIj0i0m4I3/58cSJ5srbnFDmkXbOT3rx1q1oOq8p9B9Oavi
+	 DtJionkgKS1ErI1+eRGpjjXeI7mMvEElhUN1Jk4qyqxV026693QWhAYI2lb/kgbdEn7Xl
+	 l70iOMm/JDA7j/56EZ2RBmjbaPGNwKBuLh2YqC4AZGD+6HHEGIsXgGOMX+v5/O0EgXegi
+	 8Js8yH5T3AFbP7MbJpYqMzGkdvluBr8bZFo019XUdx9uADb+1xVRMwG2IRE5FSGKsFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RT2oYpab;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=tnmzTSqr;
+	arc=none smtp.remote-ip=95.215.58.46
+Received: from mta1.migadu.com (out-46.mta1.migadu.com [95.215.58.46])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01743606A324;
-	Mon,  2 Nov 2026 08:04:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA837606A333
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 08:07:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EA837606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RT2oYpab
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7583B1F00919;
-	Mon,  2 Nov 2026 08:04:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793606679;
-	bh=2L+ohgxyjbLh2g6cH+17iLDMyNDlNDzKguTVvdoexPA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=RT2oYpabxXY/4vMDFJ+vIncngyCnSSTQb7Ezv7/QHraEgmTlhwJKluwQ4ntwq5S6u
-	 ia1bNFZH/fKhmhaR4es0Axs/ufa0kn8FhIlRaOEKp9+K9u8EzXRtuH4djC9cs0clQg
-	 oRwff6/j/JEGD/v9fO/ELc0cDEb0ch+DZH4IMiQK8acuVjeiSxANhXMCCqScCkQihh
-	 MjFjd4avOZVEj1lhAbNHpNZ7mSM91cqe8HnHXsRBa9hWUP0nY8kVmwNC9ID4RC/RDv
-	 Ab5CuVJzHi39gVG0lqlzmxvN6P3d9zTGv/oPHMQHrAo65mndf8hz99WN2e5+vJDULe
-	 Ad40IQP3tohig==
-Date: Sun, 01 Nov 2026 22:04:38 -1000
-Message-ID: <886a562b52b1c5094142d547a8336457@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>
-Subject: Re: [PATCH v2 0/3] cgroup/cpuset: Fix some more bugs in cpuset partition code
-In-Reply-To: <20261030190701.78308-1-longman@redhat.com>
-References: <20261030190701.78308-1-longman@redhat.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=tnmzTSqr
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=VFK7vMxbPR50n7fFLwXWLZ6ZPyv6K4TCi+2Re4RLgtA=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793606862; v=1; x=1794211662;
+ b=tnmzTSqrsxUQkb2Ygb/cunZg4/OUqK6lMcAvJ0bQ7Es69dTB9ZtIaSWepDAbbVg70L7cpC6f
+ V1JdH5YEhU0YdyJOo/OdoN6Kk3QzYgnGNo5mWmNFybxDGnbMDNC8TevzmkvMqfTctpYJT0lpmgr
+ g9XjIsaSGBn+f1SHLI0M2a+k=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id ab74e95e87cc3cd0;
+	Mon, 02 Nov 2026 08:07:42 +0000
+X-Mizu-Trace-ID: ab74e95e87cc3cd0
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <a857f808-1988-43bf-9300-86e24a01436b@linux.dev>
+Date: Mon, 2 Nov 2026 16:07:33 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,33 +58,67 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] mm/hugetlb: Preserve persistent flags when
+ returning folios to the pool
+To: Kaitao Cheng <kaitao.cheng@linux.dev>, Muchun Song
+ <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
+ David Hildenbrand <david@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>, Mike Rapoport <rppt@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Mani Tofigh <mt4022@columbia.edu>, Zi Yan <ziy@nvidia.com>,
+ Mike Kravetz <mike.kravetz@oracle.com>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>,
+ Miaohe Lin <linmiaohe@huawei.com>, Naoya Horiguchi
+ <nao.horiguchi@gmail.com>, Frank van der Linden <fvdl@google.com>,
+ Chris Down <chris@chrisdown.name>, Joshua Hahn <joshua.hahnjy@gmail.com>,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ Kaitao Cheng <chengkaitao@kylinos.cn>
+References: <20261102024910.31486-1-kaitao.cheng@linux.dev>
+ <20261102024910.31486-3-kaitao.cheng@linux.dev>
+From: Qi Zheng <qi.zheng@linux.dev>
+In-Reply-To: <20261102024910.31486-3-kaitao.cheng@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
->   cgroup/cpuset: Fix incorrect CPU accounting with parent's
->     effective_xcpus expansion
->   cgroup/cpuset: Recompute effective cpumask in update_cpumasks_hier()
->     after calling update_parent_effective_cpumask()
->   cgroup/cpuset: Do housekeeping check when isolated child with root
->     parent may get more xcpus
 
-Applied 1-3 to cgroup/for-7.4-fixes with the following tags added:
 
-  Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-  Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+On 11/2/26 10:49 AM, Kaitao Cheng wrote:
+> From: Kaitao Cheng <chengkaitao@kylinos.cn>
+> 
+> add_hugetlb_folio() returns a folio to the HugeTLB pool when vmemmap
+> restoration fails. It clears folio->private and restores only
+> HPG_vmemmap_optimized, losing other flags that must survive the rollback.
+> 
+> Clearing HPG_cma causes a later free to bypass the CMA release path,
+> leaving the CMA allocation bitmap set. Clearing HPG_raw_hwp_unreliable
+> loses the indication that the locations of poisoned subpages are unknown,
+> undermining the checks that prevent freeing or unpoisoning such folios.
+> 
+> Preserve the existing flags instead of resetting folio->private. Callers
+> already clear HPG_restore_reserve, HPG_migratable and HPG_freed before
+> returning a folio to the pool. Clear HPG_temporary in free_huge_folio()
+> before attempting to free a temporary folio, so a failed vmemmap restore
+> does not leave that flag set on a folio returned as surplus.
+> 
+> Add a VM_WARN_ON_ONCE_FOLIO() check for flags other than
+> HPG_vmemmap_optimized, HPG_raw_hwp_unreliable and HPG_cma to detect
+> incomplete transient flag cleanup.
+> 
+> Fixes: 161df60e9e89 ("mm, hwpoison, hugetlb: support saving mechanism of raw error pages")
+> Fixes: d2d786714080 ("mm/hugetlb: enable bootmem allocation from CMA areas")
+> Closes: https://sashiko.dev/#/bug/linux-5363eb09-9c3c-4f8b-9f3c-a998a8c4b258
+> Suggested-by: David Hildenbrand <david@kernel.org>
+> Suggested-by: Muchun Song <muchun.song@linux.dev>
+> Suggested-by: Zi Yan <ziy@nvidia.com>
+> Signed-off-by: Kaitao Cheng <chengkaitao@kylinos.cn>
+> ---
+>   mm/hugetlb.c | 10 +++++++---
+>   1 file changed, 7 insertions(+), 3 deletions(-)
 
-Two issues I noticed:
+Acked-by: Qi Zheng <qi.zheng@linux.dev>
 
-- Three of patch 1's new TEST_MATRIX rows end with A1 as a single-CPU
-  root partition, which has no sched domain, so they fail the ISOLCPUS
-  check when the script runs with -v.
-
-- The comment at the end of the "partcmd_update w/o newmask" block in
-  update_parent_effective_cpumask() still says there is no need to
-  adjust the parent's effective_cpus. Patch 1's new expansion branch now
-  does exactly that.
-
-Thanks.
-
---
-tejun
+Thanks,
+Qi
