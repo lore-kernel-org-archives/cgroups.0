@@ -1,103 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793655566;
-	b=vdAzWx3cAYV51kJ1mgPKqPQJWlaf096F2qU5w+USM/uPNTmZYofSUnq5GeRIo6SXrGom
-	 PiWfkiy0lRaPv7WJzMBEDh8lPCLnTGc20XQ3Pn1AL6iIgVnfs1h+xpCu0whwviefkfwFL
-	 WDT6e4uIEYXWZtEuYytHhHKAjU/q5D7EmqzMbdqnSBbzUqBXlfbg/FbvJCfJlOegj4Tvt
-	 fJtLc4Msqitv2XAfI0dF8XXVSkoJ9Ty64TwHcA7CVZ4mymh5U88Ag2nIj0AOiTZ9wbWF2
-	 NYzdCgRyobY2kk0cR7O/gWAvBa/YbVlH4iRgFWaUNLZns6SYWjTy09tX190ELp9OLKw==
+	t=1793659857;
+	b=rrJDoBCeN2MlnMSNRgbHZ4Y3RwIIK/MCd8vsx2RC7exx+g92fZ5USBpo27f/bGFTnTfz
+	 LG9phD4FGifaEcLEUQU7ShoK14EKH4BI2kXqS4+43AvlA5td9Ey6abZAf0ImUTwqAOFna
+	 ISkLoTNDQPFMBnSYusn3d7SZPyJPXuT2aff36aQl/U7OPMM603+QmXJRzXuQgCOeHfk2/
+	 9dGowRmJHV6UtDMFA/V+98BSWubVp1KKaoxcm3m1w2Y543YP/2srzrAIYOt6mzPurAGxb
+	 qEvDbfGizg0ZLYLfzvOptOfbC6p+egOjs7I1J1q73QerS/3Ahvs5ijgWiG5r/xQFiFw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793655566;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-Id:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793659857;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=4k4497sTbbDvYeqvxlbwbiiYz6zh1ROyOPLpxYM4Y3U=;
-	b=pZNamPQg51ZelI7I2GO17CzH1vNkb3uX0YYkdmG2kZU8tDBcuuMq7IbMt3WFIbjnt/Fy
-	 1rJ+1zFnyov8bW7S3M8g8jC/eT7CUXyNyfOEXhsqatUvKrxhyVLROagSJ/rHVhswIzNfO
-	 /ubTcpJDqQ801ly8aqxJSH9Pxb8GCiYNFyyubGg5d4zkdBBz+ZvyWgEDB9NChIx/U3KGd
-	 ab6CSGBv3qdqasGYvS49uswk413i8iVMeoruJLDAVkjjp++fugAe08p3R68Mp5sMRNZl0
-	 fXiAAcqaYEIp4tSTFT+GfGAAR+MuxzIY63cgOoX+60DaberRurDwMzFgzuATTNwiQKA==
+	bh=JZOd5uUgyv72utWzP1shduuWDKjucDdTZdv55Qn50b8=;
+	b=L8TrMqwVkK3wiVIhDK57HC48Ve7mY8PYWcYnmwMiCF86TyOAyRxeRtDaUvUlMsJlLYE7
+	 7KrnFYtj3N87HaZttBu7psEyCDhvzYuDS4Flos1GhhRucn3ZlRenkp2wj3pFptzgnvsFZ
+	 KIwabkROZjUbXGNQ0BfumFJiqxNH1e9xNtq1aMRVq82e2+8Na5ZMMmD7jvQNh/0iSB4K1
+	 pOspWJgpaW6eL9paP7tMbMrbiQjbCIq1ioxGbBVy0qPuw9P92Mby7aOdg4fCWkNBHUJck
+	 MndkV3ITmyJvMQLiEMSu01vDAtrBXdk/TTlSXxjybGcKsWr3nsEv/dMMQjOEtQozX3g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Jouev5Qt;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ifZkED0w;
+	arc=none smtp.remote-ip=209.85.128.180
+Received: from mail-yw1-f180.google.com (mail-yw1-f180.google.com [209.85.128.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31896606A335;
-	Mon,  2 Nov 2026 21:39:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25550606A324
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 22:50:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 25550606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Jouev5Qt
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FA5A1F00A16;
-	Mon,  2 Nov 2026 21:39:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793655565;
-	bh=4k4497sTbbDvYeqvxlbwbiiYz6zh1ROyOPLpxYM4Y3U=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=Jouev5Qt+8GltlW45V5pTUQV7gF9lqCjSzgOdMtlplRDu8wkW1tS8zUxZkwrLfNoS
-	 Go7Xnm7RHkpOao988ciNLcvGMB+qTzrRvSAyDHr9HGiB26HoveciMqfozQeA/1FkgC
-	 dMXstNtWJirqYHBZE93b0O8LsKzBKM9XVaQA0k3yIbmMdKGp2xVmAzmwofgm3GJ8JZ
-	 fCzy01U7ZfgO9h7xH6sDPIqN6Mg4KhnFm7LG+Taef7bp80Piy+npF+2+SoXjuo4cwk
-	 9ezM+djl2yFupw3dIdMFU/nsKfQvTrP6uNmI8JlZOvatS8SgR7g1MLQ6lGmNTTbvMB
-	 AMxMIaS5/5sLA==
-From: "Barry Song (Xiaomi)" <baohua@kernel.org>
-To: devnull+kasong.tencent.com@kernel.org
-Cc: akpm@linux-foundation.org,
-	axelrasmussen@google.com,
-	baohua@kernel.org,
-	baolin.wang@linux.alibaba.com,
-	baoquan.he@linux.dev,
-	cgroups@vger.kernel.org,
-	chenridong@xiaomi.com,
-	chrisl@kernel.org,
-	damon@lists.linux.dev,
-	david@kernel.org,
-	dev.jain@arm.com,
-	ehab.ababneh@intel.com,
-	gourry@gourry.net,
-	hannes@cmpxchg.org,
-	hughd@google.com,
-	kasong@tencent.com,
-	kunwu.chan@gmail.com,
-	lance.yang@linux.dev,
-	liam@infradead.org,
-	lianux.mm@gmail.com,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	liuxiang.277@bytedance.com,
-	ljs@kernel.org,
-	mhocko@kernel.org,
-	muchun.song@linux.dev,
-	nico.pache@linux.dev,
-	nphamcs@gmail.com,
-	qi.zheng@linux.dev,
-	rientjes@google.com,
-	roman.gushchin@linux.dev,
-	ryan.roberts@arm.com,
-	ryncsn@gmail.com,
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ifZkED0w
+Received: by mail-yw1-f180.google.com with SMTP id 00721157ae682-8ad98c3fb15so30277167b3.2
+        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 14:50:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793659856; x=1794264656; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=JZOd5uUgyv72utWzP1shduuWDKjucDdTZdv55Qn50b8=;
+        b=ifZkED0wdBxJMSWC6bkffyMZJEB1FS4T4rEYTPJey0r+0ZmRi/Qssx919bpr2m8eDu
+         mY2qFdqP3b2pPvXRfY/LFAs02hs0jkmGeBydhijglqcLKg+9tFJVr9kCAX7Dod83xf6g
+         16uugzggB4KGI5ccijwBHOj6fmSaGs7tNw2TTe5JHi7LzX+TS4rO5lnQREjASCujqkXd
+         QRrwGODuC1R5j0tPSCWWRod+/lztUyUzSKkHe+DGgqrmJ1aII21ufAzUwwWxRtCVYgpc
+         o9PbxReb1YcnlclHdS0IRxj47/mjjRxbF/eVItSnsR1Yw8mIypl78zsQf4pBaVoHTjZ/
+         4QAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793659856; x=1794264656;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=JZOd5uUgyv72utWzP1shduuWDKjucDdTZdv55Qn50b8=;
+        b=wfymbxl/4M4ucz1umlfCJR3Jz15vfn8vY5/Zhu+b68qeP4cMb1OWC4EdCnUUWwxZGb
+         BmHYcVZEG1lzwMI+AF7sw6fpXjQEK8sRzFKcwR47QeFcyAubXewsvXfs3xzUy3tMiFf/
+         kI1OzNqzLo08oO0g+o9Mag6XZH1HKzvXmtjE6FBEi1vYTm9lopPDxONmyGGFcOQol0OP
+         rHvTupFlzo9wPbSgxJwPurZeFryQr8Qm7/3z5ZFjfcxdm8tib693fGr8XQc6ne9JcfUz
+         hLsdj2wvU7s6bYSqZ6MUhujtbQNXxU7yTUqdbWpXx0JXmEIwfc7epU+nzAba+cdyHPF9
+         ksxA==
+X-Forwarded-Encrypted: i=1; AKwUvBzyiROsEu+tltpE43qiJJhlwmcgRub24R8beCRz34cst8Iip17bgBv7xNDzdXguukj/dYM5/nTh@vger.kernel.org
+X-Gm-Message-State: APuU4Z+Hd93gM6pD28CnjnlYIT/zyPqXXK9sa1BfI8OxbGV5loBUV1hR
+	HfKGSg7VrjFeLdRTshkGWlBc1JyY3uim8BURDp3hl3LDnpV/21qFecdD
+X-Gm-Gg: AYBFou1v6fFnvOGjrndZiv6e39266YrjN0ZwWBD4OsCY0gB9Ptflh4wSTVNiX8h1fq7
+	lZC1AfWnXzkgDgzaVqxMolOCQWQPOoQw2TVLaqGKlieJP5WxJl9EyMmovaRlI/PVOBMHcJr7fRn
+	ucnMxnM8TvFKfpTUL8nAqX5fS5JbRAWqyhyEGoeQeHIsb0W9TduG6/H3Npy9DP6iGR/SyLnkJMN
+	xYuByn6xY34qszOzN6ppFvU5SL4N481hAckE5D5YwB0u2mlL9cxBOd+9KOTtXXkBkT63zRYEK+p
+	z1BsKbHjSsxop0VM/TgjCDhAy7K+Ky3Pb1+KYXwfOXpsTyk88piNV8NBzje0ZRXrg7niEmZGVcr
+	mpykf52MX8H7CoxPxKk8apPA/DFEqgzsG8JrGtPiTu/Qz8O/5hnRCrxh4Yd0KNwmcn1gZuadjJK
+	RT1XknPJ0LX1slAbGk1oWPySGGuZa3XvjDPh7BH3QLo3gsPZ5lN2tQaA+b83iWV/V6tAYjQfrRE
+	uHxHxIkgdRYZcBiFkvCCdYlqwm0VC+fnDcwJTBz0WxVrvnTCvukyFgN913bRy8l7VvejRe0EpjU
+	sxwZRyDSj2+zcOxD9tJTKTVjUr21Y+xTkKxYZtaNFOafp2yaYHeBktzihS1vKk+RjWsCDPed+UX
+	rpM0in5pdqRvGEBLx3PEVyU0ec0Lt
+X-Received: by 2002:a05:690c:397:b0:8b0:9e81:8ba6 with SMTP id 00721157ae682-8b2b67967afmr88183357b3.44.1793659856054;
+        Mon, 02 Nov 2026 14:50:56 -0800 (PST)
+Received: from localhost ([2a03:2880:ff:4e::])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b2b704dab5sm61260967b3.1.2026.11.02.14.50.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Nov 2026 14:50:55 -0800 (PST)
+From: Joanne Koong <joannelkoong@gmail.com>
+To: akpm@linux-foundation.org
+Cc: yosry@kernel.org,
 	shakeel.butt@linux.dev,
-	shikemeng@huaweicloud.com,
+	hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	muchun.song@linux.dev,
+	nphamcs@gmail.com,
+	chengming.zhou@linux.dev,
 	sj@kernel.org,
-	surenb@google.com,
-	tz2294@columbia.edu,
-	usama.arif@linux.dev,
-	vbabka@kernel.org,
-	vernon2gm@gmail.com,
-	wangzicheng@honor.com,
-	weixugc@google.com,
-	willy@infradead.org,
-	ying.huang@linux.alibaba.com,
-	youngjun.park@lge.com,
-	yuanchu@google.com,
-	yuzhao@google.com,
-	zhaozhengzhuo@uniontech.com,
-	ziy@nvidia.com
-Subject: [PATCH v4 01/17] mm/memcontrol: allow update of LRU statistic without holding LRU lock
-Date: Tue,  3 Nov 2026 05:39:15 +0800
-Message-Id: <20261102213915.57805-1-baohua@kernel.org>
-X-Mailer: git-send-email 2.39.3 (Apple Git-146)
-In-Reply-To: <20261016-mglru-fg-v4-1-2106750c0bfa@tencent.com>
-References: <20261016-mglru-fg-v4-1-2106750c0bfa@tencent.com>
+	david@kernel.org,
+	ljs@kernel.org,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	damon@lists.linux.dev
+Subject: [PATCH v1 0/3] mm: read root memcg stats from global counters instead of flushing
+Date: Mon,  2 Nov 2026 14:50:27 -0800
+Message-ID: <20261102225030.2743129-1-joannelkoong@gmail.com>
+X-Mailer: git-send-email 2.52.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -107,142 +107,68 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 16, 2026 at 2:15 AM Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org> wrote:
->
-> From: Kairui Song <kasong@tencent.com>
->
-> To enable moving file pages in folio_mark_accessed directly and lazily
-> for MGLRU, allow updating the LRU statistic atomically without holding a
-> lock. It may cause temporary counter underflow, which should be fine as
-> we still follow final consistency of the counter, and it only serves as
-> a estimated metrics, a little inaccuracy has no visible effect.
+Reclaim, refault detection, the zswap shrinker, and DAMON quota goals all
+flush the memcg rstat stats before reading them. When the target is the
+root memcg (eg global reclaim), that flushes every cgroup in the system.
+Most of these flushes are ratelimited today, but the stats they read can
+be stale for seconds.
 
-This might be a good idea. Updating the LRU size without
-holding lru_lock could open up possibilities for further
-optimizations.
+For the root memcg, the call sites can just directly read global counters
+instead of going through rstat. Global counters are always up to date and
+don't need flushing. For stats that only track memory charged to a memcg
+(LRU sizes, workingset, rotation, and reclaim writeback counts), the root
+memcg's hierarchical value equals the node counter.
 
-Recently, I've been thinking about something in the aging
-path. For example, suppose a folio belongs to the root
-memcg and is heavily shared by some of its descendant
-memcgs, which also access it.
+Patch 1 is a zswap fix for the shrinker's count for the root memcg and
+can be applied independently of the rest. It doesn't have the stable
+tag, since the zswap shrinker is opt-in and the fix can change writeback
+behavior.
 
-Currently, aging in those descendant memcgs will simply
-skip this folio. Eventually, we'll have to rely on the
-rmap of the root memcg to determine whether the folio is
-hot or cold within the root memcg.
+Patch 2 adds lruvec_lru_page_state(), which reads the node counters for
+the root memcg, and uses it in reclaim and workingset_test_recent().
+workingset_test_recent() can then skip its flush when the eviction memcg
+is the root memcg. Reclaim keeps its flush for now, since global and
+root reclaim also read the stats of the child memcgs they scan.
 
-Since the shared folio may have a very large mapcount,
-walking its rmap could be quite expensive.
+Patch 3 does the same for DAMON's node_memcg_used_bp and
+node_memcg_free_bp quota goals, whose flush is not ratelimited.
 
-So I've been thinking about this and put together some
-very PoC code. It doesn't really work; it's just meant to
-illustrate what I have in mind:
+Three root flushes remain. Reclaim also reads the stats of the child
+memcgs it scans, and count_shadow_nodes() and filemap_cachestat() need
+the root memcg's own (local) stats or the stats of arbitrary memcgs,
+which means global counters can't be used as a substitute there. This
+will be addressed in a subsequent patchset, as well as getting rid of
+ratelimiting for most call sites.
+
+On an 80-CPU machine running proactive reclaim on the root cgroup, a
+root flush took 69us on average with little cgroup activity and ~0.9ms
+with 128 memcgs repeatedly allocating and freeing memory (wall time,
+including waiting for the rstat lock). Reading a node counter doesn't
+add any cost. It took the same amount of time as reading the rstat
+counter (~150ns, which includes bpftrace probe overhead).
+
+For more context on the background of this series, please see the
+discussion about memcg stats flushing in [1].
+
+[1] https://lore.kernel.org/linux-fsdevel/CAJnrk1aHdBm4CofvKfx7B3H-uF2xRXZUQs47J_4xeRmRZ4hcZg@mail.gmail.com/
+
+Joanne Koong (3):
+  mm: zswap: fix shrinker count for the root memcg
+  mm: memcg: read root lruvec LRU stats from the node counters
+  mm/damon/core: use node counters instead of flushing the root memcg
+
+ include/linux/memcontrol.h | 16 ++++++++++++++
+ mm/damon/core.c            | 15 ++++++++-----
+ mm/memcontrol.c            | 44 ++++++++++++++++++++++++++++++++++++++
+ mm/vmscan.c                | 36 +++++++++++++++----------------
+ mm/workingset.c            | 19 +++++++++-------
+ mm/zswap.c                 |  7 ++++--
+ 6 files changed, 104 insertions(+), 33 deletions(-)
 
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 7ddef3b488b3..31b02478269b 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3618,7 +3618,7 @@ static struct folio *get_pfn_folio(unsigned long pfn, struct mem_cgroup *memcg,
- 		return NULL;
- 
- 	rcu_read_lock();
--	if (folio_memcg(folio) != memcg)
-+	if (!mem_cgroup_is_descendant(memcg, folio_memcg(folio)))
- 		folio = NULL;
- 	rcu_read_unlock();
- 
-@@ -3723,7 +3723,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 			continue;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
-+			walk_update_folio(walk, args->vma, folio_lruvec(last), last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -3736,7 +3736,7 @@ static bool walk_pte_range(pmd_t *pmd, unsigned long start, unsigned long end,
- 		walk->mm_stats[MM_LEAF_YOUNG] += nr;
- 	}
- 
--	walk_update_folio(walk, args->vma, walk->lruvec, last, dirty);
-+	walk_update_folio(walk, args->vma, folio_lruvec(last), last, dirty);
- 	last = NULL;
- 
- 	if (i < PTRS_PER_PTE && get_next_vma(PMD_MASK, PAGE_SIZE, args, &start, &end))
-@@ -3812,7 +3812,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 			goto next;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, vma, walk->lruvec, last, dirty);
-+			walk_update_folio(walk, vma, folio_lruvec(last), last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -3826,7 +3826,7 @@ static void walk_pmd_range_locked(pud_t *pud, unsigned long addr, struct vm_area
- 		i = i > MIN_LRU_BATCH ? 0 : find_next_bit(bitmap, MIN_LRU_BATCH, i) + 1;
- 	} while (i <= MIN_LRU_BATCH);
- 
--	walk_update_folio(walk, vma, walk->lruvec, last, dirty);
-+	walk_update_folio(walk, vma, folio_lruvec(last), last, dirty);
- 
- 	lazy_mmu_mode_disable();
- 	spin_unlock(ptl);
-@@ -4499,7 +4499,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 			continue;
- 
- 		if (last != folio) {
--			walk_update_folio(walk, vma, lruvec, last, dirty);
-+			walk_update_folio(walk, vma, folio_lruvec(last), last, dirty);
- 
- 			last = folio;
- 			dirty = false;
-@@ -4511,7 +4511,7 @@ bool lru_gen_look_around(struct page_vma_mapped_walk *pvmw, unsigned int nr)
- 		young += nr;
- 	}
- 
--	walk_update_folio(walk, vma, lruvec, last, dirty);
-+	walk_update_folio(walk, vma, folio_lruvec(last), last, dirty);
- 
- 	lazy_mmu_mode_disable();
- 
-
-We may want to explore this after mglru-fg. What are your
-thoughts on this?
-
->
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
->  include/linux/mm_inline.h | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> index ab69b9930893..597f013c8e04 100644
-> --- a/include/linux/mm_inline.h
-> +++ b/include/linux/mm_inline.h
-> @@ -47,11 +47,10 @@ static __always_inline void __update_lru_size(struct lruvec *lruvec,
->  {
->         struct pglist_data *pgdat = lruvec_pgdat(lruvec);
->
-> -       lockdep_assert_held(&lruvec->lru_lock);
->         WARN_ON_ONCE(nr_pages != (int)nr_pages);
->
->         mod_lruvec_state(lruvec, NR_LRU_BASE + lru, nr_pages);
-> -       __mod_zone_page_state(&pgdat->node_zones[zid],
-> +       mod_zone_page_state(&pgdat->node_zones[zid],
->                                 NR_ZONE_LRU_BASE + lru, nr_pages);
->  }
->
->
-> --
-> 2.56.0
->
->
-
-Best,
-Barry
-
+base-commit: 0e02eb17f263e4a3ae6bf1fe45122c23361f0cf7
+-- 
+2.52.0
 
