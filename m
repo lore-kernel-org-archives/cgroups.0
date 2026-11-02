@@ -1,110 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793639030;
-	b=RsZXFDuA/cJyHHvEfS/GZ4oywXTCRJ7v1MjLgHxwm4Bv5QgqE0zOLuANYAcdY/zJwvrk
-	 m3hGVNynn4OBkm7vgB8wh95G4JnucW8Twe2IxHjE+Frt+xZptpLMJTPdc9K3a91SYT2Uo
-	 ODrdTwwz5swtkYsjdBJ6bM9pzhZkgbvUKIEk1UmtVGFtuHJ8RALzjKkYriCd65Nsunuvc
-	 +DdSublHDqGQBbnrp0ZYN38Qoj0urKyGEbMxoH7ZTRF70/hDp/Goi5bXg0tT7wrYJxsbq
-	 qTGfcrMHIehcT9RDSKPhGXk73h3e3y2zDqPjMnk7bMoMj6Ax8p40XX72x2IPQWQKTUw==
+	t=1793640586;
+	b=uN2uTDsveUM+kZZTQynpkETgI3OV97DJH8Wzn27m8ulESun126N7SLyGUnoGho6+fZgk
+	 lKJdAPqHonBf1jiRDX4/t9W8o6NQsB2QdDt2anXgdZCKyxLm+Hx3eaOBKDnUMf2oi4/6F
+	 gIinm3UBycA9MLVDOjUFV7lz6XWawpDDUmSfWkobh94XO+/IrKd+l6Qu0QXWsgp4YoXnD
+	 yCWwC80OtmFXW4rDKbmP07q9qfQNPFJQ2OFR8qRiiA3Fc5spshEy5/ks/xNV4QqiXiCp8
+	 P+AWV+9qN12VnTmfCJs2H+Qm58C7rYLbfHYIEJI6LsH6OSZVvyqr+VwbpFicM+AG5Rg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793639030;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793640586;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=zKVeSOmmrsl8lwum3t0s5Z+f2k9HnKnqrEKpVB5PY4I=;
-	b=rp/8p7UWYodCeB0Y7fZYpVrgojTvcj0C5nCJ/GzeG3NGee221Wk4FZc39U6TnIrevxov
-	 dtRMlL2M1k4R1Xo5DDQcXo7gB/z9WNsTBPdhKaGVVBOpr2NuRalfpUemHHeO2WKcxglFV
-	 g7C2PT1r97HlSV2u3Z4+qnZdL9GwKXDL/GKDvEjcOmaxzfPbh2C97k2+HxIUcI0k+T08c
-	 ZZYHbZEg/t8T9s2ig5OxRX0XvEqyJWfZfb0bGBTCMCaTYjW1O5178+UZrMwvnA/Hgjho3
-	 /oLbL/VT006Zw3Y20L1t7pw5/Lu4fWquaEM5T3RvO8Qz1V3mC5RLnz8Z1RobHBIuwwQ==
+	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
+	 In-Reply-To;
+	bh=lBnwm37qIsrm7xDbTxm53J3mLY9DT6w/4rBjRvoMZdE=;
+	b=s0vTAXxXXJ8/7pi+MNo39DEKc1jQ7LIbvLcKk7Ib01yu/44Kn3nDq2ILOr+93UlIi+WU
+	 XLVoW7pOnF2VLSW6draqgDhJner5TcImv925tYTDj8ZikJYCuY79OEfsMAY5D2Lnk6ttZ
+	 Blxv5wV1PCAXvZQ5j4ZA8rMDzrnzADp6PD7sSKzcDhsU66g0bfTcaNqFcG1aH9eGt6s5G
+	 QaHzrBbrrv3E3t5u1cRkgPzBlCfVHnXHnHZ1pqi2Q4Yg3U56O9GuhI9vwqyCqjk5ryul2
+	 iLNgLxeOWXw62AbYtiLABOlNS5ZLaPMidCN7RC4uKWX5fXEP70OOGQuKQb8qFpDq50g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=suse.com;
 	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=AgxdDCcD;
-	arc=none smtp.remote-ip=209.85.221.48
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=VljADhIU;
+	arc=none smtp.remote-ip=209.85.221.52
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 269316070D8B
-	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 17:03:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 269316070D8B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1C73606A32D
+	for <cgroups@vger.kernel.org>; Mon,  2 Nov 2026 17:29:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C1C73606A32D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=AgxdDCcD
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-48e10a70540so1828029f8f.1
-        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 09:03:49 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=VljADhIU
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48e3b22e971so1660829f8f.0
+        for <cgroups@vger.kernel.org>; Mon, 02 Nov 2026 09:29:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1793639028; x=1794243828; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=zKVeSOmmrsl8lwum3t0s5Z+f2k9HnKnqrEKpVB5PY4I=;
-        b=AgxdDCcDNmY4Iu0DCPZh/nv6kr32Jy+0IEcG/Elc5D9A0gW3cvNTwNjSTLh159ENVx
-         DmL/JX9N1LDAgfCrrah6bk6m9ra/nLMjl1y5QMAt4wOL1McEMAgD+zB3v59DmT+CjB45
-         xVr1Mlu0dShbqUOZcgW33+hi8/w9LhjlBon3N4HTjLShGggKrJNJ9tyqL+mFL9l+QHYE
-         2Bk1xblkkV/Uz8WhNkoqFGXYL3hFB0N0GRXUSQ8aCh2q6GKqrZuK8pGFw9iLCJ1eqoOs
-         vzNrvivpDtYQAKQEY4kIOCSoa6xD1tGGeSNz5Hz8Q4Y94c/vsA5hxJU1xau5vlaIsvby
-         BQHg==
+        d=suse.com; s=google; t=1793640584; x=1794245384; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=lBnwm37qIsrm7xDbTxm53J3mLY9DT6w/4rBjRvoMZdE=;
+        b=VljADhIULemmV8tvaeTQVmfqUsL+izWnCkC5oYi4KOzrHim9grJRjRxHOcWm2EPF3r
+         Wclx8JcLDz+igdrUFF4fi6Zdm9tcyYE1BaFTCMpYiJWRLBBXP+QCxoytS3PgZqsHJPGW
+         +bDUd9LIjDcG065kFmpe0R8+P+kDeXGL49AQnYz/AOxMW1kaMhpEpy+QXQk/8bo+5loi
+         wm5PMfz+1kRz6N2L26srC31WaEOZi5zsud25l0uiivStl0eIf8TeDxVcXrisI0bff9lh
+         8mzV3C7fc7D2F+ROsUuvar2jSoEJA0as2si4RkMu89NHk5jwkTbNNOEzjfZNZCv3Lf0s
+         2NUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793639028; x=1794243828;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=zKVeSOmmrsl8lwum3t0s5Z+f2k9HnKnqrEKpVB5PY4I=;
-        b=NkV8R7AX08VrN5eKG1GtAe6ep6gUG2420o7ggc4coryqL7HmzAP/sF7V5/26CO5n/0
-         m19K3ZdrdxeAguMrihkbHGPbdWcvs9vTvt1XjQV35MdAuTUkTHp/hJ901oPQ771SeKxd
-         RFqZsUWh0wnqe4Iu5CCopsgm5LBVKVe9CQb/tvebvP1rXJTVEGVmEopzwFI0XPW99oAF
-         Xm2aDPPYY6wcTDQ0ZD9/Nc8SjkPYoq7OKV8/31Z4PrlwB0yb9IGgJsSYaMvMcmx+Vt/7
-         VC3B2o9qkgZbv/ERpJSzFQZIjutDx4qIDkPDECzM6h7qqM/31rT2ZHCVdA3xnECCHH7e
-         3KPQ==
-X-Forwarded-Encrypted: i=1; AKwUvByOO2Mxy9Ew0iDPqRMBnY4Nv3lkRFLQ8rh2MRyHXvZgsIgbfa2y4WQ3XpLHzax5Yaow13YYcAJq@vger.kernel.org
-X-Gm-Message-State: APuU4Z+e0VoejH2bVwKMQeD5W54Hk5/3iv85ZWglEDtqUGS2ioBOmTa4
-	9l5NadB0uocmwvUmdzPQpUQvySEg9FshbLwguZTYtPNHdOF2XOLjHL18BHAewn9Peco=
-X-Gm-Gg: AYBFou17ZJFM+jZr2855Ye2lcZ8m50Ta8IBT6rHVw3+Y5U9uo5BAMiKAFnGLgRe0P+E
-	VqevHnI9EWyr78sfaVYU2cS7FbeKRW4BcXq2PuBZK7MdBftCuVidAhw3l/00Rm6YR7sCl79O9PJ
-	DsIGJs675RBGFigEviVrin/eqlZsdLG3utzjI6uPDpgRt+voXAbh3K2ne3vOn6dQVQ8QCh7UYQa
-	zWT6td+zuJ6Jd2bqcIh7Z5v/AGvMmBQ05UrUkGk6poqLWWCVXNlj0vlnL0NBewGwoJLh7v4/OuU
-	qdyycCPrxapcNUGKTaO9/qNNaZLMuSm9ryoBuebNhMOwqpgVYLpIId/Tk7l7WgYF6IQZixiv+BU
-	/Z6aSaHl6WMbLWktR5HlkypCvqh+3bR1qykS90ExoI3E0BIvLLhInvXH5SvrIJQhDKG62WarNtE
-	8mDwWqDTqqykv/HPRtB6t7QEC4/phUw4BMZ15W+ijs2yIAoL2FExQMAV7OqawTrIdrq8W/si0T6
-	kX37AhKtM+23v03gs+kJ/9U4Apa9/TviA5iJll4QBur/FooBF8+yDNJ+5ZL6BBrGTIcs6HQPwut
-	ZqRrdya6NO87TKCinLZteWpPRILWpaJjHOxsD98=
-X-Received: by 2002:a05:6000:71b:b0:48e:68d5:81b1 with SMTP id ffacd0b85a97d-48e6e4fcfbbmr22771632f8f.48.1793639028313;
-        Mon, 02 Nov 2026 09:03:48 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793640584; x=1794245384;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=lBnwm37qIsrm7xDbTxm53J3mLY9DT6w/4rBjRvoMZdE=;
+        b=qw5SNfcycKYf+X148Xx4cvTxyKjvaZ8YrTOT/pOQNPGgqx9Zh8cYc0B7n1XiRDS2LO
+         79/ZR4/BvGldvRuAVjwcHdSEwz5j+kwqe3yOxvtJ5pSG1yXmzesn/qyH7b3KxihknYVx
+         oZDW5xUy7J/R4Bq3zZ2GOL8xpslQLe+QQqKAJwk7Y5s0C7jzzEW/xifhFzzQVdkaYHyJ
+         hY3MaRSm4wq8B8vhUSFApjSC4eiQX1lgxQ735YAwXATxm7CRhJdpVpYOzUJPnIgc8Ynw
+         ujd8Zfexr00S+NoExIIby0EMh2dG7ro1Zqo1mXmJA/31VWcfhz0Gn/6nG2ARaPrIh4RH
+         ou+w==
+X-Forwarded-Encrypted: i=1; AKwUvBxCgQfX1vVrBEQi/21iZCKSM5dK/tDURdU+ajBHPKWnXjJ00IdhcOSQi51omg5IYEY5tPpQTlR5@vger.kernel.org
+X-Gm-Message-State: APuU4Z8erPI3LJwtrWBMJIO/S+neB/fO/1tTnHzP+aT9AFNeZO7KUav/
+	Fabav10Mf/lrcz/AEWNnUEYyfcj05Zj1gqIAxwycVH8Smqua3vsT9WCmJI2U6kxbbcw=
+X-Gm-Gg: AYBFou2hxEkWEDGigtr1Um8KvlH2S2w/i5nTGvQdW3ib1Dgfel04v1RON9xmdExje+v
+	eP4pdgF2gCDWwKyHq8Y4rdWQtFx5pjvHGG+fs5oumB5UFU+rnBdjDEz5sDDMkdL5fqeimDEpUgt
+	JE536UzYLz4TbeMvD+K8ftXlwx8HZ/oNVdAn7bG7J0KWU5PQExvwJ51RfRyztgVS1DRx1UfT7RU
+	nVbm/09+aazmj7IpsTHkxkgEaWx6yuTm9D4NCXo+7pKihYwYmt03VHjLsDfQ+rwisR1fyrek011
+	GBLOyQsXT0bQ+mSvJM3cQ9XHajPDKvkKTSFutZSpm2NA0d4SJcqmIveyBwm3d6VB5WDoi6Jxdav
+	HfcfUqE1KRFgLWN0wBPcV1sOIXlKAEo6p55u4KtkHUme9BR/17qyP3gCvAn8XT+wy3ZPO2FKcnC
+	dG4oaVU2Bk654MPtvi7WQ1pNOeTZJnOdlDGMmy1gdpWiFOFFZ4qHppy0ptU59SDIaD778KH0zPK
+	Q1yLiCLxFj70DdTvNOhV4aTJGAe1Uszi7K6KRXE1YhuVByTQiVbbIkAoSkfIv0vpKgm7J8wURJW
+	mbN9zVmmvM2JHdvaZJj+RTDRvLKO+02+6cOcgrc=
+X-Received: by 2002:a05:6000:4b04:b0:48d:f391:5c45 with SMTP id ffacd0b85a97d-48e6e4f8ae4mr26540418f8f.42.1793640584164;
+        Mon, 02 Nov 2026 09:29:44 -0800 (PST)
 Received: from localhost (109-81-32-81.rct.o2.cz. [109.81.32.81])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b7270asm21084674f8f.11.2026.11.02.09.03.47
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b80306sm22600959f8f.33.2026.11.02.09.29.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2026 09:03:48 -0800 (PST)
-Date: Mon, 2 Nov 2026 18:03:46 +0100
+        Mon, 02 Nov 2026 09:29:43 -0800 (PST)
+Date: Mon, 2 Nov 2026 18:29:42 +0100
 From: Michal Hocko <mhocko@suse.com>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Maarten Lankhorst <dev@lankhorst.se>,
-	Maxime Ripard <mripard@kernel.org>,
-	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>,
-	Michal Koutny <mkoutny@suse.com>,
-	Oscar Salvador <osalvador@suse.de>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v7 0/5] mm/page_counter: move stock from mem_cgroup to
- page_counter
-Message-ID: <aujCcqKKyio7oZ0x@tiehlicka>
-References: <aui3TJqadHUv-4RW@tiehlicka>
- <20261102163014.237806-1-joshua.hahnjy@gmail.com>
+To: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Tao Cui <cui.tao@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>, muchun.song@linux.dev,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, Tao Cui <cuitao@kylinos.cn>
+Subject: Re: [RFC PATCH 0/3] mm, memcg: isolate deprecated v1 state from
+ struct mem_cgroup
+Message-ID: <aujIhsampHnzcl_5@tiehlicka>
+References: <b36ab4a7-b692-49e8-92b5-1dc4d76dee00@linux.dev>
+ <0BEF7489-16EC-44EE-847B-A6AA380BE11F@linux.dev>
+ <32e80536-64e4-4ae3-a7da-4a37ed415f0a@linux.dev>
+ <7ia41p9341lv.fsf@castle.c.googlers.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -114,109 +103,49 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261102163014.237806-1-joshua.hahnjy@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7ia41p9341lv.fsf@castle.c.googlers.com>
 
-On Mon 02-11-26 08:30:14, Joshua Hahn wrote:
-> On Mon, 2 Nov 2026 17:16:12 +0100 Michal Hocko <mhocko@suse.com> wrote:
+On Mon 02-11-26 16:52:44, Roman Gushchin wrote:
+> Tao Cui <cui.tao@linux.dev> writes:
 > 
-> > > > > > > We get an added benefit of simplifying try_charge_memcg(), which now
-> > > > > > > has all the stock management handled transparently within the
-> > > > > > > page_counter layer.
-> > > > > > 
-> > > > > > This is quite a large change and I believe it will be really benefitial
-> > > > > > to have some high level design overview in the cover rather than trying to
-> > > > > > chase it in respective patches.
-> > > > > 
-> > > > > Sounds good with me. I can add the call traces above which should
-> > > > > explain my thought process a bit more. Hopefully the problem I am
-> > > > > trying to solve is evident there.
-> > > > 
-> > > > I believe I follow where you are heading. I am not sure this is the
-> > > > right path but that is a separate discussion. I would focus on whether
-> > > > moving cache to the counter makes sense on its own (without that future
-> > > > work) at this stage.
-> > > 
-> > > If I'm being honest, most of the generic benefits that exist beyond that
-> > > work were in the other part of this series that I got rid of to scale
-> > > down the scope of this version. But to explicitly name the generic
-> > > benefits, it would be unbounded memcg stock caching per-cpu, eliminating
-> > > random evictions, (like you mentioned above as well) limiting stocks
-> > > to leaf memcgs only, etc.
-> > 
-> > limiting cache to leaf memcgs makes a lot of sense and addresses a big
-> > concern I had. How exactly does this work?
+> > Hi Roman,
+> >
+> > 在 2026/10/30 14:05, Roman Gushchin 写道:
+> >> I believe we want to delete this code sooner than later, why would we rewrite it before that?
+> >> 
+> >
+> > My assumption was that v1 would still be maintained for some time
+> > before its eventual removal, and the goal was to reduce the coupling
+> > between the remaining v1 code and the shared core structures during
+> > that period, rather than to rewrite the implementation for its own
+> > sake.
 > 
-> It's not a big change, actually. This was the implementation from the
-> origianl RFC of the series:
+> I understand. But personally I don't see big issues with the current
+> code caused by the v1 stuff. Maybe I miss something...
 > 
-> https://lore.kernel.org/all/20260410210742.550489-8-joshua.hahnjy@gmail.com/
+> The proposed changes on the other hand create difficulties for those
+> who use v1 and maintain some local changes or simple backport upstream
+> fixes. Of course, it's not a reason to not change the upstream code if
+> it's justified, but in this case I'm hardly convinced.
 > 
-> The idea is that you treat a cgroup as a leaf until it becomes a parent,
-> at which point you drain the stock. Stock can land on the parent due
-> to hierarchy walks, but I can also write another part to this that
-> prevents stock from getting cached when a cgroup has children.
+> > If the expectation is that the remaining v1 implementation will be
+> > removed in the near future, then I agree this work becomes much harder
+> > to justify.
+> >
+> > Am I being too optimistic about how long the remaining v1 code is
+> > expected to stay around?
+> 
+> Well, Idk, it was considered deprecated for quite some time already,
+> so maybe announcing that it will be deleted in a year is reasonable?
+> 
+> Shakeel, Johannes, Michal, wdyt?
 
-OK, makes sense.
+As I've said up in the thread I am not really convinced this is
+something we should merge.
 
-> > > I think there was a proposal to make the number of memcg stocks per cpu
-> > > even lower than it already is, because the author wanted to include
-> > > additional fields into the stock that would make 7 no longer fit into
-> > > a single cacheline. I feel like we are reaching some limits with that
-> > > side as well, so the "unbounded" portion seems to be quite opportune.
-> > > 
-> > > But I believe those benefits that we would like to see are made better
-> > > by this series, which makes the stocking transparent such that the new
-> > > optimizations don't make the existing memcg charging code any more
-> > > complex than it is. By abstracting away this mechanism, we can make sure
-> > > that memcg just handles the logical charging semantics, and page_counter
-> > > handles the implementation-level details of stock management.
-> > 
-> > Yes, these are all good arguments. Especially when clarified that this
-> > leaf only feature. I have to say I was struggling to see how caching on
-> > all levels of the hierarchy would work in practice.
-> 
-> Sounds good. If it makes sense to you then, I can fold in the
-> leaf-only caching into this series to maintain more parity with the
-> existing code. How does that sound? 
-
-good
-
-> > > Personally I am a big fan of how try_charge_memcg looks after this
-> > > series, what do you think? 
-> > > 
-> > > > Quite honestly I am still not convinced this move
-> > > > is the right thing but I would like to fully understand the mechanics
-> > > > first. Having discrepancies among different counters just sounds like a
-> > > > potential source of future problems.
-> > > 
-> > > I hope that I can present a good argument for why this is not as
-> > > concern as it may seem initially.
-> > > 
-> > > My first point is that the memory usage counters were always fuzzy, as
-> > > specified in the memcg v1 documentation too: 
-> > > 
-> > > usage_in_bytes ... doesn't show 'exact' value of memory (and swap)
-> > > usage, it's a fuzz value for efficient access.
-> > > 
-> > > Secondly, the raw value of the usage is actually always accurate. It is
-> > > just the stock portion that overcharge the memory at times, making it
-> > > seem like there is a discrepancy. Flushing the memcg stock immediately
-> > > bring the counters to their real values (like what happens right now).
-> > > 
-> > > Finally, this is a change that is only limited to cgroup v1 users.
-> > 
-> > Right but is there any actual point in adding caching for memsw charges
-> > now? If you have a way to opt-in to caching then you can simply disabled
-> > that for memsw counter altogether. Fewer problems to deal with, explain
-> > etc...
-> 
-> I think the problem actually still exists, unfortunately. In fact I
-> think the issue becomes bigger if you remove stocking for memsw.
-
-Yes, you are right. We do actually cache memsw through the charging path
-which charges both mem and memsw with the batch. 
 -- 
 Michal Hocko
 SUSE Labs
