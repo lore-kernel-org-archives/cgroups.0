@@ -1,59 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717515;
-	b=lX57L97H3QPThiPyDXfWP8OmSPS773wJ272S1IrStw+o7eOOtW0mbCGfyVrmnX3vfcgG
-	 dAFMya6jh4EgMTGtrZkm6zC1vnkCAV+RMmA4rw1zcCqF3EbRh1rg7EdCkCCqf25zaRiqz
-	 6WYQmhMWo8bxUfOfrYvghOLiFvvaASw3OsNjkrbeOUM2MrH8M4tuGPB0bGZ+m4C7Fx4DL
-	 s9b92GZ/Tt+Kp45V6BSwQx06a6PGmuatW2A/oNS4BEG2ggytIThc1Q1FvzeCKEBi1W8vO
-	 JttR2WnWV7JBNtLjgEFZeQVjPi5SO4WVnrtF2G4DN7PToBjQ3G4VDPh19bEa/6I6yRQ==
+	t=1793717540;
+	b=Bj9Phn9gAl3joL4euYqPZSjL3412eujJcqi6PRJmrUeU/WA+zvjodg75LZeN22VmqWb4
+	 VWZdIo7xeJCbvgr1U6KElTP6eUZ4ONhMMvcfc5r1rcuPmyP5aElfhq+u0EcXp5olWwol9
+	 5YujprU045WbPON2jsUrS6nIq32/8vDif3Fo4OU4v7n9R2prlfJcElXVSbk4Le1JxACJ9
+	 gQ/aNR5rVdlG1wYZjGnzcT6/TBqdyxaezL1gDffLQGi1XnhWTf7qY6TG7OURTjfEkX6cr
+	 HcPzMFpcKJcaj46+NCP0vjyKGFCubyLLZ593I6zH8MOD7sJWvqsjvAfR7Ta7AlmR9Bg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717515;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=qj/jBK5uYX1lBOAh7CIGNjD5DbAGZcwkTAmQo8pBkzs=;
-	b=Pyk1ioVu8FD2Nd4FSxFcJbSv6joq1aUrG2Ss4VS7P1VSZff0hS2B04s4QnDzoVOMtMI6
-	 tD0CFsAjz6MdD70kB141knLxmUiJCfuopW+HB0rFbGeYKkbw3fPpFMi1DZfVw9sXpwFpE
-	 9fkCG9gXWb2YYNQ3mvUBfO39PFBInqVMcA9GO0KARfDP3u6Rv9b71GH3FYuMC0UbmxoZ0
-	 BayHal96DC/cD+nJdVZ/MZc/O0KlrZ5KpjUwiq2I5cJyiMUuAdncRUvZE5KdJdrizGV2a
-	 akSELlRy7rv/x84Qk8VP9sX9rcefYSOxRMJJC0K6sbeTmOQMw0r4ru0GFdgq4HF6qzQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717540;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=SXrZFm5c7Y9YEJYXHf63c7OvltqSiN79R5Fh6JHirao=;
+	b=drXkNqBjg6eL+GamPdpqmwtxOXRRV6aB1sEyrX5KqFPCv5LO/evqyc7tBSLhwfXlAxnK
+	 EVFOYaZtYzVQDkBfMP42DNgUErsq/NOoBchCuFx/N8PppUPTDDRLoKYTSCvsfbc7ZpZMv
+	 5QWJj6Rtt2i/NM0Ywjx7Heu6fxU5sD6ujf98XNKogTAJv29+v4a+AQ++SpXVd/DDvq/v1
+	 PWV8NqPI1O1bjPbtWx0gTQGklnluLlom3VVc3MyGbqsnjcAMU3cx5ZdBF9610WErvkryL
+	 /h6i7Qc8lYYCmIVpiGVGOpdh7nt5QDIiZFUvCBAJA8b4YZK5hZ7h9w6tvOjUcsdysww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B1yzwcN7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RWYySZfx;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A56AC606A7BA;
-	Tue,  3 Nov 2026 14:51:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9A460A2611;
+	Tue,  3 Nov 2026 14:52:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=B1yzwcN7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06DAA1F000C1;
-	Tue,  3 Nov 2026 14:51:53 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RWYySZfx
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE1121F00A16;
+	Tue,  3 Nov 2026 14:52:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717514;
-	bh=qj/jBK5uYX1lBOAh7CIGNjD5DbAGZcwkTAmQo8pBkzs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=B1yzwcN7CWiyNWpcvubXRrCbxuNfue3EMWaxmI3o8yCwa1dApj+/hy+6VaZvzbFwj
-	 gEiGdceIHEoatSvdxVZYydAj6jRnOYabrYDeBySkuosbTg1kwo0jFsSP59YwWge8Fh
-	 vUK638xS1loXo8ZXokQ+5An9IkLHb3WpMcTzQ3KsL0J8WrjSZcRZhAoPTl6T2kttoz
-	 rdkBGDeGBcS3zMVvm8FyuDJ2cPNbXIXbrVQhwpQZhqqSn2Json5EKJTKee4s6G1RTm
-	 tpxiF8y58k6WRTbQocwVUIseU94DsGbwghXbH7zHPKxEd/jWAiuBKsm5tltGI3Ev+r
-	 CvokGvV5slJGw==
-Date: Tue, 3 Nov 2026 14:51:52 +0000
-From: Harry Yoo <harry@kernel.org>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
-	David Rientjes <rientjes@google.com>, Alexei Starovoitov <ast@kernel.org>, 
-	Pedro Falcato <pfalcato@suse.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, bpf@vger.kernel.org
-Subject: Re: [PATCH RFC 4/4] mm/slab: serialize defer_free_barrier()
-Message-ID: <aun0lgIta8LmcP1T@thinkstation>
-References: <20260624-kmalloc-nolock-fixes-v1-0-fdf4d17351dd@kernel.org>
- <20260624-kmalloc-nolock-fixes-v1-4-fdf4d17351dd@kernel.org>
- <feb3e339-f61d-4f99-9859-e1895d396561@kernel.org>
+	s=k20260515; t=1793717539;
+	bh=SXrZFm5c7Y9YEJYXHf63c7OvltqSiN79R5Fh6JHirao=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=RWYySZfx0rRUBHS+D6mQrv70dNgBDuLHIhEJF/nZaakyJBbj16IsQUC/oHhhp+GL9
+	 eDEiPZPHHZTInSBMx+M9V4sQyMUg5Aa1V1epiUXOfbz1vyR11VxHwAAtNvriqi8yM5
+	 Getoowq88Rw6kMDDSYuGHHKqRlAqdEJLPOEuZHQMK6GSgWz0kRqbp8kvTVsuE1y0vd
+	 mfyGRs/5LnLLdRw5S0lbZXvQturO85V2JjHTiIyqvcnDgz/HGODZIA53opgqDL3zSA
+	 pVFmYtWkMNWSZsMZyXAh7q6jf43oTEbYSupvgYA0FRV4kz1Bmt/dibNEIktSQDz8xR
+	 YPRAdrqElfHWw==
+From: Sasha Levin <sashal@kernel.org>
+To: tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: Sasha Levin <sashal@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	=?utf-8?b?5b6Q5pmX57+U?= <xuhx@hust.edu.cn>
+Subject: Re: cgroup: fork vs cgroup.procs write race in favordynmods mode -- v7.3 is affected; please make sure bf6fbf46b5ff reaches the stable trees (repro incl. uninstrumented natural hit)
+Date: Tue,  3 Nov 2026 09:51:55 -0500
+Message-ID: <2026-11-03-1-daily-reply-0007-re-cgroup-fork-procs-race@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <3d753a39.1d66a.1a1a13d3452.Coremail.xuhx@hust.edu.cn>
+References: <3d753a39.1d66a.1a1a13d3452.Coremail.xuhx@hust.edu.cn>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -63,48 +64,15 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <feb3e339-f61d-4f99-9859-e1895d396561@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jun 26, 2026 at 05:00:51PM +0200, Vlastimil Babka (SUSE) wrote:
-> On 6/24/26 15:11, Harry Yoo (Oracle) wrote:
-> > irq_work_sync() uses rcuwait instead of busy waiting in two cases:
-> > 
-> >   1. The kernel is using PREEMPT_RT and the irq work does not run in a
-> >      hardirq context.
-> > 
-> >   2. The architecture cannot send inter-processor interrupts to make
-> >      busy waiting reasonably short.
-> > 
-> > However, rcuwait.h says:
-> >> The caller is responsible for locking around rcuwait_wait_event(),
-> >> and [prepare_to/finish]_rcuwait() such that writes to @task are
-> >> properly serialized.
-> > 
-> > Since defer_free_barrier() calls irq_work_sync() without any locks,
-> > it can potentially cause a hang as writes to @task are not serialized.
-> > 
-> > Fix this by calling defer_free_barrier() under slab_mutex and
-> > cpus_read_lock() and add lockdep asserts.
-> > 
-> > Now that defer_free_barrier() is called inside cpus_read_lock(), iterate
-> > over online cpus instead of possible cpus.
-> > 
-> > Reported-by: Sashiko <sashiko+bot@kernel.org>
-> > Closes: https://sashiko.dev/#/patchset/20260615-kfree_rcu_nolock-v3-0-70a54f3775bb%40kernel.org?part=5
-> > Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Harry Yoo (Oracle) <harry@kernel.org>
-> 
-> Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+> This is fixed upstream by bf6fbf46b5ff ("cgroup: serialize migrations of newly
+> forked processes", merged 2026-10-20, already tagged Cc: stable #
+> 6.18+), which v7.3 predates.
 
-It was dropped as it now introduces a mutex.
-
-(codetag_unload_module() invokes kvfree_rcu_barrier() ->
-deferred_work_barrier() but doesn't have access to slab_mutex
-so we can't reuse it.)
+Queued for 7.3 and 6.18, thanks.
 
 -- 
-Cheers,
-Harry / Hyeonggon
+Thanks,
+Sasha
