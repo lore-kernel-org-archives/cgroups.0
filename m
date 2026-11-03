@@ -1,81 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.222
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.127
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793676254;
-	b=ghN6wWhquDHbDZ8Nyy3jEU9JuuARqPLGXFfFAS4yzVUT86SENt9+6Yz/mos3VpzuXjkf
-	 zeQjOSiAvvcWTDRJY4UX18Q5mA0UNkqpDcW83tDaurLtGHNyOq9FmyNdLg/hU4nrs8j4A
-	 gaR5zvNTzyP1WWeVUVazPKWKG6elBElLePA+nP6b551bQS5L39fiBbAadUP29woQWQZWE
-	 Eguy/s2z1D5zS+9/sSACB8erbeKB//xjK61veDQUgmHcpLLQGQR76Z3A/60PcqW+4vYgq
-	 orO7P+TN5FanOWVXC8sg2zbYr5HuC5LbrqPKoFnj1cBPKiuqvSRjqF+oHCVV73kJ64Q==
+	t=1793680486;
+	b=HND7Dy3DS3uoLjgRijF+SV8v/kL346hhqvgyIrutMqD2/oRrAJG6cV1Q1DiRf4YIl62W
+	 hh/T4HSL33F/v+0OdAuLleTcvfuUPM74sUBa5LEHZGAIT+aC3tZLGY2l2dRpV+Ux4E4r/
+	 pY9LbykwvqwEdc0/Ndbw4VabwRymlZw//gblLDxoJP3ewf2bAIJSH16xynTNnA9vDYsMZ
+	 +MymAZj0k76U68NGUyz8h0d1naBk9A1NeGUZXATcElEeYc01bV2k1R4fzu0RdG0KWC5LV
+	 GDkguiOlNtPw5xfuyvCie6kXt4s9NMutc1AGLCf+dFWNDQdxQsTxKeo7CSvB299ODiw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793676254;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793680486;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=wp5wIsqhtLnbvTQSbQDkpP6Lf3VZf9FET+wJGcOPy6c=;
-	b=T1HfA5Jvwprc4xNj3ZNoJ2XTxaXh2mo36HwRvkMe2Y+t5wYR77Jz6QUlyTVJsZgpNwUH
-	 WwLBU7GFhwQ+q8H5r3wOZcJsmOp0WEkdLGSLDy2BOOYmkW8YJ6FxHyDJXl3hEmrBB/i8U
-	 gEDi+mNd6v6cW5eQMW+OxVg4PQ41raB4uxNXjq3Oal4Sg6sy4WIy9+3QJt40QA33oJKRS
-	 zvQIv0UDO7malJz0Sks6kf8IIPQSFH/mdlE1WWN0NCrmii95fUyw8iMw99lLP6+SkTYS/
-	 8U2LZQiR/nGPhorRpQHmiTTeWdFYn2hvrp/6ft+tek0hZ4TOd5jWXGPIkVuqbN+uEfg==
+	bh=K9Njty/s8OSTY2jW7LGO6SCpfmnpl1SS5BBMpxrgIQM=;
+	b=pcxrhLcN2jC0XVopIzdTxaMsfR8rA7jisatxxOnLK5A6zwd1vpkncDirNB+AVYwQl+vc
+	 cbD4xR+lN7GZwiqH2bumHrs2kTq9DAPrcBJH6LzC73VvRg9BRoUIr2QQrqHtf40Xe88XY
+	 tNDmCvsPaZiSm477VcpeoT+WeWFK3uUq2oGoWUJZ1RBpFTZ7Wz/NnijQbWAiWShRMRIVd
+	 spf+ZMxBIA6qOguvMNWBRV7F1RILjMfSIWDnKgmviZ+ttqO1rDll8pfXYDHe5pow5x09K
+	 nDOlT1b1nzvbH65zXwme8UVBXVM/jpcIK5kE6bwtFwT1+mnRQ824bU2ZaVMGlCOdcGw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=pg7DV0Uf;
-	arc=none smtp.remote-ip=95.215.58.222
-Received: from mta1.migadu.com (out-222.mta1.migadu.com [95.215.58.222])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=KHDkkMsv;
+	arc=none smtp.remote-ip=91.218.175.127
+Received: from mta0.migadu.com (out-127.mta0.migadu.com [91.218.175.127])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F0F606A324
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 03:24:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 65F0F606A324
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C443A606A326
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 04:34:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C443A606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=pg7DV0Uf
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=KHDkkMsv
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=WfKCC0CPaetlNjBgBzLRFTMpxvJUSOO4JuL3J0g1AR0=;
+DKIM-Signature: a=rsa-sha256; bh=Tkk/8VKuhrIf4fgRDjiA2Ro1wKiXOIisjNU8KXqStt4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793676251; v=1; x=1794281051;
- b=pg7DV0UfbU/4/aLLusRljQNxRNlkAqmaOmpsqc4y1d2UF3zLuDciHx5aDHN4Lc+F5klOhuVX
- XAwf/+2h8Iq9tlKh8V7EbQJzEAmHDi6WoaL42DY7jCdS+Y4YPSCKX3VSqV83ILCdoMJp1WzPs8R
- a+RI7qify95RqBGNqTwmYnhA=
+ t=1793680482; v=1; x=1794285282;
+ b=KHDkkMsvPiy7YmZ1IhyOB0Yed0gk+ac9uCTMIQA+xCfR/YBe14wxj/lhmy+VD41r6zHOc2tl
+ rA0T1oKitTyLSkt9MfU+T0t7+b6MZguMyS2AVRW3hL4HNkXpPV5cZqT2MZ+Nn4fjbjNCQODHUvs
+ 7KXv/3hs1NW2LmEDpLDsmnmw=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta11.migadu.com with ESMTPS id 9e2c220236658063;
-	Tue, 03 Nov 2026 03:24:11 +0000
-X-Mizu-Trace-ID: 9e2c220236658063
+Received: by smtp.migadu.com with ESMTPS id c175a73cfa824ebc;
+	Tue, 03 Nov 2026 04:34:42 +0000
+X-Mizu-Trace-ID: c175a73cfa824ebc
 X-Migadu-Flow: FLOW_OUT
-Date: Tue, 3 Nov 2026 11:24:02 +0800
-From: Baoquan He <baoquan.he@linux.dev>
-To: Ridong Chen <ridong.chen@linux.dev>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Dave Chinner <david@fromorbit.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
-	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org, linux-mm@kvack.org,
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
-	"open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>,
-	Ridong Chen <chenridong@xiaomi.com>
-Subject: Re: [PATCH v5 2/6] mm/vmscan: move vmscan tracepoints to a local
- header
-Message-ID: <aulT0u_DOUufMrZZ@fedora>
-References: <20261031090041.58574-1-ridong.chen@linux.dev>
- <20261031090041.58574-3-ridong.chen@linux.dev>
- <aufpQS0XL-CD9YW_@bogon>
- <2f272a9b-ea83-4157-8968-0081990cb709@linux.dev>
+Date: Mon, 2 Nov 2026 20:34:40 -0800
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Harry Yoo <harry@kernel.org>, 
+	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] memcg: force charges from reclaim before trying
+ the limits
+Message-ID: <auli2Zlf1F0tyi4X@linux.dev>
+References: <20261030205418.341214-1-shakeel.butt@linux.dev>
+ <20261030205418.341214-3-shakeel.butt@linux.dev>
+ <auhN7v127jwy-q-W@tiehlicka>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -87,169 +71,169 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2f272a9b-ea83-4157-8968-0081990cb709@linux.dev>
+In-Reply-To: <auhN7v127jwy-q-W@tiehlicka>
 
-On 11/02/26 at 06:46pm, Ridong Chen wrote:
-> 
-> 
-> On 11/2/2026 9:37 AM, Baoquan He wrote:
-> > On 10/31/26 at 05:00pm, Ridong Chen wrote:
-> > > From: Ridong Chen <chenridong@xiaomi.com>
-> > > 
-> > > Move include/trace/events/vmscan.h to mm/trace_vmscan.h so that the
-> > > tracepoints can be extended to reference vmscan-internal structures such
-> > > as struct scan_control, which is not visible outside mm/.  This mirrors
-> > > what several other subsystems already do with their trace headers (e.g.
-> > > fs/fuse/fuse_trace.h, fs/gfs2/trace_gfs2.h, fs/lockd/trace.h).  As they
-> > > do, set TRACE_INCLUDE_PATH to "." and add mm/ to the include path of
-> > > vmscan.o, the only user that defines CREATE_TRACE_POINTS.
-> > > 
-> > > No functional change.
-> > > 
-> > > Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> > > Reviewed-by: Barry Song <baohua@kernel.org>
-> > > ---
-> > >   MAINTAINERS                                        | 2 ++
-> > >   mm/Makefile                                        | 1 +
-> > >   mm/shrinker.c                                      | 2 +-
-> > >   include/trace/events/vmscan.h => mm/trace_vmscan.h | 4 ++++
-> > >   mm/vmscan.c                                        | 2 +-
-> > >   5 files changed, 9 insertions(+), 2 deletions(-)
-> > >   rename include/trace/events/vmscan.h => mm/trace_vmscan.h (99%)
-> > > 
-> > > diff --git a/MAINTAINERS b/MAINTAINERS
-> > > index aaf2825ac945..2ad01107fa05 100644
-> > > --- a/MAINTAINERS
-> > > +++ b/MAINTAINERS
-> > > @@ -17653,6 +17653,7 @@ F:	Documentation/admin-guide/mm/multigen_lru.rst
-> > >   F:	Documentation/mm/multigen_lru.rst
-> > >   F:	include/linux/mm_inline.h
-> > >   F:	include/linux/mmzone.h
-> > > +F:	mm/trace_vmscan.h
-> > >   F:	mm/vmscan.c
-> > >   F:	mm/workingset.c
-> > > @@ -17802,6 +17803,7 @@ R:	Shakeel Butt <shakeel.butt@linux.dev>
-> > >   R:	Lorenzo Stoakes <ljs@kernel.org>
-> > >   L:	linux-mm@kvack.org
-> > >   S:	Maintained
-> > > +F:	mm/trace_vmscan.h
-> > >   F:	mm/vmscan.c
-> > >   F:	mm/workingset.c
-> > > diff --git a/mm/Makefile b/mm/Makefile
-> > > index 2a3ec53d62ee..277b97f7f8d7 100644
-> > > --- a/mm/Makefile
-> > > +++ b/mm/Makefile
-> > > @@ -32,6 +32,7 @@ KCOV_INSTRUMENT_vmstat.o := n
-> > >   KCOV_INSTRUMENT_failslab.o := n
-> > >   CFLAGS_init-mm.o += -Wno-override-init
-> > > +CFLAGS_vmscan.o += -I$(src)
+On Mon, Nov 02, 2026 at 09:46:38AM +0100, Michal Hocko wrote:
+> On Fri 30-10-26 13:54:13, Shakeel Butt wrote:
+> > Reclaim can charge memory, for example when zswap stores a page.
+> > try_charge_memcg() forces these PF_MEMALLOC charges, but only after
+> > they fail at a limit. A charge that fits still has memory.high
+> > enforced. That can make a task in direct reclaim do more reclaim and
+> > sleep longer later, and kswapd records overage that it never handles.
 > > 
-> > One nit:
+> > It is also a problem for the next patches, which make kernel threads
+> > queue high_work. The worker charges memory from its own reclaim, so it
+> > can queue itself again. With those patches but not this one, the worker
+> > queued itself in 118 of 284 runs in a VM test with incompressible zswap
+> > data.
 > > 
-> > Does it really need the above line? It affects mm/shrinker.c too, did your
-> > shrinker.o building fail?
+> > Check PF_MEMALLOC before trying the limits. Reclaim charges then skip
+> > memory.high, as they can already go over memory.max. Drop the
+> > PF_MEMALLOC check in memcg_enforce_high(), which no longer sees them.
 > > 
-> > Seems it's redundant because kbuild adds -I$(src) -I$(obj) for every object
-> > in the directory since commit cdd750bfb1f7 ("kbuild: remove 'addtree' and
-> > 'flags' magic for header search paths"). Please correct me if I am
-> > wrong.
+> > Other effects:
+> > - As before, the check reads current, so it also catches interrupts on
+> >   a PF_MEMALLOC task such as kswapd. Softirqs set PF_MEMALLOC
+> >   themselves for swap over network, so the check can't be limited to
+> >   task context.
+> > - These charges no longer charge a batch or refill the per-cpu stock.
+> > - MEMCG_MAX still goes to the first cgroup that the charge puts over
+> >   its limit. On cgroup v1, memory.failcnt no longer counts them.
+> > - high_work can still run again and again when there is nothing left
+> >   to reclaim. This only stops reclaim from queuing more reclaim.
 > > 
+> > Suggested-by: Michal Hocko <mhocko@suse.com>
+> > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> > ---
+> >  mm/memcontrol.c | 29 +++++++++++++++++------------
+> >  1 file changed, 17 insertions(+), 12 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 0e484f7f823a..af95a4574a0f 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2762,7 +2762,6 @@ static void memcg_enforce_high(struct mem_cgroup *memcg, unsigned int nr_pages,
+> >  	 * when it rechecks the overage and simply bail out.
+> >  	 */
+> >  	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
+> > -	    !(current->flags & PF_MEMALLOC) &&
+> >  	    gfpflags_allow_blocking(gfp_mask))
+> >  		__mem_cgroup_handle_over_high(gfp_mask);
+> >  }
+> > @@ -2787,6 +2786,21 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> >  	if (consume_stock(memcg, nr_pages))
+> >  		return ret;
+> >  
+> > +	/*
+> > +	 * Reclaim may need memory to free memory. Let it go over the
+> > +	 * limits for a while rather than fail or OOM kill. Doing this
+> > +	 * before trying the limits also skips memory.high, so the
+> > +	 * high_work worker can't queue itself from its own reclaim.
+> > +	 */
+> > +	if (unlikely(current->flags & PF_MEMALLOC)) {
+> > +		/* Find the cgroup this charge puts over its limit, if any. */
+> > +		for (mem_over_limit = memcg; mem_over_limit;
+> > +		     mem_over_limit = parent_mem_cgroup(mem_over_limit))
+> > +			if (mem_cgroup_margin(mem_over_limit) < nr_pages)
+> > +				break;
+> > +		goto force;
+> > +	}
 > 
-> Hi Baoquan,
-> 
-> Thanks for the review.
-> 
-> The line is needed for vmscan.o, and mm/shrinker.c is fine without it,
-> because the two files include trace_vmscan.h in different ways.
-> 
-> mm/shrinker.c only does a plain #include "trace_vmscan.h". The lookup
-> starts from mm/, where the header lives, so no -I is needed.
-> 
-> mm/vmscan.c defines CREATE_TRACE_POINTS before including the header.
-> In that case <trace/define_trace.h>, included at the end of
-> trace_vmscan.h, includes the header again to generate the tracepoint
-> definitions:
-> 
-> #include TRACE_INCLUDE(TRACE_INCLUDE_FILE)  /* -> "./trace_vmscan.h" */
-> 
-> This #include is in include/trace/define_trace.h, so the lookup starts
-> from include/trace/ and only finds the header through -I. Without the
-> flag, vmscan.o fails to build:
-> 
-> ./include/trace/define_trace.h:118:42: fatal error: ./trace_vmscan.h: No
-> such file or directory
-> 
-> As for cdd750bfb1f7, it doesn't add -I$(src) for every build. kbuild
-> only adds -I$(src) -I$(obj) automatically when building with O=
-> (see "ifdef building_out_of_srctree" in scripts/Makefile.lib). So
-> with O= the line is indeed redundant and vmscan.o builds fine without
-> it, but a plain in-tree "make" fails with the error above. The
-> explicit flag keeps both working.
-> 
-> To be honest, I had the same worry at first: I thought every .c file
-> that includes the header would need a Makefile change. That's why v3
-> used a relative TRACE_INCLUDE_PATH (../../mm) instead. Steven corrected
-> me and pointed out that the proper way is TRACE_INCLUDE_PATH "." plus
-> -I$(src) for the one object that defines CREATE_TRACE_POINTS [1]. That
-> turned out to need only this one line. Thanks again to Steven for
-> that.
+> This is racy. Not a huge deal as we would get a false event in the worst
+> case but I think it would make more sense to check the margine after the
+> charge is forced. So this would become
 
-You are right, my nit was wrong. Learned it from you, thanks for the
-detailed explanation.
+I actually tested your version as well i.e. after the charge. It is just
+as racy and it has some additional issues which are inlined.
 
-> 
-> [1] https://lore.kernel.org/all/20261014124914.21c21559@gandalf.local.home/
-> 
-> 
-> > Other than the nit, this patch looks good to me,
-> > 
-> > Reviewed-by: Baoquan He <baoquan.he@linux.dev>
-> > 
-> > Thanks.
-> > >   mmu-y			:= nommu.o
-> > >   mmu-$(CONFIG_MMU)	:= highmem.o memory.o mincore.o \
-> > > diff --git a/mm/shrinker.c b/mm/shrinker.c
-> > > index 4fb424e721bc..4fbdade6d2f6 100644
-> > > --- a/mm/shrinker.c
-> > > +++ b/mm/shrinker.c
-> > > @@ -3,7 +3,7 @@
-> > >   #include <linux/rwsem.h>
-> > >   #include <linux/shrinker.h>
-> > >   #include <linux/rculist.h>
-> > > -#include <trace/events/vmscan.h>
-> > > +#include "trace_vmscan.h"
-> > >   #include "internal.h"
-> > > diff --git a/include/trace/events/vmscan.h b/mm/trace_vmscan.h
-> > > similarity index 99%
-> > > rename from include/trace/events/vmscan.h
-> > > rename to mm/trace_vmscan.h
-> > > index 8a872990b4be..ad90f0e9bf2e 100644
-> > > --- a/include/trace/events/vmscan.h
-> > > +++ b/mm/trace_vmscan.h
-> > > @@ -648,4 +648,8 @@ TRACE_EVENT(mm_vmscan_kswapd_clear_hopeless,
-> > >   #endif /* _TRACE_VMSCAN_H */
-> > >   /* This part must be outside protection */
-> > > +#undef TRACE_INCLUDE_FILE
-> > > +#undef TRACE_INCLUDE_PATH
-> > > +#define TRACE_INCLUDE_PATH .
-> > > +#define TRACE_INCLUDE_FILE trace_vmscan
-> > >   #include <trace/define_trace.h>
-> > > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > > index 9959ca158ce8..79d2d614afd0 100644
-> > > --- a/mm/vmscan.c
-> > > +++ b/mm/vmscan.c
-> > > @@ -71,7 +71,7 @@
-> > >   #include "swap.h"
-> > >   #define CREATE_TRACE_POINTS
-> > > -#include <trace/events/vmscan.h>
-> > > +#include "trace_vmscan.h"
-> > >   struct scan_control {
-> > >   	/* How many pages shrink_list() should reclaim */
-> > > -- 
-> > > 2.43.0
-> > > 
-> 
-> -- 
-> Best regards
-> Ridong
-> 
+> --- 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 856a7d07586c..bd202ec05acf 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2653,13 +2653,20 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	bool passed_oom = false;
+>  	unsigned int reclaim_options;
+>  	bool drained = false;
+> -	bool raised_max_event = false;
+
+First, raised_max_event can't go. Since 374f65b14819 rejected charges use it
+too, and without it forced charges that already raised MEMCG_MAX before reclaim
+raise it again.
+
+>  	unsigned long pflags;
+>  	bool allow_spinning = gfpflags_allow_spinning(gfp_mask);
+>  
+>  retry:
+>  	if (consume_stock(memcg, nr_pages))
+>  		return 0;
+> +	/*
+> +	 * Reclaim may need memory to free memory. Let it go over the
+> +	 * limits for a while rather than fail or OOM kill. Doing this
+> +	 * before trying the limits also skips memory.high, so the
+> +	 * high_work worker can't queue itself from its own reclaim.
+> +	 */
+> +	if (unlikely(current->flags & PF_MEMALLOC))
+> +		goto force;
+>  
+>  	if (!allow_spinning)
+>  		/* Avoid the refill and flush of the older stock */
+> @@ -2683,15 +2690,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		goto retry;
+>  	}
+>  
+> -	/*
+> -	 * Prevent unbounded recursion when reclaim operations need to
+> -	 * allocate memory. This might exceed the limits temporarily,
+> -	 * but we prefer facilitating memory reclaim and getting back
+> -	 * under the limit over triggering OOM kills in these cases.
+> -	 */
+> -	if (unlikely(current->flags & PF_MEMALLOC))
+> -		goto force;
+> -
+>  	if (unlikely(task_in_memcg_oom(current)))
+>  		goto nomem;
+>  
+> @@ -2712,7 +2710,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		goto nomem;
+>  
+>  	__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> -	raised_max_event = true;
+>  
+>  	psi_memstall_enter(&pflags);
+>  	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+> @@ -2773,13 +2770,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	if (!(gfp_mask & (__GFP_NOFAIL | __GFP_HIGH)))
+>  		return -ENOMEM;
+>  force:
+> -	/*
+> -	 * If the allocation has to be enforced, don't forget to raise
+> -	 * a MEMCG_MAX event.
+> -	 */
+> -	if (!raised_max_event)
+> -		__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> -
+>  	/*
+>  	 * The allocation either can't fail or will lead to more memory
+>  	 * being freed very soon.  Allow memory usage go over the limit
+> @@ -2789,6 +2779,15 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	if (do_memsw_account())
+>  		page_counter_charge(&memcg->memsw, nr_pages);
+>  
+> +	/*
+> +	 * If the allocation has to be enforced, don't forget to raise
+> +	 * a MEMCG_MAX event.
+> +	 */
+> +	for (mem_over_limit = memcg; mem_over_limit;
+> +	     mem_over_limit = parent_mem_cgroup(mem_over_limit))
+> +		if (!mem_cgroup_margin(mem_over_limit))
+
+Second, !mem_cgroup_margin() is true at usage == max, so a charge that fits
+exactly raises an event (unlike today).
+
+> +			__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+
+Third, we definitely need a break here otherwise every ancestor at its limit gets
+an event which does not happen today.
+
+I want to keep my current version.
