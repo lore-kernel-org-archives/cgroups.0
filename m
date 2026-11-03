@@ -1,54 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.243
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.113
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793708964;
-	b=20djORQ6l1Xm7ai5qYPFDhO62ohFSZSe0qJd3RI0aYFFKBycILKd3+l3npxuEQ4D/Tel
-	 lM06u8ihE5EIBpoqfvrMUBg6Shy0SmdEOnQRkHLDuRT5rKJiL7AkUDnP98cVvG4xt0DXp
-	 lXgvo1nkIF1xvb3h7BLWn4ZXEce/KY1LA5//gwWv31XzhR6m0V5mNeRv34pp1ghd738RE
-	 ji5GKPmcUwgJFhDPomx28+lgiA2LK2BZrsqNWqLCHWO6EE9qZD9CDhAvBo2t/vG1Asu/x
-	 6EWbo3thToYEO9QhpqAgPMF0GFy0LBpDAbBBSz+xz9fN/jqbbQyT39LoSWQGoB2N6IA==
+	t=1793708968;
+	b=f83XtV2DEmV+Z/nWaCfN5JKjhpZ8ep7ChfbfWXzQdu+1Mpmw8jgscjAie/sLarOCNHex
+	 nIQvEOra0uNEVusqhsUCo/QZ363b10EP60XRv5rLbBpciqg/UuwPODni1MPn/UY3ArZRa
+	 +Ypj49ZhgKt5nZ3NOGb9oVFouHIgHOLyJ3w/8TIcjNvOIIErr9Ccrfpz/lKB1uP1D5FEf
+	 BaCmCExSt+19Hjnip099uNaRS48mRIPgPsR8zsn3QpnumcqxC9vLP1VW2SYN7rbih1KwA
+	 8DZPZMRD81bThqJVuifk+Sit8z3gbe38nAjf+s9EAnoRKbI39sOCCxQd4J8fEcEC2lg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793708964;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=dhbxbNBi67wyAuSwSug1/s9Go4nceNJIYCCRWxPbymk=;
-	b=atXCjRWzLxGAGviO1cOOSx28ZqPNJMq2B+x5UDZHFCV5wkJ6KLl63N/r+GkjxcfXnes8
-	 fSPNWEIyBa6w0mqisC657ZaUq6PS4VybkBNJGtAbq4kvSHKwOj8HjDMuIsdNvXW3ZLm5b
-	 3WJz8YCQ8mMNPh0xuz3i7H8ObfuUdy/V8Pk6/kXhKpWF/XiX4y7//B91by1ZJgoEn1f1D
-	 hr4oLc2965VibGxiL1w1yx3EkQxaI1NY8Rre5ObkyDF/b2OXx+sB/DXgzURW8S9Bc30ke
-	 BOogwFVbmP4B1iENdBvXR5p5mBClX9V2B/oSvQvkx5x2i9mTqr5r6G4Wgg8C2HY9ARA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793708968;
+	h=DMARC-Filter:DKIM-Signature:Subject:Message-Id:Cc:In-Reply-To:
+	 References:Content-Type:Mime-Version:X-Original-From:Date:X-Mailer:
+	 Content-Transfer-Encoding:X-Lms-Return-Path:To:From;
+	bh=FP7kG4/RawLD0z06EWd0ekkozMQmyFz/TouOQGf11tc=;
+	b=oaEag0FPJbQXFQcdqZEYDMIOm0Q5Ki2bLzIRP7rpXyE7oSi0EjZWRODhgQxW5aUJnZxg
+	 3LG1mcp4/NebbVn7yjIOgO1aDnYnrcCeNvYhquRU7HMO1aa4Dtn+CEKVm6P2Wz/3SunbC
+	 SomsSBoQXcxnWyMi1ilokQwdrhHPX48s09fVNFk0v/bdETvJh5ojwPFofIE83viMftRZX
+	 43TZLH1m0aWlDGxpx3ohe1amsa7UNzSL5yXBNBI1SFLmBD4nR5CQaoCIQld0JO/CMSGjl
+	 ZS3CJf+HVEKFAzZjkx26EXN4F2asZS2Ln86BceMCNozbhMj1Q2o+PPCY7/rdvGNuOhg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="s/kSrIPz";
-	arc=none smtp.remote-ip=91.218.175.243
-Received: from mta0.migadu.com (out-243.mta0.migadu.com [91.218.175.243])
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=AIzGQocF;
+	arc=none smtp.remote-ip=209.127.231.113
+Received: from va-2-113.ptr.blmpb.com (va-2-113.ptr.blmpb.com [209.127.231.113])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384DA606D806
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 12:29:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 384DA606D806
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5A96606D813
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 12:29:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D5A96606D813
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=s/kSrIPz
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=PF34Ywqq3DrUpqxYnrkdwuEKtKWivf29bfPHI77oMDk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793708961; v=1; x=1794313761;
- b=s/kSrIPzXkIGCH9t1lqlcayf5MiiB6tA0eDDKjCDcWkTDapCIoQDJ/z9rDhaHDEPtasg/VQV
- q9hNCHRiFdNFLSbkddlo9jwSgKP7xH42LtKjol2mBGAoNw6qBDxAZmYyjdD9DjKa6/uhfWAtatT
- jVKewPGlRw6ouQuPiydoxNvU=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 814c7918c8892395;
-	Tue, 03 Nov 2026 12:29:21 +0000
-X-Mizu-Trace-ID: 814c7918c8892395
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <9c9827ff-4541-4a55-8e80-33b5298d8b16@linux.dev>
-Date: Tue, 3 Nov 2026 20:29:09 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=AIzGQocF
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1793708961; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=FP7kG4/RawLD0z06EWd0ekkozMQmyFz/TouOQGf11tc=;
+ b=AIzGQocFfgWdNoTakhQX2iAHKob9UPvw3QMcbq68VyAdWi6E25Tmf6ynmTo3xB6pAmH/25
+ rtNA71csOKYn3tQRJ7uAolU5wnZ3/U1LlUyFZt24qucmB0OvVG+MPYdOKnHUTE2xGmpmnt
+ 5ZcMbwudaRME8thCbSHFkx5XiihwWDK5YUQokCGyGyzFE8kdGJrH+T99OpPk6lhXYGAqUX
+ Dj+jd/Ki7nUasP9ODN5pODRvZmlA1jxm3kwVaQ7uvE/6BcVZaw8GxGJtCZO8zk/YBYyURx
+ NQ1zsONrrDFO0wbP5aXQP9tFAgI5g2jtCpXGI+ErBsCOo5sCSZt1KroD6xRrpw==
+Subject: [PATCH 1/3] mm/mempolicy: factor weighted interleave state helpers
+Message-Id: <20261103122816.48037-2-lizhe.67@bytedance.com>
+Cc: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-mm@kvack.org>, <bpf@vger.kernel.org>, 
+	"Li Zhe" <lizhe.67@bytedance.com>
+In-Reply-To: <20261103122816.48037-1-lizhe.67@bytedance.com>
+References: <20261103122816.48037-1-lizhe.67@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,66 +59,168 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH -v4 03/22] cpuset: generalize the validate_partition()
- interface
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
- <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Koutn? <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chen Ridong <chenridong@huawei.com>, Ridong Chen <chenridong@xiaomi.com>
-References: <20261101114206.2434398-1-ridong.chen@linux.dev>
- <20261101114206.2434398-4-ridong.chen@linux.dev>
- <950ad328-d16d-4cfc-b130-6a43530507ae@linux.dev>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <950ad328-d16d-4cfc-b130-6a43530507ae@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
+Date: Tue,  3 Nov 2026 20:28:14 +0800
+X-Mailer: git-send-email 2.45.2
+Content-Transfer-Encoding: 7bit
+X-Lms-Return-Path: <lba+26ae9d39e+cfc037+vger.kernel.org+lizhe.67@bytedance.com>
+To: <tj@kernel.org>, <hannes@cmpxchg.org>, <mkoutny@suse.com>, 
+	<akpm@linux-foundation.org>, <david@kernel.org>, <gourry@gourry.net>, 
+	<ziy@nvidia.com>, <joshua.hahnjy@gmail.com>, 
+	<ying.huang@linux.alibaba.com>, <ljs@kernel.org>, <liam@infradead.org>, 
+	<rppt@kernel.org>, <surenb@google.com>, <mhocko@suse.com>
+From: "Li Zhe" <lizhe.67@bytedance.com>
 
+Weighted interleave updates repeat the same allocation, default table
+initialization, table copy and default table setup patterns in the sysfs
+and auto-weighting paths.
 
+Factor those pieces into small helpers so later changes can reuse one
+state lifecycle for both the global table and cgroup-local override
+tables. Keep the existing upstream wi_srcu retirement path unchanged.
 
-On 11/3/2026 6:25 PM, Guopeng Zhang wrote:
-> 
-> 
-> 在 2026/11/1 19:41, Ridong Chen 写道:
->> From: Chen Ridong <chenridong@huawei.com>
->>
->> Refactor validate_partition() to take the parent partition, the new
->> partition root state, the new effective exclusive CPUs and the CPUs to
->> be deleted, instead of a trial cpuset. A NULL parent stands for a
->> remote partition, whose CPUs come from top_cpuset. This makes the
->> interface flexible enough to handle both local and remote partition
->> validation.
->>
->> The housekeeping conflict check is folded into validate_partition(). It
->> is skipped when the parent is not a valid partition root, as @cs can't
->> be a valid local partition in that case.
->>
->> Use the new interface for local partition enablement in
->> update_parent_effective_cpumask() and in partition_cpus_change(),
->> replacing the open-coded checks there. The order of the checks is now
->> the same for both paths: empty CPUs, housekeeping conflict, then no CPU
->> left for tasks.
->>
->> Signed-off-by: Chen Ridong <chenridong@huawei.com>
-> 
-> nit: is this old tag still needed?
-> 
-> Thanks,
-> Guopeng
-> 
+No functional change is intended.
 
-Hi Guopeng,
+Signed-off-by: Li Zhe <lizhe.67@bytedance.com>
+---
+ mm/mempolicy.c | 54 ++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 32 insertions(+), 22 deletions(-)
 
-Thanks for the review.
-
-Yes, I think it is still needed. This patch was originally written
-and posted while I was at Huawei, so it keeps the original author and
-Signed-off-by, and the second Signed-off-by records that I am now
-carrying and resubmitting it.
-
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+index 0884c629670d..fb9962302664 100644
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -188,6 +188,30 @@ static void wi_state_retire(struct weighted_interleave_state *state)
+ 		call_srcu(&wi_srcu, &state->rcu, wi_state_free_rcu);
+ }
+ 
++static struct weighted_interleave_state *wi_state_alloc(void)
++{
++	struct weighted_interleave_state *state;
++
++	return kzalloc_flex(*state, iw_table, nr_node_ids, GFP_KERNEL);
++}
++
++static void wi_state_init(struct weighted_interleave_state *state)
++{
++	for (int i = 0; i < nr_node_ids; i++)
++		state->iw_table[i] = 1;
++}
++
++#if defined(CONFIG_SYSFS) || defined(CONFIG_BPF_WEIGHTED_INTERLEAVE)
++static void wi_state_init_from(struct weighted_interleave_state *dst,
++			       struct weighted_interleave_state *src)
++{
++	if (src)
++		memcpy(dst->iw_table, src->iw_table, nr_node_ids * sizeof(u8));
++	else
++		wi_state_init(dst);
++}
++#endif
++
+ static u8 get_il_weight(int node)
+ {
+ 	struct weighted_interleave_state *state;
+@@ -243,22 +267,17 @@ int mempolicy_set_node_perf(unsigned int node, struct access_coordinate *coords)
+ 	struct weighted_interleave_state *new_wi_state, *old_wi_state = NULL;
+ 	unsigned int *old_bw, *new_bw;
+ 	unsigned int bw_val;
+-	int i;
+ 
+ 	bw_val = min(coords->read_bandwidth, coords->write_bandwidth);
+ 	new_bw = kcalloc(nr_node_ids, sizeof(unsigned int), GFP_KERNEL);
+ 	if (!new_bw)
+ 		return -ENOMEM;
+ 
+-	new_wi_state = kmalloc_flex(*new_wi_state, iw_table, nr_node_ids);
++	new_wi_state = wi_state_alloc();
+ 	if (!new_wi_state) {
+ 		kfree(new_bw);
+ 		return -ENOMEM;
+ 	}
+-	new_wi_state->mode_auto = true;
+-	for (i = 0; i < nr_node_ids; i++)
+-		new_wi_state->iw_table[i] = 1;
+-
+ 	/*
+ 	 * Update bandwidth info, even in manual mode. That way, when switching
+ 	 * to auto mode in the future, iw_table can be overwritten using
+@@ -282,6 +301,8 @@ int mempolicy_set_node_perf(unsigned int node, struct access_coordinate *coords)
+ 	}
+ 
+ 	/* NULL wi_state assumes auto=true; reduce weights and update wi_state*/
++	wi_state_init(new_wi_state);
++	new_wi_state->mode_auto = true;
+ 	reduce_interleave_weights(new_bw, new_wi_state->iw_table);
+ 	rcu_assign_pointer(wi_state, new_wi_state);
+ 
+@@ -3672,27 +3693,20 @@ static ssize_t node_store(struct kobject *kobj, struct kobj_attribute *attr,
+ 	struct weighted_interleave_state *new_wi_state, *old_wi_state = NULL;
+ 	struct iw_node_attr *node_attr;
+ 	u8 weight = 0;
+-	int i;
+ 
+ 	node_attr = container_of(attr, struct iw_node_attr, kobj_attr);
+ 	if (count == 0 || sysfs_streq(buf, "") ||
+ 	    kstrtou8(buf, 0, &weight) || weight == 0)
+ 		return -EINVAL;
+ 
+-	new_wi_state = kzalloc_flex(*new_wi_state, iw_table, nr_node_ids);
++	new_wi_state = wi_state_alloc();
+ 	if (!new_wi_state)
+ 		return -ENOMEM;
+ 
+ 	mutex_lock(&wi_state_lock);
+ 	old_wi_state = rcu_dereference_protected(wi_state,
+ 					lockdep_is_held(&wi_state_lock));
+-	if (old_wi_state) {
+-		memcpy(new_wi_state->iw_table, old_wi_state->iw_table,
+-					nr_node_ids * sizeof(u8));
+-	} else {
+-		for (i = 0; i < nr_node_ids; i++)
+-			new_wi_state->iw_table[i] = 1;
+-	}
++	wi_state_init_from(new_wi_state, old_wi_state);
+ 	new_wi_state->iw_table[node_attr->nid] = weight;
+ 	new_wi_state->mode_auto = false;
+ 
+@@ -3723,16 +3737,13 @@ static ssize_t weighted_interleave_auto_store(struct kobject *kobj,
+ 	struct weighted_interleave_state *new_wi_state, *old_wi_state = NULL;
+ 	unsigned int *bw;
+ 	bool input;
+-	int i;
+ 
+ 	if (kstrtobool(buf, &input))
+ 		return -EINVAL;
+ 
+-	new_wi_state = kzalloc_flex(*new_wi_state, iw_table, nr_node_ids);
++	new_wi_state = wi_state_alloc();
+ 	if (!new_wi_state)
+ 		return -ENOMEM;
+-	for (i = 0; i < nr_node_ids; i++)
+-		new_wi_state->iw_table[i] = 1;
+ 
+ 	mutex_lock(&wi_state_lock);
+ 	old_wi_state = rcu_dereference_protected(wi_state,
+@@ -3745,9 +3756,7 @@ static ssize_t weighted_interleave_auto_store(struct kobject *kobj,
+ 	}
+ 
+ 	if (!input) {
+-		if (old_wi_state)
+-			memcpy(new_wi_state->iw_table, old_wi_state->iw_table,
+-						       nr_node_ids * sizeof(u8));
++		wi_state_init_from(new_wi_state, old_wi_state);
+ 		goto update_wi_state;
+ 	}
+ 
+@@ -3758,6 +3767,7 @@ static ssize_t weighted_interleave_auto_store(struct kobject *kobj,
+ 		return -ENODEV;
+ 	}
+ 
++	wi_state_init(new_wi_state);
+ 	new_wi_state->mode_auto = true;
+ 	reduce_interleave_weights(bw, new_wi_state->iw_table);
+ 
 -- 
-Best regards
-Ridong
-
+2.20.1
