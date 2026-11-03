@@ -1,134 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=185.125.188.122
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793692879;
-	b=ugYRRFSCYAveAhkKVLbC4tE9eHN+Md4z4DdV7FRfE2Lhac8AjRfnbtSEEZhTU1bgYC0e
-	 7sJ2zJiwDq7XbxBPoF0fxUA8uSCUSHKGCdUUsCLWeV22zm59ioI+e07yAQTCq4nfUnk0M
-	 43zHQ6D1Wf8F8Zxw33HBpe1tIwWqDPcLExoeeSqq6pbzmRBUXs06cJ8+Bl3p6D+kB8she
-	 WCU4pBaoA2ahj5Tkbx6wva35zgUxV7i0ya/QLQR1VvgmiMdxvaDISz8wuRlYoLRGOgtES
-	 lTgFcXkg4QtZmLuBRIJJiBk1NZcrFphMKL730/VotXPAC8jCr3JPPNJGmPmIyDo99Fg==
+	t=1793694876;
+	b=I1FshZ8i4eO9zTYtVHN3ga5li00XRifAnUn7HpKDDQAyNmcbZTSGCXjOI3rvCAhuWv1w
+	 SJ4SbHqz86/kd1gUb8xcphLnAV9Kyb8HnfCGNl8TIERdz/5Hk9RNQ6yiJV3J6bpZoEIQo
+	 nuZ3ZMX+c1/Hblli5p8NuFGvKUL0/vxSewiInke/aoU5KknXizN3qdo+VshhYo2scrF+y
+	 NsqUJt3BPvm0jSY2gAp6rdOh+7tog0xK9rQ4u5nB+vpu20PTsE+A/QXEkxQW0oJTq7+D2
+	 IbsQ3xNeS6jf3ktfTwBWeb7y209MmzHGfu/8J41KSFYIZJdMaYTh3uibisL/d7SDKGQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793692879;
-	h=DMARC-Filter:Received:DKIM-Signature:Received:
-	 X-Google-DKIM-Signature:X-Forwarded-Encrypted:X-Gm-Message-State:
-	 X-Gm-Gg:X-Received:X-Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=7czWU74VCUPrnLnmq02o91EF357Keqvg3cH2LY97Lm4=;
-	b=xenUYUgFoqKj+olcr3Ue1YsYNpJwTsy1uVJgx4xJG+N4MI+xNjR/xWzPbsDL2sa4qJrp
-	 yjlTWPHD9vzdMOycpQd4XnT+e6ch9ViqPP4nY8/f6YIuvmR/uhqWM6CylMFUdwrzK0Jt4
-	 iAoMGzo7GIDuYR2+nW6Ud+uob/4sNZ/a/mCcd3dbmIafhhsOPEFzcT/jJCAyr5aGO4som
-	 MM5WeqYZPXiJMStf+vWPziqR2G+Q5dq4qPacb8BA3235J68rb3X4SDn1JjPFVDG8qfOXV
-	 2/IDZBw0gzkFK5K8cWHjZBI6x/88HYd0hqDGx2d19xqnitgrpbieJuD4mliDj2P0+nw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793694876;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=o94uNRQqzrylUu01kiRSHaUQ5l5ZXHsTJxuqTtmUWsA=;
+	b=pRjUYNQFZfpf2dhq+XLSoEthj4+5IWu0Ix6FLRFTTdFnF+sbJm7nQOShsFmqX5pdxKqV
+	 YSaGjHqYzCgaAraCp+DWaVHbHZfGNWABQLPW2phPXIM4kKFwsqLziM/QZufQdQlhCkDPm
+	 5HbfDsUmGnJZfDMGGhLb1mC3IGpPt0ne/nhuNTtu2aKa7ZRLQHXMsyU+l3J6ah+ORHg2G
+	 1m1XSnvmcq0FcKFh3udX5vviaF0H08jYKjEfobs6n+U2OGH/zA0J00xULmc0BdwID/jEg
+	 zy7Jkhrd9flyvgwOL26A6U915MbNqy1QAS5ufnYyt4yRaOxelBlC0jXNU43E9BOu3gw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=canonical.com;
-	spf=pass smtp.mailfrom=canonical.com;
-	dkim=pass header.d=canonical.com header.i=@canonical.com header.a=rsa-sha256 header.s=20251003 header.b=KIpQTFXv;
-	arc=none smtp.remote-ip=185.125.188.122
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=suse.com;
+	spf=pass smtp.mailfrom=suse.com;
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=TLVy7iFt;
+	arc=none smtp.remote-ip=209.85.221.49
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CD33606A335
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 08:01:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5CD33606A335
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=canonical.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3845F606B6E1
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 08:34:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3845F606B6E1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (4096-bit key, unprotected) header.d=canonical.com header.i=@canonical.com header.a=rsa-sha256 header.s=20251003 header.b=KIpQTFXv
-Received: from mail-dy1-f198.google.com (mail-dy1-f198.google.com [74.125.82.198])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 3B02B3F520
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 08:01:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-	s=20251003; t=1793692878;
-	bh=7czWU74VCUPrnLnmq02o91EF357Keqvg3cH2LY97Lm4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version;
-	b=KIpQTFXvm6hxRGjKvYp9zJeXovq8su7N468Ad4dgwMJaWz9vEaiOCGDkokJUQKlkb
-	 kECqOQ8JiLh/N3CLC272DWKKdaTs2IwG7u1pymBuoOp7KnuJa61ZKjlL7JpEJJ/oBI
-	 M2x2FK1Vef0DBnEU16eNMNz/9g4J2daFucqUFZKnXdT1wyuVSL+Qe8lIbb8WLnWTi9
-	 yeiOtyJ3t+Gbm8YpbO+6fbo7JqKOm8vqXkIdlcyOUgS7RWL381WJazqlbnlmGlWbD0
-	 zas6THNsJF8KmcgAJflFxVi2NcpYPQZuZ3NJmlnxMpcAlib3/Oiu3SD9NVgqeLIlLk
-	 kJvWKYgLC7FA9JkjorLJQFYcOiU4hySf+0VPqj34sfzMWsP9wHsXM9EnGs+Xx8hKAX
-	 VMk57eIMda7ykl+uvIKwmW3eWgFGmLZ1jQHlVvnoKWmOKxeb4VNwjiOOVMemB0ZOqG
-	 dCb5HaXihGq1KkdHN73W+MCCLiRTtY5P7Fs493WyyFpOQYOsAgjby9L4Cd1ZjN8V0T
-	 z1W7rVOG+CQvrleZzhb0P1pW/4G50yyxmgIk5IHxOawk5VInOEcEqhCSnN4RcArTS0
-	 p+YyAYfwOUINszRm0HzDETQzcslRddeadcEvHXcA4QHKpWUkqLmu8w8HvtAynhW35q
-	 IUEW6GMs+1HV8eERJBSlEMRk=
-Received: by mail-dy1-f198.google.com with SMTP id 5a478bee46e88-359b81ad4e8so5243396eec.0
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 00:01:18 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=TLVy7iFt
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48af4d4e61fso2354800f8f.2
+        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 00:34:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1793694874; x=1794299674; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=o94uNRQqzrylUu01kiRSHaUQ5l5ZXHsTJxuqTtmUWsA=;
+        b=TLVy7iFtFV1eosB1viqZ7kViXpvbRMjgrFtWB9Imq6n76wjr8s3iRUHWE8hgHwH7Gr
+         0KInipeNWTR08EjSERF8pBe1LkUAMlskiz3X0+LPzZHWD1VodvaOFpXD/XS36dPppxjU
+         EdiIuVK+VO4HJkL8KSHmDuftog2QHWddAXkE3Ed+Il3YJmrHhKr/mAO8DsoyZJlUakNL
+         4rxY/hQtmPfk36jSWuthX2k94iG9CN/Mho5dKMpxFLKqaIuEZzHldAH5jH+2JYLyUFMt
+         lmeeuZpbICNNFyG19S+eF5BPU+e+q0kgrq+2pfK3WorZgLrO1HemIDKFRt/Js6Ibxqlr
+         T3Nw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793692877; x=1794297677;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7czWU74VCUPrnLnmq02o91EF357Keqvg3cH2LY97Lm4=;
-        b=tDHLIgmKgWum0wRtQndqM1UjFg3L7UqDv739uOqkoEmoF+CiN40TKc8apI1clvAd8Y
-         WFCz+oz9pw3RebILBacCmVRwWwEUbHuZXtu9uNpX6fXxRUPwDVcbrmfACXF+0Qlrv80z
-         B6FMLwuv+ndG6GtwLDH6GUo5k6eUk94owKjNDdyEh67S8lz0MlUcKepyQC7blQS+AqaZ
-         T45lV5saYfaBwP6bTTdYfI1F5Gg6XvKARWdC+PNbwM3fjMU8tZx+VlD1GJqnQUXKGSju
-         TceYQQaqBATXwKSZkVuPmx/mDazguIZocqnrgZ+iyxtfcMJVdu51Zz83keJSzlqyDwy1
-         XoRA==
-X-Forwarded-Encrypted: i=1; AKwUvBx6aXVDGUxXVHpVdxaCwckutrt02bfWPG7LDiULTlNjspSCKguw4j5HjbaNGQ73UlVwx0w0ThcN@vger.kernel.org
-X-Gm-Message-State: APuU4Z9jCrtYAP+B4zTiJEb0IdY9yhE5w5jtf/bx531ssDIcuWNsv3nf
-	YNlg3CqOw4bZGJKUi1pt/mETPRSJQ/k6dtLJN+YykYTl01WXw7yyOhLzV5GX3PtMvREN5xsXW0P
-	yPdIg0hB33TBkir2XESr0VUjS4RTN1GqfxMYUmpX+9d+Tldu8VTw9tKnhXowApJE+nBvjZ1FPrZ
-	k=
-X-Gm-Gg: AYBFou0fCQQL5eBnGiQlHd7gfI89t+UiaKxIOmEtTLVtvm6hm2K4myZc/GirQkHENm5
-	vDLe8r+oCmbwhw66heyFuj4pdy5E3KKS+YLvlB2MMjOQUXBFdmWU4uLraZ65fvV8xoYK2H/RC3w
-	bF6GwMsHdIe++vfWuKpufSsebUrki9nvnrI4KI1z7ZPzN4Qt9baGgZfuYHHMnV3lxtsBt2j8Yho
-	meEkAdLtDpQxmY9TfJQ0tMRx9fiVSZmZgQgMa/UOuGOYziilnNxf9dQhJbELaARzL5EoZX4ErG4
-	HdMSt3jmMMkW43gD4PVALsiWdUg9JwOivtQD6MkCjFx0sqnQAt85+y1pKSWMbo2lbyP5FI97GME
-	a4qmF/XompSLLkzaZ6aYj7N2O8bO7x6nec7dfymdDtLfZ2sqcj9NBfjvZevUyd61MCC9hdeiJmn
-	jte4vyau1VqATSUpTD9g==
-X-Received: by 2002:a05:7300:8813:b0:36c:49a7:86ac with SMTP id 5a478bee46e88-36c49a78c8cmr1128087eec.37.1793692876454;
-        Tue, 03 Nov 2026 00:01:16 -0800 (PST)
-X-Received: by 2002:a05:7300:8813:b0:36c:49a7:86ac with SMTP id 5a478bee46e88-36c49a78c8cmr1128033eec.37.1793692875819;
-        Tue, 03 Nov 2026 00:01:15 -0800 (PST)
-Received: from Garunix (122-58-163-222-fibre.sparkbb.co.nz. [122.58.163.222])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-36a428af4e6sm37885274eec.4.2026.11.03.00.01.04
+        d=1e100.net; s=20260707; t=1793694874; x=1794299674;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=o94uNRQqzrylUu01kiRSHaUQ5l5ZXHsTJxuqTtmUWsA=;
+        b=24TbwBJeN1h3XWeRIo7+JEstBB9W2xkpMZ8+I7v9X6nhmY/5rJHc6WUEb6REBxcF65
+         HWRVX83m8/YaaB+QpxSjK9WwaSEutr1iwG+N/cznnHV9HS2J22aBRalkA1EcA+n1gRvO
+         AQr5wQahDyRb10DguqT43e3164G9s1SNbhMyZNNTXM4q9UbjuKpb8f///U4yoHuPhv9X
+         NeTQuri/sutSCrfTyH4XnNfGMbF1DaVNaHxlxPhwYTZAe0rw7IrPfb45NRqMwv1rl/YX
+         k5mWatovDwKOziWCVwPzabYPYVl6XRQu/YktMDWxZcu51G1PlDhwdc6Mg0kY71UTVbgU
+         +mGA==
+X-Forwarded-Encrypted: i=1; AKwUvBxQ1jZcezoaQXcKlz0N6sDAROUhb0Rzn6vdfX60yYhuZGlWWlB+Y1w1FpX3EzCZQXiUoNFycbT8@vger.kernel.org
+X-Gm-Message-State: APuU4Z/ah4oVbDun9RBETIHoh3cLUmiJM8fY+xrBhvyyfBcHgBpQ/dYj
+	kNjBYy3ta2rBJz3NggOnJcHrDg+NYruOK+HOZJjjKBhrfMTMlNeuoebtGwOCTev8WYad0sM7+qY
+	xZ2CR4cg=
+X-Gm-Gg: AYBFou1SY/q5w9Ao0hStcZNMVeaO17KYUR+UfBo2l9QpO62DbCTa8EVE7fiVcdnmA1e
+	j66g+cSL3Wn2OolnDt31aDOJkOZlJzkOC8qyRU2FId/cqSp2v0bnb/NiOJOTUMI92lcke+TBzmM
+	9XmGvF03AMRWL5sXlOyIVyq5pWgw2UiTVl/mcpWEyCbXo3tT1iTMKpiCAJ1ky1JeG4P/MnjC+4S
+	usq+2xPHNBmDwdKl4EPVr2JJIOaGYPkdPpsJchQFUUDTQVWGvpvGqtO79D1nuVo8+a2r8EGx3kJ
+	jTTfzqbXRyZSh9co/mG/iI0HOh0WHQ/0HAsKp/gzm6CLyWaqjk9w9t7hUE9wkuaf5ABVUq6/bGq
+	J/8+AWZ/We1Ief9LDp55/FApNqoZFjaa4mJchJ42Hp/8Grf20wTImzUMe1U7lytF+Kagga6v34X
+	lT9zWIdtI+UK9VaLomDqTi8jc7IG9z2GM6uVnLGC7Zjb7zDVfXo+pw0J+1CQsIoghwTu6vnCmRD
+	B9UPsGgeXe0/5FCrtH1WZ4EDgSWgKno5U2lq7l6VNcRFM9SL1XF4wU/94cxdJ3eA0FkOmcJXZ74
+	ac9wt/at0mWD3vYSYxZmGHabnpMlIMJps0745xk=
+X-Received: by 2002:a05:6000:2892:b0:48d:eb44:650c with SMTP id ffacd0b85a97d-48e6e309f40mr28006453f8f.40.1793694874669;
+        Tue, 03 Nov 2026 00:34:34 -0800 (PST)
+Received: from localhost (109-81-32-81.rct.o2.cz. [109.81.32.81])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b8a7d1sm23718452f8f.38.2026.11.03.00.34.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 00:01:15 -0800 (PST)
-From: Matthew Ruffell <matthew.ruffell@canonical.com>
-To: Waiman Long <longman@redhat.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>
-Cc: Caron Wills <caron.wills@pulsar.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
+        Tue, 03 Nov 2026 00:34:34 -0800 (PST)
+Date: Tue, 3 Nov 2026 09:34:33 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>,
-	Jann Horn <jannh@google.com>,
-	Pedro Falcato <pfalcato@suse.de>,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	Jay Vosburgh <jay.vosburgh@canonical.com>
-Subject: [PATCH 6/6] cgroup/cpuset: Don't make a forking task wait for memory migration
-Date: Tue,  3 Nov 2026 20:59:40 +1300
-Message-ID: <20261103075940.110308-7-matthew.ruffell@canonical.com>
-X-Mailer: git-send-email 2.55.0
-In-Reply-To: <20261103075940.110308-1-matthew.ruffell@canonical.com>
-References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>,
+	Harry Yoo <harry@kernel.org>,
+	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/5] memcg: force charges from reclaim before trying
+ the limits
+Message-ID: <aumcmb9iBpovh97u@tiehlicka>
+References: <20261030205418.341214-1-shakeel.butt@linux.dev>
+ <20261030205418.341214-3-shakeel.butt@linux.dev>
+ <auhN7v127jwy-q-W@tiehlicka>
+ <auli2Zlf1F0tyi4X@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -138,122 +106,47 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <auli2Zlf1F0tyi4X@linux.dev>
 
-From: Caron Wills <caron.wills@pulsar.com>
+On Mon 02-11-26 20:34:40, Shakeel Butt wrote:
+> On Mon, Nov 02, 2026 at 09:46:38AM +0100, Michal Hocko wrote:
+[...]
+> > @@ -2789,6 +2779,15 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> >  	if (do_memsw_account())
+> >  		page_counter_charge(&memcg->memsw, nr_pages);
+> >  
+> > +	/*
+> > +	 * If the allocation has to be enforced, don't forget to raise
+> > +	 * a MEMCG_MAX event.
+> > +	 */
+> > +	for (mem_over_limit = memcg; mem_over_limit;
+> > +	     mem_over_limit = parent_mem_cgroup(mem_over_limit))
+> > +		if (!mem_cgroup_margin(mem_over_limit))
+> 
+> Second, !mem_cgroup_margin() is true at usage == max, so a charge that fits
+> exactly raises an event (unlike today).
 
-Since commit 65e510cd30d0 ("cgroup/cpuset: Move mpol_rebind_mm/cpuset_migrate_mm()
-calls inside cpuset_attach_task()") a CLONE_INTO_CGROUP fork into a cpuset that
-differs from the parent's goes through cpuset_attach_task(), which queues a
-memory migration of the child's mm and sets attach_ctx.task_work_queued, and
-cpuset_fork() then schedules flush_migrate_mm_task_workfn() on the *parent*.
-Two things are wrong with that:
+True
 
- - task_work_queued is set whenever is_memory_migrate(cs) is true, which
-   on cgroup v2 is always, even when cpuset_migrate_mm() queued nothing
-   because the nodemasks were equal. The parent then flushes
-   cpuset_migrate_mm_wq for no reason of its own.
+> 
+> > +			__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> 
+> Third, we definitely need a break here otherwise every ancestor at its limit gets
+> an event which does not happen today.
 
- - cpuset_migrate_mm_wq is a single ordered workqueue, so the flush waits
-   for every migration queued by anyone, not just this fork's. systemd
-   forks services with CLONE_INTO_CGROUP, and as soon as one slice carries
-   a cpuset setting every top-level slice has a cpuset of its own, so PID 1
-   blocks in flush_workqueue() on every service start for as long as some
-   unrelated cpuset.mems migration takes. On the AWS systems of
-   LP: #2165410 that is minutes, during which logind cannot create
-   sessions and SSH logins fail.
+This is a separate thing but shouldn't we actually raise the event on
+all levels that are over?
 
-Make cpuset_migrate_mm() report whether it queued work and only set
-task_work_queued in that case, and don't schedule the flush from
-cpuset_fork() at all: the forking task is neither the cpuset.mems writer
-nor the cgroup.procs writer for whom the synchronous semantics were
-introduced by commit e93ad19d0564 ("cpuset: make mm migration asynchronous"),
-and nothing depends on the child's pages having moved before the parent
-returns from fork(). The migration itself still runs, in the background.
+> I want to keep my current version.
 
-Fixes: 65e510cd30d0 ("cgroup/cpuset: Move mpol_rebind_mm/cpuset_migrate_mm() calls inside cpuset_attach_task()")
-Link: https://bugs.launchpad.net/bugs/2165410
-Signed-off-by: Caron Wills <caron.wills@pulsar.com>
-Signed-off-by: Matthew Ruffell <matthew.ruffell@canonical.com>
----
- kernel/cgroup/cpuset.c | 39 +++++++++++++++++++++++++--------------
- 1 file changed, 25 insertions(+), 14 deletions(-)
+OK, fair enough. My intention was to have those two parts closer
+together but this is not something I would insist.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 439b55a310fe..b331689eab24 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2704,26 +2704,32 @@ static void cpuset_migrate_mm_workfn(struct work_struct *work)
- 	kfree(mwork);
- }
- 
--static void cpuset_migrate_mm(struct mm_struct *mm, const nodemask_t *from,
-+/*
-+ * Returns true if migration work was queued, in which case the caller may
-+ * want to flush cpuset_migrate_mm_wq before returning to userspace.
-+ */
-+static bool cpuset_migrate_mm(struct mm_struct *mm, const nodemask_t *from,
- 							const nodemask_t *to)
- {
- 	struct cpuset_migrate_mm_work *mwork;
- 
- 	if (nodes_equal(*from, *to)) {
- 		mmput(mm);
--		return;
-+		return false;
- 	}
- 
- 	mwork = kzalloc_obj(*mwork);
--	if (mwork) {
--		mwork->mm = mm;
--		mwork->from = *from;
--		mwork->to = *to;
--		INIT_WORK(&mwork->work, cpuset_migrate_mm_workfn);
--		queue_work(cpuset_migrate_mm_wq, &mwork->work);
--	} else {
-+	if (!mwork) {
- 		mmput(mm);
-+		return false;
- 	}
-+
-+	mwork->mm = mm;
-+	mwork->from = *from;
-+	mwork->to = *to;
-+	INIT_WORK(&mwork->work, cpuset_migrate_mm_workfn);
-+	queue_work(cpuset_migrate_mm_wq, &mwork->work);
-+	return true;
- }
- 
- static void flush_migrate_mm_task_workfn(struct callback_head *head)
-@@ -3376,9 +3382,9 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
- 		 * migrate mm from.
- 		 */
- 		if (is_memory_migrate(cs)) {
--			cpuset_migrate_mm(mm, &oldcs->old_mems_allowed,
--					  &attach_ctx.nodemask_to);
--			attach_ctx.task_work_queued = true;
-+			if (cpuset_migrate_mm(mm, &oldcs->old_mems_allowed,
-+					      &attach_ctx.nodemask_to))
-+				attach_ctx.task_work_queued = true;
- 		} else {
- 			mmput(mm);
- 		}
-@@ -3887,8 +3893,13 @@ static void cpuset_fork(struct task_struct *task)
- 	attach_ctx.task_work_queued = false;
- 	attach_ctx.old_cs = oldcs;
- 	cpuset_attach_task(cs, task);
--	if (attach_ctx.task_work_queued)
--		schedule_flush_migrate_mm();
-+	/*
-+	 * Unlike a cpuset.mems or cgroup.procs writer, the forking task has
-+	 * no business waiting for the child's pages to be migrated, and a
-+	 * flush of the ordered cpuset_migrate_mm_wq would make it wait for
-+	 * every migration anyone queued. Let the migration run in the
-+	 * background.
-+	 */
- 
- 	dec_attach_in_progress_locked();
- 	mutex_unlock(&cpuset_mutex);
+Acked-by: Michal Hocko <mhocko@sus.com>
+Thanks!
+
 -- 
-2.55.0
-
+Michal Hocko
+SUSE Labs
