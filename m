@@ -1,55 +1,61 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793734423;
-	b=vYgJp8pN/eleEJiGgDHebdmIozVhbLeb537FznQgq+/Im693uMOzJ7PJGthUBgGebGak
-	 C2o8zxz8A08VYmwxYG++VD3vtTluY/Kj2iuwGOD7vUoC3XfYxEnT/snb492NddzKPv3G9
-	 Mlr7m47cYywDYbzjWZrmEmAvz8Q5npMo4SQW03UlH+Eq4b6Z6CiB5HZJPWcyT+wnOpW+a
-	 hYKxfH1nX8Cg3Hr1gdPuw02R2jUGtIjrKGmH1wk6wOJ2/rUErH+m+sUxyQtVrmezb5hme
-	 0yF6G7G1kRmFciyfIjLvxWgK03gNRDGC857NdlnyM1W/szH0vsDwNh7JU/ievl/iSMg==
+	t=1793737320;
+	b=Ne7AgaQq7V/fNygofWY88cUEAi7CgzgoVQKt6bRa85hSdp2yAbfsjiP/T759dlkHtSIY
+	 WHvKr+shdDC55gn8eDcVd4tW1Qqpcsk+Zw9Ru8dVJacpD1wNJZ0da8wkSN88U85o9kbRe
+	 gj6SfrvtbTd2JmSriSENSoBVmhTpcycoTvPDE8Wd10tXMwMJqImt2H9I4QbJdZr9RETGk
+	 6xXigxOw96s/FV1XZdyzv6ZDu3bG6Cgb/FlKZQp/wJVlwisSoOdL9/r3fZzmWCjzjPVGo
+	 60zhUos83+OotMxhEr1OFnpQ3lVbSWj/R7oU3bWSEUhNZZwQsss1JHEv+CfGAYJHj3g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793734423;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=jRv7FYipiH4DqQ5+rCUwDRkUzjzUXk5k5BQEMlfi6u8=;
-	b=boc/VX0gtNe9C6Ux8cCHMv1bYetX2n1J/6p7jlyLW0u/fDEUPMO0L8HtWz0AqxyBBNai
-	 iwxin16/Ome2ZwU+8jlH8RdfMYP87tPXvF6lvNtVn+Li/whlk6INQi0lYWtn45qcc6VMY
-	 Pforpqlp0Mhjun0zwNIsi+4wxcdiZrq6K5QpIYoq5r8ADP6HjZCvg3Z4fhPSdUdxI4ycK
-	 /8DMbVdSMnVgpvjdh3VOzznaSDHTaBogUqdK4Uo1le4Fr5tyhW+N+BavjsuZTcJfK++hT
-	 Uc5FPgDBCd6h6GFO6EGJG4ZwYOdCMtM/PEWPQJyV4BqakzH8lL4NhCOalESkiS0vpmQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793737320;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=ZI36IvN614wZfc+9bgno27AitbTt9jTYGJEoJ2XdrFY=;
+	b=RQ7C+k1i8/OEaN/LNlOld3ru8mf0xxic8YMRdtVRJAbwHF0jise7Lz8dqbVXvJPPtAVR
+	 VKMLt3YjOTNvl3EB1UkzIY9bPddIKSKzfKovOcg//kMXFcK3UIjTlIst1zdqipvzAEHMK
+	 1LJJTl/i726Clih7nBbUPi8LwVQQH6jaDSXljdt8PZskAWw6rodPIbCy3ETv+vpleG1Ui
+	 313zhIBnQ7wmGHGdw+BjIkbEJPJKYFCFcCNosEwzocDFsQxYSixq0peo6HDelv5BXy248
+	 fG2u1NwZwrzMTBRrPceXuRMJr1k6Z0dA3KO+S51Fh6sxUfy6pm/8HS/KV4tfFV/NFBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="S/1z4d1T";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RcoDvnjE;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07CBE606A324
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 19:33:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB603606A329;
+	Tue,  3 Nov 2026 20:21:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=S/1z4d1T
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0BB1F00A21
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 19:33:42 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RcoDvnjE
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D54161F000C1;
+	Tue,  3 Nov 2026 20:21:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793734422;
-	bh=jRv7FYipiH4DqQ5+rCUwDRkUzjzUXk5k5BQEMlfi6u8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=S/1z4d1TPZ9AcH+itxhMJEsw7wWjDKsp1RhfAa1ULOi2R9gDWetOGvR2jk6/GEyRH
-	 fuBBzNAg2iz//ldqgURus9EkJ0S2wOSPk0v+MwwZnjCNcs8S+agrd7Fu6LnDbE2oAk
-	 pnEJNU9iKM9pUUSZcfrn2KxDeuzKOnexULXxOpZmOARDFmwKWqpSTtId4OnAo2oYed
-	 ZEijnUNo6yvORH37NXVEgJXnHTGb1KR23roqIh6FVzZyYpYX258TBIoVbBn1QL3pmz
-	 v4HecQOsrQPtceEMqj1L7Pv3n5hqbO0+g7Cfn/V9N1qSlxfc0qIxtLQKOVnBjVgwBC
-	 nl6sR03rPZKUg==
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6b203527bceso6101028a12.0
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 11:33:42 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBwr67z8obhxUW7q+3DMk73W/lnUr3tqx7O2n/GoWQpiI1a1WQytVYjkCAUzzI8mUSWYZGyi6nJn@vger.kernel.org
-X-Gm-Message-State: APuU4Z+GZqWnRLw/ng6M6huSDQlPys6kNe9r5Y5l7gtYDcRqd2GdIS39
-	elroMxwOBd7Q7lWErG4Vll55lhfP1QFs3KElUqDn5BXL7oIpDQiIeKFJjm1lxDt7NQL8LO8vnqQ
-	OctsxovTc/HEjzWOxddN4kdKIUIFaHNc=
-X-Received: by 2002:a17:907:2d25:b0:c2d:c739:30e1 with SMTP id
- a640c23a62f3a-c4ca7a9fa75mr1143730166b.32.1793734421515; Tue, 03 Nov 2026
- 11:33:41 -0800 (PST)
+	s=k20260515; t=1793737319;
+	bh=ZI36IvN614wZfc+9bgno27AitbTt9jTYGJEoJ2XdrFY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=RcoDvnjE7moujvLfJtbEFbra0suwdCXxNcVPBt9C+MQr2fIm0ROIdyzWvCf0r6dPm
+	 h1Yua3KwN/dXEbvecfBPraEq1DvHkQMvoF2Bp11NIyhrTb2NCMYj2w27/1eh/hNvWH
+	 O6IP9cDUNObqZD1pqWdB6kNJNl7EUFpDky9G3OiS6bKFKY1mVeKeMUUn4DvFnIuQJ5
+	 MfPvPYy2mOBhzLy8ZAizjeqfuKz6tTG4VQwTE83YJIVdVX9wArgcLLkJtkotpfWXyF
+	 9aX10naWVt/B4m4NQciKHVny928DYGf/UA8QtXJSt4Dc85L5sZuX2NERO9yskptzgY
+	 fgwK4+Cxd5s8g==
+Date: Tue, 3 Nov 2026 20:21:57 +0000
+From: Harry Yoo <harry@kernel.org>
+To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
+	David Rientjes <rientjes@google.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, kernel-team@meta.com, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	linux-rt-devel@lists.linux.dev, Sashiko <sashiko-bot@kernel.org>
+Subject: Re: [PATCH for-next-fixes v2 4/5] mm/slab: fix a deadlock in
+ memcg_alloc_abort_single()
+Message-ID: <auo5G__ac1qA9JRs@thinkstation>
+References: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org>
+ <20261103-kmalloc-nolock-fixes-v2-4-19167cfe4779@kernel.org>
+ <DMLSN9VHK0P3.2A97046A4YXGY@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,157 +65,72 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261102225030.2743129-1-joannelkoong@gmail.com>
- <20261102225030.2743129-3-joannelkoong@gmail.com> <CAO9r8zP87zRuoFqeKFcAJoCrOG8M+7HCtX6hvxwdLzuHUXD0Gw@mail.gmail.com>
- <CAJnrk1bv-P_TQztAGiHYdfg=5hbj4GREML2M0Uxp5oC1R9J-Mw@mail.gmail.com>
- <CAO9r8zMvofnW-6OsiasiocOBqoRbZuD71dp3RQE5746YGzamNA@mail.gmail.com> <CAJnrk1ZAz2ro0-8CC7n8mEjpuRQ64=v0rABtygaw5e2Aohq3=w@mail.gmail.com>
-In-Reply-To: <CAJnrk1ZAz2ro0-8CC7n8mEjpuRQ64=v0rABtygaw5e2Aohq3=w@mail.gmail.com>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Tue, 3 Nov 2026 11:33:29 -0800
-X-Gmail-Original-Message-ID: <CAO9r8zOa52hMRTXFQVnSWJPmijm+D-97AeZDH-MMK_-rGiSwMA@mail.gmail.com>
-X-Gm-Features: AclHuK9sBnbDrZh0YD95eyRdj4qiL2VNLTMVMO8HPo8s0hHhnjt9YDtLQC8vHkU
-Message-ID: <CAO9r8zOa52hMRTXFQVnSWJPmijm+D-97AeZDH-MMK_-rGiSwMA@mail.gmail.com>
-Subject: Re: [PATCH v1 2/3] mm: memcg: read root lruvec LRU stats from the
- node counters
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: akpm@linux-foundation.org, shakeel.butt@linux.dev, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	nphamcs@gmail.com, chengming.zhou@linux.dev, sj@kernel.org, david@kernel.org, 
-	ljs@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	damon@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <DMLSN9VHK0P3.2A97046A4YXGY@gmail.com>
 
-On Tue, Nov 3, 2026 at 11:28=E2=80=AFAM Joanne Koong <joannelkoong@gmail.co=
-m> wrote:
->
-> On Mon, Nov 2, 2026 at 5:00=E2=80=AFPM Yosry Ahmed <yosry@kernel.org> wro=
-te:
-> >
-> > On Mon, Nov 2, 2026 at 4:34=E2=80=AFPM Joanne Koong <joannelkoong@gmail=
-.com> wrote:
-> > >
-> > > On Mon, Nov 2, 2026 at 3:29=E2=80=AFPM Yosry Ahmed <yosry@kernel.org>=
- wrote:
-> > > >
-> > > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > > > index ac6c43ea8c5a..938843346571 100644
-> > > > > --- a/mm/memcontrol.c
-> > > > > +++ b/mm/memcontrol.c
-> > > > > @@ -587,6 +587,50 @@ unsigned long lruvec_page_state_local(const =
-struct lruvec *lruvec,
-> > > > >         return x;
-> > > > >  }
-> > > > >
-> > > > > +static bool lruvec_is_root(const struct lruvec *lruvec)
-> > > > > +{
-> > > > > +       return !mem_cgroup_disabled() && mem_cgroup_is_root(lruve=
-c_memcg(lruvec));
-> > > > > +}
-> > > > > +
-> > > > > +/**
-> > > > > + * lruvec_lru_page_state - read an LRU stat of an lruvec
-> > > > > + * @lruvec: the LRU vector to read from
-> > > > > + * @idx: the node_stat_item to read
-> > > > > + *
-> > > > > + * Like lruvec_page_state(), but for the root memcg the node cou=
-nter is read
-> > > > > + * instead. For stats that only track memory charged to a memcg =
-(LRU sizes,
-> > > > > + * workingset, rotation and reclaim writeback counts), the root =
-memcg's
-> > > > > + * hierarchical value equals the node counter. The root memcg ca=
-n just read the
-> > > > > + * node counter directly instead of going through rstat, which r=
-equires
-> > > > > + * flushing. Flushing the root memcg flushes every cgroup in the=
- system.
-> > > > > + *
-> > > > > + * Use lruvec_page_state() for other stats (eg slab).
-> > > > > + */
-> > > > > +unsigned long lruvec_lru_page_state(const struct lruvec *lruvec,
-> > > > > +                                   enum node_stat_item idx)
-> > > > > +{
-> > > > > +       if (lruvec_is_root(lruvec))
-> > > > > +               return node_page_state(lruvec_pgdat(lruvec), idx)=
-;
-> > > > > +
-> > > > > +       return lruvec_page_state(lruvec, idx);
-> > > > > +}
-> > > > > +
-> > > > > +/**
-> > > > > + * lruvec_lru_page_state_monotonic - lruvec_lru_page_state() for=
- delta sampling
-> > > > > + * @lruvec: the LRU vector to read from
-> > > > > + * @idx: the node_stat_item to read
-> > > > > + *
-> > > > > + * See lruvec_page_state_monotonic() and lruvec_lru_page_state()=
-.
-> > > > > + */
-> > > > > +unsigned long lruvec_lru_page_state_monotonic(const struct lruve=
-c *lruvec,
-> > > > > +                                             enum node_stat_item=
- idx)
-> > > > > +{
-> > > > > +       if (lruvec_is_root(lruvec))
-> > > > > +               return node_page_state_monotonic(lruvec_pgdat(lru=
-vec), idx);
-> > > > > +
-> > > > > +       return lruvec_page_state_monotonic(lruvec, idx);
-> > > > > +}
-> > > >
-> > > > Why not do this directly in lruvec_page_state() and
-> > > > lruvec_page_state_monotonic()? They already fallback to node stats =
-if
-> > > > memcg is disabled, why not do the same for the root? Are there case=
-s
-> > > > where the node stats are not the right thing to do?
-> > >
-> > > Hi Yosry,
-> > >
-> > > Thanks for taking a look at this series! I don't think we're able to
-> > > do this directly in lruvec_page_state()/lruvec_page_state_monotonic()
-> > > because I think there's still some places where the node stat and the
-> > > root memcg stat are not guaranteed to be equal.
-> > >
-> > > The stat I was looking at last week was slab's NR_SLAB_RECLAIMABLE_B
-> > > and NR_SLAB_UNRECLAIMABLE_B where for those, the node counter value
-> > > can contain memory/stats that wasn't actually charged to any memcg,
-> > > which I think means for these cases, the node counter values can be
-> > > larger than what reading the root memcg rstat value would give. The
-> > > functions I was looking at were account_slab() and
-> > > memcg_slab_post_alloc_hook() where the logic adds every new slab page
-> > > to the node counter but the memcg stats only get updated if specific
-> > > criteria are met (eg the cache had SLAB_ACCOUNT set or the allocation
-> > > had the __GFP_ACCOUNT gfp flag set and the allocation was not from a
-> > > root memcg).
-> >
-> > If it's only the slab stats, it probably makes sense to special case
-> > those instead of the rest of the readers, right? It would be nice if
-> > the default behavior is reading the node stats that doesn't require a
-> > flush.
->
-> If we were to special case it, it would need to exclude more than a
-> couple, I think. I asked a LLM and it says NR_KERNEL_STACK_KB,
-> NR_PAGETABLE, NR_SECONDARY_PAGETABLE, NR_VMALLOC, NR_HUGETLB,
-> WORKINGSET_NODERECLAIM would also need to be excluded.
+On Tue, Nov 03, 2026 at 06:40:09PM +0000, Alexei Starovoitov wrote:
+> On Tue, Nov 03, 2026 at 06:47 AM Harry Yoo (Meta) <harry@kernel.org> wrote:
+> >  	if (likely(size == 1)) {
+> > -		memcg_alloc_abort_single(s, *p);
+> > +		bool allow_spin = alloc_flags_allow_spinning(ac->alloc_flags);
+> > +
+> > +		memcg_alloc_abort_single(s, *p, allow_spin);
+> >  		*p = NULL;
+> >  	} else {
+> >  		kmem_cache_free_bulk(s, size, p);
+> 
+> can we call kfree_nolock(*p) here when spinning is not allowed ?
+> Karl's patch did that. You replied that memcg_slab_free_hook() should
+> not see an object that is not charged:
+> https://lore.kernel.org/all/asaAwg1KeZoEYd4K@thinkpad/
+> It's fine. __memcg_slab_free_hook() skips an object with objcg == NULL.
+> The else branch relies on that. kmem_cache_free_bulk() also gets
+> the objects that are not charged yet.
 
-Interesting. So for all these stats, root memcg stats (from
-memory.stat) is not the same as the node stat? They all draw a
-distinction between "accounted to root" vs "not accounted"? I wonder
-if this is intentional for all of them.
+While this is technically true, this relies too much on the current
+implementation details and makes the code hard to follow.
 
-> We could add
-> this special casing in, but we would need to make sure any new stat
-> that gets added in the future that belongs on the exclusion list gets
-> put on it. If it's missed, the failure would be silent whereas with a
-> separate helper, callers have to explicitly opt in. I'm happy to go
-> either way though, so if there's one way you prefer, I'm happy to do
-> that for v2.
+> > +	if (likely(allow_spin))
+> >  		__slab_free(s, slab, object, object, 1, _RET_IP_);
+> > +	else
+> > +		defer_free(s, object);
+> 
+> That's an irq_work interrupt per failed charge.
 
-I think we probably want to first understand if these stats are
-supposed to be different between the root memcg stats and the node
-stats first. Personally, I think the default should be the majority
-behavior, which I think is that node stats and root memcg stats are
-the same, so I am leaning toward explicit opt-out. Let's also see what
-memcg folks think.
+irq_work overhead should not matter by the time memcg fails charging.
+the kernel can't reclaim memory in unknown context and allocations
+won't succeed anyway once we hit the limit (unless somebody else
+reclaims memory for us). We have a bigger problem there.
+
+> kfree_nolock() tries free_to_pcs() first. It calls defer_free() only
+> when that fails.
+> 
+> Then no need for allow_spin in memcg_alloc_abort_single(),
+> and the fix doesn't depend on patch 2.
+
+Patch 2 is an independent bugfix as-is already. We should really stop
+open-coding slab_free_hook(). That ended up missing init_on_free handing.
+ 
+> Something like this (compile tested only):
+> 
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 45e077c..fb92b48 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -2551,7 +2551,10 @@ bool memcg_slab_post_alloc_hook(struct kmem_cache *s, gfp_t flags,
+>  		return true;
+> 
+>  	if (likely(size == 1)) {
+> -		memcg_alloc_abort_single(s, *p);
+> +		if (likely(alloc_flags_allow_spinning(ac->alloc_flags)))
+> +			memcg_alloc_abort_single(s, *p);
+> +		else
+> +			kfree_nolock(*p);
+>  		*p = NULL;
+>  	} else {
+>  		kmem_cache_free_bulk(s, size, p);
+
+-- 
+Cheers,
+Harry / Hyeonggon
