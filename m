@@ -1,52 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.111
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793700032;
-	b=IWVFnCR25g+MAxGosGnKXFF1OPIwKz8tQl5M5P6ewq/PRHyVdBMGH+MX1MC6PZlYDwQZ
-	 M6Cl1itP8EbnPXb7O0U5eVXg4buk0wMKFqXLeMgnHH00Dbdua7CiGFsnaR0aY9LernaMS
-	 MiKV7Vjyeu2zcGzi8KHsC9k6XIarrgTy4kMCBXv30jW/WzZ9fUuNoBKRUYseDLJK6oOVe
-	 XfAUGN37wQtcjTjfSGzQ8m9IV4lq+ZqH3PmuYnzWpRSKNGg34NcpMqnzru3y3NapEvKVg
-	 0xGBZsFRViSst54HetG4yBSsrUr+6qYogZIS8HFC7DMgyfCWvadWyI7VurR5nksrNLw==
+	t=1793701224;
+	b=fCjw9HBZ5KD5W95SSdgGdHmNYBwVW2a4qBLuMDSzUbFtexnQoWOKEtt+hT/FAI3nJ8zF
+	 Cnh3UREIscC6Vz+/D2R3JYzdWIAs8R+0/XPqJLgxiqu8dhSMQkLEjKJWFQFtndN9KTwhV
+	 JPFnsYtbP5rqxbvD0N0j+ZYj7GvVzPMmrOuTbtBYOF4j0cNYpFF0Ff6DJjfGqeZTlf4nD
+	 2CCiB9zaOmjrB3qAl350d0mwg3MECje0UJnCLqypeejTpGEET3Xy2fTCGPFbb58jddRub
+	 IiUFZ6+0xN15/TC4h7+ESV7PvdXjx9bbyAxjTz8z254L+VyLlVeD1TXMC/njHVGkmqw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793700032;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=5eBsKnOAtib/53cPHq4YDPTfnBHbrb23tyc46Pd1NRs=;
-	b=S9TjzaR2TAfBNFNpa+oUi9AbRhx3Hn3y862lqtf4+enTna8vleptZ6dOf6m0T4uRMWQA
-	 YC807qc4jPQOHCGFkxp2w8324B0lzxWodP65H9xh1c2HiEkrAMJEXE2Jj7ouv88O0fwt5
-	 wOhCiFRF1G9WLswAARbHUXJYLju8LsLwdFVpyINSusLgb72yy00eRrQnhwNdSaYPRB2i6
-	 PgYmRrHameZmLtR3FZRFnMECf3G7fwyuNzxvYroqViRDpVQCKSP1s7m5TWg4d3HWGUpvs
-	 oe+4Ca9Tod+7Qrv9HUg5j78Rn8TBGzQs9jdX1SB5rFkdPzybabOVNMxERVcrxeguyrQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793701224;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=h/kSx3u3vVCVPli1ZFb8nfYbCpLt1xTWZmMpPKWCjIw=;
+	b=QocJ0vWoaQUQM3RBUyNXsF9IMqwW5dAak84fKMrBpJBtiC3XoZzl61kQc5Q3KlkMxkSl
+	 qB9CHEo+9EpgFx/yJj9hSzCITKSA1enOcAcuxBN+r9+I4GASJunhOKq+4l5uUHN/toFJb
+	 yCo89qQ+Zs8OcXAfV56bqM21Dz8jDI4sbtMoLnvAxgORnGnI/sVjd+o8CIW+9QgcpLmYp
+	 lIY3XxaZakiUJtkhRHTnsYPZEAYE0bFxfNjxwHnY+dnhTQCRbVhIbr7/qMJ8rwnFMb2HM
+	 Nu7dV6/hD7uO35FTheW9SYo95Svj5rTDdb0piVWyQ3qGFGBaYIb764t/N6U7yjqixjA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	arc=none smtp.remote-ip=91.218.175.111
+Received: from mta0.migadu.com (out-111.mta0.migadu.com [91.218.175.111])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE2B606A82F
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 10:00:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F09A51F00A28
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 10:00:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793700026;
-	bh=5eBsKnOAtib/53cPHq4YDPTfnBHbrb23tyc46Pd1NRs=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=eiSil1mqSE0j2PYtwUbO9UfsvsIc5feXXEeOV0FGZxcqNNvxcFFzgkmJz2YYlj5KA
-	 W4xh6ZLH6hqIBcKHCrN/zbE+Nyix2wwVQh2jGgY9APgvDVsvgLjOBTOyyClHwvO/au
-	 xbLkvvIHhYgbqAR0qXbZwlp0ztXzvvK1lTFj6O5wjuZOXUwx8tkp4fSciwzsrUhAQ2
-	 Bh5v+AZ5LNxws7W1zrbh6S7jUGTtlLIsIA3WPGQLMQtgFidT76LzNqYUg8xD1uKKcS
-	 olKLS5u8FGkqrefsr146rJBCUIXSysi3dMug3YD64IteAWnOz21nM6rO9eDwY5o2oN
-	 MDpFozkxNK7jg==
-Received: by mail-qk1-f177.google.com with SMTP id af79cd13be357-93cc1ab5f6cso477981385a.0
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 02:00:25 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AKwUvBxG8Pm3KHAmxDaW0bEeKCCEYYxvd21Tszy75LgiYYW305Q3g+/cr4H/VrKG4GOqqkNlGOEiM0V3@vger.kernel.org
-X-Gm-Message-State: APuU4Z8YzUK8dCXe1CMilAPJOZNQ+ZAnerRVU8a7MQWwFW41S+VOYuZ/
-	zFFWcr9MHCoM6fNR1MsX8fxn5K8KCcGk8pbWTQJfqfhJNDID/UBCqajGzDg10Ix2miesVSiplvQ
-	qdEebXJZ19GkezNOkNVO48KjSlYE5gA4=
-X-Received: by 2002:a05:620a:7303:10b0:945:b101:67c1 with SMTP id
- af79cd13be357-945b10169d1mr751687785a.24.1793700025088; Tue, 03 Nov 2026
- 02:00:25 -0800 (PST)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 553DD606A326
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 10:20:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 553DD606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=f2gnUeKq2RDNsn2I0tV8LaUqGPSf8U/2kQeBdioZDaQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793701210; v=1; x=1794306010;
+ b=LaCzVBMkxMlc28V6nDp23xhcn5kzSxXXC7+wlr6+cmEqFFG0OoaRsFwiLCsMYUx6DdnI1+v3
+ G38KW02vo6aquE2h2dhLmi3JNddQ08YFeIQW6BO/CeBpOH3Xx+zvJmoifjQNYPwm9dAg/qfdOsD
+ C2oklDW0AdqtlrbwsOs3+eWo=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id d775d7131cdd61bc;
+	Tue, 03 Nov 2026 10:20:09 +0000
+X-Mizu-Trace-ID: d775d7131cdd61bc
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <6808ff6c-d331-4f1d-9bb9-25f7a6b1f3ff@linux.dev>
+Date: Tue, 3 Nov 2026 18:20:00 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -56,146 +55,72 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261103025610.3738894-1-ridong.chen@linux.dev>
- <20261103025610.3738894-8-ridong.chen@linux.dev> <CAGsJ_4xCTSctcPcC7X6Dx4zYaOycaPqs0DG7AaxB55wx1Afwpg@mail.gmail.com>
- <9cabcddf-d807-4a36-84f1-5bb06ea72aac@linux.dev>
-In-Reply-To: <9cabcddf-d807-4a36-84f1-5bb06ea72aac@linux.dev>
-From: Barry Song <baohua@kernel.org>
-Date: Tue, 3 Nov 2026 18:00:13 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4xXDZjhN+NkvtN+vAp8Bokack_JdNgP=nGPQtHUX8_rqg@mail.gmail.com>
-X-Gm-Features: AclHuK-l8OdgfBebeJ7I2lXBHNEFb91IlwAm3Z2gmv4eIjSIYhVp7xL_4GoZss8
-Message-ID: <CAGsJ_4xXDZjhN+NkvtN+vAp8Bokack_JdNgP=nGPQtHUX8_rqg@mail.gmail.com>
-Subject: Re: [PATCH v6 7/7] mm/mglru: add tracepoint for inc_max_seq()
-To: Ridong Chen <ridong.chen@linux.dev>
-Cc: Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Dave Chinner <david@fromorbit.com>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	Kairui Song <kasong@tencent.com>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Baoquan He <baoquan.he@linux.dev>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	"open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>, Ridong Chen <chenridong@xiaomi.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH -v4 01/22] cpuset: add early empty cpumask check in
+ partition_xcpus_add/del
+To: Ridong Chen <ridong.chen@linux.dev>, Waiman Long <longman@redhat.com>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Koutn? <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Chen Ridong <chenridong@huawei.com>, Ridong Chen <chenridong@xiaomi.com>
+References: <20261101114206.2434398-1-ridong.chen@linux.dev>
+ <20261101114206.2434398-2-ridong.chen@linux.dev>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261101114206.2434398-2-ridong.chen@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 3, 2026 at 4:39=E2=80=AFPM Ridong Chen <ridong.chen@linux.dev> =
-wrote:
->
->
->
-> On 11/3/2026 2:48 PM, Barry Song wrote:
-> > On Tue, Nov 3, 2026 at 10:58=E2=80=AFAM Ridong Chen <ridong.chen@linux.=
-dev> wrote:
-> >>
-> >> From: Ridong Chen <chenridong@xiaomi.com>
-> >>
-> >> Aging in MGLRU advances max_seq via inc_max_seq(), creating a new
-> >> youngest generation. There is currently no tracepoint on this path, so
-> >> the moment a new generation is created, and how the min_seq of each ty=
-pe
-> >> trails behind it, cannot be observed as it happens.
-> >
-> > We might be more interested in why aging is triggered rather
-> > than the exact moment when max_seq is advanced.
-> >
-> > With your patch, we get:
-> >
-> > ~ # cat /sys/kernel/tracing/trace | grep mglru_inc_max_seq
-> >             a.out-93      [001] d..1.   278.276539:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D4 anon_min_seq=3D2
-> > file_min_seq=3D1 nr_anon=3D{0x0,0xf016,0x12,0x0}
-> > nr_file=3D{0x1886,0xb,0x4c,0x0}
-> >           kswapd0-50      [000] d..1.   278.422400:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D5 anon_min_seq=3D2
-> > file_min_seq=3D2 nr_anon=3D{0x5,0xccb6,0x3439,0x0}
-> > nr_file=3D{0x4ae,0x4f,0x55,0x0}
-> >           kswapd0-50      [000] d..1.   278.508003:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D6 anon_min_seq=3D3
-> > file_min_seq=3D4 nr_anon=3D{0xccb6,0x3d29,0x1,0x0}
-> > nr_file=3D{0x0,0x59,0x7,0x0}
-> >           kswapd0-50      [000] d..1.   280.046056:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D7 anon_min_seq=3D4
-> > file_min_seq=3D5 nr_anon=3D{0x3bf3,0xcbbd,0x23e,0x0}
-> > nr_file=3D{0x0,0xb,0x1,0x0}
-> >           kswapd0-50      [000] d..1.   280.124876:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D8 anon_min_seq=3D5
-> > file_min_seq=3D6 nr_anon=3D{0xcafd,0x3e31,0x0,0x0}
-> > nr_file=3D{0x0,0x5,0x7,0x0}
-> >             a.out-96      [001] d..1.   290.629014:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D9 anon_min_seq=3D7
-> > file_min_seq=3D6 nr_anon=3D{0x0,0x10615,0xb,0x0}
-> > nr_file=3D{0x331,0xb,0x9a,0x0}
-> >           kswapd0-50      [000] d..1.   290.653098:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D10 anon_min_seq=3D=
-7
-> > file_min_seq=3D7 nr_anon=3D{0x15,0xef23,0x18c4,0x0}
-> > nr_file=3D{0xb,0xb8,0x55,0x0}
-> >             a.out-96      [001] d..1.   290.684875:
-> > mm_mglru_inc_max_seq: nid=3D0 memcg_id=3D1 max_seq=3D11 anon_min_seq=3D=
-8
-> > file_min_seq=3D9 nr_anon=3D{0xeee3,0x1afb,0x2,0x0}
-> > nr_file=3D{0x0,0x76,0x4,0x0}
-> >
-> > You can see that the youngest generation is always zero,
-> > because you're just getting the newly added youngest
-> > generation :-)
-> >
->
-> Hi Barry,
->
-> Thank you very much for testing and reviewing.
->
-> > This somehow suggests that the information is redundant, as
-> > there is always a zero there.
-> >
-> > I suspect we'll need an additional tracepoint to show why
-> > aging is triggered and at what sc->priority it happens.
-> >
-> > But do you know why you trace the moment just after aging
-> > is completed, rather than the reason why aging is needed?
-> >
-> My original goal was to pair it with mm_mglru_scan_folios, to see how
-> the aging window of each memcg moves. The per-generation anon/file
-> nr_pages were added following your suggestion on v1. I put it at the
-> end of inc_max_seq() because of the restart there, as max_seq and
-> min_seq are only final after that.
 
-The per-generation anon/file nr_pages are perfectly good, as
-they can also help explain why aging is needed, especially
-now that we're introducing new code for imbalance-based
-aging.
 
->
-> You make a very good point that the reason for aging is also
-> important. So I'd like to discuss which way is better:
->
-> 1) Keep mm_mglru_inc_max_seq, and add another tracepoint at the aging
->   decision in try_to_shrink_lruvec(), reporting why aging is needed
->   and at what sc->priority.
->
-> 2) Replace mm_mglru_inc_max_seq with a single tracepoint in
->   try_to_shrink_lruvec(), right before try_to_inc_max_seq(), reporting
->   the reason, sc->priority, swappiness, max_seq/min_seq and the
->   per-generation nr_pages before aging. The youngest generation is
->   not empty at that point, and the new window after aging can still
->   be seen from the following mm_mglru_scan_folios.
->
-> Which one do you prefer?
+在 2026/11/1 19:41, Ridong Chen 写道:
+> From: Chen Ridong <chenridong@huawei.com>
+> 
+> Add a check for an empty cpumask at the start of partition_xcpus_add()
+> and partition_xcpus_del(). This allows the functions to return early,
+> avoiding unnecessary computation when there is no work to be done. With
+> these changes, partition_xcpus_add() and partition_xcpus_del() can be
+> called even if xcpus is empty. The caller no longer needs to check whether
+> xcpus is empty, eliminating many conditional statements.
+> 
+> Signed-off-by: Chen Ridong <chenridong@huawei.com>
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
+>  kernel/cgroup/cpuset.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 3219f927c35e..72e1df1295e1 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1315,10 +1315,13 @@ static void partition_xcpus_add(int new_prs, struct cpuset *parent,
+>  {
+>  	WARN_ON_ONCE(new_prs < 0);
+>  	lockdep_assert_held(&callback_lock);
+> +
+> +	if (cpumask_empty(xcpus))
+> +		return;
+> +
+>  	if (!parent)
+>  		parent = &top_cpuset;
+>  
+> -
+>  	if (parent == &top_cpuset)
+>  		cpumask_or(subpartitions_cpus, subpartitions_cpus, xcpus);
+>  
+> @@ -1342,6 +1345,10 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
+>  {
+>  	WARN_ON_ONCE(old_prs < 0);
+>  	lockdep_assert_held(&callback_lock);
+> +
+> +	if (cpumask_empty(xcpus))
+> +		return;
+> +
+>  	if (!parent)
+>  		parent = &top_cpuset;
+>  
 
-Maybe we should keep option 2 for now. Understanding why
-we are aging and at what priority is much more important,
-especially since we're still introducing some
-imbalance-based aging code.
+Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-It should be quite simple, just a matter of moving the code
-around a little.
-
-If we later find a good reason to have option 1, we can
-always add it, right?
-
-Best,
-Barry
+Thanks,
+Guopeng
