@@ -1,77 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793714490;
-	b=uFq0y87qdiGcoMe+F7AmGDOgrrTebojDZFD3lCIlWPw+HzsSw2AhKAsZ44wP33wgMMBR
-	 stuWFbJ6P6BRFl/DmvUbXk2DcbpCEM5dlBapr/qzjh61USKRGEL/mnWGj8AJUfoiOMcT6
-	 lvWNCBjSFMFhPlQ5Tp3SDqtmbbDMO5yMoL3I0gXEMYho7yFhAX5y1dXyforA3+dV9nZN9
-	 q4Z/oYV0GlOCPPRMfKxr1+CsY2O+Z7akMGYCisRp28QX6WaQ1qvS1uECbhISVa8GEFP38
-	 oiV0Zec0cGpE75Bq9yD0q+Yy6wE8xMkJI1b1L51wxlpPmTIwlIgW0/GZkirdJaWQ1XA==
+	t=1793714858;
+	b=arAY1KTRd50XfktuZQdseLQ2557RYj/JDSXqaD4edzwmukEYxVlC2piXqO8hbtLCfzE6
+	 GgDIr/oHSDRBR0TlFOvK7wh4WRAPuVlc7QSQyYLqc35/mBqqXIURADzWFss4EzzIId2QQ
+	 2X/FgnUp1jHVX3l3tFK5NKPbEN1wt59Oqi4KFIwQBhbbzvT/HI+6pO7OfWDGKlQRN7JB1
+	 LefqlpQRCPxl6ofjKV7KsKxrZ7kw3HQlBGfDwBUNOGBHGgiOn/FA8UAULcDPttveP+zlj
+	 POixUMP4iCEuXV5HT4J3Q2xezki1F+tZZfjKzvow7Er6WD9C+ZxhRcMjaPjAcnbUmzg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793714490;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=bPRbykHolawBfCGnDVRos5HJS/K/9CLK+rvFUUZN+bY=;
-	b=CU9ZuKwDn3jWa0VfRFp0Eo0t3Th5igYQgId9jtQooV6lzTSUqxdJ5o+7lL8TXy2S+cBO
-	 i8QE7xrTxgBz+WTTN0a8STjkQxLHJjCdZbv/mo47XX0PqZanwmhGaVKEtwC6iOLK00OM/
-	 bsnMd+3HAytcGCMijbR9NozUvsZXiYXnTPe/7I54JtBxoB1zqhABSRsVrl2stcFVFtSb+
-	 RmwquSY5KdkkVPPCSL0XjsECq4YzgaPWauSWX4ldz5s8xOY1Gsb3DyZQzkzH1L0jEgN9R
-	 jLxLIvDCJQa/lLB2RzJKtbp96EFm89FiHICNp+La3/U8tLVzvpxe5QFsypNKSwIG6/w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793714858;
+	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
+	 In-Reply-To:References:Subject:From:To:Cc:Date;
+	bh=U9bSCqEoQZWI046vsKEKltFAaqusFQFamwPErZIkzhw=;
+	b=IIkEQda9+sWodGW4pENAnR7fOIyGYevmhM3nfaq4vmniATe/scNkF2rupblPyAxFRM8Z
+	 7vVaLc5OMQXmZ4TGx89shnfydZWvW9HQ+z98oEdM2jMS+NEdgx2dysUDTEmjHhK2ARfqC
+	 mJ0Su6hYRjf5ydfmV9C47e4cb7B1yYT4Sg1eJBQzd71iPZoqo+lkteIDuCAezkXxkv2Zj
+	 QOFqc3z//wn61ICnvOyGMqtYaMh2FQuu73vQLy3D2QAixLdoR8JrsnA7SY2aLxsbJbuTB
+	 2BpO5fYMHONQlibL/mxasWqK4Yj35kJ/W9G0VazCQ2RdH0iXTWBisMZiw64KZzDbb/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RNvyMkl7;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LtsOpNfe;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46AC6082BFD;
-	Tue,  3 Nov 2026 14:01:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F2E606A324;
+	Tue,  3 Nov 2026 14:07:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RNvyMkl7
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE2871F00A23;
-	Tue,  3 Nov 2026 14:01:28 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LtsOpNfe
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F2091F000C1;
+	Tue,  3 Nov 2026 14:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793714489;
-	bh=bPRbykHolawBfCGnDVRos5HJS/K/9CLK+rvFUUZN+bY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=RNvyMkl77/wB+TKUhO6X/Vsf2i8uYfQQHsCp2e6sIBV03LbpJ6GxqHxSUHPSpQTNZ
-	 CI6rBm9JwRP2j7gDDaJ0y/HQLz6p+tN7IqgT+BVC7+kA4sGZS8K1SVjiC3OitAdmCZ
-	 dnSjPivgNrMVhBrtEPnov1DXrYT1RLN0jluXjbTdgArGhwCYXQcu+Pz/M94xSpesUV
-	 d/U62dXS00RO3dSOT8j+AIg5KMJ+kMga7RIMhFbTJK4cDrD0a0vHQOgN49kKEUz48R
-	 RJ8/1JIm3uiZD5egP7DXyHHDKOftJyx91tyK/sOGckJ/q6Udv88hpE2LDUjFPp4fko
-	 py1IrVmFnuSjA==
-Date: Tue, 3 Nov 2026 15:01:26 +0100
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Matthew Ruffell <matthew.ruffell@canonical.com>
-Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Caron Wills <caron.wills@pulsar.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
-	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	Jay Vosburgh <jay.vosburgh@canonical.com>
-Subject: Re: [PATCH 2/6] kthread: Keep unbound kthreads off nohz_full CPUs
-Message-ID: <aunpNqPV38FG94-f@localhost.localdomain>
-References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
- <20261103075940.110308-3-matthew.ruffell@canonical.com>
+	s=k20260515; t=1793714857;
+	bh=U9bSCqEoQZWI046vsKEKltFAaqusFQFamwPErZIkzhw=;
+	h=In-Reply-To:References:Subject:From:To:Cc:Date;
+	b=LtsOpNfedmofvsuHIt6DsfGek0bq6QITTPDz5lDBmBMqRrGzloBwkBSpa3RwqGvN7
+	 bYiombWoF2HGf31FJlUzP9hBdEVn+dq94AMCBNuEevRLj5hcyvregFnTjqAcbgaW1Q
+	 wQ+KDd5zuB+pksbXObbQlUA4RRSqHl3t5B9DHGlvH99NoKbxw4r4VL/pnyfuPesXUe
+	 vCgxaNgw2zoh5GlCsSfL4rHKnLeB1U4+ogFYOkdOHvbtZo+WI2lEgjvHICAuc0jGVD
+	 snv2V9zijCxVGaRpgdRqNyI7oOkvT53L2NLz1BwdL2kiUBDqKHFFxnb4x43UfynvHM
+	 w9VwPRJG2Kziw==
+Content-Type: multipart/mixed; boundary="===============8626554665073680018=="
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -81,32 +49,78 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261103075940.110308-3-matthew.ruffell@canonical.com>
+Message-Id: <04adc0407868a7876c12e46e0637e13b3bb8f549e6f47a1d0a9bfe29d144e29b@mail.kernel.org>
+In-Reply-To: <20261103132613.1952975-3-cui.tao@linux.dev>
+References: <20261103132613.1952975-3-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v12 2/4] blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
+From: bot+bpf-ci@kernel.org
+To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk,alexei.starovoitov@gmail.com
+Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
+Date: Tue,  3 Nov 2026 14:07:37 +0000 (UTC)
 
-Le Tue, Nov 03, 2026 at 08:59:36PM +1300, Matthew Ruffell a écrit :
-> From: Caron Wills <caron.wills@pulsar.com>
-> 
-> Since commit 041ee6f3727a ("kthread: Rely on HK_TYPE_DOMAIN for
-> preferred affinity management") kthread_fetch_affinity() only removes
-> domain isolated CPUs from a kthread's affinity, assuming that nohz_full
-> CPUs are always domain isolated as well. Up to v6.13 every kthread
-> inherited kthreadd's affinity to housekeeping_cpumask(HK_TYPE_KTHREAD),
-> and from v6.14 the preferred affinity was filtered with HK_TYPE_KTHREAD,
-> so nohz_full CPUs were always excluded.
+--===============8626554665073680018==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-This was done on purpose because on all setup we have met so far, it didn't
-make sense to run nohz_full with load balancing. After all the point is to
-run a pinned single task on a single CPU. We have seen too many misconfigured
-CPU isolation workloads due to that constraint not being enforced since the
-origins.
+> blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
 
-I'm open to counter-arguments of course but you better have a good case.
+TL;DR: In iocost_ioc_tick, the tracepoint call sits outside its enabled()
+check, so a probe attached in between may log a bogus active count of 0, which
+consumers could read as dormancy.
 
-Thanks.
+> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+> --- a/block/blk-iocost.c
+> +++ b/block/blk-iocost.c
 
--- 
-Frederic Weisbecker
-SUSE Labs
+[ ... ]
+
+> @@ -2478,6 +2479,22 @@ static void ioc_timer_fn(struct timer_list *timer)
+>  
+>  	ioc->busy_level = clamp(ioc->busy_level, -1000, 1000);
+>  
+> +	/*
+> +	 * busy_level, cur_period, nr_active and usage_us_sum are complete
+> +	 * here. usage is wall time over wall time, summed over iocgs, and
+> +	 * is not capped at 100. vrate and period_us reflect the current
+> +	 * controller state, which an io.cost.qos write may have changed
+> +	 * mid-period. Emit before the refresh and the period transition.
+> +	 */
+> +	if (trace_iocost_ioc_tick_enabled()) {
+> +		struct ioc_gq *active_iocg;
+> +
+> +		list_for_each_entry(active_iocg, &ioc->active_iocgs,
+> +				     active_list)
+> +			nr_active++;
+> +	}
+> +	trace_iocost_ioc_tick(ioc, &now, nr_active, usage_us_sum);
+> +
+
+Can this record a bogus nr_active of 0?
+
+trace_iocost_ioc_tick() is called outside the
+trace_iocost_ioc_tick_enabled() block, so the two static key tests are
+independent.  If a probe is attached on another CPU between them, the first
+test sees the key disabled and skips the count, while the tracepoint itself
+then fires with nr_active still 0 even though ioc->active_iocgs is non-empty.
+
+Documentation/trace/tracepoints.rst says the tracepoint call should always
+be within the block of the if (trace_<tracepoint>_enabled()) check to avoid
+this race.
+
+Since the commit message describes active=0 as the marker for the transition
+to dormancy, a consumer could read this spurious record as that transition,
+alongside a non-zero usage value.
+
+Would moving the trace_iocost_ioc_tick() call inside the enabled block
+work?  Alternatively, nr_active could be counted in the existing
+list_for_each_entry() walk over ioc->active_iocgs earlier in
+ioc_timer_fn().
+
+
+---
+AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
+See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
+
+CI run summary: https://github.com/kernel-patches/bpf/actions/runs/41646836440
+--===============8626554665073680018==--
