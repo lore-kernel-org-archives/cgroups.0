@@ -1,81 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793712680;
-	b=BQb/CV2Gqnf9XBFaRNCeMlYdXyBUYD307NMHQYkf2cFPvu1m4ScHmROhqeuir/lJNgEv
-	 k4EJdnPdChnRuBGHxQa+PG/s37uCziosoQm268RnqU3bahXU1LQlv5EOVWCVC2sgZMpwO
-	 SgvL1dbm9pB0jUGI9cL8Y0byFLlhSlryJ+Lyx48blVidO2a0NQKOE4CCiC+P2djfXT/0T
-	 z5tpyB3lHKBEmxBFK0GSWWcA9IuLKf+5XJ/vnvlWQwvFgbhbQPJAMp1DuWDUBdwVgsY5q
-	 4yONS+JZEq1EuJYwwa5WLD3g1vK7zLVTvdX4LMDzGRUxzp5JBUx35Y9QsDagVPr5P2g==
+	t=1793714490;
+	b=uFq0y87qdiGcoMe+F7AmGDOgrrTebojDZFD3lCIlWPw+HzsSw2AhKAsZ44wP33wgMMBR
+	 stuWFbJ6P6BRFl/DmvUbXk2DcbpCEM5dlBapr/qzjh61USKRGEL/mnWGj8AJUfoiOMcT6
+	 lvWNCBjSFMFhPlQ5Tp3SDqtmbbDMO5yMoL3I0gXEMYho7yFhAX5y1dXyforA3+dV9nZN9
+	 q4Z/oYV0GlOCPPRMfKxr1+CsY2O+Z7akMGYCisRp28QX6WaQ1qvS1uECbhISVa8GEFP38
+	 oiV0Zec0cGpE75Bq9yD0q+Yy6wE8xMkJI1b1L51wxlpPmTIwlIgW0/GZkirdJaWQ1XA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793712680;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=bqSSouDoyJf0YGFehgWYnnk2xGKwMtREqQQCF8wiudg=;
-	b=IXI2NedoZHQAf3EwgK7J2dE3e1iFeXHDjGrQN2QSIXPwhcJ7Qv7A/+cAJY/cC4AsAHL3
-	 iR8KyLbEDm3cRYYD1n3t4xBi44gXvKksTUSMLsD6A4OS6M4dVcI2RQcoMDHI4mAjK5mIa
-	 hDhjVYFjG6IPLC7kRJ8t6yNcqRw1j+oJGvl7T3CAkQVF85mwkBzP7MLHMuXK5xFkFLXCy
-	 BdB6aRwFjJvF+1Y9d4F/yCmIwjckpEunakB6FAEUIE+gWQ7dqdbjT08WahK2qR8wyqh8e
-	 jhXr+wbUg0CFdQF6+OcZQv1mr1KZKDyFjEJUDjNkxYx4xEsj2IHhGnfFzRsOIIAecvw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793714490;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=bPRbykHolawBfCGnDVRos5HJS/K/9CLK+rvFUUZN+bY=;
+	b=CU9ZuKwDn3jWa0VfRFp0Eo0t3Th5igYQgId9jtQooV6lzTSUqxdJ5o+7lL8TXy2S+cBO
+	 i8QE7xrTxgBz+WTTN0a8STjkQxLHJjCdZbv/mo47XX0PqZanwmhGaVKEtwC6iOLK00OM/
+	 bsnMd+3HAytcGCMijbR9NozUvsZXiYXnTPe/7I54JtBxoB1zqhABSRsVrl2stcFVFtSb+
+	 RmwquSY5KdkkVPPCSL0XjsECq4YzgaPWauSWX4ldz5s8xOY1Gsb3DyZQzkzH1L0jEgN9R
+	 jLxLIvDCJQa/lLB2RzJKtbp96EFm89FiHICNp+La3/U8tLVzvpxe5QFsypNKSwIG6/w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SBMs4pMo;
-	arc=none smtp.remote-ip=198.175.65.16
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RNvyMkl7;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A77E606A33A;
-	Tue,  3 Nov 2026 13:31:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4A77E606A33A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46AC6082BFD;
+	Tue,  3 Nov 2026 14:01:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=SBMs4pMo
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1793712680; x=1825248680;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=hkR8M4AVECxKSn4GYebF87vUMQPK1tTyUqELFgxgqRs=;
-  b=SBMs4pMoauBtpedelBcC49z4kvO8AMo7TtACgeFMjLOfl4DXt66bxMHJ
-   XEh4U4rRY32DpnOKeliENg5B02GQ3JiJidpJS/9izMPO9ZCO31XGYrmTr
-   lOL4EqqPCT3BibNcwOU2x3jB0Eclj2BAzdtY3JdaneuY+iqALFKtIIGiC
-   RlR3fb2d8C9XO5L19+mJ+6k8ZrQvpJfNgso30NmiltPSZCIxEwN7oLilw
-   YyAD/2OecJOyqSqFxAeTbofirdkfkLEGBjdJehOaV3POiwrOLbu9ofEgi
-   Qqaptfs0Xqz7Lparr2lXq3+yIlGaqQXBWnRleNmGO6sxsWWIxLNi5PeB4
-   Q==;
-X-CSE-ConnectionGUID: REkoUaqRQcaGfQpDmI1H/g==
-X-CSE-MsgGUID: dpZiRuxSRSK1VrSc8Tcorg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11954"; a="2429900"
-X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
-   d="scan'208";a="2429900"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 05:31:19 -0800
-X-CSE-ConnectionGUID: lTrs3dgKTlWdj0SfnJ8l6A==
-X-CSE-MsgGUID: kcSFKz+DTo2hkMUZE0wIXQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
-   d="scan'208";a="6542067"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 03 Nov 2026 05:31:12 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xOEbU-00000000ilw-1efr;
-	Tue, 03 Nov 2026 13:31:08 +0000
-Date: Tue, 3 Nov 2026 21:30:46 +0800
-From: kernel test robot <lkp@intel.com>
-To: Matthew Ruffell <matthew.ruffell@canonical.com>,
-	Waiman Long <longman@redhat.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>,
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RNvyMkl7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE2871F00A23;
+	Tue,  3 Nov 2026 14:01:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793714489;
+	bh=bPRbykHolawBfCGnDVRos5HJS/K/9CLK+rvFUUZN+bY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=RNvyMkl77/wB+TKUhO6X/Vsf2i8uYfQQHsCp2e6sIBV03LbpJ6GxqHxSUHPSpQTNZ
+	 CI6rBm9JwRP2j7gDDaJ0y/HQLz6p+tN7IqgT+BVC7+kA4sGZS8K1SVjiC3OitAdmCZ
+	 dnSjPivgNrMVhBrtEPnov1DXrYT1RLN0jluXjbTdgArGhwCYXQcu+Pz/M94xSpesUV
+	 d/U62dXS00RO3dSOT8j+AIg5KMJ+kMga7RIMhFbTJK4cDrD0a0vHQOgN49kKEUz48R
+	 RJ8/1JIm3uiZD5egP7DXyHHDKOftJyx91tyK/sOGckJ/q6Udv88hpE2LDUjFPp4fko
+	 py1IrVmFnuSjA==
+Date: Tue, 3 Nov 2026 15:01:26 +0100
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Matthew Ruffell <matthew.ruffell@canonical.com>
+Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
 	Ingo Molnar <mingo@redhat.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>
-Cc: oe-kbuild-all@lists.linux.dev,
-	Linux Memory Management List <linux-mm@kvack.org>,
+	David Hildenbrand <david@kernel.org>,
 	Caron Wills <caron.wills@pulsar.com>,
 	Ridong Chen <ridong.chen@linux.dev>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -94,11 +66,12 @@ Cc: oe-kbuild-all@lists.linux.dev,
 	Suren Baghdasaryan <surenb@google.com>,
 	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
 	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org
-Subject: Re: [PATCH 3/6] mm/folio, mm/mlock: Don't batch folios in per-CPU
- LRU caches on isolated CPUs
-Message-ID: <202611032138.4bxGcYLC-lkp@intel.com>
-References: <20261103075940.110308-4-matthew.ruffell@canonical.com>
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	Jay Vosburgh <jay.vosburgh@canonical.com>
+Subject: Re: [PATCH 2/6] kthread: Keep unbound kthreads off nohz_full CPUs
+Message-ID: <aunpNqPV38FG94-f@localhost.localdomain>
+References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
+ <20261103075940.110308-3-matthew.ruffell@canonical.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -108,65 +81,32 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20261103075940.110308-4-matthew.ruffell@canonical.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261103075940.110308-3-matthew.ruffell@canonical.com>
 
-Hi Matthew,
+Le Tue, Nov 03, 2026 at 08:59:36PM +1300, Matthew Ruffell a écrit :
+> From: Caron Wills <caron.wills@pulsar.com>
+> 
+> Since commit 041ee6f3727a ("kthread: Rely on HK_TYPE_DOMAIN for
+> preferred affinity management") kthread_fetch_affinity() only removes
+> domain isolated CPUs from a kthread's affinity, assuming that nohz_full
+> CPUs are always domain isolated as well. Up to v6.13 every kthread
+> inherited kthreadd's affinity to housekeeping_cpumask(HK_TYPE_KTHREAD),
+> and from v6.14 the preferred affinity was filtered with HK_TYPE_KTHREAD,
+> so nohz_full CPUs were always excluded.
 
-kernel test robot noticed the following build errors:
+This was done on purpose because on all setup we have met so far, it didn't
+make sense to run nohz_full with load balancing. After all the point is to
+run a pinned single task on a single CPU. We have seen too many misconfigured
+CPU isolation workloads due to that constraint not being enforced since the
+origins.
 
-[auto build test ERROR on akpm-mm/mm-everything]
+I'm open to counter-arguments of course but you better have a good case.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Ruffell/sched-isolation-Consider-nohz_full-CPUs-isolated-in-cpu_is_isolated-again/20261103-205935
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20261103075940.110308-4-matthew.ruffell%40canonical.com
-patch subject: [PATCH 3/6] mm/folio, mm/mlock: Don't batch folios in per-CPU LRU caches on isolated CPUs
-config: sh-allnoconfig (https://download.01.org/0day-ci/archive/20261103/202611032138.4bxGcYLC-lkp@intel.com/config)
-compiler: sh4-linux-gcc (GCC) 16.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261103/202611032138.4bxGcYLC-lkp@intel.com/reproduce)
+Thanks.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202611032138.4bxGcYLC-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   mm/folio.c: In function '__folio_batch_add_and_move':
->> mm/folio.c:293:13: error: implicit declaration of function 'lru_batching_bypassed' [-Wimplicit-function-declaration]
-     293 |         if (lru_batching_bypassed())
-         |             ^~~~~~~~~~~~~~~~~~~~~
-
-
-vim +/lru_batching_bypassed +293 mm/folio.c
-
-   280	
-   281	static void __folio_batch_add_and_move(struct folio_batch __percpu *fbatch,
-   282			struct folio *folio, move_fn_t move_fn, bool disable_irq)
-   283	{
-   284		unsigned long flags;
-   285	
-   286		folio_get(folio);
-   287	
-   288		if (disable_irq)
-   289			local_lock_irqsave(&cpu_fbatches.lock_irq, flags);
-   290		else
-   291			local_lock(&cpu_fbatches.lock);
-   292	
- > 293		if (lru_batching_bypassed())
-   294			folio_move_lru_now(folio, move_fn);
-   295		else if (!folio_batch_add(this_cpu_ptr(fbatch), folio) ||
-   296				!folio_may_be_lru_cached(folio) || lru_cache_disabled())
-   297			folio_batch_move_lru(this_cpu_ptr(fbatch), move_fn);
-   298	
-   299		if (disable_irq)
-   300			local_unlock_irqrestore(&cpu_fbatches.lock_irq, flags);
-   301		else
-   302			local_unlock(&cpu_fbatches.lock);
-   303	}
-   304	
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+-- 
+Frederic Weisbecker
+SUSE Labs
