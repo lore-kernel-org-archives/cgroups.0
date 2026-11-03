@@ -1,61 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.39
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793709153;
-	b=P5hINxMGqNrXzCVMkhoQGz+fgHYjAYQMnA6yswhLfLQ0f9kBjXCtn4VR46JV34mbXyJy
-	 05E5RD+ll0COd4O+MP+QMSXIao0n6PyX5NNKPpu76I0Tp52RKH/5GixHx6UNVF1FnXWw/
-	 rQ8lza46RJyOlwaODsLXCYszkyxl/9rIC0QjyuF4Xw92Ba9Ab5CzSXiqUiC4L27rRD85/
-	 oCxjrPPDohMfQ71Pv5EjtsaV2sq/ZYonrF3P3CN9u3bXY/+3MQGRxG9ushCvyqw8GhHv+
-	 cOPm3BehPvE6XVnPGaWZvh5Q/WlVRoBAcw5Cw+lSkse9I6x4C2Bsh/1LUcsFbIXHSZQ==
+	t=1793709897;
+	b=0ksSIlKOUfG/TEJNErv3ZY0JQEAmTdArKcNIcZRroHnS2X+AKTC4Cuzben/Urs8JcBNY
+	 ZW+K8W2Sk7lUjOEfI1FOpVCmUNYeCikRewPUOcsZVFCSZQT5dkkO/cpCbz59MOr5f6spd
+	 YadJ5oeXJS6uYqnYhsM9B/vKzRZgXeEb1FoCP7+FvdIOB7Kt8aBwxgB9T2lxxIEGWBhc+
+	 H0oHtjYOViGGW5FsgH5bu3icHJdNF6rGCx9rThmriooBTT+07PdCeU9Pl4QrxQW5ZWnX5
+	 JHbEPnSmzoJqyXC6yILgjlsPCwylAaSykf4iZJJ4ZAPxHyE1ygYdLQdP1aW6/4ELi/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793709153;
-	h=DMARC-Filter:DKIM-Signature:Content-Type:To:Message-Id:
-	 X-Lms-Return-Path:X-Original-From:Content-Transfer-Encoding:From:
-	 Subject:Date:Mime-Version:Cc:In-Reply-To:References:X-Mailer;
-	bh=x2ncG86rAs9pOnWEtcTfjniv2/ccRbZe8/nBUY3DZLo=;
-	b=PSyf6gMqrHbx/XLtHrU8li4SFgbS3dAotTOdrRTxMCFrHAbW+892jMDrqFRVh8NBD1uk
-	 mk62LiUM01yyO7XOFhIxEJn5Ln74r++bZo8K2bdqLR0MwEzNXhkrgzWaFt04fbU13eS9J
-	 5T6Jf1NbDo+lNQSW9nzwuAglLrKoPHdn8hpN5OFP5oMBujp95MW4YackY4NwA7xU0zR3T
-	 zC2nBfrR3RRi/2q0kZwXwE/KJEzKyfB/7DILeFrS8HK/7wpqOAPRO0ahY8PVZniqFj4dk
-	 cbaC6R6PhF4fPsMSA5TR9H4+UHQcarN2ROkpS60zB7g+3+DaDud4o/J3qRhEbfkVF2Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793709897;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=uMxkatsy/czDTqYorXReGkN6RnEno+dYymzBkF085A8=;
+	b=sZQdc81PSQF8I3PhiJGYLTvbEasdv1IMIsiGX6EHI3FhMuthirp8YgxCXucWxdJUgnjS
+	 V+J8GDZ00qUEhhMXk9tPWVVrvIz05DvInUmvnGLWQXonTosKKr0z3xLmJSclcHTItLyf4
+	 Bx11iOZ1+d7D85GbAymmrVhbBHLFdILqF761X1uOoPpnrujjWmW8TR5TqoQ9PbB90P2XJ
+	 mQOqkh8/ekB2BlI3n0TCPlNoy4M4EQPSQRb2lm6pb0VMln16j2kq/69IKKiPUQAU1B1A8
+	 myL1nIZL78WZzuDcGASpF/tGWyvhkILcFPNV6fisOAcjHXgT+elsMPLTXjr08RIP/zA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=Y7UZCyZj;
-	arc=none smtp.remote-ip=209.127.230.112
-Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=B15FyiFs;
+	arc=none smtp.remote-ip=91.218.175.39
+Received: from mta0.migadu.com (out-39.mta0.migadu.com [91.218.175.39])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 308666085088
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 12:32:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 308666085088
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E05606A324
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 12:44:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 35E05606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=Y7UZCyZj
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1793709147; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=x2ncG86rAs9pOnWEtcTfjniv2/ccRbZe8/nBUY3DZLo=;
- b=Y7UZCyZjRyqCvZIhBQOZ+OaQT+8AW2wR11H/WdPbRmW7HHKYsQKuUtiRktBQkBR7cBEUAy
- fs5zO5r1Wf0Hp775TZH17f0cyHfXe1K/v4EHX3uxW/unTk/4EShVzzVs2IT37THbAp1C/n
- QmGAHm4CuOw0LZN25pTooVaNibUcEF2YwRJ+S9ZEPXFDBzK0QtzN2PjLhiok2ANnlYQtYt
- eGmRZ94XZVkgh4wBM3fbYDWkD2ofNQr92wYX4OWgqEE2rUcxqvyrta/mWQSbGLbdYD3kOO
- ubG5ongpAav/ElFiE1oQX0D3A5UO9db2HcH88t76hTFju7IHpzUwjr5gPGFjeg==
-Content-Type: text/plain; charset=UTF-8
-To: <tj@kernel.org>, <hannes@cmpxchg.org>, <mkoutny@suse.com>, 
-	<akpm@linux-foundation.org>, <david@kernel.org>, <gourry@gourry.net>, 
-	<ziy@nvidia.com>, <joshua.hahnjy@gmail.com>, 
-	<ying.huang@linux.alibaba.com>, <ljs@kernel.org>, <liam@infradead.org>, 
-	<rppt@kernel.org>, <surenb@google.com>, <mhocko@suse.com>
-Message-Id: <20261103122816.48037-4-lizhe.67@bytedance.com>
-X-Lms-Return-Path: <lba+26ae9d459+5a0c5c+vger.kernel.org+lizhe.67@bytedance.com>
-X-Original-From: Li Zhe <lizhe.67@bytedance.com>
-Content-Transfer-Encoding: 7bit
-From: "Li Zhe" <lizhe.67@bytedance.com>
-Subject: [PATCH 3/3] mm/mempolicy: add BPF kfuncs for cgroup interleave weights
-Date: Tue,  3 Nov 2026 20:28:16 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=B15FyiFs
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=P6NJig/U2qoMxYmMT3pXpewN3IICUxnb6l0LNzfrpD4=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793709889; v=1; x=1794314689;
+ b=B15FyiFszR9sIYIsNZtE67J+QX1fUCAdiXMvVHNhHIq9WIIvfDW6qqRAzoKwtNiyB7cycs1+
+ x9jO66Sbj7Rg8Ge8YpMsxJ1hT5h+tC/cOfzcZplhzdyCDj4AFZJx1Pkri4SXh4cG67+I5LwW5TT
+ uH+mD3CMB2+i9gNTJLVBooPM=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 50e634d3f232c597;
+	Tue, 03 Nov 2026 12:44:49 +0000
+X-Mizu-Trace-ID: 50e634d3f232c597
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <55ffbca4-985f-4838-a668-9ac84e0a0c95@linux.dev>
+Date: Tue, 3 Nov 2026 20:44:34 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -64,262 +57,144 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Cc: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<linux-mm@kvack.org>, <bpf@vger.kernel.org>, 
-	"Li Zhe" <lizhe.67@bytedance.com>
-In-Reply-To: <20261103122816.48037-1-lizhe.67@bytedance.com>
-References: <20261103122816.48037-1-lizhe.67@bytedance.com>
-X-Mailer: git-send-email 2.45.2
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH -v4 04/22] cpuset: introduce partition_enable()
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
+ <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Koutn? <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Chen Ridong <chenridong@huawei.com>, Ridong Chen <chenridong@xiaomi.com>
+References: <20261101114206.2434398-1-ridong.chen@linux.dev>
+ <20261101114206.2434398-5-ridong.chen@linux.dev>
+ <b2caa92c-9e10-4e36-bd73-b71621d60108@linux.dev>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <b2caa92c-9e10-4e36-bd73-b71621d60108@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Expose bpf_wi_set_weight(), bpf_wi_clear_weights(), and
-bpf_wi_get_weight() as a BPF syscall control plane for cgroup
-weighted-interleave overrides. The kfuncs let a privileged program
-update one node weight, remove an override, or read the effective
-weight.
 
-All three kfuncs are sleepable, require CAP_SYS_ADMIN in the initial
-user namespace, and accept only cgroup ids from the default cgroup-v2
-hierarchy. Updates materialize a complete weight table and publish it
-with RCU.
 
-Signed-off-by: Li Zhe <lizhe.67@bytedance.com>
----
- mm/mempolicy.c | 201 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 200 insertions(+), 1 deletion(-)
+On 11/3/2026 6:26 PM, Guopeng Zhang wrote:
+> 
+> 在 2026/11/1 19:41, Ridong Chen 写道:
+>> From: Chen Ridong<chenridong@huawei.com>
+>>
+>> Add partition_enable() to consolidate updates to key cpuset structures
+>> during partition enablement, including:
+>> 1. remote_partition
+>> 2. effective_xcpus
+>> 3. partition_root_state
+>> 4. prs_err
+>>
+>> Key operations performed:
+>> 1. Invokes partition_xcpus_add() to assign exclusive CPUs
+>> 2. Maintains remote partition flag
+>> 3. Syncs the effective_xcpus mask
+>> 4. Updates partition_root_state and prs_err
+>> 5. Triggers scheduler domain rebuilds
+>> 6. Sends partition change notifications
+>>
+>> This helper also handles the transition between root and isolated
+>> states of a valid partition. In that case the cpumasks are unchanged
+>> and only isolated_cpus is updated.
+>>
+>> A partition_state_update() helper is added to set partition_root_state
+>> and prs_err, and to reset the partition data when the new state is not
+>> a valid partition.
+>>
+>> Signed-off-by: Chen Ridong<chenridong@huawei.com>
+>> Signed-off-by: Ridong Chen<chenridong@xiaomi.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 51 ++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 51 insertions(+)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index df52f6e5e99f..052a131731dd 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -1716,6 +1716,57 @@ static void compute_effective_nodemask(nodemask_t *new_mems,
+>>   		nodes_copy(*new_mems, parent->effective_mems);
+>>   }
+>>   
+>> +static void partition_state_update(struct cpuset *cs, int new_prs,
+>> +				   enum prs_errcode prs_err)
+>> +{
+>> +	lockdep_assert_held(&callback_lock);
+>> +
+>> +	cs->partition_root_state = new_prs;
+>> +	WRITE_ONCE(cs->prs_err, prs_err);
+>> +	if (!is_partition_valid(cs))
+>> +		reset_partition_data(cs);
+>> +}
+>> +
+>> +/**
+>> + * partition_enable - Transitions a cpuset to a partition root
+>> + * @cs: The cpuset to enable partition for
+>> + * @parent: Parent cpuset of @cs, NULL for remote parent
+>> + * @new_prs: New partition state to set
+>> + * @new_excpus: New effective exclusive CPUs mask for the partition
+>> + *
+>> + * Transitions a cpuset to a partition root, only for v2.
+>> + * It also supports the transition between root and isolated partition.
+>> + */
+>> +static void partition_enable(struct cpuset *cs, struct cpuset *parent,
+>> +			     int new_prs, struct cpumask *new_excpus)
+> Should we consider the bisection case here? With CONFIG_WERROR=y this
+> patch fails to build on its own — partition_enable() is defined but not
+> used.
+> 
 
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index 751a5e90a4e1..7521542712cb 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -78,6 +78,8 @@
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
- #include <linux/mempolicy.h>
-+#include <linux/capability.h>
-+#include <linux/bpf.h>
- #include <linux/pagewalk.h>
- #include <linux/highmem.h>
- #include <linux/hugetlb.h>
-@@ -103,6 +105,7 @@
- #include <linux/proc_fs.h>
- #include <linux/memory-tiers.h>
- #include <linux/migrate.h>
-+#include <linux/module.h>
- #include <linux/ksm.h>
- #include <linux/rmap.h>
- #include <linux/security.h>
-@@ -245,7 +248,7 @@ static struct weighted_interleave_state *wi_task_state_rcu(void)
- 	return NULL;
- }
- 
--void weighted_interleave_cgroup_free(struct cgroup *cgrp)
-+static void wi_cgroup_clear_weights(struct cgroup *cgrp)
- {
- 	struct weighted_interleave_state *old_wi_state;
- 
-@@ -260,6 +263,202 @@ void weighted_interleave_cgroup_free(struct cgroup *cgrp)
- 
- 	wi_state_retire(old_wi_state);
- }
-+
-+void weighted_interleave_cgroup_free(struct cgroup *cgrp)
-+{
-+	wi_cgroup_clear_weights(cgrp);
-+}
-+
-+static struct weighted_interleave_state *
-+wi_effective_state_cgroup_rcu(struct cgroup *cgrp)
-+{
-+	struct weighted_interleave_state *state;
-+
-+	state = wi_cgroup_state_rcu(cgrp);
-+	if (state)
-+		return state;
-+	return rcu_dereference(wi_state);
-+}
-+
-+static void wi_cgroup_set_state(struct cgroup *cgrp,
-+				struct weighted_interleave_state *new_wi_state,
-+				u32 nid, u8 weight)
-+{
-+	struct weighted_interleave_state *old_wi_state;
-+
-+	mutex_lock(&wi_cgroup_lock);
-+	old_wi_state = rcu_dereference_protected(cgrp->wi_state,
-+						 lockdep_is_held(&wi_cgroup_lock));
-+	rcu_read_lock();
-+	wi_state_init_from(new_wi_state, wi_effective_state_cgroup_rcu(cgrp));
-+	rcu_read_unlock();
-+
-+	new_wi_state->mode_auto = false;
-+	new_wi_state->iw_table[nid] = weight;
-+	rcu_assign_pointer(cgrp->wi_state, new_wi_state);
-+	if (!old_wi_state)
-+		static_branch_inc(&wi_cgroup_weights_set);
-+	mutex_unlock(&wi_cgroup_lock);
-+
-+	wi_state_retire(old_wi_state);
-+}
-+
-+static bool wi_valid_nid(u32 nid)
-+{
-+	return nid < nr_node_ids && node_state(nid, N_MEMORY);
-+}
-+
-+static int wi_cgroup_get(u64 cgid, struct cgroup **cgrpp)
-+{
-+	struct cgroup *cgrp;
-+
-+	cgrp = __cgroup_get_from_id(cgid);
-+	if (IS_ERR(cgrp))
-+		return PTR_ERR(cgrp);
-+
-+	if (!cgroup_on_dfl(cgrp)) {
-+		cgroup_put(cgrp);
-+		return -ENOENT;
-+	}
-+
-+	*cgrpp = cgrp;
-+	return 0;
-+}
-+
-+__bpf_kfunc_start_defs();
-+
-+/**
-+ * bpf_wi_set_weight - Set one weighted-interleave node weight for a cgroup.
-+ * @cgid: cgroup id that must name a cgroup in default cgroup-v2 hierarchy
-+ * @nid: memory NUMA node id to update
-+ * @weight: new weight in range [1, 255]
-+ *
-+ * The first update creates an explicit override for @cgid by copying the
-+ * nearest ancestor override, or the system-wide weighted-interleave weights
-+ * if no ancestor has one. Nodes not named by the first update become local
-+ * values in that table and do not keep tracking ancestor changes. Later
-+ * updates modify the cgroup-local table. The override affects new
-+ * MPOL_WEIGHTED_INTERLEAVE allocations made by tasks in the cgroup and
-+ * descendants that do not have a nearer override.
-+ *
-+ * Return: 0 on success, -EINVAL for an invalid node or weight, -ENOENT
-+ * when @cgid does not name a cgroup in the default cgroup-v2 hierarchy,
-+ * -EPERM for insufficient privilege, or -ENOMEM when the override table
-+ * cannot be allocated.
-+ */
-+__bpf_kfunc int bpf_wi_set_weight(u64 cgid, u32 nid, u32 weight)
-+{
-+	struct weighted_interleave_state *new_wi_state;
-+	struct cgroup *cgrp;
-+	int ret;
-+
-+	if (!wi_valid_nid(nid) || weight == 0 || weight > U8_MAX)
-+		return -EINVAL;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	new_wi_state = wi_state_alloc();
-+	if (!new_wi_state)
-+		return -ENOMEM;
-+
-+	ret = wi_cgroup_get(cgid, &cgrp);
-+	if (ret) {
-+		kfree(new_wi_state);
-+		return ret;
-+	}
-+
-+	wi_cgroup_set_state(cgrp, new_wi_state, nid, weight);
-+	cgroup_put(cgrp);
-+	return 0;
-+}
-+
-+/**
-+ * bpf_wi_clear_weights - Remove a cgroup weighted-interleave override.
-+ * @cgid: cgroup id that must name a cgroup in default cgroup-v2 hierarchy
-+ *
-+ * After clearing, the cgroup inherits the nearest ancestor override, or the
-+ * system-wide weighted-interleave weights if no ancestor has an override.
-+ *
-+ * Return: 0 on success, -ENOENT when @cgid does not name a cgroup in
-+ * the default cgroup-v2 hierarchy, or -EPERM for insufficient
-+ * privilege.
-+ */
-+__bpf_kfunc int bpf_wi_clear_weights(u64 cgid)
-+{
-+	struct cgroup *cgrp;
-+	int ret;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	ret = wi_cgroup_get(cgid, &cgrp);
-+	if (ret)
-+		return ret;
-+
-+	wi_cgroup_clear_weights(cgrp);
-+	cgroup_put(cgrp);
-+	return 0;
-+}
-+
-+/**
-+ * bpf_wi_get_weight - Read the effective weighted-interleave node weight.
-+ * @cgid: cgroup id that must name a cgroup in default cgroup-v2 hierarchy
-+ * @nid: memory NUMA node id to query
-+ *
-+ * Return: the effective weight, -EINVAL for an invalid node, -ENOENT when
-+ * @cgid does not name a cgroup in the default cgroup-v2 hierarchy, or
-+ * -EPERM for insufficient privilege.
-+ */
-+__bpf_kfunc s64 bpf_wi_get_weight(u64 cgid, u32 nid)
-+{
-+	struct weighted_interleave_state *state;
-+	struct cgroup *cgrp;
-+	s64 weight;
-+	int ret;
-+
-+	if (!wi_valid_nid(nid))
-+		return -EINVAL;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	ret = wi_cgroup_get(cgid, &cgrp);
-+	if (ret)
-+		return ret;
-+
-+	rcu_read_lock();
-+	state = wi_effective_state_cgroup_rcu(cgrp);
-+	weight = wi_state_weight(state, nid);
-+	rcu_read_unlock();
-+
-+	cgroup_put(cgrp);
-+	return weight;
-+}
-+
-+__bpf_kfunc_end_defs();
-+
-+__ADDRESSABLE(bpf_wi_set_weight)
-+__ADDRESSABLE(bpf_wi_clear_weights)
-+__ADDRESSABLE(bpf_wi_get_weight)
-+
-+BTF_KFUNCS_START(wi_kfunc_ids)
-+BTF_ID_FLAGS(func, bpf_wi_set_weight, KF_SLEEPABLE)
-+BTF_ID_FLAGS(func, bpf_wi_clear_weights, KF_SLEEPABLE)
-+BTF_ID_FLAGS(func, bpf_wi_get_weight, KF_SLEEPABLE)
-+BTF_KFUNCS_END(wi_kfunc_ids)
-+
-+static const struct btf_kfunc_id_set wi_kfunc_set = {
-+	.owner = THIS_MODULE,
-+	.set = &wi_kfunc_ids,
-+};
-+
-+static int __init wi_kfunc_init(void)
-+{
-+	return register_btf_kfunc_id_set(BPF_PROG_TYPE_SYSCALL,
-+					 &wi_kfunc_set);
-+}
-+late_initcall(wi_kfunc_init);
- #else
- static struct weighted_interleave_state *wi_task_state_rcu(void)
- {
+Hi Guopeng,
+
+Thanks for catching this. You are right, each patch should build on
+its own, and with CONFIG_WERROR=y these helpers trigger
+-Wunused-function until they are used in patches 7-9.
+
+The helpers are introduced in separate patches on purpose: Waiman
+suggested having them complete when introduced, and then converting
+remote and local partitions to them in later patches, to make the
+series easier to review [1]. To keep that and still build cleanly,
+I'll mark them __maybe_unused when they are introduced, and drop it
+in the patch that first uses each of them.
+
+[1] https://lore.kernel.org/all/e8018984-96ed-49fa-8571-79a0d39cb218@redhat.com/
+
+> 
+>> +{
+>> +	int old_prs = cs->partition_root_state;
+>> +
+>> +	lockdep_assert_cpuset_lock_held();
+>> +	WARN_ON_ONCE(new_prs <= 0);
+>> +	WARN_ON_ONCE(!cpuset_v2());
+>> +
+>> +	if (old_prs == new_prs)
+>> +		return;
+>> +
+>> +	spin_lock_irq(&callback_lock);
+>> +	if (old_prs > 0) {
+>> +		/* Switch between root and isolated, cpumasks are unchanged */
+>> +		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
+>> +	} else {
+>> +		/* enable partition should only add exclusive cpus */
+>> +		partition_xcpus_add(new_prs, parent, new_excpus);
+>> +		/* enable remote partition */
+>> +		if (!parent)
+>> +			cs->remote_partition = true;
+>> +		cpumask_copy(cs->effective_xcpus, new_excpus);
+>> +	}
+>> +	partition_state_update(cs, new_prs, PERR_NONE);
+>> +	spin_unlock_irq(&callback_lock);
+>> +	cpuset_force_rebuild();
+>> +	notify_partition_change(cs, old_prs);
+>> +}
+>> +
+>>   /*
+>>    * remote_partition_enable - Enable current cpuset as a remote partition root
+>>    * @cs: the cpuset to update
+> 
+
 -- 
-2.20.1
+Best regards
+Ridong
+
