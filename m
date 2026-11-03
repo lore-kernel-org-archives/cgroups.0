@@ -1,78 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793729362;
-	b=0o2up9vWaFmMbs72rIytnMJQWoSuD0VgNQM0cMVtsU1qsIubXDCLEQ7Qst08Lilj4ACQ
-	 ffdD+BhOLo4t+zfVa28xCc6zZdwGvwjdEUvC+G8XapvUZJcvRe1/+d4siFuGdsO9hTiQl
-	 0DYQiO89Pw1CpSeuEj4lEku3Z8NqMPaw1+4+OGEheVaUyaw7MK2xi79iVxSBHbeXfbFt/
-	 MfWc4lRsR5yoYPeerEWydlMHZLTLt3rW+pBvErWgFPSMtjsbLw1bibwad99GNbd3idDwK
-	 xyagF/gzB0wg01UY2kHB4Ntzh/eRXMMHNk1sMAY9ycxqC2wYxbWaXqFUSBroe1j/CoA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793729362;
-	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=Yim4+xjFSL3rrvzkKn7LXdVgRhB+1jTYxkhUigaCIes=;
-	b=oGXsOL+ccmk9JUpwGxkvOJzirj5kBpaZG/9sgIgLzrWZevZ6emzFuVMsL1zSWZ7XKLcy
-	 bEylENU7rXXXA3yXnTtziZWfNftbfON6pbIe+dqQRDXI2YFXuzkuXTVunHxQtk9jOoSgl
-	 cyDSVCTE/nOahERD2z158VDn8OQ5JyjpWK1KAB9nWLsoR+hpc9eZXaFqUqk2DFZzz5y0Q
-	 PyfBQ4j8wRjTd6PZCrawQZ2ZSoIiWvJ3wo8VAxQQ0XAkSaT69ffVDco6bJ7IHr7FQvANO
-	 hWpFDUZKDGNoCBW/SRC8tKd+mm4FKPm88iyPI/6CIS9qrpBeatPh3FYiy9knJkU5Dqg==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fqOS5RlT;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793730540;
+	b=vDOkKZgnJKsvIi5E+NnR46AznxL+PSnbBpHbZDuY25e52GsYOx+Ek5C/C/NzxEGJbFyi
+	 e0c72rY5CLEY9mAGkBQprS91k3t11HDJfEh/9PazoWYALKKXJcSKBoLpDmhqOJdTvB2WJ
+	 6ps8AZ0uTDTnF5gktv4crifD7cBaM9SXhWHwZDsZP9ZACQunqZHJsVr/i2XNiW6/4uR/G
+	 WJRnpqCrc5zN+8W4nMfoNK4SU+0dXZ9Qx7eWZa9tKX1cK0GHqCseM8CA3j9vzAxshwBp7
+	 ujPcOrtE5UfS2MtF8e1D5UXGfsSR1JMENlOEF2qbsdjoek3OBUZmTOglvSQDOkFs7aw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793730540;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=A2SxbtdInviKmhuZ6qhITPKihTTKCU8zqlv1zCWXFFY=;
+	b=IA/6HzXGMHHxnD0LwO+dNuEXe4kk+ax/MVmNrb02risZQxtEVstVAJmw7kPONFV9ER9r
+	 NT5lBfLFUNUdRG+24yiMVmYAgRKg9o2swL7uLOXFDg4drms8rNMB5CBix3LowPuWHEwQe
+	 WsieerBapvLCmtRFk76ErBALjQqVfiKZKHNMS50xhKGcuDxLi3VQnJlCioPBjzLhATgpH
+	 G38KBhLX8PuX1XOoq98xPoeSS7bBYqMO/V42qZbzfJhX/ApwpjIaDZzUXEUY0ylEQo59z
+	 ddFf1hF1z18uaenXOKLcPL0elflWt0+rjQJklCbcga/bQxqbdrPWCdvMnWEmtLEKhcQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DDktR5oa;
+	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6C4606A329;
-	Tue,  3 Nov 2026 18:09:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43DC4606A326
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 18:29:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fqOS5RlT
-Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
-ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1793729362;
-	b=DiRQx7WCtdPKlSimEi/lCSfRptMxGVd2XpoEokkLCLWJB9fNHodEH8gqWj2DY7uflLbg
-	 CtAN5YrFYVlCcrEAbvctlor4AbNwPizNxccaWqyu4HKxVrccwI1fv/4Q/bcDwxsMnlBcf
-	 Um3AWlckP3VovhBXmdQnKNyXBUE7JNf4LvtGZjTR1HNjDXvbH76FfeX5WvK4iw0V4fpvX
-	 NIWqV4xFQWNAZyw/drxzQ16rWZ1CuWoFY/iFks7r8d11fpkQmQ698zb8un8UuYJ0AqL2T
-	 e4uX1GFitGDYMhdzbI/XDivkjj4cc7LNhnklZq60ptM3gHAeT5kLdakrZ6KOm5CTnkg==
-ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1793729362;
-	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer:
-	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=Yim4+xjFSL3rrvzkKn7LXdVgRhB+1jTYxkhUigaCIes=;
-	b=zort7V+wikGI0O4vBys+Kt2uaapHHR/Fr5+2P1q3VkrEXprtGeobeiEa0ef7bNgrkQsz
-	 SsfG4IKbU5smlEMw9xCAkvUFVHQXNmWw2OwUXwFvEZ7hSE63pv/Tf9no7eJdnOjLflAxw
-	 OM1Z2F5Rl9YfLG3HGwWyz/wG+kyDKPzgwKrVXmAWLoeMSan5i8b/GgGbH3/b6tIgVTqFj
-	 nA5IqPyZ3YVXzG5nkRHvqwJnlkItsQXG9dEB1ays2omTtmiDw6uq7FW9XfNIYlzG2ht+s
-	 aCDZFfDE3ixUO23xHnJ5LM5Ayg3a+zLWvmRYV3xP5kj7QmsFk3gw5+cCslIdn5Yh04g==
-ARC-Authentication-Results: i=1; smtp.kernel.org; 
-	arc=none smtp.remote-ip=100.80.115.77
-Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 5EDCE1F000C1;
-	Tue,  3 Nov 2026 18:09:21 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DDktR5oa
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFF971F0093A
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 18:28:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793729361;
-	bh=Yim4+xjFSL3rrvzkKn7LXdVgRhB+1jTYxkhUigaCIes=;
-	h=From:Date:Subject:To:Cc:Reply-To;
-	b=fqOS5RlTgteUHXEnSu+JKU5LlW4VRu+a++526Ulfj8C0WvDXfmftzrNjxFZTL+VKg
-	 0MmExkUVcnEubTEP5KTZsATcPeB4yc9zACPHMltoFFMFesgTrkc76be7/sYbL8NG4Y
-	 bMXBCp38DpIQzpLNT0SQyEl94tvh5rsV/i9dp0w2R7f0VMgasnODd4BiXIoXW+osrU
-	 UT1gq81cckzzL+d4BKEtiNmjpi6p+Xb2tNavpaA8uK+zEJ1BQk23RDoFZcbKBOXIuX
-	 rmeocVStjRRR3nQvwWL3zaxUtoFMtXxxP9Jx/ngFw9jl5qySrfbF8ZnIl55bsBkslz
-	 xx9iZO36uHAgA==
-Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id B0FA346A69;
-	Tue,  3 Nov 2026 18:09:20 +0000 (UTC)
-From: Mani Tofigh via B4 Relay <devnull+mt4022.columbia.edu@kernel.org>
-Date: Tue, 03 Nov 2026 13:09:20 -0500
-Subject: [PATCH] cgroup/freezer: walk exiting tasks in the v1 freezer
+	s=k20260515; t=1793730539;
+	bh=A2SxbtdInviKmhuZ6qhITPKihTTKCU8zqlv1zCWXFFY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=DDktR5oa1crRuyfuFtCMXUU+k3OQICXkZMzNhtqUWIUnC+D6gpAMnTCG+3xL8tQ9h
+	 IyfsZZmGsReNSr7/nnuAHWF5Mn478r2mULPN2L+rH6Q3YqgBtIy+SCpylEZn5g3NdZ
+	 /z80fsdCVKdRFOmpfO0U2owkg7PiT4fGszZdjTrpCDmRHl1Wto/C/vV/7ZMjhEGNAF
+	 rsTwgck41zXLVg/9ZT4ruE+tmYJSkqMg3Umnc45jj/04V9JT1Z+FHOOc6UKKMqmJk3
+	 aNgBu84nKY0A6Eor7WoiC/jusDJrj4pyJLhjdleXxLbtGjGgaTwvn293D6wEzUIPs5
+	 dW4km++/0Ghmw==
+Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-93cbc3ab2fdso219141385a.3
+        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 10:28:59 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvBzIdaTW/LYqKQVwUo+ljdS5ZZNjnShUnv8F0hXuX9aQCm97mGlMJigcFNfMn4y7daEcgNrSSbHx@vger.kernel.org
+X-Gm-Message-State: APuU4Z/g7HfS1AQPft97h45up223B3fsINTqs3mhoMau8V8Sp+kwx1BF
+	qDBmjdjNsNfCgoP+oPlu8AI494tQBCDBcUdw/T4+bD3Hqe7T4z4fQ1D9UoKRb3TgP5qECpMFx9e
+	bGoefG6ClxoTzXa5vmgr0UfPrqOTcnRI=
+X-Received: by 2002:a05:620a:3196:b0:93a:824:ac8d with SMTP id
+ af79cd13be357-944216b1afemr2371370885a.27.1793730539153; Tue, 03 Nov 2026
+ 10:28:59 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -82,124 +59,71 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261103-cgroup-freezer-exiting-v1-1-00d43b443747@columbia.edu>
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/yXMMQ7CMAxG4atUnrHkBFQkroIYwPwJZkgrp0UVV
- e9OgPEb3lupwg2VTt1KjpdVG0pD2HWkj2vJYLs3U5TYhyCRNfswj5wceMMZi01WMusx9YKD7qM
- ItXh0JFt+4/Pl7zrfntDpe6Nt+wAsaXPhegAAAA==
-X-Change-ID: 20261102-cgroup-freezer-exiting-c7f60e4c3200
-To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, tz2294@columbia.edu, 
- stable@vger.kernel.org, Mani Tofigh <mt4022@columbia.edu>
-X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1793729360; l=3795;
- i=mt4022@columbia.edu; s=20261026; h=from:subject:message-id;
- bh=KM/MnDxFBAC+sHs8ZYIfu9PpFh912v0OKBTiwLZBXTs=;
- b=1kmrrNgSRj3B7olIMU2INLso9M0fRHp0YmplSCHp+8t7YB5hBjT1nV0u0MqY2E+m8lzO1Cm9Y
- Z75ryOfyQFtCv4tOtkiqG9jzOFrSmMPf2JNi7dBlcze4KBym1pfyMJ4
-X-Developer-Key: i=mt4022@columbia.edu; a=ed25519;
- pk=gljCMQDuxyKPmd5y37CRpEJGSPXDV1MyAnHBhCgXl0I=
-X-Endpoint-Received: by B4 Relay for mt4022@columbia.edu/20261026 with
- auth_id=1322
-X-Original-From: Mani Tofigh <mt4022@columbia.edu>
-Reply-To: mt4022@columbia.edu
-Content-Transfer-Encoding: 7bit
+References: <20261103025610.3738894-1-ridong.chen@linux.dev>
+ <20261103025610.3738894-8-ridong.chen@linux.dev> <CAGsJ_4xCTSctcPcC7X6Dx4zYaOycaPqs0DG7AaxB55wx1Afwpg@mail.gmail.com>
+ <9cabcddf-d807-4a36-84f1-5bb06ea72aac@linux.dev> <CAGsJ_4xXDZjhN+NkvtN+vAp8Bokack_JdNgP=nGPQtHUX8_rqg@mail.gmail.com>
+ <f5137dbb-b0ed-44ea-a23f-5c848315a68a@linux.dev>
+In-Reply-To: <f5137dbb-b0ed-44ea-a23f-5c848315a68a@linux.dev>
+From: Barry Song <baohua@kernel.org>
+Date: Wed, 4 Nov 2026 02:28:46 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4zNZynkZn1mb+nT1n6dq4n399VC8Lbo5Sv92gioDfPxUg@mail.gmail.com>
+X-Gm-Features: AclHuK8ocj8au7qeT_BVvieNJJ4o0s2vwCrhyBoxk-38BXmuY8mPvZOfmLABhGE
+Message-ID: <CAGsJ_4zNZynkZn1mb+nT1n6dq4n399VC8Lbo5Sv92gioDfPxUg@mail.gmail.com>
+Subject: Re: [PATCH v6 7/7] mm/mglru: add tracepoint for inc_max_seq()
+To: Ridong Chen <ridong.chen@linux.dev>
+Cc: Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Dave Chinner <david@fromorbit.com>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <qi.zheng@linux.dev>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Kairui Song <kasong@tencent.com>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org, 
+	linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	"open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>, Ridong Chen <chenridong@xiaomi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Mani Tofigh <mt4022@columbia.edu>
+On Tue, Nov 3, 2026 at 8:23=E2=80=AFPM Ridong Chen <ridong.chen@linux.dev> =
+wrote:
+[...]
+>
+> Hi Barry,
+>
+> Agreed, I'll go with option 2. Two things I'd like to confirm first:
+>
+> 1) To report the reason, should_run_aging() would need to return it
+>   instead of a bool, e.g. an enum like:
+>
+>    enum lru_gen_aging_reason {
+>         AGING_NONE,
+>         AGING_NO_EVICTABLE,     /* eviction is not possible anymore */
+>         AGING_MIN_GENS,         /* better to age, eviction still possible=
+ */
+>    };
+>
+> Or just report sc->priority, swappiness, max_seq/min_seq and the
+> per-generation nr_pages, and let users derive the reason from them?
+> The former is more direct, the latter keeps should_run_aging()
+> unchanged.
 
-An exiting task can stay frozen after its v1 freezer cgroup is thawed.
-Since commit a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
-the css task walk hides an exiting task once its process has no live
-threads left.  That count drops when another thread of the process
-exits, which can happen between the freeze and the thaw walk.  A pid
-namespace init hits this easily since it waits freezably in
-zap_pid_ns_processes() after commit 81933038f5e2 ("pid_namespace: make
-zap_pid_ns_processes() freezable"):
+Right. We can let users infer the reason from max_seq,
+min_seq, and nr_pages in each generation. This shouldn't
+be difficult, especially since should_run_aging() may
+change. We don't need to spell out the exact reason.
+Just present users with the overall state of the lru_gen.
 
-  Task A (pid ns init)      Task B (A's thread)      Task C
-                            do_exit()
-                              exit_signals()
-  do_exit()
-    zap_pid_ns_processes()
-                                                     write FROZEN
-                                                       /* A frozen */
-                              /* live count 0 */
-                                                     write THAWED
-                                                       /* A skipped */
+>
+> 2) try_to_shrink_lruvec() has changed quite a lot recently, e.g.
+> Kairui's reclaim loop rework, and your swappiness series also touches it,
+> including the aging part. Is it stable enough now to carry a tracepoint t=
+here?
+>
 
-A then stays frozen even after SIGKILL:
+Yes, I think aging will always be needed, regardless of how
+we change the code, so this should remain stable.
 
-  [   10.775155] task:fz-init         state:D stack:28152 pid:65    tgid:65    ppid:1      task_flags:0xc0004c flags:0x00080000
-  [   10.775176] Call Trace:
-  [   10.775180]  <TASK>
-  [   10.775188]  __schedule+0x10f1/0x4760
-  [   10.775252]  schedule+0xd7/0x2c0
-  [   10.775265]  zap_pid_ns_processes+0x2c7/0x5f0
-  [   10.775346]  do_exit+0x1bf4/0x2560
-  [   10.775403]  __x64_sys_exit+0x3d/0x50
-  [   10.775414]  x64_sys_call+0x156c/0x1570
-  [   10.775425]  do_syscall_64+0xfb/0x590
-  [   10.775450]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
-  [   10.775529]  </TASK>
-
-Use CSS_TASK_ITER_WITH_DEAD in the three v1 freezer walks so they all
-see the same tasks, as commit 60f21a264930 ("cgroup, sched_ext: Include
-exiting tasks in cgroup iter") did for sched_ext.  With the fix, A is
-thawed and exits.
-
-This bug was identified and confirmed with the help of a deterministic
-hypervisor currently under development.  The C reproducer below however
-hits it within about 10s.
-
-Fixes: a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
-Cc: stable@vger.kernel.org
-Signed-off-by: Mani Tofigh <mt4022@columbia.edu>
----
-Reproducer: https://github.com/manitofigh/files/blob/main/linux-repros/freezev1.c
----
- kernel/cgroup/legacy_freezer.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup/legacy_freezer.c b/kernel/cgroup/legacy_freezer.c
-index 8545e0d1ba3d..bd11047f2311 100644
---- a/kernel/cgroup/legacy_freezer.c
-+++ b/kernel/cgroup/legacy_freezer.c
-@@ -265,7 +265,7 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
- 	rcu_read_unlock();
- 
- 	/* are all tasks frozen? */
--	css_task_iter_start(css, 0, &it);
-+	css_task_iter_start(css, CSS_TASK_ITER_WITH_DEAD, &it);
- 
- 	while ((task = css_task_iter_next(&it))) {
- 		if (freezing(task) && !frozen(task))
-@@ -309,7 +309,7 @@ static void freeze_cgroup(struct freezer *freezer)
- 	struct css_task_iter it;
- 	struct task_struct *task;
- 
--	css_task_iter_start(&freezer->css, 0, &it);
-+	css_task_iter_start(&freezer->css, CSS_TASK_ITER_WITH_DEAD, &it);
- 	while ((task = css_task_iter_next(&it)))
- 		freeze_task(task);
- 	css_task_iter_end(&it);
-@@ -320,7 +320,7 @@ static void unfreeze_cgroup(struct freezer *freezer)
- 	struct css_task_iter it;
- 	struct task_struct *task;
- 
--	css_task_iter_start(&freezer->css, 0, &it);
-+	css_task_iter_start(&freezer->css, CSS_TASK_ITER_WITH_DEAD, &it);
- 	while ((task = css_task_iter_next(&it)))
- 		__thaw_task(task);
- 	css_task_iter_end(&it);
-
----
-base-commit: fffbdad76a57eed26cff1be19f4cbb407f0b6e7c
-change-id: 20261102-cgroup-freezer-exiting-c7f60e4c3200
-
-Best regards,
---  
-Mani Tofigh <mt4022@columbia.edu>
-
-
+Best,
+Barry
