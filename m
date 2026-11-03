@@ -1,102 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.74
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793694876;
-	b=I1FshZ8i4eO9zTYtVHN3ga5li00XRifAnUn7HpKDDQAyNmcbZTSGCXjOI3rvCAhuWv1w
-	 SJ4SbHqz86/kd1gUb8xcphLnAV9Kyb8HnfCGNl8TIERdz/5Hk9RNQ6yiJV3J6bpZoEIQo
-	 nuZ3ZMX+c1/Hblli5p8NuFGvKUL0/vxSewiInke/aoU5KknXizN3qdo+VshhYo2scrF+y
-	 NsqUJt3BPvm0jSY2gAp6rdOh+7tog0xK9rQ4u5nB+vpu20PTsE+A/QXEkxQW0oJTq7+D2
-	 IbsQ3xNeS6jf3ktfTwBWeb7y209MmzHGfu/8J41KSFYIZJdMaYTh3uibisL/d7SDKGQ==
+	t=1793695135;
+	b=ysFar5U9FUZteb+msmjy5LaZt+76HXsWHqgRdaMUNJarFuzO3ax1vZxiH9MizxZ2zD1m
+	 4MC3MHrAJQTfq/dmMmTF7w1sG7pFcxtDmyorT7lOVDmSSNGCvxDlMaaid51e8ZVCtrLVz
+	 HQjvIs5HbHPvYFq3VzBUNv92Q1r/MzSF+OKlYRLlku56RcEPdnEBCnHkvIILjEtNTZQrZ
+	 n3Fkj5R432Bn0b6jLPteMmA3GBcGQRfTiF6UjUwo2T3BT9XHZAxQX2YmF6bbdMbvpIAkG
+	 s6DKtfrSIa/wBfPFpRhl4mSt898JqRq89ZdIbTc6OmAywRievknkegVbAJnPHwr7Zrw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793694876;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=o94uNRQqzrylUu01kiRSHaUQ5l5ZXHsTJxuqTtmUWsA=;
-	b=pRjUYNQFZfpf2dhq+XLSoEthj4+5IWu0Ix6FLRFTTdFnF+sbJm7nQOShsFmqX5pdxKqV
-	 YSaGjHqYzCgaAraCp+DWaVHbHZfGNWABQLPW2phPXIM4kKFwsqLziM/QZufQdQlhCkDPm
-	 5HbfDsUmGnJZfDMGGhLb1mC3IGpPt0ne/nhuNTtu2aKa7ZRLQHXMsyU+l3J6ah+ORHg2G
-	 1m1XSnvmcq0FcKFh3udX5vviaF0H08jYKjEfobs6n+U2OGH/zA0J00xULmc0BdwID/jEg
-	 zy7Jkhrd9flyvgwOL26A6U915MbNqy1QAS5ufnYyt4yRaOxelBlC0jXNU43E9BOu3gw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793695135;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=qeqwFlyJpg/hyC5+cDpsscxjxixuGz6INW/VspMuWu8=;
+	b=1c6wJaq8TfMs2wqAW2Aou1KDjxyZgY6LzSj39tZpedWRQp1mOZt5ugWiV9f+fE0xBO5h
+	 DkqfQh//GFTSnBFOU4lOfGnTQojJrMapFWNAiANCYxRquWfk1IiRVGPxDXR+ajsy4ACVI
+	 O1KMCfDR9rsm5BfETgx8SQYScGVlquikWaDDHB5tEz6dIRUAn1HaRqvMdALCeA/F9ipeW
+	 sAA4IZftrXyWMoGp2D8b8puWOJBKGLv3dpwnwtFeuq0/DbZ7Icc+3aHBAPIwYqA3FzfKG
+	 rvW2RIhP2SYXiq5Mg1FP1LfbwZ84Zb8/qHHjeeN/r3sxxfob2rNyt0L3IT+4QLHHmSw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=TLVy7iFt;
-	arc=none smtp.remote-ip=209.85.221.49
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	arc=none smtp.remote-ip=95.215.58.74
+Received: from mta1.migadu.com (out-74.mta1.migadu.com [95.215.58.74])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3845F606B6E1
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 08:34:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3845F606B6E1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=TLVy7iFt
-Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-48af4d4e61fso2354800f8f.2
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 00:34:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1793694874; x=1794299674; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=o94uNRQqzrylUu01kiRSHaUQ5l5ZXHsTJxuqTtmUWsA=;
-        b=TLVy7iFtFV1eosB1viqZ7kViXpvbRMjgrFtWB9Imq6n76wjr8s3iRUHWE8hgHwH7Gr
-         0KInipeNWTR08EjSERF8pBe1LkUAMlskiz3X0+LPzZHWD1VodvaOFpXD/XS36dPppxjU
-         EdiIuVK+VO4HJkL8KSHmDuftog2QHWddAXkE3Ed+Il3YJmrHhKr/mAO8DsoyZJlUakNL
-         4rxY/hQtmPfk36jSWuthX2k94iG9CN/Mho5dKMpxFLKqaIuEZzHldAH5jH+2JYLyUFMt
-         lmeeuZpbICNNFyG19S+eF5BPU+e+q0kgrq+2pfK3WorZgLrO1HemIDKFRt/Js6Ibxqlr
-         T3Nw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793694874; x=1794299674;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=o94uNRQqzrylUu01kiRSHaUQ5l5ZXHsTJxuqTtmUWsA=;
-        b=24TbwBJeN1h3XWeRIo7+JEstBB9W2xkpMZ8+I7v9X6nhmY/5rJHc6WUEb6REBxcF65
-         HWRVX83m8/YaaB+QpxSjK9WwaSEutr1iwG+N/cznnHV9HS2J22aBRalkA1EcA+n1gRvO
-         AQr5wQahDyRb10DguqT43e3164G9s1SNbhMyZNNTXM4q9UbjuKpb8f///U4yoHuPhv9X
-         NeTQuri/sutSCrfTyH4XnNfGMbF1DaVNaHxlxPhwYTZAe0rw7IrPfb45NRqMwv1rl/YX
-         k5mWatovDwKOziWCVwPzabYPYVl6XRQu/YktMDWxZcu51G1PlDhwdc6Mg0kY71UTVbgU
-         +mGA==
-X-Forwarded-Encrypted: i=1; AKwUvBxQ1jZcezoaQXcKlz0N6sDAROUhb0Rzn6vdfX60yYhuZGlWWlB+Y1w1FpX3EzCZQXiUoNFycbT8@vger.kernel.org
-X-Gm-Message-State: APuU4Z/ah4oVbDun9RBETIHoh3cLUmiJM8fY+xrBhvyyfBcHgBpQ/dYj
-	kNjBYy3ta2rBJz3NggOnJcHrDg+NYruOK+HOZJjjKBhrfMTMlNeuoebtGwOCTev8WYad0sM7+qY
-	xZ2CR4cg=
-X-Gm-Gg: AYBFou1SY/q5w9Ao0hStcZNMVeaO17KYUR+UfBo2l9QpO62DbCTa8EVE7fiVcdnmA1e
-	j66g+cSL3Wn2OolnDt31aDOJkOZlJzkOC8qyRU2FId/cqSp2v0bnb/NiOJOTUMI92lcke+TBzmM
-	9XmGvF03AMRWL5sXlOyIVyq5pWgw2UiTVl/mcpWEyCbXo3tT1iTMKpiCAJ1ky1JeG4P/MnjC+4S
-	usq+2xPHNBmDwdKl4EPVr2JJIOaGYPkdPpsJchQFUUDTQVWGvpvGqtO79D1nuVo8+a2r8EGx3kJ
-	jTTfzqbXRyZSh9co/mG/iI0HOh0WHQ/0HAsKp/gzm6CLyWaqjk9w9t7hUE9wkuaf5ABVUq6/bGq
-	J/8+AWZ/We1Ief9LDp55/FApNqoZFjaa4mJchJ42Hp/8Grf20wTImzUMe1U7lytF+Kagga6v34X
-	lT9zWIdtI+UK9VaLomDqTi8jc7IG9z2GM6uVnLGC7Zjb7zDVfXo+pw0J+1CQsIoghwTu6vnCmRD
-	B9UPsGgeXe0/5FCrtH1WZ4EDgSWgKno5U2lq7l6VNcRFM9SL1XF4wU/94cxdJ3eA0FkOmcJXZ74
-	ac9wt/at0mWD3vYSYxZmGHabnpMlIMJps0745xk=
-X-Received: by 2002:a05:6000:2892:b0:48d:eb44:650c with SMTP id ffacd0b85a97d-48e6e309f40mr28006453f8f.40.1793694874669;
-        Tue, 03 Nov 2026 00:34:34 -0800 (PST)
-Received: from localhost (109-81-32-81.rct.o2.cz. [109.81.32.81])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48e71b8a7d1sm23718452f8f.38.2026.11.03.00.34.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 00:34:34 -0800 (PST)
-Date: Tue, 3 Nov 2026 09:34:33 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>,
-	Harry Yoo <harry@kernel.org>,
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] memcg: force charges from reclaim before trying
- the limits
-Message-ID: <aumcmb9iBpovh97u@tiehlicka>
-References: <20261030205418.341214-1-shakeel.butt@linux.dev>
- <20261030205418.341214-3-shakeel.butt@linux.dev>
- <auhN7v127jwy-q-W@tiehlicka>
- <auli2Zlf1F0tyi4X@linux.dev>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180FF606A33D
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 08:38:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 180FF606A33D
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=OSN5qGHgqiHVh7/05xFfowZL4pMsF7I9FTtrXt2Dh7Y=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793695132; v=1; x=1794299932;
+ b=ROPqMjXI5XlPI4j2+AMYhgpbz8V4jO1vsprSWBij54GaljEpun6cdUgvud1esw4g1ip9qwvg
+ fsTAQ9gdAlNWK7zqvCd/jneT7dLIbvPehxzOCbiFFcMIHZx1ClxtmYq+gcr3R7jTmQ9V53IVzlH
+ yyMf7sjmzypXX+cjR/BV8gP0=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id c2bade759b0e2b73;
+	Tue, 03 Nov 2026 08:38:51 +0000
+X-Mizu-Trace-ID: c2bade759b0e2b73
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <9cabcddf-d807-4a36-84f1-5bb06ea72aac@linux.dev>
+Date: Tue, 3 Nov 2026 16:38:39 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -106,47 +55,125 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <auli2Zlf1F0tyi4X@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 7/7] mm/mglru: add tracepoint for inc_max_seq()
+To: Barry Song <baohua@kernel.org>
+Cc: Steven Rostedt <rostedt@goodmis.org>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Dave Chinner <david@fromorbit.com>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
+ David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
+ Kairui Song <kasong@tencent.com>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Baoquan He <baoquan.he@linux.dev>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>, linux-kernel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-mm@kvack.org,
+ cgroups@vger.kernel.org,
+ "open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <20261103025610.3738894-1-ridong.chen@linux.dev>
+ <20261103025610.3738894-8-ridong.chen@linux.dev>
+ <CAGsJ_4xCTSctcPcC7X6Dx4zYaOycaPqs0DG7AaxB55wx1Afwpg@mail.gmail.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <CAGsJ_4xCTSctcPcC7X6Dx4zYaOycaPqs0DG7AaxB55wx1Afwpg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Mon 02-11-26 20:34:40, Shakeel Butt wrote:
-> On Mon, Nov 02, 2026 at 09:46:38AM +0100, Michal Hocko wrote:
-[...]
-> > @@ -2789,6 +2779,15 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >  	if (do_memsw_account())
-> >  		page_counter_charge(&memcg->memsw, nr_pages);
-> >  
-> > +	/*
-> > +	 * If the allocation has to be enforced, don't forget to raise
-> > +	 * a MEMCG_MAX event.
-> > +	 */
-> > +	for (mem_over_limit = memcg; mem_over_limit;
-> > +	     mem_over_limit = parent_mem_cgroup(mem_over_limit))
-> > +		if (!mem_cgroup_margin(mem_over_limit))
+
+
+On 11/3/2026 2:48 PM, Barry Song wrote:
+> On Tue, Nov 3, 2026 at 10:58 AM Ridong Chen <ridong.chen@linux.dev> wrote:
+>>
+>> From: Ridong Chen <chenridong@xiaomi.com>
+>>
+>> Aging in MGLRU advances max_seq via inc_max_seq(), creating a new
+>> youngest generation. There is currently no tracepoint on this path, so
+>> the moment a new generation is created, and how the min_seq of each type
+>> trails behind it, cannot be observed as it happens.
 > 
-> Second, !mem_cgroup_margin() is true at usage == max, so a charge that fits
-> exactly raises an event (unlike today).
-
-True
-
+> We might be more interested in why aging is triggered rather
+> than the exact moment when max_seq is advanced.
 > 
-> > +			__memcg_memory_event(mem_over_limit, MEMCG_MAX, allow_spinning);
+> With your patch, we get:
 > 
-> Third, we definitely need a break here otherwise every ancestor at its limit gets
-> an event which does not happen today.
+> ~ # cat /sys/kernel/tracing/trace | grep mglru_inc_max_seq
+>             a.out-93      [001] d..1.   278.276539:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=4 anon_min_seq=2
+> file_min_seq=1 nr_anon={0x0,0xf016,0x12,0x0}
+> nr_file={0x1886,0xb,0x4c,0x0}
+>           kswapd0-50      [000] d..1.   278.422400:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=5 anon_min_seq=2
+> file_min_seq=2 nr_anon={0x5,0xccb6,0x3439,0x0}
+> nr_file={0x4ae,0x4f,0x55,0x0}
+>           kswapd0-50      [000] d..1.   278.508003:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=6 anon_min_seq=3
+> file_min_seq=4 nr_anon={0xccb6,0x3d29,0x1,0x0}
+> nr_file={0x0,0x59,0x7,0x0}
+>           kswapd0-50      [000] d..1.   280.046056:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=7 anon_min_seq=4
+> file_min_seq=5 nr_anon={0x3bf3,0xcbbd,0x23e,0x0}
+> nr_file={0x0,0xb,0x1,0x0}
+>           kswapd0-50      [000] d..1.   280.124876:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=8 anon_min_seq=5
+> file_min_seq=6 nr_anon={0xcafd,0x3e31,0x0,0x0}
+> nr_file={0x0,0x5,0x7,0x0}
+>             a.out-96      [001] d..1.   290.629014:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=9 anon_min_seq=7
+> file_min_seq=6 nr_anon={0x0,0x10615,0xb,0x0}
+> nr_file={0x331,0xb,0x9a,0x0}
+>           kswapd0-50      [000] d..1.   290.653098:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=10 anon_min_seq=7
+> file_min_seq=7 nr_anon={0x15,0xef23,0x18c4,0x0}
+> nr_file={0xb,0xb8,0x55,0x0}
+>             a.out-96      [001] d..1.   290.684875:
+> mm_mglru_inc_max_seq: nid=0 memcg_id=1 max_seq=11 anon_min_seq=8
+> file_min_seq=9 nr_anon={0xeee3,0x1afb,0x2,0x0}
+> nr_file={0x0,0x76,0x4,0x0}
+> 
+> You can see that the youngest generation is always zero,
+> because you're just getting the newly added youngest
+> generation :-)
+> 
 
-This is a separate thing but shouldn't we actually raise the event on
-all levels that are over?
+Hi Barry,
 
-> I want to keep my current version.
+Thank you very much for testing and reviewing.
 
-OK, fair enough. My intention was to have those two parts closer
-together but this is not something I would insist.
+> This somehow suggests that the information is redundant, as
+> there is always a zero there.
+> 
+> I suspect we'll need an additional tracepoint to show why
+> aging is triggered and at what sc->priority it happens.
+> 
+> But do you know why you trace the moment just after aging
+> is completed, rather than the reason why aging is needed?
+> 
+My original goal was to pair it with mm_mglru_scan_folios, to see how
+the aging window of each memcg moves. The per-generation anon/file
+nr_pages were added following your suggestion on v1. I put it at the
+end of inc_max_seq() because of the restart there, as max_seq and
+min_seq are only final after that.
 
-Acked-by: Michal Hocko <mhocko@sus.com>
-Thanks!
+You make a very good point that the reason for aging is also
+important. So I'd like to discuss which way is better:
 
+1) Keep mm_mglru_inc_max_seq, and add another tracepoint at the aging
+  decision in try_to_shrink_lruvec(), reporting why aging is needed
+  and at what sc->priority.
+
+2) Replace mm_mglru_inc_max_seq with a single tracepoint in
+  try_to_shrink_lruvec(), right before try_to_inc_max_seq(), reporting
+  the reason, sc->priority, swappiness, max_seq/min_seq and the
+  per-generation nr_pages before aging. The youngest generation is
+  not empty at that point, and the new window after aging can still
+  be seen from the following mm_mglru_scan_folios.
+
+Which one do you prefer?
 -- 
-Michal Hocko
-SUSE Labs
+Best regards
+Ridong
+
