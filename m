@@ -1,106 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.182
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793740266;
-	b=qr4CdgpM9dtVclbGUvDkQo5BK5iYDSIteq2GwQld8yMqQXX29iuDyKW+of6x5O9CdBkP
-	 ZfP/Gassx3kWue8/ZzM3AsVFbvCPhV5fbg0O/WceU7755E4MV+x13GwA5/8VZ0sildTG3
-	 wecTnYH+XSfX7dyURUS8AX//MdW+uuh8BxaNZ/FVvjH/HQPTx62/tv5HftyPfVGzoQbto
-	 O3quPflKsYVJT+c7t5aP17oIZJwG/XdjA1PPw7eRU3lWs4q7OvX7rTBqKZoQ3eJ6s10S4
-	 5FhDEQUkSpkXaheREQaR5CV2VlhJi0OuHqopKghbyyFk4D3rDiw+Xp75VbOPTzi2zpw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793740266;
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.52
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793745423;
+	b=qqfp+XmMXFrUx/qP879Aru3q8QKZoUc4LGy4YAVO6YjObcoM4TYXsKHiamrASxLHHJ4M
+	 oUAuyY4+yYEiJoGs/RuCx9uZbjg2qTdG14jIoOS57hlQ8MUr+O3TOy22zYQ1JuAvLj2Yl
+	 alPVg+E1q7Gr9oQcIn4qnCPLxINjvxhcu+8czX2g180sLyEuALLfT56/KqMr5vvQibmOl
+	 oLqTmNdC4IpAhjpQynlYiNErMjRE8BZF8zDLeOlXLe9PfvOSzhVC2PgsYMCsyqvKudWmS
+	 MUQGngbXrALvKEP5ZSehk8Wl3AIfcdtnipFme+BPq9+SJn2NvtlZq0FPYcq47rKNDdQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793745423;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Content-Type:Date:Message-Id:Cc:Subject:From:To:In-Reply-To:
-	 References:Content-Transfer-Encoding:MIME-Version;
-	bh=Gwb0yhNA8ovJvghC21bfjrqEFSJ/3LvirO9QqnwCwDw=;
-	b=lApkmjk1/AxFeZGmuz4bshK5XuY0vGzpYRHFyUuCMe68UDRlou03gADow7vkb0K+98Dy
-	 B1XPAgMWP1O93Qo6CRxcJ3RbCHoQIox6Ci7a4damRAg2GhBhnlzLdGXCRkuX5Fq6hWyp/
-	 Xp3fB9zhfyaKGIh0yD+42bE1i82G+0/94UKjIU5z9RiooYkiHzCtgCU52oXAuXAyIy3DN
-	 RlFgvjz21k6Id10rhuBDENlVM+3cEG9zRHDP0hVC5aw1iA3Ct6Tdx2pxy9dPdgCFlfudb
-	 JFRBY3cjHvwxW+8oS/P3fFjYRKLcKoZt9GbZNPKx/9Wtis/VY4Xl/bJsfbOIzIye9ZQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=QVC6zXtmTlj5EAbSSjNHwPP18DR41YQR4sifDw97zsg=;
+	b=vYBbRzDN0+iyt+h8tSiWSbzQtc5VbxO2Nj6tf1hVWVMEFmmQpcYFXRsnMWS/u/DskR0y
+	 NAXeiAtBwUw4iMb4Vw+4rtSc4N5ThPsnmM3o4rSWZpnvmxR4/PIb1d8UTETdmU41HSqWT
+	 ZNrCVkx6mUZZfgJX0HaIARj63AzkvGgdCRTB6zy3eX/VoVf5WOE3Sg6zp/2UMTMwwHo2a
+	 7bv+yLU1PagwkjTmvG69/ECA3K4PTZYztSdovuQb+Q12dgjbXK95NR75yqhVjkaYv/vNn
+	 mtJLZkkp18AkXNWL8ygY2isVHVkYM2W3IkLxCVAjVgdlsO9eF2VdBTS1P4Oiz1gN3iA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UhZ1BGol;
-	arc=none smtp.remote-ip=209.85.215.182
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=k+IVJ6Yn;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.52
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDF53606D832
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 21:11:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BDF53606D832
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0175606A324
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 22:37:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B0175606A324
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UhZ1BGol
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cd3310348d2so557770a12.1
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 13:11:05 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=k+IVJ6Yn
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-48e0d885929so66282f8f.3
+        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 14:37:02 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793745421; cv=none;
+        d=google.com; s=arc-20260327;
+        b=gBNo5P5Egiv/fBDU/BrjKMKNG2WveAqPklW81eLYbZ6c3rluEg+t6oM3doXnWSvHzA
+         dEWmNqaagEBpy6y+VENNZk0xSyzTWJcBvzlHYcipoxUBKd81W2r2v/MX77CVg+pZut7r
+         JUe/ch9PiWmgxgwyrnqdLtpY6oe9bZf7x/wij9z4v2HufGKQ9qB3AvHbsD36gKVRAPBi
+         qq8e/1EhwLH8wqWXMYr/5e9DlxrLUTohvei0/NB4+V8uX01lem4uzFkL27LE0MzW96Bg
+         FlJCredqDLZZXNrxvjp5Gja7U8nEVnXBXQnIO9YQyQJtkSQjwczwEEa7uYHrVfr/oH5x
+         CgFw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=QVC6zXtmTlj5EAbSSjNHwPP18DR41YQR4sifDw97zsg=;
+        fh=aYuOUPsjnslOUu1gWFJDXFeRlCScnSvHEwaDwVnS4+w=;
+        b=lL0dQfcF9tP06gwM+p8x9u1M6rTp+GcWjz7UZj2CnHbTO45bM/noY9cnIHBACQjBsC
+         Ha+mxyhndPr1a2bOBLaTI/10qXAvguBcwHwlFwDNeRcmyaOvHcHNhy/k6jC3zlTVXWc9
+         KGoKyXM2fI1g5Mt769/NS0zNLQFcfjrlsuEQtZId1PRufoWzRTExlZpoWwFRoEdjIA/6
+         4o7sUQ/8/7FQkHVzNpTs61rynPG5MIx3E95N5bn8xivOaTTFag4NyOb0sAJ+0u/c98M3
+         IJSa1KNE3Ve7AsF60fKakr2yhvQ3ZOFGJGqIvdH7Xh/9vWKoqcEv19FwIL+nrORfgJzf
+         5qjg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793740265; x=1794345065; darn=vger.kernel.org;
-        h=mime-version:content-transfer-encoding:references:in-reply-to:to
-         :from:subject:cc:message-id:date:content-type:from:to:cc:subject
+        d=gmail.com; s=20260707; t=1793745421; x=1794350221; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=Gwb0yhNA8ovJvghC21bfjrqEFSJ/3LvirO9QqnwCwDw=;
-        b=UhZ1BGolaieZt0ciUt1eNUSO1jnqrZLezwPTtss4f70Tsc5fUSV8VOEhI9jMVcYZO5
-         iJb/lR6lPJIQehJBdRf4dB1F9HIwHEXwOEMmB8hwjYB0Bew1QHtbGXYu1zTRI3gNE/1J
-         dsRudaBjgrqKBYhHsOlTvPuF+UELoPGlrMsEq9vzHBeld+ORdxtbF/Tg8ysHXe7yakJ/
-         Ks2rt8FXRQCx6gVAzFE/fUZBzmTdTbRkztGG9aejbQTx6aCWUGkj6pI+DYsdlcwGunMd
-         mvN/lJ03hbePC95887nHA9wPdslFAkXrrnqBVPsibCSgVNESlLENiTbH/su5cwlaVLP0
-         CA+Q==
+        bh=QVC6zXtmTlj5EAbSSjNHwPP18DR41YQR4sifDw97zsg=;
+        b=k+IVJ6YnlHQ4oETC8hg8FN8dLSl/mrCkkrXIVqeHnm+glTAWmMJEKpV/YCW925HDA1
+         7VD/ZHeKp32UwC0RmjSCnLEqAAfIyJbyaAEuO7l2VsoyakRgu/KId01AqiOT3np/wd8W
+         zdsCprDH12Olrm+o6hiX6Y7poDhCZboBfCMrSGoWxpEDCqmeDwfBgwtCDwfGX5mdOStc
+         X55X31a/hjVTencUpG1ZiG6KXqbxdPkxNDCpCPMPwFe7YRwL6u/tbZ4Pq6eWw3IIrvGL
+         od+SmtEJxt1eHRJ1ltwlq/ioIqVrH8UiIjKJ6lXH4hdCy9BmImBUpBRQbMxAV4v9O0y+
+         HK/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793740265; x=1794345065;
-        h=mime-version:content-transfer-encoding:references:in-reply-to:to
-         :from:subject:cc:message-id:date:content-type:x-gm-gg
+        d=1e100.net; s=20260707; t=1793745421; x=1794350221;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Gwb0yhNA8ovJvghC21bfjrqEFSJ/3LvirO9QqnwCwDw=;
-        b=gIx2NufFTZKQdv6QkfOug3/t/Cj8+IqfUBEmSf362zDZ0zIaNKVqPgX53Nz7qiWpoj
-         glZyb3vyQepTLwdztZ8ffuWBpdjxeWwlf6byXt1CfedJHaUIF/MztE/57WjuXPm5inQX
-         oGjPNYXEXUyUc4AKZ7YXUsJj9Gdhl2Q1qphJ0tl25yz9FJmQ7oC7/ds3Qfh4jcmGQ3y9
-         +gVPmiRmypP/jpVDv9924GomjKEIg9ihj91/p3xJ087mk3C7ueuSG96VKRAnk2mWpc+Z
-         o0Sd9kVLZMz9vTU8GGZDTdKzS0EaBQkP9JY0AoFNqQl0i+VHfXUDsxv94Ad8Yiz53Xxx
-         kTAw==
-X-Forwarded-Encrypted: i=1; AKwUvBypY6/WAO1YM1edTSl5TQtg6ZKWdXYoOxIbTGspcFyJRx+DwGvThB/V4eXR2g8NU9PxfkcMsf6s@vger.kernel.org
-X-Gm-Message-State: APuU4Z82UhFmiHE/SfKET6R8GImC42y6NbRKLA6qvMmsWfIaq49Zi6AW
-	PCjLTj+t0c66j22wLKtPYnuPv7+jyQuDqcIou56xphzACjfEoKciX9XI
-X-Gm-Gg: AYBFou0MJodgmJUsKLXcYcfAAPZkFRpV3sCphiwTeA1SXYZXg55fgGeBM1knbrgvh4v
-	ojvxceGVKCJ7s93+d751G6QPRbczV9QJcAIy0xz18s9sGdNph3PCRAEKQCsxzMWQLO+4NAUCWrq
-	fZoB3FUEpJt9NKdsyzksAD0EgU3XFJn/1wPSME9R0yDqxe7k2IQvuuVPyf/AMQrll2+JlAeak2Q
-	SRrS98aRw3fbxBoL3p6WzgrXL8mPBeTPcOqQ1uST48pIJUepcomx0OLe/f+iJJMN9qSYh7u4W7N
-	e8Lcs8s813SvrZoWqgpwzdqGCE8eo9SaUcwL0GKa4RjJeHYzpUnzU19yTjRqwc0GjktXYtEifpI
-	aGOLoAaHk6TlIxXE/xp3ku41y4cY3v4Q9rVswZndbPcBn+/MVcYv62yR2pYn7fhQUX9jdpn8jji
-	e0OG9s9LvGShV5QV2WjDguk+kbBEOb+1XW0x9pJVNUvHVQL7vVU0IcfItQoTZdDRZwIFe6TUFhP
-	5aH+hmeWuCW7Ep/D/N3akwr8QZ63tkuEg9wqpgwIdr6xLiyGBSwF4iaNZwbo0nGqMzuI8xiOE8B
-	DYyVsPAijPVD+NiYP04GITT4x5p2TML18MY0Eav10zSEspe5fiFsnvrLhcmY4vCsq0n3WuJwAC1
-	oURC6lFJaZczTwQitzfhzbXBGiramgZASqA==
-X-Received: by 2002:a17:90b:5624:b0:3ab:d26b:c2df with SMTP id 98e67ed59e1d1-3ae89758b67mr7781961a91.27.1793740264860;
-        Tue, 03 Nov 2026 13:11:04 -0800 (PST)
-Received: from localhost ([153.61.198.252])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b0944ee6easm336849a91.2.2026.11.03.13.11.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Nov 2026 13:11:04 -0800 (PST)
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 03 Nov 2026 21:11:03 +0000
-Message-Id: <DMLVUTB5J1RJ.2QKOUW6UB04ZM@gmail.com>
-Cc: "Johannes Weiner" <hannes@cmpxchg.org>, "Michal Hocko"
- <mhocko@kernel.org>, "Roman Gushchin" <roman.gushchin@linux.dev>, "Shakeel
- Butt" <shakeel.butt@linux.dev>, "Muchun Song" <muchun.song@linux.dev>,
- "Andrew Morton" <akpm@linux-foundation.org>, "Vlastimil Babka"
- <vbabka@kernel.org>, "Hao Li" <hao.li@linux.dev>, "Christoph Lameter"
- <cl@gentwo.org>, "David Rientjes" <rientjes@google.com>, "Sebastian Andrzej
- Siewior" <bigeasy@linutronix.de>, "Clark Williams" <clrkwllms@kernel.org>,
- "Steven Rostedt" <rostedt@goodmis.org>, <kernel-team@meta.com>,
- <cgroups@vger.kernel.org>, <linux-mm@kvack.org>,
- <linux-kernel@vger.kernel.org>, <linux-rt-devel@lists.linux.dev>, "Sashiko"
- <sashiko-bot@kernel.org>
-Subject: Re: [PATCH for-next-fixes v2 4/5] mm/slab: fix a deadlock in
- memcg_alloc_abort_single()
-From: "Alexei Starovoitov" <alexei.starovoitov@gmail.com>
-To: "Harry Yoo" <harry@kernel.org>
-In-Reply-To: <auo5G__ac1qA9JRs@thinkstation>
-References: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org> <20261103-kmalloc-nolock-fixes-v2-4-19167cfe4779@kernel.org> <DMLSN9VHK0P3.2A97046A4YXGY@gmail.com> <auo5G__ac1qA9JRs@thinkstation>
-Content-Transfer-Encoding: 8bit
+        bh=QVC6zXtmTlj5EAbSSjNHwPP18DR41YQR4sifDw97zsg=;
+        b=KYO1Ier+7AzvU7HfqSBF/gFBnaTCk2vcv+qlET4OAi2xFlLi+nSQq5RDq0w+NUhobs
+         pWyngZHoTSVgDalo4uj3KomhSFY/ruEUeNuqshI/NzOyrbYZtDqImn1JcgZQAl3akZlO
+         OrSXqZ/8WqfQ1LtOmJgjVbylSgGTjqWY+mIv1Vv6Xi1LvxiwFyespx1TFpcrDAN5nZH5
+         wViDEzvEOOm8mTC4aFmyiSBB8DwhK7NkGpXRChjHXEGK42RVARFQ181eRS9z4ZXdt6Zg
+         ilx3q4EbcMQ1SVEEtq6VDWD3ON2Xy64zdaqnnug4T9lluXMc+frdSAh8/rnGJnEYVIU3
+         rJtg==
+X-Forwarded-Encrypted: i=1; AKwUvBymcb7ImYqOLve3ZBY+m6kVlJD/PlopsGbTN9vyh3m72gdAUjgt01gMe+t6cwuo/O3Fd6i7E8zU@vger.kernel.org
+X-Gm-Message-State: APuU4Z/XCUp+/Y4yRRblQOz4d9+HvfftS2wxlfQgdxrg9ndFHjzINDOG
+	BCqPLCk4Brna1ZeXR6BLnr43m91xIq1MB3cd+aSVA+gek7DM/Fc5seBlzi1Oub0TYbhxoRWm6CL
+	dsUuJooIwqXytomqmylQfpiVt4WyPf6+2UiV+l1w=
+X-Gm-Gg: AYBFou0i8X6c//tk1NFiJjMrNghrxlfjgiVIpyLWyS4/s1NpR23qlL4J7NQrZcF6pRR
+	CKu5vCMZrtunQQvzogXpGwZI6q1geOmjmPZvkGCft0R+CDV56NkowMg5QAqZ/j69To5odNVYMy7
+	0Ofmp4GyvCNb5p8pkXC9ahDBhx7Zcv0SEC7RQ6dkbgkKWFjlfbACBQ/+mtJZcTxyv7qwAK7ECuq
+	BGvIL68fiE4pBOc1oDRn1tgc+GvNWPQQIIkwb9XjpA3zyodZ0xGpxXJWI1smhwItm0TgNmzUA6D
+	NCNq6ULAsSC0yDT5l0l+/8uB53XdnBShZ1N1649ZMC9lTd99N/27D49ov+yiOKl5fhttwbnBnpo
+	I65vjORlWrpemJkc7zHQxBYKRLqSlh9aU3S84eWUVdcEgiJXg7kZcWrsYtP7Uy4cCGFDB+SYb26
+	jjlQrauS9hopDKcQGKMQ==
+X-Received: by 2002:a05:6000:4027:b0:48d:f3ee:7cc with SMTP id
+ ffacd0b85a97d-48e6e4f4cc8mr30979021f8f.30.1793745420854; Tue, 03 Nov 2026
+ 14:37:00 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -110,33 +105,201 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+References: <20261102225030.2743129-1-joannelkoong@gmail.com>
+ <20261102225030.2743129-3-joannelkoong@gmail.com> <CAO9r8zP87zRuoFqeKFcAJoCrOG8M+7HCtX6hvxwdLzuHUXD0Gw@mail.gmail.com>
+ <CAJnrk1bv-P_TQztAGiHYdfg=5hbj4GREML2M0Uxp5oC1R9J-Mw@mail.gmail.com>
+ <CAO9r8zMvofnW-6OsiasiocOBqoRbZuD71dp3RQE5746YGzamNA@mail.gmail.com>
+ <CAJnrk1ZAz2ro0-8CC7n8mEjpuRQ64=v0rABtygaw5e2Aohq3=w@mail.gmail.com> <CAO9r8zOa52hMRTXFQVnSWJPmijm+D-97AeZDH-MMK_-rGiSwMA@mail.gmail.com>
+In-Reply-To: <CAO9r8zOa52hMRTXFQVnSWJPmijm+D-97AeZDH-MMK_-rGiSwMA@mail.gmail.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Tue, 3 Nov 2026 14:36:47 -0800
+X-Gm-Features: AclHuK-AYBaNZSpJUjEtODEKJtvEXTubSyokZTs8vMfIpK79wH5577sQO81jRN4
+Message-ID: <CAJnrk1ZZdkrz+WSOFTCmCh0dwTLXcoCOOuufrh2JZMXqGw=Xtw@mail.gmail.com>
+Subject: Re: [PATCH v1 2/3] mm: memcg: read root lruvec LRU stats from the
+ node counters
+To: Yosry Ahmed <yosry@kernel.org>
+Cc: akpm@linux-foundation.org, shakeel.butt@linux.dev, hannes@cmpxchg.org, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
+	nphamcs@gmail.com, chengming.zhou@linux.dev, sj@kernel.org, david@kernel.org, 
+	ljs@kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	damon@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Nov 03, 2026 at 12:21 PM Harry Yoo <harry@kernel.org> wrote:
-> While this is technically true, this relies too much on the current
-> implementation details and makes the code hard to follow.
+On Tue, Nov 3, 2026 at 11:33=E2=80=AFAM Yosry Ahmed <yosry@kernel.org> wrot=
+e:
+>
+> On Tue, Nov 3, 2026 at 11:28=E2=80=AFAM Joanne Koong <joannelkoong@gmail.=
+com> wrote:
+> >
+> > On Mon, Nov 2, 2026 at 5:00=E2=80=AFPM Yosry Ahmed <yosry@kernel.org> w=
+rote:
+> > >
+> > > On Mon, Nov 2, 2026 at 4:34=E2=80=AFPM Joanne Koong <joannelkoong@gma=
+il.com> wrote:
+> > > >
+> > > > On Mon, Nov 2, 2026 at 3:29=E2=80=AFPM Yosry Ahmed <yosry@kernel.or=
+g> wrote:
+> > > > >
+> > > > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > > > > index ac6c43ea8c5a..938843346571 100644
+> > > > > > --- a/mm/memcontrol.c
+> > > > > > +++ b/mm/memcontrol.c
+> > > > > > @@ -587,6 +587,50 @@ unsigned long lruvec_page_state_local(cons=
+t struct lruvec *lruvec,
+> > > > > >         return x;
+> > > > > >  }
+> > > > > >
+> > > > > > +static bool lruvec_is_root(const struct lruvec *lruvec)
+> > > > > > +{
+> > > > > > +       return !mem_cgroup_disabled() && mem_cgroup_is_root(lru=
+vec_memcg(lruvec));
+> > > > > > +}
+> > > > > > +
+> > > > > > +/**
+> > > > > > + * lruvec_lru_page_state - read an LRU stat of an lruvec
+> > > > > > + * @lruvec: the LRU vector to read from
+> > > > > > + * @idx: the node_stat_item to read
+> > > > > > + *
+> > > > > > + * Like lruvec_page_state(), but for the root memcg the node c=
+ounter is read
+> > > > > > + * instead. For stats that only track memory charged to a memc=
+g (LRU sizes,
+> > > > > > + * workingset, rotation and reclaim writeback counts), the roo=
+t memcg's
+> > > > > > + * hierarchical value equals the node counter. The root memcg =
+can just read the
+> > > > > > + * node counter directly instead of going through rstat, which=
+ requires
+> > > > > > + * flushing. Flushing the root memcg flushes every cgroup in t=
+he system.
+> > > > > > + *
+> > > > > > + * Use lruvec_page_state() for other stats (eg slab).
+> > > > > > + */
+> > > > > > +unsigned long lruvec_lru_page_state(const struct lruvec *lruve=
+c,
+> > > > > > +                                   enum node_stat_item idx)
+> > > > > > +{
+> > > > > > +       if (lruvec_is_root(lruvec))
+> > > > > > +               return node_page_state(lruvec_pgdat(lruvec), id=
+x);
+> > > > > > +
+> > > > > > +       return lruvec_page_state(lruvec, idx);
+> > > > > > +}
+> > > > > > +
+> > > > > > +/**
+> > > > > > + * lruvec_lru_page_state_monotonic - lruvec_lru_page_state() f=
+or delta sampling
+> > > > > > + * @lruvec: the LRU vector to read from
+> > > > > > + * @idx: the node_stat_item to read
+> > > > > > + *
+> > > > > > + * See lruvec_page_state_monotonic() and lruvec_lru_page_state=
+().
+> > > > > > + */
+> > > > > > +unsigned long lruvec_lru_page_state_monotonic(const struct lru=
+vec *lruvec,
+> > > > > > +                                             enum node_stat_it=
+em idx)
+> > > > > > +{
+> > > > > > +       if (lruvec_is_root(lruvec))
+> > > > > > +               return node_page_state_monotonic(lruvec_pgdat(l=
+ruvec), idx);
+> > > > > > +
+> > > > > > +       return lruvec_page_state_monotonic(lruvec, idx);
+> > > > > > +}
+> > > > >
+> > > > > Why not do this directly in lruvec_page_state() and
+> > > > > lruvec_page_state_monotonic()? They already fallback to node stat=
+s if
+> > > > > memcg is disabled, why not do the same for the root? Are there ca=
+ses
+> > > > > where the node stats are not the right thing to do?
+> > > >
+> > > > Hi Yosry,
+> > > >
+> > > > Thanks for taking a look at this series! I don't think we're able t=
+o
+> > > > do this directly in lruvec_page_state()/lruvec_page_state_monotonic=
+()
+> > > > because I think there's still some places where the node stat and t=
+he
+> > > > root memcg stat are not guaranteed to be equal.
+> > > >
+> > > > The stat I was looking at last week was slab's NR_SLAB_RECLAIMABLE_=
+B
+> > > > and NR_SLAB_UNRECLAIMABLE_B where for those, the node counter value
+> > > > can contain memory/stats that wasn't actually charged to any memcg,
+> > > > which I think means for these cases, the node counter values can be
+> > > > larger than what reading the root memcg rstat value would give. The
+> > > > functions I was looking at were account_slab() and
+> > > > memcg_slab_post_alloc_hook() where the logic adds every new slab pa=
+ge
+> > > > to the node counter but the memcg stats only get updated if specifi=
+c
+> > > > criteria are met (eg the cache had SLAB_ACCOUNT set or the allocati=
+on
+> > > > had the __GFP_ACCOUNT gfp flag set and the allocation was not from =
+a
+> > > > root memcg).
+> > >
+> > > If it's only the slab stats, it probably makes sense to special case
+> > > those instead of the rest of the readers, right? It would be nice if
+> > > the default behavior is reading the node stats that doesn't require a
+> > > flush.
+> >
+> > If we were to special case it, it would need to exclude more than a
+> > couple, I think. I asked a LLM and it says NR_KERNEL_STACK_KB,
+> > NR_PAGETABLE, NR_SECONDARY_PAGETABLE, NR_VMALLOC, NR_HUGETLB,
+> > WORKINGSET_NODERECLAIM would also need to be excluded.
+>
+> Interesting. So for all these stats, root memcg stats (from
+> memory.stat) is not the same as the node stat? They all draw a
+> distinction between "accounted to root" vs "not accounted"? I wonder
+> if this is intentional for all of them.
 
-Fair enough. I don't insist.
+I think there's 2 categories:
+a) the allocation isn't acccounted to any memcg (eg kernel page
+tables, hugetlb when hugetlb accounting is off, unaccounted slab
+caches and kmallocs w/out __GFP_ACCOUNT, and most vmalloc). These
+values only get added to the node counter
 
-> Patch 2 is an independent bugfix as-is already. We should really stop
-> open-coding slab_free_hook(). That ended up missing init_on_free handing.
+b) the allocation is accounted, but it comes from a task running in
+the root cgroup (eg kernel stacks, user + secondary page tables,
+accounted slab, etc)
 
-Right. No objection to patch 2.
-With patches 2 and 3 the !allow_spin side of memcg_alloc_abort_single()
-is an open coded kfree_nolock():
+I think a) has to stay as is since it's not linked to any memcg. For
+b), it seems intentional from the original commit that added kernel
+memory accounting logic (commit 7ae1e1d0f8ac ("memcg: kmem controller
+infrastructure")). The commit message for that explicitly says
+tracking kernel memory pages to a given memcg "will happen whenever
+the caller includes the flag __GFP_KMEMCG flag and the task belongs to
+a memcg other than the root". (__GFP_KMEMCG later became
+__GFP_ACCOUNT). I wonder though if this was to avoid extra overhead
+costs (eg for systems that don't use cgroups) on the hot paths, since
+it would need to do non-trivial per-object work. If root read the node
+counters for the stats that are in category b (excluding the stats
+that are in both category a and b) instead of going through rstat
+(which is what this series does for the LRU stats), there wouldn't
+need to be any extra overhead at allocation time, since nothing would
+need to be tracked.
 
-  kfree_nolock()                    memcg_alloc_abort_single(!allow_spin)
-  --------------------------------  -------------------------------------
-  memcg_slab_free_hook()            -
-  alloc_tagging_slab_free_hook()    alloc_tagging_slab_free_hook()
-  slab_free_hook(!allow_spin)       slab_free_hook(!allow_spin)
-  free_to_pcs()                     -
-  defer_free()                      defer_free()
+>
+> > We could add
+> > this special casing in, but we would need to make sure any new stat
+> > that gets added in the future that belongs on the exclusion list gets
+> > put on it. If it's missed, the failure would be silent whereas with a
+> > separate helper, callers have to explicitly opt in. I'm happy to go
+> > either way though, so if there's one way you prefer, I'm happy to do
+> > that for v2.
+>
+> I think we probably want to first understand if these stats are
+> supposed to be different between the root memcg stats and the node
+> stats first. Personally, I think the default should be the majority
+> behavior, which I think is that node stats and root memcg stats are
+> the same, so I am leaning toward explicit opt-out. Let's also see what
+> memcg folks think.
 
-I don't insist on kfree_nolock() there,
-but can we try free_to_pcs() before defer_free() ?
-Like:
+That seems reasonable to me. memcg folks, do you have any thoughts on this?
 
-	if (likely(allow_spin))
-		__slab_free(s, slab, object, object, 1, _RET_IP_);
-	else if (!can_free_to_pcs(slab) || !free_to_pcs(s, object, false))
-		defer_free(s, object);
+Thanks,
+Joanne
