@@ -1,54 +1,104 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.39
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793709897;
-	b=0ksSIlKOUfG/TEJNErv3ZY0JQEAmTdArKcNIcZRroHnS2X+AKTC4Cuzben/Urs8JcBNY
-	 ZW+K8W2Sk7lUjOEfI1FOpVCmUNYeCikRewPUOcsZVFCSZQT5dkkO/cpCbz59MOr5f6spd
-	 YadJ5oeXJS6uYqnYhsM9B/vKzRZgXeEb1FoCP7+FvdIOB7Kt8aBwxgB9T2lxxIEGWBhc+
-	 H0oHtjYOViGGW5FsgH5bu3icHJdNF6rGCx9rThmriooBTT+07PdCeU9Pl4QrxQW5ZWnX5
-	 JHbEPnSmzoJqyXC6yILgjlsPCwylAaSykf4iZJJ4ZAPxHyE1ygYdLQdP1aW6/4ELi/w==
+	t=1793710457;
+	b=hHZ7DZ62XlAG2vcE+7lEF2UjMCuJYxhHvKuyKx1KVZ+zfc1lNUqBE/EODrbkPBnChAuZ
+	 4dS+zt/tJAsbfFI/LOl2kYvW2zzceEk+Guim5GbXlFkYTlGZang5hHDjijLdfHEQ7P6U/
+	 /OV38zGFtza7h+JV/8+GxNKwlFIaXBzGyDvlhb3SRUC8+ufpMvdzNtYq7TX3Gb7wKevSe
+	 REiC7RZ2MCtLKfLY9H0u+qZjZnMRvDXcmf4WYnFxDOjX5mALiLF5T3bplibOXKKxvatQZ
+	 0Zg6QZ6SGP59hAfIEqJj+114DDyo8S59KM1zM3k5W99e6Vh0i8DCRn5TJmrJkb7laZA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793709897;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=uMxkatsy/czDTqYorXReGkN6RnEno+dYymzBkF085A8=;
-	b=sZQdc81PSQF8I3PhiJGYLTvbEasdv1IMIsiGX6EHI3FhMuthirp8YgxCXucWxdJUgnjS
-	 V+J8GDZ00qUEhhMXk9tPWVVrvIz05DvInUmvnGLWQXonTosKKr0z3xLmJSclcHTItLyf4
-	 Bx11iOZ1+d7D85GbAymmrVhbBHLFdILqF761X1uOoPpnrujjWmW8TR5TqoQ9PbB90P2XJ
-	 mQOqkh8/ekB2BlI3n0TCPlNoy4M4EQPSQRb2lm6pb0VMln16j2kq/69IKKiPUQAU1B1A8
-	 myL1nIZL78WZzuDcGASpF/tGWyvhkILcFPNV6fisOAcjHXgT+elsMPLTXjr08RIP/zA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793710457;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=T84aiAJqcr9eIc+RMHEdRg8f3K7zIQJ4MBqlwh+rBPc=;
+	b=1cKeOjacCyOG9Tce5+Oohvs/upubk8ETiszWAeSOVoODQGoxRCms+ICyuo7AhFeVJlln
+	 nhsDq0v48OSBE9EmG260kQ8mmnz1EVeAA3qvTCBTICG0ReWR28HCsFeRFjDXoWGEeUXZM
+	 9PQQ7WevTC5eajnZHWc8xEg5Mt5yvJAvLxAsVsv+bTnR5P/E5IZi9rj4kqVCF2bP5CLlL
+	 nobvTZYDO3dWQYtkRJNhcFonlWq8gvKxRsOmcjt+/HDiYYzyhmVPn0KP0vZ9hhnnNVbbD
+	 hyG2S4WNOhgTNJ0l7HdiT/Dykd9XeoaAsREuoxFVVRnaTn0kTxVPxzm+2YsW7i69Zlw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=B15FyiFs;
-	arc=none smtp.remote-ip=91.218.175.39
-Received: from mta0.migadu.com (out-39.mta0.migadu.com [91.218.175.39])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=mMsegJ5d;
+	arc=none smtp.remote-ip=198.175.65.9
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35E05606A324
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 12:44:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 35E05606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE8BA606A32F;
+	Tue,  3 Nov 2026 12:54:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BE8BA606A32F
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=B15FyiFs
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=P6NJig/U2qoMxYmMT3pXpewN3IICUxnb6l0LNzfrpD4=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793709889; v=1; x=1794314689;
- b=B15FyiFszR9sIYIsNZtE67J+QX1fUCAdiXMvVHNhHIq9WIIvfDW6qqRAzoKwtNiyB7cycs1+
- x9jO66Sbj7Rg8Ge8YpMsxJ1hT5h+tC/cOfzcZplhzdyCDj4AFZJx1Pkri4SXh4cG67+I5LwW5TT
- uH+mD3CMB2+i9gNTJLVBooPM=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 50e634d3f232c597;
-	Tue, 03 Nov 2026 12:44:49 +0000
-X-Mizu-Trace-ID: 50e634d3f232c597
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <55ffbca4-985f-4838-a668-9ac84e0a0c95@linux.dev>
-Date: Tue, 3 Nov 2026 20:44:34 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=mMsegJ5d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1793710454; x=1825246454;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=IhRkmlNFW8wvqh1/ycRf3KZ3oTStQ6uioF6qvXYIdxs=;
+  b=mMsegJ5dKg6nPnD0khk1DwMuw8ekVkHkKZAm3a9AvqaqWnMn8udLFEdq
+   CW51kiwgk0aMyd9r1rpBJqHaOdQKD5ddqDJhAjOLIA+3+1UrBzjqI+5K0
+   iKfPbmsoaUALpZQaV6EPs2+1mhRDbY6C5Cj+kokYkXsqrWEms5RSBeNvk
+   2f0PGyYWQnzq1Oh4obBpGkrp4IYogNTD75pSyTSVLrOjO0t7wVXpNRxoA
+   iJgt7zubVj0zJd9asR7v4EQ8jeopApDqDw3ngtsxoHVOlBsJ268ATqvNM
+   WIwrUZc0zIobaw+jLsfKAWtEmS1dQ1bvHJsov7ENVnwM73hwoih9E7BUf
+   w==;
+X-CSE-ConnectionGUID: 3LCnV0BxRqG3LKfyLylI7A==
+X-CSE-MsgGUID: v8ont5CzReat21RRZ1HWqg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11954"; a="2323234"
+X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
+   d="scan'208";a="2323234"
+Received: from fmviesa011.fm.intel.com ([10.60.135.151])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2026 04:54:13 -0800
+X-CSE-ConnectionGUID: bIrfVphKRsiEpMbkrvetPA==
+X-CSE-MsgGUID: 3fvg2CqPSWirao/zO/h4zw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,193,1787036400"; 
+   d="scan'208";a="8203943"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa011.fm.intel.com with ESMTP; 03 Nov 2026 04:54:07 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xOE1a-00000000ik4-3PiJ;
+	Tue, 03 Nov 2026 12:54:02 +0000
+Date: Tue, 3 Nov 2026 20:53:34 +0800
+From: kernel test robot <lkp@intel.com>
+To: Matthew Ruffell <matthew.ruffell@canonical.com>,
+	Waiman Long <longman@redhat.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	Caron Wills <caron.wills@pulsar.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
+	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Subject: Re: [PATCH 3/6] mm/folio, mm/mlock: Don't batch folios in per-CPU
+ LRU caches on isolated CPUs
+Message-ID: <202611032053.I3Ud8d11-lkp@intel.com>
+References: <20261103075940.110308-4-matthew.ruffell@canonical.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,143 +108,65 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH -v4 04/22] cpuset: introduce partition_enable()
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
- <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Koutn? <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- Chen Ridong <chenridong@huawei.com>, Ridong Chen <chenridong@xiaomi.com>
-References: <20261101114206.2434398-1-ridong.chen@linux.dev>
- <20261101114206.2434398-5-ridong.chen@linux.dev>
- <b2caa92c-9e10-4e36-bd73-b71621d60108@linux.dev>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <b2caa92c-9e10-4e36-bd73-b71621d60108@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261103075940.110308-4-matthew.ruffell@canonical.com>
+
+Hi Matthew,
+
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on akpm-mm/mm-everything]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Matthew-Ruffell/sched-isolation-Consider-nohz_full-CPUs-isolated-in-cpu_is_isolated-again/20261103-205935
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20261103075940.110308-4-matthew.ruffell%40canonical.com
+patch subject: [PATCH 3/6] mm/folio, mm/mlock: Don't batch folios in per-CPU LRU caches on isolated CPUs
+config: um-allnoconfig (https://download.01.org/0day-ci/archive/20261103/202611032053.I3Ud8d11-lkp@intel.com/config)
+compiler: clang version 17.0.6 (https://github.com/llvm/llvm-project 6009708b4367171ccdbf4b5905cb6a803753fe18)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261103/202611032053.I3Ud8d11-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611032053.I3Ud8d11-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> mm/folio.c:293:6: error: call to undeclared function 'lru_batching_bypassed'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+     293 |         if (lru_batching_bypassed())
+         |             ^
+   1 error generated.
 
 
+vim +/lru_batching_bypassed +293 mm/folio.c
 
-On 11/3/2026 6:26 PM, Guopeng Zhang wrote:
-> 
-> 在 2026/11/1 19:41, Ridong Chen 写道:
->> From: Chen Ridong<chenridong@huawei.com>
->>
->> Add partition_enable() to consolidate updates to key cpuset structures
->> during partition enablement, including:
->> 1. remote_partition
->> 2. effective_xcpus
->> 3. partition_root_state
->> 4. prs_err
->>
->> Key operations performed:
->> 1. Invokes partition_xcpus_add() to assign exclusive CPUs
->> 2. Maintains remote partition flag
->> 3. Syncs the effective_xcpus mask
->> 4. Updates partition_root_state and prs_err
->> 5. Triggers scheduler domain rebuilds
->> 6. Sends partition change notifications
->>
->> This helper also handles the transition between root and isolated
->> states of a valid partition. In that case the cpumasks are unchanged
->> and only isolated_cpus is updated.
->>
->> A partition_state_update() helper is added to set partition_root_state
->> and prs_err, and to reset the partition data when the new state is not
->> a valid partition.
->>
->> Signed-off-by: Chen Ridong<chenridong@huawei.com>
->> Signed-off-by: Ridong Chen<chenridong@xiaomi.com>
->> ---
->>   kernel/cgroup/cpuset.c | 51 ++++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 51 insertions(+)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index df52f6e5e99f..052a131731dd 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1716,6 +1716,57 @@ static void compute_effective_nodemask(nodemask_t *new_mems,
->>   		nodes_copy(*new_mems, parent->effective_mems);
->>   }
->>   
->> +static void partition_state_update(struct cpuset *cs, int new_prs,
->> +				   enum prs_errcode prs_err)
->> +{
->> +	lockdep_assert_held(&callback_lock);
->> +
->> +	cs->partition_root_state = new_prs;
->> +	WRITE_ONCE(cs->prs_err, prs_err);
->> +	if (!is_partition_valid(cs))
->> +		reset_partition_data(cs);
->> +}
->> +
->> +/**
->> + * partition_enable - Transitions a cpuset to a partition root
->> + * @cs: The cpuset to enable partition for
->> + * @parent: Parent cpuset of @cs, NULL for remote parent
->> + * @new_prs: New partition state to set
->> + * @new_excpus: New effective exclusive CPUs mask for the partition
->> + *
->> + * Transitions a cpuset to a partition root, only for v2.
->> + * It also supports the transition between root and isolated partition.
->> + */
->> +static void partition_enable(struct cpuset *cs, struct cpuset *parent,
->> +			     int new_prs, struct cpumask *new_excpus)
-> Should we consider the bisection case here? With CONFIG_WERROR=y this
-> patch fails to build on its own — partition_enable() is defined but not
-> used.
-> 
+   280	
+   281	static void __folio_batch_add_and_move(struct folio_batch __percpu *fbatch,
+   282			struct folio *folio, move_fn_t move_fn, bool disable_irq)
+   283	{
+   284		unsigned long flags;
+   285	
+   286		folio_get(folio);
+   287	
+   288		if (disable_irq)
+   289			local_lock_irqsave(&cpu_fbatches.lock_irq, flags);
+   290		else
+   291			local_lock(&cpu_fbatches.lock);
+   292	
+ > 293		if (lru_batching_bypassed())
+   294			folio_move_lru_now(folio, move_fn);
+   295		else if (!folio_batch_add(this_cpu_ptr(fbatch), folio) ||
+   296				!folio_may_be_lru_cached(folio) || lru_cache_disabled())
+   297			folio_batch_move_lru(this_cpu_ptr(fbatch), move_fn);
+   298	
+   299		if (disable_irq)
+   300			local_unlock_irqrestore(&cpu_fbatches.lock_irq, flags);
+   301		else
+   302			local_unlock(&cpu_fbatches.lock);
+   303	}
+   304	
 
-Hi Guopeng,
-
-Thanks for catching this. You are right, each patch should build on
-its own, and with CONFIG_WERROR=y these helpers trigger
--Wunused-function until they are used in patches 7-9.
-
-The helpers are introduced in separate patches on purpose: Waiman
-suggested having them complete when introduced, and then converting
-remote and local partitions to them in later patches, to make the
-series easier to review [1]. To keep that and still build cleanly,
-I'll mark them __maybe_unused when they are introduced, and drop it
-in the patch that first uses each of them.
-
-[1] https://lore.kernel.org/all/e8018984-96ed-49fa-8571-79a0d39cb218@redhat.com/
-
-> 
->> +{
->> +	int old_prs = cs->partition_root_state;
->> +
->> +	lockdep_assert_cpuset_lock_held();
->> +	WARN_ON_ONCE(new_prs <= 0);
->> +	WARN_ON_ONCE(!cpuset_v2());
->> +
->> +	if (old_prs == new_prs)
->> +		return;
->> +
->> +	spin_lock_irq(&callback_lock);
->> +	if (old_prs > 0) {
->> +		/* Switch between root and isolated, cpumasks are unchanged */
->> +		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
->> +	} else {
->> +		/* enable partition should only add exclusive cpus */
->> +		partition_xcpus_add(new_prs, parent, new_excpus);
->> +		/* enable remote partition */
->> +		if (!parent)
->> +			cs->remote_partition = true;
->> +		cpumask_copy(cs->effective_xcpus, new_excpus);
->> +	}
->> +	partition_state_update(cs, new_prs, PERR_NONE);
->> +	spin_unlock_irq(&callback_lock);
->> +	cpuset_force_rebuild();
->> +	notify_partition_change(cs, old_prs);
->> +}
->> +
->>   /*
->>    * remote_partition_enable - Enable current cpuset as a remote partition root
->>    * @cs: the cpuset to update
-> 
-
--- 
-Best regards
-Ridong
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
