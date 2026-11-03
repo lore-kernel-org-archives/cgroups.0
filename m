@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793714858;
-	b=arAY1KTRd50XfktuZQdseLQ2557RYj/JDSXqaD4edzwmukEYxVlC2piXqO8hbtLCfzE6
-	 GgDIr/oHSDRBR0TlFOvK7wh4WRAPuVlc7QSQyYLqc35/mBqqXIURADzWFss4EzzIId2QQ
-	 2X/FgnUp1jHVX3l3tFK5NKPbEN1wt59Oqi4KFIwQBhbbzvT/HI+6pO7OfWDGKlQRN7JB1
-	 LefqlpQRCPxl6ofjKV7KsKxrZ7kw3HQlBGfDwBUNOGBHGgiOn/FA8UAULcDPttveP+zlj
-	 POixUMP4iCEuXV5HT4J3Q2xezki1F+tZZfjKzvow7Er6WD9C+ZxhRcMjaPjAcnbUmzg==
+	t=1793714860;
+	b=cE/767WmUyhUaL7eSVVthFfNTr6RMU4Va2cAiIjj8Q7qoofJKOI/wiaq2DFqLLrGNsyj
+	 +7WfQjhwFi/vlfrm9T672ocSevk15kUMmiLk2e1hYGGz8vftzpg7XEba/yhWEePdQ4Ocq
+	 4rmAoVRjg1YxOnwmraVx44xTa2dL+bXaDZXzPc6RW4/i45Lrrks8J9imgecEJibM2Ucjn
+	 exF/ZlasgoLwz4lfVGx26vGoqwr4ueOlhA2HU5FRuVlePen9qnHG5oOezRoPWniv5QVKW
+	 mCBLvrClE4xML+2vH0gCZsPBnS9p7nlX8ERSqrXqrk4Bpy5MKSCq6uKt7uBHmQViovg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793714858;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793714860;
 	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
 	 In-Reply-To:References:Subject:From:To:Cc:Date;
-	bh=U9bSCqEoQZWI046vsKEKltFAaqusFQFamwPErZIkzhw=;
-	b=IIkEQda9+sWodGW4pENAnR7fOIyGYevmhM3nfaq4vmniATe/scNkF2rupblPyAxFRM8Z
-	 7vVaLc5OMQXmZ4TGx89shnfydZWvW9HQ+z98oEdM2jMS+NEdgx2dysUDTEmjHhK2ARfqC
-	 mJ0Su6hYRjf5ydfmV9C47e4cb7B1yYT4Sg1eJBQzd71iPZoqo+lkteIDuCAezkXxkv2Zj
-	 QOFqc3z//wn61ICnvOyGMqtYaMh2FQuu73vQLy3D2QAixLdoR8JrsnA7SY2aLxsbJbuTB
-	 2BpO5fYMHONQlibL/mxasWqK4Yj35kJ/W9G0VazCQ2RdH0iXTWBisMZiw64KZzDbb/Q==
+	bh=qxI6uxKuEBsKWE5dZToQWARpMTqM0sfykaf/tV2OkQE=;
+	b=iblv5MxGkDRCnV2kr6Q3r+uy4uLsxzxfij5bfQ8b5Zn/D52dePolAtRc0Tn1OKDxpETn
+	 6jqTy5CYBwfJOrqlEpbKU4O0ZCfX3zZDQvq4W2VQkvOskg2jA+Q8SeuRz7ajTyhiHAY2u
+	 nelnUUik+Don87yLonfeH/Af48joA8baAby1O0n70gDJtB58eJwyIO7oBj+6eHmmjvZJy
+	 rDOsMyNGjX//EeHmQEozcWxEguqgGXCaplsJmLutf+mBghhcZ68X8a+d8HjpXSStThSOX
+	 PIf8C5u7g2DFRSXM6NT7vVs81pM9bICmXYxeXJMtqDOIqtrAlg7fc61D5r1ZlqfdH9w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LtsOpNfe;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kvAhsPMv;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1F2E606A324;
-	Tue,  3 Nov 2026 14:07:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D020A606A336;
+	Tue,  3 Nov 2026 14:07:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=LtsOpNfe
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F2091F000C1;
-	Tue,  3 Nov 2026 14:07:37 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kvAhsPMv
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18EF31F0093A;
+	Tue,  3 Nov 2026 14:07:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793714857;
-	bh=U9bSCqEoQZWI046vsKEKltFAaqusFQFamwPErZIkzhw=;
+	s=k20260515; t=1793714859;
+	bh=qxI6uxKuEBsKWE5dZToQWARpMTqM0sfykaf/tV2OkQE=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=LtsOpNfedmofvsuHIt6DsfGek0bq6QITTPDz5lDBmBMqRrGzloBwkBSpa3RwqGvN7
-	 bYiombWoF2HGf31FJlUzP9hBdEVn+dq94AMCBNuEevRLj5hcyvregFnTjqAcbgaW1Q
-	 wQ+KDd5zuB+pksbXObbQlUA4RRSqHl3t5B9DHGlvH99NoKbxw4r4VL/pnyfuPesXUe
-	 vCgxaNgw2zoh5GlCsSfL4rHKnLeB1U4+ogFYOkdOHvbtZo+WI2lEgjvHICAuc0jGVD
-	 snv2V9zijCxVGaRpgdRqNyI7oOkvT53L2NLz1BwdL2kiUBDqKHFFxnb4x43UfynvHM
-	 w9VwPRJG2Kziw==
-Content-Type: multipart/mixed; boundary="===============8626554665073680018=="
+	b=kvAhsPMvD47M67OaIC8UcigKRO5xXurkov7sP13ENoG9Bu8aSgSd4XGyHHp+MHDbS
+	 rjhyieqt2+LLMMTKTa2+Il1z6oGL8rZ60njQIpEmAmSgFE1U9O94psfATXjDm1SiO6
+	 n0vptLQLV1S0wy7d/e0Psm4iNIMRXTyXVT43KLThvIyp6jFhniBDBdo2A4bsdIoGHJ
+	 i+6OWJsxSz4S37woEi7UMx51fGMHxnh7Fo0o77QSy3WSfFk/yth/jEO6h5hh8aLa+8
+	 EMadLU71WZDBZWr/ZemQM7hENGXMQ7RTvMbxpwUbfORwZSTzJlkD2YHzVISli31o5Z
+	 8wvLAtpgk6ehw==
+Content-Type: multipart/mixed; boundary="===============0895216361124977455=="
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -49,73 +49,78 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-Id: <04adc0407868a7876c12e46e0637e13b3bb8f549e6f47a1d0a9bfe29d144e29b@mail.kernel.org>
-In-Reply-To: <20261103132613.1952975-3-cui.tao@linux.dev>
-References: <20261103132613.1952975-3-cui.tao@linux.dev>
-Subject: Re: [RFC PATCH v12 2/4] blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
+Message-Id: <cdb4a70a69306fb920d52c3e5511bb1cbac094d4f47b1b89ae56b674853c287d@mail.kernel.org>
+In-Reply-To: <20261103132613.1952975-4-cui.tao@linux.dev>
+References: <20261103132613.1952975-4-cui.tao@linux.dev>
+Subject: Re: [RFC PATCH v12 3/4] selftests/bpf: add iocost cost model test
 From: bot+bpf-ci@kernel.org
 To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk,alexei.starovoitov@gmail.com
 Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Tue,  3 Nov 2026 14:07:37 +0000 (UTC)
+Date: Tue,  3 Nov 2026 14:07:39 +0000 (UTC)
 
---===============8626554665073680018==
+--===============0895216361124977455==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> blk-iocost: add iocost_ioc_tick tracepoint for per-period device summary
+> selftests/bpf: add iocost cost model test
 
-TL;DR: In iocost_ioc_tick, the tracepoint call sits outside its enabled()
-check, so a probe attached in between may log a bogus active count of 0, which
-consumers could read as dormancy.
+TL;DR: Selftest cgroup names "iocost_pairing" and "iocost_ms" lack a leading
+'/', so the cgroups are likely created outside the work directory and not
+removed by cleanup_cgroup_environment(), leaving empty cgroups on the host.
 
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
+> diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+> new file mode 100644
 
 [ ... ]
 
-> @@ -2478,6 +2479,22 @@ static void ioc_timer_fn(struct timer_list *timer)
->  
->  	ioc->busy_level = clamp(ioc->busy_level, -1000, 1000);
->  
 > +	/*
-> +	 * busy_level, cur_period, nr_active and usage_us_sum are complete
-> +	 * here. usage is wall time over wall time, summed over iocgs, and
-> +	 * is not capped at 100. vrate and period_us reflect the current
-> +	 * controller state, which an io.cost.qos write may have changed
-> +	 * mid-period. Emit before the refresh and the period transition.
+> +	 * cgroup_setup_and_join() creates the priced-IO cgroup with the
+> +	 * available controllers enabled, so the cgroup has
+> +	 * io.weight/io.stat and the iocg activates.
+> +	 * cleanup_cgroup_environment() removes it from every exit path
+> +	 * below. io.cost.qos and io.cost.model are root-only cgroupfs
+> +	 * files: they are written at the hierarchy root and reverted on
+> +	 * exit.
 > +	 */
-> +	if (trace_iocost_ioc_tick_enabled()) {
-> +		struct ioc_gq *active_iocg;
-> +
-> +		list_for_each_entry(active_iocg, &ioc->active_iocgs,
-> +				     active_list)
-> +			nr_active++;
-> +	}
-> +	trace_iocost_ioc_tick(ioc, &now, nr_active, usage_us_sum);
-> +
+> +	cg = cgroup_setup_and_join("iocost_pairing");
 
-Can this record a bogus nr_active of 0?
+[ ... ]
 
-trace_iocost_ioc_tick() is called outside the
-trace_iocost_ioc_tick_enabled() block, so the two static key tests are
-independent.  If a probe is attached on another CPU between them, the first
-test sees the key disabled and skips the count, while the tracepoint itself
-then fires with nr_active still 0 even though ioc->active_iocgs is non-empty.
+> +		cg = cgroup_setup_and_join("iocost_ms");
 
-Documentation/trace/tracepoints.rst says the tracepoint call should always
-be within the block of the if (trace_<tracepoint>_enabled()) check to avoid
-this race.
+Will these cgroups actually be removed by cleanup_cgroup_environment()?
 
-Since the commit message describes active=0 as the marker for the transition
-to dormancy, a consumer could read this spurious record as that transition,
-alongside a non-zero usage value.
+The name has no leading '/', and format_cgroup_path() in cgroup_helpers.c
+joins the pieces with no separator:
 
-Would moving the trace_iocost_ioc_tick() call inside the enabled block
-work?  Alternatively, nr_active could be counted in the existing
-list_for_each_entry() walk over ioc->active_iocgs earlier in
-ioc_timer_fn().
+    #define format_cgroup_path_pid(buf, path, pid) \
+        snprintf(buf, sizeof(buf), "%s%s%d%s", CGROUP_MOUNT_PATH, \
+        CGROUP_WORK_DIR, pid, path)
+
+So cgroup_setup_and_join("iocost_pairing") ends up doing mkdir on
+"/mnt/cgroup-test-work-dir<pid>iocost_pairing".  That is a sibling of the
+work directory directly under the cgroup2 root, not a child of it.
+join_cgroup(), write_cgroup_file() and read_cgroup_file() build the same
+path, so the test itself works.
+
+But __cleanup_cgroup_environment() only walks the work directory:
+
+    format_cgroup_path(cgroup_workdir, "");
+    join_cgroup_from_top(CGROUP_MOUNT_PATH);
+    nftw(cgroup_workdir, nftwfunc, WALK_FD_LIMIT, FTW_DEPTH | FTW_MOUNT);
+
+so the sibling directory is never visited.  The empty cgroup remains on the
+host as /sys/fs/cgroup/cgroup-test-work-dir<pid>iocost_pairing, which also
+contradicts the comment above ("cleanup_cgroup_environment() removes it from
+every exit path below").  serial_test_iocost_model_streams() has the same
+problem with "iocost_ms", including the matching write_cgroup_file() and
+read_cost_usage() calls.
+
+Other callers that use a fixed name pass a leading slash, for example
+"/skb_cgroup_test" and "/cgroup_iter_memcg_test".  Would "/iocost_pairing"
+and "/iocost_ms" at every place they are passed put the cgroups under the
+work directory where the existing cleanup removes them?
 
 
 ---
@@ -123,4 +128,4 @@ AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
 See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/41646836440
---===============8626554665073680018==--
+--===============0895216361124977455==--
