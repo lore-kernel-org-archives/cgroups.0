@@ -1,60 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717540;
-	b=Bj9Phn9gAl3joL4euYqPZSjL3412eujJcqi6PRJmrUeU/WA+zvjodg75LZeN22VmqWb4
-	 VWZdIo7xeJCbvgr1U6KElTP6eUZ4ONhMMvcfc5r1rcuPmyP5aElfhq+u0EcXp5olWwol9
-	 5YujprU045WbPON2jsUrS6nIq32/8vDif3Fo4OU4v7n9R2prlfJcElXVSbk4Le1JxACJ9
-	 gQ/aNR5rVdlG1wYZjGnzcT6/TBqdyxaezL1gDffLQGi1XnhWTf7qY6TG7OURTjfEkX6cr
-	 HcPzMFpcKJcaj46+NCP0vjyKGFCubyLLZ593I6zH8MOD7sJWvqsjvAfR7Ta7AlmR9Bg==
+	t=1793717679;
+	b=YmOLEX1v/J8kjFmwgHlaBy8QHudXFg448Za9G7t0wtsgK6YycQ77LkEDTUuquJlszHFv
+	 2eESLNJMbv7duSJGVdRu29cGdtdnzd4PN3GkjHRzF4InKo1iMwxBx4M2VBzCIGcP70g6O
+	 OmARd1gCIm2IC8l0UgYBytWJDN8TtFFhZwm1VMo4ZDKBCEj0TrfXTWe6oqGIBztAKdSGD
+	 jYQaysQ55QmqBFhg2pI/oyOzfqgr7ojjhWGU7yj08nxX7LFx9qoatB4iCQw53P7KHFV7G
+	 c4JkX8XANUSEWFYlGEUSEOMozuKK6u8un2Emchm2adGNFrb7pNZ6r+5tkYXpJviHERg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717540;
-	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=SXrZFm5c7Y9YEJYXHf63c7OvltqSiN79R5Fh6JHirao=;
-	b=drXkNqBjg6eL+GamPdpqmwtxOXRRV6aB1sEyrX5KqFPCv5LO/evqyc7tBSLhwfXlAxnK
-	 EVFOYaZtYzVQDkBfMP42DNgUErsq/NOoBchCuFx/N8PppUPTDDRLoKYTSCvsfbc7ZpZMv
-	 5QWJj6Rtt2i/NM0Ywjx7Heu6fxU5sD6ujf98XNKogTAJv29+v4a+AQ++SpXVd/DDvq/v1
-	 PWV8NqPI1O1bjPbtWx0gTQGklnluLlom3VVc3MyGbqsnjcAMU3cx5ZdBF9610WErvkryL
-	 /h6i7Qc8lYYCmIVpiGVGOpdh7nt5QDIiZFUvCBAJA8b4YZK5hZ7h9w6tvOjUcsdysww==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717679;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=qOY8crhkUmo/P2M0E7e/arrqNxJQQuOOJdNxg87jljQ=;
+	b=p7PrcGtk8n6QwtotQr0CnCRmQmfe8oOpoegHP8fWP+alhYXQJ0dnFNCCE+SeAiE2XKVo
+	 sRGIqeQI3HO9Gw8Qt9Q29/UDnUmF34Ot/OD0Ubn+kLgxhxFirljbnFjc0AVMG9t5aB5jJ
+	 bKTaTFAh9QOCc1vQ7R/agaTOmyx5iJezdX1YtPmymtvfu6V2MDPyFNSQFv415ADJet0xV
+	 MZaP6MPm45qbNvo/gVdJeRiC76xKN+hRLB5r43yNXdBDW2mFGbqE0fDV5iOnhQqVmJ3P3
+	 CzCklpJCUkd3VPi7ZefrtCRW6Xv/TaSCSflQcSLvG3TNBOFhkSiN2QWhcQDbTvSpVTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RWYySZfx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oyWNj3a1;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9A460A2611;
-	Tue,  3 Nov 2026 14:52:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E00F606A324;
+	Tue,  3 Nov 2026 14:54:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RWYySZfx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE1121F00A16;
-	Tue,  3 Nov 2026 14:52:18 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oyWNj3a1
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D8FD1F000C1;
+	Tue,  3 Nov 2026 14:54:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717539;
-	bh=SXrZFm5c7Y9YEJYXHf63c7OvltqSiN79R5Fh6JHirao=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=RWYySZfx0rRUBHS+D6mQrv70dNgBDuLHIhEJF/nZaakyJBbj16IsQUC/oHhhp+GL9
-	 eDEiPZPHHZTInSBMx+M9V4sQyMUg5Aa1V1epiUXOfbz1vyR11VxHwAAtNvriqi8yM5
-	 Getoowq88Rw6kMDDSYuGHHKqRlAqdEJLPOEuZHQMK6GSgWz0kRqbp8kvTVsuE1y0vd
-	 mfyGRs/5LnLLdRw5S0lbZXvQturO85V2JjHTiIyqvcnDgz/HGODZIA53opgqDL3zSA
-	 pVFmYtWkMNWSZsMZyXAh7q6jf43oTEbYSupvgYA0FRV4kz1Bmt/dibNEIktSQDz8xR
-	 YPRAdrqElfHWw==
-From: Sasha Levin <sashal@kernel.org>
-To: tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: Sasha Levin <sashal@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	=?utf-8?b?5b6Q5pmX57+U?= <xuhx@hust.edu.cn>
-Subject: Re: cgroup: fork vs cgroup.procs write race in favordynmods mode -- v7.3 is affected; please make sure bf6fbf46b5ff reaches the stable trees (repro incl. uninstrumented natural hit)
-Date: Tue,  3 Nov 2026 09:51:55 -0500
-Message-ID: <2026-11-03-1-daily-reply-0007-re-cgroup-fork-procs-race@kernel.org>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <3d753a39.1d66a.1a1a13d3452.Coremail.xuhx@hust.edu.cn>
-References: <3d753a39.1d66a.1a1a13d3452.Coremail.xuhx@hust.edu.cn>
+	s=k20260515; t=1793717678;
+	bh=qOY8crhkUmo/P2M0E7e/arrqNxJQQuOOJdNxg87jljQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=oyWNj3a1vVxuIaAVTUBnHRDIMKYpXa1HPYC0kYU52fKugBKYDBoEpGgu1FOg5S2nE
+	 HknINThy2NsIwEGZPkkcQaxa8AurBfZBaio4B6QqlNwqmjH6yX9jgEPE0+N6GF22I1
+	 OqQpcPNmz8/GNuFd+bwEB37DAzcA7IbFNo2r24XMQ8/ZCkeWrXUcUaiyeDAtnoKiG/
+	 vy+O0FeEBAsB3znZI35TWlV2rOmHRbhqOWgP8dKJcoEfsh10aNP2CbaR2BSz3+0pFA
+	 jN7p/RDuVIz41iQVj/ZjD0jKh4uUA5hg1ZYjK2XDuScMiXZjWzFX8Jx/QtzX/DcDK+
+	 KzrG84uQHXIrw==
+Date: Tue, 3 Nov 2026 14:54:36 +0000
+From: Harry Yoo <harry@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
+	David Rientjes <rientjes@google.com>, Alexei Starovoitov <ast@kernel.org>, 
+	Pedro Falcato <pfalcato@suse.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, bpf@vger.kernel.org
+Subject: Re: [PATCH RFC 1/4] mm/memcontrol: do not drain objcg stock when
+ spinning is not allowed
+Message-ID: <aun1FofGFtjPjQHy@thinkstation>
+References: <20260624-kmalloc-nolock-fixes-v1-0-fdf4d17351dd@kernel.org>
+ <20260624-kmalloc-nolock-fixes-v1-1-fdf4d17351dd@kernel.org>
+ <104794ff-9f04-48be-91e8-89d5d2269f95@kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -64,15 +64,65 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <104794ff-9f04-48be-91e8-89d5d2269f95@kernel.org>
 
-> This is fixed upstream by bf6fbf46b5ff ("cgroup: serialize migrations of newly
-> forked processes", merged 2026-10-20, already tagged Cc: stable #
-> 6.18+), which v7.3 predates.
+On Fri, Jun 26, 2026 at 04:30:48PM +0200, Vlastimil Babka (SUSE) wrote:
+> On 6/24/26 15:11, Harry Yoo (Oracle) wrote:
+> > When kmalloc_nolock() drains objcg stock, the stock might be holding
+> > the last reference to the objcg. Since obj_cgroup_release() is a
+> > callback for percpu refcount and does not know whether spinning is
+> > allowed, it is not safe to invoke obj_cgroup_put().
+> > 
+> > This was caught by lockdep on PREEMPT_RT because acquiring
+> > a sleeping lock (objcg_lock) violates lock nesting rules:
+> > 
+> >   kernel: BUG: sleeping function called from invalid context at kernel/locking/spinlock_rt.c:48
+> >   kernel: in_atomic(): 1, irqs_disabled(): 0, non_block: 0, pid: 1267, name: systemd-resolve
+> >   preempt_count: 1, expected: 0
+> >   RCU nest depth: 3, expected: 3
+> >   6 locks held by systemd-resolve/1267:
+> >    #0: ffff888a8165fa20 ((&pcs->lock)){+.+.}-{3:3}, at: kmem_cache_alloc_noprof+0x185/0xa20
+> >    #1: ffffffff9658a4c0 (rcu_read_lock){....}-{1:3}, at: rt_spin_trylock+0x74/0x2a0
+> >    #2: ffff888a81648598 ((lock)#4){+.+.}-{3:3}, at: trylock_stock+0x118/0x380
+> >    #3: ffffffff9658a4c0 (rcu_read_lock){....}-{1:3}, at: rt_spin_trylock+0x74/0x2a0
+> >    #4: ffffffff9658a4c0 (rcu_read_lock){....}-{1:3}, at: percpu_ref_put_many.constprop.0+0x40/0x270
+> >    #5: ffffffff96af11d8 (objcg_lock){+.+.}-{3:3}, at: obj_cgroup_release+0x8a/0x410
+> >   [...]
+> >   Call Trace:
+> >    <TASK>
+> >    dump_stack_lvl+0x8a/0xe0
+> >    dump_stack+0x14/0x1c
+> >    __might_resched.cold+0x233/0x2bb
+> >    rt_spin_lock+0xd3/0x410
+> >    obj_cgroup_release+0x8a/0x410
+> >    percpu_ref_put_many.constprop.0+0x226/0x270
+> >    drain_obj_stock_slot+0x27e/0x8d0
+> >    __refill_obj_stock+0x409/0x6d0
+> >    __memcg_slab_post_alloc_hook+0xa45/0x1500
+> >    __kmalloc_nolock_noprof+0x988/0xc40
+> >    [...]
+> > 
+> > However, this is illegal in !RT kernels too because the objcg release
+> > callback acquires a spinlock even when spinning is not allowed.
+> > 
+> > To fix this issue, fall back to atomics when the cached objcg doesn't
+> > match, but it is unsafe to drain because spinning is not allowed.
+> > 
+> > This is expected to affect performance of kmalloc_nolock() since
+> > it can no longer drain and refill the stock and falls back to a
+> > per-objcg atomic counter (objcg->nr_charged_bytes).
+> 
+> Maybe it's not bad that the constrained operation will not do a drain? Could
+> we say it's likely that both _nolock() and normal operations will likely be
+> happening on the same cpu for the same memcg, so a normal one will soon
+> handle it?
 
-Queued for 7.3 and 6.18, thanks.
+I ended up making obj_cgroup_put() and obj_cgroup_release()
+safe to call from any context as in RFC it's easy to overlook that
+obj_cgroup_put() is not allowed if !allow_spin.
 
 -- 
-Thanks,
-Sasha
+Cheers,
+Harry / Hyeonggon
