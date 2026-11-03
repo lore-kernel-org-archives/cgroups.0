@@ -1,60 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717908;
-	b=wJwCEFRxJR8QY2perOSamme99dZvhfvm+NRmlq8SH/ZhEhsJX7sVMNis7uBaOKkI0csi
-	 WUPXJFJKke55EU3sNKs81SL36T0eRow7L8+Xgu2wkVdcyCAOLu5LShLdpD6OIUBAvoFYY
-	 W2RpaNqljrArw1Y8KC+3/6jjFSiNhEj+jTZt4lSGiaeoUo0Uf8OLc7EQ5NgW+iZ03MkTF
-	 c8AKC8DjCRb7sAmQIvz8nwtRKjyQil9vcD5gesHHgIN5JwPje7PHQ6zV4/0a6seG3mVEQ
-	 /6d4aB2CXvZCZ1Z0AxWfpA5HzTwwYUFBw2A9JaA/UsdKtVL82LYKAs+LC4qWHExzG6g==
+	t=1793717930;
+	b=fVzcHTFGqicPsgBh50Re8uMOuuVPHapbOlEiVi5QOUU2m/9/NbJxLjRv2IMdrePybFz/
+	 LCU/skMWZmaDAR4d6Lk7jiYtArTRN0M/6EwJ4WoFW2d3xeSne/LIA8eKmyZNIayWivdg7
+	 yVMInIl+k9Uuus39buQRugC4FUoEcLmy+Rc1WBNmITP0xRH6NHnFtm0BmOqzZNjsUIMWb
+	 tWkJcA/skqPs/kvVq/45fMAVDgnwrziwSgncFUgegH6QD3kpBA6uan8ZJxkK/4omucm3O
+	 SZl2vFSsinoUjrLGPNQwOlnd1kxE5UPql6o6pVzGXdCXRBuYbo+rcmivIRInv5NGD8Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717908;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717930;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=JxIxJVDR0m557SNz1wHD6xc/rB/AEhEzdsgGBjmaoHY=;
-	b=M55BLlqBNyyEi4S+15V4/BO7UCWwTA6K+VMPmUzNIqmExCtGahEuN8n4CWOiyG45ka3G
-	 xKaMxLpWTV1WBKjRywnwTcsJge81XLxrZUHGV3p2mrn6WzOjEiUrURZmdw9d69dmgcJyE
-	 L2uMMH909hht/QeqFlajUok1tFxgoSShvnx83koJWqzxxMILs8mLeE2Ms/IuKCLk/aiAw
-	 4BBZJtZP9K30j0cc75WLF4oGS+wYr3S8oYyxZ9lzHSFYIqnVnqVbTTubxHAaet3EmjiKH
-	 l5O6dtWm1SblZVGZ/BMRBG0Hr0wz9rbwdw1KXKpsx/rTSJ3jv07EbS7/4btYxHuntSg==
+	bh=nCgjyvSgpq9HtRRmA5g/wITiwT9NMwWO0tA0AqWHdOo=;
+	b=BhK5l5Lzd0gWubFQBsetBvr2E4l/o9N737orquzu52OeJhJmfqXvRFNjfxIYY1Tp3dt6
+	 BVFJNs43oNhWPT3lD+CCRpfFsfv8W6UXGRoY0XUhqZgBm01CmEDvf5qVJYFF4ia73mJ3Z
+	 a3GtG2+dlbBRly/iSkKh5bfNs6NDSWyu6ffJbgOdHH3QycwVUZee9yLGoOzPRaNWxv7b4
+	 nPVbpWxIbqATLaxV2iXod8ru+8hefLcx4bu4Z4XdKNyG+PxiV50k7nI7Ur5PBjGTzlgjU
+	 E2mYVccJNbadW9pb6RMyHFY5HMAIY9oburCrUDU34fZeT5j+UUIJYWtrZOvEpKvBMUg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F6dv9eQB;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NJWgbDpU;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1843F606C810;
-	Tue,  3 Nov 2026 14:58:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4686070A80;
+	Tue,  3 Nov 2026 14:58:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=F6dv9eQB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3354F1F00A02;
-	Tue,  3 Nov 2026 14:58:27 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NJWgbDpU
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1377B1F0157F;
+	Tue,  3 Nov 2026 14:58:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717907;
-	bh=JxIxJVDR0m557SNz1wHD6xc/rB/AEhEzdsgGBjmaoHY=;
+	s=k20260515; t=1793717930;
+	bh=nCgjyvSgpq9HtRRmA5g/wITiwT9NMwWO0tA0AqWHdOo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=F6dv9eQBS3DHoFKwspKTOCxDhh2PQeBeZFPAVKhlhtwy8OktZf6MQUUnEbC2Cv/UF
-	 24vR9wkvQDqKQpNZqrT2lzrUkHWRjCipIVudLSxtXHpZ0JESeyVqpCfVYo60JMs3lb
-	 Cf7aAdbx4uI2M8tj/XRul15/yMFO+uqoiz6/p0jZbKVpXi91pcdiyQX18AWU7jzeW3
-	 JZ3hVRdB8PZCkJMTfG8YHfMMYiMATCrkqr4MekNd7C0asp+cDRBHSpJS6vvciIUup2
-	 dAuxhiLgwoBqeIGoUfjqGqR6LWyaiU7ub8hVOsWRoPrDtw0ZFZM224IET5Lux/F+qk
-	 nv7G8gSm/n5Qw==
-Date: Tue, 3 Nov 2026 14:58:25 +0000
-From: Harry Yoo <harry@kernel.org>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
-	David Rientjes <rientjes@google.com>, Alexei Starovoitov <ast@kernel.org>, 
-	Pedro Falcato <pfalcato@suse.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, bpf@vger.kernel.org
-Subject: Re: [PATCH RFC 2/4] mm/slab: handle allow_spin in slab_free_hook()
- instead of open coding
-Message-ID: <aun1uxYrS0imczik@thinkstation>
-References: <20260624-kmalloc-nolock-fixes-v1-0-fdf4d17351dd@kernel.org>
- <20260624-kmalloc-nolock-fixes-v1-2-fdf4d17351dd@kernel.org>
- <91776136-ecaf-4687-be63-a2c074435462@kernel.org>
+	b=NJWgbDpULl5/IfF/A2iaAsdMvrqVRCq1dRCxgSslUT4SCbCQxEk+R0ZYD8o4BUD8d
+	 GZdaUnBFknNdr9beo7nm/L/i78tSSC1a8wnFsu0sj/aGcr94UX30N4xKSMxMzM3Hmv
+	 pb0CgMUzBef6Uu0HsSCrtZcj8HN9zZDdRika3LgaAiUlbZtyvncqColrWhRsY8JeMs
+	 VxOdoIiWkmrGXSDk5u0NIFBEsMYeOOiJD8EUnsqtjsl2VPuxcajKtoO+r7KSIaIa4b
+	 e5Q/JQ0CnebzbKZtsTKJKD1m2FPpPKkT4J2P9TYZ4ZY8EqcTSkoCqVT9nLGXlwk9fp
+	 mg/y0vj9QVZqw==
+Date: Tue, 3 Nov 2026 04:58:49 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Matthew Ruffell <matthew.ruffell@canonical.com>
+Cc: Waiman Long <longman@redhat.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Caron Wills <caron.wills@pulsar.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
+	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	Jay Vosburgh <jay.vosburgh@canonical.com>
+Subject: Re: [PATCH 6/6] cgroup/cpuset: Don't make a forking task wait for
+ memory migration
+Message-ID: <aun2qV-Jaupz0koB@slm.duckdns.org>
+References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
+ <20261103075940.110308-7-matthew.ruffell@canonical.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -66,87 +84,31 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <91776136-ecaf-4687-be63-a2c074435462@kernel.org>
+In-Reply-To: <20261103075940.110308-7-matthew.ruffell@canonical.com>
 
-Apologies for the late reply...
+Hello,
 
-On Fri, Jun 26, 2026 at 04:41:22PM +0200, Vlastimil Babka (SUSE) wrote:
-> On 6/24/26 15:11, Harry Yoo (Oracle) wrote:
-> > diff --git a/mm/slub.c b/mm/slub.c
-> > index 32672a92581b..85760c8ff2e2 100644
-> > --- a/mm/slub.c
-> > +++ b/mm/slub.c
-> > @@ -2611,41 +2611,52 @@ struct rcu_delayed_free {
-> >   * - memcg_slab_post_alloc_hook()
-> >   * - alloc_tagging_slab_alloc_hook()
-> >   *
-> > + * slab_free_hook() assumes that memcg_slab_free_hook() and
-> > + * alloc_tagging_slab_free_hook() are already invoked.
-> > + *
-> >   * Free hooks that must handle missing corresponding alloc hooks:
-> >   * - kmemleak_free_recursive()
-> >   * - kfence_free()
-> >   *
-> > - * Free hooks that have no alloc hook counterpart, and thus safe to call:
-> > + * Free hooks that have no alloc hook counterpart, and thus safe to call
-> > + * when spinning is allowed:
-> >   * - debug_check_no_locks_freed()
-> >   * - debug_check_no_obj_freed()
-> >   * - __kcsan_check_access()
-> >   */
-> >  static __always_inline
-> >  bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
-> > -		    bool after_rcu_delay)
-> > +		    bool after_rcu_delay, bool allow_spin)
-> >  {
-> >  	/* Are the object contents still accessible? */
-> >  	bool still_accessible = (s->flags & SLAB_TYPESAFE_BY_RCU) && !after_rcu_delay;
-> >  
-> > -	kmemleak_free_recursive(x, s->flags);
-> >  	kmsan_slab_free(s, x);
-> >  
-> > -	debug_check_no_locks_freed(x, s->object_size);
-> > -
-> > -	if (!(s->flags & SLAB_DEBUG_OBJECTS))
-> > -		debug_check_no_obj_freed(x, s->object_size);
-> > -
-> > -	/* Use KCSAN to help debug racy use-after-free. */
-> > -	if (!still_accessible)
-> > -		__kcsan_check_access(x, s->object_size,
-> > -				     KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ASSERT);
-> > -
-> > -	if (kfence_free(x))
-> > -		return false;
-> > +	if (likely(allow_spin)) {
-> > +		/* These hooks acquire spinlocks */
-> > +		kmemleak_free_recursive(x, s->flags);
-> > +		debug_check_no_locks_freed(x, s->object_size);
+On Tue, Nov 03, 2026 at 08:59:40PM +1300, Matthew Ruffell wrote:
+...
+>  - task_work_queued is set whenever is_memory_migrate(cs) is true, which
+>    on cgroup v2 is always, even when cpuset_migrate_mm() queued nothing
+>    because the nodemasks were equal. The parent then flushes
+>    cpuset_migrate_mm_wq for no reason of its own.
 > 
-> This line shouldn't be here?
+>  - cpuset_migrate_mm_wq is a single ordered workqueue, so the flush waits
+>    for every migration queued by anyone, not just this fork's. systemd
+>    forks services with CLONE_INTO_CGROUP, and as soon as one slice carries
+>    a cpuset setting every top-level slice has a cpuset of its own, so PID 1
+>    blocks in flush_workqueue() on every service start for as long as some
+>    unrelated cpuset.mems migration takes. On the AWS systems of
+>    LP: #2165410 that is minutes, during which logind cannot create
+>    sessions and SSH logins fail.
 
-You mean because debug_check_no_locks_freed() doesn't acquire a lock
-when there is no bug to report?
+The end result looks fine to me but can you please separate the two changes
+into separate patches? The two changes can't interact with each other, so
+the patch as a whole looks puzzling.
 
-That's fair, but I didn't want to introduce functional changes
-in this patch as kfree_nolock() hasn't been calling it anyway.
-
-So separated this (and KCSAN checks) to patch 3 in v2 as they only
-acquire locks when reporting a bug. (Taking risk of deadlock for bug
-reporting just like KASAN).
-
-> > +		if (!(s->flags & SLAB_DEBUG_OBJECTS))
-> > +			debug_check_no_obj_freed(x, s->object_size);
-> > +		/* Use KCSAN to help debug racy use-after-free. */
-> > +		if (!still_accessible)
-> > +			__kcsan_check_access(x, s->object_size,
-> > +					     KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ASSERT);
-> > +		if (kfence_free(x))
-> > +			return false;
-> 
-> The whole block now misses free space lines that it had.
-
-Adjusted in v2, thanks!
+Thanks.
 
 -- 
-Cheers,
-Harry / Hyeonggon
+tejun
