@@ -1,45 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793714860;
-	b=cE/767WmUyhUaL7eSVVthFfNTr6RMU4Va2cAiIjj8Q7qoofJKOI/wiaq2DFqLLrGNsyj
-	 +7WfQjhwFi/vlfrm9T672ocSevk15kUMmiLk2e1hYGGz8vftzpg7XEba/yhWEePdQ4Ocq
-	 4rmAoVRjg1YxOnwmraVx44xTa2dL+bXaDZXzPc6RW4/i45Lrrks8J9imgecEJibM2Ucjn
-	 exF/ZlasgoLwz4lfVGx26vGoqwr4ueOlhA2HU5FRuVlePen9qnHG5oOezRoPWniv5QVKW
-	 mCBLvrClE4xML+2vH0gCZsPBnS9p7nlX8ERSqrXqrk4Bpy5MKSCq6uKt7uBHmQViovg==
+	t=1793715025;
+	b=ia+FnL2LI3nzuVAhvDAnal+hCh3Wxji6tPIM/Pins7C+YJT5QBVnfomaQO2mKZ7ZKdQi
+	 iEShNxFEKPk4yQKIYncyW7mNgvsSfehkn4SZ6GHbGtlLUKVjydgNgXMJQbrerVL49j1EB
+	 z1lmHBN+Jf9tEnmAZnuxKza5Kf+pSbrV57nwyM9UfB1zYzQ1AewQqg4w68P3Ae5zV6JyP
+	 TCGikOoxxIkzh/X2VJGuNhwZ62eg9ImHU5vbPyLj2RImYmBQeYCsloe63B5qE8cUH5FVF
+	 iGVzVOK8GY6PN9to/HPpHxmM7eJduLNkVmi5okJf6u2HKy8MV8svMkobINiXLornvKg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793714860;
-	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
-	 In-Reply-To:References:Subject:From:To:Cc:Date;
-	bh=qxI6uxKuEBsKWE5dZToQWARpMTqM0sfykaf/tV2OkQE=;
-	b=iblv5MxGkDRCnV2kr6Q3r+uy4uLsxzxfij5bfQ8b5Zn/D52dePolAtRc0Tn1OKDxpETn
-	 6jqTy5CYBwfJOrqlEpbKU4O0ZCfX3zZDQvq4W2VQkvOskg2jA+Q8SeuRz7ajTyhiHAY2u
-	 nelnUUik+Don87yLonfeH/Af48joA8baAby1O0n70gDJtB58eJwyIO7oBj+6eHmmjvZJy
-	 rDOsMyNGjX//EeHmQEozcWxEguqgGXCaplsJmLutf+mBghhcZ68X8a+d8HjpXSStThSOX
-	 PIf8C5u7g2DFRSXM6NT7vVs81pM9bICmXYxeXJMtqDOIqtrAlg7fc61D5r1ZlqfdH9w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793715025;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=9hcT28SYX76z1COvWorzxu+1gkA4oj6GNwI2cd7zGC4=;
+	b=ve6nwXNB/yTTk1tKsUllEugm2ATxOxhYFj3TyYg2DK4BN8w6XoWxh2XCla82iQRQxXnY
+	 n3yVuF4TjF18WkwnUq4rRJgBxpIz3VQK6GRsf5OROzajO4RV54HAV4D8xRKDr5aeMT7wW
+	 xUuUSCtIJZq4j+vjwNrF/SvMir1vpQN732KZSOi4CaGKqekQ0WKWlr6UDf565c1whnmkJ
+	 8vtX2T20nrjVPfRyWnCeigX4KFWN70zmpPf2f7fPLwhOF48r6fSppRrtVg/FFgj6iLNaL
+	 Qwppbx/l9VyFkXQzGg7paBGsqfZLbGTSJXwWl/roTRujjHrZfyaWqmqJd79QMlJo8ag==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kvAhsPMv;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A8gG2FyS;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D020A606A336;
-	Tue,  3 Nov 2026 14:07:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F88A606A32C;
+	Tue,  3 Nov 2026 14:10:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kvAhsPMv
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18EF31F0093A;
-	Tue,  3 Nov 2026 14:07:39 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A8gG2FyS
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C32D1F000C1;
+	Tue,  3 Nov 2026 14:10:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793714859;
-	bh=qxI6uxKuEBsKWE5dZToQWARpMTqM0sfykaf/tV2OkQE=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=kvAhsPMvD47M67OaIC8UcigKRO5xXurkov7sP13ENoG9Bu8aSgSd4XGyHHp+MHDbS
-	 rjhyieqt2+LLMMTKTa2+Il1z6oGL8rZ60njQIpEmAmSgFE1U9O94psfATXjDm1SiO6
-	 n0vptLQLV1S0wy7d/e0Psm4iNIMRXTyXVT43KLThvIyp6jFhniBDBdo2A4bsdIoGHJ
-	 i+6OWJsxSz4S37woEi7UMx51fGMHxnh7Fo0o77QSy3WSfFk/yth/jEO6h5hh8aLa+8
-	 EMadLU71WZDBZWr/ZemQM7hENGXMQ7RTvMbxpwUbfORwZSTzJlkD2YHzVISli31o5Z
-	 8wvLAtpgk6ehw==
-Content-Type: multipart/mixed; boundary="===============0895216361124977455=="
+	s=k20260515; t=1793715025;
+	bh=9hcT28SYX76z1COvWorzxu+1gkA4oj6GNwI2cd7zGC4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=A8gG2FySIrvGccJDt9QVUN41xO71+6Rpf7aiyxt8Vsopa/Ys8hBvt1hDZeBlS/PGw
+	 MOt8BcnF/W4r1s15z+9Q6nzud+DWuRPuIHnctKYism3LQZOnWs3vU+zGKDYcGAak9v
+	 i1JqUhBvQ5kbpMtFLU6xUwyGov9lzqLdMvTVOsorWieMgO07vFjRnAf8TphXqmT54a
+	 fGU5gWTkE4FlbUGGSThdSpyyACGOdEcur0TIARvk+d+UVbVw5+sbat1Ht0raY6TNIJ
+	 eZtyJEUng8T8aAiarrufke9huCyGceFpE9bK2kxHfRy5JVsGTTX+UrBQ3G6s7LkukY
+	 Bnv6IKVnB5Lwg==
+Date: Tue, 3 Nov 2026 15:10:22 +0100
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Matthew Ruffell <matthew.ruffell@canonical.com>,
+	Leonardo Bras <leobras.c@gmail.com>
+Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Caron Wills <caron.wills@pulsar.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
+	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	Jay Vosburgh <jay.vosburgh@canonical.com>
+Subject: Re: [PATCH 4/6] sched/isolation: Drain per-CPU LRU batches when CPUs
+ become isolated
+Message-ID: <aunrTtH00__Xi7PW@localhost.localdomain>
+References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
+ <20261103075940.110308-5-matthew.ruffell@canonical.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -49,83 +83,39 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-Id: <cdb4a70a69306fb920d52c3e5511bb1cbac094d4f47b1b89ae56b674853c287d@mail.kernel.org>
-In-Reply-To: <20261103132613.1952975-4-cui.tao@linux.dev>
-References: <20261103132613.1952975-4-cui.tao@linux.dev>
-Subject: Re: [RFC PATCH v12 3/4] selftests/bpf: add iocost cost model test
-From: bot+bpf-ci@kernel.org
-To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk,alexei.starovoitov@gmail.com
-Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,ast@kernel.org,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Tue,  3 Nov 2026 14:07:39 +0000 (UTC)
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261103075940.110308-5-matthew.ruffell@canonical.com>
 
---===============0895216361124977455==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Le Tue, Nov 03, 2026 at 08:59:38PM +1300, Matthew Ruffell a écrit :
+> From: Caron Wills <caron.wills@pulsar.com>
+> 
+> Isolated CPUs no longer batch folios in their per-CPU LRU caches, so
+> that __lru_add_drain_all() never has to queue work on them. Boot time
+> isolation (isolcpus=, nohz_full=) takes effect before any folio is
+> batched, but a cpuset isolated partition can be created at runtime and
+> the affected CPUs may still hold folios in their batches from before.
+> Those would linger until the CPU happens to drain locally, and the next
+> lru_add_drain_all() would fall back to queueing work on the now isolated
+> CPU, which is exactly what must be avoided.
+> 
+> Drain all batches once from housekeeping_update(), right after the
+> HK_TYPE_DOMAIN mask has been updated and next to the vmstat and memcg
+> workqueue flushes that exist for the same reason, so that newly isolated
+> CPUs start out with empty batches.
+> 
+> Link: https://bugs.launchpad.net/bugs/2165410
+> Signed-off-by: Caron Wills <caron.wills@pulsar.com>
+> Signed-off-by: Matthew Ruffell <matthew.ruffell@canonical.com>
 
-> selftests/bpf: add iocost cost model test
+There was this patchset:
+https://lore.kernel.org/lkml/20260519012754.240804-1-leobras.c@gmail.com/
 
-TL;DR: Selftest cgroup names "iocost_pairing" and "iocost_ms" lack a leading
-'/', so the cgroups are likely created outside the work directory and not
-removed by cleanup_cgroup_environment(), leaving empty cgroups on the host.
+Leonardo, do you plan a v5?
 
-> diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
-> new file mode 100644
+Thanks.
 
-[ ... ]
-
-> +	/*
-> +	 * cgroup_setup_and_join() creates the priced-IO cgroup with the
-> +	 * available controllers enabled, so the cgroup has
-> +	 * io.weight/io.stat and the iocg activates.
-> +	 * cleanup_cgroup_environment() removes it from every exit path
-> +	 * below. io.cost.qos and io.cost.model are root-only cgroupfs
-> +	 * files: they are written at the hierarchy root and reverted on
-> +	 * exit.
-> +	 */
-> +	cg = cgroup_setup_and_join("iocost_pairing");
-
-[ ... ]
-
-> +		cg = cgroup_setup_and_join("iocost_ms");
-
-Will these cgroups actually be removed by cleanup_cgroup_environment()?
-
-The name has no leading '/', and format_cgroup_path() in cgroup_helpers.c
-joins the pieces with no separator:
-
-    #define format_cgroup_path_pid(buf, path, pid) \
-        snprintf(buf, sizeof(buf), "%s%s%d%s", CGROUP_MOUNT_PATH, \
-        CGROUP_WORK_DIR, pid, path)
-
-So cgroup_setup_and_join("iocost_pairing") ends up doing mkdir on
-"/mnt/cgroup-test-work-dir<pid>iocost_pairing".  That is a sibling of the
-work directory directly under the cgroup2 root, not a child of it.
-join_cgroup(), write_cgroup_file() and read_cgroup_file() build the same
-path, so the test itself works.
-
-But __cleanup_cgroup_environment() only walks the work directory:
-
-    format_cgroup_path(cgroup_workdir, "");
-    join_cgroup_from_top(CGROUP_MOUNT_PATH);
-    nftw(cgroup_workdir, nftwfunc, WALK_FD_LIMIT, FTW_DEPTH | FTW_MOUNT);
-
-so the sibling directory is never visited.  The empty cgroup remains on the
-host as /sys/fs/cgroup/cgroup-test-work-dir<pid>iocost_pairing, which also
-contradicts the comment above ("cleanup_cgroup_environment() removes it from
-every exit path below").  serial_test_iocost_model_streams() has the same
-problem with "iocost_ms", including the matching write_cgroup_file() and
-read_cost_usage() calls.
-
-Other callers that use a fixed name pass a leading slash, for example
-"/skb_cgroup_test" and "/cgroup_iter_memcg_test".  Would "/iocost_pairing"
-and "/iocost_ms" at every place they are passed put the cgroups under the
-work directory where the existing cleanup removes them?
-
-
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
-
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/41646836440
---===============0895216361124977455==--
+-- 
+Frederic Weisbecker
+SUSE Labs
