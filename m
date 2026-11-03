@@ -1,67 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.210.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793724370;
-	b=jFfgFWkLdGYELb6kNE7jtODgWbex3t/VWHN3ONpE69h55vey7Ppy6MtfcimyGA9CxDIi
-	 3glGH2/IS4utSSwuRYNeYWb0soI7ufp474qCbkblfX0r/EQnJbB/OFEbjJzymiMK7Gp9i
-	 HZGkgXPMo/Sufm2zjBVK4ESJsnD3K+ehw5rzEaVkhNOPhA2LpSle1OPftHB+KcC7DKLVR
-	 a80jVQzP3KfoemeISRsi1pWAb8YoeIPoPwmnGbsDc36g42h87Iaj5F0856OUcNt/Km3I3
-	 DtCUWZScH3J1HYSiUtfn6OT4uoea60SWEiklqeGsftEmeolu1KWj8dHouErsDzU219g==
+	t=1793724702;
+	b=AvnuMAQ/AdKmS+xW6/d+1yIBVuYIY/N/TqThXg0QfnX/ilvSV0ofisXC69CA3+ds8MEm
+	 IEy1IgtVbzCZ+Yik0rDm7vk/nc7MEyjsT840Ku49arZhg98UNsfKJPW4OpOry2nJtL7gu
+	 EPD+cz+dES2tekxviDI9HsgWGBTAAJnzkJXvpV0tOSGNbcDIhfSHA8NXlqzfdK5Mbr6kJ
+	 ILVrjB6Gf0aylLGz51/lHbBDph21upxHfsKybI52EyKt30jnzkCr2MaBI49Qr8Akzux6T
+	 Nx5uHB3h677PfO/XhP2jTNu9zZAoWIw6eQ49TbNvK9R+MJFfqhYdXPQK7TLexL7vgCg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793724370;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=QrQxpAgOB38zPWPykzyeyLu30lUbfa9ddi7dGDk1YNA=;
-	b=ckDEngjcY2KwrEVugj2Kts5vuE26AM/Zy8E8OvbOWVG17wzKmtUaSL9HK8dPVeQc5Evd
-	 f21MfpQn2kgh+rIU5Ds/iiYReRcfOJ5YQbu6NdopaRC2MYaOeCut5Gkn9JpVZ54RndKDw
-	 MyloXkNoHbaPzQoZdXvDMcsGfj12VCPciAUwWxFSVV8JQOOwt0XMMvhWCUKcf0g8mZyCO
-	 ElNiZwxTM4GTUlig0FG8lMgIHkMfdQoQoeKqhhCP4pKNdd3A8KPEdYKkPcfXAhrGLwYiL
-	 ZrQNSOai3B6yPViULCCXD00HG8TDmxNd+ub7BH4JQSWm/j2OTBbO5lBbIh3Hqqma65A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793724702;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Content-Type:Date:
+	 Message-Id:Cc:Subject:From:To:In-Reply-To:References:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=z/+aYEPLoBSp7AxjoxxgYR8cgspXFyNdt6Vr/KNLDmE=;
+	b=lIakbp3uSJLo3PLEBtS8J2E+nFI6V0SYd1QntASoy5i61By3Yfx1n6d1VrGTOTGr3Vx+
+	 UDA9mZv1Sfxuoyp4O/aUVJ47JB8nBuEef9Wr6o9sXIbfMlB6p0fsgHE7fILw55Y/klVN2
+	 R7e/Q8TxODQ9ygDL9ZULeY7eYcyzsc1nPi/8P1fAUEzv6XsakUL3zpMjQVJtwCtbDuyW+
+	 cvxygao47Q+IElXsrWr68g8dX6LLQ1CaES7/f/Hsl9j8DkT2gqrQT8RDKApU5A0ox/iqe
+	 GVk5SrHcAnBNLeqC8kyTKODJzQ3bup1vv42oihGjZz1zR+G5OtO0VoYbo3DQsIoKDVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=iZzu06Zt;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eTIFtqdT;
+	arc=none smtp.remote-ip=209.85.210.172
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1990606A32C
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 16:46:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A1990606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B44E9606A33A
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 16:51:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B44E9606A33A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=iZzu06Zt
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793724368;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QrQxpAgOB38zPWPykzyeyLu30lUbfa9ddi7dGDk1YNA=;
-	b=iZzu06ZtlqzR1vHiN8GKNeAVWZPV2Uz+e5l+7vOWUnMNf//IddEzZD/xngwn5Ko114YweC
-	kXapQ32LvCDjSm+7azIz2O2tUJigjw53D919NRqA/c1XK0dmw+aGj4aqJgAo/x3KwkLxTd
-	IxPsOLeUkHL2kL6DIElMuXpB8u9lK1c=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-668-inK9B4OPMa6z1NdhMIdAQg-1; Tue,
- 03 Nov 2026 11:46:05 -0500
-X-MC-Unique: inK9B4OPMa6z1NdhMIdAQg-1
-X-Mimecast-MFC-AGG-ID: inK9B4OPMa6z1NdhMIdAQg_1793724363
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1BB3319560B7;
-	Tue,  3 Nov 2026 16:46:03 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 734531955F43;
-	Tue,  3 Nov 2026 16:46:01 +0000 (UTC)
-Message-ID: <33024a13-9706-486c-aef0-aeeb2193c8ee@redhat.com>
-Date: Tue, 3 Nov 2026 11:46:00 -0500
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eTIFtqdT
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-8a064fac8cbso2895548b3a.1
+        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 08:51:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793724701; x=1794329501; darn=vger.kernel.org;
+        h=mime-version:content-transfer-encoding:references:in-reply-to:to
+         :from:subject:cc:message-id:date:content-type:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=z/+aYEPLoBSp7AxjoxxgYR8cgspXFyNdt6Vr/KNLDmE=;
+        b=eTIFtqdTdXpA/AfqqKkL10HIQZLcduWeqawGhkY8XSlpOW7wAg7SwK7IyckCmAeC8z
+         QZEJnVKKbFm1lme2SYMMxv1HNP1Njw8KJE3QtzbovqqCyntSjZr0OxFCZk8earTy7ZeP
+         s5VZOXYH++PjPF1kTEA3lESRC8qsEpTcVQUri9WLAkuFv2cuZix2S1MDadbIk2gWxXcO
+         a1CWIRWP4N0snge7OVszIUi9zzUBbb6XW85sc28z+DIK0qUMW3AE1Bt1XJHJEohjeBO9
+         ub6LOMq+gg31oFsCGTjAhEdvsMpjkdKA0Yw0Eq/2gp4qZRvsM2ML5GSPlkglQB80sBeL
+         ogXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793724701; x=1794329501;
+        h=mime-version:content-transfer-encoding:references:in-reply-to:to
+         :from:subject:cc:message-id:date:content-type:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=z/+aYEPLoBSp7AxjoxxgYR8cgspXFyNdt6Vr/KNLDmE=;
+        b=BfmtZCcP2bYIxZ7NchRCaqbiBciTsdbinC+CKQfkXt0FleWnvGamoAdpubXL/RP8Bo
+         ThkUcx/Zwk67jqJgY1DmfAGCCGHBybDSuZkE4D+0B4niE2D9uvswOrqRr6Oac5PJSshp
+         lzW1EAe0twTm2+vZIGRtY+UEi+OI2AEnERc3Clr55UWOHnS6VMCiEYJvUPNlQ5fCEe7s
+         MwfBNpkg0b25O3etP5e5C1+yz7NhynyDOjrDTEd+mAJKjz6wO0kp4pSbfoWpDhRP07RR
+         r3hi8T/y0nk89DVSOjOowRioQ/rOnwAdloTjk34K09wnQZHAhu8Xq3aRJnIye0A4NxIf
+         XwRQ==
+X-Gm-Message-State: APuU4Z9TlX903BIbOi2IJ1tx4MF/RAF+eHSK4wXZrpEByNyWPI7Ox8H+
+	02234EuOVVv90UmrO5OxQCWFs9XKGL1U/9VJfirV1qdMzhW8SP3R+6qw
+X-Gm-Gg: AYBFou00T+oi3iwfDZi7JVV7LLU3cTZeRDpT8fvk89Ei4DzgXrTzWYVuk5I+Mbr+rbe
+	kbAQaOPy5pjiAbwf15kC68ZzqEY+0DruU83Fk6sFn2k9HxHysrFV81K2sxv6VNOvCLWznpiPu5j
+	Y2PstkGhMB3qFLjn/DX2NkQgX2ZaM39XXKl3xY6OYG00SFIFG0cgsj9jHpvJT9Ly77hdoOZLmsL
+	vDm9FZlHxVUHRH0B3cCpriQKXtnPfLEIvy+PwzHUr3SVIgHc/ykOAOWP/vNjiOovIxy7CdGRDlB
+	o08rDw4on+axgZBy5YDWPJepauilsXGMZuyDbWICT86UVMSENDRvnJVvme/StwfpMbCU2qgrmzZ
+	HALNVNPd0gdkVg0JP9NVhTt0S7z5KeeXgJVO3TbsPA5/yllcYS1X5fIBGeplVQprE6+MpFRxeWR
+	0DnZej2/4tdzRmhCGGU3F1CI34acu/vK5ThZGc/IWRSQzKAX4H3JHrQgF+r2kwjYxFuBGBMTWrR
+	pQi3EwVnWq1KcX0LFbBrgvxyW42q09PJ4YV3JP8ZMxALzu1r0bnBaU/9F7f5AF+drXlADd05wYS
+	qMecgYMdzK+60neGSomRPqqU4Z4/ECy/89xcWuuaw3c1lVySkI6NAOb2ffNgmmuZ/tniLM1Jz3A
+	OxVJRVFoH7ZAfXMdMufcaG3o8hJjrLCwGdw==
+X-Received: by 2002:a05:6a00:3a12:b0:8a0:2cfd:87cb with SMTP id d2e1a72fcca58-8a9bf90ab27mr11070101b3a.43.1793724700510;
+        Tue, 03 Nov 2026 08:51:40 -0800 (PST)
+Received: from localhost ([153.61.198.249])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8aad77fccffsm3794904b3a.7.2026.11.03.08.51.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 03 Nov 2026 08:51:40 -0800 (PST)
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 03 Nov 2026 16:51:39 +0000
+Message-Id: <DMLQC758A2C3.175VOTFQ2Z8HD@gmail.com>
+Cc: <cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <bpf@vger.kernel.org>, <andrii@kernel.org>,
+ <eddyz87@gmail.com>, <daniel@iogearbox.net>,
+ <linux-kselftest@vger.kernel.org>, <cuitao@kylinos.cn>,
+ <ameryhung@gmail.com>
+Subject: Re: [RFC PATCH v12 1/4] blk-iocost: add BPF struct_ops cost model
+ support
+From: "Alexei Starovoitov" <alexei.starovoitov@gmail.com>
+To: "Tao Cui" <cui.tao@linux.dev>, <tj@kernel.org>, <josef@toxicopanda.com>,
+ <axboe@kernel.dk>
+In-Reply-To: <20261103132613.1952975-2-cui.tao@linux.dev>
+References: <20261103132613.1952975-1-cui.tao@linux.dev> <20261103132613.1952975-2-cui.tao@linux.dev>
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,50 +104,16 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/3] cgroup/cpuset: Fix some more bugs in cpuset
- partition code
-To: Tejun Heo <tj@kernel.org>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner
- <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Guopeng Zhang <guopeng.zhang@linux.dev>
-References: <20261030190701.78308-1-longman@redhat.com>
- <886a562b52b1c5094142d547a8336457@kernel.org>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <886a562b52b1c5094142d547a8336457@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 11/2/26 3:04 AM, Tejun Heo wrote:
->>    cgroup/cpuset: Fix incorrect CPU accounting with parent's
->>      effective_xcpus expansion
->>    cgroup/cpuset: Recompute effective cpumask in update_cpumasks_hier()
->>      after calling update_parent_effective_cpumask()
->>    cgroup/cpuset: Do housekeeping check when isolated child with root
->>      parent may get more xcpus
-> Applied 1-3 to cgroup/for-7.4-fixes with the following tags added:
+On Tue, Nov 03, 2026 at 05:26 AM Tao Cui <cui.tao@linux.dev> wrote:
+> @@ -3223,7 +3306,6 @@ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
+>  	return 0;
+>  }
 >
->    Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
->    Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
->
-> Two issues I noticed:
->
-> - Three of patch 1's new TEST_MATRIX rows end with A1 as a single-CPU
->    root partition, which has no sched domain, so they fail the ISOLCPUS
->    check when the script runs with -v.
->
-> - The comment at the end of the "partcmd_update w/o newmask" block in
->    update_parent_effective_cpumask() still says there is no need to
->    adjust the parent's effective_cpus. Patch 1's new expansion branch now
->    does exactly that.
+> -
+>  static int ioc_weight_show(struct seq_file *sf, void *v)
 
-Thanks for noticing that. Will fix that in the next set of fixes that I 
-am working on.
+Unrelated change. Tejun pointed at this hunk in v11.
 
-Cheers,
-Longman
-
+Overall makes sense to me:
+Acked-by: Alexei Starovoitov <ast@kernel.org>
