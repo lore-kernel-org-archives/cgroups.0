@@ -1,45 +1,45 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793717950;
-	b=vKIUKUu8f6EKJ6cqpDqlqStOQld6hOzzIoFA8LNOH1hTgJedP/TNY5E54F9JgWU0G/B+
-	 x7mqyRXeXr9xq330TDSlcWBv9yPb2I1g2vOdO6fyClvXWGHf67Dsq6MAA7ag8G678VAY2
-	 n7mb6hbOkkko6PF2RtVqSBM2zs7nNV/lNpnsmLGkYtfyxSnVPpOY+b1Na+gPT4xvs/1xn
-	 SziDpceHT0QA1i6wMvxL7UMivA1UkWBJwRGEVAvMpjGXyL3AlII43elqUay3COZ9nh3bN
-	 KybKMvv+lVIkJtdV9ylZJ1YrZIkobCP2aEgXQkxkS4Jy9jZjY6ja0ROrHQrbzx30fmg==
+	t=1793718117;
+	b=UoZAzSr69jRfuzTxmFu4gUBJJP0GbvLk0VX6UiXsIfr0Nr0YedEVuObFYp212wSYbAj1
+	 4dwoVT7rDuhvXqBVNqCxLERf07pETcqBiF+UJKkbeWxp9wBU2xtq2GMFCtjloWRj17APe
+	 jOcq40QYgSoV8yWBQ9R6H6sivlYRzXXQakb5F5SYK26YFe6G0nTHvqLIl3lPnl53spFwv
+	 Zz5cs/T0chgNZZKhb4b6gjXaf6G5kA1IvrCj39Hhw8qO+ORn/CSYvxPDPS7NqLPySVY0G
+	 JR6WzU6C5h53EtFZprBN8pFMu2DqWsH64HUC7KQmNQG+wDYQFg+md6LNDGmm5sY/BpA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793717950;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793718117;
 	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=xTaO+IpTNWTE3CNFVHX0P2a4foAlotO2i/j+8kuODPc=;
-	b=rLL/qgZmIVYsPHrmXKs3ZFino5/x7JVsJ5gYYVmjVah6l97HdLPWbpgD49/5Z+KeljPj
-	 K0ZYHYiYNNifnCUxmJaZLTaAnMWUHK81OuYUns8yt/yFbjUwo4/vVIvXzAcnOKlUyi62r
-	 IpUwoZQeCuZ/VO9+1dSy9ag6CnW/GSR0H5FCeHgdOSrT1dhrZi2PodPYvgxOt82xrdihT
-	 OrU6S0KJW8cCk6+YFkscJBDz3CO8bQcGr+tu5NxEAaKlWTCIfKjlOw8LU404wYtGg9SES
-	 71O4v8m+YF9UsD9qx+w54tS3Covm03XsqVRXM8x+qW7RhS2DToXNViqDMKHzWF2HJYw==
+	bh=x+DwvzPCizDdWmjSJvWlcQRJydG6oUcS5wV4t674KgA=;
+	b=ATRct9tINwpwLEmTdCTzGKKV5qC0d/FpQeR6bLrKk7KyS3CihJpST1BIots1+YE5PlLy
+	 9oEDejOehhRCAYLvIROfem2A8Gp/o+2nJNKX5OUr9pKTlxOa87pEr9xSvq6Gih3GJj8tj
+	 R7rALNsyuzOqYjwkMiSC3Tu37A6jvEATbZ9L6gqK43fyS0Im2Gk9vdmb1mJYU3N3KEnYn
+	 CkfJHjuypQonTc7K562v8r8jOlf2xq5TWlfzzxpzGKnQWfVM9lrBoDCYilAOAK4jtBWl4
+	 kaw55T6zLl2eM29QlvtU8EMxvb3gdhxYxlvRd3aM5Dct94yXQzQWAiE89vx1o44trdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oEbqHgIE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nt5AkpQ9;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45046606C867;
-	Tue,  3 Nov 2026 14:59:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15CCC606B251;
+	Tue,  3 Nov 2026 15:01:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oEbqHgIE
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FA0B1F00919;
-	Tue,  3 Nov 2026 14:59:09 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nt5AkpQ9
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B751B1F00919;
+	Tue,  3 Nov 2026 15:01:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793717949;
-	bh=xTaO+IpTNWTE3CNFVHX0P2a4foAlotO2i/j+8kuODPc=;
+	s=k20260515; t=1793718116;
+	bh=x+DwvzPCizDdWmjSJvWlcQRJydG6oUcS5wV4t674KgA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=oEbqHgIE+lY1Hs45AftM4rckAxM0DUPGsSUAtVRRHsLlCWFfg/veggpDHx7lSfgRv
-	 ibzBHmChGFeeUx2SP8E1zUBkySc9PwAFVUIn62YQlpimDIta3QR35XHjkbcYNhi2BP
-	 wa5a1j1zb+NN9BiCdbdo4lSvj/oJnzVDxiLtUzOZoXLffAYC3emYdylnhzQAsFQTHB
-	 MIsduntKoVn+y2w6wh8viyDeUGIUXaVSs+MsCwmDnde1ZryBcvS0rGAjKFJa4nyqG4
-	 eOwC9caU3Ww1Mvk8kYxmni0poKc1wvsFuKHnE3Rp1RRiZjxtRv2zHsYytALtoux6LT
-	 2A8C9VrUM5m9Q==
-Date: Tue, 3 Nov 2026 04:59:09 -1000
+	b=nt5AkpQ9xzaOQ1fTYw0l5B4HfodCv0sPfD7QFVJnV2c9oEkdAzkw+NTT59o2ggnYz
+	 SZbi23+yzLh/v2Wmpx5CcIEUDB/1X8Quo+88j2eLBa7Atfjqeky9v2k319KGMODtCL
+	 Ftok0laG7i6piw0fW0Q9jYqWx9uBGsBs0lSJ2yTdHUS+DhfdosZx8g1F1Hs27HmGh0
+	 4IhfI1cku3+T+DlOdPXavAnvm4eVfgYQX/2QigbFcpkT9b//JO6CmCEC6mB6ePeJWt
+	 9zdofkU10cLS6w5myGpOLtx8+RRydr5ein+oH2Hfsg1neaOR7DpSJV2t51KkYE/IPO
+	 PMvkXzaCKV5OA==
+Date: Tue, 3 Nov 2026 05:01:56 -1000
 From: Tejun Heo <tj@kernel.org>
 To: Matthew Ruffell <matthew.ruffell@canonical.com>
 Cc: Waiman Long <longman@redhat.com>,
@@ -68,11 +68,11 @@ Cc: Waiman Long <longman@redhat.com>,
 	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org, linux-mm@kvack.org,
 	Jay Vosburgh <jay.vosburgh@canonical.com>
-Subject: Re: [PATCH 5/6] cgroup/cpuset: Don't wait for memory migration when
- cpuset.mems is written with O_NONBLOCK
-Message-ID: <aun2vUjloJjH3Hpb@slm.duckdns.org>
+Subject: Re: [PATCH 0/6] mm, sched, cgroup: LRU Cache never drains when
+ isolcpus are used with spinning SCHED_FIFO tasks causing page migration
+ stalls
+Message-ID: <aun3ZGLR2sLsvG6F@slm.duckdns.org>
 References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
- <20261103075940.110308-6-matthew.ruffell@canonical.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,44 +84,30 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261103075940.110308-6-matthew.ruffell@canonical.com>
+In-Reply-To: <20261103075940.110308-1-matthew.ruffell@canonical.com>
 
-On Tue, Nov 03, 2026 at 08:59:39PM +1300, Matthew Ruffell wrote:
-> From: Caron Wills <caron.wills@pulsar.com>
-> 
-> Writing cpuset.mems migrates the memory of every task in the cpuset on
-> the ordered cpuset_migrate_mm_wq, and since commit 3514309e0322
-> ("cpuset: Defer flushing of the cpuset_migrate_mm_wq to task_work") the
-> writer flushes that workqueue from task_work before returning to
-> userspace, so that the write appears synchronous (the design of commit
-> e93ad19d0564 ("cpuset: make mm migration asynchronous")). The writer
-> therefore sleeps in TASK_UNINTERRUPTIBLE for as long as all queued
-> migrations take. On a system with isolated CPUs running SCHED_FIFO tasks
-> that was measured at 2 to 10 minutes (LP: #2165410), and it is unbounded
-> in principle: a migration blocked behind a starved kworker or a slow
-> expedited grace period holds up every migration queued after it.
-> 
-> The writer is usually systemd. It applies AllowedMemoryNodes= from PID 1
-> itself, and since v259 it opens every cgroup v2 attribute file with
-> O_NONBLOCK precisely to opt into asynchronous semantics wherever the
-> kernel offers them (src/basic/cgroup-util.c, cg_set_attribute(), citing
-> the memory.max/memory.high behaviour of commit c8e6002bd611 ("memcg:
-> introduce non-blocking limit setting option")). While PID 1 is stuck in
-> the flush, logind cannot create sessions and SSH logins fail.
-> 
-> Honour O_NONBLOCK the same way memcg does: skip the task_work flush when
-> the file was opened non-blocking and let the migration complete in the
-> background. Blocking writers keep the synchronous behaviour and the
-> cgroup.procs attach path is unchanged.
-> 
-> This does not make the migration any faster; it only stops the writer,
-> in practice init, from being held hostage by it.
-> 
-> Link: https://bugs.launchpad.net/bugs/2165410
-> Signed-off-by: Caron Wills <caron.wills@pulsar.com>
-> Signed-off-by: Matthew Ruffell <matthew.ruffell@canonical.com>
+Hello,
 
-This makes sense to me. Waiman?
+On Tue, Nov 03, 2026 at 08:59:34PM +1300, Matthew Ruffell wrote:
+...
+> isolcpus=nohz,18-95,108-178 nohz_full=18-95,108-178 rcu_nocbs=18-95,108-178 
+> rcu_nocb_poll skew_tick=1 nosmt=force idle=poll numa_balancing=disable 
+> transparent_hugepage=never audit=0 nmi_watchdog=0 nowatchdog mce=ignore_ce 
+> tsc=reliable clocksource=tsc
+
+We should get rid of fine grained isolation control. This is such a footgun
+and ties implementation details to interface too tightly.
+
+...
+> What happens is that the spinning SCHED_FIFO processes running on isolcpus are
+> constantly dirtying the LRU cache, and when we attempt NUMA migration of the
+> 50GB of pages, systemd calls flush_migrate_mm_task_workfn() which creates a
+> kworker that calls cpuset_migrate_mm_workfn() then do_migrate_pages() then 
+> lru_cache_disable(), and then __lru_add_drain_all(). __lru_add_drain_all() then
+> creates a kworker on each CPU to drain the LRU cache, and systemd and the
+> initial kworker wait until this is done on all CPUs.
+
+I suppose you have fair deadline server disabled?
 
 Thanks.
 
