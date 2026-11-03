@@ -1,94 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793716295;
-	b=trMUKVJmSXW1k2BFTlZW9OfEBhCrguVTqPvl23MKfx1bXaG44rShgSnFs3c7QHVVnw1o
-	 YjDrUn+X6UDmQYADyy2toxHTMlfJey5xJWx5v2Myq/UUcR8A4Od9Ucbrs1cllrLfAmWVP
-	 zbdxa7V8xwBtXeJq7WR60QceuKNx86sTZ9pJDX2qor5PYUIO3DHjjbITXTREia6H/RXBI
-	 rma7n8S9rX0a4nsmjBOOmVfYAW7HyFlcuCTiFc69Ea8opLxXET/+mArrDfQSQUcyrpPd4
-	 /viRR87l5Yr4pBi04++vHjFstgQ6sme59+WANDuNtXaYFjD/L+UCoTz+kFB1h+xdvRg==
+	t=1793717286;
+	b=TjQUwFV8QRzktvLRUdrwc/P1tMMOt9g0SegdJfXo/UXef5H3myE6N8YIsUemjnP3V1hM
+	 dwMeK5ZVOFzjkd6wZlzUR+G2RbMgkPfvvH6artqFX+YCqxdMEheJ9xxmn3cVO/DM1i/DL
+	 ph6QcJA6lWad/NVvIogciOQgg39/b6IH5LbioZ0Du8aOE/sJRNAX3wwSsJC005nUcZwRM
+	 rAierqBG3cbL/v3VQIXbGT1B8vNWJbMCaniYfxK7EJuyV2fhNg96Dgpf47gfOTBey+FVq
+	 thgZCjlet0DT3q7JA9Xyu4SNaSYYiTsocySQrhOwQJAPBcqF4Vt6Xrf3VPcKACk2MjA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793716295;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:In-Reply-To:
-	 References:Subject:Message-Id:Date:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:X-Mailer;
-	bh=KXzabl41ZeEnGrVAYqexhOU2oRggUUYi90hmQPge7Yw=;
-	b=BCjZqk1DeBhqvb+AqVX0AmfLuAsBDVAcdG8HDw1d2tSHJRsa8TMfNIXEN2NMwfwprzfR
-	 Cin64MDerlAKiJ63KTGZcC1bdrGF0pDG9eKDVwV/wWK1yGYhi3DThfFIoqO5GSSOBpG5q
-	 E4pS6bedIfBe0gtFfzfrg7iip/E2YO6DM8ppfFE3DTgZmiFbTk2cQEimzphXhwU3X9EoK
-	 yxhEGizx3cOR72Lz5eLwrCQ8sfFl5MJv7+wuYarOSOPVnXhA4hr49gFO2Qr2JE8EgKDd3
-	 6TI3YVrujAr8PxLX9aeF9hb2LFtg3U4FH2b5miMajXGGpO1/Wu+wdDDgDS/N/lLKgyA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793717286;
+	h=Received:DKIM-Signature:From:Subject:Date:Message-Id:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
+	 Cc:X-Mailer;
+	bh=Wcfm4NJTkbtPoo0W4PeJYWfvmalPaASf+2pIVtyvhx8=;
+	b=dQ3GzDfyPKggA0a+x9ljslY275ARFxNU46BozFAAVHEZU+sSuyJhdoBVDwkXm6A+zgNZ
+	 CghW9tV5D0T36el674+SWq9hW3MtciRRuhCUve6/gW/8a1nfGsz3wMplGljxS9KM0R7xh
+	 /twSmwCdj0ZaOH2kLzufAJwZdcgmvpylx8ecHHgEqfYrNUlhrlfJUSJu63LIIUo7Ddz+9
+	 fBooGQKb+AIDgtTHQeVyNk4PUD+Pgy57sAFe5grdqIA92Zs22YE6yW/sTLRJA3UJiCzlU
+	 E+0xXm7dp2fXCtMXHbnHpjdcUBLtqRPr26HIv02ScohTOWoUXrg0aABwW42+hr+/ziA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kernel.dk;
-	spf=pass smtp.mailfrom=kernel.dk;
-	dkim=pass header.d=kernel-dk.20260707.gappssmtp.com header.i=@kernel-dk.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=gCUl3iG4;
-	arc=none smtp.remote-ip=74.125.82.50
-Received: from mail-dl1-f50.google.com (mail-dl1-f50.google.com [74.125.82.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=og5bCNnC;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9A360850AB
-	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 14:31:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B9A360850AB
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A0E60A380C;
+	Tue,  3 Nov 2026 14:48:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel-dk.20260707.gappssmtp.com header.i=@kernel-dk.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=gCUl3iG4
-Received: by mail-dl1-f50.google.com with SMTP id a92af1059eb24-1ae18eb9ad0so4326728c88.1
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 06:31:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20260707.gappssmtp.com; s=20260707; t=1793716294; x=1794321094; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=KXzabl41ZeEnGrVAYqexhOU2oRggUUYi90hmQPge7Yw=;
-        b=gCUl3iG4R2jpywA1QQ9kJt+qOfE9h0zR8pM3mDaJcggKmtXx55bVra4P/CXDOGGj+/
-         imZ08kKIS3RRKi4i1kr6kpejvmVS50Y3yR7/XTpaS5JuhBBEOCyp9/9i1kYWs6MdYrQl
-         yLtTf3MHm9JQIo5zKXozqctrL9NL0pQ0pByG+gszIzL96BPuMiiHKfpG4l1yVo3qHknC
-         ivAQ90QDSnWP+Xtrq1eQL0PFOdlXaogQ4drK57lZtwum7/hFDE05T7pd4xyEf/U46DKW
-         LFl6oY2hd54Rfff9+G6Poc53Z5yB7GGzRMUmBl8axg/ufh8NqvuvLVva++p1tJA/A3o0
-         obPA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793716294; x=1794321094;
-        h=content-transfer-encoding:content-type:mime-version:date:message-id
-         :subject:references:in-reply-to:cc:to:from:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=KXzabl41ZeEnGrVAYqexhOU2oRggUUYi90hmQPge7Yw=;
-        b=HxKdTZFA5YRUce8Bk/31uGujV/S7v0yN2exJSTchhw231qATUXcWFCEsG7anqoIFr+
-         dLGcJF26F6oFRZ57trzZj90OMKw8oVm4hmJqiY6diujTMPZ9HA0W+I6ljoXXqVVwkFdf
-         koWkqiVnXdSCCIfktJkwcu7+GhHuOPTLST1+GFGqWTdFg8ldoMeXZzCOEaqAKsnXH4X7
-         NBN/afvt+dWp1FZ9KJEhQnpAZ8Yo5mAEUqTEXuRnBIaZJEXEXyY7kSYycLLTeDPCdXTU
-         gj1y3cm5ZHtKeennJpHNas+ww0kWn5nl0wMbnM5Opzvwu1TXi0N9mAnGDr2kyE2BL/zR
-         SyUw==
-X-Gm-Message-State: APuU4Z+q3vyTlAs+oyeLYWSUSKAP0l8cItVQAreay7g8FhIMAGQoV43j
-	FNe5PKDI8UnVgXyfOlCovsvf0PiPHBChFoef1BC57lZ1ui9aG/wgcRt1sBXdDaRYzoU=
-X-Gm-Gg: AYBFou20wnzqF0uj7Ny4MNQlx6Pvsnhd0/qjAIRpdllL2oYwFv+TVZsa4YLy8a99v4R
-	pDViAwKLDhukrMpVccQ591Kfd2oC0zvWa9XsIOq802Ds6h3qf4un8YMZtfn8ZG3ck48kadZm1lq
-	4kPDlxLFdBPnJzklreHnT5Ig1dYeOJBVyzUQa4fyRCfyDFJBnrJGdwTLSy+46lwlpun+OBqKN7E
-	7A6c0PKIS04r3aW5MMjZ5VyMvyqczVh5RoWdtc7AeAOFNRaYEGAzrc2XZCaOEVP9qR5LNUVBDHw
-	0bDLAIWzncGY8s/FH8PCA8oas3PYeNKHanCEFnfhs7FUD4wFPtbjTh1wWiQscg0ii/28rgACcnF
-	7pihYBjF9T4nxogtIhdtv7Lo0v1zDh0UufsjEx6fomQrKBLaWvJNr6EjsH2UqlGC3W7UTd7hKGW
-	0Q839MaSKzdF5xCRhDDfVZQtrLtiDcKEuLL/NC9+lInUTg5Gxzh8JB4hS7NIjA9o6hXS/fA3mQ/
-	IBk8uL9RlGxAh9Yy2mRMUmqBs44PcIPyNXlbmLPQLI+6GKuG63FoTiNKmf/l1HaIaoDTuHprHK4
-	ln4so3RimJbrQhpFb2nzq2+PDwyBQUtSUZqEQV73MM2dSa9SEiPgRY+giCxFl5FPrdwZS1hQn40
-	l0wD+N5hT1p8B
-X-Received: by 2002:a05:7022:eb44:10b0:186:5b49:90d8 with SMTP id a92af1059eb24-1ac5782fd31mr21082249c88.4.1793716294128;
-        Tue, 03 Nov 2026 06:31:34 -0800 (PST)
-Received: from [192.168.1.106] ([198.8.77.135])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b23b847348sm9534779c88.4.2026.11.03.06.31.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 06:31:33 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: tj@kernel.org, josef@toxicpanda.com, Zhe Liu <liuzhe1@kylinos.cn>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, stable@vger.kernel.org
-In-Reply-To: <20261102061802.408173-1-liuzhe1@kylinos.cn>
-References: <20261102061802.408173-1-liuzhe1@kylinos.cn>
-Subject: Re: [PATCH v2] blk-iocost: account flush sequence latency only
- once
-Message-Id: <179371629271.3691261.11171025306527479565.b4-ty@b4>
-Date: Tue, 03 Nov 2026 07:31:32 -0700
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=og5bCNnC
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 478AE1F000C1;
+	Tue,  3 Nov 2026 14:48:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793717285;
+	bh=Wcfm4NJTkbtPoo0W4PeJYWfvmalPaASf+2pIVtyvhx8=;
+	h=From:Subject:Date:To:Cc;
+	b=og5bCNnCWypgCWUiGfXpt76OPxMNmpziIPcsV9Zs5WXVFaTldbfNdS4SVH5zwQHNz
+	 OjqAfGiEzma5i4WL0gLpzl24H9P8dQavzNaT5aaije6CnIww4V462jcJhFBBVmyTaF
+	 l1B+fIXqiY+axDuZBtkIDZMHCO2YItflbVfoiPhhhtNq/3u7V2qvVGQ8SwVaFjvzqs
+	 V4aaXA9o8YoZvc8DAtwx9fDkdYbvSQvVOR28KfbxWOdiaOF7qFNDSyyjdTI35uamTm
+	 HXE3+ZFWtyerrJw8EwjYQxymxyuwoxsAVAlzc+5WKGI0ivodCEhqOsxeH2g2jQf0W4
+	 X2/UXPsn5b30w==
+From: "Harry Yoo (Meta)" <harry@kernel.org>
+Subject: [PATCH for-next-fixes v2 0/5] memcg,slab: kmalloc_nolock() fixes
+Date: Tue, 03 Nov 2026 14:47:49 +0000
+Message-Id: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -100,27 +55,116 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.15.2
+X-B4-Tracking: v=1; b=H4sIABX06WoC/yWMwQ6CQAxEf4X0bBNSdBf9FeMB1wIV3DVbNCSEf
+ 7fCZZKXmTcLKGdhhUuxQOavqKRoQIcCQt/EjlEexkAludLREYdXM44pYEyWA7Yys2I4e+dPFdX
+ eV2DqO/NWmHmFNmWMPE/7Fm57r5/7k8P0/4Z1/QFNLHSfiAAAAA==
+X-Change-ID: 20260624-kmalloc-nolock-fixes-c97675328773
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+ Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, Harry Yoo <harry@kernel.org>, 
+ Alexei Starovoitov <ast@kernel.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
+ David Rientjes <rientjes@google.com>, 
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
+Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+ linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev, 
+ Sashiko <sashiko-bot@kernel.org>
+X-Mailer: b4 0.16.0
 
+This patchset fixes three kmalloc_nolock() bugs.
 
-On Mon, 02 Nov 2026 14:18:02 +0800, Zhe Liu wrote:
-> A flush sequence with a DATA phase can complete its original request
-> twice. Both completions invoke ioc_rqos_done(), causing the request to
-> contribute two latency samples and adding the same queue wait time
-> twice. This gives such requests disproportionate weight compared to
-> ordinary writes, distorting the device-wide latency and queue wait
-> feedback used to adjust iocost's virtual time rate.
-> 
-> [...]
+1. obj_cgroup_put() takes spinlocks in the release path when it drops
+   the last reference, but it can be called from any context.
 
-Applied, thanks!
+2. A spinlock may be taken in the following path and may lead
+   to deadlock:
 
-[1/1] blk-iocost: account flush sequence latency only once
-      commit: e9804489e27dd6e33aec5511fe3780ff3009f57f
+   kmalloc_nolock()
+   -> slab_post_alloc_hook()
+   -> memcg_slab_post_alloc_hook()
+   -> memcg_alloc_abort_single().
+
+3. irq_work_sync() is called without synchronization for rcuwait
+   (on PREEMPT_RT or some architectures), potentially causing a
+   hang.
+
+Bug 1 was reported by lockdep, and bugs 2 [1] and 3 [2] were
+reported by Sashiko.
+
+Patch 1 only touches mm/memcontrol.c and no later patche depends on
+it, so it can go through to the memcg tree.
+
+Deferring obj_cgroup_release()
+==============================
+
+RFC v1 skipped the stock drain in __refill_obj_stock() when spinning is
+not allowed. Making sure "obj_cgroup_put() is not called in a restricted
+context that doesn't allow spinning." is easy to get wrong.
+
+v2 makes obj_cgroup_release() safe in any context instead (as mentioned
+in cover letter of the RFC v1). The release callback only queues the
+objcg (llist_add() + irq_work_queue(), both NMI-safe) and the release
+runs from irq_work.
+
+This also fixes a performance regression in RFC v1 in a free-heavy
+kmalloc_nolock() microbenchmark.
+
+Changes in v2
+=============
+
+- Rebased onto the latest slab/for-next-fixes.
+
+- Rebasing the series, writing patch 1 and 5, and verification was
+  assisted by AI and carefully reviewed by Harry Yoo.
+
+- Patch 1: replaced with the new approach described above.
+
+- Patch 2:
+  - Now introduces the allow_spin local variables itself
+    (previously added by the old patch 1).
+  - Addressed v1 review comments from Vlastimil (thanks!):
+    - restored the blank lines.
+
+- Patch 3 (new): call debug_locks and KCSAN checks in kfree_nolock()
+  regardless of allow_spin, as they acquire a spinlock only when
+  reporting a bug.
+
+- Patch 5 (patch 4 in v1): Introduce a mutex for
+  deferred_work_barrier() as it can no longer reuse slab_mutex. In v1
+  the only caller was kmem_cache_destroy(). The barrier is now also
+  called from kvfree_rcu_barrier() and friends, which are usable outside
+  mm where slab_mutex is not visible. Dropped Vlastimil's Acked-by
+  accordingly.
+
+- Dropped the Cc: stable tags to avoid intrusive backports for unlikely
+  issues in practice [3].
+
+- Link to v1: https://lore.kernel.org/20260624-kmalloc-nolock-fixes-v1-0-fdf4d17351dd@kernel.org
+
+[1] https://sashiko.dev/#/patchset/20260610-slab_alloc_flags-v2-0-7190909db118%40kernel.org?part=9
+[2] https://sashiko.dev/#/patchset/20260615-kfree_rcu_nolock-v3-0-70a54f3775bb%40kernel.org?part=5
+[3] https://lore.kernel.org/1816e94b-87e0-4276-8ff7-1fb651326ab3@kernel.org
+
+---
+Harry Yoo (Meta) (5):
+      mm/memcontrol: defer obj_cgroup_release() to irq_work
+      mm/slab: handle allow_spin in slab_free_hook() instead of open coding
+      mm/slab: call debug_locks and KCSAN checks in kfree_nolock()
+      mm/slab: fix a deadlock in memcg_alloc_abort_single()
+      mm/slab: serialize deferred_work_barrier()
+
+ include/linux/memcontrol.h |   2 +
+ mm/memcontrol.c            |  27 +++++++++--
+ mm/slub.c                  | 112 ++++++++++++++++++++++++++-------------------
+ 3 files changed, 91 insertions(+), 50 deletions(-)
+---
+base-commit: 03a176b9248c4513bb705ed3d931af3a7e9c2a08
+change-id: 20260624-kmalloc-nolock-fixes-c97675328773
 
 Best regards,
--- 
-Jens Axboe
-
-
+--  
+Cheers,
+Harry / Hyeonggon
 
