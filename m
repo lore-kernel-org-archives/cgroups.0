@@ -1,79 +1,94 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793715025;
-	b=ia+FnL2LI3nzuVAhvDAnal+hCh3Wxji6tPIM/Pins7C+YJT5QBVnfomaQO2mKZ7ZKdQi
-	 iEShNxFEKPk4yQKIYncyW7mNgvsSfehkn4SZ6GHbGtlLUKVjydgNgXMJQbrerVL49j1EB
-	 z1lmHBN+Jf9tEnmAZnuxKza5Kf+pSbrV57nwyM9UfB1zYzQ1AewQqg4w68P3Ae5zV6JyP
-	 TCGikOoxxIkzh/X2VJGuNhwZ62eg9ImHU5vbPyLj2RImYmBQeYCsloe63B5qE8cUH5FVF
-	 iGVzVOK8GY6PN9to/HPpHxmM7eJduLNkVmi5okJf6u2HKy8MV8svMkobINiXLornvKg==
+	t=1793716295;
+	b=trMUKVJmSXW1k2BFTlZW9OfEBhCrguVTqPvl23MKfx1bXaG44rShgSnFs3c7QHVVnw1o
+	 YjDrUn+X6UDmQYADyy2toxHTMlfJey5xJWx5v2Myq/UUcR8A4Od9Ucbrs1cllrLfAmWVP
+	 zbdxa7V8xwBtXeJq7WR60QceuKNx86sTZ9pJDX2qor5PYUIO3DHjjbITXTREia6H/RXBI
+	 rma7n8S9rX0a4nsmjBOOmVfYAW7HyFlcuCTiFc69Ea8opLxXET/+mArrDfQSQUcyrpPd4
+	 /viRR87l5Yr4pBi04++vHjFstgQ6sme59+WANDuNtXaYFjD/L+UCoTz+kFB1h+xdvRg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793715025;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=9hcT28SYX76z1COvWorzxu+1gkA4oj6GNwI2cd7zGC4=;
-	b=ve6nwXNB/yTTk1tKsUllEugm2ATxOxhYFj3TyYg2DK4BN8w6XoWxh2XCla82iQRQxXnY
-	 n3yVuF4TjF18WkwnUq4rRJgBxpIz3VQK6GRsf5OROzajO4RV54HAV4D8xRKDr5aeMT7wW
-	 xUuUSCtIJZq4j+vjwNrF/SvMir1vpQN732KZSOi4CaGKqekQ0WKWlr6UDf565c1whnmkJ
-	 8vtX2T20nrjVPfRyWnCeigX4KFWN70zmpPf2f7fPLwhOF48r6fSppRrtVg/FFgj6iLNaL
-	 Qwppbx/l9VyFkXQzGg7paBGsqfZLbGTSJXwWl/roTRujjHrZfyaWqmqJd79QMlJo8ag==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793716295;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:In-Reply-To:
+	 References:Subject:Message-Id:Date:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-Mailer;
+	bh=KXzabl41ZeEnGrVAYqexhOU2oRggUUYi90hmQPge7Yw=;
+	b=BCjZqk1DeBhqvb+AqVX0AmfLuAsBDVAcdG8HDw1d2tSHJRsa8TMfNIXEN2NMwfwprzfR
+	 Cin64MDerlAKiJ63KTGZcC1bdrGF0pDG9eKDVwV/wWK1yGYhi3DThfFIoqO5GSSOBpG5q
+	 E4pS6bedIfBe0gtFfzfrg7iip/E2YO6DM8ppfFE3DTgZmiFbTk2cQEimzphXhwU3X9EoK
+	 yxhEGizx3cOR72Lz5eLwrCQ8sfFl5MJv7+wuYarOSOPVnXhA4hr49gFO2Qr2JE8EgKDd3
+	 6TI3YVrujAr8PxLX9aeF9hb2LFtg3U4FH2b5miMajXGGpO1/Wu+wdDDgDS/N/lLKgyA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A8gG2FyS;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=kernel.dk;
+	spf=pass smtp.mailfrom=kernel.dk;
+	dkim=pass header.d=kernel-dk.20260707.gappssmtp.com header.i=@kernel-dk.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=gCUl3iG4;
+	arc=none smtp.remote-ip=74.125.82.50
+Received: from mail-dl1-f50.google.com (mail-dl1-f50.google.com [74.125.82.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F88A606A32C;
-	Tue,  3 Nov 2026 14:10:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B9A360850AB
+	for <cgroups@vger.kernel.org>; Tue,  3 Nov 2026 14:31:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1B9A360850AB
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=A8gG2FyS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C32D1F000C1;
-	Tue,  3 Nov 2026 14:10:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793715025;
-	bh=9hcT28SYX76z1COvWorzxu+1gkA4oj6GNwI2cd7zGC4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=A8gG2FySIrvGccJDt9QVUN41xO71+6Rpf7aiyxt8Vsopa/Ys8hBvt1hDZeBlS/PGw
-	 MOt8BcnF/W4r1s15z+9Q6nzud+DWuRPuIHnctKYism3LQZOnWs3vU+zGKDYcGAak9v
-	 i1JqUhBvQ5kbpMtFLU6xUwyGov9lzqLdMvTVOsorWieMgO07vFjRnAf8TphXqmT54a
-	 fGU5gWTkE4FlbUGGSThdSpyyACGOdEcur0TIARvk+d+UVbVw5+sbat1Ht0raY6TNIJ
-	 eZtyJEUng8T8aAiarrufke9huCyGceFpE9bK2kxHfRy5JVsGTTX+UrBQ3G6s7LkukY
-	 Bnv6IKVnB5Lwg==
-Date: Tue, 3 Nov 2026 15:10:22 +0100
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Matthew Ruffell <matthew.ruffell@canonical.com>,
-	Leonardo Bras <leobras.c@gmail.com>
-Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Caron Wills <caron.wills@pulsar.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R . Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Michal Hocko <mhocko@suse.com>, Jann Horn <jannh@google.com>,
-	Pedro Falcato <pfalcato@suse.de>, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	Jay Vosburgh <jay.vosburgh@canonical.com>
-Subject: Re: [PATCH 4/6] sched/isolation: Drain per-CPU LRU batches when CPUs
- become isolated
-Message-ID: <aunrTtH00__Xi7PW@localhost.localdomain>
-References: <20261103075940.110308-1-matthew.ruffell@canonical.com>
- <20261103075940.110308-5-matthew.ruffell@canonical.com>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel-dk.20260707.gappssmtp.com header.i=@kernel-dk.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=gCUl3iG4
+Received: by mail-dl1-f50.google.com with SMTP id a92af1059eb24-1ae18eb9ad0so4326728c88.1
+        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 06:31:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20260707.gappssmtp.com; s=20260707; t=1793716294; x=1794321094; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=KXzabl41ZeEnGrVAYqexhOU2oRggUUYi90hmQPge7Yw=;
+        b=gCUl3iG4R2jpywA1QQ9kJt+qOfE9h0zR8pM3mDaJcggKmtXx55bVra4P/CXDOGGj+/
+         imZ08kKIS3RRKi4i1kr6kpejvmVS50Y3yR7/XTpaS5JuhBBEOCyp9/9i1kYWs6MdYrQl
+         yLtTf3MHm9JQIo5zKXozqctrL9NL0pQ0pByG+gszIzL96BPuMiiHKfpG4l1yVo3qHknC
+         ivAQ90QDSnWP+Xtrq1eQL0PFOdlXaogQ4drK57lZtwum7/hFDE05T7pd4xyEf/U46DKW
+         LFl6oY2hd54Rfff9+G6Poc53Z5yB7GGzRMUmBl8axg/ufh8NqvuvLVva++p1tJA/A3o0
+         obPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793716294; x=1794321094;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=KXzabl41ZeEnGrVAYqexhOU2oRggUUYi90hmQPge7Yw=;
+        b=HxKdTZFA5YRUce8Bk/31uGujV/S7v0yN2exJSTchhw231qATUXcWFCEsG7anqoIFr+
+         dLGcJF26F6oFRZ57trzZj90OMKw8oVm4hmJqiY6diujTMPZ9HA0W+I6ljoXXqVVwkFdf
+         koWkqiVnXdSCCIfktJkwcu7+GhHuOPTLST1+GFGqWTdFg8ldoMeXZzCOEaqAKsnXH4X7
+         NBN/afvt+dWp1FZ9KJEhQnpAZ8Yo5mAEUqTEXuRnBIaZJEXEXyY7kSYycLLTeDPCdXTU
+         gj1y3cm5ZHtKeennJpHNas+ww0kWn5nl0wMbnM5Opzvwu1TXi0N9mAnGDr2kyE2BL/zR
+         SyUw==
+X-Gm-Message-State: APuU4Z+q3vyTlAs+oyeLYWSUSKAP0l8cItVQAreay7g8FhIMAGQoV43j
+	FNe5PKDI8UnVgXyfOlCovsvf0PiPHBChFoef1BC57lZ1ui9aG/wgcRt1sBXdDaRYzoU=
+X-Gm-Gg: AYBFou20wnzqF0uj7Ny4MNQlx6Pvsnhd0/qjAIRpdllL2oYwFv+TVZsa4YLy8a99v4R
+	pDViAwKLDhukrMpVccQ591Kfd2oC0zvWa9XsIOq802Ds6h3qf4un8YMZtfn8ZG3ck48kadZm1lq
+	4kPDlxLFdBPnJzklreHnT5Ig1dYeOJBVyzUQa4fyRCfyDFJBnrJGdwTLSy+46lwlpun+OBqKN7E
+	7A6c0PKIS04r3aW5MMjZ5VyMvyqczVh5RoWdtc7AeAOFNRaYEGAzrc2XZCaOEVP9qR5LNUVBDHw
+	0bDLAIWzncGY8s/FH8PCA8oas3PYeNKHanCEFnfhs7FUD4wFPtbjTh1wWiQscg0ii/28rgACcnF
+	7pihYBjF9T4nxogtIhdtv7Lo0v1zDh0UufsjEx6fomQrKBLaWvJNr6EjsH2UqlGC3W7UTd7hKGW
+	0Q839MaSKzdF5xCRhDDfVZQtrLtiDcKEuLL/NC9+lInUTg5Gxzh8JB4hS7NIjA9o6hXS/fA3mQ/
+	IBk8uL9RlGxAh9Yy2mRMUmqBs44PcIPyNXlbmLPQLI+6GKuG63FoTiNKmf/l1HaIaoDTuHprHK4
+	ln4so3RimJbrQhpFb2nzq2+PDwyBQUtSUZqEQV73MM2dSa9SEiPgRY+giCxFl5FPrdwZS1hQn40
+	l0wD+N5hT1p8B
+X-Received: by 2002:a05:7022:eb44:10b0:186:5b49:90d8 with SMTP id a92af1059eb24-1ac5782fd31mr21082249c88.4.1793716294128;
+        Tue, 03 Nov 2026 06:31:34 -0800 (PST)
+Received: from [192.168.1.106] ([198.8.77.135])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1b23b847348sm9534779c88.4.2026.11.03.06.31.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Nov 2026 06:31:33 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: tj@kernel.org, josef@toxicpanda.com, Zhe Liu <liuzhe1@kylinos.cn>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <20261102061802.408173-1-liuzhe1@kylinos.cn>
+References: <20261102061802.408173-1-liuzhe1@kylinos.cn>
+Subject: Re: [PATCH v2] blk-iocost: account flush sequence latency only
+ once
+Message-Id: <179371629271.3691261.11171025306527479565.b4-ty@b4>
+Date: Tue, 03 Nov 2026 07:31:32 -0700
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -83,39 +98,29 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261103075940.110308-5-matthew.ruffell@canonical.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-Le Tue, Nov 03, 2026 at 08:59:38PM +1300, Matthew Ruffell a écrit :
-> From: Caron Wills <caron.wills@pulsar.com>
+
+On Mon, 02 Nov 2026 14:18:02 +0800, Zhe Liu wrote:
+> A flush sequence with a DATA phase can complete its original request
+> twice. Both completions invoke ioc_rqos_done(), causing the request to
+> contribute two latency samples and adding the same queue wait time
+> twice. This gives such requests disproportionate weight compared to
+> ordinary writes, distorting the device-wide latency and queue wait
+> feedback used to adjust iocost's virtual time rate.
 > 
-> Isolated CPUs no longer batch folios in their per-CPU LRU caches, so
-> that __lru_add_drain_all() never has to queue work on them. Boot time
-> isolation (isolcpus=, nohz_full=) takes effect before any folio is
-> batched, but a cpuset isolated partition can be created at runtime and
-> the affected CPUs may still hold folios in their batches from before.
-> Those would linger until the CPU happens to drain locally, and the next
-> lru_add_drain_all() would fall back to queueing work on the now isolated
-> CPU, which is exactly what must be avoided.
-> 
-> Drain all batches once from housekeeping_update(), right after the
-> HK_TYPE_DOMAIN mask has been updated and next to the vmstat and memcg
-> workqueue flushes that exist for the same reason, so that newly isolated
-> CPUs start out with empty batches.
-> 
-> Link: https://bugs.launchpad.net/bugs/2165410
-> Signed-off-by: Caron Wills <caron.wills@pulsar.com>
-> Signed-off-by: Matthew Ruffell <matthew.ruffell@canonical.com>
+> [...]
 
-There was this patchset:
-https://lore.kernel.org/lkml/20260519012754.240804-1-leobras.c@gmail.com/
+Applied, thanks!
 
-Leonardo, do you plan a v5?
+[1/1] blk-iocost: account flush sequence latency only once
+      commit: e9804489e27dd6e33aec5511fe3780ff3009f57f
 
-Thanks.
-
+Best regards,
 -- 
-Frederic Weisbecker
-SUSE Labs
+Jens Axboe
+
+
+
