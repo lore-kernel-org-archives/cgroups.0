@@ -1,47 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793790181;
-	b=lszE6PbnCzn8eNf7htB1+FG2YG2UqR8qQ4/ezl+VMeHxrxvgzeRK7QgRdn7f6W8lRhP2
-	 q/2gLf9gPjwqTCs6wTSfMI6C2bUzbP1AY9a9plvYPqVrxZ2za+rpV2iro43ctLEPLPVKA
-	 GxvtShULdlkgp6veF7QOJKf/UKn/ox4FlrIxlnu3o1mGjXPIEATBWczOGoJjBWyjnqMF7
-	 LC60z8NqDG6tyLLhazNKt2KHad0d25Li2oXTZ0TjdGjlxXudskzdrnr6pTAGsM/VnLlEi
-	 57LtyAEEk0PmQrtQJGUJN0yesBOjbmTVZ6nA5kqbess8FvBAc2RbtFwJnNMR9jUurig==
+	t=1793790578;
+	b=tMu4vkIYdz5/0gYK04qgsr7ZgT4Ot55Y5ml/gMQHIH6wRu7/UC1TdKrLhcRasj1Dhd7m
+	 ck4VerSvk/HRP6DTwvb+cQeoyjbw4KibPw5TQL0NVwrYK9ZGKDgOtnNnh15SZizBe3GV5
+	 ASEzU8wwFQ8gBn9minkLgW3gS54c8XrloG9FlAGpPLFWRuX23eM7akR0y9Uvn8zYoxvDI
+	 UleC8h7Lb41jOgdMyc5PWotn4ZkcKlPyrNxztfO/zBwHBh1UZfrDIhctDHiCgRkgUCA64
+	 jAI6UPip59fPTDUn/8Zwp1WwjcwK99KIflwKw+6x29LBZ8iFJuWSToJY9J8TeuTH+nQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793790181;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=MmAAu5i6ADNm9DWcT6htUpjVYsuBgc5FPA1Ofa2D4uU=;
-	b=BE1ah5/b9qzi95J4YsS3I1/KXVNoIfNGmas8vMS5UV2js9mF1lVfda8oEqIZ73CkbJ0P
-	 rhSMc/UrUVaaGOOS0BrXoxWjpNDpGwkfbcnU7VWQg31Xj2mNd2Ig8REOBMIewVNPSDnTa
-	 YtBbcRSl/Rj8XkwGz1OiHaY24+flz9oJ0LpCnaYN3PGQd04GHt20Pn+5e+SCxgdv0sYpW
-	 hhOczsgRXt9xhl5HuOVebqMHRczUYw5WzpDd3ljapyTZjbLATQ/JB6r63zu3amOBCeloi
-	 Z9nNxXY7q2EwTPoeJi+nSstpwtDfBmWrmk1ojk0npLF/V8DjSrIqjcoVwZ/hlRGL75g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793790578;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:Subject:Date:Message-Id:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
+	 X-Change-ID:To:Cc:X-Developer-Signature:X-Developer-Key:X-Scanned-By;
+	bh=y/j5QPLW6jpzCD3GV5JpZq3Ngo4fRQoXZZ90Dm8OkWQ=;
+	b=tK008lhM8CWBkx+ugFK97QQAlbdiRtdUi7S38FSpx9NpWadOl2fLncMNw9CIM4/sI/zt
+	 5uMqzLIymfZ4N2Jlm+gmU9ynEEj1DwZ9B32lVXr74rLsZR/DVy/tLxbmrs0we/zb+H0dL
+	 frbwMqU0U4cMY74nfTShWwbuOzfwoENd9W+1zWN+I4lTdxuHGDUzpdFeiz4ezC76qkslT
+	 l8wq42qIUrJ7N2MkxkMvuPcQKKPmKTUsSMlt8ks2Ycuirvn7j1iSFTc/HXQ4AtpXaLao/
+	 pAXl5opMLVIFHWn36fEsb3sS6bQUyhYWStPXTAxuvOlHyxHct6KeH5Yhm1lhcIvR0qA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SUzV4Hv2;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=UtfNtUVo;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D34606A31B;
-	Wed,  4 Nov 2026 11:03:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D650606A330
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 11:09:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D650606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SUzV4Hv2
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E98D11F000C1;
-	Wed,  4 Nov 2026 11:02:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793790180;
-	bh=MmAAu5i6ADNm9DWcT6htUpjVYsuBgc5FPA1Ofa2D4uU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=SUzV4Hv2uoryb9Q24Qln7PLzOfILm3kcqdwfobU3M4CtRlVN+xvpdBz65WTxlF/gG
-	 8zP5EQSJRfHEWirYplJxgwJ29EazRs1Mtzvxmn9j/5BRuUCriKNjEQ6vWa85IZ7zvE
-	 WuILPXj4mRjIbJhGR3aqB1qDZw9j/RFjbb8AafNxTetksy2ejxRbqHLTQ4RvqYD9jb
-	 O6hf0LTX03ok0deyQOvKIkyVnEJ0dhPdL49nmq+b6ZSKK7ln/bUJ6qWmoIrk5VacIF
-	 naGDLX+xTp/LHq6a1qbMWKniZntZ//3XK//oLTIAOMcf6eoMlnZhva7GG2ft0UJFOs
-	 uJq1G/yQE/gmg==
-Message-ID: <b181dade-ffa1-4b58-9927-8a2429a59ac1@kernel.org>
-Date: Wed, 4 Nov 2026 12:02:55 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=UtfNtUVo
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793790576;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=y/j5QPLW6jpzCD3GV5JpZq3Ngo4fRQoXZZ90Dm8OkWQ=;
+	b=UtfNtUVoyBpbKwmTPvZcL0Elfq6Jx3BZFKISmGOEkAeD5l4G1xvC5uKhQDT/OUGqljaetQ
+	nBU6ffqbdLLrytwApuUoZQkgkzSLqj5SP25HP1ok35ve7gOmybbytcS0oywgQHUVdYxuWO
+	thwGIoHcCbZVPlQqjb3abG2mOWd2EjE=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-47-95zgtnEUO52YN059qEpIoQ-1; Wed,
+ 04 Nov 2026 06:09:30 -0500
+X-MC-Unique: 95zgtnEUO52YN059qEpIoQ-1
+X-Mimecast-MFC-AGG-ID: 95zgtnEUO52YN059qEpIoQ_1793790566
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8E1CA1956088;
+	Wed,  4 Nov 2026 11:09:24 +0000 (UTC)
+Received: from aesteve-thinkpadp1gen8.rmtes.csb (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 27CE0195608D;
+	Wed,  4 Nov 2026 11:09:14 +0000 (UTC)
+From: Albert Esteve <aesteve@redhat.com>
+Subject: [PATCH v4 0/8] memcg: dma-buf cgroup accounting and charge
+ transfer
+Date: Wed, 04 Nov 2026 12:09:09 +0100
+Message-Id: <20261104-v2_20230123_tjmercier_google_com-v4-0-1819a017000b@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -51,165 +73,186 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-next-fixes v2 1/5] mm/memcontrol: defer
- obj_cgroup_release() to irq_work
-Content-Language: en-US
-To: "Harry Yoo (Meta)" <harry@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>,
- Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
-Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
-References: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org>
- <20261103-kmalloc-nolock-fixes-v2-1-19167cfe4779@kernel.org>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <20261103-kmalloc-nolock-fixes-v2-1-19167cfe4779@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAAAAAAAC/43N0YrCMBAF0F+RPBvJTNK0+uR/iJQ6mbRZViNpC
+ buU/rtRlkXZh/Vt7lw4dxYjp8Cj2K1mkTiHMcRLCWa9EjR0l55lcCULVGhVpRqZsS23VoC6nT7
+ OnChwavsY+09uKZ6lN8aTP4GttBKFuSb24esxcTiWPIRxiun7sZjh/v3BAf/HM0glrUZbKyBtt
+ 7BP7IZu2pRS3PWMvyIohDdELCJ7y4zONVTRH1E/i/Uboi5i3TgkQ6fGmvpFXJblBjmZGH11AQA
+ A
+X-Change-ID: 20260508-v2_20230123_tjmercier_google_com-f44fcfb16530
+To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+ Sumit Semwal <sumit.semwal@linaro.org>, 
+ =?utf-8?q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Benjamin Gaignard <benjamin.gaignard@collabora.com>, 
+ Brian Starkey <Brian.Starkey@arm.com>, John Stultz <jstultz@google.com>, 
+ "T.J. Mercier" <tjmercier@google.com>, 
+ Christian Brauner <brauner@kernel.org>, Paul Moore <paul@paul-moore.com>, 
+ James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
+ Stephen Smalley <stephen.smalley.work@gmail.com>, 
+ Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
+ =?utf-8?q?Ondrej_Mosn=C3=A1=C4=8Dek?= <omosnacek@gmail.com>, 
+ Jens Wiklander <jenswi@kernel.org>, Sumit Garg <sumit.garg@kernel.org>, 
+ =?utf-8?q?Ondrej_Mosn=C3=A1=C4=8Dek?= <omosnacek@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, 
+ linux-mm@kvack.org, linux-security-module@vger.kernel.org, 
+ selinux@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+ op-tee@lists.trustedfirmware.org, Albert Esteve <aesteve@redhat.com>
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1793790554; l=7204;
+ i=aesteve@redhat.com; s=20260827; h=from:subject:message-id;
+ bh=X4BZFXAHZjeZ5G+n6xJuzSu1l1U0TCSBOdNO5egLRKM=;
+ b=Km+AqlhWRTv/KXXv4GRbT2llTohKS+mIBYai0uvK0MKieulAtBqFdb+ot4kS5rHtLOoLqnwgW
+ ykX9usEkQGUD0PWls5MHmfgY0UQayrDXDRMYunnztg3zl598W8CS8z6
+X-Developer-Key: i=aesteve@redhat.com; a=ed25519;
+ pk=zI2RBeZgocwYm3AkJW4CtjoJnKoDZrfBl1xe5Ed6h+U=
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-On 11/3/26 15:47, Harry Yoo (Meta) wrote:
-> obj_cgroup_put() can be called from any context.
-> __memcg_slab_free_hook() puts a per-object reference on
-> every accounted free, and draining a per-cpu objcg stock slot puts
-> the cached reference. When it drops the last reference,
-> obj_cgroup_release() takes objcg_lock, frees percpu memory
-> (pcpu_lock, via percpu_ref_exit()) and calls kfree_rcu(). Each of
-> these can deadlock when the current context interrupted a holder of
-> the respective lock.
-> 
-> Defer the release to irq_work. llist_add() and irq_work_queue() are
-> NMI-safe, and the irq_work runs in a context where acquiring a
-> spinlock is allowed.
-> 
-> Add a separate llist_node instead of reusing the list/rcu union
-> because the list stays linked until the deferred release. struct
-> obj_cgroup grows from 56 to 64 bytes, but both are served from
-> kmalloc-64, so no memory is additionally consumed.
-> 
-> Closes: https://lore.kernel.org/20261001044056.75079-3-kmehltretter@gmail.com
-> Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
-> Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
+Shared-memory allocator services (e.g., Android's gralloc)
+allocate dma-bufs on behalf of client processes in different
+cgroups. Today those allocations are charged to the allocator's
+own cgroup, leaving client cgroups with no visibility into their
+actual memory consumption and defeating resource limits.
 
-I guess releasing objcg isn't too frequent, so it won't matter that we make
-all cases use the defered work instead of somehow trying to do that only in
-contexts that would really need it.
+This series adds memory cgroup accounting for dma-buf allocations,
+building on T.J. Mercier's earlier series [1] and incorporating
+feedback from previous versions and LPC discussions [2].
 
-Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Patch 1 introduces the MEMCG_DMABUF stat and reserve/cancel
+and uncharge helpers in mm/memcontrol.c
 
-since memcg tree will be used from the next cycle, we can just keep this as
-part of the series in the slab tree?
+Patch 2 wires up the charging policy: dma_buf_export() stores
+exp_info.memcg and updates the stat, a new charge_fd field in
+DMA_HEAP_IOCTL_ALLOC accepts a pidfd or cgroupfd to identify
+the target cgroup, and __GFP_ACCOUNT is removed from system-heap
+allocations to avoid double counting.
 
-> ---
->  include/linux/memcontrol.h |  2 ++
->  mm/memcontrol.c            | 27 ++++++++++++++++++++++++---
->  2 files changed, 26 insertions(+), 3 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 69e1bcc67c58..4d5c634daef8 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -185,6 +185,8 @@ struct obj_cgroup {
->  		struct list_head list; /* protected by objcg_lock */
->  		struct rcu_head rcu;
->  	};
-> +	/* Used to defer obj_cgroup_release() to irq_work */
-> +	struct llist_node release_node;
->  	bool is_root;
->  };
->  
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a05d9a8baa1b..c53147a88580 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -147,9 +147,8 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, unsigned int nr_pages)
->  		memcg_uncharge(memcg, nr_pages);
->  }
->  
-> -static void obj_cgroup_release(struct percpu_ref *ref)
-> +static void __obj_cgroup_release(struct obj_cgroup *objcg)
->  {
-> -	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
->  	unsigned int nr_bytes;
->  	unsigned int nr_pages;
->  	unsigned long flags;
-> @@ -190,10 +189,32 @@ static void obj_cgroup_release(struct percpu_ref *ref)
->  	list_del(&objcg->list);
->  	spin_unlock_irqrestore(&objcg_lock, flags);
->  
-> -	percpu_ref_exit(ref);
-> +	percpu_ref_exit(&objcg->refcnt);
->  	kfree_rcu(objcg, rcu);
->  }
->  
-> +static LLIST_HEAD(objcg_release_llist);
-> +
-> +static void objcg_release_workfn(struct irq_work *work)
-> +{
-> +	struct llist_node *head = llist_del_all(&objcg_release_llist);
-> +	struct obj_cgroup *objcg, *tmp;
-> +
-> +	llist_for_each_entry_safe(objcg, tmp, head, release_node)
-> +		__obj_cgroup_release(objcg);
-> +}
-> +
-> +static DEFINE_IRQ_WORK(objcg_release_work, objcg_release_workfn);
-> +
-> +static void obj_cgroup_release(struct percpu_ref *ref)
-> +{
-> +	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
-> +
-> +	/* The last put may come from a context that cannot take spinlocks */
-> +	if (llist_add(&objcg->release_node, &objcg_release_llist))
-> +		irq_work_queue(&objcg_release_work);
-> +}
-> +
->  static struct obj_cgroup *obj_cgroup_alloc(void)
->  {
->  	struct obj_cgroup *objcg;
-> 
+Patch 3 adds DMA_BUF_IOCTL_XFER_CHARGE, a general ioctl on any
+dma-buf fd to transfer charges post-allocation. This covers the
+double-hop allocator case (SurfaceFlinger -> gralloc -> kernel)
+and works for buffers from any exporter (DRM, V4L2, etc.). Charging
+is gated by dmabuf->memcg being set at export time, ensuring that
+transfer is only applied for buffers backed by system memory where
+size reflects actual bytes. If the receiving cgroup lacks capacity
+for the charge, the ioctl returns -ENOMEM and the original charge
+is preserved.
+
+Patches 4-7 add access control for cross-cgroup charging. Letting
+userspace decide who to charge needs to be a privileged operation
+because it has material impact on OOM decission and resource limits.
+We gate it via LSM hooks for the two charge_fd flavours:
+security_dma_buf_charge_task() gates the pidfd path (target
+identified by task credentials) and security_dma_buf_charge_cgroup()
+gates the cgroupfd path (target identified by cgroup directory label),
+with SELinux implementations under a dma_buf object class.
+
+Patch 8 adds selftests.
+
+Known limitations:
+
+- Single-owner model: a dma-buf carries one memcg charge regardless
+  of how many processes share it.
+- Only memcg accounting. CMA heaps would additionally need dmem
+  controller integration.
+- If a transfer of an uncharged buffer fails, the buffer remains
+  charged to the original cgroup. The allocator (userspace) is
+  expected to handle this (retry, free, ...).
+- The LSM hooks are intentionally narrow. Broader cgroup access controls
+  (e.g. for the memfd/kexec handover case [2]) could be a separate effort
+  reusing the same pattern.
+- Only system heap sets exp_info.memcg today. Other exporters
+  (DRM, V4L2, etc.) can opt in by setting it, but are not
+  covered by this series.
+- Related to the above: lazy backing-store allocation is not supported.
+  This can be extended later, e.g., by adding a flag on the dma-buf
+  struct for explicitly marking when memory is committed.
+
+[1] https://lore.kernel.org/cgroups/20230109213809.418135-1-tjmercier@google.com/
+[2] https://lpc.events/event/20/contributions/2416/
+
+Signed-off-by: Albert Esteve <aesteve@redhat.com>
+---
+Changes in v4:
+- Remove memcg_account flag; exp_info.memcg != NULL is the opt-in
+- Centralize memcg bookkeeping in dma_buf_export()
+- Drop mem_cgroup_commit_dmabuf()
+- Make mem_cgroup_transfer_charge() generic (not dma-buf specific)
+- Add EXPORT_SYMBOL_GPL for reserve/cancel (system_heap is tristate)
+- Reorder: move xfer ioctl before LSM patches
+- Serialize dmabuf->memcg updates with the dma-buf resv lock instead of cmpxchg
+- Link to v3: https://lore.kernel.org/r/20261027-v2_20230123_tjmercier_google_com-v3-0-78d2c4cb8647@redhat.com
+
+Changes in v3:
+- Split mem_cgroup_charge_dmabuf() into reserve/commit/cancel three-phase API
+- Extract mem_cgroup_get_from_fd() helper shared by allocate and xfer paths
+- Rename __padding to flags in struct dma_buf_transfer_charge
+- Fix UAF race: move mod_memcg_state() before cmpxchg in transfer
+- Add memcg_account opt-in flag; xfer returns -EOPNOTSUPP if unset
+- Wrap dma_buf_charge_cgroup hook in #ifdef CONFIG_CGROUPS
+- Fix TOCTOU in SELinux charge_cgroup xattr length handling
+- Link to v2: https://lore.kernel.org/r/20261021-v2_20230123_tjmercier_google_com-v2-0-ef6ee2dd8c5c@redhat.com
+
+Changes in v2:
+- Move charge_pid_fd to charge_fd, accepting cgroupfd in addition
+  to pidfd per Christian König.
+- New DMA_BUF_IOCTL_XFER_CHARGE ioctl for post-allocation charge
+  transfer on any dma-buf, not just dma-heap buffers per Christian König
+  and T.J. Mercier.
+- Moved __GFP_ACCOUNT removal to patch 1 per Barry Song.
+- dma-buf charge/uncharge helpers take struct dma_buf * directly
+  to avoid the need for caller to manage size calculations.
+- Added test_xfer_charge_cgroupfd_self to dmabuf-heap selftests.
+- Added LSM and SELinux hooks for cgroupfd-based charging.
+- Rebased to v7.3-rc7.
+- Link to v1: https://lore.kernel.org/r/20260512-v2_20230123_tjmercier_google_com-v1-0-6326701c3691@redhat.com
+
+---
+Albert Esteve (7):
+      dma-heap: charge dma-buf memory via explicit memcg
+      dma-buf: transfer memcg charges via DMA_BUF_IOCTL_XFER_CHARGE
+      security: dma-buf: Add dma_buf_charge_task LSM hook
+      security: dma-buf: Add dma_buf_charge_cgroup LSM hook
+      selinux: Restrict cross-cgroup dma-buf charging
+      selinux: Restrict dma-buf direct cgroup charging
+      selftests/dmabuf-heaps: Add dma-buf memcg accounting tests
+
+T.J. Mercier (1):
+      memcg: Add MEMCG_DMABUF accounting infrastructure
+
+ Documentation/admin-guide/cgroup-v2.rst            |   5 +
+ drivers/dma-buf/dma-buf.c                          |  50 ++++
+ drivers/dma-buf/dma-heap.c                         |  28 +-
+ drivers/dma-buf/heaps/cma_heap.c                   |   3 +-
+ drivers/dma-buf/heaps/system_heap.c                |  21 +-
+ drivers/tee/tee_heap.c                             |   3 +-
+ include/linux/dma-buf.h                            |   9 +
+ include/linux/dma-heap.h                           |   3 +-
+ include/linux/lsm_hook_defs.h                      |   4 +
+ include/linux/memcontrol.h                         |  47 ++++
+ include/linux/security.h                           |  18 ++
+ include/uapi/linux/dma-buf.h                       |  26 ++
+ include/uapi/linux/dma-heap.h                      |   7 +
+ mm/memcontrol.c                                    | 176 +++++++++++++
+ security/security.c                                |  34 +++
+ security/selinux/hooks.c                           |  44 ++++
+ security/selinux/include/classmap.h                |   1 +
+ tools/testing/selftests/cgroup/Makefile            |   2 +-
+ tools/testing/selftests/cgroup/test_memcontrol.c   | 290 ++++++++++++++++++++-
+ tools/testing/selftests/dmabuf-heaps/config        |   1 +
+ tools/testing/selftests/dmabuf-heaps/dmabuf-heap.c | 227 +++++++++++++++-
+ tools/testing/selftests/dmabuf-heaps/vmtest.sh     | 226 ++++++++++++++++
+ 22 files changed, 1210 insertions(+), 15 deletions(-)
+---
+base-commit: 24a19b953e2a3d0ea5a8c4951a0ab8f32720c907
+change-id: 20260508-v2_20230123_tjmercier_google_com-f44fcfb16530
+
+Best regards,
+-- 
+Albert Esteve <aesteve@redhat.com>
 
