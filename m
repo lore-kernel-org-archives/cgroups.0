@@ -1,103 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.5
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793776565;
-	b=BbDC+X74MiXUiDXZ+7f2aiYdL+1Y6cxCvyFie2ioI0pZNjvjp/mZUP/85QO0YXgzAx0q
-	 Xj2ePIgSEbuaWzrhk7vYDZaKNQ3nfL1bRGeUOsu3ZF6Wlen6w80p7ye5fy4ZQ3VPzdTWj
-	 d0GmPoq5AGIi4mATpztCFkzPAOqIHFsmGAUa5l7nSdptPf/RiyZd3KyeZPBXYtaUPfUdy
-	 HKilQx/jDNL3XCfA//6XquSP5eaEKYc8jnIShnZepve26zxY4VJW9XW3pb5j6QwCQkpqO
-	 Amt81VchyvwliLxXSlYZTmfB+uf0bFleKeguoqr39ZxCXNFqIIzzF5cx/3pwrL7JcRg==
+	t=1793776588;
+	b=4uA20nMf1iMwJOyMDFns9MMN0bwL4iojigUdQpEeLKucfZz54iTiI51t84pYf/fO4Z82
+	 kAmh5leAJCYlYCeH3GJqCrKRfY4V1V188npmVMliPFwosw2xZLD9FcV/LRx8xRRkecUU4
+	 uvxhN+obcKK2E4nK/RYGwgovoqEwyRbU0kcow6iRNOrv6ex83XnH7Ie6MAuJAfE1a92DC
+	 vUVJbkaZTkalkQD6AIMuhQL85nLmyHefa4z6JJ2ADECb5b7/6YqyZvtqDdvMRXfXo3dAV
+	 lFd5eTT+fhcB8ZUS5nx/VSUF7uonrqenfHaNT/KeevJ/PlQnjMv5mztSIOB5unH6plw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793776565;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=yDA6l1mYLflGy0BGVuiZ1Kit3BaPSEgJ8GlY0lKqIiw=;
-	b=Di+ZvnBQ1458GvVpBK6WxENHF7FGPzepWP1osNj8gpxG2M7UeDm6/LX1MrH1aRKsV007
-	 Klu56UyKxBPTmbuO1kT/NMqauynWNcE1DzhCA9HPsLK2paBK0q8SN1IfpgSGSqjDY0/YS
-	 to/+ZWApqcnVZVp2xsqubmChPVyvXecAKv7IXr1iE9OkbClVGoRxsp5sbF+45zeYnWpnJ
-	 eED57Ib4VKLvs48B0Hc0N1BMRm2myKCjSTaEmWdX+WimgwnUQzkb3WK2+DAu705evAZnT
-	 3ziYxeLC3MPhhtGAaz9iDEnIrBEBsTROEZE9Yk9EP5/BhawUFLTQaY8FHu6fCfPfzsA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793776588;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=sq8GeUPUbWD5/l9webTykYpDaibNcYX0trvCELNClDY=;
+	b=SOkp6dBPY6PJEW1sliHRDRn/hWyMQHGsbmXx1eLXyixwPKxN7jBpVsPR9pZnPpvpY2/J
+	 GpOE+4LYexC+i3hpI+OIa7PDVCNdXioPzvX2j+A3sj0JTRBtEDvMM3UKZVjakvSyVrKv7
+	 ADs9NUfTKkf4i6xUFP3Hy0zOKXVQEDgLTk5bZ+rwExXdI9wJxK7qahoZrX3ruAAwHaQmv
+	 Eybv0tqOm6sXDwFGDzU1DMhP4QST0Aix0RvsWEkXTt/2jnzj3ic5Vcd82ZXPeXWFBn6qm
+	 VBSL9+/+J8sT1r0c8lpMiXa0mvso8Z0jTsRJMpdszOItrQ9VfVVy6VTD3fOkAvXdBwg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=SCr6PGxa;
-	arc=none smtp.remote-ip=209.85.215.182
-Received: from mail-pg1-f182.google.com (mail-pg1-f182.google.com [209.85.215.182])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ASCmtkw1;
+	arc=none smtp.remote-ip=95.215.58.5
+Received: from mta1.migadu.com (out-5.mta1.migadu.com [95.215.58.5])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E9C3606A32D
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 07:16:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E9C3606A32D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B436606A332
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 07:16:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B436606A332
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=SCr6PGxa
-Received: by mail-pg1-f182.google.com with SMTP id 41be03b00d2f7-cc4aa0246b7so185365a12.3
-        for <cgroups@vger.kernel.org>; Tue, 03 Nov 2026 23:16:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793776564; x=1794381364; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yDA6l1mYLflGy0BGVuiZ1Kit3BaPSEgJ8GlY0lKqIiw=;
-        b=SCr6PGxaxxdOGwOMWjAV8/YoNtzj0aril/7uhLsJIkptH0AsWbQ8R5kr7lGx5gXa8k
-         DSqLDhfcP8wUF93EsV2wlgLNM83rgS0ONKb2TXRCgH3lMla0+4KyRe1r5S/nCZbKdyt3
-         7Vs1JzQ4YqCqjOzLJb4QtIPuYCq0l9i+0Pws7zzzmXLsDFuWp6o5+G2MCor0kbjlop8p
-         nKTMx1HKT2rQaEHjc2f7bYmMX5ey1kB+3Tr884aN8oNj48johc8Guygpip205l/TSdww
-         WH6d/lJETKxV6yjcama4pwLKreCnLU1NST2Mot/l3cwsIjmQhxmDvQzHnU4kExBLTbdn
-         BUTA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793776564; x=1794381364;
-        h=content-transfer-encoding:content-type:mime-version:message-id:date
-         :subject:cc:to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yDA6l1mYLflGy0BGVuiZ1Kit3BaPSEgJ8GlY0lKqIiw=;
-        b=SeHwj6fsnFwhdzHxvlrocrVdNc6rcgFDfT0g4DLLlB5oD5GSCyy9Wnj8fH5t8aeRUX
-         Sb7YiaPYGeVb0NyBiqTn68921rR2MiM+ry5fhClmgRtThWZcMWaPsDmefNWwi1WwanJS
-         e7gWjB4aZWPHVx99rxGviJLANm0KInyPNB7L81eCtomhb/7usJVVeAKwcScMXsLK19gM
-         cOm1ZRMJKKJcGBMNPvw9lTzRN94a+XzSv92O433LuHzWKyZCfanwGDCPrsP5tnqnr7wB
-         ejSkXlvsNJc8EwAgju8S0ROar+Fokud4+qe0cwb9KhzlXExqoOlbgEiD1t3+eVjurmIa
-         r5Rw==
-X-Forwarded-Encrypted: i=1; AKwUvBzZ2Xyi0QD5eztDYdj1IKyixpMOCPREW14h1T4JziiylPab5TYB5hXHoN8U++3PZ0xvUogw1e1Z@vger.kernel.org
-X-Gm-Message-State: APuU4Z/DcqNnwj95yJtEv3kmW0snrSB1cbFnVQIhozmMY41RiDX3T9Ws
-	F23cJ98ERSDlNaxlLn2G9tXGXLXT+6kJr8ljqKv0wh8Bxj0blt0kC8LS
-X-Gm-Gg: AYBFou3cVfCXrd25C/2AAU1w1DbaAv8Sv9GQfR3xeHBlLfa9fe9KNeUqcOd9QqKV/Fq
-	1GLnjBMzlJKsl+5atntUWqoS/9JfWNZvqLF6nmRnq2WCcYnFc/JX+agN+cAIMK/A3WSXFWjeYkC
-	RqNxPsIzn+OmU9TN8htdQLDT34J805ZJWD/MJDZj5Ti+c1R24j1ywcvTWdck08KZzqk79R7SFkg
-	gstqeMvgd+tMOvQ8/hcIXOmWNd83+sov/vE/h4w8Xnzqv/2cwlvijoDEFI0oR0G3UCs1fslxMeG
-	KuZe2u24Ktc1SS7Q3JWv7sbNHPEOuwiYdMd9RWnNz7A7Ybadk5IZvhWAeyvoP6BY8kpXB5RJj60
-	ASR3FyhY14XPOfPGmqQcsT/fOJIiD6EWIJK9VSSeMYTZzAdlFZX5NFwD1L6zPnjNtkjTAhP5s/p
-	xExePIZb/Efo1FvwSJNtwiJb0Q67LY3EaQcE+nrmJMlkuA6zf9Ox8GYOuCNHdrCqthnS4Vvv6cm
-	tYrsXaVdXDYDIMpuPQFSs+Fk/xhCGbRctsds244NFoDFru2+uA1OEIWovjBBArFw4oxcxRz/hrr
-	LNIBdh2Gd3vtfQ/xbxj2lCNI4HxJk9K8LwAjn1WPXhH9j4F1xxDcwTd8iU/Cyp9RkQfOHMJL0yJ
-	DWlLboIuwYaQfK2KKptkYpbycatZhe+aJ+QS97/twA5bum9lECW0t9LFNQ+F3yS1dcmzP9A==
-X-Received: by 2002:a17:90b:1f8f:b0:3a4:ba6b:cc24 with SMTP id 98e67ed59e1d1-3ae89820cc1mr11401444a91.58.1793776563726;
-        Tue, 03 Nov 2026 23:16:03 -0800 (PST)
-Received: from yupeng-XPS-15-9520.. (c-73-169-192-12.hsd1.wa.comcast.net. [73.169.192.12])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b093c499a5sm2947389a91.2.2026.11.03.23.16.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Nov 2026 23:16:03 -0800 (PST)
-From: Peng Yu <yupeng0921@gmail.com>
-To: Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>
-Cc: Keith Busch <kbusch@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Josef Bacik <josef@toxicpanda.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Maurizio Lombardi <mlombard@arkamax.eu>,
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ASCmtkw1
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=0NMn6LfHJXdY0del5TIwB9PNJWC94DBmPcplZLgt9NE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793776580; v=1; x=1794381380;
+ b=ASCmtkw1exsVpYkJRoJjNg4dJnicckKvkH2fYjpv1OQqOu28dB3sx5qYIMPS9Od72Sj5aPDW
+ 0odhTPBfbPSoRST5AEhwSeAbi1oKIVvxrhisrw7ubpXuFGH2B14F1FUpRjqPpyxyPSc0dT4x3jW
+ IP3ZxRAwVye9NoljUFGR/4s4=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 3f4a2e5a750a33d9;
+	Wed, 04 Nov 2026 07:16:20 +0000
+X-Mizu-Trace-ID: 3f4a2e5a750a33d9
+X-Migadu-Flow: FLOW_OUT
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: longman@redhat.com
+Cc: ridong.chen@linux.dev,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org,
 	cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
-	Peng Yu <yupeng0921@gmail.com>
-Subject: [PATCH v12] nvmet: add cgroup_id to charge namespace I/O to a cgroup
-Date: Tue,  3 Nov 2026 23:16:00 -0800
-Message-ID: <20261104071600.470430-1-yupeng0921@gmail.com>
+	linux-kselftest@vger.kernel.org,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: [PATCH] cgroup/cpuset: Fail if isolated CPUs don't leave any boot domain housekeeping CPU
+Date: Wed,  4 Nov 2026 15:16:00 +0800
+Message-ID: <20261104071600.474587-1-guopeng.zhang@linux.dev>
 X-Mailer: git-send-email 2.43.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -108,519 +70,156 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The nvmet issues namespace IOs from kernel threads. So the io.max and
-other cgroup controllers can't apply limits to the namespaces.
-Consider this scenario: LVM creates multiple logical volumes on the
-same physical disk, and the logical volumes are assigned to different
-nvmet subsystems/namespaces. We want to stop a remote noisy user from
-using all the disk iops via nvmet. So add a per namespace cgroup_id to
-associate the namespace with a cgroup. Each namespace can then be
-throttled separately.
+From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-The per namespace cgroup is good enough for the io.max, but is not good
-enough for the io.cost and io.latency. The io.cost and io.latency may
-put a thread to sleep. If the thread is shared by different namespaces,
-all of them will be impacted together. Submit the IOs via a workqueue to
-avoid this impact.
+With the "domain" flag of the isolcpus= boot option, the CPUs isolated
+at boot are excluded from the sched domains and the remaining CPUs
+become the boot domain housekeeping CPUs. An isolated partition is
+allowed to use the boot isolated CPUs, but it must not take over all
+the boot domain housekeeping CPUs.
 
-With cgroup_id set, every I/O command except Reservation commands runs
-from its own work item on a per namespace WQ_HIGHPRI workqueue. Zone
-management and the file backend's Flush, DSM and Write Zeroes run
-directly in that work item. Each work item runs under memalloc_noio and
-looks up the cgroup's effective io css. A command whose queue is being
-deleted is aborted. buffered_io is not supported.
+prstate_housekeeping_conflict() checks that rule for root partitions
+only. The 2nd check covers the nohz_full case as it is gated by
+housekeeping_enabled(HK_TYPE_KERNEL_NOISE) which is not enabled by
+isolcpus=domain. So on an isolcpus=domain,<cpus> boot, an isolated
+partition can claim all the remaining boot domain housekeeping CPUs.
+The state is committed, but the sched domain rebuild at the end of
+the write finds no housekeeping CPU left for the boot domain and
+hits WARNs and an OOPS in partition_sched_domains().
+housekeeping_update() cannot accept the configuration either as it
+cannot empty the boot domain housekeeping mask.
+With an "isolcpus=domain,10-31" boot where CPUs 0-9 are the boot
+domain housekeeping CPUs, for example:
 
-Performance test:
-On a 4 core VM and 4G ramdisk, export tcp-nvmeof targets to 127.0.0.1,
-run fio with below parameters:
-fio --bs=4k --rw=randwrite --iodepth=32 --numjobs=4 --ioengine=libaio --direct=1
+  # echo 0-9 > A/cpuset.cpus
+  # echo isolated > A/cpuset.cpus.partition
+  WARNING: kernel/sched/topology.c:3089 at build_sched_domains+...
+  WARNING: kernel/cgroup/cpuset.c:1478 at cpuset_update_sd_hk_unlock+...
+  RIP: 0010:partition_sched_domains+0x3b8
 
-file backend result:
-|                            | IOPS   | Mean Latency | p99 latency |
-|without this patch          | 204.4k | 625.8 µs     | 668 µs      |
-|this patch, cgroup_id unset | 204.4k | 625.7 µs     | 668 µs      |
-|this patch, cgroup_id set   | 155.9k | 820.6 µs     | 1139 µs     |
+Fix that by extending prstate_housekeeping_conflict() to reject an
+isolated partition update that would leave no active boot domain
+housekeeping CPU outside the isolated CPUs. The CPUs released back
+to the boot domain by the same update are taken into account, so
+replacing one of the last housekeeping CPUs with another one in a
+single update remains allowed. The new check is only performed when
+housekeeping_enabled(HK_TYPE_KERNEL_NOISE) is disabled so that the
+existing nohz_full behavior is unchanged.
 
-block device backend result:
-|                            | IOPS   | Mean Latency | p99 latency |
-|without this patch          | 216.0k | 592.2 µs     | 627 µs      |
-|this patch, cgroup_id unset | 216.0k | 592.1 µs     | 627 µs      |
-|this patch, cgroup_id set   | 160.0k | 799.6 µs     | 1090 µs     |
+Add test cases in test_cpuset_prs.sh to verify that taking over all
+the boot domain housekeeping CPUs is rejected while swapping one of
+them with another one is allowed.
 
-With this patch and no cgroup_id set, the performance is almost the same.
-When we set the cgroup_id, with no io controller limit, we can see a
-performance decrease but it is still very fast.
-
-Signed-off-by: Peng Yu <yupeng0921@gmail.com>
-Assisted-by: Claude:claude-fable-5 [Claude Code]
-Assisted-by: Claude:claude-opus-5-5 [Claude Code]
+Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 ---
-Changes since v11 (Tejun's review of v11):
-* Applied most of the v11 feedback suggestions.
-* Rebased on nvme-7.4 ca7e6a9a6932.
+ kernel/cgroup/cpuset.c                        | 36 +++++++++++++++++++
+ .../selftests/cgroup/test_cpuset_prs.sh       | 30 ++++++++++++++++
+ 2 files changed, 66 insertions(+)
 
-Tejun's v11 review points without a code change:
-
-> The name uses only the nsid, which is unique only within a subsystem, so
-> namespaces in different subsystems get identically named workqueues and
-> rescuer threads.
-
-No unique name is needed, because the workqueue is not in sysfs (no
-WQ_SYSFS). A subsystem NQN is also too long for a workqueue name (32
-bytes).
-
-> The file backend's Flush, DSM and Write Zeroes and zone management now
-> count against blkcg_wq's max_active for their whole duration
-> (vfs_fsync(), vfs_fallocate(), submit_bio_wait() over the zones). With
-> max_active at the number of CPUs, a few slow flushes can fill it and
-> hold up the namespace's reads and writes. Without cgroup_id these ran on
-> nvmet_wq and zbd_wq. Probably fine, but worth noting.
-
-Yes. They can only hold up commands of the same namespace, which are
-charged to the same cgroup. A command that io.cost puts to sleep holds
-its slot the same way.
-
-Tejun, if v12 looks fine from the cgroup side, could you add your
-Acked-by?
-
-Tejun's v11 review: https://lore.kernel.org/all/17d94c41da65e31e1579a7211ebb7aa1@kernel.org/
-v11: https://lore.kernel.org/all/20261029153103.13689-1-yupeng0921@gmail.com/
-Sashiko's v10 review: https://lore.kernel.org/all/sashiko-outbox-185466@kernel.org/
-v10: https://lore.kernel.org/all/20261026153020.47791-1-yupeng0921@gmail.com/
-Tejun's v9 comment: https://lore.kernel.org/all/aee729fd53ef9c7c084a443216cfeb39@kernel.org/
-v9: https://lore.kernel.org/all/20261023043423.176002-1-yupeng0921@gmail.com/
-v8: https://lore.kernel.org/all/20261002152821.410591-1-yupeng0921@gmail.com/
-v7 (with test steps): https://lore.kernel.org/all/20260929232411.101087-1-yupeng0921@gmail.com/
-
- Documentation/ABI/stable/configfs-nvmet |  21 ++++
- drivers/nvme/target/configfs.c          |  47 ++++++++
- drivers/nvme/target/core.c              | 153 ++++++++++++++++++++++++
- drivers/nvme/target/io-cmd-file.c       |  10 +-
- drivers/nvme/target/nvmet.h             |  40 +++++++
- drivers/nvme/target/zns.c               |   8 +-
- 6 files changed, 269 insertions(+), 10 deletions(-)
-
-diff --git a/Documentation/ABI/stable/configfs-nvmet b/Documentation/ABI/stable/configfs-nvmet
-index 36b587404ee7..c0b0b7ff100e 100644
---- a/Documentation/ABI/stable/configfs-nvmet
-+++ b/Documentation/ABI/stable/configfs-nvmet
-@@ -314,6 +314,27 @@ Description:
- 		attr_subsys_vendor_id: Shows or sets the PCI subsystem
- 		vendor ID. Displayed in "0x%x" format.
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 6e136888fc8e..c1ed556ddb1a 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1403,6 +1403,42 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+ 	if (del_cpus && cpumask_empty(del_cpus))
+ 		del_cpus = NULL;
  
-+What:		/config/nvmet/subsystems/NAME/namespaces/NSID/cgroup_id
-+Date:		November 2026
-+KernelVersion:	7.5
-+Contact:	Peng Yu <yupeng0921@gmail.com>
-+Description:
-+		Shows or sets the cgroup2 ID of the cgroup to charge this
-+		namespace's I/O to. Writing 0 clears it. The I/O is
-+		charged to the cgroup's effective io css: the cgroup
-+		itself or its nearest ancestor with the io controller
-+		enabled. The namespace must be disabled before
-+		modification. Enabling the namespace fails if the cgroup
-+		can't be found in the cgroup namespace of the enabling
-+		task, or if buffered_io is set. If the cgroup is removed
-+		while the namespace is enabled, the I/O goes to the
-+		effective io css of its nearest remaining ancestor; a
-+		cgroup that is removed and created again gets a new ID.
-+		Reservation commands and the flush of a Set Features
-+		Write Protect are not charged.
-+
-+		Only available when CONFIG_BLK_CGROUP is enabled.
-+
- What:		/config/nvmet/hosts/HOSTNQN/dhchap_key
- What:		/config/nvmet/hosts/HOSTNQN/dhchap_ctrl_key
- What:		/config/nvmet/hosts/HOSTNQN/dhchap_hash
-diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
-index b3a5242d06f9..622559022f07 100644
---- a/drivers/nvme/target/configfs.c
-+++ b/drivers/nvme/target/configfs.c
-@@ -572,6 +572,50 @@ static ssize_t nvmet_ns_device_path_store(struct config_item *item,
- 
- CONFIGFS_ATTR(nvmet_ns_, device_path);
- 
-+#ifdef CONFIG_BLK_CGROUP
-+static ssize_t nvmet_ns_cgroup_id_show(struct config_item *item, char *page)
-+{
-+	struct nvmet_ns *ns = to_nvmet_ns(item);
-+	struct nvmet_subsys *subsys = ns->subsys;
-+	ssize_t ret;
-+
-+	mutex_lock(&subsys->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%llu\n", ns->cgroup_id);
-+	mutex_unlock(&subsys->lock);
-+	return ret;
-+}
-+
-+static ssize_t nvmet_ns_cgroup_id_store(struct config_item *item,
-+		const char *page, size_t count)
-+{
-+	struct nvmet_ns *ns = to_nvmet_ns(item);
-+	struct nvmet_subsys *subsys = ns->subsys;
-+	u64 cgroup_id;
-+	int ret;
-+
-+	ret = kstrtou64(page, 0, &cgroup_id);
-+	if (ret)
-+		return ret;
-+
-+	mutex_lock(&subsys->lock);
-+
-+	if (ns->enabled) {
-+		ret = -EBUSY;
-+		goto out_unlock;
-+	}
-+
-+	/* Writing 0 clears the association. */
-+	ns->cgroup_id = cgroup_id;
-+	ret = count;
-+
-+out_unlock:
-+	mutex_unlock(&subsys->lock);
-+	return ret;
-+}
-+
-+CONFIGFS_ATTR(nvmet_ns_, cgroup_id);
-+#endif /* CONFIG_BLK_CGROUP */
-+
- #ifdef CONFIG_PCI_P2PDMA
- static ssize_t nvmet_ns_p2pmem_show(struct config_item *item, char *page)
- {
-@@ -844,6 +888,9 @@ static struct configfs_attribute *nvmet_ns_attrs[] = {
- 	&nvmet_ns_attr_buffered_io,
- 	&nvmet_ns_attr_revalidate_size,
- 	&nvmet_ns_attr_resv_enable,
-+#ifdef CONFIG_BLK_CGROUP
-+	&nvmet_ns_attr_cgroup_id,
-+#endif
- #ifdef CONFIG_PCI_P2PDMA
- 	&nvmet_ns_attr_p2pmem,
- #endif
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index 1dede04c204a..67aeb704b015 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -4,12 +4,15 @@
-  * Copyright (c) 2015-2016 HGST, a Western Digital Company.
-  */
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#include <linux/cgroup.h>
- #include <linux/hex.h>
-+#include <linux/kthread.h>
- #include <linux/module.h>
- #include <linux/random.h>
- #include <linux/rculist.h>
- #include <linux/pci-p2pdma.h>
- #include <linux/scatterlist.h>
-+#include <linux/sched/mm.h>
- 
- #include <generated/utsrelease.h>
- 
-@@ -483,8 +486,152 @@ void nvmet_put_namespace(struct nvmet_ns *ns)
- 	percpu_ref_put(&ns->ref);
- }
- 
-+#ifdef CONFIG_BLK_CGROUP
-+static int nvmet_blkcg_ns_enable(struct nvmet_ns *ns)
-+{
-+	struct cgroup *cgrp;
-+
-+	if (!ns->cgroup_id)
-+		return 0;
-+
 +	/*
-+	 * Writeback of buffered writes is charged through the page cache's
-+	 * memcg, not to this cgroup, so we don't support buffered io.
++	 * With boot time domain isolation (isolcpus= with the domain flag),
++	 * the CPUs that are not isolated at boot become the boot domain
++	 * housekeeping CPUs. An isolated partition must not take over all
++	 * of them. Otherwise housekeeping_update() will fail later when
++	 * the isolated CPUs are handed over, leaving the sched domains in
++	 * an inconsistent state. This case isn't covered by the 2nd check
++	 * below which requires nohz_full to be enabled.
 +	 */
-+	if (ns->buffered_io) {
-+		pr_err("cgroup_id is not supported with buffered_io: %s\n",
-+		       ns->device_path);
-+		return -EINVAL;
-+	}
++	if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE) &&
++	    housekeeping_enabled(HK_TYPE_DOMAIN_BOOT) && (new_prs == PRS_ISOLATED)) {
++		cpumask_var_t boot_hk_cpus;
 +
-+	cgrp = cgroup_get_from_id(ns->cgroup_id);
-+	if (IS_ERR(cgrp)) {
-+		pr_err("failed to resolve cgroup id %llu: %ld\n",
-+		       ns->cgroup_id, PTR_ERR(cgrp));
-+		return PTR_ERR(cgrp);
-+	}
++		if (!alloc_cpumask_var(&boot_hk_cpus, GFP_KERNEL))
++			return true;
 +
-+	/*
-+	 * WQ_HIGHPRI: the tcp and rdma transports execute the commands from
-+	 * WQ_HIGHPRI workqueues; keep that priority on this one.
-+	 */
-+	ns->blkcg_wq = alloc_workqueue("nvmet-blkcg-%u",
-+			WQ_MEM_RECLAIM | WQ_UNBOUND | WQ_HIGHPRI,
-+			min_t(int, num_online_cpus(), WQ_MAX_ACTIVE),
-+			ns->nsid);
-+	if (!ns->blkcg_wq) {
-+		cgroup_put(cgrp);
-+		return -ENOMEM;
-+	}
-+
-+	ns->cgrp = cgrp;
-+	return 0;
-+}
-+
-+static void nvmet_blkcg_ns_disable(struct nvmet_ns *ns)
-+{
-+	if (ns->cgrp) {
 +		/*
-+		 * No command is left, but the work item of a command that
-+		 * completed from inside ->blkcg_execute() may still be
-+		 * returning: destroy_workqueue() waits for it.
++		 * Compute the isolated CPUs after this update: the CPUs
++		 * released by it (@del_cpus) leave the isolated set and
++		 * become available to the boot domain again, unless they
++		 * are returned to an isolated parent instead.
 +		 */
-+		destroy_workqueue(ns->blkcg_wq);
-+		ns->blkcg_wq = NULL;
-+		cgroup_put(ns->cgrp);
-+		ns->cgrp = NULL;
-+	}
-+}
-+
-+/*
-+ * Charge the I/O that the current work item submits for @req to the
-+ * effective io css of the namespace's cgroup, looked up for each command.
-+ */
-+static bool nvmet_blkcg_begin(struct nvmet_req *req)
-+{
-+	struct nvmet_ns *ns = req->ns;
-+	struct cgroup_subsys_state *css;
-+
-+	/*
-+	 * A disable waits for the command: don't throttle it any more. This
-+	 * catches only commands that haven't started; io.max holds the bios
-+	 * already submitted and releases them at its rate.
-+	 */
-+	if (!test_bit(NVMET_NS_IO_LIVE, &ns->flags))
-+		return false;
-+
-+	css = cgroup_get_e_css(ns->cgrp, &io_cgrp_subsys);
-+	kthread_associate_blkcg(css);
-+	css_put(css);
-+	return true;
-+}
-+
-+static void nvmet_blkcg_end(bool associated)
-+{
-+	if (associated)
-+		kthread_associate_blkcg(NULL);
-+}
-+
-+/*
-+ * The io.cost and io.latency enforce their limits by putting the thread to
-+ * sleep. A transport thread may be shared by multiple namespaces. In the
-+ * tcp-nvmeof case, all namespaces in the same subsystem may share a
-+ * thread. So we submit the IOs via the workqueue, thus the current thread
-+ * won't be blocked.
-+ */
-+static void nvmet_blkcg_work(struct work_struct *work)
-+{
-+	struct nvmet_req *req =
-+		container_of(work, struct nvmet_req, blkcg_work);
-+	unsigned int noio_flag;
-+	bool associated;
-+
-+	/* its queue is being deleted: abort it rather than throttle it */
-+	if (unlikely(percpu_ref_is_dying(&req->sq->ref))) {
-+		nvmet_req_complete(req, NVME_SC_ABORT_QUEUE);
-+		return;
++		if (del_cpus && parent_prs != PRS_ISOLATED)
++			cpumask_andnot(boot_hk_cpus, isolated_cpus, del_cpus);
++		else
++			cpumask_copy(boot_hk_cpus, isolated_cpus);
++		cpumask_andnot(boot_hk_cpus,
++			       housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT),
++			       boot_hk_cpus);
++		cpumask_andnot(boot_hk_cpus, boot_hk_cpus, new_cpus);
++		res = !cpumask_intersects(boot_hk_cpus, cpu_active_mask);
++		free_cpumask_var(boot_hk_cpus);
++		if (res)
++			return true;
 +	}
 +
-+	/* reclaim must not wait for I/O queued on this workqueue */
-+	noio_flag = memalloc_noio_save();
-+	associated = nvmet_blkcg_begin(req);
-+	req->blkcg_execute(req);
-+	nvmet_blkcg_end(associated);
-+	memalloc_noio_restore(noio_flag);
-+}
+ 	/*
+ 	 * Exit 2nd check early and return false if
+ 	 * 1) there is no boot time isolated nohz_full CPU
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index bdca6c471f87..8c7af34b51c8 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -133,6 +133,17 @@ LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
+ [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" = 8 &&
+    "$LAST_NOHZ_FULL_CPU" = $LAST_PRESENT_CPU ]] && RUN_NOHZ_FULL_TESTS=1
+ 
++# The isolcpus domain test matrix assumes that the boot domain
++# housekeeping CPUs are exactly 0-9, i.e. an
++# "isolcpus=domain,10-<last>" boot.
++RUN_ISOLCPUS_DOMAIN_TESTS=
++if grep -q "isolcpus=.*domain" /proc/cmdline 2>/dev/null &&
++	[[ -z "$(cat /sys/devices/system/cpu/nohz_full 2>/dev/null)" ]]
++then
++	[[ "$(cat /sys/devices/system/cpu/isolated)" = "10-$LAST_PRESENT_CPU" ]] &&
++		RUN_ISOLCPUS_DOMAIN_TESTS=1
++fi
 +
-+static void nvmet_blkcg_queue_req(struct nvmet_req *req)
-+{
-+	INIT_WORK(&req->blkcg_work, nvmet_blkcg_work);
-+	queue_work(req->ns->blkcg_wq, &req->blkcg_work);
-+}
+ #
+ # If isolated CPUs have been reserved at boot time (as shown in
+ # /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
+@@ -602,6 +613,24 @@ ISOLCPUS_TEST_MATRIX=(
+ 	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
+ )
+ 
++# Test matrix to be run when the system is booted with
++# "isolcpus=domain,10-<last>" so that CPUs 0-9 are the boot domain
++# housekeeping CPUs.
++ISOLCPUS_DOMAIN_TEST_MATRIX=(
++	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
++	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
++	# Using all the boot domain housekeeping CPUs in an isolated
++	# partition is not allowed
++	" C0-9      .      .      .     P2      .      .      .     0 A1:0-9  A1:P-2  ."
 +
-+static void nvmet_blkcg_init_req(struct nvmet_req *req)
-+{
-+	if (!req->ns->blkcg_wq)
-+		return;
++	# Replacing some of the boot domain housekeeping CPUs with other
++	# ones in a single update is allowed
++	" C2-9:P2   .      .      .    C0-4     .      .      .     0 A1:0-4  A1:P2   0-4"
 +
-+	req->blkcg_execute = req->execute;
-+	req->execute = nvmet_blkcg_queue_req;
-+}
-+#else
-+static inline int nvmet_blkcg_ns_enable(struct nvmet_ns *ns)
-+{
-+	return 0;
-+}
++	# Taking over the last housekeeping CPU by an update is not allowed
++	" C0-8:P2   .      .      .    C0-9     .      .      .     0 A1:0-9  A1:P-2  ."
++)
 +
-+static inline void nvmet_blkcg_ns_disable(struct nvmet_ns *ns)
-+{
-+}
-+
-+static inline void nvmet_blkcg_init_req(struct nvmet_req *req)
-+{
-+}
-+#endif /* CONFIG_BLK_CGROUP */
-+
- static void nvmet_ns_dev_disable(struct nvmet_ns *ns)
- {
-+	nvmet_blkcg_ns_disable(ns);
- 	nvmet_bdev_ns_disable(ns);
- 	nvmet_file_ns_disable(ns);
- }
-@@ -611,6 +758,10 @@ int nvmet_ns_enable(struct nvmet_ns *ns)
- 	if (ret)
- 		goto out_unlock;
- 
-+	ret = nvmet_blkcg_ns_enable(ns);
-+	if (ret)
-+		goto out_dev_disable;
-+
- 	ret = nvmet_p2pmem_ns_enable(ns);
- 	if (ret)
- 		goto out_dev_disable;
-@@ -1170,6 +1321,8 @@ static u16 nvmet_parse_io_cmd(struct nvmet_req *req)
- 	if (ret)
- 		return ret;
- 
-+	nvmet_blkcg_init_req(req);
-+
- 	if (req->ns->pr.enable) {
- 		ret = nvmet_pr_check_cmd_access(req);
- 		if (ret)
-diff --git a/drivers/nvme/target/io-cmd-file.c b/drivers/nvme/target/io-cmd-file.c
-index 695963dd932e..b9d221eeef57 100644
---- a/drivers/nvme/target/io-cmd-file.c
-+++ b/drivers/nvme/target/io-cmd-file.c
-@@ -265,8 +265,7 @@ static void nvmet_file_execute_flush(struct nvmet_req *req)
- {
- 	if (!nvmet_check_transfer_len(req, 0))
- 		return;
--	INIT_WORK(&req->f.work, nvmet_file_flush_work);
--	queue_work(nvmet_wq, &req->f.work);
-+	nvmet_req_run_work(req, nvmet_wq, &req->f.work, nvmet_file_flush_work);
- }
- 
- static void nvmet_file_execute_discard(struct nvmet_req *req)
-@@ -325,8 +324,7 @@ static void nvmet_file_execute_dsm(struct nvmet_req *req)
- {
- 	if (!nvmet_check_data_len_lte(req, nvmet_dsm_len(req)))
- 		return;
--	INIT_WORK(&req->f.work, nvmet_file_dsm_work);
--	queue_work(nvmet_wq, &req->f.work);
-+	nvmet_req_run_work(req, nvmet_wq, &req->f.work, nvmet_file_dsm_work);
- }
- 
- static void nvmet_file_write_zeroes_work(struct work_struct *w)
-@@ -355,8 +353,8 @@ static void nvmet_file_execute_write_zeroes(struct nvmet_req *req)
- {
- 	if (!nvmet_check_transfer_len(req, 0))
- 		return;
--	INIT_WORK(&req->f.work, nvmet_file_write_zeroes_work);
--	queue_work(nvmet_wq, &req->f.work);
-+	nvmet_req_run_work(req, nvmet_wq, &req->f.work,
-+			nvmet_file_write_zeroes_work);
- }
- 
- u16 nvmet_file_parse_io_cmd(struct nvmet_req *req)
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 3cd58e813aa7..17694fc7d634 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -118,6 +118,22 @@ struct nvmet_ns {
- 	struct nvmet_subsys	*subsys;
- 	const char		*device_path;
- 
-+#ifdef CONFIG_BLK_CGROUP
-+	u64			cgroup_id;
-+	/*
-+	 * Resolved from ->cgroup_id when the namespace is enabled and
-+	 * released when it is disabled, so it has the same lifetime and
-+	 * visibility rules as ->bdev and ->file.
-+	 */
-+	struct cgroup		*cgrp;
-+	/*
-+	 * The I/O commands of a namespace with a cgroup, except Reservation
-+	 * commands, are executed from their own work items on ->blkcg_wq, so
-+	 * the cgroup's throttling doesn't put a transport context to sleep.
-+	 */
-+	struct workqueue_struct	*blkcg_wq;
-+#endif
-+
- 	struct config_group	device_group;
- 	struct config_group	group;
- 
-@@ -510,6 +526,11 @@ struct nvmet_req {
- 
- 	void (*execute)(struct nvmet_req *req);
- 	const struct nvmet_fabrics_ops *ops;
-+#ifdef CONFIG_BLK_CGROUP
-+	/* the backend's ->execute, called from ->blkcg_work */
-+	void (*blkcg_execute)(struct nvmet_req *req);
-+	struct work_struct	blkcg_work;
-+#endif
- 
- 	struct pci_dev		*p2p_dev;
- 	struct device		*p2p_client;
-@@ -756,6 +777,25 @@ void nvmet_bdev_execute_zone_mgmt_recv(struct nvmet_req *req);
- void nvmet_bdev_execute_zone_mgmt_send(struct nvmet_req *req);
- void nvmet_bdev_execute_zone_append(struct nvmet_req *req);
- 
-+/*
-+ * A command of a namespace with a cgroup already runs from its own work
-+ * item on the namespace's workqueue (see nvmet_blkcg_work()), so run the
-+ * backend's work function right there; otherwise queue it on @wq.
-+ */
-+static inline void nvmet_req_run_work(struct nvmet_req *req,
-+		struct workqueue_struct *wq, struct work_struct *work,
-+		work_func_t func)
-+{
-+#ifdef CONFIG_BLK_CGROUP
-+	if (req->ns->blkcg_wq) {
-+		func(work);
-+		return;
-+	}
-+#endif
-+	INIT_WORK(work, func);
-+	queue_work(wq, work);
-+}
-+
- static inline u32 nvmet_rw_data_len(struct nvmet_req *req)
- {
- 	return ((u32)le16_to_cpu(req->cmd->rw.length) + 1) <<
-diff --git a/drivers/nvme/target/zns.c b/drivers/nvme/target/zns.c
-index 92f5c1435582..38455481da24 100644
---- a/drivers/nvme/target/zns.c
-+++ b/drivers/nvme/target/zns.c
-@@ -335,8 +335,8 @@ void nvmet_bdev_execute_zone_mgmt_recv(struct nvmet_req *req)
- 	if (!nvmet_check_transfer_len(req, (numd + 1) << 2))
- 		return;
- 
--	INIT_WORK(&req->z.zmgmt_work, nvmet_bdev_zone_zmgmt_recv_work);
--	queue_work(zbd_wq, &req->z.zmgmt_work);
-+	nvmet_req_run_work(req, zbd_wq, &req->z.zmgmt_work,
-+			   nvmet_bdev_zone_zmgmt_recv_work);
- }
- 
- static inline enum req_op zsa_req_op(u8 zsa)
-@@ -534,8 +534,8 @@ static void nvmet_bdev_zmgmt_send_work(struct work_struct *w)
- 
- void nvmet_bdev_execute_zone_mgmt_send(struct nvmet_req *req)
- {
--	INIT_WORK(&req->z.zmgmt_work, nvmet_bdev_zmgmt_send_work);
--	queue_work(zbd_wq, &req->z.zmgmt_work);
-+	nvmet_req_run_work(req, zbd_wq, &req->z.zmgmt_work,
-+			   nvmet_bdev_zmgmt_send_work);
- }
- 
- static void nvmet_bdev_zone_append_bio_done(struct bio *bio)
-
-base-commit: ca7e6a9a693240f059a0b47726f64a3f0573011a
+ # Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
+ # This also means that CPU 8 is available and is a nohz_full CPU.
+ NOHZ_FULL_TEST_MATRIX=(
+@@ -1472,6 +1501,7 @@ test_inotify()
+ run_state_test TEST_MATRIX
+ run_remote_state_test REMOTE_TEST_MATRIX
+ TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
++[[ -n "$RUN_ISOLCPUS_DOMAIN_TESTS" ]] && run_state_test ISOLCPUS_DOMAIN_TEST_MATRIX
+ [[ -n "$RUN_NOHZ_FULL_TESTS" ]] && run_state_test NOHZ_FULL_TEST_MATRIX
+ test_isolated
+ test_boot_isolated
 -- 
-2.53.0
+2.43.0
 
