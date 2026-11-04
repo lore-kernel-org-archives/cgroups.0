@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.113
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.136
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793798723;
-	b=cqmY1YQ5gCjAbW8+1vCVvFvEECS0ev4xzNrt3e9HKBLX5CIqqINEJPQ/xjoUt4vwXQud
-	 KXA+oVnXyz4qyAoia5pyXEQcCOW9VeC6FlROZ9ggmPmsFR+zHUMbRTHlrC5fy873Gy4BJ
-	 pGZe9qVJTjV6/ws6ZppDf0XJeUXiJAQtq2V+tkwQouzrwm98ZCa9fpbIdmxRVL0MDCarg
-	 wuazBf1tPn3GVCWq8+t+Baz2TyQtu0tHMX34DWL4PLTYWhh+UJdpX+TKpT7aGb5HdJDFJ
-	 MtfsdKL3a/k/JoohxzwwM7nts4AOkqJekSIkplGAtrVyJmlGnl46C8Hpq0EvEL8zmyw==
+	t=1793799974;
+	b=aFb24CNaN97Lb+P6zpTE4uvLws7/M9y2rCSEhOZR0n2dVFPC0rwP0JNcrA7kHdON7Jtd
+	 Cfl7eUXkEGe2Xqobd1N/WHDivbxMpwj9CqvaJNpCdjXoavvuWD0HfPUKINE5jQgOmgG85
+	 wm+BAOL0bbRqxMO1j1FjgzpciU3XgLDQ+QVaopl3T5jMfxzH5H3cAYJiZ/0sLhGqbSYVO
+	 Di8FPQ3SUlIW4iY891tH2p+XlQxr0FUpj+TcOhWciDdqaYTETeowMgB3YisUufn0NIedX
+	 VYoIwTHvXAgvRqCv5Dmd/wjr9tAly9zj1EFdE9APcEdNzLbx+V3FJ/GBxnM6iNFywEA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793798723;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793799974;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=WewCNuo8YovPY2dmGEGeXhtwDfjeK4b5OhGvtgGhTF0=;
-	b=p1dwaYeakD9y9zIaQjs3toUe/ohaCh7KTeCTY0V9Hcvy0Y2zNW75DU0J/JoFNVLBfUVR
-	 BTuGWESuZ0L58tefJ8pIe6Y41N1DB9NGHX1r3THH0i1tYpEd2RV0jLq6bXiuxbY+bwf6J
-	 9gEcqgNqR3Bz6H3dgcNABsqp+CO/GMcPtoRjdZMnhrSsmz/BGycmggHp1uP01vvo35y2T
-	 WkNb5rV3fLTaprchumhgPEZytbXguIQ0p1cQZGLhDX+dldudr7sphpxw949uKkus9Q8wF
-	 tTTrvanuw38vxUDtoT3vS0fsxfwLRTurtr+SgXNKWacDXnuLPAZfPKlGEZkaWNxqelw==
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=Q4tWgwLTiI8SPma50NL+69gW2A8l1tsl3NgQNJG9OZI=;
+	b=RGgmY2Z4a5jvEogpefUanKASjeI/jBH6FdZ15Pb3KtrM7ddhBdXYOxCGnHTE7zirS1j9
+	 0GOBrWr+BRfoi1DKYCQQNZKleCGV0lexJUl85cgvhgYO4iGik9mIL9RG34WotLNEGyKoe
+	 nqu3DcXxqaGeq48CotJZdwKNdUgveVbtqR6x7NEm77phmf0u6/BdroB3BGxTZjkTf4Sn8
+	 wj80K60UrSiWswlunYH9rVptiDvBNelbTOnPEFCJI74Nk/wfvFAAbSnu9XpBGhTgskM6+
+	 cyaulvTOLmN5yqyS+Ep0Gk8qQ/8sjImuGpPMWQL9K/BlGRfcL3pe0uoVUSzFS9VIQ0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="YhT7a/p1";
-	arc=none smtp.remote-ip=95.215.58.113
-Received: from mta1.migadu.com (out-113.mta1.migadu.com [95.215.58.113])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=D7zAy89x;
+	arc=none smtp.remote-ip=91.218.175.136
+Received: from mta0.migadu.com (out-136.mta0.migadu.com [91.218.175.136])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E21E0606A31B
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 13:25:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E21E0606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21F14606A328
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 13:46:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21F14606A328
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=YhT7a/p1
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=D7zAy89x
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=BNLoTZcqlZkdyN8nI/N/fiKEzBgCvrjgOnls62w/d7g=;
+DKIM-Signature: a=rsa-sha256; bh=r1v3gaHbye2LaSteE/Y0pgAbJSvJ3a9oWoFvgk1atq8=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793798720; v=1; x=1794403520;
- b=YhT7a/p1dfsL/eIlLPBtQDmuzjGr03JYM2Gxa5WMRSSPpTLxzmO3W1fKHTFQjo8AgVngvNSc
- JzwxYKxyMMo1od4tWhMEmYiw96VQeFm440m2HOBGqSOificvFPUSbqBUSjWMAYGFKzVYngYH6Ni
- liDZR52RlRNsexBbDOBBvHsw=
+ t=1793799969; v=1; x=1794404769;
+ b=D7zAy89xQ+cQiauu/mlV4T0WBr50R4C4ILX9ymomytcDXFkiBS4UVvNG7y1R25caNGhAhmeR
+ nqvK3Uq9pIWOKykMLxCpvdOgF2uyeMAfZAdlhprcdqnxbcIxeS9Msnjh0oTCFSIyitXGmzaQjhx
+ aOVNqreRnnYm4RYROF6+qGPI=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id eca819494a8d83eb;
-	Wed, 04 Nov 2026 13:25:19 +0000
-X-Mizu-Trace-ID: eca819494a8d83eb
+Received: by smtp.migadu.com with ESMTPS id 9497cdf413eb9ab1;
+	Wed, 04 Nov 2026 13:46:09 +0000
+X-Mizu-Trace-ID: 9497cdf413eb9ab1
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <57f4dd69-a326-4802-b9b3-f715568b8ea4@linux.dev>
-Date: Wed, 4 Nov 2026 21:25:10 +0800
+Message-ID: <a8be8f5f-fb9c-46da-a1b6-eea68ae07006@linux.dev>
+Date: Wed, 4 Nov 2026 21:46:03 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,124 +59,198 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, tz2294@columbia.edu,
- stable@vger.kernel.org
-Subject: Re: [PATCH] cgroup/freezer: walk exiting tasks in the v1 freezer
-To: mt4022@columbia.edu, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
-References: <20261103-cgroup-freezer-exiting-v1-1-00d43b443747@columbia.edu>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20261103-cgroup-freezer-exiting-v1-1-00d43b443747@columbia.edu>
+Subject: Re: [PATCH] cgroup/cpuset: Fail if isolated CPUs don't leave any boot
+ domain housekeeping CPU
+To: Ridong Chen <ridong.chen@linux.dev>, longman@redhat.com
+Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20261104071600.474587-1-guopeng.zhang@linux.dev>
+ <cbe741a9-fd0c-4c8f-8591-55ecc70f222a@linux.dev>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <cbe741a9-fd0c-4c8f-8591-55ecc70f222a@linux.dev>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hi Mani,
 
-在 2026/11/4 02:09, Mani Tofigh via B4 Relay 写道:
-> From: Mani Tofigh <mt4022@columbia.edu>
+
+在 2026/11/4 20:58, Ridong Chen 写道:
 > 
-> An exiting task can stay frozen after its v1 freezer cgroup is thawed.
-> Since commit a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
-> the css task walk hides an exiting task once its process has no live
-> threads left.  That count drops when another thread of the process
-> exits, which can happen between the freeze and the thaw walk.  A pid
-> namespace init hits this easily since it waits freezably in
-> zap_pid_ns_processes() after commit 81933038f5e2 ("pid_namespace: make
-> zap_pid_ns_processes() freezable"):
 > 
->   Task A (pid ns init)      Task B (A's thread)      Task C
->                             do_exit()
->                               exit_signals()
->   do_exit()
->     zap_pid_ns_processes()
->                                                      write FROZEN
->                                                        /* A frozen */
->                               /* live count 0 */
->                                                      write THAWED
->                                                        /* A skipped */
+> On 11/4/2026 3:16 PM, Guopeng Zhang wrote:
+>> From: Guopeng Zhang<zhangguopeng@kylinos.cn>
+>>
+>> With the "domain" flag of the isolcpus= boot option, the CPUs isolated
+>> at boot are excluded from the sched domains and the remaining CPUs
+>> become the boot domain housekeeping CPUs. An isolated partition is
+>> allowed to use the boot isolated CPUs, but it must not take over all
+>> the boot domain housekeeping CPUs.
+>>
+>> prstate_housekeeping_conflict() checks that rule for root partitions
+>> only. The 2nd check covers the nohz_full case as it is gated by
+>> housekeeping_enabled(HK_TYPE_KERNEL_NOISE) which is not enabled by
+>> isolcpus=domain. So on an isolcpus=domain,<cpus> boot, an isolated
+>> partition can claim all the remaining boot domain housekeeping CPUs.
+>> The state is committed, but the sched domain rebuild at the end of
+>> the write finds no housekeeping CPU left for the boot domain and
+>> hits WARNs and an OOPS in partition_sched_domains().
+>> housekeeping_update() cannot accept the configuration either as it
+>> cannot empty the boot domain housekeeping mask.
+>> With an "isolcpus=domain,10-31" boot where CPUs 0-9 are the boot
+>> domain housekeeping CPUs, for example:
+>>
+>>    # echo 0-9 > A/cpuset.cpus
+>>    # echo isolated > A/cpuset.cpus.partition
+>>    WARNING: kernel/sched/topology.c:3089 at build_sched_domains+...
+>>    WARNING: kernel/cgroup/cpuset.c:1478 at cpuset_update_sd_hk_unlock+...
+>>    RIP: 0010:partition_sched_domains+0x3b8
+>>
+>> Fix that by extending prstate_housekeeping_conflict() to reject an
+>> isolated partition update that would leave no active boot domain
+>> housekeeping CPU outside the isolated CPUs. The CPUs released back
+>> to the boot domain by the same update are taken into account, so
+>> replacing one of the last housekeeping CPUs with another one in a
+>> single update remains allowed. The new check is only performed when
+>> housekeeping_enabled(HK_TYPE_KERNEL_NOISE) is disabled so that the
+>> existing nohz_full behavior is unchanged.
+>>
+>> Add test cases in test_cpuset_prs.sh to verify that taking over all
+>> the boot domain housekeeping CPUs is rejected while swapping one of
+>> them with another one is allowed.
 > 
-> A then stays frozen even after SIGKILL:
-> 
->   [   10.775155] task:fz-init         state:D stack:28152 pid:65    tgid:65    ppid:1      task_flags:0xc0004c flags:0x00080000
->   [   10.775176] Call Trace:
->   [   10.775180]  <TASK>
->   [   10.775188]  __schedule+0x10f1/0x4760
->   [   10.775252]  schedule+0xd7/0x2c0
->   [   10.775265]  zap_pid_ns_processes+0x2c7/0x5f0
->   [   10.775346]  do_exit+0x1bf4/0x2560
->   [   10.775403]  __x64_sys_exit+0x3d/0x50
->   [   10.775414]  x64_sys_call+0x156c/0x1570
->   [   10.775425]  do_syscall_64+0xfb/0x590
->   [   10.775450]  entry_SYSCALL_64_after_hwframe+0x77/0x7f
->   [   10.775529]  </TASK>
-> 
-> Use CSS_TASK_ITER_WITH_DEAD in the three v1 freezer walks so they all
-> see the same tasks, as commit 60f21a264930 ("cgroup, sched_ext: Include
-> exiting tasks in cgroup iter") did for sched_ext.  With the fix, A is
-> thawed and exits.
+> Hi Guopeng,
 > 
 
-Thanks for the clear writeup and reproducer. Ran freezev1.c against
-next-20261103 on a 2-vCPU VM. Base reproduced the hang on round 1
-(5.1s), with the patch 600s / 6124 rounds ran clean.
+Hi Ridong,
 
-Reviewed-by: Tao Cui <cuitao@kylinos.cn>
-Tested-by: Tao Cui <cuitao@kylinos.cn>
+Thanks a lot for the analysis and the patch. 
 
-Thanks,
-Tao
-> This bug was identified and confirmed with the help of a deterministic
-> hypervisor currently under development.  The C reproducer below however
-> hits it within about 10s.
+> Thanks for the report and the reproducer. I can reproduce the WARN and
+> the OOPS in partition_sched_domains() here.
 > 
-> Fixes: a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Mani Tofigh <mt4022@columbia.edu>
+> However, I don't think prstate_housekeeping_conflict() is the right
+> place to fix it, and the fix doesn't seem complete. The same problem
+> can be triggered with a root partition, which this patch doesn't cover.
+> With an "isolcpus=domain,4-7" boot on an 8-CPU VM:
+> 
+>   # echo 0-3 > A/cpuset.cpus
+>   # echo root > A/cpuset.cpus.partition
+>   WARNING: kernel/sched/topology.c:3111 at build_sched_domains+0x2b96/0x5500
+>   Oops: general protection fault, ... [#1] SMP KASAN NOPTI
+>   RIP: 0010:partition_sched_domains+0x10a3/0x1a10
+> 
+
+You are right. The sashiko review also reported this issue. I can
+reproduce the WARN and the OOPS here as well.
+
+> The faulting address is in build_perf_domains(), where cpumask_first()
+> on the empty cpu_map returns nr_cpu_ids and cpu_rq() goes out of
+> bounds.
+> 
+> The root cause looks like it isn't a housekeeping conflict. Boot time
+> isolated CPUs stay in top_cpuset.effective_cpus by design, and they are
+> only filtered out of the top_cpuset sched domain in
+> generate_sched_domains(). But the checks that make sure the parent
+> still has CPUs left, i.e. tasks_nocpu_error() for local partitions and
+> the cpumask_subset(top_cpuset.effective_cpus, ...) checks in
+> remote_partition_enable()/remote_cpus_update(), only look at
+> top_cpuset.effective_cpus. So any partition, root or isolated, local
+> or remote, can take away all the boot domain housekeeping CPUs as long
+> as some boot isolated CPUs are still left in top_cpuset, which leaves
+> the top_cpuset sched domain empty.
+> 
+> So I think the check should be done at the "parent has no CPU left"
+> level instead. Something like the diff below. It is not tested yet;
+> could you give it a try with your reproducer and the test cases?
+> Note that the root partition and remote partition cases should be
+> added to the selftest as well.
+> 
+
+That's a great idea, thanks for your guidance. I will test it and add
+the relevant test cases.
+
+Best regards,
+Guopeng
+
+> Without isolcpus=domain, HK_TYPE_DOMAIN_BOOT is cpu_possible_mask and
+> the new check is equivalent to the existing one, so no extra
+> housekeeping_enabled() gating is needed.
+> 
 > ---
-> Reproducer: https://github.com/manitofigh/files/blob/main/linux-repros/freezev1.c
-> ---
->  kernel/cgroup/legacy_freezer.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 3219f927c35e..fb3e81405f5b 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1180,12 +1180,51 @@ static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
+>                 cpuset_force_rebuild();
+>  }
 > 
-> diff --git a/kernel/cgroup/legacy_freezer.c b/kernel/cgroup/legacy_freezer.c
-> index 8545e0d1ba3d..bd11047f2311 100644
-> --- a/kernel/cgroup/legacy_freezer.c
-> +++ b/kernel/cgroup/legacy_freezer.c
-> @@ -265,7 +265,7 @@ static void update_if_frozen(struct cgroup_subsys_state *css)
->  	rcu_read_unlock();
->  
->  	/* are all tasks frozen? */
-> -	css_task_iter_start(css, 0, &it);
-> +	css_task_iter_start(css, CSS_TASK_ITER_WITH_DEAD, &it);
->  
->  	while ((task = css_task_iter_next(&it))) {
->  		if (freezing(task) && !frozen(task))
-> @@ -309,7 +309,7 @@ static void freeze_cgroup(struct freezer *freezer)
->  	struct css_task_iter it;
->  	struct task_struct *task;
->  
-> -	css_task_iter_start(&freezer->css, 0, &it);
-> +	css_task_iter_start(&freezer->css, CSS_TASK_ITER_WITH_DEAD, &it);
->  	while ((task = css_task_iter_next(&it)))
->  		freeze_task(task);
->  	css_task_iter_end(&it);
-> @@ -320,7 +320,7 @@ static void unfreeze_cgroup(struct freezer *freezer)
->  	struct css_task_iter it;
->  	struct task_struct *task;
->  
-> -	css_task_iter_start(&freezer->css, 0, &it);
-> +	css_task_iter_start(&freezer->css, CSS_TASK_ITER_WITH_DEAD, &it);
->  	while ((task = css_task_iter_next(&it)))
->  		__thaw_task(task);
->  	css_task_iter_end(&it);
+> +/*
+> + * top_cpuset_sd_nocpu - Check if top_cpuset will have no sched domain CPU
+> + * @add_cpus: CPUs to be taken away from top_cpuset
+> + * @del_cpus: CPUs to be given back to top_cpuset, can be NULL
+> + * Return: true if no active CPU will be left in the top_cpuset sched domain
+> + *
+> + * Boot time isolated CPUs stay in top_cpuset.effective_cpus, but they are
+> + * excluded from the sched domain of top_cpuset in generate_sched_domains().
+> + * So checking top_cpuset.effective_cpus alone is not enough to ensure that
+> + * the top_cpuset sched domain won't become empty after @add_cpus are taken
+> + * away from it. The sched domain of top_cpuset must keep at least one
+> + * active boot domain housekeeping CPU.
+> + */
+> +static bool top_cpuset_sd_nocpu(const struct cpumask *add_cpus,
+> +                               const struct cpumask *del_cpus)
+> +{
+> +       const struct cpumask *hk_mask = housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT);
+> +       int cpu;
+> +
+> +       for_each_cpu_and(cpu, hk_mask, cpu_active_mask) {
+> +               if (cpumask_test_cpu(cpu, add_cpus))
+> +                       continue;
+> +               if (cpumask_test_cpu(cpu, top_cpuset.effective_cpus) ||
+> +                   (del_cpus && cpumask_test_cpu(cpu, del_cpus)))
+> +                       return false;
+> +       }
+> +       return true;
+> +}
+> +
+>  /*
+>   * tasks_nocpu_error - Return true if tasks will have no effective_cpus
+>   */
+>  static bool tasks_nocpu_error(struct cpuset *parent, struct cpuset *cs,
+>                               struct cpumask *xcpus)
+>  {
+> +       /*
+> +        * The top_cpuset always has tasks (kthreads at least), so its sched
+> +        * domain can't be empty. The current effective_xcpus of a valid
+> +        * partition will be given back to top_cpuset if not in @xcpus.
+> +        */
+> +       if ((parent == &top_cpuset) &&
+> +           top_cpuset_sd_nocpu(xcpus, is_partition_valid(cs)
+> +                                      ? cs->effective_xcpus : NULL))
+> +               return true;
+> +
+>         /*
+>          * A populated partition (cs or parent) can't have empty effective_cpus
+>          */
+> @@ -1724,7 +1763,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+>          */
+>         compute_excpus(cs, tmp->new_cpus);
+>         if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
+> -           cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
+> +           top_cpuset_sd_nocpu(tmp->new_cpus, NULL))
+>                 return PERR_INVCPUS;
+>         if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
+>                 return PERR_NOCPUS;
+> @@ -1828,7 +1867,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+>                 if (!capable(CAP_SYS_ADMIN))
+>                         WRITE_ONCE(cs->prs_err, PERR_ACCESS);
+>                 else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
+> -                        cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
+> +                        top_cpuset_sd_nocpu(tmp->addmask, tmp->delmask))
+>                         WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
+>                 else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
+>                                                        excpus, tmp->delmask))
 > 
-> ---
-> base-commit: fffbdad76a57eed26cff1be19f4cbb407f0b6e7c
-> change-id: 20261102-cgroup-freezer-exiting-c7f60e4c3200
-> 
-> Best regards,
-> --  
-> Mani Tofigh <mt4022@columbia.edu>
 
