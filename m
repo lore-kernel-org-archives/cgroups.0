@@ -1,66 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793776588;
-	b=4uA20nMf1iMwJOyMDFns9MMN0bwL4iojigUdQpEeLKucfZz54iTiI51t84pYf/fO4Z82
-	 kAmh5leAJCYlYCeH3GJqCrKRfY4V1V188npmVMliPFwosw2xZLD9FcV/LRx8xRRkecUU4
-	 uvxhN+obcKK2E4nK/RYGwgovoqEwyRbU0kcow6iRNOrv6ex83XnH7Ie6MAuJAfE1a92DC
-	 vUVJbkaZTkalkQD6AIMuhQL85nLmyHefa4z6JJ2ADECb5b7/6YqyZvtqDdvMRXfXo3dAV
-	 lFd5eTT+fhcB8ZUS5nx/VSUF7uonrqenfHaNT/KeevJ/PlQnjMv5mztSIOB5unH6plw==
+	t=1793785177;
+	b=ZQ3b6k+X6Xvm8nW/NAqrR0t1nweCXs7tX/VigMAzIXSYj9MuordbadmMWZavaKuK84zZ
+	 MlFheh4rbCp54ZdU3/EtTBzmCBhfyOpnskWPAVK5XZFke5JTZtTa8XlkTPwJbU0Z0lb1Q
+	 zD5Q912bcpIGeubWwLjj1G9hriG2BhLdiq3jEM2DwDw6ezJ2NBL4mjT+vvjl4TtywtyVL
+	 rcopQr9gtLmfvM/rhOiEW2bFANff3cCmFnZkhDrijys6p6hfItI5zSEHYYkT+qlEIXX3F
+	 BRM8+3Guw2X8WyH1yarPss0Q1HcaELVkyDqi3XSIxmefvPEZqLrkZZ8mYH2eDjodNpA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793776588;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=sq8GeUPUbWD5/l9webTykYpDaibNcYX0trvCELNClDY=;
-	b=SOkp6dBPY6PJEW1sliHRDRn/hWyMQHGsbmXx1eLXyixwPKxN7jBpVsPR9pZnPpvpY2/J
-	 GpOE+4LYexC+i3hpI+OIa7PDVCNdXioPzvX2j+A3sj0JTRBtEDvMM3UKZVjakvSyVrKv7
-	 ADs9NUfTKkf4i6xUFP3Hy0zOKXVQEDgLTk5bZ+rwExXdI9wJxK7qahoZrX3ruAAwHaQmv
-	 Eybv0tqOm6sXDwFGDzU1DMhP4QST0Aix0RvsWEkXTt/2jnzj3ic5Vcd82ZXPeXWFBn6qm
-	 VBSL9+/+J8sT1r0c8lpMiXa0mvso8Z0jTsRJMpdszOItrQ9VfVVy6VTD3fOkAvXdBwg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793785177;
+	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=GKas3peospknksB0vSRc5IU2FW9D1srUiUjTUhHUOGk=;
+	b=BeIMnzBiqjFuMh6wQqBpJ9DbLpC28EtZeuxv3+mXwDoN7YJeqqE94sdsq2HVE6LJ0ngw
+	 imyE6Kiag0ibzklS5TYjplx1QtiUvfRJcnrF0jiyWW58A52be3oiYvmsvFzKm68mlrKot
+	 KVMduES4tvVHxGCGKWmovBOFiWp7N0T4p9220Y6F5JCOcCycJG9C4PyJDtrJL/cBCEUq/
+	 1rmwK2c27woWh0PW+hfqwT3FoGsMQLuaY0/Zweeuo0jBxVBzlXlz8VKE9rAb//ZLTIFvN
+	 1Y6025jJlzUY0rxU5cgst1/6UXhwkD/1XQw7ONC04fEoDQzCxJmCVNBxhjNj+AvWn+g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ASCmtkw1;
-	arc=none smtp.remote-ip=95.215.58.5
-Received: from mta1.migadu.com (out-5.mta1.migadu.com [95.215.58.5])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B436606A332
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 07:16:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B436606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ASCmtkw1
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=0NMn6LfHJXdY0del5TIwB9PNJWC94DBmPcplZLgt9NE=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793776580; v=1; x=1794381380;
- b=ASCmtkw1exsVpYkJRoJjNg4dJnicckKvkH2fYjpv1OQqOu28dB3sx5qYIMPS9Od72Sj5aPDW
- 0odhTPBfbPSoRST5AEhwSeAbi1oKIVvxrhisrw7ubpXuFGH2B14F1FUpRjqPpyxyPSc0dT4x3jW
- IP3ZxRAwVye9NoljUFGR/4s4=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 3f4a2e5a750a33d9;
-	Wed, 04 Nov 2026 07:16:20 +0000
-X-Mizu-Trace-ID: 3f4a2e5a750a33d9
-X-Migadu-Flow: FLOW_OUT
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-To: longman@redhat.com
-Cc: ridong.chen@linux.dev,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142D3606A328;
+	Wed,  4 Nov 2026 09:39:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 142D3606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: a086d4fad83311f19a56ed5b684f684d-20261104
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
+	HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE
+	HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
+	SA_TRUSTED, SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS
+	DKIM_NOPASS, DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF
+	GTI_FG_BS, GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:eb28db4d-434b-490d-8aba-b9882b379760,IP:10,
+	URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:10
+X-CID-INFO: VERSION:1.3.19,REQID:eb28db4d-434b-490d-8aba-b9882b379760,IP:10,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:10
+X-CID-META: VersionHash:7db8b62,CLOUDID:c3887dee93015b2c45488bae4be79267,BulkI
+	D:261104173930I66NRZ8C,BulkQuantity:0,SF:17|19|38|66|78|102|127|153|865|89
+	8,TC:nil,Content:0|15|50|99,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS
+	:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,A
+	RC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: a086d4fad83311f19a56ed5b684f684d-20261104
+X-User: husong@kylinos.cn
+Received: from ctao-book [(114.244.3.119)] by mailgw.kylinos.cn
+	(envelope-from <husong@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1667460396; Wed, 04 Nov 2026 17:39:27 +0800
+From: Song Hu <husong@kylinos.cn>
+To: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org
+Cc: david@kernel.org,
 	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	shuah@kernel.org,
 	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH] cgroup/cpuset: Fail if isolated CPUs don't leave any boot domain housekeeping CPU
-Date: Wed,  4 Nov 2026 15:16:00 +0800
-Message-ID: <20261104071600.474587-1-guopeng.zhang@linux.dev>
-X-Mailer: git-send-email 2.43.0
+	Song Hu <husong@kylinos.cn>
+Subject: [PATCH] mm: memcontrol: serialize concurrent memory.min/low writes
+Date: Wed,  4 Nov 2026 17:39:20 +0800
+Message-ID: <20261104093920.2279191-1-husong@kylinos.cn>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -72,154 +90,108 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+page_counter_set_min() and page_counter_set_low() require callers to
+serialize updates to the same counter.
 
-With the "domain" flag of the isolcpus= boot option, the CPUs isolated
-at boot are excluded from the sched domains and the remaining CPUs
-become the boot domain housekeeping CPUs. An isolated partition is
-allowed to use the boot isolated CPUs, but it must not take over all
-the boot domain housekeeping CPUs.
+The v2 write path does not provide that guarantee: kernfs serializes
+only writes through the same struct file, while each echo opens the
+file independently, and cgroup_file_write() invokes the handler
+directly, so concurrent updates run in parallel.
 
-prstate_housekeeping_conflict() checks that rule for root partitions
-only. The 2nd check covers the nohz_full case as it is gated by
-housekeeping_enabled(HK_TYPE_KERNEL_NOISE) which is not enabled by
-isolcpus=domain. So on an isolcpus=domain,<cpus> boot, an isolated
-partition can claim all the remaining boot domain housekeeping CPUs.
-The state is committed, but the sched domain rebuild at the end of
-the write finds no housekeeping CPU left for the boot domain and
-hits WARNs and an OOPS in partition_sched_domains().
-housekeeping_update() cannot accept the configuration either as it
-cannot empty the boot domain housekeeping mask.
-With an "isolcpus=domain,10-31" boot where CPUs 0-9 are the boot
-domain housekeeping CPUs, for example:
+The store and the subsequent propagation replay are not atomic, and
+propagate_protected_usage() recomputes protection accounting from the
+current page_counter limits instead of a value captured when the
+write started.  Two concurrent updates can therefore interleave such
+that the replay associated with an older limit overwrites accounting
+computed from the newer one: writer A stores 100, writer B stores 200
+and replays, then A's replay runs last and leaves min_usage and the
+ancestors' children_min_usage computed from the stale 100 while
+counter->min is 200.  The wrong accounting
+persists until the next charge or uncharge re-runs the propagation;
+an idle group with resident pages never self-heals, and reclaim
+meanwhile distributes sibling protection by the wrong numbers.  No
+corruption beyond mispriced protection.
 
-  # echo 0-9 > A/cpuset.cpus
-  # echo isolated > A/cpuset.cpus.partition
-  WARNING: kernel/sched/topology.c:3089 at build_sched_domains+...
-  WARNING: kernel/cgroup/cpuset.c:1478 at cpuset_update_sd_hk_unlock+...
-  RIP: 0010:partition_sched_domains+0x3b8
+Serialize the write handlers with a shared mutex, the same shape the
+v1 controller already uses for its limit writes (memcg_max_mutex in
+memcontrol-v1.c).  The offline and reset paths, which clear the
+limits under cgroup_mutex, take the same mutex, so every memcg
+writer of page_counter_set_min()/set_low() ends up serialized.  The
+mutex is only ever taken as a leaf in process context, so there is
+no ordering hazard.  memory.high and memory.max need no lock:
+neither propagates protection, and their setters are already atomic
+(a plain store and an xchg respectively).
 
-Fix that by extending prstate_housekeeping_conflict() to reject an
-isolated partition update that would leave no active boot domain
-housekeeping CPU outside the isolated CPUs. The CPUs released back
-to the boot domain by the same update are taken into account, so
-replacing one of the last housekeeping CPUs with another one in a
-single update remains allowed. The new check is only performed when
-housekeeping_enabled(HK_TYPE_KERNEL_NOISE) is disabled so that the
-existing nohz_full behavior is unchanged.
-
-Add test cases in test_cpuset_prs.sh to verify that taking over all
-the boot domain housekeeping CPUs is rejected while swapping one of
-them with another one is allowed.
-
-Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+Fixes: bf8d5d52ffe8 ("memcg: introduce memory.min")
+Fixes: 230671533d64 ("mm: memory.low hierarchical behavior")
+Signed-off-by: Song Hu <husong@kylinos.cn>
 ---
- kernel/cgroup/cpuset.c                        | 36 +++++++++++++++++++
- .../selftests/cgroup/test_cpuset_prs.sh       | 30 ++++++++++++++++
- 2 files changed, 66 insertions(+)
+ mm/memcontrol.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 6e136888fc8e..c1ed556ddb1a 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1403,6 +1403,42 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
- 	if (del_cpus && cpumask_empty(del_cpus))
- 		del_cpus = NULL;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 84f4a8fd4d16..87ca7bc1aef1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4458,14 +4458,27 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 	return -ENOMEM;
+ }
  
-+	/*
-+	 * With boot time domain isolation (isolcpus= with the domain flag),
-+	 * the CPUs that are not isolated at boot become the boot domain
-+	 * housekeeping CPUs. An isolated partition must not take over all
-+	 * of them. Otherwise housekeeping_update() will fail later when
-+	 * the isolated CPUs are handed over, leaving the sched domains in
-+	 * an inconsistent state. This case isn't covered by the 2nd check
-+	 * below which requires nohz_full to be enabled.
-+	 */
-+	if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE) &&
-+	    housekeeping_enabled(HK_TYPE_DOMAIN_BOOT) && (new_prs == PRS_ISOLATED)) {
-+		cpumask_var_t boot_hk_cpus;
++/*
++ * The store-plus-replay sequences of page_counter_set_min() and
++ * page_counter_set_low() must not interleave across writers: a stale
++ * replay can overwrite a newer one and protection accounting stays
++ * wrong until the next charge or uncharge re-runs it.  The walk in
++ * those helpers crosses counters, so this lock has to stay global --
++ * per-cgroup locking would still let a descendant writer and an
++ * ancestor writer race.
++ */
++static DEFINE_MUTEX(memcg_protected_mutex);
 +
-+		if (!alloc_cpumask_var(&boot_hk_cpus, GFP_KERNEL))
-+			return true;
-+
-+		/*
-+		 * Compute the isolated CPUs after this update: the CPUs
-+		 * released by it (@del_cpus) leave the isolated set and
-+		 * become available to the boot domain again, unless they
-+		 * are returned to an isolated parent instead.
-+		 */
-+		if (del_cpus && parent_prs != PRS_ISOLATED)
-+			cpumask_andnot(boot_hk_cpus, isolated_cpus, del_cpus);
-+		else
-+			cpumask_copy(boot_hk_cpus, isolated_cpus);
-+		cpumask_andnot(boot_hk_cpus,
-+			       housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT),
-+			       boot_hk_cpus);
-+		cpumask_andnot(boot_hk_cpus, boot_hk_cpus, new_cpus);
-+		res = !cpumask_intersects(boot_hk_cpus, cpu_active_mask);
-+		free_cpumask_var(boot_hk_cpus);
-+		if (res)
-+			return true;
-+	}
-+
- 	/*
- 	 * Exit 2nd check early and return false if
- 	 * 1) there is no boot time isolated nohz_full CPU
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index bdca6c471f87..8c7af34b51c8 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -133,6 +133,17 @@ LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
- [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" = 8 &&
-    "$LAST_NOHZ_FULL_CPU" = $LAST_PRESENT_CPU ]] && RUN_NOHZ_FULL_TESTS=1
+ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
  
-+# The isolcpus domain test matrix assumes that the boot domain
-+# housekeeping CPUs are exactly 0-9, i.e. an
-+# "isolcpus=domain,10-<last>" boot.
-+RUN_ISOLCPUS_DOMAIN_TESTS=
-+if grep -q "isolcpus=.*domain" /proc/cmdline 2>/dev/null &&
-+	[[ -z "$(cat /sys/devices/system/cpu/nohz_full 2>/dev/null)" ]]
-+then
-+	[[ "$(cat /sys/devices/system/cpu/isolated)" = "10-$LAST_PRESENT_CPU" ]] &&
-+		RUN_ISOLCPUS_DOMAIN_TESTS=1
-+fi
-+
- #
- # If isolated CPUs have been reserved at boot time (as shown in
- # /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
-@@ -602,6 +613,24 @@ ISOLCPUS_TEST_MATRIX=(
- 	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
- )
+ 	memcg1_css_offline(memcg);
  
-+# Test matrix to be run when the system is booted with
-+# "isolcpus=domain,10-<last>" so that CPUs 0-9 are the boot domain
-+# housekeeping CPUs.
-+ISOLCPUS_DOMAIN_TEST_MATRIX=(
-+	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
-+	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-+	# Using all the boot domain housekeeping CPUs in an isolated
-+	# partition is not allowed
-+	" C0-9      .      .      .     P2      .      .      .     0 A1:0-9  A1:P-2  ."
-+
-+	# Replacing some of the boot domain housekeeping CPUs with other
-+	# ones in a single update is allowed
-+	" C2-9:P2   .      .      .    C0-4     .      .      .     0 A1:0-4  A1:P2   0-4"
-+
-+	# Taking over the last housekeeping CPU by an update is not allowed
-+	" C0-8:P2   .      .      .    C0-9     .      .      .     0 A1:0-9  A1:P-2  ."
-+)
-+
- # Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
- # This also means that CPU 8 is available and is a nohz_full CPU.
- NOHZ_FULL_TEST_MATRIX=(
-@@ -1472,6 +1501,7 @@ test_inotify()
- run_state_test TEST_MATRIX
- run_remote_state_test REMOTE_TEST_MATRIX
- TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
-+[[ -n "$RUN_ISOLCPUS_DOMAIN_TESTS" ]] && run_state_test ISOLCPUS_DOMAIN_TEST_MATRIX
- [[ -n "$RUN_NOHZ_FULL_TESTS" ]] && run_state_test NOHZ_FULL_TEST_MATRIX
- test_isolated
- test_boot_isolated
++	mutex_lock(&memcg_protected_mutex);
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
++	mutex_unlock(&memcg_protected_mutex);
+ 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+ 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
+ 
+@@ -4548,8 +4561,10 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+ 	page_counter_set_max(&memcg->kmem, PAGE_COUNTER_MAX);
+ 	page_counter_set_max(&memcg->tcpmem, PAGE_COUNTER_MAX);
+ #endif
++	mutex_lock(&memcg_protected_mutex);
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
++	mutex_unlock(&memcg_protected_mutex);
+ 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+ 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
+ 	memcg_wb_domain_size_changed(memcg);
+@@ -4924,7 +4939,9 @@ static ssize_t memory_min_write(struct kernfs_open_file *of,
+ 	if (err)
+ 		return err;
+ 
++	mutex_lock(&memcg_protected_mutex);
+ 	page_counter_set_min(&memcg->memory, min);
++	mutex_unlock(&memcg_protected_mutex);
+ 
+ 	return nbytes;
+ }
+@@ -4947,7 +4964,9 @@ static ssize_t memory_low_write(struct kernfs_open_file *of,
+ 	if (err)
+ 		return err;
+ 
++	mutex_lock(&memcg_protected_mutex);
+ 	page_counter_set_low(&memcg->memory, low);
++	mutex_unlock(&memcg_protected_mutex);
+ 
+ 	return nbytes;
+ }
 -- 
-2.43.0
+2.53.0
 
