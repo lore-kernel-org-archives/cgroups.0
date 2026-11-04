@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793806518;
-	b=xnVnSMD0eIN+t4d1x4gF10vBxqhlDPnGLlShToMdpMXD1NUIm4zmZ6aMVXMEPTnym6Hu
-	 e9MmBojL+qIBtqSi3Y/krbiI5Sp34p/OMJnRPIXuno94ygdSQezSHA+a66phoKvaNa4D0
-	 c9MOu+kYEyx0sVpmabT7XHhSIXP9IRwBmA7xvkPSoVJX12UR15K6bkQUq/XAQ4+2Hi6CA
-	 yxWv6nGAYeCFWTt+veIKmoLocUNWNtbzU+okCPZdZK17GsIbAV7SbK/RVPupjOCSAL/mV
-	 WR6RzPMv263CCONmdZYroiehGXmlIyinMzLyhU1ZxNtOQBJ7LkpDIVa0Nue+d7wrsjg==
+	t=1793809493;
+	b=jOc4YQvggdSZ3HApWW2byPS2lUKZIhny9VEUVS61/0yCiydPr/JSDRQQzLzW2zDAeCp1
+	 ifgZxBGUinD+0UTZyGWkYgTGcIRrglf5O0u2ULx3Bld6PYOvnRa09CVhB+mVH0/6ZqXSM
+	 /8BfhGySJNjuf0coREpRJ3qj96fw6XzUnkii/DCfDxzFSAXlEW8phA93Gd5dWYVcth9mz
+	 g0o/LEGonzWHXUK6GEwENMkQTipw432tzZDn/kmtrqdVu+m2OV94pXsnqVweLVzoGaw6J
+	 rXbqQX3gUos/t0kvkMaFzpy5RigP40WGqC5GLmckVNZpZXo3K9Yp7ZP0zVQSwA+6Biw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793806518;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793809493;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=qP1iq0olN33Pbj7s1LpnKxEDc19GAI3fREIGaO3xv2I=;
-	b=M8QIU5hX/tm9PjS6nRBnhpnlbHqfYbD4szF1eSRmSYP9dopkbrP54cPtxmTfGl8/pefQ
-	 aNDe9XRzO7wLKxoC1EAV/nCFnn91lp6Co7BIoqhYIIPbxW2wdXQFcpZ2m1r6SAOsDiK2m
-	 PSRaqtXAm3dZEr2dkjL0xCBteXPeExt+6mLHRM/RwoHQ6u4+2lI8urM3vkD/8A9gmKmLj
-	 4IlJMo47qK/TZK9eNMZmejKUwHwAEIkJLWpGfXUqIQ3YIqzwigDw3oVikMnB1V9E66P8I
-	 jp6NuCE2i6ejxwyPb50boZGAMfegfjD7uChSQ9MdpLG/kBlvo2sdRzOBl9eFMJIDw7w==
+	bh=0jAbavI8ymZD98DRzmcyyK930fQyxtvawv4WSCcoeMY=;
+	b=FEXR0W3YuVQAYPC/t8wUcpC9Vkvr9QTiAozWtPAQufeO1siGP9nZCxaiFeKiAmU1yqj2
+	 +uNFyi6s8rRbSCRuPxeFrCL8iaEUfSs/9XwRv/3LCBDEbmYYgPhcBC5NkTo85pHvbxNiQ
+	 LNp/IGAmCqjMBfa6cdq7+ejq2pKq6dvO64wp3u4S7KVCNRiwWSqOTimkwNT0htqPxKzJg
+	 JPYMNsavvhs/lfX3FA47y+OEHXk1J0eNR2pjxUHJqCjD/CnqJioLBKeWPlfJHcEmlFUOI
+	 RAy38PRny50WZ7WhsYqkXqQMBir8RAXEzg+Ul/r1/SKZQ1VbsWyi7vKkoJEi7LqOWFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dVUnZZF2;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fmwQKII2;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5B3E606A31B;
-	Wed,  4 Nov 2026 15:35:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7765606A32C;
+	Wed,  4 Nov 2026 16:24:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=dVUnZZF2
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D86331F00919;
-	Wed,  4 Nov 2026 15:35:13 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fmwQKII2
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91E171F000C1;
+	Wed,  4 Nov 2026 16:24:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793806517;
-	bh=qP1iq0olN33Pbj7s1LpnKxEDc19GAI3fREIGaO3xv2I=;
+	s=k20260515; t=1793809492;
+	bh=0jAbavI8ymZD98DRzmcyyK930fQyxtvawv4WSCcoeMY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=dVUnZZF2JbbWHkh7TlBjyQ+8ZqlC0Kbnm95XH1obnujxhf98eX7KvMnOQMGreH9qn
-	 bYG0x3iMgD5BXGdksHjkl3dvtZ36XlxCMqVl0pQWAK0foVkfzjK03N4TSpPSH/sZRY
-	 Y2IRcQOAyWBrY2Lw8Z0n8TxpHgTKrUEF3ZSSY78nszazsxWCX3upfrgGE3Z5fuSzH8
-	 1sDRmbxV12YJa3bE94Ckwh6lK8P5UkC9Z1tPgyufH30swBcuFnOw79xxxtcCauARhV
-	 xZ+MxXxCJWOdWf6scPuXKnMsgJwA/BkxPQ/odsXjiA3DUsgv/DTE+IiC4jyNidJaLK
-	 J1H+oE37KddgQ==
-Message-ID: <6441429b-eff2-485b-acf3-26c3034910ae@kernel.org>
-Date: Wed, 4 Nov 2026 16:35:11 +0100
+	b=fmwQKII2OcOxpajVA5m6X2WFvwAjWfOocU2T+k3T70EY6soxn1uhskGNqKdz6OvIN
+	 VmsTpfWcJ5T2hMgM8ew3aaX5VkIgFgcNknEmUwKqhluTKM15Til1zGkd8qPNGzVRU4
+	 9wtox6Lb4jWK0+GXsbHnqkx9ufit513GlaHrZx6yxW/3391rhDCQhMjsB7LHFTu/N1
+	 Ea/N8tDlz9xWQxJc+6fVZrdyQ8SJqe2cpNdAzkBk+sSdys3aYDfbv9/nlAp3txGad0
+	 grJf84a6ksmA9E335KvNDmCzIwyY7OWS2Hh52xgdE6jCnDQ4k4IX59FYf2NMjVZj3J
+	 aGcO6EHA1+JYA==
+Message-ID: <37ed51ad-5160-46b5-a951-a0da2ff1824d@kernel.org>
+Date: Wed, 4 Nov 2026 17:24:47 +0100
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -52,25 +52,23 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-next-fixes v2 4/5] mm/slab: fix a deadlock in
- memcg_alloc_abort_single()
+Subject: Re: [PATCH for-next-fixes v2 5/5] mm/slab: serialize
+ deferred_work_barrier()
 Content-Language: en-US
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>,
- Harry Yoo <harry@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+To: "Harry Yoo (Meta)" <harry@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
  Roman Gushchin <roman.gushchin@linux.dev>,
  Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>, Hao Li <hao.li@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>,
  Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
  Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
- kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
+Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev,
  Sashiko <sashiko-bot@kernel.org>
 References: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org>
- <20261103-kmalloc-nolock-fixes-v2-4-19167cfe4779@kernel.org>
- <DMLSN9VHK0P3.2A97046A4YXGY@gmail.com> <auo5G__ac1qA9JRs@thinkstation>
- <DMLVUTB5J1RJ.2QKOUW6UB04ZM@gmail.com>
+ <20261103-kmalloc-nolock-fixes-v2-5-19167cfe4779@kernel.org>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -111,40 +109,59 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <DMLVUTB5J1RJ.2QKOUW6UB04ZM@gmail.com>
+In-Reply-To: <20261103-kmalloc-nolock-fixes-v2-5-19167cfe4779@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/3/26 22:11, Alexei Starovoitov wrote:
-> On Tue, Nov 03, 2026 at 12:21 PM Harry Yoo <harry@kernel.org> wrote:
->> While this is technically true, this relies too much on the current
->> implementation details and makes the code hard to follow.
+On 11/3/26 15:47, Harry Yoo (Meta) wrote:
+> irq_work_sync() uses rcuwait instead of busy waiting in two cases:
 > 
-> Fair enough. I don't insist.
+>   1. The kernel is using PREEMPT_RT and the irq work does not run in a
+>      hardirq context.
 > 
->> Patch 2 is an independent bugfix as-is already. We should really stop
->> open-coding slab_free_hook(). That ended up missing init_on_free handing.
+>   2. The architecture cannot send inter-processor interrupts to make
+>      busy waiting reasonably short.
 > 
-> Right. No objection to patch 2.
-> With patches 2 and 3 the !allow_spin side of memcg_alloc_abort_single()
-> is an open coded kfree_nolock():
+> However, rcuwait.h says:
+>> The caller is responsible for locking around rcuwait_wait_event(),
+>> and [prepare_to/finish]_rcuwait() such that writes to @task are
+>> properly serialized.
 > 
->   kfree_nolock()                    memcg_alloc_abort_single(!allow_spin)
->   --------------------------------  -------------------------------------
->   memcg_slab_free_hook()            -
->   alloc_tagging_slab_free_hook()    alloc_tagging_slab_free_hook()
->   slab_free_hook(!allow_spin)       slab_free_hook(!allow_spin)
->   free_to_pcs()                     -
->   defer_free()                      defer_free()
+> Since deferred_work_barrier() calls irq_work_sync() without any locks,
+> it can potentially cause a hang as writes to @task are not serialized.
 > 
-> I don't insist on kfree_nolock() there,
-> but can we try free_to_pcs() before defer_free() ?
-> Like:
+> Fix this by serializing deferred_work_barrier() with a dedicated mutex.
+> We cannot reuse slab_mutex because e.g.) some users of
+> kvfree_rcu_barrier() are outside mm/.
 > 
-> 	if (likely(allow_spin))
-> 		__slab_free(s, slab, object, object, 1, _RET_IP_);
-> 	else if (!can_free_to_pcs(slab) || !free_to_pcs(s, object, false))
-> 		defer_free(s, object);
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Closes: https://sashiko.dev/#/patchset/20260615-kfree_rcu_nolock-v3-0-70a54f3775bb%40kernel.org?part=5
+> Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
+> Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
 
-Why not try free_to_pcs with allow_spin as well then, and improve
-memcg_alloc_abort_single() for both contexts?
+Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+
+
+> ---
+>  mm/slub.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 6dfa8ca3c937..50e88edcef3a 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -6636,8 +6636,12 @@ void defer_kfree_rcu(struct kvfree_rcu_head *head)
+>  /* Must be called before flush_rcu_sheaves_on_cache() */
+>  void deferred_work_barrier(void)
+>  {
+> +	static DEFINE_MUTEX(barrier_mutex);
+>  	int cpu;
+>  
+> +	/* irq_work_sync() may use rcuwait that requires serialization */
+> +	guard(mutex)(&barrier_mutex);
+> +
+>  	for_each_possible_cpu(cpu)
+>  		irq_work_sync(&per_cpu_ptr(&deferred_percpu_work, cpu)->work);
+>  }
+> 
+
