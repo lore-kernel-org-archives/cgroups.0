@@ -1,51 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.62
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.111
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793755773;
-	b=0z32YOVTQILc4CLG/hX4mDuUEXiVhz0athOaU8ZkiZPKxLs1zs4VM1+Hdgv7+OR02oXJ
-	 0Pilf7zMj7dSihrGxtpRTrCcInfDIrO7BeJS0NpY1Z6Hk/gZhXZtGnsr2G1DyJ/uJss58
-	 oXAqvtX0mgfF0ao+WVQivvJ4LiCVgC8u7d23OqJSnVaC/WYFXuy21QqOaBPePZyn7mvku
-	 BpwK4idBV8YJ78n71euMEY4nxL9oVrD7UCWQAs+9CzEw4xhUFCiDRcckIUJuyKv1WMyDs
-	 5T5pblXWVPJ7T2kFkvE61a5voudng4Rqi1Rn/8Q9rHcDwQGQ99uc6Ge5TLByfqNkLfQ==
+	t=1793760318;
+	b=oq1gBlZJMY3qScBcoYmeu4R3tQVo25l/2E37Oft8dtmegPDtsHkxu6QWi65CC5UgQQWl
+	 LhJ9/nUkgMPS1unaARTQN6YuIyl1/pKod6x+CmjP+QcOwC7RJeXpQRdx9itwGe6TuSIc+
+	 RRLxihi/O5tBM2rNzcd4bazrlHZLg1bYhrIkk8oqcERNRjF87yy10ovIZCZzzVKdY8f9Z
+	 2Ylvt0pGy42u6479Tix6QTBOqhLnKm8KZ1njJn/2sXgv9wT0qVjQrPqIxcKMckQdguwdF
+	 xfD/monh6m84NLySbyI0KHoaLVJrQSzqLk+PDrPwShqRxT8sKAIiEFI6//uxhwQPZqQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793755773;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=CE0t5hOROhr+8knZGqTWCAomcPgxGmzw+Md6f9Efdfw=;
-	b=tFkuIVs3k4rr0QOelr0MeFhMBQVh1YpmLtoQdDtRswYVVy5Z25BiiGnzBvHK0ZUfJuCE
-	 o8oeKjst1rlVPFgAzpi/v2FQ4leQ31yttge+WwrdzyD9ekodagGHTWSrCTYSetISXaC8N
-	 4PLkk8pgMW/hXRLwmlk+AbjUcmqorQXMmnvnyr+uS/dNwDwTdXdsl19cTFTPZ8o52L92V
-	 fgA66WkcjkAV1GrGePC9GSht5Y1cAuo9vLjdyiD8eiV7r6/S73W4XhutoCXn+0GVhVwMj
-	 CMvPfk5ibfwYS2lyizJtB2c/dBy74MIJDAb09k8PWGySwWxHUsu/Efm14E5RBFdxKIg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793760318;
+	h=DMARC-Filter:DKIM-Signature:In-Reply-To:Mime-Version:
+	 X-Lms-Return-Path:X-Original-From:User-Agent:To:Subject:Date:
+	 References:Cc:From:Content-Type:Message-Id:Content-Transfer-Encoding;
+	bh=rRzhUBlhk/MV6qetpAub4eArNWxfVuqj/T9Xhffcs+I=;
+	b=ghz53jGJgaE7CKG+zeYLtXiE+OmB8eFu6yFsINeIyv83MrV3ckh4gjGTliaQZbBtma6a
+	 +WrU5zSEQJ4ifiWmDQwoLKkLuBPpkCQadlSgjXZIeRSOG/FhH18QYDMqC3F1yZPIvaHBw
+	 68Agn2WWFlMz1zTwonOTn4CfLqkaBVeiCzPTR4OQQm31GS2x9toSLBufbKAAoZ0nl0goK
+	 kAsTYlP6w+lKsW06nYv2Kcrx5N/zNYd0y5H70xW+L0ODfZPPLP1rviW6Da1tWcCNvDSBK
+	 lExx3LcJlfd7CcbY99tAUFe2JFdsP4Gllbkdfp7+MWS84lwCQy5Xgb0IPYjRM8DB11g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.62
-Received: from mta0.migadu.com (out-62.mta0.migadu.com [91.218.175.62])
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=a3uy0tnS;
+	arc=none smtp.remote-ip=209.127.231.111
+Received: from va-2-111.ptr.blmpb.com (va-2-111.ptr.blmpb.com [209.127.231.111])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75846606D809
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 01:29:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 75846606D809
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=QwlcNBQAVDxk0/AvVL+NWkQwGw6IW0hqKl+WZhIVwVQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793755765; v=1; x=1794360565;
- b=o3nkAPqoiAhQCuG7W+cYJPXVqRbfmnABmAgU+ifZRUe+hpALHAZdbLU71L1/bypKy1hCRZel
- LrXg8QFqzflrTyf3WsCyaOUfD0hqrsfE7HFQUcMd5CRxhTZ3TmZ3IyBnoia8EK1s6VZ0g9JteeF
- u9uGQgAu7/aT6Re0f9SxG8j8=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 59a6eb213e4c26de;
-	Wed, 04 Nov 2026 01:29:25 +0000
-X-Mizu-Trace-ID: 59a6eb213e4c26de
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <dd07c949-eb56-425a-8b1f-ceda118d3a5a@linux.dev>
-Date: Wed, 4 Nov 2026 09:29:17 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4DC606A31B
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 02:45:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8C4DC606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=a3uy0tnS
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1793760311; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=rRzhUBlhk/MV6qetpAub4eArNWxfVuqj/T9Xhffcs+I=;
+ b=a3uy0tnSn2cJBr5aBLK8fXX5Ap+fy0xWiabvtBdkU30DxrO5TfMZMmfSbqWVG5UQ8DMX7Y
+ 5SRrXF+D395hSWT3hX2UJD8DMrWn+XO6vzfJg3g1BOd5xn80IPBmZUdxN32Avvk37foB0w
+ DoeDyCoPlToHA3kZLB0gLh3AZXqdubVxF33fnCvt8hlM4qhfgswauCoccOk8e/tzyk/Ug+
+ 9eFkJ6+CDc8x/15HlMWqXDrg2sgq+G+HdygOrKyXCzCsQZw+dHnSbNo6ltBSg2EsNfIcmz
+ eFMexcSAP5x7RHi9SLOwKv3OG1hKtQGuYICvLX7N3y7szk/xK9DSjU/NKP7XQw==
+In-Reply-To: <0efbf4db1decd8e6bb6a5fcdcf897314@kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -54,84 +52,80 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
+Mime-Version: 1.0
+X-Lms-Return-Path: <lba+26aea9c34+3f4f81+vger.kernel.org+lizhe.67@bytedance.com>
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 7/7] mm/mglru: add tracepoint for inc_max_seq()
-To: Barry Song <baohua@kernel.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>,
- Masami Hiramatsu <mhiramat@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Dave Chinner <david@fromorbit.com>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
- David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>,
- Kairui Song <kasong@tencent.com>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- Baoquan He <baoquan.he@linux.dev>,
- Baolin Wang <baolin.wang@linux.alibaba.com>, linux-kernel@vger.kernel.org,
- linux-trace-kernel@vger.kernel.org, linux-mm@kvack.org,
- cgroups@vger.kernel.org,
- "open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>,
- Ridong Chen <chenridong@xiaomi.com>
-References: <20261103025610.3738894-1-ridong.chen@linux.dev>
- <20261103025610.3738894-8-ridong.chen@linux.dev>
- <CAGsJ_4xCTSctcPcC7X6Dx4zYaOycaPqs0DG7AaxB55wx1Afwpg@mail.gmail.com>
- <9cabcddf-d807-4a36-84f1-5bb06ea72aac@linux.dev>
- <CAGsJ_4xXDZjhN+NkvtN+vAp8Bokack_JdNgP=nGPQtHUX8_rqg@mail.gmail.com>
- <f5137dbb-b0ed-44ea-a23f-5c848315a68a@linux.dev>
- <CAGsJ_4zNZynkZn1mb+nT1n6dq4n399VC8Lbo5Sv92gioDfPxUg@mail.gmail.com>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <CAGsJ_4zNZynkZn1mb+nT1n6dq4n399VC8Lbo5Sv92gioDfPxUg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+To: "Tejun Heo" <tj@kernel.org>
+Subject: Re: [PATCH 0/3] mm/mempolicy: add per-cgroup weighted interleave controls
+Date: Wed, 4 Nov 2026 10:44:46 +0800
+References: <20261103122816.48037-1-lizhe.67@bytedance.com> <0efbf4db1decd8e6bb6a5fcdcf897314@kernel.org>
+Cc: <hannes@cmpxchg.org>, <mkoutny@suse.com>, <akpm@linux-foundation.org>, 
+	<david@kernel.org>, <gourry@gourry.net>, <ziy@nvidia.com>, 
+	<joshua.hahnjy@gmail.com>, <ying.huang@linux.alibaba.com>, 
+	<ljs@kernel.org>, <liam@infradead.org>, <rppt@kernel.org>, 
+	<surenb@google.com>, <mhocko@suse.com>, <cgroups@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>, 
+	<bpf@vger.kernel.org>
+From: "Li Zhe" <lizhe.67@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Message-Id: <03bceb67-d362-47a6-b555-ed5aa1f9bd3e@bytedance.com>
+Content-Transfer-Encoding: 7bit
+
+On 11/3/26 11:35 PM, Tejun Heo wrote:
+> Hello, Zhe.
+>
+> On Tue, Nov 03, 2026 at 08:28:13PM +0800, Li Zhe wrote:
+>> MPOL_WEIGHTED_INTERLEAVE currently has one system-wide weight table,
+>> configured through sysfs or auto-derived from node bandwidth. This series
+>> adds an optional BPF control plane that lets privileged BPF syscall
+>> programs install manual weighted-interleave overrides for individual
+>> cgroups.
+> ...
+>
+> I don't think this has much to do with cgroups. Weighted interleave is
+> already a per-thread/per-VMA policy chosen through set_mempolicy() and
+> mbind(), and the weights are parameters of that policy. I think this
+> should be tied to the memory policy instead. This is different from
+> the per-cgroup NUMA balancing kfuncs. NUMA balancing has no per-task
+> opt-in and acts on memory with no task context.
+>
+> Gregory Price's mempolicy2 series already proposed set_mempolicy2() and
+> mbind2() with task-local weights:
+>
+>    https://lore.kernel.org/all/20240103224209.2541-1-gregory.price@memverge.com/
 
 
+Hi Tejun. Thanks for taking a look.
 
-On 11/4/2026 2:28 AM, Barry Song wrote:
-> On Tue, Nov 3, 2026 at 8:23 PM Ridong Chen <ridong.chen@linux.dev> wrote:
-> [...]
->>
->> Hi Barry,
->>
->> Agreed, I'll go with option 2. Two things I'd like to confirm first:
->>
->> 1) To report the reason, should_run_aging() would need to return it
->>    instead of a bool, e.g. an enum like:
->>
->>     enum lru_gen_aging_reason {
->>          AGING_NONE,
->>          AGING_NO_EVICTABLE,     /* eviction is not possible anymore */
->>          AGING_MIN_GENS,         /* better to age, eviction still possible */
->>     };
->>
->> Or just report sc->priority, swappiness, max_seq/min_seq and the
->> per-generation nr_pages, and let users derive the reason from them?
->> The former is more direct, the latter keeps should_run_aging()
->> unchanged.
-> 
-> Right. We can let users infer the reason from max_seq,
-> min_seq, and nr_pages in each generation. This shouldn't
-> be difficult, especially since should_run_aging() may
-> change. We don't need to spell out the exact reason.
-> Just present users with the overall state of the lru_gen.
-> 
->>
->> 2) try_to_shrink_lruvec() has changed quite a lot recently, e.g.
->> Kairui's reclaim loop rework, and your swappiness series also touches it,
->> including the aging part. Is it stable enough now to carry a tracepoint there?
->>
-> 
-> Yes, I think aging will always be needed, regardless of how
-> we change the code, so this should remain stable.
-> 
+I agree that MPOL_WEIGHTED_INTERLEAVE itself is selected by the task or
+VMA through the existing mempolicy interfaces. This series is not trying
+to make cgroups select that policy for tasks. A task still has to opt in
+to MPOL_WEIGHTED_INTERLEAVE explicitly.
 
-Thank you for your patience. That makes sense to me.
+The part this series tries to make cgroup-scoped is the weight table.
+Today that table is already outside struct mempolicy and is configured
+as a system-wide administrative parameter. The problem we are trying to
+solve is that different co-located workloads may need different DRAM/CXL
+ratios while using the same MPOL_WEIGHTED_INTERLEAVE policy.
 
-Will update.
+I have looked at the mempolicy2/mbind2 direction. It would model the
+weights as task-local or VMA-local policy parameters, but it also requires
+new syscall ABI and a much larger mempolicy UAPI extension. This BPF kfunc
+interface was intended as a smaller administrative control plane for the
+existing global-weight model: keep the existing mempolicy ABI, keep the
+global sysfs table as the default, and allow a privileged manager to
+install an override for a cgroup in the default hierarchy.
 
--- 
-Best regards
-Ridong
+Does that distinction make the cgroup-scoped override acceptable? If not,
+could you suggest a better way to support this kind of administrative
+weight override without adding new mempolicy syscalls?
 
+Thanks,
+Zhe
+
+>
+> Thanks.
+>
+> --
+> tejun
