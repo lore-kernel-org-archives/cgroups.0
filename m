@@ -1,109 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.193.77
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793823880;
-	b=NyctYR3LSt8Vobl2siUGUzfkzY0Fnrf/x6hwuvWG+YUUuw7Aj93Wt7LVlOGP7jJtt7Nc
-	 i7E2xR3Pv6OurEZDmmymEOMq2ghUdcfibvrva9n09dhsQGMzF6oLRyD5X3BcWmH/9xtms
-	 pGa4uw8tY+mTGUhSYxvg9APLuDoIdrW0eAllBit7k6aSqJxWXLPcy3gCbsJQPUHUN84Rg
-	 3aDXbZFEuNrqkZqEr6XOIwKrtxrxVjQf8AjkWUYNlX/g3yn5narg5mDTTfBsnnO4gdVgb
-	 qVwJ0/WLEj7WEIoSG4XRjq8scYj6/uSLPlTBcm+qlk9tPGetb2FhSYZr283WBJ1Dk2A==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793823880;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
-	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
-	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
-	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
-	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
-	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=0H/vkr1QIIVFGm6wA+u77NSKYBFbLOovJyYs+oqgtDw=;
-	b=Y+f0DK+uZwVVBJvyymxdfsF83JID+ocyf+64KlQ2fZ4kRcbsAF0CD4CDUIVM/k19VQC1
-	 noqpNLDyUc5ox8n2QdN3fs2EpTNKJMOuId1I9UhD7t/zyAJeHRaVHo8LBv4ALNaWQNJU0
-	 aLWF9FfSy//uIHJLtTZKeem9MxYJrvCuZcQqjTQKZFJVovvADUS1nTi/tEPskS73TexNU
-	 X3kuqidzHCgWbBVh8P5aXeGNfV3JVKaPUlYGaJSQnb9Ule2juNu4RMom+PqFcVTy+zl2s
-	 67WmBFLlKO8uqEkS1q2NK5vFLNpeEt7vXL2b+712CKiNuuVi0+u1PwZRBzEHzj4sWyQ==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=efficios.com;
-	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=dGM4dceA;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.193.77
-Received: from YT6PR01CU002.outbound.protection.outlook.com (mail-canadacentralazon11022077.outbound.protection.outlook.com [40.107.193.77])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793825790;
+	b=FpBL9Vs8xamAXqL42e/ADIjsQQzZ9g+otF265Jmajz7aBRgRMtK1bFpIjox9f79gBaAT
+	 zhVCMxUccUe5pfI9MryxaKxb+L/S/ylVOAvKNA2DtqX4m9VWsqFboK5RpI4lG3rp5r9dG
+	 t9DIHctWp18W8YK0QLpp8ymxifR60fkZLv0PLNx7OGxX2SxKgPBdOINHApoBe7JeL7pwK
+	 DfDzgB/W40l78xLjzAiRWE28E3cdB6ctdbIqxycIwHa11XHYFRh96LkfdB7NQP52P8UEB
+	 GHC1cDPsUIn29EoewnGrA3Iy+9v2igJ6t2vWuxj62yqaSutt7tqaqq4h7ImBC+rQEew==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793825790;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=osWOTOTQBxibmdk7vYQvxdot4PKbfhI2tgBU79UNrUk=;
+	b=dkLBrIZYMzeJpSkML+abOj8NxsRq65fMZIq0vQJFkKh17gzEqXwP03nDBwE9zQpPgC0p
+	 AKvz8TFz/sEfj/PCoexI7n7NrxGcFvK9EKbCC2WlizyDeeVXnZEjP2txTcmsLv2kowHc1
+	 cwCnPuTcWNWgKeAUkCjpYbiVw0qvEFQ6yD5P+ApuC3IBZU9VkHaEbZYmQ5RYlgrnk+xTC
+	 Ccv0y1Qqt8tZh/LyOtoBhkdl0vXoyJjCclpzXkdLJZ23rsYVNU2ySM0CRMlST1+r2rUOU
+	 fcdwtUpSIZSPBFS7KUJAdCgsSXs0p6m9EcbCyeGRnVAOdqixE7Al0Q2lc3JE0MrVkJg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KazNcZp6;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2577B607030B;
-	Wed,  4 Nov 2026 20:24:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2577B607030B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74ACC606C903
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 20:56:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=dGM4dceA
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OJUbDWcYYDPnUluRxwX5BaQ3WieIeVJPIB/rVkhukO9Hg5r87+b+d9m1SddiQ2OZWhnR+9PaaktElidNY2cmIdIwLxlRHMFfsQuoeMSqHndvsWFkG7j9MqEuACjOiDA3bIUr7HsxfqhSb+5y60LG8/xGh3UgigK2quQ7Arp1/2yAqGa8gbc4AejzX4dd10WBJzVapHSILHsszfjCd2+dnVo4p5+MwCLhfOq3pBcYZ2tUcDT2ls3DssFi2ePruEPEZZmGK1QadmbM3ebfbHaLiQgZj1/PI3o8NTUpYvDZHCGJ6ej+HAcXPPxfFTwiBlQ0q5vUHmNuxXiqJmwYNyjgQA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=0H/vkr1QIIVFGm6wA+u77NSKYBFbLOovJyYs+oqgtDw=;
- b=rpDxRNj9XJDiP/gDWCeU8Ba2ladolLX0+vWDiGD8k4O6AE/t0y+uRDOgeSRlqcz3unRXAOhYsD6G/ZMgZvFyarK5gVTChuY7gPNzsrqAUzidnijPwYPgO6FDdl9mOxlOKZTgKj3UMZqZMppzcRJur87YDNo5Q7vbME6i4dykylk5svjXT6UlxyX/C7WLqoSK6UCBwetNHqLag0gxGpNPovYlkX3f8s6p1R375sgnsRTMdlXPmo5MGa6rfpJjUBlGlygaDqj/Im22U+Y8F2UfMYiddDjm/EI0XkHrmt9Q42hW6bVOeFpaZngj8cVHB7FF3tZGWi/uWr979TuRLSWvrg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=efficios.com; dmarc=pass action=none header.from=efficios.com;
- dkim=pass header.d=efficios.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0H/vkr1QIIVFGm6wA+u77NSKYBFbLOovJyYs+oqgtDw=;
- b=dGM4dceA6A0IMUAntpdBbe8Ta2rsv5f6/GgmprXfMbuha9yFLJAEcJiKmZcKHTearGlEdGyMlDCdVHA7DQ9+GlzZ4mu0yfegVpvCA5utfRJcdD65HPTiPy2XR1Tu49gPjoDUL0ySIpBlesVsdaDh0m6letnwUgmQJzDVLeKVvQOiLMCnHVIwtLMSvrMCwOYePCHwJnafWt3GbjxtC7ZNZEcFAE6pA0KGZWrBuW2HCek69XGnq23/WGw+SBO33ZK61XBurIdWf26rFmp8gx1eNAfNdPniSji8qVld7Q+Ns1l1EQrU2SuSDcQdlT+bl9YZ+SpbgFDKc6IrmZuZf50M5Q==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=efficios.com;
-Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:1d0::10) by YT2PR01MB9493.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:a5::11) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Wed, 4 Nov
- 2026 20:24:34 +0000
-Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
- ([fe80::6b9e:a901:67c5:7ddc]) by YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
- ([fe80::6b9e:a901:67c5:7ddc%6]) with mapi id 15.21.0592.009; Wed, 4 Nov 2026
- 20:24:34 +0000
-Message-ID: <e37fd4f5-4422-4f04-bcb3-cb640e67697d@efficios.com>
-Date: Wed, 4 Nov 2026 15:24:33 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/12] sched/deadline: bandwidth accounting fixes and
- selftests
-To: Juri Lelli <juri.lelli@redhat.com>, Peter Zijlstra
- <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>
-Cc: linux-kernel@vger.kernel.org, Dietmar Eggemann
- <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>,
- Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
- Valentin Schneider <vschneid@redhat.com>,
- K Prateek Nayak <kprateek.nayak@amd.com>,
- Luca Abeni <luca.abeni@santannapisa.it>,
- Claudio Scordino <claudio@evidence.eu.com>,
- Mathieu Poirier <mathieu.poirier@linaro.org>,
- Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Clark Williams <clrkwllms@kernel.org>, cgroups@vger.kernel.org,
- linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
-References: <cover.1793804635.git.mathieu.desnoyers@efficios.com>
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Content-Language: en-US
-In-Reply-To: <cover.1793804635.git.mathieu.desnoyers@efficios.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: YQBPR0101CA0082.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:c01:4::15) To YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:1d0::10)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=KazNcZp6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 431311F00A1C
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 20:56:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793825789;
+	bh=osWOTOTQBxibmdk7vYQvxdot4PKbfhI2tgBU79UNrUk=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=KazNcZp6qfpRdpx0Oe5j+F8/M9LJGR2nQOeCHm5RYvPEKVOnFU9V9UfLJR1KMsW9B
+	 bJvBnjkwNdj2C8cn/tLvyj7KgG3kxBlB5vj+bmXwEQ7TrHN8Myj4tDSEODHN6kEV6z
+	 RZP1RffojHsRoeuIK4m6s85Vaw8N4qWOXCeeSBydy+CXMxnmJxxtnhokkSPrVawA0u
+	 zULvzQrlmtRimkxL4Cxcdep7XIoTUK4+YtoP/PoJX1/E/eEsnrR1VAuUL19Bz8bped
+	 Q4MiiD80HzVkRzPSl44k0WY/HWUP0E5kYcf3ARkXoastBoOSwUY0xhempTBPZstDJi
+	 NNw3Jlt/v4jyw==
+Received: by mail-vk1-f171.google.com with SMTP id 71dfb90a1353d-5eabf243d05so451254e0c.2
+        for <cgroups@vger.kernel.org>; Wed, 04 Nov 2026 12:56:29 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AKwUvBw2a/l6ZOIis5xcmt7J425ipFPeZ1/Dhy08Sq+1Rd1+PHXXd7/s6PAcx5S/7J1tvTJsI7ajEtg+@vger.kernel.org
+X-Gm-Message-State: APuU4Z+ctXuP222bmqxqFrnZ//XZM9LeuAgjjJPkc/DZ2310eo/QCO/z
+	ZORr3ndOxO6bJHdf/wXvI7MFwoCQ+161hSRU9L4AW6LOgC5MikYakXWGQnEpDaQ05mmO9/I1jlV
+	bxZaZ3SkT7sWAFt1WQQAQokao6yo82Gk=
+X-Received: by 2002:a05:6122:32d5:b0:5e9:6d96:a910 with SMTP id
+ 71dfb90a1353d-5ec6850f9a8mr7100215e0c.3.1793825788528; Wed, 04 Nov 2026
+ 12:56:28 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -113,90 +59,167 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: YT6PR01MB491026:EE_|YT2PR01MB9493:EE_
-X-MS-Office365-Filtering-Correlation-Id: aad52cba-8b66-4da8-808e-08df3ab1a41c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|1800799024|7416014|23010399003|366016|10067099003|22082099003|18002099003|56012099006|261022075727099003;
-X-Microsoft-Antispam-Message-Info:
-	lst81HHEgBtGD9QyEOqlU1/pWf+vrkiIEE3ohekAUXfdiMvH9FJsfaRVSyCjpFWg8H7agCwGrv2SMkLg7/EZBZnBIbVTR84GuwbufDgNPMRryWM6ZAK53DUN2Z8jU51oR1vOREmrCupytCYuXe/Vi/wUV3uNFVccXtJw7Li6Bwh5+IlqDVxBp86LuxCvXx8mYEJw+89jV2sWqU4EwX0r6qfCB6ll3BjwJG+jciYM+oBQH2Y3+XXpkQdOV3pPvobwnDGB1E7Gi68SFf0WDpgZDEZxG11AKvPX1ZGY1WsSquBYM0wN1FTTmCvZekMrh/AxD71I9LH0OOh27JuIfaB3rhOjkDMh89v9o7foC6mDbnjHn/zNlsdDCrCmeCPGFWjiHd3MQ39XVVd2ov15E/MmbtEdoamIOGOn2mnZdf1J6bWagq0M+2y5O0CSJ446JIJ5DVfpwiUgOYQzYsbHVCuRk9yayqxwrF/FK4NwQhfaoWE+SzHe8ncV6GL9vTOAoFluSvr4gg2ZPR/5Qg4G5RvIc+o9+8Q4R9FIA6RYXI2yQqa4DK6qPQPJCP66S7MSSgdPT8dzIMtXlIem9sX1iSJT64doLiFUnrsi2i0PtsY4gUw=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(23010399003)(366016)(10067099003)(22082099003)(18002099003)(56012099006)(261022075727099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?azc4QVdSL2VhUEo5T3B0ODJLbUllR3dueTRhWXF2bURjNEp0L0FtVGJBUUE3?=
- =?utf-8?B?Vlh3TTk0eFNVcWZXRmkxU2kvY1lYYTI1ejRZT1hOUUlpMjRuZ1ZlOFpZU3Fo?=
- =?utf-8?B?NG1NalIxN1AwenFaYXladnRjY3hkdWFoaEtzdE8wZ2lhYStoK2VibkpBa3RB?=
- =?utf-8?B?NGNyM0xiVmVFVVhhY1NYSzFFNkRDVnJORWtSbXA5cUdjTlh4TDVBZy9WaU1T?=
- =?utf-8?B?bHNkNWhma3BQL2NuOHR5VkZwSkFma0wyRjJFQThEdzRQZnlVK2xzWDE3U296?=
- =?utf-8?B?bWorS0dBOHhvMWpDR3JaWUdPWDU3WVE3cEFTM2Jmck9xQmYrUEZhbTNzcWJO?=
- =?utf-8?B?YzVhQU1hZyt2dEtkdWRjdHFQa21RbnF1b2FmdE9yY3c1UDVVUnNha0ZEdHNQ?=
- =?utf-8?B?aW5OSURFR09ndzdabHZYaUlpWVRJQ1ZiYWlSTnNWc2QvUGZjNnZNSHVDSjlG?=
- =?utf-8?B?aWwzN3FWZEM4SzBvMVFRbEZ2U3hqVjUybDFJMk5tRFoxQWhDVW43VzVDR2pU?=
- =?utf-8?B?ZGZFVUtyRWFabVMwdTdKYmgxampsQTFmdHV3K2hRcVp6cWNaMkdQWXJheGNK?=
- =?utf-8?B?ZW9oSHFzYkZKaS8wSEVTVEI0ZmxYNXArd2pTNmJrOXhFMHEyWlM4S2ZWUEZU?=
- =?utf-8?B?enpkM3RQYVpwV21Ld29XT0xrQUtFRWgrbjV5cExobnVtU2ZGclZvdS9aL3RP?=
- =?utf-8?B?Tzg3MVZHbGJZTFJteFJFMlQvSG5aaUxiK3FkUkozZ0p5cVp2ZTJDSEczTkNB?=
- =?utf-8?B?eWJmQzJJNURIZ3orTC9xOVpGMXlJNlRCNTMwZ3NZakpjRzFFUzlRd1Ntdm41?=
- =?utf-8?B?MEVOdEZKVTVETm80MjFYMUIrbFIrN2dMd1ZWZ1VxVVh2MXpYbG9WeWlGMEdC?=
- =?utf-8?B?ZkdSSU9Mc0VqVkM0cXVEbHUzMlEvbC9OZzRwOFdBNnMyVUdCRXg4U2E5TE1p?=
- =?utf-8?B?TU1nTTFrT2w1TzN2d04rZ3VPR01vWW5sdjhUcm8wcDdKbW5pWGx2cXhIUFZB?=
- =?utf-8?B?TE1haEhiQ1lIRE9lVi9ubUYzbmtpMlVTMDZPZlhIb1FiQkw1TjRsN2hWWXd6?=
- =?utf-8?B?c3BZbVBlTjZTdFJ1YjZnb1dwVk9jeWhlZ3Irb0UwdG94TDJpTWJnZXcvRHlE?=
- =?utf-8?B?azFGNGNSSWpqSmNDcm45NVJLQkdOWUE0S2ZhQjlvRVFOd1N0amdVMkN4WmlV?=
- =?utf-8?B?RVo4NEt3RXV5eEhFZDlXeXF2TnRXaEFPZVZ5MFU0cjJzbTJEOU9sKzlBL1Vw?=
- =?utf-8?B?WFEzOW1ZNys5UHFlWjlIU1Vja3lYZzZzV3kxMGpXY0JJeUY3VEQyUXlta3Np?=
- =?utf-8?B?N1hjU2llOWNkSXhpVFJCTlhobzFNdnlQRUljNTlPcWNKUmFPbWxUa2YyeTkw?=
- =?utf-8?B?QkI3Yi9BV0liUGQ3M1MzclVqbmJQVkxNM3BJZ0RLT25jRUZneXMyZGszU3Iz?=
- =?utf-8?B?eStpYlVuNTJGMHVUUFVLbVNZcmdlUDBpcVJJMEFFb1N0cDFZWk5NSVVlVDl3?=
- =?utf-8?B?S0VmbEhoNnhpeXM5ZFduQ1VpZkt6U3NBZ3JXRXpKUzdFREJrc21ZaXR3clNr?=
- =?utf-8?B?RktFYW45NWVBeGlDQlBLcW1yaXk1bklUaDBhMUZsV2d1WXJ1aTQ3czdiU3N3?=
- =?utf-8?B?dWNML3VLbUNuZFROZUlGOEJuQ0cvY0t3SXcrUkdKeXFXbzM0anZVT2FzbWdt?=
- =?utf-8?B?czRKV2g4a0RhV2FIZmF6WFlQcmM0ZDExTVRsN09ZNytFSVhNNzFpV2NvT2xt?=
- =?utf-8?B?aCtvUXNwVGJ2bkxERWxYYmNuNTFOMnRaUzJ3ODVKNmREdFI4QUIwbGp4ZlhC?=
- =?utf-8?B?MjlQRG9iWkY4dUYrd1dYaHJLV2IyeEh1T3pDUHdUU0Jtb1ZJdTZqZitlVVlI?=
- =?utf-8?B?SExFb2NMNzBwdE9pTUxLV3dKU0tCcEI2WXlpYU0yUlJjU0NCaWNRNXdyQkV2?=
- =?utf-8?B?ME4yMWFYYnhTUEFnUlJNSTNEZ1oreEZWT0Mxd1hoZ2QycmVGOGptMDN5U1Qy?=
- =?utf-8?B?ZkN0cUgrcm0wbVkxWng0RmZmTHNEbEpGV01rTzdQVGVacXViT1FhZlRhK1Ft?=
- =?utf-8?B?Mzkyc0NOemdCcWszc0pDUWl5dm1ocTZvSkZUQTh5TmNZKy9CSDdmS1hrdTU3?=
- =?utf-8?B?ZnhDdUdVMVdiTDc2TEY5RXB1SzBOR3RWYkplWEhOUTJzK1B3bnZOSnd5SHlY?=
- =?utf-8?B?WG9lSnBoYTNiaWdwWlRFWlhYUmpISkFXbTBBNGRudmJsVUd4TThvN0JVOHZV?=
- =?utf-8?B?RlV1aXNMaXRsTFFZbGZzMjk5SU1iZUNoN3NKSGdCZW5HVVNhSkpnR2ozeGtR?=
- =?utf-8?B?ZmwrVHJkUE5KUnZTVytEODJvZjhIV08yckt2NTlGZ05yRE13K0pzdG9NNHh0?=
- =?utf-8?Q?lV/HSec8+MZaOx9Y=3D?=
-X-OriginatorOrg: efficios.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aad52cba-8b66-4da8-808e-08df3ab1a41c
-X-MS-Exchange-CrossTenant-AuthSource: YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 20:24:34.7864
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4f278736-4ab6-415c-957e-1f55336bd31e
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: u2mTX76HYBpWuK88xzs+N1WoCjoluWhMuMPLyZrsuo8lJThfsijBHIo9ue73kt+qGq34rUSv40AUdXtXO2Dzvr/yREgjikycDAJAH/5+mL8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: YT2PR01MB9493
+References: <20261104130817.849089-1-ridong.chen@linux.dev> <20261104130817.849089-8-ridong.chen@linux.dev>
+In-Reply-To: <20261104130817.849089-8-ridong.chen@linux.dev>
+From: Barry Song <baohua@kernel.org>
+Date: Thu, 5 Nov 2026 04:56:17 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4y_Ay0mYO3ic72oepjtW6KYf2sKRXEHb3Ff8uwKrOJZjQ@mail.gmail.com>
+X-Gm-Features: AclHuK83pxTrPui2NSL2YizsStHa_eD5Qfiw1-w_RlgnlnIfhF0-PgLrUc5Gd7I
+Message-ID: <CAGsJ_4y_Ay0mYO3ic72oepjtW6KYf2sKRXEHb3Ff8uwKrOJZjQ@mail.gmail.com>
+Subject: Re: [PATCH v7 7/7] mm/mglru: add tracepoint for aging
+To: Ridong Chen <ridong.chen@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Steven Rostedt <rostedt@goodmis.org>, Masami Hiramatsu <mhiramat@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Dave Chinner <david@fromorbit.com>, 
+	David Hildenbrand <david@kernel.org>, Michal Hocko <mhocko@kernel.org>, Qi Zheng <qi.zheng@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Muchun Song <muchun.song@linux.dev>, 
+	Kairui Song <kasong@tencent.com>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
+	Baoquan He <baoquan.he@linux.dev>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	linux-trace-kernel@vger.kernel.org, 
+	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, 
+	"open list:BPF [MISC]:Keyword:(?:b|_)bpf(?:b|_)" <bpf@vger.kernel.org>, Ridong Chen <chenridong@xiaomi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2026-11-04 10:10, Mathieu Desnoyers wrote:
-> Hi Juri,
-> 
-> Please find in this series eight fixes to SCHED_DEADLINE bandwidth
-> accounting, on top of your four in sched/urgent, with the selftests that
-> catch them.
-I'm taking care of issues found by Sashiko, including additional
-preexisting bugs. I'm also taking care of yet more preexisting
-sched deadline bugs identified by a round of Fable review
-over my updated series.
+On Wed, Nov 4, 2026 at 9:10=E2=80=AFPM Ridong Chen <ridong.chen@linux.dev> =
+wrote:
+>
+> From: Ridong Chen <chenridong@xiaomi.com>
+>
+> Aging in MGLRU advances max_seq to create a new youngest generation.
+> It is triggered from try_to_shrink_lruvec() when should_run_aging()
+> finds that eviction is no longer possible, or that it would be better
+> to age first at the current priority. There is currently no tracepoint
+> on this path, so it cannot be observed when and why aging is needed.
+>
+> Add mm_mglru_aging, emitted in try_to_shrink_lruvec() right before
+> try_to_inc_max_seq(), with the node id, memcg id, sc->priority,
+> swappiness, max_seq, the anon and file min_seq, and the number of pages
+> in each generation for both types, as computed by lruvec_gen_size().
+>
+> The reason for aging is not reported explicitly, as the logic in
+> should_run_aging() may change, e.g. for imbalance-based aging. It can
+> be derived from the generation window and the per-generation sizes,
+> which are taken before aging, so the youngest generation is populated
+> as well.
+>
+> The nr_anon/nr_file arrays are ordered by seq rather than by generation
+> slot: entry i holds the generation max_seq - MAX_NR_GENS + 1 + i, i.e.
+> they go from the oldest generation to the newest, the same order as the
+> debugfs lru_gen file, so the output can be read directly without mapping
+> slots back to seqs. The arrays are printed with __print_array(), so the
+> output is hex and its length follows MAX_NR_GENS automatically.
+>
+> Only the lruvec, sc and swappiness are passed in; everything else,
+> including max_seq, is read in TP_fast_assign(), so try_to_shrink_lruvec()
+> does no extra work when the event is disabled. Reading max_seq there
+> rather than using the caller's copy keeps the window consistent with
+> the per-generation sizes read right after it, should another reclaimer
+> age the lruvec in between.
+>
+> The event marks the aging decision, not its result: the following
+> try_to_inc_max_seq() may find that aging is already in progress or
+> done by another reclaimer, so concurrent reclaimers can each emit it
+> for the same max_seq. Whether max_seq was advanced can be seen from the
+> following mm_mglru_scan_folios.
+>
+> Suggested-by: Barry Song <baohua@kernel.org>
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
 
-v2 will include fixes for 17 sched deadline bugs, most of which have
-reproducers.
+Much better now:
 
-Thanks,
+~ # echo 1 > /sys/kernel/tracing/events/vmscan/mm_mglru_aging/enable
+~ # ./a.out
+Mapped 400 MB at 0xffff98a00000
+^C
+~ # cat /sys/kernel/tracing/trace | grep mglru_aging
+         kswapd0-49      [001] .....   104.277689: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D6 swappiness=3D60 max_seq=3D3 anon_min_seq=
+=3D2
+file_min_seq=3D1 nr_anon=3D{0x0,0x0,0xd360,0x0}
+nr_file=3D{0x0,0x23e2,0x0,0x0}
+         kswapd0-49      [001] .....   104.536448: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D3 swappiness=3D60 max_seq=3D4 anon_min_seq=
+=3D2
+file_min_seq=3D2 nr_anon=3D{0x0,0x20,0xf8bc,0x0}
+nr_file=3D{0x0,0x91a,0xbd,0x0}
+           a.out-79      [000] .....   104.689518: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D4 swappiness=3D60 max_seq=3D5 anon_min_seq=
+=3D3
+file_min_seq=3D4 nr_anon=3D{0x0,0xf8a0,0x1188,0x0}
+nr_file=3D{0x0,0x0,0x2,0x7}
+         kswapd0-49      [001] .....   107.282038: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D2 swappiness=3D60 max_seq=3D6 anon_min_seq=
+=3D4
+file_min_seq=3D5 nr_anon=3D{0x0,0x6c50,0xa168,0x605}
+nr_file=3D{0x0,0x0,0x98,0x18}
+         kswapd0-49      [001] .....   107.812598: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D1 swappiness=3D60 max_seq=3D7 anon_min_seq=
+=3D5
+file_min_seq=3D6 nr_anon=3D{0x0,0xfe10,0x1721,0x54}
+nr_file=3D{0x0,0x0,0x1a,0x3}
+           a.out-79      [000] .....   108.936872: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D2 swappiness=3D60 max_seq=3D8 anon_min_seq=
+=3D6
+file_min_seq=3D7 nr_anon=3D{0x8,0x7d29,0x8c54,0xc90}
+nr_file=3D{0x0,0x0,0x4,0x2}
+         kswapd0-49      [001] .....   108.937115: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D2 swappiness=3D60 max_seq=3D8 anon_min_seq=
+=3D6
+file_min_seq=3D7 nr_anon=3D{0x0,0x7d15,0x8c94,0xcac}
+nr_file=3D{0x0,0x0,0x4,0x2}
+         kswapd0-49      [001] .....   109.425258: mm_mglru_aging:
+nid=3D0 memcg_id=3D1 priority=3D1 swappiness=3D60 max_seq=3D9 anon_min_seq=
+=3D7
+file_min_seq=3D8 nr_anon=3D{0x0,0xed69,0x24bc,0x488}
+nr_file=3D{0x0,0x0,0x3,0x3}
 
-Mathieu
+One thing that looks a bit weird, though. For example:
 
--- 
-Mathieu Desnoyers
-EfficiOS Inc.
-https://www.efficios.com
+max_seq=3D3 anon_min_seq=3D2
+
+We have only two generations for anon, but we print four:
+
+nr_anon=3D{0x0,0x0,0xd360,0x0}
+
+The two oldest generations don't actually exist. Ideally,
+we would print only the two existing generations:
+
+nr_anon=3D{0xd360,0x0}
+
+you should be able to fix it by:
+
+__print_array(__entry->nr_anon, __entry->max_seq -
+__entry->anon_min_seq + 1 , sizeof(unsigned long)),
+__print_array(__entry->nr_file, __entry->max_seq -
+__entry->file_min_seq + 1, sizeof(unsigned long)))
+
+But I guess it's fine, since the two extra entries are both
+zero.
+
+And, I personally prefer the youngest-to-oldest order,
+as we usually have:
+
+head ---------- tail
+
+where head is young and tail is old.
+
+Your output uses:
+
+tail ---------- head
+
+But anyway, I guess this is just a matter of whether we
+read it from left to right or right to left. Personally, I
+find it more natural to read from youngest to oldest.
+
+If you're not tired of working on this and would like to make
+a few more improvements, you could address the two issues
+above. But it is up to you.
+
+For the patch,
+
+Reviewed-by: Barry Song <baohua@kernel.org>
