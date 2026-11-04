@@ -1,54 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.136
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793799974;
-	b=aFb24CNaN97Lb+P6zpTE4uvLws7/M9y2rCSEhOZR0n2dVFPC0rwP0JNcrA7kHdON7Jtd
-	 Cfl7eUXkEGe2Xqobd1N/WHDivbxMpwj9CqvaJNpCdjXoavvuWD0HfPUKINE5jQgOmgG85
-	 wm+BAOL0bbRqxMO1j1FjgzpciU3XgLDQ+QVaopl3T5jMfxzH5H3cAYJiZ/0sLhGqbSYVO
-	 Di8FPQ3SUlIW4iY891tH2p+XlQxr0FUpj+TcOhWciDdqaYTETeowMgB3YisUufn0NIedX
-	 VYoIwTHvXAgvRqCv5Dmd/wjr9tAly9zj1EFdE9APcEdNzLbx+V3FJ/GBxnM6iNFywEA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793799974;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=Q4tWgwLTiI8SPma50NL+69gW2A8l1tsl3NgQNJG9OZI=;
-	b=RGgmY2Z4a5jvEogpefUanKASjeI/jBH6FdZ15Pb3KtrM7ddhBdXYOxCGnHTE7zirS1j9
-	 0GOBrWr+BRfoi1DKYCQQNZKleCGV0lexJUl85cgvhgYO4iGik9mIL9RG34WotLNEGyKoe
-	 nqu3DcXxqaGeq48CotJZdwKNdUgveVbtqR6x7NEm77phmf0u6/BdroB3BGxTZjkTf4Sn8
-	 wj80K60UrSiWswlunYH9rVptiDvBNelbTOnPEFCJI74Nk/wfvFAAbSnu9XpBGhTgskM6+
-	 cyaulvTOLmN5yqyS+Ep0Gk8qQ/8sjImuGpPMWQL9K/BlGRfcL3pe0uoVUSzFS9VIQ0Q==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=D7zAy89x;
-	arc=none smtp.remote-ip=91.218.175.136
-Received: from mta0.migadu.com (out-136.mta0.migadu.com [91.218.175.136])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.200.26
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793800319;
+	b=kIQDX7FHPagQtiv8w0dJLmPhCCAbgjjdrNrpV3pHAUJ4+wjS1U6yvmwrUxuXE/0mU62t
+	 y41yIuUFMCwzishko8VW/BcXIfcw2izxUJnlHtepHgajOTB4JrFfkUE44alp9cmoRaYu7
+	 EjaS890jfHhk3CTkNuP/8bCS3hwTSVwG8oyTKrXHZWF9P4KqelVwkiJQ1oXkTjeMxsgp7
+	 6YtehvkiyJOC3s5sPbuv+YUJyuJM3P+8kZ7h7RSyLy7DvsaC+OVeXpbZ7tm5S8/IDZ8Yw
+	 N8+Pul6gX/x/u4ICGr850fvClFNZptVkV4aPJ9fOZdveAoEhJ6/HYH/WV28PjNtjqew==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793800319;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=mQtJKixgze7C+diWpLN9bp2gmSFhvKu0oFRTq7AaEEA=;
+	b=YhofC9YBe9XAagT5Yfwuumxd/JC8kx7mODJy2sZ8J8gLo1AortwrEaCLaMSZe3YIZU7g
+	 Txb2x6ncWxNF4BLcR152yslH+rJ2rrKVjWM1KcvL1cS6k0/ViK2Xxaa67JTgZe/JU4mtM
+	 ihhdaJ9Jb8FwFIts35PvrQFrad7wfst95l7HKY5QQcbwnEAT14bgIaIBQgca11xLfv75g
+	 Nsp5P5TiqYp0d8EjZFm9rBHHe6qlPwmX0se2tbbXMvzSq2iqnYOtD1e7UEydwxEmX+M3b
+	 1nmjy+4tf4HGCG4oty0/neJzuRsSSNqQh9iMzIeKueSYKXZlPtkA6NjDlI95/OUgETw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=amd.com;
+	spf=fail smtp.mailfrom=amd.com;
+	dkim=pass header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=1OaV7a26;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.200.26
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012026.outbound.protection.outlook.com [40.107.200.26])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21F14606A328
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 13:46:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21F14606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 827A2606A31B;
+	Wed,  4 Nov 2026 13:51:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 827A2606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=D7zAy89x
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=r1v3gaHbye2LaSteE/Y0pgAbJSvJ3a9oWoFvgk1atq8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793799969; v=1; x=1794404769;
- b=D7zAy89xQ+cQiauu/mlV4T0WBr50R4C4ILX9ymomytcDXFkiBS4UVvNG7y1R25caNGhAhmeR
- nqvK3Uq9pIWOKykMLxCpvdOgF2uyeMAfZAdlhprcdqnxbcIxeS9Msnjh0oTCFSIyitXGmzaQjhx
- aOVNqreRnnYm4RYROF6+qGPI=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9497cdf413eb9ab1;
-	Wed, 04 Nov 2026 13:46:09 +0000
-X-Mizu-Trace-ID: 9497cdf413eb9ab1
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <a8be8f5f-fb9c-46da-a1b6-eea68ae07006@linux.dev>
-Date: Wed, 4 Nov 2026 21:46:03 +0800
+	dkim=pass (1024-bit key, unprotected) header.d=amd.com header.i=@amd.com header.a=rsa-sha256 header.s=selector1 header.b=1OaV7a26
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=fwlrplglXoh9OyjK5tR8CAVbMbWktw9uFYFeNSHJvwGJ6DkHw5K7lbE9u/0Tbeg0GuJpfAQ0DM+niGciw4x8V57/ewqSGdo6Uu6Gj7GfEZsxws0lnruQXzrDGFNP+uCFaPnt63QckclpYwFSdePxd3NN7erCxuhk3D0J0dkyHfEboL+7dZrQtoas+CSPVf7pQHO29Jp4vngicwOSs9Iza9Jkn49P1c+sdpJdW/N6BoO/QznG37XJCLicoM9/Atf0ESIlCZdLjLBjfnQ0gtwuB6YclmswwLzgrTghAqSWXgOv4DA1Y1F6306oniarI3zwBqP62bf1bpIUUuhtRUlVXw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mQtJKixgze7C+diWpLN9bp2gmSFhvKu0oFRTq7AaEEA=;
+ b=d0HeySeTfz4nN+X2kqhvBEsxytSTgVNh3MSxaO9/DsG9ALP2mlHiEvyzQoL6tRGw7w7JPCvBFca2gwurXJWCs0Q22jg5VEJbAlubvmj7zTC8drKFyl7TN+Au4wGjyfvHbJ91GyVN9D47edqL2FpnbVpK8qZlHK46HrhTgxzIuCv1c4I3QUMALPcvj4MXlze6SZUYkLeOoTG8t0lvva4YHeKf8ooCi4dbkMAwpBuWGEh4JtzrZeWXqRSNBELSeuo9L0HUlhMeFyxhRDYmR8hcVr6A+beAnEl0Es75IEWfwEuxHT2xxwf7Aa7fUbFgjJeX5sTy8Uiu8KAThXEnThXk5Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mQtJKixgze7C+diWpLN9bp2gmSFhvKu0oFRTq7AaEEA=;
+ b=1OaV7a26aooUI4kXc46/YIBQOwvrUIdoGhyzhFxSpxgIEVSt4U2yJeUY/fSt5uSa5+GnmHRtNhKQU4V3Sfrs3Wf6vxVqL52H3qHecHZHh61/Fya8ToXnrPPOZw1D+aM4lJaE/5AgJPEhe+U+obCr80cQ0PbpgDd/hbDHVIqTHk4=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
+ by PH0PR12MB7885.namprd12.prod.outlook.com (2603:10b6:510:28f::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Wed, 4 Nov
+ 2026 13:51:54 +0000
+Received: from PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c]) by PH7PR12MB5685.namprd12.prod.outlook.com
+ ([fe80::ce69:cfae:774d:a65c%3]) with mapi id 15.21.0592.007; Wed, 4 Nov 2026
+ 13:51:53 +0000
+Message-ID: <fb40349c-18d2-45d6-9278-8f20e1b8dc74@amd.com>
+Date: Wed, 4 Nov 2026 14:51:42 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 3/8] dma-buf: transfer memcg charges via
+ DMA_BUF_IOCTL_XFER_CHARGE
+To: Albert Esteve <aesteve@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>,
+ Sumit Semwal <sumit.semwal@linaro.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Benjamin Gaignard <benjamin.gaignard@collabora.com>,
+ Brian Starkey <Brian.Starkey@arm.com>, John Stultz <jstultz@google.com>,
+ "T.J. Mercier" <tjmercier@google.com>, Christian Brauner
+ <brauner@kernel.org>, Paul Moore <paul@paul-moore.com>,
+ James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>,
+ Stephen Smalley <stephen.smalley.work@gmail.com>,
+ Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>,
+ =?UTF-8?B?T25kcmVqIE1vc27DocSNZWs=?= <omosnacek@gmail.com>,
+ Jens Wiklander <jenswi@kernel.org>, Sumit Garg <sumit.garg@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ linux-mm@kvack.org, linux-security-module@vger.kernel.org,
+ selinux@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ op-tee@lists.trustedfirmware.org
+References: <20261104-v2_20230123_tjmercier_google_com-v4-0-1819a017000b@redhat.com>
+ <20261104-v2_20230123_tjmercier_google_com-v4-3-1819a017000b@redhat.com>
+Content-Language: en-US
+From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+In-Reply-To: <20261104-v2_20230123_tjmercier_google_com-v4-3-1819a017000b@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: FR4P281CA0334.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:ea::10) To PH7PR12MB5685.namprd12.prod.outlook.com
+ (2603:10b6:510:13c::22)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,199 +118,323 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] cgroup/cpuset: Fail if isolated CPUs don't leave any boot
- domain housekeeping CPU
-To: Ridong Chen <ridong.chen@linux.dev>, longman@redhat.com
-Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20261104071600.474587-1-guopeng.zhang@linux.dev>
- <cbe741a9-fd0c-4c8f-8591-55ecc70f222a@linux.dev>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <cbe741a9-fd0c-4c8f-8591-55ecc70f222a@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|PH0PR12MB7885:EE_
+X-MS-Office365-Filtering-Correlation-Id: dd9bb6a9-3177-4234-7703-08df3a7ac85d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|1800799024|366016|376014|7416014|261022105027099003|261021123027099003|261021121427099003|261026121527099003|261009223027099003|921020|261026140227099003|261028144727099003|261102123227099003|261102130727099003|4143699003|11063799006|10067099003|56012099006|22082099003|18002099003|261009221227099003;
+X-Microsoft-Antispam-Message-Info:
+	96/w4GoXA1uytAjAlaICjVANUoJGVhgUQ+B3edILtpMDdjhiIjrsi46l2ZvZbjLMyVtOK5RW6WCckTqoBlY6+3IUXaDW3P6593qCDRzUVJDSbEuOrZvslLqH5q3g4Tecn72FKzZ0S29pe4QfjmTpa5OnM2rMhSXbD/hpbbEXsfmSZMt6aukZ8wF0GlWPYCPN52PMLFrTk7biBJOUrj1D+aZ2hMLA3g5Th6CDqkZAV0qypC4qV+36Na1itA0xq8ixdMfx6EFHEMSS65pAQxqF1/hwEAnrs5rRxKJl4GyUtwed0jd2ZkbRXOidjMnSyx3FzAgAiXqIv9kAms1vTRcix3IAbuIZ9FLLfXDhDq9JApTwC+M1pYchghPpXHzPSiFZVc/h0sy07s8m0cVbQ7+x6vXykGfZscTQ3E1FDfrpmRMPSDVYYOx+kk1qbzHRGk4S8w7z57H1B2s6maq1axZIhQwTe0NNnFHAjmTC43ArwnooMsNRuZsW073HDWp1/ErBrdzlRpJBQ6MJ6KX2nJrALIvtsKU4IFcm+arQD6SB9nONco4NjD1YCuHYivFh/XEYogsrI8RT61L00ZqYfLqyXgYvkkSwjjxc2bQ/R4TwDvMi+c32ap+8oHdINZUQe0wNkrKVl5ubWP7eFPVf5hIYRQtvQIWAEgImiXiLqDezdG/82ORn6zwq7EoIuayAIVO1+JgCCb0c8wHjj6dxtwNhPw==
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(1800799024)(366016)(376014)(7416014)(261022105027099003)(261021123027099003)(261021121427099003)(261026121527099003)(261009223027099003)(921020)(261026140227099003)(261028144727099003)(261102123227099003)(261102130727099003)(4143699003)(11063799006)(10067099003)(56012099006)(22082099003)(18002099003)(261009221227099003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?Tml0N01Kd2FnaFJ2bjMwTDI0VUY1d2FKNklkWnRjdnJlc2d1ZjdpUy8rdlo3?=
+ =?utf-8?B?RVIvd243dmE2OVpNSXVONGdxVFRva3pKeDM5ZmVBZVF4WkFyZmMySDU0RitH?=
+ =?utf-8?B?YnVTeEVXTk5FWkU3Z21ZeEtIeEVhcHhJZ3dwSThyV3FOeEMzQXgreG9QTjRG?=
+ =?utf-8?B?ODR3V1c5c1lib2lSNWtsRDRoc3U0eWRoNTdOWU10dUZYcVFTdmh6TjFiOThm?=
+ =?utf-8?B?Y2p0N3QyL3VXQUdwVXFpa1hJMVJsQi91aG5EdTEyaVBhV0tuT1l4alp1U1Uz?=
+ =?utf-8?B?L3VYTDNWUE9UTkhndmxDdXNwNjVkcXJuc3NIOFNCVWZRSzJvdXk0QXRrZnE4?=
+ =?utf-8?B?OVl2cmdIditoOHZsdEpaTmpjUGd2Q2VzNWNodHdwQTJYRm54K3RKK3FaNEV4?=
+ =?utf-8?B?NnNUSHZWRDhvRitLcUVtOEt1NUY4UDVBalZrakFoRHgvWm5vbU1vdU51cWIx?=
+ =?utf-8?B?VkNUd1ZYd21SUlZ0Q2RrV2dVT2tycVV6dUI3ZWZEQnZHRzFGbllGS0k1bkVq?=
+ =?utf-8?B?eTF1dnJKUnpiVi9ndkRpNFgwM2swTDFaWncra2V3NHRVMC90UGczZnA2cE5q?=
+ =?utf-8?B?QTVzTDZYemZiZHlOY2ljZHlBMU9BcWhxUlJ0R093c3B2cUpmL3YvMDN6bGN2?=
+ =?utf-8?B?M3dWWXBZTCtNMzVMaHNmYmgxUSsrNmM1TStQMk9yR0F0N1h5bVc0cDUweWMw?=
+ =?utf-8?B?bTZ5MUxPT1U3cXJCU2pjdVZ6eHpCbDlnUnYva3g1Mk01U2FXbDdkN2YxZWlz?=
+ =?utf-8?B?ZnFtYWRpMGk3ZTNDMlpXQy9GanFra3A5bFIzQW9QeE5nSngyT05GQXdUUHBp?=
+ =?utf-8?B?V0l0cEZpUnBDY3VxSXRzRittSEM5OXBoSzFlQ1l5REsvVjRpdldSZjIrSmV0?=
+ =?utf-8?B?RHQwMXFxYjVaNkNSN2ZXcWxMOWxoSnlENnd1T2RVWjFVSlNQYTNMbzdzdUEz?=
+ =?utf-8?B?RWsvY2s0UXZpcHNQaHdoRjc5bTJWaW5zNG8rVDh4NGo1dC9zWnlMYjBzV3NF?=
+ =?utf-8?B?QVlCR3NGWGtCRFdEMU00akorRUdpQmdKZ05qdFdXa3RCamJtNTFZMzI4bnJI?=
+ =?utf-8?B?aEhiWHI1UEVadENCejNiekhzRXpLb1EzU2lFSjFTYTVzeWhnSUh3VGtZT25U?=
+ =?utf-8?B?VUVPSWo2U2RHbW9pM3FEWlg2QjdoeitQTE5SSnZEakl4Q2p2ekVnZXo0bFdP?=
+ =?utf-8?B?SjZ4QU8rVWF1V2ZOU2lBVlRib1JNUXpSSFR1NFZhTm5yK2trOTRjU0x3cnZO?=
+ =?utf-8?B?RjI4ZWViWk0vNktHNzNqS1pnRUZPaEdxSHZIaTBnL2dDUEZiM2IyVVNYTno1?=
+ =?utf-8?B?TG1IMzlkZGxsVmxhUWN4RDlvSHVrUVdBRDBwRDFoaXFWeVF0VUwzVUVEbncy?=
+ =?utf-8?B?bE8xMGVXZEpITzJaVUFPOWtZV3N5L0lPeTRwTDVHZUxYdkNybzhYR01xNlI2?=
+ =?utf-8?B?Q3BUWnlZWVNsQjd4ZmdsNEJQWFgzN1RNOXNqNGUrMHZhK293QktRaU0yaHZ6?=
+ =?utf-8?B?VGNvcllrb1piNVY0blBaSmQzOU12OE1oZWx6MnFMY2lrd0xRYkNlVjIxWHVR?=
+ =?utf-8?B?NUpRWFI4VFhHTE5FdFZ1UldDZ3o0VDBVZGUvZHpNalE5VE50K0cxQ2QrcHRw?=
+ =?utf-8?B?SitsNzNnRXdGR0pnN25LYlhuWFZ5Nm1DTEFFek5xemFYUWJYcnEvWWFoOVFq?=
+ =?utf-8?B?S2lpeFpQTlpOaUI0SG93YnN5czVQamxxdGdIOEpBQ3A5cXNSWW1xb3NUNGlG?=
+ =?utf-8?B?M0JpVFBEWUVNYUxzKzRFRDJNWERQZGxFcFdnSml5VTBpUnAzYWIyakVVWnF0?=
+ =?utf-8?B?YVVIRUg4Q3paOXlMaldzVFUzTWRnL3U3ZlNSbVMrM0JuVFdiNVlFcnJ1V3lR?=
+ =?utf-8?B?dk9Rb1N5MVluVURvRkNKWW9RQXJrRHdKc00rdnA3MG5KQnhqNHdacXVVcmgw?=
+ =?utf-8?B?aWV0UEorVGs3dDdZSmNubHdkWUN4NUtHc1VIZk5HRzlSbllwZ0xSN3RKdG54?=
+ =?utf-8?B?b21meUl1K1FrUVFKalNPZS8zTi9FM2xPQ3ZseGNTUGNFNlRSZmlLZFZ4aW8v?=
+ =?utf-8?B?UmJtdG1GbVhoeFdvZWpkZHh6RTYvUnRSdnRkNCtESkxMeExKTFVSSTNCUXlS?=
+ =?utf-8?B?VVJ2eDZiVkxkWWRrb0NZMGNXMVNKcC9sREZwcDV6bVhmSWFDUnF0Z0VlREQ1?=
+ =?utf-8?B?QnM2ZW9RNWVWN0hoM2RVNzhqSWNaSWVLU08ydkN5MHVyc1p3MTF5dEZwOXgz?=
+ =?utf-8?B?Ry80amUzVEJYWjJqdmwxbWFsWkVTTGxTWkFsWk5qMmpjallCdmFuRTFKeWJY?=
+ =?utf-8?Q?2Pylw29bJiUZ3VhooJ?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dd9bb6a9-3177-4234-7703-08df3a7ac85d
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 13:51:53.3435
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6IadmT3l8oiO2qnIkVu2dbS/48UcoHNhnw+j+DT0Zya9ULx2PgyZc+8BlUvhXyMR
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB7885
 
-
-
-在 2026/11/4 20:58, Ridong Chen 写道:
+On 11/4/26 12:09, Albert Esteve wrote:
+> dma-heap already supports charging a specific cgroup at allocation
+> time via charge_fd in DMA_HEAP_IOCTL_ALLOC. However, dma-bufs can
+> originate from any exporter (DRM, V4L2, etc.), and the allocator may
+> not know the final owner at allocation time.
 > 
+> Add DMA_BUF_IOCTL_XFER_CHARGE to transfer a dma-buf's memcg charge
+> to a different cgroup after allocation. The target is identified by
+> charge_fd, which may be a cgroupfd or a pidfd.
 > 
-> On 11/4/2026 3:16 PM, Guopeng Zhang wrote:
->> From: Guopeng Zhang<zhangguopeng@kylinos.cn>
->>
->> With the "domain" flag of the isolcpus= boot option, the CPUs isolated
->> at boot are excluded from the sched domains and the remaining CPUs
->> become the boot domain housekeeping CPUs. An isolated partition is
->> allowed to use the boot isolated CPUs, but it must not take over all
->> the boot domain housekeeping CPUs.
->>
->> prstate_housekeeping_conflict() checks that rule for root partitions
->> only. The 2nd check covers the nohz_full case as it is gated by
->> housekeeping_enabled(HK_TYPE_KERNEL_NOISE) which is not enabled by
->> isolcpus=domain. So on an isolcpus=domain,<cpus> boot, an isolated
->> partition can claim all the remaining boot domain housekeeping CPUs.
->> The state is committed, but the sched domain rebuild at the end of
->> the write finds no housekeeping CPU left for the boot domain and
->> hits WARNs and an OOPS in partition_sched_domains().
->> housekeeping_update() cannot accept the configuration either as it
->> cannot empty the boot domain housekeeping mask.
->> With an "isolcpus=domain,10-31" boot where CPUs 0-9 are the boot
->> domain housekeeping CPUs, for example:
->>
->>    # echo 0-9 > A/cpuset.cpus
->>    # echo isolated > A/cpuset.cpus.partition
->>    WARNING: kernel/sched/topology.c:3089 at build_sched_domains+...
->>    WARNING: kernel/cgroup/cpuset.c:1478 at cpuset_update_sd_hk_unlock+...
->>    RIP: 0010:partition_sched_domains+0x3b8
->>
->> Fix that by extending prstate_housekeeping_conflict() to reject an
->> isolated partition update that would leave no active boot domain
->> housekeeping CPU outside the isolated CPUs. The CPUs released back
->> to the boot domain by the same update are taken into account, so
->> replacing one of the last housekeeping CPUs with another one in a
->> single update remains allowed. The new check is only performed when
->> housekeeping_enabled(HK_TYPE_KERNEL_NOISE) is disabled so that the
->> existing nohz_full behavior is unchanged.
->>
->> Add test cases in test_cpuset_prs.sh to verify that taking over all
->> the boot domain housekeeping CPUs is rejected while swapping one of
->> them with another one is allowed.
+> The transfer charges the new cgroup before uncharging the old one,
+> preserving the original charge on failure. Concurrent transfers are
+> serialized by the dma-buf reservation lock, so lockdep covers the
+> locking order of the charge path early. The transfer implementation
+> is generic (mem_cgroup_transfer_charge) and not dma-buf specific, so
+> it can be reused by other subsystems.
 > 
-> Hi Guopeng,
+> Not all dma-buf exporters back their buffers with reclaimable system
+> memory. Some represent device registers, VRAM, or carved-out pools
+> where size is not a meaningful memory cost. The xfer ioctl returns
+> -EOPNOTSUPP for buffers whose memcg is not set. Exporters opt in by
+> passing a memcg through dma_buf_export_info at export time. Currently
+> only the system heap sets it, other exporters can opt in as needed.
 > 
-
-Hi Ridong,
-
-Thanks a lot for the analysis and the patch. 
-
-> Thanks for the report and the reproducer. I can reproduce the WARN and
-> the OOPS in partition_sched_domains() here.
+> Usage example:
+>   int cg_fd = open("/sys/fs/cgroup/clients/app1", O_RDONLY | O_DIRECTORY);
 > 
-> However, I don't think prstate_housekeeping_conflict() is the right
-> place to fix it, and the fix doesn't seem complete. The same problem
-> can be triggered with a root partition, which this patch doesn't cover.
-> With an "isolcpus=domain,4-7" boot on an 8-CPU VM:
+>   struct dma_buf_transfer_charge xfer = {
+>       .charge_fd = cg_fd,
+>   };
+>   ioctl(dmabuf_fd, DMA_BUF_IOCTL_XFER_CHARGE, &xfer);
+>   /* charge now on app1's cgroup */
+>   close(cg_fd);
 > 
->   # echo 0-3 > A/cpuset.cpus
->   # echo root > A/cpuset.cpus.partition
->   WARNING: kernel/sched/topology.c:3111 at build_sched_domains+0x2b96/0x5500
->   Oops: general protection fault, ... [#1] SMP KASAN NOPTI
->   RIP: 0010:partition_sched_domains+0x10a3/0x1a10
-> 
-
-You are right. The sashiko review also reported this issue. I can
-reproduce the WARN and the OOPS here as well.
-
-> The faulting address is in build_perf_domains(), where cpumask_first()
-> on the empty cpu_map returns nr_cpu_ids and cpu_rq() goes out of
-> bounds.
-> 
-> The root cause looks like it isn't a housekeeping conflict. Boot time
-> isolated CPUs stay in top_cpuset.effective_cpus by design, and they are
-> only filtered out of the top_cpuset sched domain in
-> generate_sched_domains(). But the checks that make sure the parent
-> still has CPUs left, i.e. tasks_nocpu_error() for local partitions and
-> the cpumask_subset(top_cpuset.effective_cpus, ...) checks in
-> remote_partition_enable()/remote_cpus_update(), only look at
-> top_cpuset.effective_cpus. So any partition, root or isolated, local
-> or remote, can take away all the boot domain housekeeping CPUs as long
-> as some boot isolated CPUs are still left in top_cpuset, which leaves
-> the top_cpuset sched domain empty.
-> 
-> So I think the check should be done at the "parent has no CPU left"
-> level instead. Something like the diff below. It is not tested yet;
-> could you give it a try with your reproducer and the test cases?
-> Note that the root partition and remote partition cases should be
-> added to the selftest as well.
-> 
-
-That's a great idea, thanks for your guidance. I will test it and add
-the relevant test cases.
-
-Best regards,
-Guopeng
-
-> Without isolcpus=domain, HK_TYPE_DOMAIN_BOOT is cpu_possible_mask and
-> the new check is equivalent to the existing one, so no extra
-> housekeeping_enabled() gating is needed.
-> 
+> Signed-off-by: Albert Esteve <aesteve@redhat.com>
 > ---
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 3219f927c35e..fb3e81405f5b 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1180,12 +1180,51 @@ static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
->                 cpuset_force_rebuild();
->  }
+>  drivers/dma-buf/dma-buf.c    | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/dma-buf.h      |  3 ++-
+>  include/linux/memcontrol.h   | 13 +++++++++++++
+>  include/uapi/linux/dma-buf.h | 26 ++++++++++++++++++++++++++
+>  mm/memcontrol.c              | 42 ++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 125 insertions(+), 1 deletion(-)
 > 
-> +/*
-> + * top_cpuset_sd_nocpu - Check if top_cpuset will have no sched domain CPU
-> + * @add_cpus: CPUs to be taken away from top_cpuset
-> + * @del_cpus: CPUs to be given back to top_cpuset, can be NULL
-> + * Return: true if no active CPU will be left in the top_cpuset sched domain
-> + *
-> + * Boot time isolated CPUs stay in top_cpuset.effective_cpus, but they are
-> + * excluded from the sched domain of top_cpuset in generate_sched_domains().
-> + * So checking top_cpuset.effective_cpus alone is not enough to ensure that
-> + * the top_cpuset sched domain won't become empty after @add_cpus are taken
-> + * away from it. The sched domain of top_cpuset must keep at least one
-> + * active boot domain housekeeping CPU.
-> + */
-> +static bool top_cpuset_sd_nocpu(const struct cpumask *add_cpus,
-> +                               const struct cpumask *del_cpus)
+> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+> index 837666273550..3bd26fbb1109 100644
+> --- a/drivers/dma-buf/dma-buf.c
+> +++ b/drivers/dma-buf/dma-buf.c
+> @@ -540,6 +540,45 @@ static long dma_buf_import_sync_file(struct dma_buf *dmabuf,
+>  }
+>  #endif
+>  
+> +/* Transfer a dma-buf's memcg charge; see struct dma_buf_transfer_charge */
+> +static long dma_buf_xfer_charge(struct dma_buf *dmabuf,
+> +				const void __user *user_data)
 > +{
-> +       const struct cpumask *hk_mask = housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT);
-> +       int cpu;
+> +	struct dma_buf_transfer_charge arg;
+> +	struct mem_cgroup *memcg;
+> +	unsigned int nr_pages = PAGE_ALIGN(dmabuf->size) >> PAGE_SHIFT;
+> +	int ret = 0;
 > +
-> +       for_each_cpu_and(cpu, hk_mask, cpu_active_mask) {
-> +               if (cpumask_test_cpu(cpu, add_cpus))
-> +                       continue;
-> +               if (cpumask_test_cpu(cpu, top_cpuset.effective_cpus) ||
-> +                   (del_cpus && cpumask_test_cpu(cpu, del_cpus)))
-> +                       return false;
-> +       }
-> +       return true;
+> +	if (copy_from_user(&arg, user_data, sizeof(arg)))
+> +		return -EFAULT;
+> +
+> +	if (!IS_ENABLED(CONFIG_MEMCG))
+> +		return 0;
+> +
+> +	if (arg.flags != 0)
+> +		return -EINVAL;
+> +
+> +	memcg = mem_cgroup_get_from_fd(arg.charge_fd);
+> +	if (IS_ERR(memcg))
+> +		return PTR_ERR(memcg);
+> +
+> +	dma_resv_lock(dmabuf->resv, NULL);
+> +
+> +	if (!dmabuf->memcg) {
+> +		ret = -EOPNOTSUPP;
+> +		goto out;
+> +	}
+> +
+> +	if (dmabuf->memcg != memcg &&
+> +	    !mem_cgroup_transfer_charge(&dmabuf->memcg, memcg, MEMCG_DMABUF, nr_pages))
+
+Please move the calculation of nr_pages after taking the dma_resv_lock().
+
+We currently don't have anybody dynamically changing DMA-buf sizes but just to be on the save side.
+
+With that done Reviewed-by: Christian König <christian.koenig@amd.com>
+
+Regards,
+Christian.
+
+> +		ret = -ENOMEM;
+> +
+> +out:
+> +	dma_resv_unlock(dmabuf->resv);
+> +	mem_cgroup_put(memcg);
+> +	return ret;
 > +}
 > +
->  /*
->   * tasks_nocpu_error - Return true if tasks will have no effective_cpus
->   */
->  static bool tasks_nocpu_error(struct cpuset *parent, struct cpuset *cs,
->                               struct cpumask *xcpus)
->  {
-> +       /*
-> +        * The top_cpuset always has tasks (kthreads at least), so its sched
-> +        * domain can't be empty. The current effective_xcpus of a valid
-> +        * partition will be given back to top_cpuset if not in @xcpus.
-> +        */
-> +       if ((parent == &top_cpuset) &&
-> +           top_cpuset_sd_nocpu(xcpus, is_partition_valid(cs)
-> +                                      ? cs->effective_xcpus : NULL))
-> +               return true;
+>  static long dma_buf_ioctl(struct file *file,
+>  			  unsigned int cmd, unsigned long arg)
+>  {
+> @@ -590,6 +629,9 @@ static long dma_buf_ioctl(struct file *file,
+>  		return dma_buf_import_sync_file(dmabuf, (const void __user *)arg);
+>  #endif
+>  
+> +	case DMA_BUF_IOCTL_XFER_CHARGE:
+> +		return dma_buf_xfer_charge(dmabuf, (const void __user *)arg);
 > +
->         /*
->          * A populated partition (cs or parent) can't have empty effective_cpus
->          */
-> @@ -1724,7 +1763,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
->          */
->         compute_excpus(cs, tmp->new_cpus);
->         if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
-> -           cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
-> +           top_cpuset_sd_nocpu(tmp->new_cpus, NULL))
->                 return PERR_INVCPUS;
->         if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
->                 return PERR_NOCPUS;
-> @@ -1828,7 +1867,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
->                 if (!capable(CAP_SYS_ADMIN))
->                         WRITE_ONCE(cs->prs_err, PERR_ACCESS);
->                 else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
-> -                        cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
-> +                        top_cpuset_sd_nocpu(tmp->addmask, tmp->delmask))
->                         WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
->                 else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
->                                                        excpus, tmp->delmask))
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> index 85dd747c9b36..b01149d26b44 100644
+> --- a/include/linux/dma-buf.h
+> +++ b/include/linux/dma-buf.h
+> @@ -507,7 +507,8 @@ struct dma_buf_attachment {
+>   * @priv:	Attach private data of allocator to this buffer
+>   * @memcg:	memcg to charge for this buffer's memory. Set only for
+>   *		buffers backed by system memory where @size reflects the
+> - *		actual allocation in bytes.
+> + *		actual allocation in bytes. Enables charge transfer via
+> + *		DMA_BUF_IOCTL_XFER_CHARGE.
+>   *
+>   * This structure holds the information required to export the buffer. Used
+>   * with dma_buf_export() only.
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index f8ec751b7d7b..af02d9777fe9 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -676,6 +676,11 @@ struct mem_cgroup *mem_cgroup_get_from_fd(int fd);
+>  bool mem_cgroup_reserve_dmabuf(struct mem_cgroup *memcg, gfp_t gfp,
+>  			       unsigned int nr_pages);
+>  
+> +bool mem_cgroup_transfer_charge(struct mem_cgroup **ptr_memcg,
+> +				struct mem_cgroup *new_memcg,
+> +				enum memcg_stat_item item,
+> +				unsigned int nr_pages);
+> +
+>  void __mem_cgroup_uncharge(struct folio *folio);
+>  
+>  /**
+> @@ -1197,6 +1202,14 @@ static inline void mem_cgroup_cancel_dmabuf(struct mem_cgroup *memcg,
+>  {
+>  }
+>  
+> +static inline bool mem_cgroup_transfer_charge(struct mem_cgroup **ptr_memcg,
+> +					      struct mem_cgroup *new_memcg,
+> +					      enum memcg_stat_item item,
+> +					      unsigned int nr_pages)
+> +{
+> +	return true;
+> +}
+> +
+>  static inline void mem_cgroup_uncharge(struct folio *folio)
+>  {
+>  }
+> diff --git a/include/uapi/linux/dma-buf.h b/include/uapi/linux/dma-buf.h
+> index e827c9d20c5d..0aaf2e7d593b 100644
+> --- a/include/uapi/linux/dma-buf.h
+> +++ b/include/uapi/linux/dma-buf.h
+> @@ -168,6 +168,31 @@ struct dma_buf_import_sync_file {
+>  	__s32 fd;
+>  };
+>  
+> +/**
+> + * struct dma_buf_transfer_charge - Transfer a dma-buf's memcg charge
+> + *
+> + * Any holder of a dma-buf file descriptor can perform a
+> + * DMA_BUF_IOCTL_XFER_CHARGE to attribute the buffer's memory
+> + * cost to a specific cgroup, or move it from one cgroup to
+> + * another.  The ioctl charges the new cgroup before uncharging
+> + * the old one atomically.  On failure the original charge is
+> + * preserved.  If the buffer has no existing memcg charge, the
+> + * ioctl returns -EOPNOTSUPP.
+> + */
+> +struct dma_buf_transfer_charge {
+> +	/** @flags: Reserved, must be zero */
+> +	__u32 flags; /* unused for now */
+> +	/**
+> +	 * @charge_fd: File descriptor identifying the target cgroup.
+> +	 *
+> +	 * May be either a pidfd, in which case the charge moves to the
+> +	 * memory cgroup of the referenced process, or a cgroupfd obtained
+> +	 * by opening a cgroup v2 directory, in which case the charge moves
+> +	 * directly to that cgroup's memory controller.
+> +	 */
+> +	__u32 charge_fd;
+> +};
+> +
+>  #define DMA_BUF_BASE		'b'
+>  #define DMA_BUF_IOCTL_SYNC	_IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
+>  
+> @@ -179,5 +204,6 @@ struct dma_buf_import_sync_file {
+>  #define DMA_BUF_SET_NAME_B	_IOW(DMA_BUF_BASE, 1, __u64)
+>  #define DMA_BUF_IOCTL_EXPORT_SYNC_FILE	_IOWR(DMA_BUF_BASE, 2, struct dma_buf_export_sync_file)
+>  #define DMA_BUF_IOCTL_IMPORT_SYNC_FILE	_IOW(DMA_BUF_BASE, 3, struct dma_buf_import_sync_file)
+> +#define DMA_BUF_IOCTL_XFER_CHARGE	_IOW(DMA_BUF_BASE, 4, struct dma_buf_transfer_charge)
+>  
+>  #endif
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 17fdefc56b97..3e717b5663c8 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5752,6 +5752,48 @@ void mem_cgroup_cancel_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  }
+>  EXPORT_SYMBOL_GPL(mem_cgroup_cancel_dmabuf);
+>  
+> +/**
+> + * mem_cgroup_transfer_charge - move a charge between memcgs
+> + * @ptr_memcg: pointer to the memcg to transfer from
+> + * @new_memcg: target memcg; caller must hold a reference
+> + * @item: stat counter to adjust
+> + * @nr_pages: number of pages to transfer
+> + *
+> + * Transfers @nr_pages of charge from *@ptr_memcg to @new_memcg and, on
+> + * success, stores @new_memcg in *@ptr_memcg.
+> + *
+> + * Updates to *@ptr_memcg must be serialized by the caller.
+> + * Returns %true on success, %false if the charge against @new_memcg
+> + * failed.
+> + */
+> +bool mem_cgroup_transfer_charge(struct mem_cgroup **ptr_memcg,
+> +				struct mem_cgroup *new_memcg,
+> +				enum memcg_stat_item item,
+> +				unsigned int nr_pages)
+> +{
+> +	struct mem_cgroup *old_memcg = *ptr_memcg;
+> +
+> +	if (!new_memcg || mem_cgroup_disabled())
+> +		return true;
+> +
+> +	if (try_charge(new_memcg, GFP_KERNEL, nr_pages))
+> +		return false;
+> +
+> +	mod_memcg_state(new_memcg, item, nr_pages);
+> +	css_get(&new_memcg->css);
+> +	*ptr_memcg = new_memcg;
+> +
+> +	if (old_memcg) {
+> +		/* Uncharge old cgroup */
+> +		mod_memcg_state(old_memcg, item, -nr_pages);
+> +		if (!mem_cgroup_is_root(old_memcg))
+> +			refill_stock(old_memcg, nr_pages);
+> +		mem_cgroup_put(old_memcg);
+> +	}
+> +
+> +	return true;
+> +}
+> +
+>  /**
+>   * mem_cgroup_uncharge_dmabuf - uncharge a dma-buf from its memcg
+>   * @dmabuf: buffer to uncharge
 > 
 
