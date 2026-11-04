@@ -1,55 +1,111 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793833380;
-	b=TFHQK4oqkdpUpbj7KNVNd825GwYqZvxfiSERG0Io/L09N9Mqs516pPC1LZlZfxMrRO11
-	 Cqa2gxV5nUxoFXkiTB457SfQ6i8N49vxE4khsvR/XdENezgO7GgSVn6Zw94pYonbvxW6A
-	 tUj5m6gi24LixkJg/FdSy1v/a1+yHRcs7JPKmtBdyFoqPQk+WvXoGWOZXZhUP99QK3Jfv
-	 k/0ZwUhGqRLN4Eq/98fphhcjMcfoaNpGqmirdHlr2YGpO5rp1AjGcTL5zINhKK0tZE30c
-	 mLkcD3ofhndoWRmeaJFg8oL7z8oOi84zHEsjQKS+Qwcv3Fmow7xO7gvEqgyUMZByIXQ==
+	t=1793835032;
+	b=FnK/jwoXjUIB8Stp9xEZ3gbqQyKgUmnDZY/zEBnYNWaJaT0HnunLTFx9eBJau2d/uKHR
+	 Eaf4H8+eAxIrLHxSJ+KhkgRe/iQuXdsCOkP6KA9ejM0kXPj5LbulXUHxOenxx7oEFM3Kw
+	 ZvMCTiXbxdqXqAgbLmhquuMKAzxL9B+7bXDoxNh685RGTXWr87yOnRcbzNuElKYhiYZwe
+	 nOl4DJBTxalUWqUh41XZUgJP+em4WZ9WonXh4as54wakXd80lb3TZ/m7oeXIQHaSdKMEF
+	 oF7Im8/Xa8BUv+KAFhANTwrVR5sNPJ0WnG1HxE6Hro1LF/0qW466yaB+IbdJDOhYymg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793833380;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
-	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793835032;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=RtDJVlSwaDZV2kPnN+e71gVYTRxFI7GApJtZA+uD56Q=;
-	b=fIDiXpe/hTV51S/JKrMiIJEPLiRwOFawSC02hba230vkU1rLZ6ATpZw38GS2zjyHA1J9
-	 4hAv86QYbatD3NO077NQVWzlK1RZB+R0o1qsn3G9hRkNq3ri8uBxH4RNZ4KQ1qPLZeCGG
-	 3LHemKnUJVN+Ot4T267mk4UhSDjM2CXw+zoS9ig05HwJOVk3SReMpQaCTnn/4zw8qvQmF
-	 dUW0OafxAfheBKUAkdhIv/HrWzMMj1CrIiLKWniQ1fOou9Qj7o1nlqkSDpVMu8tjUqRJP
-	 SCf6U1XXupe6fBmFPnkpF4VcKGGzQTMRefL9aUXyL9pRDFPjDLVspFmKQ73RejNEW6A==
+	bh=S8O6n4wkP+hVSces6SjRurqbVke5VUdfxmmLz5pPN8Y=;
+	b=L9N9tlqfuazzhqwskIX0Bvn8wtFd06m1QMvJrNYvVNTFzHo+ZRvfFDljWGvruxFPQ+7v
+	 Im2q5NfmpqeagGHCp1BTEo8QKP948JxPrHiq1aO3RgMwcS/RRcBIU+uNgqpmCrurnGZhq
+	 Fr06OU6DboFtYwZdgOH+GJToelLyUamiAaljLpXTzpVWHM61/tTBsxDzE6Vv2W3tscD54
+	 qk9jFPgOjCy6RBlyVyBZGog3DzpG2DQlYUxauompQ6S5F6aNJHMgWJiL8cjPwNvfVbo0x
+	 SUKgUMkfy97dO50RT+/eoZS/qtLmjHCsQCmEnL3lc33Pa9cg44oedW0UyIIBGxNr7Xw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=UuYi+P0t;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EvVroBtT;
+	arc=none smtp.remote-ip=209.85.128.172
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D33B606A335
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 23:02:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A50FB606A31B
+	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 23:30:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A50FB606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=UuYi+P0t
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D9BF1F00A21;
-	Wed,  4 Nov 2026 23:02:59 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=EvVroBtT
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-8b3299aed39so2491097b3.1
+        for <cgroups@vger.kernel.org>; Wed, 04 Nov 2026 15:30:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1793833379;
-	bh=RtDJVlSwaDZV2kPnN+e71gVYTRxFI7GApJtZA+uD56Q=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=UuYi+P0trryxGTFIB7MaSORDfU4+JZ1hS7sHUVk1M7row6E1je8aH4BekGP7golkS
-	 1miU+ExvCZpGvWuGN23th4WuCq0iCxaVaUWeLE5/5xT4vnZDgSEXoCChzWCZNt/h+v
-	 4srV9O8Mpsdtmiqvst4vAAkRpWRRM0wVDOdCHVPk=
-Date: Wed, 4 Nov 2026 15:02:58 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Kuniyuki Iwashima <kuniyu@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, Kuniyuki
- Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] memcg: Misc cleanup and perf improvement for
- TCP.
-Message-Id: <20261104150258.56cf6be2efe442cdf5ff8da1@linux-foundation.org>
-In-Reply-To: <20261029194452.3189365-1-kuniyu@google.com>
-References: <20261029194452.3189365-1-kuniyu@google.com>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        d=gmail.com; s=20260707; t=1793835031; x=1794439831; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=S8O6n4wkP+hVSces6SjRurqbVke5VUdfxmmLz5pPN8Y=;
+        b=EvVroBtTUWmi89p91aNwajO2iOtdAzpDF2ekbCdoJVtZHDfPYgSoI2hlQ2izInR8og
+         +7E2vLPSzN/N/32IE22A1H23aBNd+93++Kok+aXo3VUg3Lz5eUfXZTxJpBDGjdqI9Yvf
+         FrrH4f3hzLOemmSb9dvqNy8/iH9ddiLuB/w6ZM4r1Y5/DCFnyTAuwBu9RcGVr4u4+FS1
+         ahJeZeUlP1H5xeeyHe1bm2mDb3bfrEUyb6ShOeA0DPtQILnvCpOchxvwLmEMVVI5u+b/
+         XhtS30DjvF0+LfgL4VfA1hgTxvlZLCecWvF+uHypcbpm80tgKVOuk5zG/zS7PfdspKQm
+         jUDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793835031; x=1794439831;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=S8O6n4wkP+hVSces6SjRurqbVke5VUdfxmmLz5pPN8Y=;
+        b=ogwgczlCYmv2ylP7O/WHi2/rLeVpzBeFjyQGuE9bN1LU206IcPWa9e8Hl0KwY+g1iZ
+         a62/mULMUyaHD4WacnpYG3AqErsoPASkh9WNDI4goom7z4KzfJBs7yXe8iGHhuoWfyoy
+         frg0I6lTMJ0vziGdKQWzPz6q3jJieGc8LBhgB0w5rybx7EyYhB6YpJuQrUqhRBVWNNW4
+         LHUcV+Mt7MUyEM2hCGsgo7VDf16vtnBI/L+vrXkd3u70BLI0lh22tR4RsUpuZzdSPxAm
+         e4GHyOt+68XRqAkSqvDpPoTRDzBdWf3ifj4mqBNI0S11taEY/YG7lHk5eqa/znwrBKbq
+         Nw3w==
+X-Forwarded-Encrypted: i=1; AKwUvBzC4wOrrLNA7ObWeitknFjU0pxIN6Q3NvQyzMpwdAay5R59TOE7px2lZMEOGOUHlZhILF8mvPIk@vger.kernel.org
+X-Gm-Message-State: APuU4Z/MaXgiM3738s383Tz85eXmCBLBf2Z8lwdBpCdX9MUs1VJD7D7c
+	sc7vwVINL46B/BtiITsZQuPadMXkvq5dbufnBHxyZA5aWtOr1qczOHzT
+X-Gm-Gg: AYBFou2UEzvqonXuaH/+/OGYEWsIjjbrj1492Dbzi9w1z1cuoDli7OilpOepDIuh28g
+	BmYMyqTxy2A6c3ysZhtKC0mnkq5M9Vtso4QpyTyRAjfo0DFx1acMRfiVIUF9+xP9mXQPXHIWGeM
+	s2E0T7JOrZ79NlNpIXzoGIp4KGarQo18xk8blO7sAp0DD2CIsJKwSCfN6HobeHhRRvsf4oW16Nc
+	xaGwbP/ul4TGSGbFRsYyVe4z2N8liIIbYgqYCuHDtoxrsXS1oIaVR7XImLLvIL5NC37qe23xdiR
+	huwEIyATLPYVRkNj7Sjn/nbbITxxmcODtajLx1L+l77mQMTbZK17enKZPFb51h7g2yGGwrncwJy
+	MW3vBSzg/dZ5vvK04RVEzwACpVcbiUQHFlHETxv7WQJBR7Jo1xogHfU75f9X5pWVGzseY5wO9G0
+	xhHyEI4/dZlP4gKic01paF+yNG3OMQLHp+2xGEcu820xg72OOTu+QrviAM3QXAIwuQp+viN/xIp
+	DgAESPxDd9vX4pnexLo9plaKxKasGQTI3N4MUKAA5Z9b80gf5SoI9A/mFR+bIi51lfzkfm1faFk
+	V7VItD8Lu6hM/z2Xp8U1sooinQo08Pklja8jkw4xn7qLqK62gApg++XiX7L9
+X-Received: by 2002:a05:690c:e210:10b0:8b0:a30a:7f05 with SMTP id 00721157ae682-8b2b6774969mr71427577b3.84.1793835030478;
+        Wed, 04 Nov 2026 15:30:30 -0800 (PST)
+Received: from localhost ([2a03:2880:10ff:73::])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b30997aa84sm29045837b3.29.2026.11.04.15.30.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 15:30:29 -0800 (PST)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Michal Hocko <mhocko@kernel.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kuniyuki Iwashima <kuniyu@google.com>,
+	Harry Yoo <harry@kernel.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Maarten Lankhorst <dev@lankhorst.se>,
+	Maxime Ripard <mripard@kernel.org>,
+	Natalie Vock <nat@pixelcluster.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Oscar Salvador <osalvador@suse.de>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: [PATCH v8 0/7] mm/page_counter: move stock from mem_cgroup to page_counter
+Date: Wed,  4 Nov 2026 15:30:21 -0800
+Message-ID: <20261104233029.3282438-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,85 +114,122 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Thu, 29 Oct 2026 19:44:11 +0000 Kuniyuki Iwashima <kuniyu@google.com> wrote:
+v7 --> v8
+=========
+- Rebase onto mm-new as of 11/03/2026. This picks up two memcg series
+  that required some rework:
+  - Kuniyuki Iwashima's memcg stock cleanups were worked into the
+    series, so the changes now live in page_counter code instead.
+  - Shakeel Butt's memory.high rework. Commit 4/7 folds in his
+    PF_MEMALLOC change into the page_counter checks. This change was
+    suggested by Shakeel.
+- Commit 7/7 is new. It brings back an optimization from an earlier
+  version of the series to let stock charge only accumulate on leaf
+  cgroups.
+  - To accommodate this change, sprinkle in READ_ONCE() for
+    counter->stock reads since the pointer can change at runtime now.
+- Cover letter rework as suggested by Michal Hocko.
 
-> On host w/ AMD EPYC 9B45 128-Core Processor (Zen 5 Turin,
-> 2 sockets, 512 vCPUs), tcp_rr w/ 20000 flows throughput often
-> degrades by ~50%, 32M -> 17M~27M.
-> 
-> In the bad case, the number of involuntary context switches
-> was extremely high by 12x (241733 -> 3093367).
-> 
-> The root cause was that refill_stock() calls memcg_uncharge()
-> or drain_stock() while holding memcg_stock.lock.
-> 
-> Patch 1~3 are misc cleanup for better asm output and patch 4
-> moves heavy operations to out of local_lock(&memcg_stock.lock).
-> 
-> This series removes the flakiness and gives ~3% gain on the
-> 512 vCPU platform.
-> 
-> In addition, on machine w/ AMD EPYC 7B12 64-Core Processor
-> (Zen 2 Rome, 2 sockets, 256 vCPU), tcp_rr w/ 10000 flows achieves
-> 36% more throughput with lower latency.
-> 
->   tcp_rr (10000 flows, 128 threads, 60s, average of 3 runs):
-> 
->   Metric                     |       Baseline |    Patched |    Diff
->   ---------------------------+----------------+------------+--------
->   Throughput (RPS)           |     20,884,499 | 28,453,051 | +36.24%
->   Latency Mean (us)          |         478.46 |     351.07 | -26.63%
->   Latency p50 (us)           |         453.96 |     343.04 | -24.43%
->   Latency p90 (us)           |         669.00 |     479.57 | -28.32%
->   Latency p99 (us)           |         969.38 |     593.92 | -38.73%
+INTRODUCTION
+============
+Memcg keeps a per-CPU stock of precharged pages so that small and
+frequent allocations do not walk the page_counter hierarchy every time.
+Today, the stock implementation lives in memcontrol code, even though
+the operation it caches is a page_counter charge. This makes it
+difficult to add new page_counters to a memcg and preserve the fast path
+behavior.
 
-Thanks, that all checks out here.  I fed the series into my
-LLM-controlled live kernel testing setup.  tl;dr: no correctness issues
-but the performance gains on this setup are much more humble.
+This series moves the stock into the page_counter layer.
+page_counter_try_charge() consumes the stock, charges a batch to the
+hierarchy on a miss, and refills the stock with the surplus. Memcg no
+longer manages the stock in try_charge_memcg.
 
-Gory details for the morbidly interested:
+So the stock keeps the existing layout, which is still a per-CPU bank
+of 7 slots, each holding a count of precharged pages that it hands out.
+It maintains exclusion using local locks on each CPU, and for remote
+drains we schedule on the memcg workqueue.
 
+This change gives us the following benefits:
+- Separate charge caching (page_counter) from charge policy (memcg).
+- Makes it simple to keep stock out of interior cgroups on cgroup v2.
+- Prepares for future work for stock improvement, which can now be
+  isolated from memcg changes.
 
-: I tested all four patches before/after on Linux 7.4.0-rc1.
-: 
-: Correctness testing used a four-vCPU, 8 GiB Debian QEMU/KVM guest
-: with KASAN and lockdep. Both kernels passed all 22 memcg/kmem
-: selftests, cgroup/socket churn, guest CPU hotplug, socket lifetime
-: across migration/cgroup removal, and payload-checked TCP transfers
-: under memory pressure. Final socket charges and dying descendants
-: reached zero, with no unexpected kernel diagnostics. Traces confirmed
-: stock trimming, eviction and fallback coverage.
-: 
-: Performance testing used 56 guest vCPUs pinned individually to 56
-: physical cores of a 64-core Threadripper 3995WX, with 32 GiB and
-: KASAN/lockdep disabled. Host and guest each had one socket/NUMA node;
-: the guest exposed one thread per core. Neper used 10,000 flows and
-: one-byte requests/responses. All 24 runs completed: three 60-second
-: runs per kernel/condition, with alternating A/B boot blocks.
-: 
-: Median throughput changes for the full series:
-: 
-:     Workers per endpoint     RPS off     RPS on
-:                       28      +1.21%     +1.38%
-:                      128      +0.14%     +0.72%
-: 
-: The smaller machine likely explains much of the difference from your
-: 36% gain. Your reported systems have two sockets and 256/512 vCPUs.
-: Here each endpoint had just 28 vCPUs backed by 28 physical cores;
-: 128 workers oversubscribed those CPUs rather than adding parallelism.
-: There was no physical inter-socket traffic. These differences can
-: reduce shared-counter contention and the lock-held interval behind
-: the RPS/charge-fallback/ksoftirqd amplification you described. I
-: exercised stock and RPS paths, but did not reproduce your collapse
-: or establish comparable amplification. This explanation is plausible,
-: not demonstrated by the measurements.
-: 
-: Three conditions consistently favored B; 128 workers/RPS-off was
-: essentially tied. Frequency was uncontrolled, limiting sub-percent
-: claims. Both kernels had VM CPU-feature/watchdog diagnostics without
-: an unstable-clock message, and softnet drops with RPS off.
+With this change, make sure to preserve:
+- All locking behavior is unchanged from before.
+- Non-leaf cgroups do not hold stock. Specifically, their stock is
+  drained when they become a parent, and remaining stock (isolated CPUs,
+  concurrent refills, etc.) gets drained lazily on future stock misses.
+- Exact charging for non-spinning callers.
+- Stocks only exist for the memory and memsw page_counters as before.
+  Other page_counters (swap, v1 kmem, v1 tcpmem, hugetlb_cgroup, dmem)
+  don't stock as before.
+
+EFFECT ON CGROUP V2 USERS
+=========================
+Currently when a cgroup becomes a parent, it doesn't drain the stock.
+Rather, it just prevents new charges from accumulating by nature of
+parent cgroups not having processes. Here, we can do a little better.
+When a cgroup becomes a parent, schedule drains right away, in addition
+to making sure parents don't accumulate new charges.
+
+Everything else is preserved. We preserve all draining, refilling,
+and (un)charging behavior, including the uncharge path's refills
+and direct uncharges.
+
+EFFECT ON CGROUP V1 USERS
+=========================
+The memory and memsw counters now have separate stocks, which can hit,
+evict, and drain independently. Their raw values can therefore drift
+apart by the stocked amounts, even though every charge is applied to
+both.
+
+To preserve the user-visible property that
+memory.usage_in_bytes <= memory.memsw.usage_in_bytes, the memory
+value reports the smaller of the two values. Both raw values are already
+upper bounds on real usage, so this stays within the fuzz that
+usage_in_bytes always had (and this is also already documented, see
+section 5.5 usage_in_bytes in Documentation/admin-guide/cgroup-v1/
+memory.rst).
+
+TESTING
+=======
+This series should not have big changes to performance, so I ran some
+benchmarks to verify that. I did testing on a 16-CPU, 32G machine VM.
+I ran repeated anonymous memory faults and MADV_DONTNEED to measure the
+CPU time spent per page. So + number is worse. I ran each experiment
+5 times, with 4 workers.
+
++-----------+-----------+--------------+-------+
+|           | base (ns) | patched (ns) | delta |
++-----------+-----------+--------------+-------+
+| cgroup v1 |     890.6 |        901.8 | +1.2% |
+| cgroup v2 |     893.5 |        902.2 | +1.0% |
++-----------+-----------+--------------+-------+
+
+Based on mm-new as of 11/03/26:
+74d73ffcffe03 "riscv: mm: fix concurrency in mark_new_valid_map()"
+
+Joshua Hahn (7):
+  mm/memcontrol: flatten try_charge_memcg control flow
+  mm/page_counter: introduce per-CPU stock
+  mm/page_counter: make page_counter_try_charge() stock-aware
+  mm/memcontrol: check PF_MEMALLOC after trying the limits
+  mm/memcontrol: move memory stock to page counters
+  mm/memcontrol: add stock to the memsw page counter
+  mm/memcontrol: restrict memory stock to leaf cgroups on v2
+
+ include/linux/page_counter.h |  35 ++-
+ kernel/cgroup/dmem.c         |   2 +-
+ mm/hugetlb_cgroup.c          |   2 +-
+ mm/memcontrol-v1.c           |  17 +-
+ mm/memcontrol.c              | 430 +++++++++++++----------------------
+ mm/page_counter.c            | 233 ++++++++++++++++++-
+ 6 files changed, 430 insertions(+), 289 deletions(-)
+
+-- 
+2.53.0-Meta
 
