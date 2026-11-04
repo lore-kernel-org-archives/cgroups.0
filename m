@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1793805149;
-	b=0+M10CPfc32CXBrF9HwbLsCJYlwCipMxxy+fDIqWDULLtxysUQ2+wW+Xa99DXiF6EYrg
-	 7LXtd7mA6SXv68ULW8d9H71Zcn4gouLdROk6A8XVyZA7Qa9QF9z3kOffH1W/9rH6TZQYy
-	 7/zAVRxp7hL17oWfYCj8EABzXsBS0W7MJRawXq5dP/qpoXZ//8JIbcPlCGY6JKj+vpOHF
-	 B+5i8wr6JJ0ZUXypiR3ucIikVSLw0eyR0wJl4wuzVhWPE4rHMcNPzH/i08MZjTyBlhcS8
-	 qTwHOvD95jclHNjeaE4ddLu8z7SAFGOG8S0kFmhCuFSYIKocNM9Me7ZUxZg7QS+C2rw==
+	b=NHsGZfF7U8pyYdW1R5xmHQu+cP5nKDA1000E7lM/1aYRAdf//T7vEjsCDQtfoSzdVzpa
+	 EtupQWxg152MK/ssDFpb9JqQd/poIw61Xxp59JId3ljb14SUshJEd0pMmVkQnv+XYr4ED
+	 Wx2XsWGi/FrdcOL7TmSMk3A6YsPCro15DTl8fm9OVmkc8Lz6PizuvywPlAF0cjEOTUMk2
+	 F8qHfig1VJ+cZ5p4oDzR9qiJ0XzRWgQU1HwOXfmfnau7ghIwWCDkmWzJJR4cwnEMcToTM
+	 RVMd5DHHez8zKKiFFwFukkSv1tmK3gaLUSE6w7KlbWgz3Rv8Q8kyDnDFTfQw/4pAFqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1793805149;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=aVWrFhpEnfMXGEZkvUTJyLjJszY90Acq8hqoYwyKwQk=;
-	b=BN4vLnARoIb++fJgUj7VHyLyxwt/35t0oexwEM7HILE93bC1eBfKIcaUKxAYh0KeEUnf
-	 dDBpHEplRw7CkiDz+vHhOBqlzOuf+bG1LnhBxMCDICF+9TdXIDMGK0QfkoARmnPmqd0Lr
-	 D1cGFojWmR+zFNCamej6KhKD7QGv7jKa/2aSrSPqEXykpC+IRK0wlSUzChxTuHVuLV25f
-	 qGqKjtUOTo28MZuTl6+/Pu3AXHpi74WMKQDlg9KeS0+EPJr1/FXAxDWlKm4sxjPiHM/Wq
-	 jd22z5WpxmO5nMbeazKAsqsgrPVSwmgHtQlmkWcMD2vHsmgmujVss05lAIxXYZnfzqw==
+	bh=C7/+RN7PDMRO7pHT+IVDUbw2xp4j3zIvBDh0XTZ3JLQ=;
+	b=O8iRhelW53aEGKWE73MRmOHYBcy6ah2Wc0TGIR3B1C2e892yhoMJ7E/yq7/n6B5mrp2H
+	 GB9IBI5Xl9uGX2/UZvqq63qT9b0M76pJP4Zz+l93sMMkWqVimwXvnWwBlqyNA38U+pN5a
+	 fZdqsloROr3dgVIvnEQE6oQc/ugQIWL1PHqKa2PBBuvSVDFkplXZuchkwgwaQgcX/hEpA
+	 mt0B5KhNIySVhOXFaRmqLJYF2kZ9OkQwOTQqv3y7ANRZKX/3qqNXhUAJD2zPnH4w/ZEV0
+	 SRb8Nw1WQZwafbwxYnVX7c1QfxmiMXND7TaDTj60qOGNlzpJS6n69KTiaki0KiMIdOw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=PydbVvGw;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=UcKF0dUZ;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22773606D827;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BD1B606D82F;
 	Wed,  4 Nov 2026 15:12:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 22773606D827
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5BD1B606D82F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=PydbVvGw
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=UcKF0dUZ
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
 	s=smtpout1; t=1793805141;
-	bh=aVWrFhpEnfMXGEZkvUTJyLjJszY90Acq8hqoYwyKwQk=;
+	bh=C7/+RN7PDMRO7pHT+IVDUbw2xp4j3zIvBDh0XTZ3JLQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PydbVvGw+oti6Gjb6wiHbcCBrqpJDF6KCxq/kW9aH1+IU2itEbrc/6vmZBNX91F2d
-	 /KjeOo4WsgywmJFqj7eBbAoqwc6i7UtZ1OBvLloVUShb/ut7Vu838iQJocqiwxTa3b
-	 mmxG7rIl12pVhQFLSC+TpvBM4FgydxNeAlz5dBdd+IKgcvCnQ+EQyb4cpQhTMFPfKR
-	 pkxXKpRWU11z4LMSgaq8Fb/zT2v89d943SLauOAGyL+E3XWPUmxbSGw4ai/e8B21qa
-	 1UIh1ZaFzy22548xrjuVqW+gC4OGO3lZQajVhpLCc1R5tNFZaRJSRWMAE8ork06WM+
-	 Zk3JqHitck9wg==
+	b=UcKF0dUZTTMhkaPPvq1sKTQxX6QYIkauaB3jFBKy0t4+qfdfMRR7VGl3QLxE40g0R
+	 l7SaJoRUR2y5M2gW4lxuqpoTvNBTqGcNTEOQyaWwXk9xgP8oOi0H+IheOJiCqADVuu
+	 PaQuRHAH6OvZaltL8zl/9qeqxOUV3ENV08/Q542WJcxN8WmdpqYlc2Q504xqVqQixP
+	 /sngyDXOvHIvimC4BvMJ+A3/icGqIZgXIMNQrNnu9VTw4t7uWZxqAdMEMNBfAq+8Xe
+	 pQJEjNCcn5mCiL1/4vPlUfizRAGlCJKdnk21IUF/U6TfBV5T9FBgY6QG1whB2MxCkG
+	 hWvItJ8e+WgOA==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jKTSj1mKFzL1Q;
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jKTSj41Z1zJqx;
 	Wed, 04 Nov 2026 10:12:21 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: Juri Lelli <juri.lelli@redhat.com>,
@@ -73,9 +73,9 @@ Cc: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev
-Subject: [PATCH 09/12] sched/deadline: Do not take a waking task's bandwidth off a runqueue it left
-Date: Wed,  4 Nov 2026 10:10:30 -0500
-Message-Id: <828cd80ec6e4764f04f8667fc98d7aa22d2bf076.1793804635.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH 11/12] sched/deadline: Rebuild the root domains' accounting without cpusets too
+Date: Wed,  4 Nov 2026 10:10:32 -0500
+Message-Id: <7ea39be6af23940c33a63002ea832838fe69bb9e.1793804635.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1793804635.git.mathieu.desnoyers@efficios.com>
 References: <cover.1793804635.git.mathieu.desnoyers@efficios.com>
@@ -90,122 +90,105 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A deadline task that wakes on another CPU has its bandwidth taken off
-the runqueue it slept on by migrate_task_rq_dl(), from set_task_cpu(),
-and charged to the one it wakes on by the enqueue that follows. That
-enqueue can be left to the target CPU through the wake list, and
-try_to_wake_up() returns before it runs: the task's task_cpu() is then
-the CPU it wakes on while its bandwidth is on no runqueue at all.
+A change of the root domains, which CPU hotplug and suspend and resume
+make, clears their deadline bandwidth accounting and fills it back: the
+servers of each CPU, and the bandwidth of the deadline tasks of each
+cpuset. The walk that puts the tasks back lives in the cpuset code,
+dl_rebuild_rd_accounting(), and is a stub without CONFIG_CPUSETS: such
+a kernel loses the bandwidth of every deadline task at the first
+hotplug, total_bw of the new root domain holding its servers alone.
 
-sched_setattr() of that task meanwhile finds it off the runqueues, and
-dl_change_utilization() takes its old bandwidth off the runqueue of
-task_cpu(), which never held it. this_bw of that CPU underflows, which
-costs every other task and the fair server there their own, for good.
-switched_from_dl() leaves the class through the same hole.
+The tasks are never told. Each still takes its bandwidth out of
+total_bw once it leaves SCHED_DEADLINE, or dies: it underflows, and
+admission afterwards refuses every deadline task of the root domain.
 
-Reaching it needs a deadline task whose wakeup migrates, which asks for
-more than one CPU in its root domain and for them to be taken. It is
-easier to reach with CONFIG_SCHED_PROXY_EXEC=y, where a task blocked on
-a mutex is migrated to the CPU of its owner and wakes back on its own.
+Walk the tasks instead of the cpusets, which is all there is without
+them, and keep one declaration beside dl_clear_root_domains() for both.
 
-In 8 VMs of 8 vCPUs, a task of 10ms every 100ms that sleeps and wakes in
-a partition root of two CPUs, both taken by deadline tasks of an earlier
-deadline, its runtime changed between 10ms and 20ms from a CPU outside,
-warns in all 8 within a second, and the warnings spread to the idle
-task's accounting of both CPUs:
+In 8-CPU VMs built without CONFIG_CPUSETS, the hotplug_sleepers case of
+the selftest added later in this series admits 9 tasks of 10ms every
+100ms before taking a CPU offline and back, and 0 after, on v7.4-rc1 as
+with the patches before this one; hotplug_departed and
+hotplug_server_refused fail after it, and two more hotplug cases skip
+for want of room. The five pass with this change, in 4 VMs, with no
+warning.
 
-  WARNING: kernel/sched/deadline.c:352 at dl_rq_change_utilization+0x71/0x2e0, CPU#0: wake_race/109
-   __sub_rq_bw(): this_bw underflow
-  WARNING: kernel/sched/deadline.c:316 at task_contending+0x244/0x260, CPU#6: swapper/6/0
-   __add_running_bw(): running_bw overflow
-
-Record that window in the entity, as dl_bw_offrq, and leave the
-runqueue alone while it is set: the enqueue to come charges the CPU the
-task wakes on, with the new bandwidth, which __setparam_dl() sets right
-after sched_dl_overflow(). add_rq_bw() clears it, so every path that
-charges a runqueue does. The 8 VMs above warn no more. deadline_bw_test,
-added later in this series, has params_waking for this: without this
-change it fails on every one of those VMs, and random_mix on one of
-three.
-
-Fixes: 8fd27231c330 ("sched/deadline: Track the "total rq utilization" too")
+Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 ---
- include/linux/sched.h   |  1 +
- kernel/sched/deadline.c | 20 +++++++++++++++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
+ include/linux/cpuset.h         |  5 -----
+ include/linux/sched/deadline.h |  1 +
+ kernel/sched/deadline.c        | 22 ++++++++++++++++++++++
+ 3 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 0633a73579db..8ffc076a485f 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -718,6 +718,7 @@ struct sched_dl_entity {
- 	unsigned int			dl_defer_running  : 1;
- 	unsigned int			dl_defer_idle     : 1;
- 	unsigned int			dl_bw_attached    : 1;
-+	unsigned int			dl_bw_offrq       : 1;
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 914983387e95..608c3c5a9535 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -129,7 +129,6 @@ static inline int cpuset_do_page_mem_spread(void)
  
- 	/*
- 	 * Bandwidth enforcement timer. Each -deadline task has its
+ extern bool current_cpuset_is_being_rebound(void);
+ 
+-extern void dl_rebuild_rd_accounting(void);
+ extern void rebuild_sched_domains(void);
+ 
+ extern void cpuset_print_current_mems_allowed(void);
+@@ -273,10 +272,6 @@ static inline bool current_cpuset_is_being_rebound(void)
+ 	return false;
+ }
+ 
+-static inline void dl_rebuild_rd_accounting(void)
+-{
+-}
+-
+ static inline void rebuild_sched_domains(void)
+ {
+ 	guard(cpus_read_lock)();
+diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
+index bdf39ac1d43d..e30b6ac2b050 100644
+--- a/include/linux/sched/deadline.h
++++ b/include/linux/sched/deadline.h
+@@ -33,6 +33,7 @@ struct root_domain;
+ extern void dl_add_task_root_domain(struct task_struct *p);
+ extern void dl_clear_root_domain(struct root_domain *rd);
+ extern void dl_clear_root_domains(void);
++extern void dl_rebuild_rd_accounting(void);
+ /*
+  * Return whether moving DL task @p to @new_mask requires moving DL
+  * bandwidth accounting between root domains. This helper is specific to
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 8ead9b050dfc..a8906cf96640 100644
+index a8906cf96640..0ea902b9e5d0 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -358,6 +358,7 @@ void __sub_rq_bw(u64 dl_bw, struct dl_rq *dl_rq)
- static inline
- void add_rq_bw(struct sched_dl_entity *dl_se, struct dl_rq *dl_rq)
- {
-+	dl_se->dl_bw_offrq = 0;
- 	if (!dl_entity_is_special(dl_se))
- 		__add_rq_bw(dl_se->dl_bw, dl_rq);
+@@ -3668,6 +3668,28 @@ void dl_clear_root_domain(struct root_domain *rd)
+ 		dl_server_add_bw(rd, i);
  }
-@@ -435,6 +436,14 @@ static void dl_change_utilization(struct task_struct *p, u64 new_bw)
- 	if (task_on_rq_queued(p))
- 		return;
  
-+	/*
-+	 * Waking up on another CPU, the task has its bandwidth on no
-+	 * runqueue: the enqueue to come charges the new one, with the new
-+	 * parameters, which __setparam_dl() sets right after this.
-+	 */
-+	if (p->dl.dl_bw_offrq)
-+		return;
++#ifndef CONFIG_CPUSETS
++/*
++ * Rebuild the root domains' accounting, where no cpuset holds the
++ * deadline tasks of each: they are found by walking them all, which
++ * dl_rebuild_rd_accounting() of the cpusets does per cpuset instead.
++ */
++void dl_rebuild_rd_accounting(void)
++{
++	struct task_struct *g, *p;
 +
- 	dl_rq_change_utilization(task_rq(p), &p->dl, new_bw);
- }
- 
-@@ -2785,6 +2794,12 @@ static void migrate_task_rq_dl(struct task_struct *p, int new_cpu __maybe_unused
- 		cancel_inactive_timer(&p->dl);
- 	}
- 	sub_rq_bw(&p->dl, &rq->dl);
-+	/*
-+	 * Until the enqueue on the CPU it wakes on charges it there, which
-+	 * add_rq_bw() tells of, this bandwidth is on no runqueue: the rq of
-+	 * task_cpu() is not the one it was taken from.
-+	 */
-+	p->dl.dl_bw_offrq = 1;
- 	rq_unlock(rq, &rf);
- }
- 
-@@ -3736,7 +3751,9 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
- 			dl_task_release_bw(p, dl_task_root_domain_cpu(p));
- 			released = true;
- 		}
--		sub_rq_bw(&p->dl, &rq->dl);
-+		if (!p->dl.dl_bw_offrq)
-+			sub_rq_bw(&p->dl, &rq->dl);
-+		p->dl.dl_bw_offrq = 0;
- 		/*
- 		 * Released: reset the parameters, as inactive_task_timer()
- 		 * does. Kept, they would make the task one with bandwidth to
-@@ -4191,6 +4208,7 @@ static void __dl_clear_params(struct sched_dl_entity *dl_se)
- 	dl_se->dl_defer			= 0;
- 	dl_se->dl_defer_running		= 0;
- 	dl_se->dl_defer_armed		= 0;
-+	dl_se->dl_bw_offrq		= 0;
- 
- #ifdef CONFIG_RT_MUTEXES
- 	dl_se->pi_se			= dl_se;
++	lockdep_assert_cpus_held();
++	lockdep_assert_held(&sched_domains_mutex);
++
++	dl_clear_root_domains();
++
++	read_lock(&tasklist_lock);
++	for_each_process_thread(g, p)
++		dl_add_task_root_domain(p);
++	read_unlock(&tasklist_lock);
++}
++#endif /* !CONFIG_CPUSETS */
++
+ /*
+  * Clear every root domain ahead of a rebuild of their accounting, which
+  * dl_add_task_root_domain() then fills with the deadline tasks of the
 -- 
 2.47.3
 
