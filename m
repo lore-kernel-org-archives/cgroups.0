@@ -1,67 +1,109 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793818465;
-	b=mVDsILitt6XyTJ+VVdS4ynU/Yng1LBU0iIO5vzlpTEXf44FqKidiJGLleySwt7c/wcEo
-	 /zPCwZhkLv3FtQ42bKOdzl2OOvDj6rXgK3Gkov8KegLP46Dgp9eZq5RAgU7iugIt/Pz5/
-	 I3TDYQCcd9drXttX7UVN7xaNVGpYrelL4BDCdZlhCYDVlT6340EGMiNtDOSOdiVCG8mye
-	 Ay4iawCG0Jp5vxygbdSHLh/8daNEzaULvomOhSxtAKQQYxwhzZ/k4T0zc19Ib5qb0joBz
-	 Mol3kLHRIfBSeFjOH/ghVJAuBodfEz04o2Xb7Dsa9ECxef8VxEVpdn2zkO2Zec7l+SA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793818465;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=rZkLSYXKKzU81t2un0h+GEcRdEdD+QAs33oIrkdXBa8=;
-	b=efSOMcVnwjWmjqQl42lsVf5LMRFl4p+0h0YDpsK4GbaZG1n/3438b6Nb1q7raRHAi0AH
-	 W+v8JJvK3u5kkkUqNPncVlCu+3XRZB559Q4MA1FlAa/Cklnq2T21s5IXYHNRs3pZQji3T
-	 wgAu6m4q+5afqHIYaQPPaIX/X7td2c71EngO5UF21mLPHT2FHdngFbItFPnql3XpYrVpT
-	 e2cBUEMNpyhIGN69vZqblAZMYIN5RHTRm0Faz9XLGRk89FAzcSHyDQ5bLJG4m0NAUB1Gn
-	 mGXRWtC9npfa2G0x9Qcwz7BeKc6jDKoMAZHMs/N+CL5p0DvMiQSKm9JVHCX5bC89riQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=B6a8bCHr;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.193.77
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793823880;
+	b=NyctYR3LSt8Vobl2siUGUzfkzY0Fnrf/x6hwuvWG+YUUuw7Aj93Wt7LVlOGP7jJtt7Nc
+	 i7E2xR3Pv6OurEZDmmymEOMq2ghUdcfibvrva9n09dhsQGMzF6oLRyD5X3BcWmH/9xtms
+	 pGa4uw8tY+mTGUhSYxvg9APLuDoIdrW0eAllBit7k6aSqJxWXLPcy3gCbsJQPUHUN84Rg
+	 3aDXbZFEuNrqkZqEr6XOIwKrtxrxVjQf8AjkWUYNlX/g3yn5narg5mDTTfBsnnO4gdVgb
+	 qVwJ0/WLEj7WEIoSG4XRjq8scYj6/uSLPlTBcm+qlk9tPGetb2FhSYZr283WBJ1Dk2A==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793823880;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=0H/vkr1QIIVFGm6wA+u77NSKYBFbLOovJyYs+oqgtDw=;
+	b=Y+f0DK+uZwVVBJvyymxdfsF83JID+ocyf+64KlQ2fZ4kRcbsAF0CD4CDUIVM/k19VQC1
+	 noqpNLDyUc5ox8n2QdN3fs2EpTNKJMOuId1I9UhD7t/zyAJeHRaVHo8LBv4ALNaWQNJU0
+	 aLWF9FfSy//uIHJLtTZKeem9MxYJrvCuZcQqjTQKZFJVovvADUS1nTi/tEPskS73TexNU
+	 X3kuqidzHCgWbBVh8P5aXeGNfV3JVKaPUlYGaJSQnb9Ule2juNu4RMom+PqFcVTy+zl2s
+	 67WmBFLlKO8uqEkS1q2NK5vFLNpeEt7vXL2b+712CKiNuuVi0+u1PwZRBzEHzj4sWyQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=efficios.com;
+	spf=pass smtp.mailfrom=efficios.com;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=dGM4dceA;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.193.77
+Received: from YT6PR01CU002.outbound.protection.outlook.com (mail-canadacentralazon11022077.outbound.protection.outlook.com [40.107.193.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D920606A337
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 18:54:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6D920606A337
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2577B607030B;
+	Wed,  4 Nov 2026 20:24:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2577B607030B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=B6a8bCHr
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793818463;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=rZkLSYXKKzU81t2un0h+GEcRdEdD+QAs33oIrkdXBa8=;
-	b=B6a8bCHr34cpTwStDsdrRi00/MxFFt7E0lDf0flOIVp7x9hYcqVXWPmw3XgeoOu8k14iPX
-	M50z/HS8ETzM7VbOdbIzjD7vG2WudTzaSFLXnRzYslJSS6npgpgQ1gkdrMxERk0oTOooTC
-	cDOxqrhfS7JTEq3As5hJ8YdvTPog9kA=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-613-wdvqmzNoP_KTF34Y9w_xIQ-1; Wed,
- 04 Nov 2026 13:54:20 -0500
-X-MC-Unique: wdvqmzNoP_KTF34Y9w_xIQ-1
-X-Mimecast-MFC-AGG-ID: wdvqmzNoP_KTF34Y9w_xIQ_1793818458
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B70931953993;
-	Wed,  4 Nov 2026 18:54:17 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B2DD61956041;
-	Wed,  4 Nov 2026 18:54:15 +0000 (UTC)
-Message-ID: <21cfe1b7-be80-4f3b-8366-cd77afd113b0@redhat.com>
-Date: Wed, 4 Nov 2026 13:54:14 -0500
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=dGM4dceA
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=OJUbDWcYYDPnUluRxwX5BaQ3WieIeVJPIB/rVkhukO9Hg5r87+b+d9m1SddiQ2OZWhnR+9PaaktElidNY2cmIdIwLxlRHMFfsQuoeMSqHndvsWFkG7j9MqEuACjOiDA3bIUr7HsxfqhSb+5y60LG8/xGh3UgigK2quQ7Arp1/2yAqGa8gbc4AejzX4dd10WBJzVapHSILHsszfjCd2+dnVo4p5+MwCLhfOq3pBcYZ2tUcDT2ls3DssFi2ePruEPEZZmGK1QadmbM3ebfbHaLiQgZj1/PI3o8NTUpYvDZHCGJ6ej+HAcXPPxfFTwiBlQ0q5vUHmNuxXiqJmwYNyjgQA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0H/vkr1QIIVFGm6wA+u77NSKYBFbLOovJyYs+oqgtDw=;
+ b=rpDxRNj9XJDiP/gDWCeU8Ba2ladolLX0+vWDiGD8k4O6AE/t0y+uRDOgeSRlqcz3unRXAOhYsD6G/ZMgZvFyarK5gVTChuY7gPNzsrqAUzidnijPwYPgO6FDdl9mOxlOKZTgKj3UMZqZMppzcRJur87YDNo5Q7vbME6i4dykylk5svjXT6UlxyX/C7WLqoSK6UCBwetNHqLag0gxGpNPovYlkX3f8s6p1R375sgnsRTMdlXPmo5MGa6rfpJjUBlGlygaDqj/Im22U+Y8F2UfMYiddDjm/EI0XkHrmt9Q42hW6bVOeFpaZngj8cVHB7FF3tZGWi/uWr979TuRLSWvrg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=efficios.com; dmarc=pass action=none header.from=efficios.com;
+ dkim=pass header.d=efficios.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0H/vkr1QIIVFGm6wA+u77NSKYBFbLOovJyYs+oqgtDw=;
+ b=dGM4dceA6A0IMUAntpdBbe8Ta2rsv5f6/GgmprXfMbuha9yFLJAEcJiKmZcKHTearGlEdGyMlDCdVHA7DQ9+GlzZ4mu0yfegVpvCA5utfRJcdD65HPTiPy2XR1Tu49gPjoDUL0ySIpBlesVsdaDh0m6letnwUgmQJzDVLeKVvQOiLMCnHVIwtLMSvrMCwOYePCHwJnafWt3GbjxtC7ZNZEcFAE6pA0KGZWrBuW2HCek69XGnq23/WGw+SBO33ZK61XBurIdWf26rFmp8gx1eNAfNdPniSji8qVld7Q+Ns1l1EQrU2SuSDcQdlT+bl9YZ+SpbgFDKc6IrmZuZf50M5Q==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=efficios.com;
+Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1d0::10) by YT2PR01MB9493.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:a5::11) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Wed, 4 Nov
+ 2026 20:24:34 +0000
+Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::6b9e:a901:67c5:7ddc]) by YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::6b9e:a901:67c5:7ddc%6]) with mapi id 15.21.0592.009; Wed, 4 Nov 2026
+ 20:24:34 +0000
+Message-ID: <e37fd4f5-4422-4f04-bcb3-cb640e67697d@efficios.com>
+Date: Wed, 4 Nov 2026 15:24:33 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/12] sched/deadline: bandwidth accounting fixes and
+ selftests
+To: Juri Lelli <juri.lelli@redhat.com>, Peter Zijlstra
+ <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
+ Vincent Guittot <vincent.guittot@linaro.org>
+Cc: linux-kernel@vger.kernel.org, Dietmar Eggemann
+ <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>,
+ Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+ Valentin Schneider <vschneid@redhat.com>,
+ K Prateek Nayak <kprateek.nayak@amd.com>,
+ Luca Abeni <luca.abeni@santannapisa.it>,
+ Claudio Scordino <claudio@evidence.eu.com>,
+ Mathieu Poirier <mathieu.poirier@linaro.org>,
+ Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shuah Khan <shuah@kernel.org>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Clark Williams <clrkwllms@kernel.org>, cgroups@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
+References: <cover.1793804635.git.mathieu.desnoyers@efficios.com>
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Content-Language: en-US
+In-Reply-To: <cover.1793804635.git.mathieu.desnoyers@efficios.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: YQBPR0101CA0082.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c01:4::15) To YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1d0::10)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,213 +113,90 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] cgroup/cpuset: Fail if isolated CPUs don't leave any boot
- domain housekeeping CPU
-To: Ridong Chen <ridong.chen@linux.dev>,
- Guopeng Zhang <guopeng.zhang@linux.dev>
-Cc: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20261104071600.474587-1-guopeng.zhang@linux.dev>
- <cbe741a9-fd0c-4c8f-8591-55ecc70f222a@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <cbe741a9-fd0c-4c8f-8591-55ecc70f222a@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: YT6PR01MB491026:EE_|YT2PR01MB9493:EE_
+X-MS-Office365-Filtering-Correlation-Id: aad52cba-8b66-4da8-808e-08df3ab1a41c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|7416014|23010399003|366016|10067099003|22082099003|18002099003|56012099006|261022075727099003;
+X-Microsoft-Antispam-Message-Info:
+	lst81HHEgBtGD9QyEOqlU1/pWf+vrkiIEE3ohekAUXfdiMvH9FJsfaRVSyCjpFWg8H7agCwGrv2SMkLg7/EZBZnBIbVTR84GuwbufDgNPMRryWM6ZAK53DUN2Z8jU51oR1vOREmrCupytCYuXe/Vi/wUV3uNFVccXtJw7Li6Bwh5+IlqDVxBp86LuxCvXx8mYEJw+89jV2sWqU4EwX0r6qfCB6ll3BjwJG+jciYM+oBQH2Y3+XXpkQdOV3pPvobwnDGB1E7Gi68SFf0WDpgZDEZxG11AKvPX1ZGY1WsSquBYM0wN1FTTmCvZekMrh/AxD71I9LH0OOh27JuIfaB3rhOjkDMh89v9o7foC6mDbnjHn/zNlsdDCrCmeCPGFWjiHd3MQ39XVVd2ov15E/MmbtEdoamIOGOn2mnZdf1J6bWagq0M+2y5O0CSJ446JIJ5DVfpwiUgOYQzYsbHVCuRk9yayqxwrF/FK4NwQhfaoWE+SzHe8ncV6GL9vTOAoFluSvr4gg2ZPR/5Qg4G5RvIc+o9+8Q4R9FIA6RYXI2yQqa4DK6qPQPJCP66S7MSSgdPT8dzIMtXlIem9sX1iSJT64doLiFUnrsi2i0PtsY4gUw=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(7416014)(23010399003)(366016)(10067099003)(22082099003)(18002099003)(56012099006)(261022075727099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?azc4QVdSL2VhUEo5T3B0ODJLbUllR3dueTRhWXF2bURjNEp0L0FtVGJBUUE3?=
+ =?utf-8?B?Vlh3TTk0eFNVcWZXRmkxU2kvY1lYYTI1ejRZT1hOUUlpMjRuZ1ZlOFpZU3Fo?=
+ =?utf-8?B?NG1NalIxN1AwenFaYXladnRjY3hkdWFoaEtzdE8wZ2lhYStoK2VibkpBa3RB?=
+ =?utf-8?B?NGNyM0xiVmVFVVhhY1NYSzFFNkRDVnJORWtSbXA5cUdjTlh4TDVBZy9WaU1T?=
+ =?utf-8?B?bHNkNWhma3BQL2NuOHR5VkZwSkFma0wyRjJFQThEdzRQZnlVK2xzWDE3U296?=
+ =?utf-8?B?bWorS0dBOHhvMWpDR3JaWUdPWDU3WVE3cEFTM2Jmck9xQmYrUEZhbTNzcWJO?=
+ =?utf-8?B?YzVhQU1hZyt2dEtkdWRjdHFQa21RbnF1b2FmdE9yY3c1UDVVUnNha0ZEdHNQ?=
+ =?utf-8?B?aW5OSURFR09ndzdabHZYaUlpWVRJQ1ZiYWlSTnNWc2QvUGZjNnZNSHVDSjlG?=
+ =?utf-8?B?aWwzN3FWZEM4SzBvMVFRbEZ2U3hqVjUybDFJMk5tRFoxQWhDVW43VzVDR2pU?=
+ =?utf-8?B?ZGZFVUtyRWFabVMwdTdKYmgxampsQTFmdHV3K2hRcVp6cWNaMkdQWXJheGNK?=
+ =?utf-8?B?ZW9oSHFzYkZKaS8wSEVTVEI0ZmxYNXArd2pTNmJrOXhFMHEyWlM4S2ZWUEZU?=
+ =?utf-8?B?enpkM3RQYVpwV21Ld29XT0xrQUtFRWgrbjV5cExobnVtU2ZGclZvdS9aL3RP?=
+ =?utf-8?B?Tzg3MVZHbGJZTFJteFJFMlQvSG5aaUxiK3FkUkozZ0p5cVp2ZTJDSEczTkNB?=
+ =?utf-8?B?eWJmQzJJNURIZ3orTC9xOVpGMXlJNlRCNTMwZ3NZakpjRzFFUzlRd1Ntdm41?=
+ =?utf-8?B?MEVOdEZKVTVETm80MjFYMUIrbFIrN2dMd1ZWZ1VxVVh2MXpYbG9WeWlGMEdC?=
+ =?utf-8?B?ZkdSSU9Mc0VqVkM0cXVEbHUzMlEvbC9OZzRwOFdBNnMyVUdCRXg4U2E5TE1p?=
+ =?utf-8?B?TU1nTTFrT2w1TzN2d04rZ3VPR01vWW5sdjhUcm8wcDdKbW5pWGx2cXhIUFZB?=
+ =?utf-8?B?TE1haEhiQ1lIRE9lVi9ubUYzbmtpMlVTMDZPZlhIb1FiQkw1TjRsN2hWWXd6?=
+ =?utf-8?B?c3BZbVBlTjZTdFJ1YjZnb1dwVk9jeWhlZ3Irb0UwdG94TDJpTWJnZXcvRHlE?=
+ =?utf-8?B?azFGNGNSSWpqSmNDcm45NVJLQkdOWUE0S2ZhQjlvRVFOd1N0amdVMkN4WmlV?=
+ =?utf-8?B?RVo4NEt3RXV5eEhFZDlXeXF2TnRXaEFPZVZ5MFU0cjJzbTJEOU9sKzlBL1Vw?=
+ =?utf-8?B?WFEzOW1ZNys5UHFlWjlIU1Vja3lYZzZzV3kxMGpXY0JJeUY3VEQyUXlta3Np?=
+ =?utf-8?B?N1hjU2llOWNkSXhpVFJCTlhobzFNdnlQRUljNTlPcWNKUmFPbWxUa2YyeTkw?=
+ =?utf-8?B?QkI3Yi9BV0liUGQ3M1MzclVqbmJQVkxNM3BJZ0RLT25jRUZneXMyZGszU3Iz?=
+ =?utf-8?B?eStpYlVuNTJGMHVUUFVLbVNZcmdlUDBpcVJJMEFFb1N0cDFZWk5NSVVlVDl3?=
+ =?utf-8?B?S0VmbEhoNnhpeXM5ZFduQ1VpZkt6U3NBZ3JXRXpKUzdFREJrc21ZaXR3clNr?=
+ =?utf-8?B?RktFYW45NWVBeGlDQlBLcW1yaXk1bklUaDBhMUZsV2d1WXJ1aTQ3czdiU3N3?=
+ =?utf-8?B?dWNML3VLbUNuZFROZUlGOEJuQ0cvY0t3SXcrUkdKeXFXbzM0anZVT2FzbWdt?=
+ =?utf-8?B?czRKV2g4a0RhV2FIZmF6WFlQcmM0ZDExTVRsN09ZNytFSVhNNzFpV2NvT2xt?=
+ =?utf-8?B?aCtvUXNwVGJ2bkxERWxYYmNuNTFOMnRaUzJ3ODVKNmREdFI4QUIwbGp4ZlhC?=
+ =?utf-8?B?MjlQRG9iWkY4dUYrd1dYaHJLV2IyeEh1T3pDUHdUU0Jtb1ZJdTZqZitlVVlI?=
+ =?utf-8?B?SExFb2NMNzBwdE9pTUxLV3dKU0tCcEI2WXlpYU0yUlJjU0NCaWNRNXdyQkV2?=
+ =?utf-8?B?ME4yMWFYYnhTUEFnUlJNSTNEZ1oreEZWT0Mxd1hoZ2QycmVGOGptMDN5U1Qy?=
+ =?utf-8?B?ZkN0cUgrcm0wbVkxWng0RmZmTHNEbEpGV01rTzdQVGVacXViT1FhZlRhK1Ft?=
+ =?utf-8?B?Mzkyc0NOemdCcWszc0pDUWl5dm1ocTZvSkZUQTh5TmNZKy9CSDdmS1hrdTU3?=
+ =?utf-8?B?ZnhDdUdVMVdiTDc2TEY5RXB1SzBOR3RWYkplWEhOUTJzK1B3bnZOSnd5SHlY?=
+ =?utf-8?B?WG9lSnBoYTNiaWdwWlRFWlhYUmpISkFXbTBBNGRudmJsVUd4TThvN0JVOHZV?=
+ =?utf-8?B?RlV1aXNMaXRsTFFZbGZzMjk5SU1iZUNoN3NKSGdCZW5HVVNhSkpnR2ozeGtR?=
+ =?utf-8?B?ZmwrVHJkUE5KUnZTVytEODJvZjhIV08yckt2NTlGZ05yRE13K0pzdG9NNHh0?=
+ =?utf-8?Q?lV/HSec8+MZaOx9Y=3D?=
+X-OriginatorOrg: efficios.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: aad52cba-8b66-4da8-808e-08df3ab1a41c
+X-MS-Exchange-CrossTenant-AuthSource: YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2026 20:24:34.7864
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4f278736-4ab6-415c-957e-1f55336bd31e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: u2mTX76HYBpWuK88xzs+N1WoCjoluWhMuMPLyZrsuo8lJThfsijBHIo9ue73kt+qGq34rUSv40AUdXtXO2Dzvr/yREgjikycDAJAH/5+mL8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: YT2PR01MB9493
 
-On 11/4/26 7:58 AM, Ridong Chen wrote:
->
->
-> On 11/4/2026 3:16 PM, Guopeng Zhang wrote:
->> From: Guopeng Zhang<zhangguopeng@kylinos.cn>
->>
->> With the "domain" flag of the isolcpus= boot option, the CPUs isolated
->> at boot are excluded from the sched domains and the remaining CPUs
->> become the boot domain housekeeping CPUs. An isolated partition is
->> allowed to use the boot isolated CPUs, but it must not take over all
->> the boot domain housekeeping CPUs.
->>
->> prstate_housekeeping_conflict() checks that rule for root partitions
->> only. The 2nd check covers the nohz_full case as it is gated by
->> housekeeping_enabled(HK_TYPE_KERNEL_NOISE) which is not enabled by
->> isolcpus=domain. So on an isolcpus=domain,<cpus> boot, an isolated
->> partition can claim all the remaining boot domain housekeeping CPUs.
->> The state is committed, but the sched domain rebuild at the end of
->> the write finds no housekeeping CPU left for the boot domain and
->> hits WARNs and an OOPS in partition_sched_domains().
->> housekeeping_update() cannot accept the configuration either as it
->> cannot empty the boot domain housekeeping mask.
->> With an "isolcpus=domain,10-31" boot where CPUs 0-9 are the boot
->> domain housekeeping CPUs, for example:
->>
->>    # echo 0-9 > A/cpuset.cpus
->>    # echo isolated > A/cpuset.cpus.partition
->>    WARNING: kernel/sched/topology.c:3089 at build_sched_domains+...
->>    WARNING: kernel/cgroup/cpuset.c:1478 at 
->> cpuset_update_sd_hk_unlock+...
->>    RIP: 0010:partition_sched_domains+0x3b8
->>
->> Fix that by extending prstate_housekeeping_conflict() to reject an
->> isolated partition update that would leave no active boot domain
->> housekeeping CPU outside the isolated CPUs. The CPUs released back
->> to the boot domain by the same update are taken into account, so
->> replacing one of the last housekeeping CPUs with another one in a
->> single update remains allowed. The new check is only performed when
->> housekeeping_enabled(HK_TYPE_KERNEL_NOISE) is disabled so that the
->> existing nohz_full behavior is unchanged.
->>
->> Add test cases in test_cpuset_prs.sh to verify that taking over all
->> the boot domain housekeeping CPUs is rejected while swapping one of
->> them with another one is allowed.
->
-> Hi Guopeng,
->
-> Thanks for the report and the reproducer. I can reproduce the WARN and
-> the OOPS in partition_sched_domains() here.
->
-> However, I don't think prstate_housekeeping_conflict() is the right
-> place to fix it, and the fix doesn't seem complete. The same problem
-> can be triggered with a root partition, which this patch doesn't cover.
-> With an "isolcpus=domain,4-7" boot on an 8-CPU VM:
->
->   # echo 0-3 > A/cpuset.cpus
->   # echo root > A/cpuset.cpus.partition
->   WARNING: kernel/sched/topology.c:3111 at 
-> build_sched_domains+0x2b96/0x5500
->   Oops: general protection fault, ... [#1] SMP KASAN NOPTI
->   RIP: 0010:partition_sched_domains+0x10a3/0x1a10
->
-> The faulting address is in build_perf_domains(), where cpumask_first()
-> on the empty cpu_map returns nr_cpu_ids and cpu_rq() goes out of
-> bounds.
->
-> The root cause looks like it isn't a housekeeping conflict. Boot time
-> isolated CPUs stay in top_cpuset.effective_cpus by design, and they are
-> only filtered out of the top_cpuset sched domain in
-> generate_sched_domains(). But the checks that make sure the parent
-> still has CPUs left, i.e. tasks_nocpu_error() for local partitions and
-> the cpumask_subset(top_cpuset.effective_cpus, ...) checks in
-> remote_partition_enable()/remote_cpus_update(), only look at
-> top_cpuset.effective_cpus. So any partition, root or isolated, local
-> or remote, can take away all the boot domain housekeeping CPUs as long
-> as some boot isolated CPUs are still left in top_cpuset, which leaves
-> the top_cpuset sched domain empty.
->
-> So I think the check should be done at the "parent has no CPU left"
-> level instead. Something like the diff below. It is not tested yet;
-> could you give it a try with your reproducer and the test cases?
-> Note that the root partition and remote partition cases should be
-> added to the selftest as well.
->
-> Without isolcpus=domain, HK_TYPE_DOMAIN_BOOT is cpu_possible_mask and
-> the new check is equivalent to the existing one, so no extra
-> housekeeping_enabled() gating is needed.
->
-> ---
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 3219f927c35e..fb3e81405f5b 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1180,12 +1180,51 @@ static void update_partition_sd_lb(struct 
-> cpuset *cs, int old_prs)
->                 cpuset_force_rebuild();
->  }
->
-> +/*
-> + * top_cpuset_sd_nocpu - Check if top_cpuset will have no sched 
-> domain CPU
-> + * @add_cpus: CPUs to be taken away from top_cpuset
-> + * @del_cpus: CPUs to be given back to top_cpuset, can be NULL
-> + * Return: true if no active CPU will be left in the top_cpuset sched 
-> domain
-> + *
-> + * Boot time isolated CPUs stay in top_cpuset.effective_cpus, but 
-> they are
-> + * excluded from the sched domain of top_cpuset in 
-> generate_sched_domains().
-> + * So checking top_cpuset.effective_cpus alone is not enough to 
-> ensure that
-> + * the top_cpuset sched domain won't become empty after @add_cpus are 
-> taken
-> + * away from it. The sched domain of top_cpuset must keep at least one
-> + * active boot domain housekeeping CPU.
-> + */
-> +static bool top_cpuset_sd_nocpu(const struct cpumask *add_cpus,
-> +                               const struct cpumask *del_cpus)
-> +{
-> +       const struct cpumask *hk_mask = 
-> housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT);
-> +       int cpu;
-> +
-> +       for_each_cpu_and(cpu, hk_mask, cpu_active_mask) {
-> +               if (cpumask_test_cpu(cpu, add_cpus))
-> +                       continue;
-> +               if (cpumask_test_cpu(cpu, top_cpuset.effective_cpus) ||
-> +                   (del_cpus && cpumask_test_cpu(cpu, del_cpus)))
-> +                       return false;
-> +       }
-> +       return true;
-> +}
-> +
->  /*
->   * tasks_nocpu_error - Return true if tasks will have no effective_cpus
->   */
->  static bool tasks_nocpu_error(struct cpuset *parent, struct cpuset *cs,
->                               struct cpumask *xcpus)
->  {
-> +       /*
-> +        * The top_cpuset always has tasks (kthreads at least), so its 
-> sched
-> +        * domain can't be empty. The current effective_xcpus of a valid
-> +        * partition will be given back to top_cpuset if not in @xcpus.
-> +        */
-> +       if ((parent == &top_cpuset) &&
-> +           top_cpuset_sd_nocpu(xcpus, is_partition_valid(cs)
-> +                                      ? cs->effective_xcpus : NULL))
+On 2026-11-04 10:10, Mathieu Desnoyers wrote:
+> Hi Juri,
+> 
+> Please find in this series eight fixes to SCHED_DEADLINE bandwidth
+> accounting, on top of your four in sched/urgent, with the selftests that
+> catch them.
+I'm taking care of issues found by Sashiko, including additional
+preexisting bugs. I'm also taking care of yet more preexisting
+sched deadline bugs identified by a round of Fable review
+over my updated series.
 
-The del_cpus should normally be (cs->effective_xcpus & ~xcpus), but the 
-top_cpuset_sd_nocpu() helper will skip CPUs that are in xcpus. So it 
-will work in this case. It should be noted in the functional comment of 
-top_cpuset_sd_nocpu() that @del_cpus can include common CPUs that will 
-stay in the partition which will be skipped in the helper so that future 
-change won't accidentally change that behavior.
+v2 will include fixes for 17 sched deadline bugs, most of which have
+reproducers.
 
-Other than that, the code looks good to me.
+Thanks,
 
-Cheers,
-Longman
+Mathieu
 
-> + return true;
-> +
->         /*
->          * A populated partition (cs or parent) can't have empty 
-> effective_cpus
->          */
-> @@ -1724,7 +1763,7 @@ static int remote_partition_enable(struct cpuset 
-> *cs, int new_prs,
->          */
->         compute_excpus(cs, tmp->new_cpus);
->         if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
-> -           cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
-> +           top_cpuset_sd_nocpu(tmp->new_cpus, NULL))
->                 return PERR_INVCPUS;
->         if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
->                 return PERR_NOCPUS;
-> @@ -1828,7 +1867,7 @@ static void remote_cpus_update(struct cpuset 
-> *cs, struct cpumask *xcpus,
->                 if (!capable(CAP_SYS_ADMIN))
->                         WRITE_ONCE(cs->prs_err, PERR_ACCESS);
->                 else if (cpumask_intersects(tmp->addmask, 
-> subpartitions_cpus) ||
-> -                        cpumask_subset(top_cpuset.effective_cpus, 
-> tmp->addmask))
-> +                        top_cpuset_sd_nocpu(tmp->addmask, tmp->delmask))
->                         WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
->                 else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
->                                                        excpus, 
-> tmp->delmask))
->
-
+-- 
+Mathieu Desnoyers
+EfficiOS Inc.
+https://www.efficios.com
