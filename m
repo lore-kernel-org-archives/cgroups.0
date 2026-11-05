@@ -1,61 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793880590;
-	b=WHIplZsxk3wJ1jQsTd2Gk0XI20iEsmDjWYBeU9VL2JrHvLgwsZ6V0fJnQzC4egXSWAAX
-	 BMTfh3/qM9a+DhiipKw4J2A11+FP/b4nZsnw1T18Ruj3gP6olwm13DaHg62iceAFV1JuM
-	 CDid+gl7QyOYivaoSH6TGzd2vpAMlkNdsEJaGIDJy5u+6351u0eApC8jWf7NNoWyrIIYu
-	 xqn8o5QHmnk/Sw873loYzvvIAMDfD0mEScJY1i4B90Dw9A+4lBXg8EaJm9OZRQX9Ie0Ze
-	 MNptEN4r5Nii6bBOeqa+g2guW1d0VkvbbofUC1I7YLbbVT8GdA/BsE3MLUaMcbRTr3w==
+	t=1793882941;
+	b=FrCqbYfkE3MIDxkSmSEkU89mdaRI4G3/8xHCq+81qKpjPWcDA7RWVhrvMBOGax3kgP8i
+	 AfaijNSVAbfMwh9wyk7+WLJIDqquEFsaHoOJGZ01DCCtJdekb2zZ4xJmIKqyTuRIZhOoK
+	 /TIgZsAUlg2ZCna1CPMut+Hqx70+KL3tXNwDbLmGVR8sk+PTY91tuapiEWACctaceh6lG
+	 ARQ4nA/nkoxlgA8X9GQzv8HRx0WqDjrfrhXUm9sQMGDX/ZMcNIX1D+plqitxPebZVPsIY
+	 5crzIz/HZyp3c3KYI67rJn5PL5c/mOB1YlIdmvtIapjIYDDhaDXSBsd2Iguq3SbHG1g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793880590;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=gukOYmvYDHX2QKSOGio7z+vsfvmKRfuVGQNVt9yzjww=;
-	b=C715gJ7hkcqOw4X8J80Aa/lQ5vw7+LVBbayv93omZ40pjxcPiDh7k5qasCPjS38U9iW2
-	 OReDVxgoni00z6DTvEJgRx8x5XZzSUrc/NdO35BBO+C+aW60sVnMe2bhx9SQtyVSfJT40
-	 btsCqB5RMCivfBbmuC3G4M8EBp85RnjAshFWhGjBJc0dvpgfTsFnMI7E3ESSlQJU9lQKR
-	 MTIAaamkaiTOuOxRkgZL/rn3QaYJnbqS3VirfcAWVSrZo8zLgq2RS/vdqzUm7nl4Ki3SQ
-	 inmxok4H5FZ3eqn5M4CZEXk/9cQgRoNN78qTgx0SI7s4vPiTZ5gfnS5JlfytbrU/W0g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793882941;
+	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=8lNES7HOAcQtbypia4I77W3fBXnSYdPVadaze0MP+7o=;
+	b=ziUBQOmNjyH7WDv+ar5U85aq2DNnrXBPzK8VDyYjxX+Ul09avIi65R/9nH8o5pY4KyOe
+	 KZCRthd4Sqbtvu+Dd6AJEBLrfYwA7i+0kXIYLYVzGFh/J7Y2W0UDVnGxzbLgaKOmpAF+M
+	 cVZszpWTegBuFNOicVsZgxcJCeoxsbplRMnRoMbLrPkiYS+eyNHPuqFXPsvKF4IJ/K+MP
+	 CVvdnvIIKtUfV5+NeT7IjbXhqALS/BaHakM4tfnCV1N1c5MxuSuGX1iVlt94pWtGRNvC/
+	 1yYm2Rd/M6d0/G8V1RAza9mb05y9GgbdWA+Fso75LizqiNlU1ZrDAaZLQM0952jmjYQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aAAW3W8z;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BEA606EEBF;
-	Thu,  5 Nov 2026 12:09:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aAAW3W8z
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38CE1F0093A;
-	Thu,  5 Nov 2026 12:09:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793880589;
-	bh=gukOYmvYDHX2QKSOGio7z+vsfvmKRfuVGQNVt9yzjww=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=aAAW3W8zrqhI1GlZKqclxuzopsOsI5eRflWVb+u4vb5PXFTYkgJ0rp9Kj8p5k/PnJ
-	 dz9x5vflTBj+DeSq6KDVaKKWH4IO1ANMazHhA8U7XpsUFlwUQv3pPtBE5apiquXHF8
-	 VIijSfbzJWIZ0u8nFhus81QZCpCdrEIkdEEVT9qcVLTnlF9X7DDYJUpALeqULAdBUk
-	 gG3qH+UW1A7HkPJle0v+Ro9VJBDQIiBephkzM1sYS8P/gd5M72p1JtRoV4TPOtMTPm
-	 lTV9zl9RBf9VsgqSb5pKIdsUflUPUNRZjRUAYJW6CA56tI1pSDaFNGwOyrBwhQLiSh
-	 TJOgN9lfoSL8g==
-Date: Thu, 5 Nov 2026 12:09:47 +0000
-From: Harry Yoo <harry@kernel.org>
-To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
-	David Rientjes <rientjes@google.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
-	Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, kernel-team@meta.com, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH for-next-fixes v2 2/5] mm/slab: handle allow_spin in
- slab_free_hook() instead of open coding
-Message-ID: <auxxnr3iVYNOOoci@thinkstation>
-References: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org>
- <20261103-kmalloc-nolock-fixes-v2-2-19167cfe4779@kernel.org>
- <f31885cd-57c2-428d-9760-a76a0137f989@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A8E4606A328;
+	Thu,  5 Nov 2026 12:48:57 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A8E4606A328
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 3ed29f84d91711f19a56ed5b684f684d-20261105
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
+	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD
+	HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
+	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_CHARSET
+	HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME, SA_TRUSTED
+	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
+	DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
+	GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:f03f5e37-40c5-467b-b83c-79ae097e5bc3,IP:10,
+	URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:30
+X-CID-INFO: VERSION:1.3.19,REQID:f03f5e37-40c5-467b-b83c-79ae097e5bc3,IP:10,UR
+	L:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:30
+X-CID-META: VersionHash:7db8b62,CLOUDID:80bdff4df7e3f81b0ec11ec1ebd4f49a,BulkI
+	D:261105204853AFQH8L54,BulkQuantity:0,SF:10|38|66|78|102|127|153|865|898,T
+	C:nil,Content:0|15|50|99,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil
+	,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 3ed29f84d91711f19a56ed5b684f684d-20261105
+X-User: sunshaojie@kylinos.cn
+Received: from sunshaojie-pc [(114.244.3.119)] by mailgw.kylinos.cn
+	(envelope-from <sunshaojie@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1841114905; Thu, 05 Nov 2026 20:48:48 +0800
+From: Shaojie Sun <sunshaojie@kylinos.cn>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Shaojie Sun <sunshaojie@kylinos.cn>
+Subject: [PATCH] cgroup: replace BUG_ON()s in compare_css_sets() with WARN_ON_ONCE()
+Date: Thu,  5 Nov 2026 20:48:13 +0800
+Message-ID: <20261105124813.862460-1-sunshaojie@kylinos.cn>
+X-Mailer: git-send-email 2.50.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -65,97 +82,55 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f31885cd-57c2-428d-9760-a76a0137f989@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 04, 2026 at 02:54:13PM +0100, Vlastimil Babka (SUSE) wrote:
-> On 11/3/26 15:47, Harry Yoo (Meta) wrote:
-> > kfree_nolock() deliberately skips slab free hooks that should not be
-> > called in unknown context. However, there is one more place that
-> > needs the same thing: memcg_alloc_abort_single().
-> > 
-> > Instead of open coding slab_free_hook(), let it handle the allow_spin
-> > parameter. This is required to correctly handle allocation failures due
-> > to memcg charging.
-> > 
-> > There are two functional changes from this.
-> > 
-> > First, memcg_alloc_abort_single() -> slab_free_hook() path no longer
-> > calls free hooks that acquire spinlocks if !allow_spin.
-> 
-> Hm, since this is only changed by patch 4, I don't think it needs mentioning
-> here, as it's not any functional change yet.
+compare_css_sets() walks the cgrp_links lists of two css_sets in
+lockstep.  Both lists carry exactly one link per hierarchy root, so a
+length or ordering mismatch just means the two css_sets are not the same
+one, which is what the function already reports with "return false".
+The caller keeps walking the hash chain and allocates a new css_set if
+nothing matches.
 
-Good point, will adjust.
+None of these checks is a user-reachable error path; they are invariant
+checks on kernel-internal bookkeeping that are expected never to fire,
+and each one has a way out.
 
-> > Second, kfree_nolock() now follows init_on_free which has been ignored.
-> > 
-> > Besides that, no functional change intended.
-> > 
-> > Closes: https://lore.kernel.org/asiSUpAYYU8Od4HM@gmail.com
-> > Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
-> > Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
-> > ---
-> >  mm/slub.c | 104 +++++++++++++++++++++++++++++++++-----------------------------
-> >  1 file changed, 56 insertions(+), 48 deletions(-)
-> > 
-> > diff --git a/mm/slub.c b/mm/slub.c
-> > index 45e077c7526c..36e7bb93418a 100644
-> > --- a/mm/slub.c
-> > +++ b/mm/slub.c
-> > @@ -2686,41 +2686,54 @@ struct rcu_delayed_free {
-> >   * - memcg_slab_post_alloc_hook()
-> >   * - alloc_tagging_slab_alloc_hook()
-> >   *
-> > + * slab_free_hook() assumes that memcg_slab_free_hook() and
-> > + * alloc_tagging_slab_free_hook() are already invoked.
-> > + *
-> >   * Free hooks that must handle missing corresponding alloc hooks:
-> >   * - kmemleak_free_recursive()
-> >   * - kfence_free()
-> >   *
-> > - * Free hooks that have no alloc hook counterpart, and thus safe to call:
-> > + * Free hooks that have no alloc hook counterpart:
-> >   * - debug_check_no_locks_freed()
-> >   * - debug_check_no_obj_freed()
-> >   * - __kcsan_check_access()
-> >   */
-> >  static __always_inline
-> >  bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
-> > -		    bool after_rcu_delay)
-> > +		    bool after_rcu_delay, bool allow_spin)
-> 
-> Hm 3 bools. Could we bite the bullet and try doing free_flags (extended to
-> cover init and after_rcu_delay) here already? :) Given it's not intended for
-> a stable backport.
+No functional change for a consistent state.
 
-Ack, will try to bite the bullet.
+Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
+---
+ kernel/cgroup/cgroup.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-> > @@ -2776,8 +2790,11 @@ bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
-> >  		set_orig_size(s, x, orig_size);
-> >  
-> >  	}
-> > -	/* KASAN might put x into memory quarantine, delaying its reuse. */
-> > -	return !kasan_slab_free(s, x, init, still_accessible, false);
-> > +	/*
-> > +	 * KASAN might put x into memory quarantine, delaying its reuse.
-> > +	 * Skip quarantine when spinning is not allowed as it uses a spinlock.
-> > +	 */
-> > +	return !kasan_slab_free(s, x, init, still_accessible, !allow_spin);
-> >  }
-> >  
-> >  static __fastpath_inline
-> > @@ -2789,9 +2806,10 @@ bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
-> >  	void *next = *head;
-> >  	void *old_tail = *tail;
-> >  	bool init;
-> > +	bool allow_spin = true;
-> 
-> Then we wouldn't need tricks like this I guess?
-
-Right.
-
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index a284225f8dc9..81c82d137fa2 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1024,10 +1024,12 @@ static bool compare_css_sets(struct css_set *cset,
+ 		l2 = l2->next;
+ 		/* See if we reached the end - both lists are equal length. */
+ 		if (l1 == &cset->cgrp_links) {
+-			BUG_ON(l2 != &old_cset->cgrp_links);
++			if (WARN_ON_ONCE(l2 != &old_cset->cgrp_links))
++				return false;
+ 			break;
+ 		} else {
+-			BUG_ON(l2 == &old_cset->cgrp_links);
++			if (WARN_ON_ONCE(l2 == &old_cset->cgrp_links))
++				return false;
+ 		}
+ 		/* Locate the cgroups associated with these links. */
+ 		link1 = list_entry(l1, struct cgrp_cset_link, cgrp_link);
+@@ -1035,7 +1037,8 @@ static bool compare_css_sets(struct css_set *cset,
+ 		cgrp1 = link1->cgrp;
+ 		cgrp2 = link2->cgrp;
+ 		/* Hierarchies should be linked in the same order. */
+-		BUG_ON(cgrp1->root != cgrp2->root);
++		if (WARN_ON_ONCE(cgrp1->root != cgrp2->root))
++			return false;
+ 
+ 		/*
+ 		 * If this hierarchy is the hierarchy of the cgroup
 -- 
-Cheers,
-Harry / Hyeonggon
+2.50.1
+
