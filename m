@@ -1,80 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793880578;
-	b=DleiVMgQb/KoFS1NuYlHO7zLlZ3bDLur+vx126n6+GlaPNzsEsrbOAj75K7h7NWgPKRM
-	 Af6MPqEsfgwNitiDiKsxrEOU6OYnoNXAyZwE3fVkPMhoXQbDbdUR3YovvfuoGYGBh+6D3
-	 StMCAkrWnlDEd25yUMORHgldGO3ZufoLFdwmkeqx8bTpfFLPh8KwetbAXPC4BmMDt1KXf
-	 +Lx5+yhluMcj5G8xx42ABaBnV2D8I3ABaQe/Uofw5pSmPq/XKanL43+ATABSMcdfJjvTI
-	 oPyq7Xvh5Q13PMTH91QNnp8Xw9+uh4wUVqvMDVb04b2lGkItX7F2nD8Sr6gO6Xv86dw==
+	t=1793880590;
+	b=WHIplZsxk3wJ1jQsTd2Gk0XI20iEsmDjWYBeU9VL2JrHvLgwsZ6V0fJnQzC4egXSWAAX
+	 BMTfh3/qM9a+DhiipKw4J2A11+FP/b4nZsnw1T18Ruj3gP6olwm13DaHg62iceAFV1JuM
+	 CDid+gl7QyOYivaoSH6TGzd2vpAMlkNdsEJaGIDJy5u+6351u0eApC8jWf7NNoWyrIIYu
+	 xqn8o5QHmnk/Sw873loYzvvIAMDfD0mEScJY1i4B90Dw9A+4lBXg8EaJm9OZRQX9Ie0Ze
+	 MNptEN4r5Nii6bBOeqa+g2guW1d0VkvbbofUC1I7YLbbVT8GdA/BsE3MLUaMcbRTr3w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793880578;
-	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=VLI3tsLjWgFo/M+ht55Dzc93Zh+oSgKyrWv+ds6AzTE=;
-	b=aPaYf8n4PWRPjhOZ8D75SdRgCT7/Rz7vYvlPXXpgDZYzy8Qlh+9VTVd7BagQ4SYlBVPY
-	 MG2kYWfZZQJepxHOjsevXFNFnOJnOBsf3KftQj18667uhEO857BQrGdkZFgy4OAd5MRpI
-	 t9+PuY0q6we72kDynTftV4TUFE5elzDu4Na5DreHDsFLfdsTvb5htHtehSZ73UROlq/k/
-	 Yzv5LIZxY7PybIhwQtCTWzvJwQeZA0qmucdmjZurc91fraD1gkyBXuoekPVQHpVpjBavL
-	 +81NIIOdJi54nGQCak7P9Kk8cacHfqdq8+jBXp8uznh5mX2yPeccBR1oZn0xqNRdLYg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793880590;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
+	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=gukOYmvYDHX2QKSOGio7z+vsfvmKRfuVGQNVt9yzjww=;
+	b=C715gJ7hkcqOw4X8J80Aa/lQ5vw7+LVBbayv93omZ40pjxcPiDh7k5qasCPjS38U9iW2
+	 OReDVxgoni00z6DTvEJgRx8x5XZzSUrc/NdO35BBO+C+aW60sVnMe2bhx9SQtyVSfJT40
+	 btsCqB5RMCivfBbmuC3G4M8EBp85RnjAshFWhGjBJc0dvpgfTsFnMI7E3ESSlQJU9lQKR
+	 MTIAaamkaiTOuOxRkgZL/rn3QaYJnbqS3VirfcAWVSrZo8zLgq2RS/vdqzUm7nl4Ki3SQ
+	 inmxok4H5FZ3eqn5M4CZEXk/9cQgRoNN78qTgx0SI7s4vPiTZ5gfnS5JlfytbrU/W0g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=H8eEqMlz;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=yRTd4ZoV;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aAAW3W8z;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 673ED606A336;
-	Thu,  5 Nov 2026 12:09:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 673ED606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5BEA606EEBF;
+	Thu,  5 Nov 2026 12:09:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=H8eEqMlz;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=yRTd4ZoV
-Date: Thu, 5 Nov 2026 13:09:32 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1793880574;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VLI3tsLjWgFo/M+ht55Dzc93Zh+oSgKyrWv+ds6AzTE=;
-	b=H8eEqMlzcdzd898GU7zTXYGjslyeROH/zk5iNNfAxJvqkuiCVMx6T5f57A1xkNeKVwD86d
-	ifZku4DiICEaldOxgdpNHm1fiDo60m3NP9LZzbhef46u3hUsjGM8oqQiZMFn0ZcZFFvFLo
-	OnwMhS3FZKkaTmVakcVewkEzMsyUP79BOGmxWRSzTVYGmk1j1pBXPEikeof6JaghZ08jzS
-	ZAKcas2pn5mLYHldeFjMhNhwPeX+yxnk6NzuXH30Gldj1ersbJtAsgfhRB9Fhl6R/5/Aj4
-	lNshfVMKNkzUrjfl80rqBSIv30FertsWiaYWWEyhR/gMyVHhrprZvFOIjEbuNA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1793880574;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=VLI3tsLjWgFo/M+ht55Dzc93Zh+oSgKyrWv+ds6AzTE=;
-	b=yRTd4ZoVKPen8uZuQO4i3zPiyG+f/HGwwIBXFtWW80/LwERbrOwLbSzuEwT32cSgRpA+HE
-	yJgOHF5Lhsy35KAQ==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Juri Lelli <juri.lelli@redhat.com>
-Cc: linux-rt-devel@lists.linux.dev, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	K Prateek Nayak <kprateek.nayak@amd.com>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-	John Ogness <john.ogness@linutronix.de>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>
-Subject: Re: [RFC] RT throttling, DL/ fair server, RT_GROUP_SCHED and
- everything
-Message-ID: <20261105120932.lSBBenqn@linutronix.de>
-References: <20261023161348.t3lpPLQZ@linutronix.de>
- <at8J1mimeQ2oPZDE@jlelli-thinkpadt14gen4.remote.csb>
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=aAAW3W8z
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38CE1F0093A;
+	Thu,  5 Nov 2026 12:09:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793880589;
+	bh=gukOYmvYDHX2QKSOGio7z+vsfvmKRfuVGQNVt9yzjww=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=aAAW3W8zrqhI1GlZKqclxuzopsOsI5eRflWVb+u4vb5PXFTYkgJ0rp9Kj8p5k/PnJ
+	 dz9x5vflTBj+DeSq6KDVaKKWH4IO1ANMazHhA8U7XpsUFlwUQv3pPtBE5apiquXHF8
+	 VIijSfbzJWIZ0u8nFhus81QZCpCdrEIkdEEVT9qcVLTnlF9X7DDYJUpALeqULAdBUk
+	 gG3qH+UW1A7HkPJle0v+Ro9VJBDQIiBephkzM1sYS8P/gd5M72p1JtRoV4TPOtMTPm
+	 lTV9zl9RBf9VsgqSb5pKIdsUflUPUNRZjRUAYJW6CA56tI1pSDaFNGwOyrBwhQLiSh
+	 TJOgN9lfoSL8g==
+Date: Thu, 5 Nov 2026 12:09:47 +0000
+From: Harry Yoo <harry@kernel.org>
+To: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
+	David Rientjes <rientjes@google.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, kernel-team@meta.com, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	linux-rt-devel@lists.linux.dev
+Subject: Re: [PATCH for-next-fixes v2 2/5] mm/slab: handle allow_spin in
+ slab_free_hook() instead of open coding
+Message-ID: <auxxnr3iVYNOOoci@thinkstation>
+References: <20261103-kmalloc-nolock-fixes-v2-0-19167cfe4779@kernel.org>
+ <20261103-kmalloc-nolock-fixes-v2-2-19167cfe4779@kernel.org>
+ <f31885cd-57c2-428d-9760-a76a0137f989@kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,244 +65,97 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <at8J1mimeQ2oPZDE@jlelli-thinkpadt14gen4.remote.csb>
+In-Reply-To: <f31885cd-57c2-428d-9760-a76a0137f989@kernel.org>
 
-On 2026-10-26 09:05:42 [+0100], Juri Lelli wrote:
-> Hi Sebastian,
-Hi Juri,
+On Wed, Nov 04, 2026 at 02:54:13PM +0100, Vlastimil Babka (SUSE) wrote:
+> On 11/3/26 15:47, Harry Yoo (Meta) wrote:
+> > kfree_nolock() deliberately skips slab free hooks that should not be
+> > called in unknown context. However, there is one more place that
+> > needs the same thing: memcg_alloc_abort_single().
+> > 
+> > Instead of open coding slab_free_hook(), let it handle the allow_spin
+> > parameter. This is required to correctly handle allocation failures due
+> > to memcg charging.
+> > 
+> > There are two functional changes from this.
+> > 
+> > First, memcg_alloc_abort_single() -> slab_free_hook() path no longer
+> > calls free hooks that acquire spinlocks if !allow_spin.
+> 
+> Hm, since this is only changed by patch 4, I don't think it needs mentioning
+> here, as it's not any functional change yet.
 
-> On 23/10/26 18:13, Sebastian Andrzej Siewior wrote:
-> > Hi,
-> >=20
-> > this is about the old RT throttling mechanism, the DL/fair server around
-> > the RT tasks, the /proc/sys/kernel/sched_rt_* mechanism to control the
-> > former and CONFIG_RT_GROUP_SCHED which never worked as it supposed to.
-> > The current status looks like a mess and I'm not sure if there is a bug
-> > somewhere leading to my headaches or if this is just not meant to be
-> > working together. If so out with it.
-> >=20
-> > tl;dr /proc/=E2=80=A6/sched_rt_*, sched_rt_runtime_exceeded() probably
-> > CONFIG_RT_GROUP_SCHED should be removed. A bit of docs should be added
-> > for the fair server (or the right place).
->=20
-> Thanks for putting this recap together!
->=20
-> > Now. Details.
->=20
-> ...
->=20
-> > Without enabled RT_GROUP_SCHED the files can be set. Are they useful?
-> > According to Documentation/scheduler/sched-deadline.rst it used for
-> > "admission control" whatever that means. Anyway the fair server still
-> > kicks if it is disabled. So I *think* this is just something else and
-> > not part for the docs there.
->=20
-> Right, confusing, but for a root_domain comprising M CPUs, -deadline task=
-s can
-> be created while the sum of their bandwidths stays below
->=20
->   M * (sched_rt_runtime_us / sched_rt_period_us)
+Good point, will adjust.
 
-My understanding is that this is the runtime available to a DL task and
-the length of a DL period (after the accounted runtime is reset). The
-left over runtime (of runtime is less than period) is either buffer
-(idle) or SCHED_OTHER runtime.
-This defines how much runtime a DL task gets from the system, correct?
+> > Second, kfree_nolock() now follows init_on_free which has been ignored.
+> > 
+> > Besides that, no functional change intended.
+> > 
+> > Closes: https://lore.kernel.org/asiSUpAYYU8Od4HM@gmail.com
+> > Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
+> > Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
+> > ---
+> >  mm/slub.c | 104 +++++++++++++++++++++++++++++++++-----------------------------
+> >  1 file changed, 56 insertions(+), 48 deletions(-)
+> > 
+> > diff --git a/mm/slub.c b/mm/slub.c
+> > index 45e077c7526c..36e7bb93418a 100644
+> > --- a/mm/slub.c
+> > +++ b/mm/slub.c
+> > @@ -2686,41 +2686,54 @@ struct rcu_delayed_free {
+> >   * - memcg_slab_post_alloc_hook()
+> >   * - alloc_tagging_slab_alloc_hook()
+> >   *
+> > + * slab_free_hook() assumes that memcg_slab_free_hook() and
+> > + * alloc_tagging_slab_free_hook() are already invoked.
+> > + *
+> >   * Free hooks that must handle missing corresponding alloc hooks:
+> >   * - kmemleak_free_recursive()
+> >   * - kfence_free()
+> >   *
+> > - * Free hooks that have no alloc hook counterpart, and thus safe to call:
+> > + * Free hooks that have no alloc hook counterpart:
+> >   * - debug_check_no_locks_freed()
+> >   * - debug_check_no_obj_freed()
+> >   * - __kcsan_check_access()
+> >   */
+> >  static __always_inline
+> >  bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
+> > -		    bool after_rcu_delay)
+> > +		    bool after_rcu_delay, bool allow_spin)
+> 
+> Hm 3 bools. Could we bite the bullet and try doing free_flags (extended to
+> cover init and after_rcu_delay) here already? :) Given it's not intended for
+> a stable backport.
 
-> and writing -1 disables the check altogether. That's the "admission contr=
-ol"
-> the docs hand-wave about, and it's also why the knobs can't simply be del=
-eted.
-> As you noticed already, the servers are completely independent of these k=
-nobs:
-> writing -1 does not disable the fair server, it only lifts the DL admissi=
-on
-> cap. In principle we could move this to a different interface that reads =
-closer
-> to the underlying purpose, but I'm not sure how much breakage it could ca=
-use.
+Ack, will try to bite the bullet.
 
-That is my point. The rt_ runtime/ period is about DL properties and not
-RT as in SCHED_FIFO/ RR as it once was. Both are set to one second as of
-today and can not be changed with enabled CONFIG_RT_GROUP_SCHED.
+> > @@ -2776,8 +2790,11 @@ bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
+> >  		set_orig_size(s, x, orig_size);
+> >  
+> >  	}
+> > -	/* KASAN might put x into memory quarantine, delaying its reuse. */
+> > -	return !kasan_slab_free(s, x, init, still_accessible, false);
+> > +	/*
+> > +	 * KASAN might put x into memory quarantine, delaying its reuse.
+> > +	 * Skip quarantine when spinning is not allowed as it uses a spinlock.
+> > +	 */
+> > +	return !kasan_slab_free(s, x, init, still_accessible, !allow_spin);
+> >  }
+> >  
+> >  static __fastpath_inline
+> > @@ -2789,9 +2806,10 @@ bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
+> >  	void *next = *head;
+> >  	void *old_tail = *tail;
+> >  	bool init;
+> > +	bool allow_spin = true;
+> 
+> Then we wouldn't need tricks like this I guess?
 
-Could we please move it to /sys/kernel/sched/ and rename it as dl
-something? Is there any reason to keep as-is? There is
-	Documentation/scheduler/sched-deadline.rst
-	Documentation/arch/arm64/asymmetric-32bit.rst
+Right.
 
-referring to it in DL context. There is "ftracetest" writing
-unconditionally -1 as a workaround, see commit 57c4cfd4a2eef
-("ftrace/selftests: workaround cgroup RT scheduling issues").
-
-If the runtime/ period arguments are fine then we could keep
-it and make them only apply for the DL period.
-
-Two files have been repurposed and if your intention as to disable the
-RT throttler then you will be surprised.
-
-> ...
->=20
-> > Anyway. Could this interface be moved to /sys/kernel/sched/fair_server
-> > away from the debugfs part? debugfs is not for stable kernels/ ABI. Is
-> > there a reason why this might be considered debugging and not final or
-> > restricted from productive?
->=20
-> I think this was raised already in the past, but at the time maybe it
-> was still to early to say if dl-servers will stick around. They now have
-> got more users (sched-ext), so it might be a time we discuss a stable
-> (non-debug) interface for it. Your suggestion doesn't look bad to me.
-
-Thank you.
-
-> > Just to summarize:
-> > - Remove /proc/sys/kernel/sched_rt_*
-> >   [ ] Yes [ ] No, because
-> >               _____________________
->=20
-> Yes and no :). We need an interface to tweak admission control, but we
-> could find a better/different one.
-
-Okay.
-
-> > - Remove CONFIG_RT_GROUP_SCHED
-> >   [ ] Yes [ ] No, because
-> >               _____________________
->=20
-> Luca already commented on this. I believe the plan is still to come up
-> with a DEADLINE backed RT_GROUP_SCHED for Cgroups v2. If cleaner, an
-> approach could be to first merge the removal of RT_GROUP_SCHED and then
-> reimplement the whole lot as Yuri and Luca are proposing to do. The
-> series is already somewhat doing that, but it could be made more
-> explicit/clean I guess.
-
-okay, then let me prepare a removal of this then.
-
-> > - An additional trace sched event for fair server preemption
-> >   [ ] Yes   [ ] No, it is silly to have
->=20
-> With 820725b0eb59f ("sched: Add deadline tracepoints") we already have
-> some of that: sched_dl_{throttle,replenish,update,server_start,server_sto=
-p},
-> which fire for fair/ext servers too (there's a type field, DL_SERVER_FAIR
-> and friends). They of course require something like this [1] to be
-> activated. We could add more if they are still not enough to get a clear
-> picture about what's going on.
-
-Hmm. You may want to merge Qais's current master to get it compiled
-again ;) But then nothing hooks it up, so I just replaced with with
-trace_printk() just to see what happens and got:
-
-|       loop-time-1612    [000] d.h1.   154.121809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D3999981 [ns]
-|       loop-time-1612    [000] d.h1.   154.123812: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D2003097 [ns]
-|       loop-time-1612    [000] d.h1.   154.123812: replenish_dl_entity: tr=
-ace_sched_dl_replenish_tp
-^
-|       loop-time-1612    [000] dN.2.   154.123814: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D1783 [ns]
-|       loop-time-1612    [000] d..2.   154.123815: sched_switch: prev_comm=
-=3Dloop-time prev_pid=3D1612 prev_prio=3D9 prev_state=3DR =3D=3D> next_comm=
-=3Dksoftirqd/0 next_pid=3D14 next_prio=3D120
-|     ksoftirqd/0-14      [000] d..2.   154.123817: sched_stat_runtime: com=
-m=3Dksoftirqd/0 pid=3D14 runtime=3D3036 [ns]
-|     ksoftirqd/0-14      [000] d..2.   154.123817: update_curr_dl_se: trac=
-e_sched_dl_update_tp
-|     ksoftirqd/0-14      [000] d..2.   154.123818: dl_server_stop.part.0: =
-trace_sched_dl_server_stop_tp
-|     ksoftirqd/0-14      [000] d..2.   154.123819: sched_switch: prev_comm=
-=3Dksoftirqd/0 prev_pid=3D14 prev_prio=3D120 prev_state=3DS =3D=3D> next_co=
-mm=3Dloop-time next_pid=3D1612 next_prio=3D9
-|       loop-time-1612    [000] d.h1.   154.125809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D1992016 [ns]
-|       loop-time-1612    [000] d.h1.   154.129809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D4000522 [ns]
-|       loop-time-1612    [000] d.h1.   154.133809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D3999631 [ns]
-|       loop-time-1612    [000] d.h2.   154.133810: sched_waking: comm=3Dks=
-oftirqd/0 pid=3D14 prio=3D120 target_cpu=3D000
-|       loop-time-1612    [000] d.h3.   154.133811: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D1463 [ns]
-|       loop-time-1612    [000] d.h3.   154.133811: dl_server_start: trace_=
-sched_dl_server_start_tp
-|       loop-time-1612    [000] dNh3.   154.133811: sched_wakeup: comm=3Dks=
-oftirqd/0 pid=3D14 prio=3D120 target_cpu=3D000
-|       loop-time-1612    [000] d..2.   154.133812: sched_switch: prev_comm=
-=3Dloop-time prev_pid=3D1612 prev_prio=3D9 prev_state=3DR =3D=3D> next_comm=
-=3Dksoftirqd/0 next_pid=3D14 next_prio=3D120
-^
-|     ksoftirqd/0-14      [000] d..2.   154.133812: sched_stat_runtime: com=
-m=3Dksoftirqd/0 pid=3D14 runtime=3D2054 [ns]
-|     ksoftirqd/0-14      [000] d..2.   154.133812: update_curr_dl_se: trac=
-e_sched_dl_update_tp
-|     ksoftirqd/0-14      [000] d..2.   154.133813: dl_server_stop.part.0: =
-trace_sched_dl_server_stop_tp
-|     ksoftirqd/0-14      [000] d..2.   154.133814: sched_switch: prev_comm=
-=3Dksoftirqd/0 prev_pid=3D14 prev_prio=3D120 prev_state=3DS =3D=3D> next_co=
-mm=3Dloop-time next_pid=3D1612 next_prio=3D9
-|       loop-time-1612    [000] d.h1.   154.137809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D3996495 [ns]
-|       loop-time-1612    [000] d.h2.   154.137810: sched_waking: comm=3Dks=
-oftirqd/0 pid=3D14 prio=3D120 target_cpu=3D000
-
-Comparing the first and the second preemption point, it is different.
-The first looks like a direct consequence of the fair_server and second
-probably because of the left over budget. This reflects the
-implementation and I understand if you don't want to expose this
-directly as-is. There is also this where the N flag just vanishes:
-|       loop-time-1612    [000] d.h1.   159.029809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D3997426 [ns]
-|       loop-time-1612    [000] d.h2.   159.029811: sched_waking: comm=3Dks=
-oftirqd/0 pid=3D14 prio=3D120 target_cpu=3D000
-|       loop-time-1612    [000] d.h3.   159.029811: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D1543 [ns]
-|       loop-time-1612    [000] d.h3.   159.029811: dl_server_start: trace_=
-sched_dl_server_start_tp
-|       loop-time-1612    [000] d.h3.   159.029811: enqueue_dl_entity: trac=
-e_sched_dl_replenish_tp
-|       loop-time-1612    [000] dNh3.   159.029811: sched_wakeup: comm=3Dks=
-oftirqd/0 pid=3D14 prio=3D120 target_cpu=3D000
-|       loop-time-1612    [000] d.h1.   159.033809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D3998449 [ns]
-|       loop-time-1612    [000] d.h1.   159.037809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D4000072 [ns]
-|       loop-time-1612    [000] d.h1.   159.041809: sched_stat_runtime: com=
-m=3Dloop-time pid=3D1612 runtime=3D3999901 [ns]
-
-I assume the bandwidth was replenished and then loop-time could remain
-on the CPU. It would probably help if I would weld have dump some DL
-details along=E2=80=A6
-I'm not sure if it would be better to add some DL details along or
-extend sched_switch with a scheduling reason.
-
-There are also no trace events for DL tasks if they exceed their
-requested runtime, right? I *think* there is a signal (or can be) sent
-if the DL task runs for too long.=20
-The sched_pelt* events didn't contain any bandwidth information as far
-as I can tell (you just pointed me there as an example how those trace
-points could be utilized I suppose).
-
-> > - Fair server documentation needs to go to
-> >   [ ] It is fine where it is
-> >   [ ] To ____________________
->=20
-> Not fine where it is: the servers (fair & ext) work independently of
-> RT_GROUP_SCHED and deserve their own description (defaults 50ms/1s per
-> CPU, what they guarantee for fair tasks under RT pressure, how to tune
-> or disable them). Either a new section in sched-deadline.rst (they are
-> DL servers after all) or a small standalone file works for me.
-
-Okay. Let me look into this.
-
-> Thanks!
-> Juri
->=20
-> 1 - https://github.com/jlelli/sched_tp/commits/deadline-tp/
->     from Qais' https://github.com/qais-yousef/sched_tp
->=20
-
-Sebastian
+-- 
+Cheers,
+Harry / Hyeonggon
