@@ -1,78 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.212
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793882941;
-	b=FrCqbYfkE3MIDxkSmSEkU89mdaRI4G3/8xHCq+81qKpjPWcDA7RWVhrvMBOGax3kgP8i
-	 AfaijNSVAbfMwh9wyk7+WLJIDqquEFsaHoOJGZ01DCCtJdekb2zZ4xJmIKqyTuRIZhOoK
-	 /TIgZsAUlg2ZCna1CPMut+Hqx70+KL3tXNwDbLmGVR8sk+PTY91tuapiEWACctaceh6lG
-	 ARQ4nA/nkoxlgA8X9GQzv8HRx0WqDjrfrhXUm9sQMGDX/ZMcNIX1D+plqitxPebZVPsIY
-	 5crzIz/HZyp3c3KYI67rJn5PL5c/mOB1YlIdmvtIapjIYDDhaDXSBsd2Iguq3SbHG1g==
+	t=1793883162;
+	b=nD/bu3iPy3D6xbIY7rkmiQJDXa30BydgwaeT6gtJ7YW4VFj3PLo+WNZkpuGWYDsFyAyd
+	 /KaX4FhsmFg85CtPMVWDE5EXPWFqfLisAr9x4SmOt19TW/0wmUbGNVt0FqKQ7LeKac6Qa
+	 5r7+x8L1Ubix3Hfxz0Py3yyMAaLR5Prv7A+nlj2nXxaUbzs25s6Ep+xs6Of89OzPTVYMl
+	 R1nNxRKMHG/MG4tfgbUa1Vk3ojPhOjy8yqq1jTbTRBRfkUp2tpkVKMD62FtugMNPq+Qts
+	 hWIHLEh7r/ZG1xnlYCLBa/Rgh8ePtN8pObihU4yCwuC89l9PaO6hL523t1XDnDJHhBQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793882941;
-	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=8lNES7HOAcQtbypia4I77W3fBXnSYdPVadaze0MP+7o=;
-	b=ziUBQOmNjyH7WDv+ar5U85aq2DNnrXBPzK8VDyYjxX+Ul09avIi65R/9nH8o5pY4KyOe
-	 KZCRthd4Sqbtvu+Dd6AJEBLrfYwA7i+0kXIYLYVzGFh/J7Y2W0UDVnGxzbLgaKOmpAF+M
-	 cVZszpWTegBuFNOicVsZgxcJCeoxsbplRMnRoMbLrPkiYS+eyNHPuqFXPsvKF4IJ/K+MP
-	 CVvdnvIIKtUfV5+NeT7IjbXhqALS/BaHakM4tfnCV1N1c5MxuSuGX1iVlt94pWtGRNvC/
-	 1yYm2Rd/M6d0/G8V1RAza9mb05y9GgbdWA+Fso75LizqiNlU1ZrDAaZLQM0952jmjYQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793883162;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=/S8nmBJYJf0PJEvSPvPjoWUsu1ImoW+EhQidFJg863g=;
+	b=F1hYc0m/VjZ+sJJKhlerWIUJlWHA2ST4D7WaohZboHoS2krP1AIgltEenIE6bKumSDwM
+	 /sarS+0M8dW4vNX1iXcl2YkaRBt/0M9/gKTVup47yOjdFX7ryQqVl9KE4DQnb2OJVpqgp
+	 7vgq0OGXrLkd5kQWbq0k8kTbDiuvYNVmqxxthkU/Vhd24uFYndntFfB6uL1m9yN+0V79g
+	 optk7vYL1QO2QnfvoDOXoUUz0zmonzx/mx6inguqcQKJjrcbZjUyan1OWGjLqxYxDn0tY
+	 RDYSdx2om8F1dOBiGvzjuf2pAptMpbGGODRsblRbHAeJxgRgGr2SK6dOArOqo9qjMJw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=kylinos.cn;
-	arc=none smtp.remote-ip=124.126.103.232
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qekM4S4p;
+	arc=none smtp.remote-ip=95.215.58.212
+Received: from mta1.migadu.com (out-212.mta1.migadu.com [95.215.58.212])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A8E4606A328;
-	Thu,  5 Nov 2026 12:48:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8A8E4606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 3ed29f84d91711f19a56ed5b684f684d-20261105
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CHARSET
-	HR_CHARSET_NUM, HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD
-	HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
-	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_CHARSET
-	HR_TO_CHARSET_NUM, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NAME, SA_TRUSTED
-	SA_EXISTED, SN_TRUSTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_BAD, CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS
-	GTI_RG_INFO, GTI_C_BU, AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:f03f5e37-40c5-467b-b83c-79ae097e5bc3,IP:10,
-	URL:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:30
-X-CID-INFO: VERSION:1.3.19,REQID:f03f5e37-40c5-467b-b83c-79ae097e5bc3,IP:10,UR
-	L:0,TC:0,Content:-5,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:30
-X-CID-META: VersionHash:7db8b62,CLOUDID:80bdff4df7e3f81b0ec11ec1ebd4f49a,BulkI
-	D:261105204853AFQH8L54,BulkQuantity:0,SF:10|38|66|78|102|127|153|865|898,T
-	C:nil,Content:0|15|50|99,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil
-	,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 3ed29f84d91711f19a56ed5b684f684d-20261105
-X-User: sunshaojie@kylinos.cn
-Received: from sunshaojie-pc [(114.244.3.119)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1841114905; Thu, 05 Nov 2026 20:48:48 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: Tejun Heo <tj@kernel.org>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB181606A32E
+	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 12:52:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CB181606A32E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=qekM4S4p
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=cNkwqBsz8pJ04Hv17fnP9AR30asZBRa4qlasYCrXmFQ=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793883158; v=1; x=1794487958;
+ b=qekM4S4p6TVCPfIGPve2MmFyhXTrLysxJtYoq1Tq3i0IrmdQg4si+eQM7HOmVSl3sgFOQ+T/
+ qT7kQao6U39ztApGAwbmwjXImY6lSgWivmk6dnROW9kxdArLVkwFvskwfZITtkCHubcpyIawCiW
+ NAsCsqczlEw0QWa7T7N3TKFU=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 0c46c4d6252889c3;
+	Thu, 05 Nov 2026 12:52:38 +0000
+X-Mizu-Trace-ID: 0c46c4d6252889c3
+X-Migadu-Flow: FLOW_OUT
+From: Ridong Chen <ridong.chen@linux.dev>
+To: Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
+	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Shaojie Sun <sunshaojie@kylinos.cn>
-Subject: [PATCH] cgroup: replace BUG_ON()s in compare_css_sets() with WARN_ON_ONCE()
-Date: Thu,  5 Nov 2026 20:48:13 +0800
-Message-ID: <20261105124813.862460-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.50.1
+	linux-kselftest@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH 0/4] cpuset: preparatory fixes and cleanups for partition rework
+Date: Thu,  5 Nov 2026 20:52:11 +0800
+Message-Id: <20261105125215.2205892-1-ridong.chen@linux.dev>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,53 +74,63 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-compare_css_sets() walks the cgrp_links lists of two css_sets in
-lockstep.  Both lists carry exactly one link per hierarchy root, so a
-length or ordering mismatch just means the two css_sets are not the same
-one, which is what the function already reports with "return false".
-The caller keeps walking the hash chain and allocates a new css_set if
-nothing matches.
+From: Ridong Chen <chenridong@xiaomi.com>
 
-None of these checks is a user-reachable error path; they are invariant
-checks on kernel-internal bookkeeping that are expected never to fire,
-and each one has a way out.
+This is the first part of the cpuset local partition rework posted as
+RFC v4 [1]. The rework is split into three parts to make it easier to
+review and merge:
 
-No functional change for a consistent state.
+  1) fixes and preparatory cleanups (this series);
+  2) introduce partition_enable/disable/update() and rework the local
+     partition code on top of them;
+  3) clean up the remaining partition state handling outside these
+     helpers.
 
-Signed-off-by: Shaojie Sun <sunshaojie@kylinos.cn>
----
- kernel/cgroup/cgroup.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Patch 1 is a fix for an existing bug, found while looking into a review
+comment on RFC v4: when cpuset.cpus.exclusive of an already invalid
+partition root is cleared, its effective_xcpus is not reset, so its
+former exclusive CPUs can't be claimed by a sibling. A test case is
+added for it.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index a284225f8dc9..81c82d137fa2 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1024,10 +1024,12 @@ static bool compare_css_sets(struct css_set *cset,
- 		l2 = l2->next;
- 		/* See if we reached the end - both lists are equal length. */
- 		if (l1 == &cset->cgrp_links) {
--			BUG_ON(l2 != &old_cset->cgrp_links);
-+			if (WARN_ON_ONCE(l2 != &old_cset->cgrp_links))
-+				return false;
- 			break;
- 		} else {
--			BUG_ON(l2 == &old_cset->cgrp_links);
-+			if (WARN_ON_ONCE(l2 == &old_cset->cgrp_links))
-+				return false;
- 		}
- 		/* Locate the cgroups associated with these links. */
- 		link1 = list_entry(l1, struct cgrp_cset_link, cgrp_link);
-@@ -1035,7 +1037,8 @@ static bool compare_css_sets(struct css_set *cset,
- 		cgrp1 = link1->cgrp;
- 		cgrp2 = link2->cgrp;
- 		/* Hierarchies should be linked in the same order. */
--		BUG_ON(cgrp1->root != cgrp2->root);
-+		if (WARN_ON_ONCE(cgrp1->root != cgrp2->root))
-+			return false;
- 
- 		/*
- 		 * If this hierarchy is the hierarchy of the cgroup
+Patches 2-4 are the first three patches of RFC v4, rebased onto
+next-20261104:
+
+  2) add an early empty cpumask check in partition_xcpus_add/del(), so
+     callers don't need to check it;
+  3) settle the isolation state of CPUs given back to the parent in
+     partition_xcpus_del(), so isolated_cpus_release() can be removed;
+  4) generalize validate_partition() so it can be used for both local
+     and remote partitions.
+
+All patches build on their own, and test_cpuset_prs.sh passes with
+this series applied.
+
+[1] https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+
+Changes since RFC v4:
+  - New patch 1 to fix the invalid partition effective_xcpus reset.
+  - Patch 3: only settle the isolation state of the CPUs still owned by
+    the parent when invalidating a child partition in
+    compute_partition_effective_cpumask(), as the parent may be shrunk
+    and not updated yet. This code is removed later in the rework.
+  - Rebase onto next-20261104, which includes commit 362212853cd0
+    ("cgroup/cpuset: Fix incorrect CPU accounting with parent's effective_xcpus expansion").
+
+Chen Ridong (2):
+  cpuset: add early empty cpumask check in partition_xcpus_add/del
+  cpuset: generalize the validate_partition() interface
+
+Ridong Chen (2):
+  cgroup/cpuset: Reset partition data when an invalid partition stays
+    invalid
+  cpuset: settle isolation state when CPUs are given back to parent
+
+ kernel/cgroup/cpuset.c                        | 211 +++++++-----------
+ .../selftests/cgroup/test_cpuset_prs.sh       |   4 +
+ 2 files changed, 89 insertions(+), 126 deletions(-)
+
+
+base-commit: 8b7179210b22f8e48a82c5ceacb9d56a9c4cfec4
 -- 
-2.50.1
+2.34.1
 
