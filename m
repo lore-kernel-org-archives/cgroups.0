@@ -1,102 +1,125 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.49
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793835164;
-	b=eqp/ZdYEa3DWJEaKL/V5CIAze7KvVNbK6LfhSKz6ourTD/fQMbHt8h+5wuMNVu4PGSrX
-	 5utflL6yXHhNoMku1r1sn3xmZ8GCNes40DAVn1HiKJCDV2uPcllxPZ/h2KephhWqeurbH
-	 BU+8ts8Im90yqIe3Hk+iQaBwpS2yYHO736LAE/HemdoK1orae5LcgqektLLbQH5bjMCbk
-	 MV9/8o1btm98VLdMDThhNhdQU5R7k9Z4uiBgMSG/TgeSKETZcxg5qwjv+ZWgq2gYgPAAg
-	 RUveBaQVQiF67/m3puQOS56whyIOoNaOahVUGVHq95kc/loF14X1oWH/a1+m/Mr1LyA==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793835164;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.42
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793839134;
+	b=Ii1IDkeBSvyEfCfqa8Zk4/ikatgM423PZDbpCKBt3ih7zOm0HLk7a3CQwxwqDMJVvvyT
+	 Zzb/Aq4Mup6kcYJbowcgCYHarqknVM5L9x0Bf+/2itsttrX19NJ05EiuLArd37D16z03S
+	 zYU1g29/kH6g3XlnVPhXTKz4s2K+cY6ckD+TseXu2dbkmhXH1JX8TpQTb0olDRKIm0yuR
+	 HuzsT04nOm3lZZBUIiLkuIitLfVQhQaPkmkSh7ZP0v51F3GORrBmQE+/QWNWh/tF99XgF
+	 8hHz1CO6h04h2JbcirTa0aEvQUNCuP1C2w9JeeQOf41j5OwVAhaQvxcomIMXkofs/GA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793839134;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=VkjyCgRLiyyLNFM8olRCBV6HjItGRbYCTvwNvN8lDwU=;
-	b=oQeky81bMUAL+yV+7i+xeLPrYAnJDTgBFf5DLrQUq8pu9fukjSuqwQgdbqlnPCrg3/dH
-	 lHJsJo5FAW2cANlYB//14/rKdw/uxuY+rvRcrgYBepAjGzvNlgbCv07CEp7kniudWEImy
-	 HZL4BQnZ7lc4bSKSIu+l+nj+puRSRv6W0IPWzmXoIqnfIUE34N4Ah/AwJbxLWjBORgBt6
-	 fp9y5qZjDcxz/0aCy3X+vSQ78rJ5HKhhzuBL8t96hvYhJh+7lLDAfl7i3AuvO3OCgTQlo
-	 XIRsBWYdr3LAAW6RYN7MeKCCC/x7ghYqweusgBiZfzdc2945BYNikaUBqmF9fO2/MBw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Y2LHCCti;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=74.125.82.49
-Received: from mail-dl1-f49.google.com (mail-dl1-f49.google.com [74.125.82.49])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding;
+	bh=5Pxa+8WmY5aWMvQp4MOIKPhDhZ93O3CM2MNQsb3Ea3w=;
+	b=YgXwyR0jbKSHEJc33t6SKRM6DkPcjYatunB9OSPy7Gw5hqJvG8SFGjRsWLVbsMxj3L7R
+	 ev0Xk3k1y7pM4oh/vXGnLDEeHpaTJg9fIQoQXASZsUx96H7WEODDsP1G5Z+h5QQJKVymZ
+	 +K+Bf5xniaSDXyAaqhUvhiSTHS/TT3/XkhDooDU/wBIvPAoMTeKdSEUeHGVKVIts3saNF
+	 xlyErTWgBDDPjBw80dhhA9MviIgTk+wFGzlCvDH8IrH/7iwMA7xZyk1RC0xQL7lmxIy64
+	 7H6yHshWUOfwNrJVEz0BzH4WLeu1MMoxHQkwOnzOeWEN1KKCRmg8SDTVjl15AbtD3lw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=j+UwyjoE;
+	arc=none smtp.remote-ip=209.85.221.42
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 71CB3606A31B
-	for <cgroups@vger.kernel.org>; Wed,  4 Nov 2026 23:32:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 71CB3606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B0DA606A331
+	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 00:38:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B0DA606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Y2LHCCti
-Received: by mail-dl1-f49.google.com with SMTP id a92af1059eb24-15dd124bbe7so124695c88.1
-        for <cgroups@vger.kernel.org>; Wed, 04 Nov 2026 15:32:44 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793835163; cv=none;
-        d=google.com; s=arc-20260327;
-        b=dVgNdCpn6N5lu8jUDpJIDyNGql24aDqErUzNQKKRb5vFr/LcpGuepjiplTB5gI6C/H
-         Avy5nVooFSO6fvZJARLerP5n4eZWNDcfI/0WO9EY9sIrh0Hqerfbq/rwSguUAZiFNGpf
-         +pfXABPr/IYRflqhhfssrgYC4pURhXbSryvKdHkERMSPu8KaLyrStViZt3docWqaUibR
-         kZLDy3xd/Rhz9UPN0C/ZQ5B7IRYs7O8r6mt+ugu2gSmteVw2RUnxuVFZ8CVaVmfgMa4Q
-         GUiyYTLovoanqkm8U3wINeJyrrf5alZz6DG8Zy+je/LC7qncchsR8dLDfuTauSlyFvu5
-         28bw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=VkjyCgRLiyyLNFM8olRCBV6HjItGRbYCTvwNvN8lDwU=;
-        fh=mkHc6SBhrvCXs+91T7BZ3KrBeYnZhlzOk75DLm4ReeU=;
-        b=mxgbjaQcOsdhS4PalIG6AJskebqKwaWBu5KaJCc19cx/QCq5F4y4gSpsrgPs48QN6j
-         L1pqE0kK6nDXym4a8n08OsMB2uu7htVyF3QNrrJKIqjUn+zSprR/xTjlgHyrDzObVmip
-         hrBbe00NLUvtUBBymBNWdupD3eqx/oZgMhXuyIlSRM99TwbnQgKJH+i8hY+tNa4GQedF
-         v5u7DSuPC6XhOe5rxaTE97b+F86d/tytQ+NtEfDN4VdxfAbFgjaP9290BzDHuosiLhe/
-         QJD2mYCc8WQwXID00f/72qqEDKQNbTet3kyCkOybmdy2190KcLwP4xsz9zQR/Dbt1OH6
-         iZBg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=j+UwyjoE
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-48b001cd92bso606299f8f.2
+        for <cgroups@vger.kernel.org>; Wed, 04 Nov 2026 16:38:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1793835163; x=1794439963; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=VkjyCgRLiyyLNFM8olRCBV6HjItGRbYCTvwNvN8lDwU=;
-        b=Y2LHCCtil81kw9KOsNT5+65Ji3XPl4n2X1Trzvs4RT2zVKyna0zlVd5UFSlDt2YX2I
-         2wf5mX/SwOQ4eQskSLS4PlqQU4RQxsdSqFgB8llCXhCpoGr8Z2iHoeZE7s6qiKtjedAP
-         r1FGYbgNkd20Fvf4JQNJfKvhLd56cF3G3/q/fkJ7D3YWQq+jKquFUjeg7xG7/Yn9+R5c
-         WV6oBQOCOWWAQIsuARduDaEUsq2IzmOObV3SaawfSko9mFk62XYN00iIu8FijS3ajwTA
-         cPlmPoqOLVOAtawLEN+3u8C2bTEm7uamAs70bg6kLqc8foaBS84Rl7ALVKHwF7Ddclkf
-         ScJg==
+        d=gmail.com; s=20260707; t=1793839132; x=1794443932; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-disposition:content-type
+         :mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=5Pxa+8WmY5aWMvQp4MOIKPhDhZ93O3CM2MNQsb3Ea3w=;
+        b=j+UwyjoEO+2q1E+nBxP9Wr7NweSOXMWefGF8bJYdheLbXwnW0MJ4MZk/3VPcuD+MeA
+         sWRG1QNOF+upgGBClSVfoImblhO9ufDyl28bv1DAyCPDtFGY+nzJrxI1U9zRHoyPD9WN
+         JWUUmtUAuauJLGUQM8T/xWhyKwADMrDlJcKez/Zyt3HRjNvquncBkMz8uQk7CUETT+t/
+         PwX4AwGZcHpwVNlw22kjIRd6pYGzNJmpIA0QJLYtAO00R//2nX9O8CQKhdPE9sg7r0Nl
+         sWddnnI2coLnTikwp0qWB+8L/kLbpaLf4aY8ls1WNhvbjfqchplJUx40eJAKFMXx528U
+         nbNg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793835163; x=1794439963;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=VkjyCgRLiyyLNFM8olRCBV6HjItGRbYCTvwNvN8lDwU=;
-        b=WZPBPZtgsmpjzVfVdS2nwOzJ1WZ9qWtJFD+lbz4v2vaejudIbkj3bQR90IXnIyTIcH
-         XEhaJor7ERrEABrfKSipEn7jkA1ry9AGsA5VBFJ/cCWrs1wfQA2lhokBN35b4SAirDKH
-         Z7/S11iFFn0THy8M6WHNvJruJJD89iqRoXJ3AFDSqsY0D1yIRnGPntDjbDj0p690j7vo
-         8asa9Eu2yzSsbOu/gUhCIPawD4ertLQ4pWYFJAlw5sng6tzd154+TP1uL1WppJ9Ug4e/
-         3/q5yrpytrPopVsLT7rm6KAuasRjson8iwYJm5x4L6EQc8t0NDOBBiErbSN91ccuue+T
-         RGKA==
-X-Forwarded-Encrypted: i=1; AKwUvBxR8+cwbPRA3u1IS9DIEhvGwwAVsxnpv20b7jxQMVl6gztDnP1eL3FkwYJxWqM1uVA07Thy4UoC@vger.kernel.org
-X-Gm-Message-State: APuU4Z88pGcwV5cV6l7SVPYnbrMGLc7wad9aki26jP4cjZiv+MlA6Ulw
-	6U26HzHlk93AsJHxSCorrszqT/PzHikhQ64JcvffUePryrNxd6dMYqP2Wmx04PDMA1rrmcqkquc
-	psBvTmd25jofYBf2ThrSAx67L5mVncaj+dCtAciAv
-X-Gm-Gg: AYBFou0GqmQ+FJFL+zR/+tULdKPYLBbI38UP7+oTrAphUrtPwtT2u79BQ85n+VRFv0H
-	eKzDQuz2NJx2lzv+DlNa7K86+vqHFBzbY61DxCQXKfuesKFPbq2IdDckHV+7vvCK8H0MXQctgvF
-	rnkcJ0m5ig3T21/VPKBpHuD9y1tUFjdc9K8aUDJ184WZZW8Lz+XZEJo/qIrMVFJrfofyaiQCtbx
-	wVShCwU3eipwt3FxNEGWcSG1h7i96bgJh0CbVr8Zw78Nq2IEvZ6GYxtB3OQBVMownUaw8ypH5PY
-	uqWxaQr/bJyXSpr+1Sj4F/55cf/2g71YZVg3MK09J8jMw8s6OHwhsYX3oc00ZNFC3q/7JID5SVg
-	iSBAK2UtkGe4oy71wblYKcXeLVx3YbssKd+TAz5AoKuJxz2MlKm9/iBLLy1+FqS80a/GYU5xSQY
-	Bc9qKzahAUF7HYGGjkPHoWl/08e4DtkPTYj1fFzwOPi7KVat+wnA4yynsU9SWJZeSCV+DiGb1Yb
-	QxbKH/knA==
-X-Received: by 2002:a05:701b:454f:20b0:167:d73a:e994 with SMTP id
- a92af1059eb24-1ac5ac4f0b9mr27337873c88.24.1793835162463; Wed, 04 Nov 2026
- 15:32:42 -0800 (PST)
+        d=1e100.net; s=20260707; t=1793839132; x=1794443932;
+        h=content-transfer-encoding:content-disposition:content-type
+         :mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=5Pxa+8WmY5aWMvQp4MOIKPhDhZ93O3CM2MNQsb3Ea3w=;
+        b=J/LuBjPkycqcZVE+ct2vuJvyM0zfwamTonwbWuRX9L7u66WJLcCnwQGIl+ftTHgJpX
+         fGtiHBgWXq+G86qrSbZPx8EV7rdp+aFdmKvXsqDZPKBdgTie0LHrFBWENSDPFymml0yC
+         M+Edx94MYfgPBNwG3hPHKFW95BVJ0AqRiQ/ARM9esri/o1CTOlGK20cnHhLmS5VIwBmK
+         /xyTur7QBkPlivrVxOwSqVQP4DXJaJQcpjGgAoL43QrpzOmvFPaMMfh9dbyasszkkwrJ
+         sOeUZ628nRpAWLu56wijHSzpQq0fBEgV+A6xcLjQVVmZfu/kT9cnvAs4rRazXnxDOW+m
+         e+8g==
+X-Forwarded-Encrypted: i=1; AKwUvBxnnT0xjG9TFKUkY8YaitnVomA6cKjoG58clxqrMs2K7j0eXrIoMA55QZLYFccLieCA4akHuQI9@vger.kernel.org
+X-Gm-Message-State: APuU4Z/9N/NizWApDwaSFZHczSeF6b/vbrcw5aECDvaDiXsOjJvhvxo4
+	AvSa9wC8cvtoJPI+f+4t2qBansITdKKlTKRKe2jM98ArnPwZYW3JFNz8
+X-Gm-Gg: AYBFou2TLcEPUEP5m/QwQ1RKw1guHvSyFMY56ReXA08S1rZlaWFoYq2zpPb5IQKbn7g
+	MGT2WU5iKFbD0LkEQJGkKOd1KRnI/5NvU/t9KU7GGeSlHxStH3VMsrofzdV15W0aTLhrbeUGJB5
+	cC/0jc9SCREkVb1Z3sdZUyVE3Qcm8X3+zp3FfPiopQ4d2PnCeFqpb45ddg7JaZBPUjeKsl9QvFi
+	6xcVMlyFGfeuCAyOS9R1BAafWAYNMcxjIjgPrfZ5EfYmi0Tlk0H64XZ/xxC41EBGB+ghl9rQG0A
+	5eX4OkO7yN0hifBJd/va/qhgV8IOKgfLM0NkiwWUlioB9HkmGTGBiuA9tcZC4N0Uj/xr8toktMY
+	7AKTmHXd0FKpf6Brx5Q7JlfNQOiwa+YofKLGsjavij7+wTMzndwvHFQLTPnYDuj/+j1/w3UKVH8
+	+t/zytI41oKxXWVsrbV0U3MdRVumqs9VSPWKYQNqyJmyuzKC0VtGnRzljgBivdxtL2Gb5nHtFqF
+	7jAyAxdjD9e8m6KZ8QEA21y/dtnxquAWJYfQrwNgltcTiKt9HEpBM968ljVv+dqNTwqrbOWJ7+T
+	u2rNtnAGuk8KinDKozq4cnPjlbOWt/YPqNZlY9FZy5J1OgjaksQrkX9UNWQ=
+X-Received: by 2002:a5d:5e8d:0:b0:491:49c2:3b3 with SMTP id ffacd0b85a97d-49149c2043fmr821244f8f.51.1793839132301;
+        Wed, 04 Nov 2026 16:38:52 -0800 (PST)
+Received: from WindFlash.powerhub ([2a0a:ef40:f61:3b01:d08a:833b:756:8fce])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-48fed553441sm5988761f8f.43.2026.11.04.16.38.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 16:38:51 -0800 (PST)
+From: Leonardo Bras <leobras.c@gmail.com>
+To: Frederic Weisbecker <frederic@kernel.org>
+Cc: Leonardo Bras <leobras.c@gmail.com>,
+	Matthew Ruffell <matthew.ruffell@canonical.com>,
+	Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Caron Wills <caron.wills@pulsar.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R . Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Jann Horn <jannh@google.com>,
+	Pedro Falcato <pfalcato@suse.de>,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	Jay Vosburgh <jay.vosburgh@canonical.com>
+Subject: Re: [PATCH 4/6] sched/isolation: Drain per-CPU LRU batches when CPUs become isolated
+Date: Wed,  4 Nov 2026 21:38:50 -0300
+Message-ID: <auvQGQs-2DXQ2Brf@WindFlash>
+X-Mailer: git-send-email 2.55.0
+In-Reply-To: <aunrTtH00__Xi7PW@localhost.localdomain>
+References: <20261103075940.110308-1-matthew.ruffell@canonical.com> <20261103075940.110308-5-matthew.ruffell@canonical.com> <aunrTtH00__Xi7PW@localhost.localdomain>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -106,110 +129,39 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261029194452.3189365-1-kuniyu@google.com> <20261104150258.56cf6be2efe442cdf5ff8da1@linux-foundation.org>
-In-Reply-To: <20261104150258.56cf6be2efe442cdf5ff8da1@linux-foundation.org>
-From: Kuniyuki Iwashima <kuniyu@google.com>
-Date: Wed, 4 Nov 2026 15:32:31 -0800
-X-Gm-Features: AclHuK8qPYiofzotxpZJ9SgyNdpa7WFtAeKrxFZ9YkpLUqaZkq8IFOxN9qosUfM
-Message-ID: <CAAVpQUApRZ=Mhm0pmZ1EEvAr=87d7pEsz-uMzjqneeMzC6EJQA@mail.gmail.com>
-Subject: Re: [PATCH v3 0/4] memcg: Misc cleanup and perf improvement for TCP.
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Kuniyuki Iwashima <kuni1840@gmail.com>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-On Wed, Nov 4, 2026 at 3:03=E2=80=AFPM Andrew Morton <akpm@linux-foundation=
-.org> wrote:
->
-> On Thu, 29 Oct 2026 19:44:11 +0000 Kuniyuki Iwashima <kuniyu@google.com> =
-wrote:
->
-> > On host w/ AMD EPYC 9B45 128-Core Processor (Zen 5 Turin,
-> > 2 sockets, 512 vCPUs), tcp_rr w/ 20000 flows throughput often
-> > degrades by ~50%, 32M -> 17M~27M.
-> >
-> > In the bad case, the number of involuntary context switches
-> > was extremely high by 12x (241733 -> 3093367).
-> >
-> > The root cause was that refill_stock() calls memcg_uncharge()
-> > or drain_stock() while holding memcg_stock.lock.
-> >
-> > Patch 1~3 are misc cleanup for better asm output and patch 4
-> > moves heavy operations to out of local_lock(&memcg_stock.lock).
-> >
-> > This series removes the flakiness and gives ~3% gain on the
-> > 512 vCPU platform.
-> >
-> > In addition, on machine w/ AMD EPYC 7B12 64-Core Processor
-> > (Zen 2 Rome, 2 sockets, 256 vCPU), tcp_rr w/ 10000 flows achieves
-> > 36% more throughput with lower latency.
-> >
-> >   tcp_rr (10000 flows, 128 threads, 60s, average of 3 runs):
-> >
-> >   Metric                     |       Baseline |    Patched |    Diff
-> >   ---------------------------+----------------+------------+--------
-> >   Throughput (RPS)           |     20,884,499 | 28,453,051 | +36.24%
-> >   Latency Mean (us)          |         478.46 |     351.07 | -26.63%
-> >   Latency p50 (us)           |         453.96 |     343.04 | -24.43%
-> >   Latency p90 (us)           |         669.00 |     479.57 | -28.32%
-> >   Latency p99 (us)           |         969.38 |     593.92 | -38.73%
->
-> Thanks, that all checks out here.  I fed the series into my
-> LLM-controlled live kernel testing setup.  tl;dr: no correctness issues
-> but the performance gains on this setup are much more humble.
+On Tue, Nov 03, 2026 at 03:10:22PM +0100, Frederic Weisbecker wrote:
+> Le Tue, Nov 03, 2026 at 08:59:38PM +1300, Matthew Ruffell a écrit :
+> > From: Caron Wills <caron.wills@pulsar.com>
+> > 
+> > Isolated CPUs no longer batch folios in their per-CPU LRU caches, so
+> > that __lru_add_drain_all() never has to queue work on them. Boot time
+> > isolation (isolcpus=, nohz_full=) takes effect before any folio is
+> > batched, but a cpuset isolated partition can be created at runtime and
+> > the affected CPUs may still hold folios in their batches from before.
+> > Those would linger until the CPU happens to drain locally, and the next
+> > lru_add_drain_all() would fall back to queueing work on the now isolated
+> > CPU, which is exactly what must be avoided.
+> > 
+> > Drain all batches once from housekeeping_update(), right after the
+> > HK_TYPE_DOMAIN mask has been updated and next to the vmstat and memcg
+> > workqueue flushes that exist for the same reason, so that newly isolated
+> > CPUs start out with empty batches.
+> > 
+> > Link: https://bugs.launchpad.net/bugs/2165410
+> > Signed-off-by: Caron Wills <caron.wills@pulsar.com>
+> > Signed-off-by: Matthew Ruffell <matthew.ruffell@canonical.com>
+> 
+> There was this patchset:
+> https://lore.kernel.org/lkml/20260519012754.240804-1-leobras.c@gmail.com/
+> 
+> Leonardo, do you plan a v5?
 
-Thanks for testing, I think the number depends on the CPU
-generation and the number of CPUs and NIC queues.
+Yeah, working on that.
+Hopefully should be tested by the end of this month.
 
-The last number is from Zen 2 CPUs with 32 RX queues, and
-the result was consistent, while on Zen 5 CPUs, the final gain
-(+ no flakiness) was 3~4% as noted above.
-
-
->
-> Gory details for the morbidly interested:
->
->
-> : I tested all four patches before/after on Linux 7.4.0-rc1.
-> :
-> : Correctness testing used a four-vCPU, 8 GiB Debian QEMU/KVM guest
-> : with KASAN and lockdep. Both kernels passed all 22 memcg/kmem
-> : selftests, cgroup/socket churn, guest CPU hotplug, socket lifetime
-> : across migration/cgroup removal, and payload-checked TCP transfers
-> : under memory pressure. Final socket charges and dying descendants
-> : reached zero, with no unexpected kernel diagnostics. Traces confirmed
-> : stock trimming, eviction and fallback coverage.
-> :
-> : Performance testing used 56 guest vCPUs pinned individually to 56
-> : physical cores of a 64-core Threadripper 3995WX, with 32 GiB and
-> : KASAN/lockdep disabled. Host and guest each had one socket/NUMA node;
-> : the guest exposed one thread per core. Neper used 10,000 flows and
-> : one-byte requests/responses. All 24 runs completed: three 60-second
-> : runs per kernel/condition, with alternating A/B boot blocks.
-> :
-> : Median throughput changes for the full series:
-> :
-> :     Workers per endpoint     RPS off     RPS on
-> :                       28      +1.21%     +1.38%
-> :                      128      +0.14%     +0.72%
-> :
-> : The smaller machine likely explains much of the difference from your
-> : 36% gain. Your reported systems have two sockets and 256/512 vCPUs.
-> : Here each endpoint had just 28 vCPUs backed by 28 physical cores;
-> : 128 workers oversubscribed those CPUs rather than adding parallelism.
-> : There was no physical inter-socket traffic. These differences can
-> : reduce shared-counter contention and the lock-held interval behind
-> : the RPS/charge-fallback/ksoftirqd amplification you described. I
-> : exercised stock and RPS paths, but did not reproduce your collapse
-> : or establish comparable amplification. This explanation is plausible,
-> : not demonstrated by the measurements.
-> :
-> : Three conditions consistently favored B; 128 workers/RPS-off was
-> : essentially tied. Frequency was uncontrolled, limiting sub-percent
-> : claims. Both kernels had VM CPU-feature/watchdog diagnostics without
-> : an unstable-clock message, and softnet drops with RPS off.
-
-FWIW, I tested it with RFS and on non-VM.
+Thanks!
+Leo
