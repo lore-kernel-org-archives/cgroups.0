@@ -1,59 +1,61 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793840778;
-	b=17+Eun5zygFS2TJWTjryQXTKrGCX2CpdOZCOKFlDp7bX+VfiH6bOwkjrM+PMUvVtMPzr
-	 dfiAEYtkZvj4xRVhzU6hOFPgF0fAglexw578hvNdtXRJxBWPmmDf9RZc3YqbvxUxvYVLE
-	 aAT24s3Qj35FBx4W41f8tGBvWTo+rgByjtU4b8zKbvi7lic7yHfqCa1TTY2tMEtij8XIT
-	 68Z+7q/h8vDKtZrNVIuuyBTEhGb/xQHwDkRaHryPQXzuwn8QneQYTW0lHkGF1fJO3E9D3
-	 7PcMNjMx2pj5mIm5S1r356Qr9qBDoomJr2zXmxwgXi22yw5J+u3rtQy2l1E/r6CqpNw==
+	t=1793841508;
+	b=p2bJXTFokOgCfzDW6xyT3cbGtvjqFkzSnxNUdy5wLxOFUtdlJoW9ydVIkjVgAfXpJYgD
+	 4ZspYA3fbjK9wmrUqaowWKufLB+7sGwOkfiI+vNFvXt2FRHK8sfWvNEYVOfj4KPMwG8jX
+	 vBtgSDZfl0IZv9e0qCI8cr9iaRrqJSUbsFzBG5p/FEnR0DZQV05RPEAoE1K+0zvGGa/NA
+	 6IQ4g3i5F2RHE6gef9OMC3U1ZLRv6d8nUXbx1G2M2RAdrg49EyF4IZcKQgHyJqzrcPYHQ
+	 +5B0kNoq1Q1ldPPOyCCxDYNz1WvAjWAkEaowEjnyPInqkRqyT/cjyf0xEOZVYytGTEg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793840778;
-	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
-	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
-	 X-Content-Kind-Code:In-Reply-To:X-CPGS-Detection:X-Drm-Type:
-	 X-Msg-Generator:X-Msg-Type:X-Reply-Demand:Message-ID:Date:
-	 X-CMS-MailID:Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:
-	 CMS-TYPE:X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:
-	 X-CMS-RootMailID:References;
-	bh=7oacRK3Pt7sPDmCYh3oGr8HRMGBnelioWyFlTRnDaT4=;
-	b=1RPqLM97j3IgHOcbThF/z1u2vwZpDRfPHq7131lI1P9e6w5XSVnzGSQLly0uzjZWjmuK
-	 biF3m9p/q3evklQnxCkaxeulXDQlZfwtQ6N3T60dv5MEBy8eHP4r7tNjDKIYijoY/8EeX
-	 De04qA6SdF7jrFQqdNreFupSpC27lsCNvIWgB5l3B2ftzL2e5R8Of7Kxkli1q9LvhNRY8
-	 +W3pr1Uw/GSjhduiXN7D1irDLzu8XxUjifoJrTEmcXmo0tGg7TJfsPIY73wbAJr19Nq09
-	 WuIDctjS9Ml24VfWVUc61LJhoqWstj074Nbm0jzddMqL1vUmKujxmQS8uHeQmqHmbTA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793841508;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=mQmK1VyNyRInh3bcu1F6pkwNvgg2G6ZMbyKt5yTapqk=;
+	b=tWUgVdAUtHLAudXp9TbJ5Ahz4quDDY8gs2rdtvnIX4zIhqKTl9Tnhg0bwvxqbGVolFAE
+	 qUx5Bblp4tq7nsixfZfRgxLNPxTg3GN9it0xSy11oBeD0Ku+m1IRLcEuVauUSmeGp/gt6
+	 R0TB8UoYIU+nv4BHjhcofM7d79ta35XexywJKSnjcJwjkYlsYJ+kvNpqypFe8M7QZGzdj
+	 e+WffjsVwNIRTyzR0nyGGjvIJYbzCC77QHcoL+4UQI/Ep6vmmCGhyaYXIaxZQgVdX39OH
+	 1QMBvmTESj50Zr8WFcUR/LD/hv3faEVup1fsBYLFJOv5m3y123t3zTy7jP9CZ5dU5wQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=samsung.com;
-	spf=pass smtp.mailfrom=samsung.com;
-	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=RA3zsBB6;
-	arc=none smtp.remote-ip=203.254.224.25
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="UUUFD0/R";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D0E4606A328
-	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 01:06:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1D0E4606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1DFF606D82B;
+	Thu,  5 Nov 2026 01:18:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=RA3zsBB6
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20261105010614epoutp025ee0ebb14cf93a6cfac24eb874b2beb8~lAK44IQmZ2382523825epoutp02P
-	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 01:06:14 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20261105010614epoutp025ee0ebb14cf93a6cfac24eb874b2beb8~lAK44IQmZ2382523825epoutp02P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1793840774;
-	bh=7oacRK3Pt7sPDmCYh3oGr8HRMGBnelioWyFlTRnDaT4=;
-	h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-	b=RA3zsBB6URHMzGwoGYVTZtDnG4Z/RSmoifO152SpBUu+BE87rLi3SQfpeaFgcWXKA
-	 E+4yTCLFFv47LIa+83OerP4m0YunVhraHGUkgn7/KS74QvP4afwSZiLvwjZk0B7/2N
-	 WJFaNH6P/Rtf+gXJ4fF4CmO1KriIpBYMuSjlBT9c=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
-	20261105010613epcas2p104a21c4f3ac935d60d726cc0c56fbdee~lAK4A-fKR0052700527epcas2p1G;
-	Thu,  5 Nov 2026 01:06:13 +0000 (GMT)
-Received: from epcas2p3.samsung.com (unknown [182.195.38.212]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4jKkdx2v9gz6B9m7; Thu,  5 Nov
-	2026 01:06:13 +0000 (GMT)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UUUFD0/R
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1531E1F00A20;
+	Thu,  5 Nov 2026 01:18:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1793841507;
+	bh=mQmK1VyNyRInh3bcu1F6pkwNvgg2G6ZMbyKt5yTapqk=;
+	h=From:To:Cc:Subject:Date;
+	b=UUUFD0/RgyXitm6KMRBEe87kCtHttmgDX46T/atU2r8acWM3dB/s5NllRUEMpNEiK
+	 MU6WSNC2Acb8ZjI7ca8uVCP7sKxODSHEukTJoVUU5H5HhkiNUEmceiK9xQf9i/lG3+
+	 L3G4RTgZjbY2tRV3wXkdQdkjyzXMhJXESbPL3hTac1K7cWvu6hbHwuTUS0R2gygPLE
+	 2wQ/PdHfOtCkuOgpm82s9gSuhZzkEqUkA62y3uHLmGIP9JfpEvCRUPcY8Lpghhv22/
+	 htt2GoRebJ9LMjxCGPTc1Ti9LJRFq1ZMviUFBrLHIEEGUPpgH5CR81IGoNiOtRkNAY
+	 Hz9QsmJIYNVsg==
+From: Sasha Levin <sashal@kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kselftest@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] selftests: cgroup: fall back to an unlinked file without O_TMPFILE
+Date: Wed,  4 Nov 2026 20:18:24 -0500
+Message-ID: <20261105011824.1143947-1-sashal@kernel.org>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -62,60 +64,53 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-Subject: RE:(2) [PATCH 1/2] mm/huge_memory: set memcg_data before a split
- page leaves the folio
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From: Daejun Park <daejun7.park@samsung.com>
-To: Zi Yan <ziy@nvidia.com>, Andrew Morton <akpm@linux-foundation.org>
-CC: Tao Yi <escape@deepseek.com>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
-	David Hildenbrand <david@kernel.org>, Matthew Wilcox <willy@infradead.org>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>, "Liam R. Howlett"
-	<liam@infradead.org>, Nico Pache <nico.pache@linux.dev>, Ryan Roberts
-	<ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Barry Song
-	<baohua@kernel.org>, Lance Yang <lance.yang@linux.dev>, Usama Arif
-	<usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, Vlastimil Babka
-	<vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Brendan Jackman
-	<brendan.jackman@linux.dev>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
-	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>, Daejun Park
-	<daejun7.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <DMMKKOIGA9UJ.353PCUUMFLCCJ@nvidia.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20261105010612epcms2p60abe5ce24c4ca7d61236b613a517fe2a@epcms2p6>
-Date: Thu, 05 Nov 2026 10:06:12 +0900
-X-CMS-MailID: 20261105010612epcms2p60abe5ce24c4ca7d61236b613a517fe2a
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-cpgsPolicy: CPGSC10-223,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20261104163327epcas2p1f056cd220dc0d3e40e6fcea082f01b74
-References: <DMMKKOIGA9UJ.353PCUUMFLCCJ@nvidia.com>
-	<20261104-kpagecgroup-split-v1-0-f70e947fec85@samsung.com>
-	<20261104-kpagecgroup-split-v1-1-f70e947fec85@samsung.com>
-	<CGME20261104163327epcas2p1f056cd220dc0d3e40e6fcea082f01b74@epcms2p6>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Wed Nov 4, 2026 at 11:33 AM EST, Zi Yan wrote:
-> Assign memcg data before clear_compound_head(), so lockless,
-> reference-free readers get the right value instead of bogus data from
-> the overlaid ->_nr_pages in the first tail page.
+get_temp_fd() creates its page cache file with O_TMPFILE in the current
+directory. On filesystems without O_TMPFILE support, such as NFS, the
+open fails with EOPNOTSUPP, and with it every test that needs page cache:
+test_memcg_current_peak, test_memcg_min, test_memcg_low, test_memcg_high,
+test_memcg_max and test_memcg_reclaim. Boards that boot with an NFS root
+fail all six.
 
-Thanks, agreed. Your wording says why the assignment has to come before
-clear_compound_head(), which my comment left implicit.
+Create a regular file with mkstemp() and unlink it in that case.
 
-Thanks,
-Daejun
+Fixes: 84092dbcf901 ("selftests: cgroup: add memory controller self-tests")
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+Found with KernelCI's NVIDIA lab, whose boards boot from NFS. Tested on a
+144-CPU Grace with KernelCI's arm64 build of 05441d697f7f9: run from an
+NFSv3 mount, all six tests fail without this patch. With it, they behave
+as they do from ext4 on that machine: the other four pass, while
+test_memcg_min fails and test_memcg_low sometimes fails there too.
+
+ tools/testing/selftests/cgroup/test_memcontrol.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index bb673012dcf08..7dc9c26628675 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -33,7 +33,17 @@ static int page_size;
+ 
+ int get_temp_fd(void)
+ {
+-	return open(".", O_TMPFILE | O_RDWR | O_EXCL, 0600);
++	char name[] = "./cgroup_test_XXXXXX";
++	int fd;
++
++	fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, 0600);
++	if (fd >= 0 || errno != EOPNOTSUPP)
++		return fd;
++
++	fd = mkstemp(name);
++	if (fd >= 0)
++		unlink(name);
++	return fd;
+ }
+ 
+ int alloc_pagecache(int fd, size_t size)
+-- 
+2.53.0
+
