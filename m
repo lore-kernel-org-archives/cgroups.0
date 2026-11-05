@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907259;
-	b=lbxDbEtkyhNdn9pGYyf4APmXqX31o9ExYon+0dd0+axMEcvjn39Y1t3jWVH7d52npt/q
-	 5M7oHjgMB9JA1FN+WHG6W/uhgqt3hmPBdPpbLjtpiiLdWMRHb8uqqohiMHUk10XTVr/R9
-	 AgguAP5IqYsZEv9jWsHADkgJTuKiJfxNseK4IT04YcXxW2+bv29/4W2UFn7if1VAyOOgY
-	 g60xI9mIFj4CP8muGblGRWZkdQN2npfRgtaoYDAp9URtnDh1OxSg6x0BYqaKfA6DtqOCd
-	 YHFluAmQQP/Aez1/q0gApeVDzmQSWtYmgJC3AAg3bkpiN20qREqZWQhX34bfxbc/yCw==
+	t=1793907256;
+	b=5pM7Yiewx8YTht7AfSLpNl4tn1/W+GHxjmchZ7yrMtbv/452AkhZ6oTEbRi873c5Sm8S
+	 AGRbQ4c1xAj7IKZXz01K2NU5znB5YE5hL5AyXYDUe7H0DdVsYQe0iUJzSfG+B6qIN+xYQ
+	 EH8GiLBh1+k+uLWm4QqyvEZDRoSQMoBRC3Vcpqn5gUeedeTYiAmNwnhldgXMCL4EJxDe0
+	 wF48P/ijjhNCAkWzG3lKrs0D0PMnSS7NatcYp12vz+vtjP0ZzEGCL716CzLKaXb6D1M3x
+	 w/pjmg3BNu4GTnyFHL4OmtvphsYz3tpXoRMa2FWDgDGpQqcTqYcIUI8Vh69by+ecnRA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907259;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907256;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=dqzI7szqypUolQPlKTiL4Tger2zQvjkv2ryDgx7nJmw=;
-	b=zXikZAw0qHPLhco0sO/ukw/vDKYVC175dSq5LvyyvXBqgLETmXSUO32AdCWJ3gxZ8So9
-	 PIN07I402B7SavZMet0Mq2z3ATi3N5E51FwVD67RJmF2XSMhcfewkLurbozYIlu9LzThU
-	 kyLmP0CMYguy4z6KrwVXggFJ1Oj1c641MhEUMIm36tjhlQ5nTKZPqcQkvS9i8ZzDM3DLG
-	 So3MoJ3hgJdr4rFpcNey+LXCBk3P2Prq3I+QULuBRxDnEE7i0fLYs3JNHJy2bQXJZKLRJ
-	 ++9niHC44uSeN0+O0AQLh1aE4HGZOjVNWMWjbxxBIBSIih7jOz+jphDBsYPvmg5/Kzw==
+	bh=UgrZOSXgcIR7ewws5Wtl/aD7cavaVZd53IcOP/KOXkE=;
+	b=1/2HUS3wC8dpH4Bn0CAdYePxGc/f8A4FY+oUdDHGnyGPd3ntZHwvrOfgZI+Tltcp9too
+	 4MKk/yGCgFjvyCM4qXY9TebvuI0CrEPxAeivin8As4Mp3hBw4nSio+UxDaz6xl9elN0UD
+	 gTjg5st5yoe555xTsfIpf9/yZyX3qjofSRMjObw9kN69mcMsQd/MZ7sPFDk+PYa/1uy43
+	 NHtV7oBW0KxGcBQNba3BRnmfw9RhQf0ZnbMsxnMu1fixTBPxyyZwjswjdxuUI7FErnxS7
+	 mfDlEYPuv/+TDENlYpZebxOAJFHD8y/UCmIgkxcvmrJsGXGxwtaJTJgoOibFBPxHUFg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=n7WrZUl4;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=wfUNz3ai;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D04D26082BD7;
-	Thu,  5 Nov 2026 19:34:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D04D26082BD7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1086D606B056;
+	Thu,  5 Nov 2026 19:34:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1086D606B056
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=n7WrZUl4
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=wfUNz3ai
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1793907251;
-	bh=dqzI7szqypUolQPlKTiL4Tger2zQvjkv2ryDgx7nJmw=;
+	s=smtpout1; t=1793907249;
+	bh=UgrZOSXgcIR7ewws5Wtl/aD7cavaVZd53IcOP/KOXkE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=n7WrZUl4HVhwggDjxrZhYnTcgqm5yQImvMMSYbBgRKFZ0XjiRHBDPrVKsXV9XD+4t
-	 98XZs/2WjtMOuMf3vXpVBDvPlKSLY5qhPhyoYt6tFXGadNbFFXWCoJ7YmdXDTwn22+
-	 teF0ZEU2qUjjHtCEPLyORXzBr2OBvcof+D6Fe5fhZ22czdO81EJ9Yl+REoeNa+M8I7
-	 yUFzfAPKnBYBX7/UgzUXgAz3Ecaj8KuJziXY6IXvXpmn08aoACZRr/U4tXnkk/3YT0
-	 9QqcrarSwIzQWOoNDBI40uzw9urR39YPxh3eqB3gBJoka9zzWoj8VFY8RP3KcfIZDU
-	 3MrLvX05WNzCA==
+	b=wfUNz3ai7Y58tnwvg1X98+jEC4IVm8uKj/gJTQ/Sp4733zg52AZNaIj5RB0SMKRWk
+	 ywcxvSHd3zd3LTeTEYOaC0M8kyXrb7Fekr3soVdSnjPSUlPQrQHPEpL6Ae9E9fP6sP
+	 uVjJgeEiPBVLjjiN3OTCAhGcgiPEozjRKO5EHfHgKBL3oxXg5fRSrhs/qt6nXV+aXM
+	 8gCaT2kNyUJLMXQuony0BpxnTlqlbnmVlM5ViFK/XWYmGkKjs+fVmT/WDAqR9ShAnO
+	 Tn8IwalGGgjAZ/UdVfjDYoI1g0ByUFSMOwnHAcBNyYPASPmp5Bo514hrHEwsfxGBge
+	 GWKDEcetfIU6w==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jLCDM08wSzLPS;
-	Thu, 05 Nov 2026 14:34:11 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jLCDK0NNszLDS;
+	Thu, 05 Nov 2026 14:34:09 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -76,10 +76,11 @@ Cc: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
+	Sashiko <sashiko-bot@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH v3 13/24] sched/deadline: Leave a dying task out of a rebuild of the accounting
-Date: Thu,  5 Nov 2026 14:33:48 -0500
-Message-Id: <20261105193359.1450487-14-mathieu.desnoyers@efficios.com>
+Subject: [PATCH v3 01/24] sched: Fix cpuset_mutex double unlock in __sched_setscheduler()
+Date: Thu,  5 Nov 2026 14:33:36 -0500
+Message-Id: <20261105193359.1450487-2-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20261105193359.1450487-1-mathieu.desnoyers@efficios.com>
 References: <20261105193359.1450487-1-mathieu.desnoyers@efficios.com>
@@ -94,53 +95,162 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A rebuild of the root domains' accounting finds the tasks of a cpuset
-through css_task_iter, which hides an exiting task once its process has
-no live thread left, and hides a dying thread of a process with live
-threads only once cgroup_task_dead() takes it off the cpuset, after its
-last schedule. The walk without cpusets finds every task. Either can
-find a task at its last schedule, between the release of its bandwidth
-there, task_non_contending() past its 0-lag time, and the reset of its
-dl_bw: both run under the runqueue lock, which the walk does not take.
-The walk then counts, in a root domain the rebuild has just cleared, a
-bandwidth that nothing releases again.
+From: Andrea Parri <parri.andrea@gmail.com>
 
-Leave out a dead task that is not on the departed list: its bandwidth
-is released, or being released. do_task_dead() sets TASK_DEAD under
-pi_lock, which the walk holds, so a task found alive dies after the
-walk, and releases what the walk counted. A dead task on the list keeps
-its bandwidth until its timer, and the rebuild counts it where the list
-says, as before.
+A sched_setattr() with SCHED_FLAG_KEEP_POLICY on a SCHED_DEADLINE task
+unlocks cpuset_mutex twice if the task's policy changes concurrently:
 
-Found by the Sashiko AI review of the second posting of this series.
+  WARNING: bad unlock balance detected!
+  7.4.0-rc1 #1 Not tainted
+  -------------------------------------
+  repro/126 is trying to release lock (cpuset_mutex) at:
+  [<ffffffff9a17cacc>] __sched_setscheduler+0x9cc/0xc40
+  but there are no more locks to release!
+  ...
+  Call Trace:
+   print_unlock_imbalance_bug.part.0+0xfb/0x110
+   lock_release+0x286/0x2e0
+   __mutex_unlock_slowpath+0x1a/0x400
+   __sched_setscheduler+0x9cc/0xc40
+   __x64_sys_sched_setattr+0xa3/0x1b0
+   do_syscall_64+0x106/0x5f0
+   entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
+__sched_setscheduler() samples p->policy before taking any lock, and
+restarts from the recheck label if p->policy differs under the rq lock.
+The restart drops cpuset_mutex but leaves cpuset_locked set, so a pass
+that no longer needs the mutex still unlocks it on its way out:
+
+  CPU 1                                CPU 2
+  __sched_setscheduler(KEEP_POLICY)
+    policy = p->policy /* DEADLINE */
+                                       __sched_setscheduler(SCHED_OTHER)
+                                         p->policy = SCHED_OTHER
+    cpuset_locked = true
+    cpuset_lock()
+    rq = task_rq_lock(p)
+    oldpolicy != p->policy
+      cpuset_unlock()
+      goto recheck
+    /* no cpuset_lock() this time */
+    ...
+    if (cpuset_locked)
+      cpuset_unlock()
+
+Without CONFIG_DEBUG_MUTEXES, or CONFIG_DEBUG_RT_MUTEXES on PREEMPT_RT,
+nothing warns. The second unlock still clears the owner field regardless
+of who holds the mutex, so another task can lose cpuset_mutex inside its
+critical section. Entering SCHED_DEADLINE needs CAP_SYS_NICE, but a
+racing caller that owns the task does not need it if it samples a policy
+other than SCHED_DEADLINE.
+
+Clear cpuset_locked when dropping the mutex for the restart. This should be
+safe because the flag is only tested on the paths leaving the next pass,
+after that pass has set it again if it took the mutex.
+
+The following program, run as root, reproduces the splat, which no longer
+appears with this applied. On PREEMPT_RT it crashes the kernel within
+seconds, which this also fixes:
+
+  #define _GNU_SOURCE
+  #include <pthread.h>
+  #include <stdint.h>
+  #include <sys/syscall.h>
+  #include <unistd.h>
+
+  struct attr {
+      uint32_t size, policy;
+      uint64_t flags;
+      int32_t nice;
+      uint32_t prio;
+      uint64_t runtime, deadline, period;
+  };
+
+  static volatile int stop;
+  static volatile pid_t target;
+
+  static void set(struct attr a)
+  {
+      a.size = sizeof(a);
+      syscall(SYS_sched_setattr, target, &a, 0);
+  }
+
+  static void *sleeper(void *arg)
+  {
+      target = syscall(SYS_gettid);
+      while (!stop)
+          usleep(1000);
+      return arg;
+  }
+
+  static void *switcher(void *arg)
+  {
+      while (!stop) {
+          /* SCHED_DEADLINE, 2us every 1s */
+          set((struct attr){ .policy = 6, .runtime = 2000,
+                             .deadline = 1000000000,
+                             .period = 1000000000 });
+          set((struct attr){ .policy = 0 }); /* SCHED_OTHER */
+      }
+      return arg;
+  }
+
+  static void *racer(void *arg)
+  {
+      /* KEEP_POLICY | KEEP_PARAMS */
+      while (!stop)
+          set((struct attr){ .flags = 0x18 });
+      return arg;
+  }
+
+  int main(void)
+  {
+      pthread_t t[5];
+      int i;
+
+      pthread_create(&t[0], NULL, sleeper, NULL);
+      while (!target)
+          usleep(100);
+      pthread_create(&t[1], NULL, switcher, NULL);
+      for (i = 2; i < 5; i++)
+          pthread_create(&t[i], NULL, racer, NULL);
+      sleep(30);
+      stop = 1;
+      for (i = 0; i < 5; i++)
+          pthread_join(t[i], NULL);
+      return 0;
+  }
+
+An LLM helped find the PREEMPT_RT crash and write this patch and its test.
+
+Fixes: 111cd11bbc54 ("sched/cpuset: Bring back cpuset_mutex")
+Reported-by: Sashiko <sashiko-bot@kernel.org>
+Link: https://sashiko.dev/#/patchset/20261016062629.2102883-1-sh_def%40163.com
+Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
 Cc: stable@vger.kernel.org
-Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Reviewed-by: Waiman Long <longman@redhat.com>
+Reviewed-by: Kayra Cizmeci <kayracizmeci@gmail.com>
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 ---
- kernel/sched/deadline.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ kernel/sched/syscalls.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 7a0c27e76028..d9bd01a1bac0 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -3594,6 +3594,15 @@ void dl_add_task_root_domain(struct task_struct *p)
- 		cpu = p->dl.dl_departed_cpu;
- 		if (!cpu_active(cpu))
- 			goto unlock;
-+	} else if (READ_ONCE(p->__state) == TASK_DEAD) {
-+		/*
-+		 * Dead and not departed: its bandwidth was released at its
-+		 * last schedule, under its runqueue lock and not this one,
-+		 * and dl_bw may still say otherwise. do_task_dead() sets
-+		 * TASK_DEAD under pi_lock before that, so a task found alive
-+		 * here dies after this walk, and releases what it counted.
-+		 */
-+		goto unlock;
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 45a127deeadd..2af550f92ac6 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -640,8 +640,10 @@ int __sched_setscheduler(struct task_struct *p,
+ 	if (unlikely(oldpolicy != -1 && oldpolicy != p->policy)) {
+ 		policy = oldpolicy = -1;
+ 		task_rq_unlock(rq, p, &rf);
+-		if (cpuset_locked)
++		if (cpuset_locked) {
+ 			cpuset_unlock();
++			cpuset_locked = false;
++		}
+ 		goto recheck;
  	}
- 	rq = cpu_rq(cpu);
- 	dl_b = &rq->rd->dl_bw;
+ 
 -- 
 2.47.3
 
