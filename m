@@ -1,48 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.239
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793883174;
-	b=ibw3oEP5WjSl1+MAmbcV8Bj+m9ZPf0+bgILuirKNARdB2gbxNLKMIQJTiQUbRRx1VD2W
-	 C7emyKbKokoWYSfcnwecg5nQWtNAuePb7bma+MbDEO9KTmSCZGkfO+ZbYKXbS8hLkEXV0
-	 QXBdg3lcslm3IYO7sTAws/0g/SrRC+RrMf66CYkflQo5yvbpeWt8SglMAWWgPS0J2S8ke
-	 mmi6lFqtIWGfuxV2vt5Zx6jzidIZj8EmuaLRA0FAIUn386tYIALh7TOgJpuAG5DE8PAF2
-	 2iP+FChBjXEA9nI4wGQQ+oXMjVHRnlObaU6s6xxvsUOYeAkkhRQLbEhwREEihY6giig==
+	t=1793883177;
+	b=JtHVrWmIHl1AtsRk7m4H2RAg3ThLNiIvHDhc0xGWtlSs8vnCc6RsCTGD79p7hAH9hPpn
+	 653/L7dbK//AI/yW0l9oSd16iE+5P/GFA0QHMyxX0pjEPC4LNiG8RHpwa/z0dT5YmGfs7
+	 rKG8K9bhXxonIYwxCq88QS87D/858s7BQnzy7xF7qOqvJmRv/tXb7sU/5vcvnnLo/8Ckn
+	 duPREwc8MGdiUbW6dk1ZoijClpiJyDrXMeKHv2o5xxgXmy6N/CxSYbi0N4thsqcu52tZB
+	 kqbgrV9Xe7udOQ9j7QflczcBGvODIx0lkgljH2dq30kXBoH59Yx12Ev8toIWlGL2agA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793883174;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793883177;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=RTgQRTFtisig+XhJkIfb6eg7MdcCPg80PyEHZzaAC08=;
-	b=qEA6tMpunp1kqvVpW3fF1fp70HWPZ+8TCR6F+fAZvDJe/6XX+QUrtWPc0a93BtF0jaOh
-	 GBK1JrFFwvYM+ZSYI8QqZzKfUbuwlsw1HmlCiz1yVf1CPKPiRnx8/wY3k8KS2OPYn2aSY
-	 lxdr4kWBB5YybDuT1hbXox2RGzLCbySbkvNpD4BM4OBobQpisXtfKovu/iuI3ILZ3slZ1
-	 fAUMx/HTUvaEcy1kMqb+oHdU1hBpKD1GP6V+bEv4noAu3S9O6riMET8GI5K5YkbxMuNKS
-	 Q1CUfcyluHNYw5bf5ClucKAMPpF+bFBxd1qnowMaH3M2Pcwo+0FLGkUsGceiP6rhnMg==
+	bh=U7QPnMltm0NUA1TBoFVEGMv8tP5BZSUYF1lBRbJpUqE=;
+	b=byVzOQQV5BiCSKwhB06z9Yy7C+W/ya4JIpZ2Wj13d16Vrm+zJM+0kidzpQD+ydXu1agZ
+	 7NMRfDy1qB0EtHQ3xyeQuzM6UWWT6kyiewDStJQkK2jEUWiHgb8bG8LkZf8Gw2b0Q/XzD
+	 megUN9YkVts2AaI1BvjQWjT9/j/xe5g9dpCZbuqHrtKguV05D8DKN/jZTwJh8BcSe2iXR
+	 VgoF9joDKti8IE7wEXyEH5Q4FaNA4zfgUWxPPhGHuxOf2mF+uadG/DgjyBP98aBVoxj23
+	 fpqu8RcXhwsyL92f/UhXssn3sDrZKkO+/LnOD8kKQHE+icDNcub4Dblc5HtqB0G8ywA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=91.218.175.182
-Received: from mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=OWOkAeAS;
+	arc=none smtp.remote-ip=95.215.58.239
+Received: from mta1.migadu.com (out-239.mta1.migadu.com [95.215.58.239])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81944606A33F
-	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 12:52:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 81944606A33F
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2207D606D831
+	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 12:52:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2207D606D831
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=OWOkAeAS
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=mUgM79iUHbJsNdD4rDYze8gDWIqMls6PBPkzr43vslw=;
+DKIM-Signature: a=rsa-sha256; bh=P5EDvk6rF/qCnD0K9efR1giZB/efgKEHgWhKG6KkDcY=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793883166; v=1; x=1794487966;
- b=eocEAXbk4HDy9IlZDyIMQySSckN/hqGXXclU97FyWxI7S2mhfko6TvjW/8uLamS4WtKf0iP5
- Gcxt3BJzRpVhq0cPmfluCDlmiL/+w/DK3oOonvbQURZV63Iqe33XPqFpJVWVRJ5mWjY7EeZFPeR
- xj1ptRCufrTBmhoutaqkwICo=
+ t=1793883175; v=1; x=1794487975;
+ b=OWOkAeASOOYzab0z0xD+L69GxFgOK8SO1sE3RARiQVshHf0r2C13Rii5U9HJUBtQAh+jmzL2
+ AFIWZfTXqFonE9Dhc50H4+U8s6NHKJV7cAM0onkwI2CJuRn0ZuH9QjpNHNXaUi7+cx1vBwr6dZz
+ nXKQ+BoKGFhiGfbz1TE8FFog=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 661658dd28fab252;
-	Thu, 05 Nov 2026 12:52:46 +0000
-X-Mizu-Trace-ID: 661658dd28fab252
+Received: by smtp.migadu.com with ESMTPS id d32cdb94a89149b2;
+	Thu, 05 Nov 2026 12:52:55 +0000
+X-Mizu-Trace-ID: d32cdb94a89149b2
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Waiman Long <longman@redhat.com>,
@@ -56,10 +59,11 @@ Cc: Ridong Chen <ridong.chen@linux.dev>,
 	linux-kselftest@vger.kernel.org,
 	Sashiko <sashiko-bot@kernel.org>,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Chen Ridong <chenridong@huawei.com>,
 	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH 1/4] cgroup/cpuset: Reset partition data when an invalid partition stays invalid
-Date: Thu,  5 Nov 2026 20:52:12 +0800
-Message-Id: <20261105125215.2205892-2-ridong.chen@linux.dev>
+Subject: [PATCH 2/4] cpuset: add early empty cpumask check in partition_xcpus_add/del
+Date: Thu,  5 Nov 2026 20:52:13 +0800
+Message-Id: <20261105125215.2205892-3-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261105125215.2205892-1-ridong.chen@linux.dev>
 References: <20261105125215.2205892-1-ridong.chen@linux.dev>
@@ -74,80 +78,52 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Ridong Chen <chenridong@xiaomi.com>
+From: Chen Ridong <chenridong@huawei.com>
 
-When cpuset.cpus or cpuset.cpus.exclusive of a partition root is
-changed, update_cpumask() and update_exclusive_cpumask() copy the new
-effective_xcpus computed for the trial cpuset into the cpuset, and call
-reset_partition_data() only if the partition was valid before and is
-invalid now:
+Add a check for an empty cpumask at the start of partition_xcpus_add()
+and partition_xcpus_del(). This allows the functions to return early,
+avoiding unnecessary computation when there is no work to be done. With
+these changes, partition_xcpus_add() and partition_xcpus_del() can be
+called even if xcpus is empty. The caller no longer needs to check whether
+xcpus is empty, eliminating many conditional statements.
 
-	if ((old_prs > 0) && !is_partition_valid(cs))
-		reset_partition_data(cs);
-
-An invalid partition root (old_prs < 0) that stays invalid is not
-covered. Its effective_xcpus is then left with the trial value, which
-is computed from user_xcpus() and so falls back to cpuset.cpus when
-cpuset.cpus.exclusive is cleared. As an invalid partition root does not
-own any exclusive CPUs, and rm_siblings_excl_cpus() treats a non-empty
-effective_xcpus of a sibling without cpuset.cpus.exclusive as owned,
-those CPUs can then no longer be claimed by a sibling:
-
-  # A1: cpuset.cpus=2-3, cpuset.cpus.exclusive=2-3, root, with tasks
-  # offline CPUs 2-3 -> A1 becomes invalid
-  echo > A1/cpuset.cpus.exclusive
-  cat A1/cpuset.cpus.exclusive.effective    # 2-3, expected empty
-  echo 3 > B1/cpuset.cpus.exclusive         # -EINVAL
-
-Reset the partition data whenever the cpuset is a partition root, valid
-or not, and ends up invalid. Add a test case for it.
-
-Fixes: f62a5d39368e ("cgroup/cpuset: Remove remote_partition_check() & make update_cpumasks_hier() handle remote partition")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://sashiko.dev/#/patchset/20261101114206.2434398-1-ridong.chen%40linux.dev?part=15
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
- kernel/cgroup/cpuset.c                            | 4 ++--
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 4 ++++
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ kernel/cgroup/cpuset.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 3052413e41e7..bc16fd1b1c5e 100644
+index bc16fd1b1c5e..68b82dabbf38 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2607,7 +2607,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
- 	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
--	if ((old_prs > 0) && !is_partition_valid(cs))
-+	if (old_prs && !is_partition_valid(cs))
- 		reset_partition_data(cs);
- 	spin_unlock_irq(&callback_lock);
- 
-@@ -2672,7 +2672,7 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->exclusive_cpus, trialcs->exclusive_cpus);
- 	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
--	if ((old_prs > 0) && !is_partition_valid(cs))
-+	if (old_prs && !is_partition_valid(cs))
- 		reset_partition_data(cs);
- 	spin_unlock_irq(&callback_lock);
- 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index bdca6c471f87..9c0c78ca6329 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -434,6 +434,10 @@ TEST_MATRIX=(
- 	# cpuset.cpus is allowed, but those extra CPUs are ignored.
- 	"  C2-3:P1   C3:P1  .      .      .     C2-4    .      .     0 A1:|A2:2-3 A1:P1|A2:P1"
- 
-+	# Clearing cpuset.cpus.exclusive of an invalid partition releases its
-+	# exclusive CPUs, so a sibling can claim them.
-+	" CX2-3:P1    .     .     C3  T:O2=0:O3=0:X  .     .      X3   0 XA1:|XB1:3 A1:P-1"
+@@ -1315,10 +1315,13 @@ static void partition_xcpus_add(int new_prs, struct cpuset *parent,
+ {
+ 	WARN_ON_ONCE(new_prs < 0);
+ 	lockdep_assert_held(&callback_lock);
 +
- 	# A child cannot recover until its exclusive CPUs are available again.
- 	" CX1-4:P1 CX3-4:P1 .     .     X1-2     .      .      .     0 A1:1-2|A2:1-2|XA2: A1:P1|A2:P-1"
- 	" CX1-4:P1 CX3-4:P1 .     .  X1-2:X1-4   .      .      .     0 A1:1-2|A2:3-4|XA2:3-4 A1:P1|A2:P1"
++	if (cpumask_empty(xcpus))
++		return;
++
+ 	if (!parent)
+ 		parent = &top_cpuset;
+ 
+-
+ 	if (parent == &top_cpuset)
+ 		cpumask_or(subpartitions_cpus, subpartitions_cpus, xcpus);
+ 
+@@ -1342,6 +1345,10 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
+ {
+ 	WARN_ON_ONCE(old_prs < 0);
+ 	lockdep_assert_held(&callback_lock);
++
++	if (cpumask_empty(xcpus))
++		return;
++
+ 	if (!parent)
+ 		parent = &top_cpuset;
+ 
 -- 
 2.34.1
 
