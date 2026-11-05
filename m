@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793907260;
-	b=sry6fpQQezU+h0EdYSRYGjkOmyz7NHUS/C/Q6TOIXjkbJqY3QWqKzw6cQ83WNm3XuCVG
-	 SLyR4hDDKMAK8vYab9WZO/VWvnCD8T8ylU5UHHmAwdeoR+WL5OlE70NDGenH5Vjijg8XU
-	 pDIR0c3eJwxU1oIkEj3qTC6WJQLj257EnW0nKndzVZ9uWOJWZs8Cqh5QYX4EnRXuMj+UY
-	 h7h1Jvxf0Cp14DSGAKATp5+VUqkmYy3hPtRQKhu9DAoI1NYNKlvuPLDZmoNyx0nSpYssk
-	 nsos5LVUfSyKeph0uK1dFDWigJ699uoVr6Zcr7tPzKGAjC32nuRI5+0EPB9pZObNNPw==
+	t=1793907264;
+	b=rsg/4xqhwsx7sK3/KR2j4/iiWBIe8/56HC4edA2c0q1BFupA39h0XPI1Rjddl/PFajeH
+	 Y/J7TUE59TzsQMTNPDis+sJkE6X7ovnf1x0KmbAEK9xPV5zan9XKsa1kAvjfGGnn03FOh
+	 KmW6EZJbtm/OW0cJbTCkPE2YcEW8wpZDup9tlJomql5+wLbMfZnGYkChAOidrYF74V2bk
+	 kU/CrmxxJc3nmv44LaLT583MmV9Yghx2xuvX7qbAdarMSODZwOD9z436wKO9ZCLXtW4HT
+	 9+5n5iso7sClaCNKDd3z0x2U01CWYyWpVAga0Rnr7urk/SF1EtpV0IfTVf0MLd4n31A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793907260;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793907264;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=9xcKHMbn3SsYLrcgRVCN+uYKxdH8XYhCdsy+dXlYLgA=;
-	b=rVfOFRxcMpwKg8KDRuJ224qM3RpiTpGe5+F4E4NBv+CZ4tMUJ06NZoohrySvstRGPTlK
-	 6NOtDfv/yM8GKmG6Do0E5VstLD1uK8rYNcxShD2vHlmxnLDwdzbx9uWhJb2LZEguLbLzk
-	 7dHQeqN4jANpUUhzAwiY4hZ1hMr1LEZFzjLXlhTTVxOE9QTvUY/ac78zK1CUwxWh/sp77
-	 rwSH2houii2AcYNM30bc8Le25BJ70d1EzGGjTq7s9CegFUImCMH97ryR+JGFywwtro1Ae
-	 EF+FwntCSrDLjfUXmANJt4jlnJ/1w5KATI3mVD17YfCD0N1Sq87WKVg2O0uKOe1X3HQ==
+	bh=af+4ajGlgtX+ITY+QAIEdN5bCJZjAJgGwtyaF8TMBHU=;
+	b=nG3D5xSMlrvnEEvCiG30jH2VvvrQXUnzbGIn+ETiCROpI3cn2KnpaljnJLH3zM89e80J
+	 waQKGPcPC9EetjY7T6WccGgWFadSBdPaOUc41FzdiwRs/LYe6dVpkiDYNxIObdikcRmcM
+	 pT66Hgtug27sNiGJnvXfzZpdMAejiBVtVNVzzqcK+l6FVD/ScRYUKKTMZFZ/J3wxgwLSE
+	 7OBoM0V0PaJJg4F6uLmEh+ZzvhKEA7KqVNCzatspn4eFuo41eTmw2QcipjZZ6QbScYxjQ
+	 nD3505JBEPJvIihesIPUqgi1kNOLZGUQJeJof5E5TURv4/QmGVwV39jQu7p/Sj0JNXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=T3Y2FqCm;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=OQLVdqta;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF58C60A2611;
-	Thu,  5 Nov 2026 19:34:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF58C60A2611
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDDFF6082BD6;
+	Thu,  5 Nov 2026 19:34:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CDDFF6082BD6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=T3Y2FqCm
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=OQLVdqta
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1793907252;
-	bh=9xcKHMbn3SsYLrcgRVCN+uYKxdH8XYhCdsy+dXlYLgA=;
+	s=smtpout1; t=1793907251;
+	bh=af+4ajGlgtX+ITY+QAIEdN5bCJZjAJgGwtyaF8TMBHU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=T3Y2FqCmR8Ff1NGspV0s2QL4Ofq2YBYPDEBhyEuWSZzWYspvomB1y2OD/y0AX/RoJ
-	 aQ8pxHH1F4/0Yn/8i0Zu2eFtKoInygXHy2MewI8XnmqtevneJg/o5AjmEVaF1Rh86i
-	 kpXV+S6rVdHfHB9rXYtfzwjBtlG1HPejMXUm8+TRZWADazBb9UZ5nLEXZ8IV2By8J6
-	 PMy3jD1RQl5xnwa9DzAcik9sCaLbpPdAUbTh7SPYP71xQQdQZ7OVk62Mq/gQvFYylt
-	 cUkzEO8hJvxOsbCL7pkT7sfEGwc/m8f01mVoHoLkoJnA8dpYM6SUI4UdKTrr3Gw8oq
-	 875HSx7K4kruQ==
+	b=OQLVdqtawSXJY1GnRjdy1hBUsjTfNYsg6Mf9B3zNX9pkhLhbNZuRr3HvRN6I1VG+/
+	 CZbej3v5BYhj06exYBPCc1MlBDplBuTh+o8Ru47xnV5Y7J5LbsxpdBr7TE2BnBAs84
+	 fqw0ltBEnZkvu3/S45eG+eN4AJCKNL2fedvETi1hAT0geMKpNmWoviUtg+Sa0LFWht
+	 1nl6T0vWePw3YvioHw3Y6Wc+4fs9d8Dov8L93XITj3/aogx9fxSMkSOcpR3uTcB38j
+	 08jZ1QGNtXxleCWhDW4Ub9CfmlBzBFpj/hber+Zynj1cYZ+rAH1ZOCycsOlfEYHPEp
+	 sqnxrvIgyby4w==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jLCDN2YBbzLkq;
-	Thu, 05 Nov 2026 14:34:12 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jLCDM3kywzLPT;
+	Thu, 05 Nov 2026 14:34:11 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -75,10 +75,11 @@ Cc: linux-kernel@vger.kernel.org,
 	weihengqiuu@gmail.com,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v3 21/24] sched/debug: Show the deadline bandwidth of each runqueue
-Date: Thu,  5 Nov 2026 14:33:56 -0500
-Message-Id: <20261105193359.1450487-22-mathieu.desnoyers@efficios.com>
+	linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH v3 16/24] cgroup/cpuset: Wait for an attach before rebuilding the sched domains
+Date: Thu,  5 Nov 2026 14:33:51 -0500
+Message-Id: <20261105193359.1450487-17-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20261105193359.1450487-1-mathieu.desnoyers@efficios.com>
 References: <20261105193359.1450487-1-mathieu.desnoyers@efficios.com>
@@ -93,37 +94,65 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-sched_debug prints the bandwidth each root domain has handed out
-(dl_bw->total_bw), and nothing of the two sums each runqueue keeps:
-this_bw, the bandwidth of every deadline task of that CPU, and
-running_bw, the part of it whose tasks are active. GRUB drains the
-runtime of a reclaiming task at the rate the two give, the bandwidth of
-its CPU that is reserved and active (grub_reclaim(): max_bw - (this_bw -
-running_bw) - extra_bw): the less of its CPU is active, the slower its
-runtime drains, and the longer it runs on.
+cpuset_can_attach() sets aside, in the root domain of the destination,
+the bandwidth of the deadline tasks it is about to move, and drops
+cpuset_mutex until cpuset_attach() moves them. A rebuild of the sched
+domains in between, rebuild_sched_domains() from a write of
+sched_rt_runtime_us or from the energy model, takes cpuset_mutex and
+runs: dl_rebuild_rd_accounting() clears the root domains and counts
+each task where its cpuset says, and the reservation is gone. The
+attach then moves the bandwidth of each task out of the root domain it
+left, on the strength of a reservation that is no longer there, and the
+destination's total_bw ends short of what its tasks hold: it admits
+deadline tasks beyond its capacity, and underflows when they leave.
 
-Both sums have invariants a test can check, which the kernel itself
-warns about when they break: neither may wrap, and running_bw never
-exceeds this_bw. Print them.
+The writes of a cpuset's files wait for an attach in progress before
+taking cpuset_mutex, wait_attach_done_lock(), since
+commit 75f7a25ec6bb ("cgroup/cpuset: Prevent race between task attach
+and cpuset state change"), and CPU hotplug holds cpus_write_lock, which
+an attach holds for reading throughout. Wait in
+rebuild_sched_domains_cpuslocked() as well: a rebuild from the hotplug
+path finds no attach in progress, and one from the sysctl or the energy
+model lets the attach complete first.
 
+The deadline_bw_test selftest added later in this series has the case,
+move_vs_rebuild: a process of 2049 threads, one of them a deadline task
+asleep, moved in and out of a one-CPU partition root while a writer of
+sched_rt_runtime_us rebuilds the sched domains 20 times, six rounds.
+With the patches of this series before this one, a round leaves a root
+domain short of the task's bandwidth, the root domain of the other CPUs
+admitting 3 more tasks of 10% in three 8-CPU VMs and the partition root
+none at all in a fourth, in 4 VMs of 4; with this change the six rounds
+pass, in 2 VMs of 2.
+
+Found by the Sashiko AI review of the second posting of this series.
+
+Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
+Cc: stable@vger.kernel.org
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 ---
- kernel/sched/debug.c | 2 ++
- 1 file changed, 2 insertions(+)
+ kernel/cgroup/cpuset.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index a4ae092e0a68..c8a2cf18fdd1 100644
---- a/kernel/sched/debug.c
-+++ b/kernel/sched/debug.c
-@@ -1171,6 +1171,8 @@ void print_dl_rq(struct seq_file *m, int cpu, struct dl_rq *dl_rq)
- 	SEQ_printf(m, "  .%-30s: %lu\n", #x, (unsigned long)(dl_rq->x))
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 5b8f1d9552a6..aa946baeb4b9 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1067,7 +1067,13 @@ void rebuild_sched_domains_locked(void)
  
- 	PU(dl_nr_running);
-+	PU(running_bw);
-+	PU(this_bw);
- 	dl_bw = &cpu_rq(cpu)->rd->dl_bw;
- 	SEQ_printf(m, "  .%-30s: %lld\n", "dl_bw->bw", dl_bw->bw);
- 	SEQ_printf(m, "  .%-30s: %lld\n", "dl_bw->total_bw", dl_bw->total_bw);
+ static void rebuild_sched_domains_cpuslocked(void)
+ {
+-	mutex_lock(&cpuset_mutex);
++	/*
++	 * An attach in progress has set aside, in the root domain its tasks
++	 * move to, the deadline bandwidth it moves once it takes
++	 * cpuset_mutex again: the rebuild of the accounting would drop that
++	 * reservation, and the move would go through on its strength.
++	 */
++	wait_attach_done_lock();
+ 	rebuild_sched_domains_locked();
+ 	mutex_unlock(&cpuset_mutex);
+ }
 -- 
 2.47.3
 
