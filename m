@@ -1,129 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793890151;
-	b=M2EkOQ4lhK5OZvWrpmYOS/7/nnwkSQn7WuFVOFSk9n5tDLDMDkcXp5nnEq0IygP1geQl
-	 Lrd1fOqIKWQ3iw3Up9bOizCqVK01+BMde8ySv6CVzNmOrMJra89wlObzMbZx1ukE36u0S
-	 czBuMXABdZDB64m5q/k+M8/0PLAGt8IVMalBqhGe6EeaI5mXEmu2xgcK4A3JU0BzvXFPi
-	 aPWcBqNHLjpfDDGoIkG9JjWL2k1XL3gpONRQ/PyEoCDAthl14SO8pdEFkNrO4+2ryNDYp
-	 3LVTTBvQzx9ZPvRavB1p6poPlbbZLHP4M7zstHidIHLrsE6LGLKLwyRZeuleS+Io67g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793890151;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.52
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1793890255;
+	b=E5vBSefg0Ce1LKlGY32C3olNj2Rs+y+8EH2x7upIYnxDHFWiBj4lTCGC6vh5xsE3EeBj
+	 51PVN6sZHDBnb3i7zPE0WC6b2pc48+VW026vc+jPM5HfhU29xczMjva8NKPY194wOzbfu
+	 eJfg8cYT3ASVThHJvVNH+omFPMXUoB83bVBFQXedyny44PYNI8kc7o38nj1C41ijTbAv9
+	 hdk4O0VmvEXPSFL2aGq1//LwIHVboqFGBBjxxIJKEkVuByWX7j8GRpcMKQVWsXCGlGiju
+	 xUpESvTvfes0Se3ch1DuvNUZn18PbSCcLtcT0GSe/IdyYaMuhV7JdcgqnYNtODyOtNg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793890255;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=0oZXaqilvDmJS1hNMgdeAwWlpvrdojNG02VoZz9o0R0=;
-	b=RPyusLn4La15kwi1ah8+ShrGCK1nKn90yfvI6az32KVACfKtJbDMNMjqVT6ZHeWKBaJU
-	 6xVzyjfHEqAvDeWjm86GTOqsGnCoBFXpyWbDfmio4aio19dEnu/WClJ8t8+J+RVy1iOPj
-	 WoYSgYK8SxrE/DVlm8wKPdxyutTe1+ad8m6JBgcqeshLICW82BtITgBCtOQyeNbLDNm19
-	 5gLZKjjeiabwVkt/HN6Btnv1Y/FFvLzj4rc8AQJam0n5poKLmsyKL+8Kfv2BvK+PWClqS
-	 4W2NaHHfOVUmmgkGjoaF7xOHe7i6PV8eOhgC3xKOSgWBYiaDJIRwpbn7ZOgtksHx/1Q==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dkq0QiMr;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=pcORwHkx;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=x6AYBRDQlDAqtDeCOrRnb86KC7Ggop6ssABCp4bzpWk=;
+	b=E5G2J3A/yq9EEfCC5k41bz5AAPxrEo8XhEMUOKEfe9xM/jfmtIA4SEWUr9k4z5Tg0b8I
+	 +rCWfmXYzKJ5HiBviXWP6K12LhnwObZUm/+O+70+6cBtzuxjI6lsUjXl1GL827589oSRa
+	 HD99EIZYak7k4K6GAXsjMl25LbvbGq4LhN0Fy9ZLylhpCY2LJe6z5dP1QmFGn8AdaUi0S
+	 LXPvvdl0IvERO2QV8E0YVs40yUoGQkNYftLrIbljBrCeIkyPZUrOOEAn/mNpj/Y7ZgZel
+	 36LHRZzLqoM4zWAmP2O/UnuXmPmJ2Jdru1e476rN2CEOErWxzFZ4nyf2KvrAfggJoPA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Qrf5XQ3S;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.222.52
+Received: from mail-ua1-f52.google.com (mail-ua1-f52.google.com [209.85.222.52])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 881A9606A32C
-	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 14:49:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 881A9606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75D4A606A33B
+	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 14:50:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 75D4A606A33B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dkq0QiMr;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=pcORwHkx
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793890144;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0oZXaqilvDmJS1hNMgdeAwWlpvrdojNG02VoZz9o0R0=;
-	b=dkq0QiMrECsJKdQe3voh/qleY5HlHBx8Y1/14T65hTY2mJbfv+OFnfQWSpjsIRWz/Y/4pT
-	UPqyS/hoXTF+dX7Bt+N9Lj7jjs3Ar++C4EvB27O5s0kkehaNo4MADSETY1Eotz8rJeulsz
-	efzOBABpXj4ROEd4SCHHsVuQDFdCo3Y=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-376-sKwM-GnUOLCtwmT2_bikPQ-1; Thu, 05 Nov 2026 09:49:03 -0500
-X-MC-Unique: sKwM-GnUOLCtwmT2_bikPQ-1
-X-Mimecast-MFC-AGG-ID: sKwM-GnUOLCtwmT2_bikPQ_1793890142
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4a4654add56so18198555e9.2
-        for <cgroups@vger.kernel.org>; Thu, 05 Nov 2026 06:49:03 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Qrf5XQ3S
+Received: by mail-ua1-f52.google.com with SMTP id a1e0cc1a2514c-998749fe872so1084280241.0
+        for <cgroups@vger.kernel.org>; Thu, 05 Nov 2026 06:50:55 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1793890254; cv=none;
+        d=google.com; s=arc-20260327;
+        b=EQVhSJgwDJwKktgRjLkbiwMm/MGK7TSZsG2I+FwVSxFElr+1YO3Ap/Q6QIxIFOdbvR
+         ViIOElolFJo8d/dZf/SWgCaff3K43iKbEEeNNDwhB6J7ZYEBdV3vqUMV9Q5kHwvVqTR9
+         wah8pZYS0JOB+t5WM5b3lMLy6+4yrdnmfqVuFybEvplczLJjfJPaDdMuApKjtyaSdKPG
+         kH/Ybax+rZ+0ZBrYp1RSBsPU1qUi24pKunqQJxuzQUUuAu4HzdjlZTM17+P4gMmvG3I3
+         zMJHWH/yScQkeLsxFFQu6hErGoavDZ7jEZvzCAUuPcl1lQEzEkC0ZhZmaFXkG/xWLVdM
+         1KZg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=x6AYBRDQlDAqtDeCOrRnb86KC7Ggop6ssABCp4bzpWk=;
+        fh=/rFHwILKdvVaPlY2u7boh+DDk5pT48O11F2gEozoEJA=;
+        b=cwhUlUSA12c28mGcFZyjsJOSnhmuMhOSLIVphbMAyGbJHBYxKS6YytQ0IO/0+pPqvH
+         HjsM0scQjE5ZLegkeuNjpJp5Wl7DEC6nxC3cMdlLW1Nial5zwUo+3sRZBhj3rE9FrJiX
+         iqjSmj5cnDLR/VWpS5Y5s8T7BGbo6EctZKgphm4OCZffHxl/dqy41+AdBRHaWWre8Yti
+         H0By4nx8dMBPK3YRhP6I7F+P17XTp785pxLh6Fj6HzIiVkDJeNUjfEi3l3T8a91jAZYk
+         eI8dTy1qb4NgqCfZxigkEuTcsvEof1FvcE7AYV1Yl5xdZf+oGWxL3eq4FOeK0L04W3cM
+         VC5A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793890142; x=1794494942; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20260707; t=1793890254; x=1794495054; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=0oZXaqilvDmJS1hNMgdeAwWlpvrdojNG02VoZz9o0R0=;
-        b=pcORwHkx8ESY7disZ1BO7voLsR2k6eWKMwao+wjRO9/6DnGPJKl0JPlhiMY7WQusKb
-         6cP5KAqeH71olbmhp86RYTkMfGZAyks5eyjntU8ODRLuHJ4RlH/J1VsCbrMNf4mqME/a
-         D0QK5VIQTr/CSeN23lyN85om9W91nAVOyJPDY6ePxh0nfB1BTu9FEGVv6n265R4Qrr7x
-         0Egh5xeXqjjxsFm3vUoF4Q/+TO+u//625zxy3SGkuN3zWK8SN/PKGdzFcW0rcOSvHx+j
-         ZEhLoNqCVZiG6f15q/iujZZVXwZkMrdgoxH+HjZB9MENSVUWUMgniHG5IPeHCyGhcp5w
-         jLXw==
+        bh=x6AYBRDQlDAqtDeCOrRnb86KC7Ggop6ssABCp4bzpWk=;
+        b=Qrf5XQ3SSTLAgWvV+nnFlsLm1JLWLJ2uInCBOKdNaEFLZlZ+/tzVzEIfIk3hbWb/vD
+         hsUHhBGmPqU303eF71vK5rHMyUQ7GsuMwV6TjWns2/RoNhaU7rwom/xHkz66g+8n32WJ
+         50uTk93nV2xYkb9lu4salBmLqTUfbGMA4mQqsrnLpf39FMQ+b9o/rPaVN8zdxJ7zmsv2
+         F961FedeqnnlKdMl5WnurPwS+SOgPGa1mDpOgkePPcNWAlY2alAELq31DDUeGbddEPHW
+         5KmJkk7LBr/4vcBaZHFUeJgMJDQgO0atmaj5t6QKpxUnX1w7n2K5KG6g4fglHKwZR1xO
+         3DMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793890142; x=1794494942;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1793890254; x=1794495054;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=0oZXaqilvDmJS1hNMgdeAwWlpvrdojNG02VoZz9o0R0=;
-        b=mS6xaeumJaC6F9fG6gwxsluJHJdwG4A3d26KKP1e09VreX1DAsJwIQyJ51XMe11/Ud
-         Mi6+zE2t/4ijryVq5Vcl8QpvIF0dt1W29E6XEgaFjTCr0HUTHVmVhyn/IMc2RutbIlXn
-         7IrZDhsfo/Bwo/uvFXab1zOHVraCtZq7qjCRldI1TepcgZsJwdOfFh3rzO4AgUsDFSD/
-         dbWTn8jJ6JI8uOpGbkT6pppqmIPgEb2Ip9Q0ah3uGZ3J7iw5pIeXcgRnbNgcqJZuibtR
-         UPMp73JlWF8IkxpLQs49TAqxDf8j9DYrSMFJ+8gjJe1ZVgQm9YJYK9kOYWvWNYqHN+hk
-         wbgg==
-X-Forwarded-Encrypted: i=1; AKwUvBwcZICmGUfLAQQyMgtYEPQ2haKZ4qELlHGi05syBfxUOKp9anEChB/XMF8AeNAxH3ppfyMFUlFz@vger.kernel.org
-X-Gm-Message-State: APuU4Z/5T0xjRv9j+hTC5Sj3MpkaU3vmYd4UcsNNkKMBN9/XyvL3iu6X
-	am7XYLMIPDWEI6tAVGjtU6STgkVATi7JkXxVZMhNdswP2Q0Fou9PQGWcan76V6QgvXqE5KalqkV
-	L/p8YzCdXqxAzo1MrIKR+tFAiTy7LsOmJONz66PHKuY1kFxr3lXY4r4tFVMw=
-X-Gm-Gg: AYBFou1nlvZup/CmfXG6qMGxA+IWdxP0CrWlJIq+Wb0pHJHOZIu1QkkD4ZSxgiTH7Uh
-	KfLsfw9i0AddmStcALpBnM0F1D5IDLLWHAKgz2/TLsJZBFV4fa/8Yhq+EG6ruVFXNyHdNCEcWSL
-	LT8b76mpsOijItAfTG2vC0/6lToMNkzCZImy40RC0Q1Ml6bkILuXiuPnAKFoR035HP2cd3JBhg1
-	U/JpdGlW2PtVtJK6oiVpYsfyOCeDJkD7g8CUvRQSFKh2tH/fCAsdr5bJiBBmF0wYUaioNAQVNkc
-	Bo1liLjhgYUnECteok9fKUhML3S3JfFsBugZUhW3pZYFTqMjL5resSvDTJ1bMRd1BUfq96Wxuse
-	DctpucwLzs6JuWb8VRaWDGW+B2CQ7oulcXCUrgxLdMSjpiGPpYq+WNGU8m7oXnVft2yxiUyI9hT
-	j97w==
-X-Received: by 2002:a05:600c:1f93:b0:49f:ce78:356d with SMTP id 5b1f17b1804b1-4ac180f2fd3mr448854095e9.30.1793890141844;
-        Thu, 05 Nov 2026 06:49:01 -0800 (PST)
-X-Received: by 2002:a05:600c:1f93:b0:49f:ce78:356d with SMTP id 5b1f17b1804b1-4ac180f2fd3mr448853555e9.30.1793890141421;
-        Thu, 05 Nov 2026 06:49:01 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b56f5e65b0sm79732955e9.11.2026.11.05.06.48.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Nov 2026 06:49:00 -0800 (PST)
-Date: Thu, 5 Nov 2026 15:48:57 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	linux-kernel@vger.kernel.org,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Luca Abeni <luca.abeni@santannapisa.it>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	Waiman Long <longman@redhat.com>,
-	Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Clark Williams <clrkwllms@kernel.org>, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH v2 06/21] sched/deadline: Do not lose a throttled task
- switched out and back
-Message-ID: <auyXWR01Lqb_yam3@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261104211207.1392343-1-mathieu.desnoyers@efficios.com>
- <20261104211207.1392343-7-mathieu.desnoyers@efficios.com>
+        bh=x6AYBRDQlDAqtDeCOrRnb86KC7Ggop6ssABCp4bzpWk=;
+        b=Ro/xMLYdsi8z+95aMJ7SMq0JBKY+qHkCbMb32B+7+wjzMMdryT7cbuk1Vj/58BGbYb
+         3KOLr4mra1nmt/J0x6L3XMY0+bUgXgwhFF4HbmGDvDPfPviv/+sQN979glLiVFaJ24Bc
+         VLf2HdFn0eEvgOKkGWITStUmKbVTBboXTJkOBSBRPRtW1xrznjF9nTHS/y+P98VaX6tz
+         TkspVFJcg3kKtYcZWV1c+UnnE/qsdUhA93v7QM4mpwihRxiA2xCn2TlOoH3HHh+JSdrx
+         qg/jU79atzkNi/wUvsjJpyK7XTm6wZq53yd/h0BeOGzqpAvhux0X1HIWQ8FHnwLmHXpY
+         TjNg==
+X-Forwarded-Encrypted: i=1; AKwUvBx+C6dM7iYMFDRDaux+33ERU4qfbotTLjEEhPNDgj1Y3QaFCWjM1nyB3cGGRSPqo38RuA7yAyg8@vger.kernel.org
+X-Gm-Message-State: APuU4Z9kAf6tocHQ1FqqVYpx+Zl2/pE50bDOTOlxBr3LvEw3+SUIz7xO
+	aNwO8VL7FhyTz8uYrYNXs87ExwD247dne6BOzQ4gY+n5YpJW4Wl+cwfKYLZI5TVm5xHPLLgcJGs
+	xPi+qZ4p+IRD4NgNV2fn8IKAyZejTDcs=
+X-Gm-Gg: AYBFou3mVFm5windLtx56zaRs6L+ufG9hGHyTgKrabwUOP7Q7G4XjRL1l8qIIB/ZBB7
+	VThk1qwZHxobltprBLNzndYpJxmDJ4Mb6M2cYMq5Hh8sYOjlrBwR9b6yLOdj1dGDWNC5Z+edJgg
+	OWIH8zuzYMTdEFRK6ET3V9CiOszwAMICkhude8WAZSHAEEd7nkwbp/adM2X28RPFNtrGwr/3M8O
+	lZYkAHMuKg7SLwBjsF6grUU26S372ltb8gBsIaQy9cDfCG8diwDP+dEUFOaVa0gyjTFh5n5qkhT
+	Rmj7LoDQmuYBmogSiwF34r5uD1laEZQHBNqSnfge6yEH2AJApH7yoPF9wzATjkLBZAgdCdMaPX1
+	jWLzzlt/f3RQQpin1nzyFpQixUb57z32D9rbmvaSPq+r9Sy15gLGHRIL0Iyppx8x0Ums/q3MvBW
+	roOvQZCRq9
+X-Received: by 2002:a05:6102:5243:b0:7cc:115:ddf4 with SMTP id
+ ada2fe7eead31-7d072cafbdamr9042312137.25.1793890254113; Thu, 05 Nov 2026
+ 06:50:54 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -133,101 +105,78 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261104211207.1392343-7-mathieu.desnoyers@efficios.com>
+References: <20261104233029.3282438-1-joshua.hahnjy@gmail.com> <auwfZj6QTwQqFIZb@parvat>
+In-Reply-To: <auwfZj6QTwQqFIZb@parvat>
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+Date: Thu, 5 Nov 2026 09:50:43 -0500
+X-Gm-Features: AclHuK8f94VBTeNgSM335yz-5hAFVlY2uvlhDStBMta91PSr4DplroD4jKbuQCM
+Message-ID: <CAN+CAwPNsSWyqbKRGEL_rtrz9CWTdFvhKFvZpbUNoJJONXxuZA@mail.gmail.com>
+Subject: Re: [PATCH v8 0/7] mm/page_counter: move stock from mem_cgroup to page_counter
+To: Balbir Singh <balbirs@nvidia.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Michal Hocko <mhocko@kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, Kuniyuki Iwashima <kuniyu@google.com>, 
+	Harry Yoo <harry@kernel.org>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Maarten Lankhorst <dev@lankhorst.se>, Maxime Ripard <mripard@kernel.org>, 
+	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>, Oscar Salvador <osalvador@suse.de>, 
+	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	kernel-team@meta.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On Thu, Nov 5, 2026 at 1:17=E2=80=AFAM Balbir Singh <balbirs@nvidia.com> wr=
+ote:
+>
+> On Wed, Nov 04, 2026 at 03:30:21PM -0800, Joshua Hahn wrote:
+> > INTRODUCTION
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > Memcg keeps a per-CPU stock of precharged pages so that small and
+> > frequent allocations do not walk the page_counter hierarchy every time.
+> > Today, the stock implementation lives in memcontrol code, even though
+> > the operation it caches is a page_counter charge. This makes it
+> > difficult to add new page_counters to a memcg and preserve the fast pat=
+h
+> > behavior.
+> >
+> > This series moves the stock into the page_counter layer.
+> > page_counter_try_charge() consumes the stock, charges a batch to the
+> > hierarchy on a miss, and refills the stock with the surplus. Memcg no
+> > longer manages the stock in try_charge_memcg.
+> >
+> > So the stock keeps the existing layout, which is still a per-CPU bank
+> > of 7 slots, each holding a count of precharged pages that it hands out.
+> > It maintains exclusion using local locks on each CPU, and for remote
+> > drains we schedule on the memcg workqueue.
+> >
+> > This change gives us the following benefits:
+> > - Separate charge caching (page_counter) from charge policy (memcg).
+> > - Makes it simple to keep stock out of interior cgroups on cgroup v2.
+> > - Prepares for future work for stock improvement, which can now be
+> >   isolated from memcg changes.
 
-On 04/11/26 16:11, Mathieu Desnoyers wrote:
-> A SCHED_DEADLINE task that is throttled, switched to another policy and
-> switched back before its 0-lag time can be left throttled with nothing
-> to replenish it: runnable, queued as far as the core is concerned, but
-> on no dl_rq and with no timer pending. It never runs again, and a fatal
-> signal cannot make it run; only another switch out of SCHED_DEADLINE
-> requeues it.
-> 
->  1. the task exhausts its runtime: dl_throttled is set, and the
->     replenishment timer armed for the start of its next period;
->  2. sched_setscheduler() switches it to SCHED_OTHER: switched_from_dl()
->     calls task_non_contending(), which arms the inactive timer for the
->     0-lag time; the parameters are kept until then, so that leaving and
->     reentering SCHED_DEADLINE gains no bandwidth;
->  3. the replenishment timer fires: dl_task_timer() finds a task that is
->     not a deadline task and returns, dl_throttled still set;
->  4. sched_setattr() switches it back before the 0-lag time:
->     switched_to_dl() cancels the inactive timer, and enqueue_dl_entity()
->     leaves a throttled task to its replenishment timer, which has fired
->     already.
-> 
-> The window between the deadline and the 0-lag time is the overrun
-> scaled by period/runtime: about 100us for an overrun of 20us at 20%
-> bandwidth. The replenishment timer cleared the parameters, dl_throttled
-> included, of a task it found out of SCHED_DEADLINE until
-> commit 209a0cbda7a0 ("sched/deadline: Improve the tracking of active
-> utilization") moved that reset to the inactive timer, at the 0-lag
-> time.
-> 
-> Give the task the replenishment the timer owes it, as the timer already
-> does for one that is throttled and not queued: the overrun comes off the
-> periods that follow, the deadline moves past it, and dl_throttled and
-> dl_yielded are cleared. A return before the 0-lag time then finds an
-> entity it can run on, and a return after it finds the parameters reset
-> by the inactive timer, as before.
-> 
-> Clearing dl_throttled alone would leave the overrun in the runtime, for
-> the new period of the enqueue to forgive, the deadline behind, for
-> dl_check_constrained_dl() to throttle the task on again, and a yield of
-> that period set, for update_curr_dl_se() to throttle it at once. The
-> first version of this patch did, and the Sashiko AI review of the first
-> posting of this series pointed the three out.
-> 
-> The selftest added two patches later fails its throttled_round_trip
-> case 8 times out of 8, on v7.3 as on v7.4-rc1 with the four deadline
-> fixes of sched/urgent, and passes it 8 times out of 8 with this change.
-> It was found by a cgroup selftest under development,
-> test_concurrency_deadline, which hung about once in 1350 runs.
-> 
-> Fixes: 209a0cbda7a0 ("sched/deadline: Improve the tracking of active utilization")
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> ---
->  kernel/sched/deadline.c | 17 +++++++++++++++--
->  1 file changed, 15 insertions(+), 2 deletions(-)
-> 
-> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-> index 30a52e42c26d..b646063a7b0d 100644
-> --- a/kernel/sched/deadline.c
-> +++ b/kernel/sched/deadline.c
-> @@ -1232,10 +1232,23 @@ static enum hrtimer_restart dl_task_timer(struct hrtimer *timer)
->  
->  	/*
->  	 * The task might have changed its scheduling policy to something
-> -	 * different than SCHED_DEADLINE (through switched_from_dl()).
-> +	 * different than SCHED_DEADLINE (through switched_from_dl()). It
-> +	 * keeps its parameters until its 0-lag time and may come back to
-> +	 * SCHED_DEADLINE before then, switched_to_dl() cancelling the
-> +	 * inactive timer: give it the replenishment this timer owes it, as
-> +	 * the !queued case below does, and leave the enqueue to its return.
-> +	 * A throttle left behind would never be lifted; an overrun left in
-> +	 * its runtime would be forgiven by the new period its enqueue
-> +	 * starts; and a yield left set would throttle it again at once.
->  	 */
-> -	if (!dl_task(p))
-> +	if (!dl_task(p)) {
-> +		if (dl_se->dl_throttled && !is_dl_boosted(dl_se)) {
-> +			sched_clock_tick();
-> +			update_rq_clock(rq);
-> +			replenish_dl_entity(dl_se);
-> +		}
->  		goto unlock;
-> +	}
+[...snip...]
 
-This should fix the subject issue. Sashiko points out a follow-up
-re-entry case that looks problematic (and I think I'm now seeing more),
-but that should all only concern limited bandwidth overruns. This change
-fix an actual hang, so we might want to take it and work on the
-remaining issues separately.
+> Is the main motivation ease of addition of page_counters to a memcg?
+> What would those counters be, why not add them here?
 
-Thanks,
-Juri
+Hi Balbir,
 
+Thank you for your interest in the series! So yes, that is the main
+motivation but this series offers standalone benefits as well (which
+are right above).
+
+The new page_counters that I want to add track per-tier per-memcg
+residence. Those are used for enforcement (and not necessarily for
+visibility), so I think they wouldn't make too much sense to add on
+their own now, without the actual enforcement parts.
+
+What do you think? I've also linked my tiered memcg series [1] if you
+wanted additional context.
+
+Thank you, I hope you have a great day!
+Joshua
+
+[1] https://lore.kernel.org/all/20260807202059.2620949-1-joshua.hahnjy@gmai=
+l.com/
