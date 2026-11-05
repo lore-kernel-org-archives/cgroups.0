@@ -1,60 +1,56 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793841508;
-	b=p2bJXTFokOgCfzDW6xyT3cbGtvjqFkzSnxNUdy5wLxOFUtdlJoW9ydVIkjVgAfXpJYgD
-	 4ZspYA3fbjK9wmrUqaowWKufLB+7sGwOkfiI+vNFvXt2FRHK8sfWvNEYVOfj4KPMwG8jX
-	 vBtgSDZfl0IZv9e0qCI8cr9iaRrqJSUbsFzBG5p/FEnR0DZQV05RPEAoE1K+0zvGGa/NA
-	 6IQ4g3i5F2RHE6gef9OMC3U1ZLRv6d8nUXbx1G2M2RAdrg49EyF4IZcKQgHyJqzrcPYHQ
-	 +5B0kNoq1Q1ldPPOyCCxDYNz1WvAjWAkEaowEjnyPInqkRqyT/cjyf0xEOZVYytGTEg==
+	t=1793841510;
+	b=t3uezNlAqyNUhpgb1xGPyqppMpyyL1fCzUqpedl35Zj7dqEC0hvO0PLXOz9B/7I3NaiC
+	 s0fP+1xn0dvB/9jR1f5T4yJnm7MEtvI7BdRDxQJOYLQGpJCHa8rwxyLgND76tWwwS77+y
+	 j9V0SCE3ceYJn1fChNPGeojYlvs8a5NT8uUu7S4WzvWvN/l4hGC+lN/FpDT5qEU8r8Xe7
+	 Ma8z/warOdP3BW6JtD8Mtq5wcq+NAGlvntf7kWERAsOe026NdIWyKCvcvmxIpqFN2hjLs
+	 wckIpzJXsC089rw3DtPDJmIy22jsIglB7cbXkfl8rILmqUsZ1QvDhUpIcCwSKYVH7tA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793841508;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793841510;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=mQmK1VyNyRInh3bcu1F6pkwNvgg2G6ZMbyKt5yTapqk=;
-	b=tWUgVdAUtHLAudXp9TbJ5Ahz4quDDY8gs2rdtvnIX4zIhqKTl9Tnhg0bwvxqbGVolFAE
-	 qUx5Bblp4tq7nsixfZfRgxLNPxTg3GN9it0xSy11oBeD0Ku+m1IRLcEuVauUSmeGp/gt6
-	 R0TB8UoYIU+nv4BHjhcofM7d79ta35XexywJKSnjcJwjkYlsYJ+kvNpqypFe8M7QZGzdj
-	 e+WffjsVwNIRTyzR0nyGGjvIJYbzCC77QHcoL+4UQI/Ep6vmmCGhyaYXIaxZQgVdX39OH
-	 1QMBvmTESj50Zr8WFcUR/LD/hv3faEVup1fsBYLFJOv5m3y123t3zTy7jP9CZ5dU5wQ==
+	bh=6uEnGaOIenA5eydcCh3cJrgCw/m8lMhIgSChXVe85sM=;
+	b=xm0Dy1Wz+Kf7D9K8Ii5I/jiaNn34YLJOAcPEXqFzMJTpvfz9wDD+gqM9JlOHVxDH+UZd
+	 EqhEOw4e8M1blg1FfD2f8EaGhLQNsbw0CV/NAOLs1NuUd5DA1imIx9VjYQDUvATWOZ/oc
+	 G71J5SfBAbdRXpaa2/hBSbUEqFyWVU8CgyJVCZqw5RfuqOQgMyJIvA3TKz0RSRoujWE7G
+	 7rq6ZKwI4znNnB1HtSXcuvxTTRuskcVVBKKGgVYOzlgIlL4FbStduy6rBXRKuf1jWRHis
+	 mVMB41Me9tNgFDhpKOQvCcdFpoVEo7a1usTIwC4koml9wYfGFYgTLUd6r5xUz9BXKJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="UUUFD0/R";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QNytI8or;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1DFF606D82B;
-	Thu,  5 Nov 2026 01:18:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9E2B606A32F;
+	Thu,  5 Nov 2026 01:18:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UUUFD0/R
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1531E1F00A20;
-	Thu,  5 Nov 2026 01:18:25 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QNytI8or
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D36A1F00A21;
+	Thu,  5 Nov 2026 01:18:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793841507;
-	bh=mQmK1VyNyRInh3bcu1F6pkwNvgg2G6ZMbyKt5yTapqk=;
+	s=k20260515; t=1793841509;
+	bh=6uEnGaOIenA5eydcCh3cJrgCw/m8lMhIgSChXVe85sM=;
 	h=From:To:Cc:Subject:Date;
-	b=UUUFD0/RgyXitm6KMRBEe87kCtHttmgDX46T/atU2r8acWM3dB/s5NllRUEMpNEiK
-	 MU6WSNC2Acb8ZjI7ca8uVCP7sKxODSHEukTJoVUU5H5HhkiNUEmceiK9xQf9i/lG3+
-	 L3G4RTgZjbY2tRV3wXkdQdkjyzXMhJXESbPL3hTac1K7cWvu6hbHwuTUS0R2gygPLE
-	 2wQ/PdHfOtCkuOgpm82s9gSuhZzkEqUkA62y3uHLmGIP9JfpEvCRUPcY8Lpghhv22/
-	 htt2GoRebJ9LMjxCGPTc1Ti9LJRFq1ZMviUFBrLHIEEGUPpgH5CR81IGoNiOtRkNAY
-	 Hz9QsmJIYNVsg==
+	b=QNytI8orpl2T6IdtqZ7UwDe2tMu/Md9OiMt0rM0MQFfG5cmmY3kMO8PhrDV3OW0Mp
+	 SAbZYNbFbETl9czaiRlHp0tREwZevuCKsh5eYI8hQv0FsoGcSSSMsDTYO27QjWW2j7
+	 +hQllQmgcx3mhAZrYf4c1eZg4rhuQyugaR3UdJ22FhkcqnX2huYLlC7lgIXUuwojRa
+	 eQ4hjQaropjE9u/XfEbwDWXHC3DxS59KxQgB1/YhlYiZxSDIh5xp1xs4dum6Bs5h2l
+	 ETIZX1VWIgF3MQUzCGjlz+yqGVJzZaDgwgBgEw3ZvzVJOgPp4coiNlmj4OcOuuB6Gn
+	 RYcpBSaxMdaNQ==
 From: Sasha Levin <sashal@kernel.org>
 To: Tejun Heo <tj@kernel.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
 	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	Shuah Khan <shuah@kernel.org>,
+	David Vernet <void@manifault.com>,
 	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH] selftests: cgroup: fall back to an unlinked file without O_TMPFILE
-Date: Wed,  4 Nov 2026 20:18:24 -0500
-Message-ID: <20261105011824.1143947-1-sashal@kernel.org>
+Subject: [PATCH] selftests: cgroup: skip the cpu.max tests without CFS bandwidth control
+Date: Wed,  4 Nov 2026 20:18:27 -0500
+Message-ID: <20261105011827.1143972-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -67,50 +63,63 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-get_temp_fd() creates its page cache file with O_TMPFILE in the current
-directory. On filesystems without O_TMPFILE support, such as NFS, the
-open fails with EOPNOTSUPP, and with it every test that needs page cache:
-test_memcg_current_peak, test_memcg_min, test_memcg_low, test_memcg_high,
-test_memcg_max and test_memcg_reclaim. Boards that boot with an NFS root
-fail all six.
+cpu.max only exists when the kernel is built with CONFIG_CFS_BANDWIDTH,
+which arm64's defconfig does not enable. test_cpucg_max and
+test_cpucg_max_nested then fail to write it and report a failure.
 
-Create a regular file with mkstemp() and unlink it in that case.
+Skip both tests when cpu.max does not exist, and add CONFIG_CFS_BANDWIDTH
+to the cgroup selftests' config.
 
-Fixes: 84092dbcf901 ("selftests: cgroup: add memory controller self-tests")
+Fixes: 889ab8113ef1 ("cgroup: Add test_cpucg_max() testcase")
+Fixes: a79906570f96 ("cgroup: Add test_cpucg_max_nested() testcase")
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-Found with KernelCI's NVIDIA lab, whose boards boot from NFS. Tested on a
-144-CPU Grace with KernelCI's arm64 build of 05441d697f7f9: run from an
-NFSv3 mount, all six tests fail without this patch. With it, they behave
-as they do from ext4 on that machine: the other four pass, while
-test_memcg_min fails and test_memcg_low sometimes fails there too.
+Tested on a 144-CPU Grace with KernelCI's arm64 defconfig build of
+05441d697f7f9, which has CONFIG_CFS_BANDWIDTH unset: both tests now skip.
 
- tools/testing/selftests/cgroup/test_memcontrol.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ tools/testing/selftests/cgroup/config     |  1 +
+ tools/testing/selftests/cgroup/test_cpu.c | 10 ++++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index bb673012dcf08..7dc9c26628675 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -33,7 +33,17 @@ static int page_size;
+diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
+index 39f979690dd3b..aaf5872c71410 100644
+--- a/tools/testing/selftests/cgroup/config
++++ b/tools/testing/selftests/cgroup/config
+@@ -1,3 +1,4 @@
++CONFIG_CFS_BANDWIDTH=y
+ CONFIG_CGROUPS=y
+ CONFIG_CGROUP_CPUACCT=y
+ CONFIG_CGROUP_FREEZER=y
+diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
+index 3456e3e988c68..7119aa1db496c 100644
+--- a/tools/testing/selftests/cgroup/test_cpu.c
++++ b/tools/testing/selftests/cgroup/test_cpu.c
+@@ -694,8 +694,11 @@ static int test_cpucg_max(const char *root)
+ 	if (cg_create(cpucg))
+ 		goto cleanup;
  
- int get_temp_fd(void)
- {
--	return open(".", O_TMPFILE | O_RDWR | O_EXCL, 0600);
-+	char name[] = "./cgroup_test_XXXXXX";
-+	int fd;
-+
-+	fd = open(".", O_TMPFILE | O_RDWR | O_EXCL, 0600);
-+	if (fd >= 0 || errno != EOPNOTSUPP)
-+		return fd;
-+
-+	fd = mkstemp(name);
-+	if (fd >= 0)
-+		unlink(name);
-+	return fd;
- }
+-	if (cg_write(cpucg, "cpu.max", quota_buf))
++	if (cg_write(cpucg, "cpu.max", quota_buf)) {
++		if (errno == ENOENT)
++			ret = KSFT_SKIP;
+ 		goto cleanup;
++	}
  
- int alloc_pagecache(int fd, size_t size)
+ 	struct cpu_hog_func_param param = {
+ 		.nprocs = 1,
+@@ -768,8 +771,11 @@ static int test_cpucg_max_nested(const char *root)
+ 	if (cg_create(child))
+ 		goto cleanup;
+ 
+-	if (cg_write(parent, "cpu.max", quota_buf))
++	if (cg_write(parent, "cpu.max", quota_buf)) {
++		if (errno == ENOENT)
++			ret = KSFT_SKIP;
+ 		goto cleanup;
++	}
+ 
+ 	struct cpu_hog_func_param param = {
+ 		.nprocs = 1,
 -- 
 2.53.0
 
