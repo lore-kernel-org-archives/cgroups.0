@@ -1,111 +1,129 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.28
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793859443;
-	b=Oj/1I0hQo8a/f2wwaXALCsDwy88iNxwXjGJD4LYb6f83oY1H8m5Msc8VMlvp4okQBVJn
-	 9tejTg1NDHAOmEoqEDwxQg+2lDheLQ7EQw80GYgANBpQVvRJZk8bU2L+1Kn1yYXbQARlF
-	 kSlz9LrCbtU3UZpme17ScnPUjv8P5yurvWYamZ+tiVjFtzWKAToJH2UjQERH0+PksuHAj
-	 hmC74k9EcxWM/Wf2wzPzgH/I6t1fOSMGj7kILOgMlECKtlB6Oyc/ho1/PVe7NLKAAzCcs
-	 2t+a9DVMLPORuGEEZDfclzkemt+MbhzO+IRudh9MViFJbfl8jRRc0HXxsemaljY0bEQ==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793859443;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:Content-Type:Content-Disposition:
-	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:
-	 X-MS-Exchange-AntiSpam-MessageData-1:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=t+JJRMydHxdPqDIQ0OjJ6/jxtXOmSjWuwdxpd5R6SPQ=;
-	b=1Kp995wiN6hfMRbZb6pQ3XJXn43gdjF0zDwF54ibuFxZSr7IwikTEOM1HPovTep4aDWE
-	 IgLAwg3u8WqBzhXTlQlE32buzqnN5asfp9fMFERkiAZQ7mxiEoR/uSczbrdPFUL7jJq2s
-	 86omFaiueTOMvu3XVnKcdpE1MGaArTiBEnFczEwFTrtzcsNpzDcNqrkVP+ZejBRGVIcMy
-	 hsVn+f913q42Yb7OhJmKHT7CxdBLvkBHRB6YGLE7PVuZCe7yIjW8zaHGnSAhFiCI4UTYb
-	 sF3ckSumMVD5w/n6pB1hs8W1i9dS2cvOOpflKCWNzQD5tPz0LrqvEDblTqgtfn43t4w==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=nvidia.com;
-	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=pO1h3vNo;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.28
-Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012028.outbound.protection.outlook.com [52.101.48.28])
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1793862889;
+	b=xZ6+MAeTWZ1PZk9eUQxhZB5M1yNb5OM1xzI0+5J8YIybR0WQzgkpQYugBPKhNq6H2mdb
+	 gKyGbg+bNZ8W2sjkHE90zqka8ZjysOFsE3HQqrt169oJhY06teB9M4xu6Z8FFL/zIYbvV
+	 wjDt3h0rKt/TCVnMLT7E3gLEaMJjDmLF/5w3VjSCKf32VjdKvmB8eGhLB2eldD/2QAR2A
+	 ZPjXzoERTDO6BCyZlXYxNwY9LM58WPCkguA5luvQaKV2RXFIvQqzscOorf0KjaqUslT/8
+	 MdypqBs88bgGich+SViWeZZ1xoS3eHj3Xz+2TpYlDGTeRKrUqm3fge5JJI3W8c5ie2Q==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793862889;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=cZkitsX+DewrI5AYsqUlHktt4nU0q8Qh/L8/eegqT0M=;
+	b=tcrfz2vgy4HVQgB7S+tz4oqDyInzuimPvD/1fSOHMIv9xsmPasGTe0oICPeEFQlXh8F3
+	 pdKIz8Ctkvr/6GTUqNf0QdX1MK8ehJg525z7PKh3dZmQFQcrCwCzZdLHd4U5dOjIXUH8c
+	 KUH83CQ75A4cEMmpuxq5zpqiWVR5o53zW7zphR/n0f+btQSkAenPxSPDdbCCLRPHpYGnA
+	 h6pxgDoU9Xvh4snAyf+rHXnB6UFjXfKrvBUQz/CF+ONO6lEMlHibJwPKth7nRmlDpHzZn
+	 nDgsBZLRJ0U7tqqU4Hb2ZV/XjsjUV9nGsomc7D7HEhKgdSymvq/PymCl/I1z751LrRg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=VAAtYU2R;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=XumuW6oi;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E291B606A31B;
-	Thu,  5 Nov 2026 06:17:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E291B606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62BAC606A329
+	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 07:14:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 62BAC606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=pO1h3vNo
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=iRppKhIZDe96P/qOjfMpRCR9WTXK3qttEtBy92qtE7vVDEZ1vvAOPgZSlFa32WpUz3PMdhervXupuakr7a9gPgw6Rt2ffqTwCd+neiKnQOxQBw7W+lOZZb0wV/1LIZMGxX2fl9qCt61o+mj718hj6+Ws1yDG+f1bI/7uZULcDzXKi1RDh4+X5joJe4a72+1OifvwFFAMsN7N2TucW+kMdSpSuVxjuBZRvVupJvkYDBYCvWAI4g67ktotgpRB5qYtwoVhHHt41lqb+ZXkDyzPwCJlQr+oPtogegzu+zgZl+WLIIAXybEKO9IbCw8p8PQbPsJEkj9tRudOEA14wr+pzw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=t+JJRMydHxdPqDIQ0OjJ6/jxtXOmSjWuwdxpd5R6SPQ=;
- b=ShiIk0paVkPPNvFeO2rqCf0Uqn/pD65kGrSTso467lqHjf1qQk0fo6HU/0PuZZu6BO3KIg9bqW5LtU8U7kd+wldNk3+bcD8oVNpL67gVNOVX56+7uHSVrNcA16GgGxNM4lPgwiTHHSltTIo0MMSq44dtafPGllwAHialb3pPHmwyE1Jsu2/P/HBMb90EoPEiqy5i682d+LDWzGknCiBBdhhRTMVpWzywJu5qQthsDAfqCiSfOu1/JfJNR/YlBaIeYzrnz30OltkBNJqNOsqPT4QO1u3b9E/UvnNuLJut3P+d8Es7t9tzHWlkgj3s4UvPWehMgAfG6DkZX1h5sU322Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=t+JJRMydHxdPqDIQ0OjJ6/jxtXOmSjWuwdxpd5R6SPQ=;
- b=pO1h3vNoym/mIoV89cxzcRtmBHFmifay3A86K1t/WwKSxO5Va5yxqKAdKFeuciX952ZSaTodtWGyJldZzc+Yyu5ukoBRD0EirAhVO9gL2zfgo5PL8tfyVDEJGi4Fml6A33CignCKnYhLPZOkzvZ5bwUyDnmZix0ZplkelfaluT2eK29FU6ykOUnlpx3L79Vf7JrxWfV0Bp/4v1cMuKi+Tkro1ZzPa62mQj2KeA8oR8Vvn8nFnV9RsQjbjfKPKGDllKSa+4vM6ajv6rSPY2jDq38MsMcEjy1lzLwRpeW3+YYmrchavbJiKitc1CALX2eD7U/c59o2tD4XEF7868xEKA==
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from CH3PR12MB9730.namprd12.prod.outlook.com (2603:10b6:610:253::9)
- by DM4PR12MB6496.namprd12.prod.outlook.com (2603:10b6:8:bd::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Thu, 5 Nov
- 2026 06:17:17 +0000
-Received: from CH3PR12MB9730.namprd12.prod.outlook.com
- ([fe80::843d:c1f0:b2ed:4128]) by CH3PR12MB9730.namprd12.prod.outlook.com
- ([fe80::843d:c1f0:b2ed:4128%4]) with mapi id 15.21.0592.009; Thu, 5 Nov 2026
- 06:17:17 +0000
-Date: Thu, 5 Nov 2026 17:17:10 +1100
-From: Balbir Singh <balbirs@nvidia.com>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Michal Hocko <mhocko@kernel.org>,
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=VAAtYU2R;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=XumuW6oi
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1793862887;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=cZkitsX+DewrI5AYsqUlHktt4nU0q8Qh/L8/eegqT0M=;
+	b=VAAtYU2RgYH6pQzcks5y24LAZUYSV56hDWarr8l094ODjAnp8V1cuOURn6ywczROCOympa
+	WveQ1JOJ8guwZ7ZDZMWMN0FKJCg4DOZ5Os5d85+LeIDPq9/IND3IAx3owZjauqdLiyj1m1
+	bGpdYFf8bCLQ10xsqShdxjoYOqmGyMw=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-68-Knz4HvhDOe-QFIpjuhpIpg-1; Thu, 05 Nov 2026 02:14:46 -0500
+X-MC-Unique: Knz4HvhDOe-QFIpjuhpIpg-1
+X-Mimecast-MFC-AGG-ID: Knz4HvhDOe-QFIpjuhpIpg_1793862885
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4994d67d0e3so10311335e9.2
+        for <cgroups@vger.kernel.org>; Wed, 04 Nov 2026 23:14:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1793862885; x=1794467685; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=cZkitsX+DewrI5AYsqUlHktt4nU0q8Qh/L8/eegqT0M=;
+        b=XumuW6oiQTXigEVxC3UHVAwrKCYL1EEn7E32m48Ko4QP2cFWCAPjnLrKEFWy1rwBuB
+         ilv43E/3WOJglVkTMZ8l9v9liW8tY3OlgCmZ29DVHm03/IHV1oIW8hkl1b8HvgOpvWXh
+         KFaHEgQS+si5j4Uy596RWbLGsBamCmT8NpgDPcpow6JCsAqObeoeni1PM6AaOvJ/xc+D
+         kTVcKRqvjzgn0dK1GmLzCBxvkbB6/35y7Cd0SmiSHSVaIIv72nnu/acXSa8NrpciVV2E
+         6Rr/CtKL5wxX06v/SeZxJ+Wsmb79j55O3RF9Lm6iJ56+6kDGPokO95FXaR2OvXPGglU9
+         OBFw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793862885; x=1794467685;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=cZkitsX+DewrI5AYsqUlHktt4nU0q8Qh/L8/eegqT0M=;
+        b=f/mH4qVxJwuUwbIY8JRzjiCDQZE21kZdo7T3mG2o0T2SNVax/kT8n50Kxyv7bLT8nM
+         o0lqYMiUaewEGWoJfGIx6mPpDQFGGHuBUi85WR0CMb9YhyVV/V3t6Hctf7HZRSrAMPZs
+         hOUaMfxrk1x52nS0Fnx7Q/hatDoVg5/X/ILvb6kfBk+iA0bA98t8PD5A9C0sto4DQlN4
+         PD4T1OQ1v2y7AwY6uHrAGvtTkG08XgHFBk80pmGjLUKfyNTQs6wT9UKrMWiTmooFRYms
+         pz+xlyZvoo/S86tNz98Koot8Z2seD6QSEy9E5ekhmoon8vD/gU/YmlaOMaNL8pCgVacK
+         ACWA==
+X-Forwarded-Encrypted: i=1; AKwUvBxwUotEOCLLbwaA5Sx+QxJoDiDQO6aF6I0kRgGn3MiWeAVYBNBZFzStwWbi8W5cWgR5TXL59Afo@vger.kernel.org
+X-Gm-Message-State: APuU4Z+pK6fiElme+Y15F8iQDD3fwsDb8Asj7o4Hy6beWLmy5DoP7J+L
+	KwpRubGcjlki/crangIFf1Vt3/PmRtYRMKDH9cH1PhW5LW0ukl998z8f0DJtGGCdL3bmIpX9hSw
+	kLkKwfW+dURdm4NHmZrLeZIS+FlsMNC22HzIVX2PA+b06KZcubOwMryv8GQ0=
+X-Gm-Gg: AYBFou0HXcIZevedtP3B2xFc27WZdOL5NuAP5JQdEjyjCZumUHDvR5EH2Lcg3m3Wxi4
+	SMsNlG5yByzzV802kPEHMJ3WcNRrRi1JXpePlLAYFE595zqhB02DZ5t6a8PMP52mj21Drd+gOQY
+	dCz9f65+AtgShvCAJmZQ4IFoGCEkj5DMrwY7cryFLhuHg8fQs0oaTnBfaqKiaaWtIcAXHzEvDHz
+	S7XArVIKNo1bB8TQ79fBPX8mTPSW+oXwv15exIzBK19lEBXk14PqmnHIlXwZ2/pLpenwj2zna3m
+	BkzKm5jmNNiW6rT8sjQ6l83zjgg/TlJhvrT2ce6W1RjcqX2PEzt8vzJNVqcs+hgiIK1n0Uua6m9
+	k8qPgHR0fWgR4lf+MbdCr/47ywTRfe/fpfFybmWKmG55KLjUvoAPoqwdEipidb9Y2n3QBO/Jxwm
+	053w==
+X-Received: by 2002:a05:600c:a012:b0:4a3:59c9:a747 with SMTP id 5b1f17b1804b1-4ac1793fb0fmr400160555e9.17.1793862884856;
+        Wed, 04 Nov 2026 23:14:44 -0800 (PST)
+X-Received: by 2002:a05:600c:a012:b0:4a3:59c9:a747 with SMTP id 5b1f17b1804b1-4ac1793fb0fmr400159945e9.17.1793862884464;
+        Wed, 04 Nov 2026 23:14:44 -0800 (PST)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b572bba207sm39679165e9.10.2026.11.04.23.14.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Nov 2026 23:14:43 -0800 (PST)
+Date: Thu, 5 Nov 2026 08:14:41 +0100
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	linux-kernel@vger.kernel.org,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Luca Abeni <luca.abeni@santannapisa.it>,
+	Mathieu Poirier <mathieu.poirier@linaro.org>,
+	Waiman Long <longman@redhat.com>,
+	Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
 	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kuniyuki Iwashima <kuniyu@google.com>, Harry Yoo <harry@kernel.org>,
-	David Hildenbrand <david@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Maarten Lankhorst <dev@lankhorst.se>,
-	Maxime Ripard <mripard@kernel.org>,
-	Natalie Vock <nat@pixelcluster.dev>, Tejun Heo <tj@kernel.org>,
-	Oscar Salvador <osalvador@suse.de>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v8 0/7] mm/page_counter: move stock from mem_cgroup to
- page_counter
-Message-ID: <auwfZj6QTwQqFIZb@parvat>
-References: <20261104233029.3282438-1-joshua.hahnjy@gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261104233029.3282438-1-joshua.hahnjy@gmail.com>
-X-ClientProxiedBy: ME3PR01CA0066.ausprd01.prod.outlook.com
- (2603:10c6:220:1c2::19) To CH3PR12MB9730.namprd12.prod.outlook.com
- (2603:10b6:610:253::9)
+	Shuah Khan <shuah@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Clark Williams <clrkwllms@kernel.org>, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
+Subject: Re: [PATCH v2 01/21] sched: Reject SCHED_FLAG_KEEP_PARAMS before
+ reserving deadline bandwidth
+Message-ID: <auws4cpKvQnmNM4f@jlelli-thinkpadt14gen4.remote.csb>
+References: <20261104211207.1392343-1-mathieu.desnoyers@efficios.com>
+ <20261104211207.1392343-2-mathieu.desnoyers@efficios.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -115,178 +133,33 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB9730:EE_|DM4PR12MB6496:EE_
-X-MS-Office365-Filtering-Correlation-Id: a88e690a-3473-4e0d-6d75-08df3b047102
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|376014|7416014|10070799003|366016|1800799024|261022105027099003|261021121427099003|11063799006|10067099003|56012099006|261009223027099003|261021123027099003|261028144727099003|261026121527099003|261022075727099003|261102123227099003|261026140227099003|22082099003|18002099003;
-X-Microsoft-Antispam-Message-Info:
-	afxhITMZyoRsh+NYbEt4uHRpbfZq6JiENx3E5mQiuktCRWe3UZ0i40dlRH0f3L3v2hE/+Kw33yOaCvZPxho/W46HNfdO9zPVwZ0WP47+eCeIgB9untxO0aAPccvd2J6oxFxui7K6Cy2jIFxGR5MLXd2jrvT5TNw8IOwiGa50c5fvJ7tC3gwxY7y3wS2I+DBeLQPIWuLE2Od6av+P3PpWbD2E8HBwolZF807ExVimQ0Mpw74WTpQWuOHcAimQ+c0rdDDkiXNtisSq5Kjt1AXzBRWDw4hR1qX3iSgrP7k2E7TbrqtTwqr4iSv5YYCCMaAdT+UF4kRgMaE3zio4a7XCxiBZwn4e5e3378R/8XENmS1H4dHqbfhe1Fz/1xFNQlxxjNgcwCEcvKeoyRqywSrq2wsCbETP9+WQ+UdJOkvYv+AmeZREHCLme/wz79xh+jKHZp3J+0jEy1elljchNGFIc34+WrA33E0Me0tbuf7ZX6kKvzVdwY5t+lByhbGdyUdn4LZpd43sfZ/rB+Cmuy5E0eluCc/7ucvwcF17yQ5DiOOyBJ3Py0PEyK4ipCpSDC3wGOBxdeeSG4wJk/LwB9HQ/mLRf7eah3cJKtMXpdEeAgz8Ry5qg03csD7Y6vvTdX5znvaZQCkSeD+pmufuevi2X71Zq0EfjwqItqMy3zG30ME=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(10070799003)(366016)(1800799024)(261022105027099003)(261021121427099003)(11063799006)(10067099003)(56012099006)(261009223027099003)(261021123027099003)(261028144727099003)(261026121527099003)(261022075727099003)(261102123227099003)(261026140227099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?wAtB9xsJlmbAQuYUCPjdkQm441ZDK1ibWGhKmgY7LJv9K0WRXWRE9ObsHiQ2?=
- =?us-ascii?Q?0urb6aAj0aUxwdAR1SaD9ae8wklAv1fM6DQrYndKHvSx5j/ayZ+e2SFn3PUA?=
- =?us-ascii?Q?E1hq1CJtZLPhE6rp3y5fCjBJwlZOFkY5ehZU+AQcN41wBm1OioRdIFPJKGdW?=
- =?us-ascii?Q?zQfUo/+XuErPf+KfQzfTd2oL90nSjJ0Y0bo15+IMYVqTCJji9fSdZ1N35502?=
- =?us-ascii?Q?411eBZX93vvuQyuX2vawJIDeQYBwn8lq93CfWqI0/jXYq4jArjIgBZ9w2gxm?=
- =?us-ascii?Q?Ide0UQcWJz5sepUho8MAo7H3F/hCMYtockbtM6QpiHxXqw65DGhbPQUdo8mi?=
- =?us-ascii?Q?hgK1veAvYy9bovDwPrW7hhDru2zRTFr3ZTQOqm+P/EWR+wMfiN9ynpMl3w+A?=
- =?us-ascii?Q?2B3+WPSv+G2+t3lUMat2C9Enzu4K1/XCy5+TubknSKSEUURWh/zkefPuIPx5?=
- =?us-ascii?Q?t8rIhEWHZF0ybP/M6xcDHJkGD1Tyz1N/lCKVSnHczT0DRIT8nYS2vpnQw167?=
- =?us-ascii?Q?rkhHft854kbiuUxezj5YSFRGelhhevLsSEgOOKoa8WXyJ/X0F3SrKh7NH9E3?=
- =?us-ascii?Q?Okrgq/tW4Ks4zQZ3EvJlIbNc7EK+dSCsK48N1sJSnzlH/K1/LCvoi2nEXW0k?=
- =?us-ascii?Q?eWObhzbON95zHH/fEepgqDCeCwCnIaSVqRjx+Ch90exEHA4JSe5jKKWdRfO+?=
- =?us-ascii?Q?hOFyvMe9Q87XcnWW3qQ6GtPUmdCwC/1bIcSPLApOgccFBMF2OM8XfDtzGuVc?=
- =?us-ascii?Q?i10jhcX5T0AFo3FxMAaHzeup7biCmftMIN9LrJLSf/pEU1+Uu95MXITmr+EE?=
- =?us-ascii?Q?A82CqibwhRAx1BAzAjORkR9HKkpoP9T/GLvLimmXwKBvqwCW4eeU36HPHD4m?=
- =?us-ascii?Q?Jn0TDjtoJlfUblD8zy5vpDIcNW0csdxI9f9sOzCcy5TGJRcNnKfGyeOSf0vP?=
- =?us-ascii?Q?09VGmwZUh1PGMplk2sQzXdUO1CpKYKLRBu9Lk+t/k3Nhyo8dyN2zDGHbO/nZ?=
- =?us-ascii?Q?KPY96bDbAKJmHDx+nVMyiIedbd6A2epuCXRNpQ4kUFJUIN/HNajwwsiHl+ki?=
- =?us-ascii?Q?8aaAckZFxKjhE2CtVw/ZzF1h5xlYm5QyQ3lzzVoojj9AuxfJmfbgC3yhhqJv?=
- =?us-ascii?Q?sd4QlxblIzffbRpyPWQ9nyQMQSbHj9U9LThOlB9Zbrf1f8Bv8O/zcOUa4HJJ?=
- =?us-ascii?Q?T2sUGhwhVptK0gLgEmbWLjYQq/n2kC0TMMyOiwUJMPxRxIq0xKPvvT45diOG?=
- =?us-ascii?Q?dx1K80XJh+es+O/987kympm3yL2eaHbWs03BG3ZdnFISobOmPYo8TccdYXDS?=
- =?us-ascii?Q?nCJwHUIDlVZmqPr+GGv222SoHSgOEUjWZEveSWEcQRdHWuCMTwID3kLJAeW+?=
- =?us-ascii?Q?vOnArwVrLYSVzi9IGd6AbbpA6lRfJcCUGEoopicetokZCtsz5cc8Tnff+87t?=
- =?us-ascii?Q?fLBQ+e9UCs7w6cTpipyBDxQ1UE0llyPW96LVl12v4NZsP8SrWGb8uBwIRcC/?=
- =?us-ascii?Q?sz4esGKZpvBKEGBGFV+DBhYWRn8fwAQr3cDDDQKPak9H1wU+c1hqAOlJ6NNR?=
- =?us-ascii?Q?CXLkun5sm41MgV0h6wgE8A2KsXk6h3Hhx4/NhUSUDYURSAxj6ZVJcyEWZlgw?=
- =?us-ascii?Q?PFqKGWSuLA7nSB/IPIALin+UppVoJk08Ytijt/WpgCJCz9ZPiU20rESD64AB?=
- =?us-ascii?Q?QDUAEphbuSnQKCU2omGW9rpF/2tcsHry+Lpb/8savBkAcL7UEk25sWplxdF/?=
- =?us-ascii?Q?LzRxkTS8s8Mt6EPzvDRJN1lAbxPa3RozHWEtpgzfLmdv0SCvKSyHzbJA5gYP?=
-X-MS-Exchange-AntiSpam-MessageData-1: QenJdrpH/zE/yg==
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a88e690a-3473-4e0d-6d75-08df3b047102
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9730.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 06:17:17.4500
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5WGuv/XSnK/8pWy/MGNB26iIgQFkH6qJdjK5HcS1pZ0ibEAG7Qs7n7wkwrbbOxVPU/ddD/n8Vf8+JcVz0+/7BA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6496
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261104211207.1392343-2-mathieu.desnoyers@efficios.com>
 
-On Wed, Nov 04, 2026 at 03:30:21PM -0800, Joshua Hahn wrote:
-> v7 --> v8
-> =========
-> - Rebase onto mm-new as of 11/03/2026. This picks up two memcg series
->   that required some rework:
->   - Kuniyuki Iwashima's memcg stock cleanups were worked into the
->     series, so the changes now live in page_counter code instead.
->   - Shakeel Butt's memory.high rework. Commit 4/7 folds in his
->     PF_MEMALLOC change into the page_counter checks. This change was
->     suggested by Shakeel.
-> - Commit 7/7 is new. It brings back an optimization from an earlier
->   version of the series to let stock charge only accumulate on leaf
->   cgroups.
->   - To accommodate this change, sprinkle in READ_ONCE() for
->     counter->stock reads since the pointer can change at runtime now.
-> - Cover letter rework as suggested by Michal Hocko.
-> 
-> INTRODUCTION
-> ============
-> Memcg keeps a per-CPU stock of precharged pages so that small and
-> frequent allocations do not walk the page_counter hierarchy every time.
-> Today, the stock implementation lives in memcontrol code, even though
-> the operation it caches is a page_counter charge. This makes it
-> difficult to add new page_counters to a memcg and preserve the fast path
-> behavior.
-> 
-> This series moves the stock into the page_counter layer.
-> page_counter_try_charge() consumes the stock, charges a batch to the
-> hierarchy on a miss, and refills the stock with the surplus. Memcg no
-> longer manages the stock in try_charge_memcg.
-> 
-> So the stock keeps the existing layout, which is still a per-CPU bank
-> of 7 slots, each holding a count of precharged pages that it hands out.
-> It maintains exclusion using local locks on each CPU, and for remote
-> drains we schedule on the memcg workqueue.
-> 
-> This change gives us the following benefits:
-> - Separate charge caching (page_counter) from charge policy (memcg).
-> - Makes it simple to keep stock out of interior cgroups on cgroup v2.
-> - Prepares for future work for stock improvement, which can now be
->   isolated from memcg changes.
-> 
-> With this change, make sure to preserve:
-> - All locking behavior is unchanged from before.
-> - Non-leaf cgroups do not hold stock. Specifically, their stock is
->   drained when they become a parent, and remaining stock (isolated CPUs,
->   concurrent refills, etc.) gets drained lazily on future stock misses.
-> - Exact charging for non-spinning callers.
-> - Stocks only exist for the memory and memsw page_counters as before.
->   Other page_counters (swap, v1 kmem, v1 tcpmem, hugetlb_cgroup, dmem)
->   don't stock as before.
-> 
-> EFFECT ON CGROUP V2 USERS
-> =========================
-> Currently when a cgroup becomes a parent, it doesn't drain the stock.
-> Rather, it just prevents new charges from accumulating by nature of
-> parent cgroups not having processes. Here, we can do a little better.
-> When a cgroup becomes a parent, schedule drains right away, in addition
-> to making sure parents don't accumulate new charges.
-> 
-> Everything else is preserved. We preserve all draining, refilling,
-> and (un)charging behavior, including the uncharge path's refills
-> and direct uncharges.
-> 
-> EFFECT ON CGROUP V1 USERS
-> =========================
-> The memory and memsw counters now have separate stocks, which can hit,
-> evict, and drain independently. Their raw values can therefore drift
-> apart by the stocked amounts, even though every charge is applied to
-> both.
-> 
-> To preserve the user-visible property that
-> memory.usage_in_bytes <= memory.memsw.usage_in_bytes, the memory
-> value reports the smaller of the two values. Both raw values are already
-> upper bounds on real usage, so this stays within the fuzz that
-> usage_in_bytes always had (and this is also already documented, see
-> section 5.5 usage_in_bytes in Documentation/admin-guide/cgroup-v1/
-> memory.rst).
-> 
-> TESTING
-> =======
-> This series should not have big changes to performance, so I ran some
-> benchmarks to verify that. I did testing on a 16-CPU, 32G machine VM.
-> I ran repeated anonymous memory faults and MADV_DONTNEED to measure the
-> CPU time spent per page. So + number is worse. I ran each experiment
-> 5 times, with 4 workers.
-> 
-> +-----------+-----------+--------------+-------+
-> |           | base (ns) | patched (ns) | delta |
-> +-----------+-----------+--------------+-------+
-> | cgroup v1 |     890.6 |        901.8 | +1.2% |
-> | cgroup v2 |     893.5 |        902.2 | +1.0% |
-> +-----------+-----------+--------------+-------+
-> 
-> Based on mm-new as of 11/03/26:
-> 74d73ffcffe03 "riscv: mm: fix concurrency in mark_new_valid_map()"
-> 
-> Joshua Hahn (7):
->   mm/memcontrol: flatten try_charge_memcg control flow
->   mm/page_counter: introduce per-CPU stock
->   mm/page_counter: make page_counter_try_charge() stock-aware
->   mm/memcontrol: check PF_MEMALLOC after trying the limits
->   mm/memcontrol: move memory stock to page counters
->   mm/memcontrol: add stock to the memsw page counter
->   mm/memcontrol: restrict memory stock to leaf cgroups on v2
-> 
->  include/linux/page_counter.h |  35 ++-
->  kernel/cgroup/dmem.c         |   2 +-
->  mm/hugetlb_cgroup.c          |   2 +-
->  mm/memcontrol-v1.c           |  17 +-
->  mm/memcontrol.c              | 430 +++++++++++++----------------------
->  mm/page_counter.c            | 233 ++++++++++++++++++-
->  6 files changed, 430 insertions(+), 289 deletions(-)
->
+Hello,
 
-Is the main motivation ease of addition of page_counters to a memcg?
-What would those counters be, why not add them here?
+On 04/11/26 16:11, Mathieu Desnoyers wrote:
+> __sched_setscheduler() returns -EINVAL for a SCHED_FLAG_KEEP_PARAMS
+> request that would change scheduling class, after sched_dl_overflow()
+> has reserved the bandwidth of the request, and nothing gives it back.
+> Switching a SCHED_OTHER task to SCHED_DEADLINE that way fails and leaks
+> the runtime that sched_setattr() filled in from the task's slice, up to
+> 100ms with a custom one, into the root domain's total_bw. Repeated, it
+> makes the root domain refuse every deadline task, and refuse to offline
+> its last CPU.
+> 
+> Reserve the bandwidth after that check, last of the checks. A refused
+> request also leaves sched_reset_on_fork as it was again.
+> 
+> Fixes: 8a70415351ba ("sched: Reject SCHED_FLAG_KEEP_PARAMS when it would change scheduling class")
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> ---
 
-Balbir
+Makes sense to me.
+
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+
+Thanks,
+Juri
+
