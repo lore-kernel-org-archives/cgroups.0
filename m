@@ -1,101 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.46
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.189.125
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793908439;
-	b=J1lmcdcywySjqix9/15I9ZuQ45JU5CMGJcyTYwzvA1yTGnoA5JuxV+VZejNyA1ssNxSt
-	 OqqOJRM6oSVtzfroCZhEnnB3xgf54ugJZAHosUreej8dRjqWhuAXxgXYrVJ7cZo7k2hnG
-	 mV4/e/aplrOwseWSNdKWa2FCzXPPjKI5Pn9VzHntBL2261fZ/fgWt1JM9Ix7/ey6VDTCo
-	 UnfRKzGl7JB6ivpxccRpK8Dq10aQ9AaV1C25v/G35qdngT2NPLEJhFjQvb2Cltc5iHI6c
-	 TJGCb4TNUw/foANdj1cCg+FVaqe+BjS81F6L/wB5Qe6Dy44jtO9/zlxfvPy1f5CNuHQ==
+	t=1793908452;
+	b=s79r3CoLF23CsD2KBjXu89dD1YqZsE16Z+7TTGaOgW8vIoyCwTlwQ3hMpsGG7cSDHZQH
+	 uSk8l4t8d+Jkq8L3oNQ+TLK52YFKdvksMYPMCW0x4GTiPyBFdO6w+aHOBFnKxyzDX7Cqt
+	 eYTYCdNvopyHe2HnZfuBEk5KkJrpthrB+zH5PdGkhBGsWxAsWxaxRvlEvkEE6cKX9df9H
+	 TIbUkvGM4scfler/lFTgnoSde/JteI5U1s/XbY+/NoIgBYgfl21l5XJ1SZ5UtqEwnOaJM
+	 hBVrh7XJTtQLflgFhWgxbwbDjJb9Qv3rE1igzSGIngedj7RuGXkiLkMGfuNRNersM1Q==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793908439;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=FW6tKeq353YHIRkk0OUzFf/CvCzaixbIzv+YKmAJaT4=;
-	b=A6SR/E780G/FnW9jTv447qJbrl2sj+YLoYFzR5L6vE8gdDSBWQXnivFSPjeghdhBWFD7
-	 jfEbrfHmZI19CrSsSdOW6ewaCsDqb/3u6OHIzQgRXaYMcrMtHjkcbfIcIYeWRpGjr6TzL
-	 xnhz9mvaO9M9YaXCeTVP4g/CRUo3EK5gr9WU9K7ilfwdsiY+XG1JjTD+H5B+zdvMz+5b4
-	 f0EUlqL6ZLq5q3tL4anf7d/pOOJ9wU7Nq4EFPvlztaGK0ofgKhg5SLCdSA2bPTciLzNOK
-	 Vbh8Bfrj9ut9C7Kg3aK3HHYS7ODi2t2ndxvXNULQQ0a3h9hOCErSxPc6KgJaRK3bUvQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793908452;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=PX7ujTL79ijaY7XoQzQVRjCTt7csyrkvuYADYf0nA5U=;
+	b=021Ns8HPUwx/zzCBdwTk/8CIk/tHkQgPQc0EvblpIDfOdu/s0XFYxOltSx3tBAObzb+n
+	 Vi1UavK0tBljCwqden7OUY8+5lqh5csI1Yw/p7ERLyd18kboZO+/LDEwtWlaVma8MenrH
+	 j8eDOYU0+TFoYeMovmh88/lf7J2vJ5diHsWCkgC3dHDYqwegVCaeNovyqFrza0IB5lv/4
+	 FV1VsgSoMwkf0iK0xytuV7o8s23PfYnoWI2ZT3pc0ODgrJGCz1j5xF8ZmuSXKQERkCzKq
+	 exPKWAQGYMsxCJI5Eus02cnb/QmTwnFNBmsRnQ0hq/MNCEXWmY4YYMkZxnG+bbPqeQQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rPJeK+dx;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.46
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=efficios.com;
+	spf=pass smtp.mailfrom=efficios.com;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=La0SIXPT;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.189.125
+Received: from YT3PR01CU008.outbound.protection.outlook.com (mail-canadacentralazon11020125.outbound.protection.outlook.com [52.101.189.125])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77667606B9C3
-	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 19:53:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 77667606B9C3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B45606B9C3;
+	Thu,  5 Nov 2026 19:54:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F2B45606B9C3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rPJeK+dx
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a5177d78c7so22649665e9.2
-        for <cgroups@vger.kernel.org>; Thu, 05 Nov 2026 11:53:59 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1793908438; cv=none;
-        d=google.com; s=arc-20260327;
-        b=XzlRXphNhpOZ4UpA0ssKXGhfPmAWhFQ5c48oyuRktvHXmqvTWimuqfZKlzDgG58ZZi
-         XlCWNGZQkGqJA/ShzizbZK534CUeplHoY9mrECPS8CSbvQgePbrPCgyGkAFfzqFYQ3d7
-         aH1++2UM9VGZvZucsDQYQK35Q+J4itLbpzRjJCFB7gZk6fKcNAPHIh+FLnWZqzHNy2XB
-         1toJU9cixwVXNMg0MFr3gr3ln/KeFHMBOnTbmZiwUuSvOrwUoV6hho97lOJZbKRtQ8bd
-         xUiz2WWLap3a8r7E397P9HPM87bkfxNADifTiR/lMdTfW1BPbE1Ap0diCL6DzQD5ToY/
-         e5GQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=FW6tKeq353YHIRkk0OUzFf/CvCzaixbIzv+YKmAJaT4=;
-        fh=klwSOPvOIComGRE6loY7FQLHAIJwFSRb8837WO0dD4o=;
-        b=FKGuTuxqs4F4GIV5RIgJO9F44TTPq7EKGUlN96OOAvfQZtFUmnHQWXmZSAVPLX9y4K
-         pN5Du4yK5EpSIqHwoOjTrCfSiTGoTwKNEFUkgH3l+m/n9Y09r/2gW76kk1/TrRf9WrW1
-         J36ujpYinmp2GKG7xNFoF9R2116UU2RCEyxXs8jTPlG+2eNStu7WSsydZvqCy8qb3wl8
-         UiMI19AhL72e+fA8/4rfRwHd2y1uXMXTKoDx/h4O3zMK93SV02tvOJXbyQFeyLKUM3l4
-         QtKftgmSjbFeTvsV6xgDOS15S4yoX7Jubw2lk+RF3WAINaQ6mD/hgQhgnqoprFUFn2O9
-         tgoA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1793908438; x=1794513238; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FW6tKeq353YHIRkk0OUzFf/CvCzaixbIzv+YKmAJaT4=;
-        b=rPJeK+dxd3KHvhf3dJ6yjjs/fIeP1xDq23YnecFAyVzqOgxfj5H1WhD+hpX6gQcD4r
-         LxWBkADKLWcM1ge5NpbOelBKI/p28FTOx9Jnrksd8G08p+AIpUYD6DiLwRpOkgV3u8vG
-         Hts1A073AqWS+lPyO1btj3nxPZ1aBLPLw9ip+DC4KW93mIyT9uH0Yz8D+B42/fZbLUcv
-         epSFXp8qyuqH4mx8/kXDBUp/0D+Tg9HMpSLuGJqErEEAPgJu4r7gdlW4+SaeR0j9YfQV
-         ENQ43+8LCaNdPCdANmqUq5TOZOD8rcPMVe0JN7laMAZoiH/h5Jf8tUCPnIAfml28+qp7
-         HqEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793908438; x=1794513238;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FW6tKeq353YHIRkk0OUzFf/CvCzaixbIzv+YKmAJaT4=;
-        b=EGve1zkQLF6FiSJy4lP2NLNdE2dOLi05LuBbsBFXbHFOFgLt9ruljWOHrDRk7DhyMp
-         NRKqI1I75YCpwGp9etaOu+xZiw4Wg+NH6E/0hiDu+0a3FfvToO9N94adUvsTjxBwkTlq
-         X0g4Kom4yrDqE97BN7ufkaHgIbLuoq/RT8ZAeyjrb9D3PTBPiF3O6BOciEI+EK4elTh8
-         gCd17NykAF5/uzMurEhpXs7+Om9FmYJIlXQ+qrSpml5AdGwlQXqXjP5YsXP9NQGYqm2A
-         F2Klu/tp9NhAj+GDehRP9iv2bNKMpi7R5MABysi61TPgdMnKADSIB+xC20aur3KLAJvM
-         9MPg==
-X-Forwarded-Encrypted: i=1; AKwUvBy761oh9xNrW+hBQPWk20Pc8TarLSCHV/wIOzoXTYepD4JsklvbnzZN8ECUgn/JVagAmYxpe2iQ@vger.kernel.org
-X-Gm-Message-State: APuU4Z90oDSOJY/z3LvGNaQwDHh5KdlJUoGiG3Exj4bB+DZClI0KUJou
-	0FO66UCWdCpBgeUr3wdePmzGawTXBlCvUXOSPNAUTSdicwJyodYipNj2RKWnM8U/BGOS9olwF38
-	0oFCgxhhD6Fk0RXZ/JD1imZ9uGaLhn9g=
-X-Gm-Gg: AYBFou0fnkq4doSOlBsHTvcxq199I6PJ/wNhCMAxWlJ6/KGHFGGndxz8C5KtAaewmuG
-	T6r6Yacvtv3jgMjfoH0jYxDnHAlGJ2LRuWB/10FxvwynsnnikK1vRZ09dkLnfwjaWsP7jD9PMuq
-	diMfOr/LiRUm7HQOXj1XyPfys4FJLm9fhJ/JubSSkRlWO4pq3ZzePBI4O5fHb1TbmbscIU4jhww
-	+Bp8fKGFE1ao0fYlejW2gKV30rh/LWRl/obhikWs5RsvOyMuFZDmD3YFTw5FtVnsE7guj9FNuRE
-	8nFBHmD+3ksHm4qd+KwSQfyGx1KLOSaA8uK58mA0YYl6qPgjvTB7e64LT6JN0VZDVhT6URpJN/W
-	yWd19oB7HB+x9P21zYMq9lKQvYgqBIyClcENC5k+vEEH5H5WfhFFJ3VPAKfEq/vugwKPqLDGcf2
-	x65pqp7NFNdF8l8Xr6JA==
-X-Received: by 2002:a05:600c:818e:b0:4b3:9540:47a6 with SMTP id
- 5b1f17b1804b1-4b6dff86e38mr2801065e9.28.1793908437547; Thu, 05 Nov 2026
- 11:53:57 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=La0SIXPT
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cUfPqWtdSfGBdg/irENBOj4cF+82UU+AakzvRewBqE8DV5KNXe/ZueqA5cgNHVFB9FHfTAuYhWcHLdB9coVkT1wVOGsLKNYl4u43WwB3PYrAyWiUWm91VyGV0F/SUFPkB2pNKnX3H2etkzFUd4WYCtssqexcMSPIT5dnt0MUR6nUSCgSvrXOwDKBVZJOMCgvngU2cYovXXSQRkS8FGKJiOp3hd7qGDWhT5wqJDuqHbHZC1RloUf/Nex6q0j5YW/Ua7ZjXyX+lyYFOzH/EggOXZ/TeUTfhJOcG1yOnLSmc/Sr+lBK8B3fRWrQ50OgGCpxt6rg5vmPHgeMPItlsMb1QA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PX7ujTL79ijaY7XoQzQVRjCTt7csyrkvuYADYf0nA5U=;
+ b=O6N2KP36ZypWkqPsLXGtpMGefVkIMD00JzrXIwqSRGvMXfYpeDs6ywplmkFt0ghiIt7EIo7LPZvzz1amave9K6CT3xPx9qLG7tl37P3oIYQk84LewlVe5ncnWWDiMbH+u43cxJUTgwvrfbnWmnCZh/XeVBxvKBY6FbzgRCCU+GW8HbbTW9T4IPQrbd+Cr1AopATj5GSky+1qiU2E8/NhXC2s6CYc3W/RJnJFb7FeV40IK93WUJpRYTMTazEkgJMAnMsBSJ5Bv+p6vbz99BgcaR1jWIGK22gfsB5Fn7akkT5po0izHg7XJJg+45xUylCUwua6pw38Idn/f7Ly/CS1Mw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=efficios.com; dmarc=pass action=none header.from=efficios.com;
+ dkim=pass header.d=efficios.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PX7ujTL79ijaY7XoQzQVRjCTt7csyrkvuYADYf0nA5U=;
+ b=La0SIXPTeqt0AX3ik9VVdjTWKghg6lcM/SIdnZLPbtQY8yFBGkNM/OC3OFoG2UMCAo/J2uWNHZ45+W/ObnpXYyES1pm0nVsDEMXiY7ivTnPhfN1TK8AnvoQct4lFWoMf2K8CrHGkKcTCrXmTgvWKKLB1PFqGvS+vI93O6p8u0pTK/IVnq6K4Z5DPjE9CDUalyDxOL2naQEh+FRIEAKEKFWJ3aX/VgvpRW6Y3Xd74VLnIzfSGPJKgW/Zx+eLPYb9EV+hhKwQVxK60FPNdqMpsDGz/wvPROQtnsmtZ23TiDASBG8dWNsNhB49L3aLIGfKdmYxbLl7XI5rTLabpqsGoxA==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=efficios.com;
+Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1d0::10) by YT3PR01MB8724.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:7d::14) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Thu, 5 Nov
+ 2026 19:54:06 +0000
+Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::6b9e:a901:67c5:7ddc]) by YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::6b9e:a901:67c5:7ddc%6]) with mapi id 15.21.0592.009; Thu, 5 Nov 2026
+ 19:54:06 +0000
+Message-ID: <9307bef8-80bb-4b27-b7e8-9a63fe98326a@efficios.com>
+Date: Thu, 5 Nov 2026 14:54:04 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 01/24] sched: Fix cpuset_mutex double unlock in
+ __sched_setscheduler()
+To: Kayra Cizmeci <kayracizmeci@gmail.com>
+Cc: juri.lelli@redhat.com, peterz@infradead.org, mingo@redhat.com,
+ vincent.guittot@linaro.org, linux-kernel@vger.kernel.org,
+ dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
+ mgorman@suse.de, vschneid@redhat.com, kprateek.nayak@amd.com,
+ luca.abeni@santannapisa.it, mathieu.poirier@linaro.org, longman@redhat.com,
+ ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com,
+ shuah@kernel.org, bigeasy@linutronix.de, clrkwllms@kernel.org,
+ parri.andrea@gmail.com, m.szyprowski@samsung.com, weihengqiuu@gmail.com,
+ cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-rt-devel@lists.linux.dev, Sashiko <sashiko-bot@kernel.org>,
+ stable@vger.kernel.org
+References: <20261105193359.1450487-1-mathieu.desnoyers@efficios.com>
+ <20261105193359.1450487-2-mathieu.desnoyers@efficios.com>
+ <auzdzi_ZIqmYFV-Z@scheduler.schedules>
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Content-Language: en-US
+In-Reply-To: <auzdzi_ZIqmYFV-Z@scheduler.schedules>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: YQBPR0101CA0263.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c01:68::17) To YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1d0::10)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,105 +109,96 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261029204157.117879-1-joannelkoong@gmail.com>
- <auPhT70GU-Zqe9Qy@linux.dev> <6849a9c7-0e11-42f2-bd99-d7ae3d5b944a@kernel.org>
-In-Reply-To: <6849a9c7-0e11-42f2-bd99-d7ae3d5b944a@kernel.org>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 5 Nov 2026 11:53:45 -0800
-X-Gm-Features: AclHuK83KbcAE74RZl_XlV2f3k85A7P5GaBmid_sbfdijpMH3WJv_bA5h7VKPGQ
-Message-ID: <CAJnrk1ZF7FminyCYORxysXW0zA=fuUtBe5YXkabsSTOmXt_vdA@mail.gmail.com>
-Subject: Re: [PATCH v2] mm: move LRU size stat updates out of lru_lock in
- folio batches
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>, akpm@linux-foundation.org, yosry@kernel.org, 
-	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	muchun.song@linux.dev, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, 
-	rppt@kernel.org, surenb@google.com, kasong@tencent.com, qi.zheng@linux.dev, 
-	baohua@kernel.org, baolin.wang@linux.alibaba.com, axelrasmussen@google.com, 
-	yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: YT6PR01MB491026:EE_|YT3PR01MB8724:EE_
+X-MS-Office365-Filtering-Correlation-Id: dd44caad-c6c8-4114-0b78-08df3b768cb7
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|376014|23010399003|366016|1800799024|18002099003|22082099003|6133799003|10067099003|4143699003|261026140227099003|261022105027099003|261102123227099003|261028144727099003|56012099006|261021121427099003|261009223027099003;
+X-Microsoft-Antispam-Message-Info:
+	H/Zz8yY521XJIeNNHmdrfDmqOH3T3JMMvjIaAeCQlNEHIy6JdWyC/c9hNnqZirdOzOZLBX2IqF3GAHpor3uhbezlA6ZkK9xEoHIeP98n4TLUm/7CK5Kv2Wb80KWvujSBESySZnFWwUSm3wM8Bt1EEUdTZ8/vz/QUh6XhbEKa7sTIBQAtq7Ev3l31GIJgurU3F5dghIGwf+JhR+Yc41oIJ6zSWtwGzzBFnMODuiZw960vOf6zCf6IZTBSxGQHyixjbai8JD7+gzlFCx8a/hIRbKdWlrhUxqpfGQH+jLKNlq8g0mamK/acmTvKq8XkeOLLtzU3MBM5CIDnjEirYYVcrJlH2AfXa9QLhllUft7UCss50OU/LSbrflHhD0t5VnjyzlM7n2jP8asBXnBJWPgPpFqwrJtseXV/tXPuybhIJuTfuLdsZC+tISrlcjxm7YIy6GtSUkKP4b+k+hogi5e9xvrIPecsnNeBsn+4RBDxfGOjqFUekeky4ADuBeLKjgU9u0Kagey2KP94TG6u3DhMVzU5cmFHdBiO6z8hu5MMNToectcj2twip3nG5GaT8oKAJCPtfonw7lad9axq/zNUZqf3J/wlzNoE2oFgbC3r3OM=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(23010399003)(366016)(1800799024)(18002099003)(22082099003)(6133799003)(10067099003)(4143699003)(261026140227099003)(261022105027099003)(261102123227099003)(261028144727099003)(56012099006)(261021121427099003)(261009223027099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?TEQrNXp6TjgvT3hJbnVQN2JVcjZDbmdidkZFTWFjSm43b3h2ZTI5OWFwQnlt?=
+ =?utf-8?B?dHRVckVaMXFCQ1R5MWxSVnM2YUorQjNXdVVFS3JVZW1QVFVSUzZMdklCSzJR?=
+ =?utf-8?B?RGRVU3h4VUEyZElmQkdzRE84djlTUi9pS0tPeTNraXRVY3RJaDF4YVp0UmNG?=
+ =?utf-8?B?V2diRkVwcW92RjNTb3VGUnB3VnVqRDlWUHJaUlVpMmMzL2FBeHozSHk0amZs?=
+ =?utf-8?B?Mi9odk1HaTZCbklKQmhHNGJ5OGZHNm44dVVVbHVZUjlXNDRyc1kyYmVOTEd2?=
+ =?utf-8?B?czVPWDRXOFJvL3RuYUViUndhWjJQVXJZeVBaSTFaNzBRemRET0s5RWZCZ1VW?=
+ =?utf-8?B?MEx3MytyQm1ZdC8wSGxzT3VIM2txZFVzRlowUit5bVpuWXBIclZ4dFplZGVR?=
+ =?utf-8?B?cGFIVnRqdFpGTGZGckt3bW9SMnlCRk81OEpwc2xVL21oeDA0anp5Rk5xWHRp?=
+ =?utf-8?B?VzNpYzYyemc0UW83MTAvQmI1TTFKZEJCVG5MdzFDZDVQdUp3dStqY2g3QVRq?=
+ =?utf-8?B?cFJObVRIUnN6bzFJQnM3YWZuNGN1cUx0WE5RV2xlNVpKY0tmcTZ2VjRvOWIw?=
+ =?utf-8?B?Q1p2SXRHRm85V2lheGlUN1JzT3Naa2M2RndhVUJnM1dOcm1wWDFzUGU2YXcw?=
+ =?utf-8?B?cFRwQk4yalV2ZzFrd3hJRTd1T2pmQU85bVpGTnlaWjdIeWVTejZjcDBOT3ln?=
+ =?utf-8?B?aEdaRWgyYzNCQ3JQOGVvSFFJRU5XMlA1OTdHelZ4OVRlbGcwWHh4Q0N0c1pZ?=
+ =?utf-8?B?WlFkMG9KMTlyZkFWdGNqc3VBVG1iNEF6OStYMjZveVdBWkRqZjdGTmJ0VWFE?=
+ =?utf-8?B?aG9vQjFxbjA4MUNPQ09QOW44OGJzQUlydElxRVF4ZklNRlgrNTRmdm1tb01R?=
+ =?utf-8?B?MGRnMTQ4NDJZT3dmZndySnhNakhQdGthNm5zQW5BUXN3TllJWThCdmdMbVpT?=
+ =?utf-8?B?cHpqMG1Ta2pYdko4NXgwbzJ4bkdpQm81Y2RpWDVTcytTMkJ1dE9nOWg5TTVs?=
+ =?utf-8?B?dThEaEJVSW9tSDM1bVJLaFg4WVJXR0tSZUVtTU9Rdk43VXl0Q1hWc0xPdGZ1?=
+ =?utf-8?B?R2Y4cjBWbndmT3YrUGtlelJYMmlpL2FOUUxyTUhjR0ZXSDc3VW1zbEJBSzc2?=
+ =?utf-8?B?ME1iUjhFQW9QTWU2UVFDZHI3ejkxdWFaRGd5MjlIRDk3R2UxZnJFMnRza3FK?=
+ =?utf-8?B?SmtTaDQ2NE4wQ2ovbDREVGFzNHlRZ3Nxbkw0bm9jSjJZNnczVm4zd1o1djV5?=
+ =?utf-8?B?WlZGbWRJV1E1S2NHNkFSdFRHWlEzTVk5U285L1diVXpNZmcza3VEdDZlMnhp?=
+ =?utf-8?B?QjNBMzdxeTFlb0xXNEtrajdYMmpwN0hvODVtajJsaVhJaCtKNXdZZGcrcGNm?=
+ =?utf-8?B?MytjNThYSm5QOEM4VFZFbDhSVk9YU1p3enZPRzdZY1ZIUG1XVmJvUWxzWU1R?=
+ =?utf-8?B?bTRhR200dnRFQkhBWGZLNVdySHdJckhUODVvYVpxY0lZSTVNSmw1WXVDc2Vx?=
+ =?utf-8?B?T2x5NXR6eE5uUERVTFBmbUdwZm5MV1AyUGxObFg2VmVFdFBQRG8rVEUxQXJX?=
+ =?utf-8?B?Uys3KzRYU1pJNUtwejVmVTlWVjQ0bFF3SktIWkFidGlOSytEQnVYeSsrVFho?=
+ =?utf-8?B?N2xrMGc0cml1OXV2eXkwUWlNTk5MeGs0V0pKTGc0Sm9Dbi9nWmx6WUE0YWJ3?=
+ =?utf-8?B?dGZZTytmL1lPcnBXSGdKN1B2dzIxdGFMRVJzYTh5eXdyaU91NDRrYWN3K2tI?=
+ =?utf-8?B?WmJjQmt6UjducjFGeTFteHo0RC83dk1kMG0yYkFQVDgzV0EwOFBGTzVPbll1?=
+ =?utf-8?B?M0NWYTBiS3BuRTBsWThWTWgvWDU4Tld5SHFsbldpcTcxaHppbWVNQVYvTTJh?=
+ =?utf-8?B?TS9mWXh3WWgrc3dPQVdVRUdIK2xweXVzYnF2Uk83aXlVRlM5L0twbWVLdmdy?=
+ =?utf-8?B?eGtxMWFpZXBzOXczSmlnNldHSS9HM3BzYSszNUlUaGFsZ1RRQWM3YVZzUGVo?=
+ =?utf-8?B?OUh6M2xJS2pLRVp0cjlnQkRSMUlwUUVSZVVtb2srd2RCbkR6VVJnQUhnUHJo?=
+ =?utf-8?B?WmJhMzlUbjBNT1hGR3RYa3ZTQXl5RGZkK2w3ZlgyQnA3S096SFZCeGRhTXV6?=
+ =?utf-8?B?dFNUU3M4SmFNNWFKZ21hRVpOTVh0OTRzY0o0MUo2aUJkdGp4MjRONHhvajFx?=
+ =?utf-8?B?YmJ1NnZ3ak83NVVpcjBncnFQZnZZRnNCNE9zSGtkMTJFMCs0YWFSZ3pYbXVQ?=
+ =?utf-8?B?QmNVamJTODZTS3JGOXcvYTcwaEZEMnI5S2ZqR2pIZHFhdnNua2VjZEx6UE1Q?=
+ =?utf-8?B?SUUwNzMzaVI1WWFxQmd3ZHJBaWZ2UE9aTTJFcDJ2QW1QbkVnOE53YVQvNGZV?=
+ =?utf-8?Q?k6HR1CdGgxIdUR3SbQYhqS66v7+hj8zb+E+Gg?=
+X-OriginatorOrg: efficios.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dd44caad-c6c8-4114-0b78-08df3b768cb7
+X-MS-Exchange-CrossTenant-AuthSource: YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 19:54:06.3749
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4f278736-4ab6-415c-957e-1f55336bd31e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 2PVjkxrUk2NsBsz1g/W3MCaRFjBf18Ai9RHhJjA10PPPorqSydIZkQgNAGtczZlryyJJfZN5ve91ZNb0xeo0WRqyj5LJEwDoOUy7aMhOkMg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: YT3PR01MB8724
 
-On Thu, Nov 5, 2026 at 11:37=E2=80=AFAM David Hildenbrand (Arm)
-<david@kernel.org> wrote:
->
-> On 10/30/26 01:19, Shakeel Butt wrote:
-> > On Thu, Oct 29, 2026 at 01:41:57PM -0700, Joanne Koong wrote:
-> >> folio_batch_move_lru() and folios_put_refs() take the lruvec's lru_loc=
-k
-> >> once per batch, but they update the node and memcg lruvec stats for
-> >> every folio in the batch while holding the lock. Only the LRU lists an=
-d
-> >> the memcg lru_zone_size need lru_lock. Updating the stats while holdin=
-g
-> >> the lru_lock is unnecessary, and they make up a large part of the
-> >> critical section, as seen in [1] where a change that added just a few
-> >> instructions to the memcg stat update path cost about 2% throughput
-> >> because the LRU stat updates run under lru_lock, and the overhead went
-> >> away once they were moved outside of the lock.
-> >>
-> >> With many threads faulting and freeing memory in a single memcg, about
-> >> half of all cycles are spent waiting for lru_lock, and the hold time o=
-f
-> >> the lru_lock directly limits throughput. A perf profile with 80 thread=
-s
-> >> faulting in and freeing shmem in a single memcg shows 52.8% of all
-> >> cycles spent spinning on lru_lock, split evenly between
-> >> folio_batch_move_lru() and folios_put_refs(). About 25% of the time
-> >> spent holding lru_lock in those two paths goes to the LRU stat updates=
-,
-> >> mostly cache misses loading pn->memcg, pn->lruvec_stats_percpu and the
-> >> per-cpu counters. The stat updates are only 0.7% of all cycles, but th=
-ey
-> >> lengthen the critical section that the other threads are waiting on.
-> >>
-> >> Accumulate the stat changes per LRU list while holding the lock instea=
-d,
-> >> and only apply them after dropping the lock (while still inside
-> >> the RCU read section that keeps the lruvec's memcg alive). This moves
-> >> the stat updates out of the lru_lock critical section and turns the
-> >> per-folio updates into at most one update per LRU list per batch.
-> >
-> > This updating of stats after dropping the lru lock does introduce one b=
-ehavior
-> > change i.e. race between reparenting on offlining and stats update. I t=
-hink it
-> > is safe and correct though. Better to document it.
-> >
-> >>
-> >> The batch is attached to the lruvec while lru_lock is held so that the
-> >> LRU add/del helpers don't need to pass it down. To keep struct lruvec
-> >> from growing, cost_lock is moved into the hole after lru_lock, which
-> >> leaves room for the batch pointer in the same cacheline as lru_lock.
-> >>
-> >> The stats can now lag behind the LRU lists by one batch, which is well
-> >> within the per-cpu batching they already have.
-> >>
-> >> On a 2-socket Skylake (80 CPUs, 2 NUMA nodes), with threads pinned to
-> >> CPUs repeatedly faulting in and freeing memory in a single memcg,
-> >> average pages per second over 7 freshly created memcgs per run, 2 boot=
-s
-> >> each:
-> >>
-> >>                      before    after
-> >>   shmem, 20 threads  4.74M     5.47M   (+15%)
-> >>   shmem, 80 threads  7.94M    10.33M   (+30%)
-> >>   anon,  20 threads  3.04M     3.35M   (+10%)
-> >>   anon,  80 threads  3.23M     3.41M   (+5%)
-> >>
-> >> Link: https://lore.kernel.org/linux-fsdevel/CAJnrk1ZezmmzrYdf8KP6re_a7=
-6izMS=3DqGPeC8ZZXiteHyZZC-Q@mail.gmail.com/ [1]
-> >> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
-> >
-> > Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-> >
->
-> Thanks, I'm planning on queue this.
->
+On 2026-11-05 14:51, Kayra Cizmeci wrote:
+> On Thu, Nov 05, 2026 at 02:33:36PM -0500, Mathieu Desnoyers wrote:
+>> From: Andrea Parri <parri.andrea@gmail.com>
+> 
+>> Fixes: 111cd11bbc54 ("sched/cpuset: Bring back cpuset_mutex")
+>> Reported-by: Sashiko <sashiko-bot@kernel.org>
+>> Link: https://sashiko.dev/#/patchset/20261016062629.2102883-1-sh_def%40163.com
+>> Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+>> Cc: stable@vger.kernel.org
+>> Reviewed-by: Waiman Long <longman@redhat.com>
+>> Reviewed-by: Kayra Cizmeci <kayracizmeci@gmail.com>
+>> Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+> 
+> You gotta add your own SoB, no?
+I'm just relaying the patch and did not touch it, I'm really unsure.
+In any case it can be picked up by the maintainers through their
+preferred route.
 
-I'll send out a v3 today that adds the documentation Shakeel suggested
-about the race between reparenting on offlining and stats update.
+What's the process for this scenario ?
 
 Thanks,
-Joanne
+
+Mathieu
+
+-- 
+Mathieu Desnoyers
+EfficiOS Inc.
+https://www.efficios.com
