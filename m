@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.40
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.28
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1793858936;
-	b=Ycrzka9XFesn1FYIuPwkE1DOzkn4Ih/ghwjxEK/cUU9R5MewHgfW5i0w8uVl8//QBL9A
-	 nSfjY2ZJ4BXeT/U4pocGxKse2TBCsa+6Oqv7jzG/916AvRquFcNdzu0bWgKo0rfcA3dal
-	 J6OnfzlJ41MUohH/iOqyqafpf8FVbD8iMboGc25Eftm+Tw0GgiXp+pAWqiqgP/uKdqdI3
-	 Z1ymEoFzK8VRk2D4XS3pwowlYSznOW5MVYlnme03ebyFr4imuw+2866G8ZACsUB7p/A27
-	 iZoqtqAFyPQZOCwrzjmAz2Oabi7AevLfOfiOVMp1OxNiKswj/zcvIwU9NE7lRttk1ZQ==
+	t=1793859443;
+	b=Oj/1I0hQo8a/f2wwaXALCsDwy88iNxwXjGJD4LYb6f83oY1H8m5Msc8VMlvp4okQBVJn
+	 9tejTg1NDHAOmEoqEDwxQg+2lDheLQ7EQw80GYgANBpQVvRJZk8bU2L+1Kn1yYXbQARlF
+	 kSlz9LrCbtU3UZpme17ScnPUjv8P5yurvWYamZ+tiVjFtzWKAToJH2UjQERH0+PksuHAj
+	 hmC74k9EcxWM/Wf2wzPzgH/I6t1fOSMGj7kILOgMlECKtlB6Oyc/ho1/PVe7NLKAAzCcs
+	 2t+a9DVMLPORuGEEZDfclzkemt+MbhzO+IRudh9MViFJbfl8jRRc0HXxsemaljY0bEQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793858936;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793859443;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
 	 Subject:Message-ID:References:Content-Type:Content-Disposition:
 	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -25,55 +25,55 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=M3DrYTcpWup/5cuuiAlGMoyyyySpp9VpFcQP4dOMZyI=;
-	b=GbET80ODi7Y6hyZ5tvTBSfuj1F0BHeEH/nfL6A/OrF12d4DLOB0YkgxJ5V+gs02/kMUm
-	 cms+o9jbWaXQuXR/vacxhx8fPGaZ5LypSkeeBMi1K8S8rK04sapyfxV+RNeO5O5bXVMQv
-	 mDHN24y+Ch6Lg/rx5rNTpFlboQUIaAJLVu5M8NX2QWad02fwzM/zR7ZeeS+Y5N5p4Aa7d
-	 Vb+AY7wHcP65IcXdWN464p1asrdfxBBFHwugnn9ILgPkaWUORIF4x2gvxXwqC1HzCKp8o
-	 quhanEUd7qEysFZyu/mh6+cU6sQYTp8PNg6BuqFEbKQMS0DcLutSoaUwLGWjmiLNyyA==
+	bh=t+JJRMydHxdPqDIQ0OjJ6/jxtXOmSjWuwdxpd5R6SPQ=;
+	b=1Kp995wiN6hfMRbZb6pQ3XJXn43gdjF0zDwF54ibuFxZSr7IwikTEOM1HPovTep4aDWE
+	 IgLAwg3u8WqBzhXTlQlE32buzqnN5asfp9fMFERkiAZQ7mxiEoR/uSczbrdPFUL7jJq2s
+	 86omFaiueTOMvu3XVnKcdpE1MGaArTiBEnFczEwFTrtzcsNpzDcNqrkVP+ZejBRGVIcMy
+	 hsVn+f913q42Yb7OhJmKHT7CxdBLvkBHRB6YGLE7PVuZCe7yIjW8zaHGnSAhFiCI4UTYb
+	 sF3ckSumMVD5w/n6pB1hs8W1i9dS2cvOOpflKCWNzQD5tPz0LrqvEDblTqgtfn43t4w==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=PnR1tcQx;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.57.40
-Received: from BN8PR05CU002.outbound.protection.outlook.com (mail-eastus2azon11011040.outbound.protection.outlook.com [52.101.57.40])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=pO1h3vNo;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.28
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012028.outbound.protection.outlook.com [52.101.48.28])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD814606A31B;
-	Thu,  5 Nov 2026 06:08:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AD814606A31B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E291B606A31B;
+	Thu,  5 Nov 2026 06:17:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E291B606A31B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=PnR1tcQx
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=pO1h3vNo
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fRTsL7pm6uKe9+vhJ2LySJYSJQgLpES3PrwGqkcwsYjQf0G2L/pNj3LucgIx7A5RTWI8a9YXVvZZsTYnrJADRN8HK3yauQYOnFDZCuOge44i+ZR/7hguGTe/0sIt+CQ9jF4tUUl6/jNE9lFtr678pxS6wtYNnAsGsYGvjTCD2F9VxHKtcQQ2z0pthrncYXwXUCha+dvgy5SjkXeK3w5KYXQSWmd4SWukb0JC4m9BQShkkfusLtbgtwT8K6RWctA58si+jnsHeYzy4qq0XTNCJSiafEuegc17+PXvbFuS9vgBhihLolPcsTu9TrmPCl3GqsBMEoIFD2ENS+0u9IHu+A==
+ b=iRppKhIZDe96P/qOjfMpRCR9WTXK3qttEtBy92qtE7vVDEZ1vvAOPgZSlFa32WpUz3PMdhervXupuakr7a9gPgw6Rt2ffqTwCd+neiKnQOxQBw7W+lOZZb0wV/1LIZMGxX2fl9qCt61o+mj718hj6+Ws1yDG+f1bI/7uZULcDzXKi1RDh4+X5joJe4a72+1OifvwFFAMsN7N2TucW+kMdSpSuVxjuBZRvVupJvkYDBYCvWAI4g67ktotgpRB5qYtwoVhHHt41lqb+ZXkDyzPwCJlQr+oPtogegzu+zgZl+WLIIAXybEKO9IbCw8p8PQbPsJEkj9tRudOEA14wr+pzw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=M3DrYTcpWup/5cuuiAlGMoyyyySpp9VpFcQP4dOMZyI=;
- b=J5Z7zUfpRQ/FV/ACQLm7zKc15O4J2/87xQMslZItBMudSkwey3BpV4tyOiPww5Vzvs6TrQPZDg4wPJRjXxek23yYtYZ+Sqayu9USxdnWHwruJCMc6rBMZ2tv++VF9fxXMJV+WHUWEduIJl7Gz+G1QGFHrZkP57vuLdDGlszIqisP0d4V6AVEFZ2OXs9M0k44J0ngsr4pgzbid3ZJ16lJIPG7omty3/3E1A95R6+fUeghHLSGZpgxk+DUrhZo5ROp3sIUBDGJ1tQpf+lDvkJszjn11vi+r83CBAQe34i6bJYQXFKTSja+/NhCFaRCrBgI8KJBnw2bP6h8vs7du6uHbw==
+ bh=t+JJRMydHxdPqDIQ0OjJ6/jxtXOmSjWuwdxpd5R6SPQ=;
+ b=ShiIk0paVkPPNvFeO2rqCf0Uqn/pD65kGrSTso467lqHjf1qQk0fo6HU/0PuZZu6BO3KIg9bqW5LtU8U7kd+wldNk3+bcD8oVNpL67gVNOVX56+7uHSVrNcA16GgGxNM4lPgwiTHHSltTIo0MMSq44dtafPGllwAHialb3pPHmwyE1Jsu2/P/HBMb90EoPEiqy5i682d+LDWzGknCiBBdhhRTMVpWzywJu5qQthsDAfqCiSfOu1/JfJNR/YlBaIeYzrnz30OltkBNJqNOsqPT4QO1u3b9E/UvnNuLJut3P+d8Es7t9tzHWlkgj3s4UvPWehMgAfG6DkZX1h5sU322Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M3DrYTcpWup/5cuuiAlGMoyyyySpp9VpFcQP4dOMZyI=;
- b=PnR1tcQxubFDqOvcrrkw2D5sPktkKqogpGMvWnjK+3R8puPCPIsi5WmB9HV6mSqa3p17NNxhojTwmYJpqw5vPqBsMSN02YAKN3u3FTW9zmLoTjatl8/NKj27grN2rg9O2UwVfePfkVyV6rNUdIQuGZBl5J1aIwOAILz6L07HzChj3NOi17CkmIky4ywoV/zm5iDDaOBkURqYK+Ih9qIe3vP72BkmxYY0uVHn2StGX3pinZRM2yJQzc1NC9E/bpDTZ61V4teJLPiyas3a6zjU55po7ysWWF4zgxh5v94MVTdZy/g6tcvxKp0SK2XuXdPVXxy58QUkuyidfhMXgvEHKg==
+ bh=t+JJRMydHxdPqDIQ0OjJ6/jxtXOmSjWuwdxpd5R6SPQ=;
+ b=pO1h3vNoym/mIoV89cxzcRtmBHFmifay3A86K1t/WwKSxO5Va5yxqKAdKFeuciX952ZSaTodtWGyJldZzc+Yyu5ukoBRD0EirAhVO9gL2zfgo5PL8tfyVDEJGi4Fml6A33CignCKnYhLPZOkzvZ5bwUyDnmZix0ZplkelfaluT2eK29FU6ykOUnlpx3L79Vf7JrxWfV0Bp/4v1cMuKi+Tkro1ZzPa62mQj2KeA8oR8Vvn8nFnV9RsQjbjfKPKGDllKSa+4vM6ajv6rSPY2jDq38MsMcEjy1lzLwRpeW3+YYmrchavbJiKitc1CALX2eD7U/c59o2tD4XEF7868xEKA==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CH3PR12MB9730.namprd12.prod.outlook.com (2603:10b6:610:253::9)
- by BL1PR12MB5875.namprd12.prod.outlook.com (2603:10b6:208:397::7) with
+ by DM4PR12MB6496.namprd12.prod.outlook.com (2603:10b6:8:bd::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.569.12; Thu, 5 Nov
- 2026 06:08:51 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.592.10; Thu, 5 Nov
+ 2026 06:17:17 +0000
 Received: from CH3PR12MB9730.namprd12.prod.outlook.com
  ([fe80::843d:c1f0:b2ed:4128]) by CH3PR12MB9730.namprd12.prod.outlook.com
  ([fe80::843d:c1f0:b2ed:4128%4]) with mapi id 15.21.0592.009; Thu, 5 Nov 2026
- 06:08:50 +0000
-Date: Thu, 5 Nov 2026 17:08:45 +1100
+ 06:17:17 +0000
+Date: Thu, 5 Nov 2026 17:17:10 +1100
 From: Balbir Singh <balbirs@nvidia.com>
 To: Joshua Hahn <joshua.hahnjy@gmail.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
@@ -96,16 +96,15 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	Oscar Salvador <osalvador@suse.de>, cgroups@vger.kernel.org,
 	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
 	kernel-team@meta.com
-Subject: Re: [PATCH v8 1/7] mm/memcontrol: flatten try_charge_memcg control
- flow
-Message-ID: <auwdbYi9sLaNd1G6@parvat>
+Subject: Re: [PATCH v8 0/7] mm/page_counter: move stock from mem_cgroup to
+ page_counter
+Message-ID: <auwfZj6QTwQqFIZb@parvat>
 References: <20261104233029.3282438-1-joshua.hahnjy@gmail.com>
- <20261104233029.3282438-2-joshua.hahnjy@gmail.com>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261104233029.3282438-2-joshua.hahnjy@gmail.com>
-X-ClientProxiedBy: MEWPR01CA0292.ausprd01.prod.outlook.com
- (2603:10c6:220:1f0::7) To CH3PR12MB9730.namprd12.prod.outlook.com
+In-Reply-To: <20261104233029.3282438-1-joshua.hahnjy@gmail.com>
+X-ClientProxiedBy: ME3PR01CA0066.ausprd01.prod.outlook.com
+ (2603:10c6:220:1c2::19) To CH3PR12MB9730.namprd12.prod.outlook.com
  (2603:10b6:610:253::9)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -117,112 +116,177 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB9730:EE_|BL1PR12MB5875:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5a4bee68-b31f-43ec-4840-08df3b034302
+X-MS-TrafficTypeDiagnostic: CH3PR12MB9730:EE_|DM4PR12MB6496:EE_
+X-MS-Office365-Filtering-Correlation-Id: a88e690a-3473-4e0d-6d75-08df3b047102
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|10070799003|366016|376014|7416014|1800799024|261028144727099003|261021121427099003|261021123027099003|261022105027099003|261026121527099003|261026140227099003|11063799006|4143699003|10067099003|56012099006|18002099003|22082099003|261102123227099003;
+	BCL:0;ARA:13230040|23010399003|376014|7416014|10070799003|366016|1800799024|261022105027099003|261021121427099003|11063799006|10067099003|56012099006|261009223027099003|261021123027099003|261028144727099003|261026121527099003|261022075727099003|261102123227099003|261026140227099003|22082099003|18002099003;
 X-Microsoft-Antispam-Message-Info:
-	ir+zadc/kNAQTP0sTd36li/XYAtECMdU1HG1ejijY27usFcrVi1TQuVhGXUlCPepY75B+BUgG5eRfAt1p/ZbZpQGGhLXByf9ghxpt+NvhMmsaKrSMB47Q+gw7SCSCwPl7f7VP8lie67O2foZAxwCVjP3Ji/EZHjAQzJ5k3KXSVG/P7aCZhbxmwz3BkDYQRTMhg5aTbTX4UzOf8bgz/Md2vuulVm0uGfu5eTAdvtZtXqPmjhiOOZ4iDmHryMM2hNANN/tzh3jEFB/Y2sZXhi2TiEKv1gInZOqIN2Op1Oe1ztMso24R38OmNJ2qEfOt9TeFr/netV5RxMjPuwhomcntiKCd+fxq3xWtXueKYIPMAGZuMOcSGbUNCqPVbz2wPtEmhJYsGRsPNSeOCOm9YeQ/5fTi6pcDxSvG6dvr3VydNrkb1LuciZYXqvBd/MysPNZlBRCU6OzFI2F/FsQavYnzYSjjs7Ce7Q+1GJxpUtfmbXTujnx5Rdp/PESYVAEuj5ikHKQPqJCcVjlnLh+LBdJS7FAziFZrR1tYR0m4gmvmnwq3SpjLVYHbBvcN7RDhxU2EcJVw9lLhjJQRkVgFVYvvnbMhnV+bM8PH0928/s9AsNhDj3no95uMPhytV/zOL0ePjfY3/bNdCVkgGWEvVIUVRzQb5Tu0xl8ScOlieI/udY=
+	afxhITMZyoRsh+NYbEt4uHRpbfZq6JiENx3E5mQiuktCRWe3UZ0i40dlRH0f3L3v2hE/+Kw33yOaCvZPxho/W46HNfdO9zPVwZ0WP47+eCeIgB9untxO0aAPccvd2J6oxFxui7K6Cy2jIFxGR5MLXd2jrvT5TNw8IOwiGa50c5fvJ7tC3gwxY7y3wS2I+DBeLQPIWuLE2Od6av+P3PpWbD2E8HBwolZF807ExVimQ0Mpw74WTpQWuOHcAimQ+c0rdDDkiXNtisSq5Kjt1AXzBRWDw4hR1qX3iSgrP7k2E7TbrqtTwqr4iSv5YYCCMaAdT+UF4kRgMaE3zio4a7XCxiBZwn4e5e3378R/8XENmS1H4dHqbfhe1Fz/1xFNQlxxjNgcwCEcvKeoyRqywSrq2wsCbETP9+WQ+UdJOkvYv+AmeZREHCLme/wz79xh+jKHZp3J+0jEy1elljchNGFIc34+WrA33E0Me0tbuf7ZX6kKvzVdwY5t+lByhbGdyUdn4LZpd43sfZ/rB+Cmuy5E0eluCc/7ucvwcF17yQ5DiOOyBJ3Py0PEyK4ipCpSDC3wGOBxdeeSG4wJk/LwB9HQ/mLRf7eah3cJKtMXpdEeAgz8Ry5qg03csD7Y6vvTdX5znvaZQCkSeD+pmufuevi2X71Zq0EfjwqItqMy3zG30ME=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(10070799003)(366016)(376014)(7416014)(1800799024)(261028144727099003)(261021121427099003)(261021123027099003)(261022105027099003)(261026121527099003)(261026140227099003)(11063799006)(4143699003)(10067099003)(56012099006)(18002099003)(22082099003)(261102123227099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9730.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(10070799003)(366016)(1800799024)(261022105027099003)(261021121427099003)(11063799006)(10067099003)(56012099006)(261009223027099003)(261021123027099003)(261028144727099003)(261026121527099003)(261022075727099003)(261102123227099003)(261026140227099003)(22082099003)(18002099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?+Der5HW/4IBWhAq6NDPXIuVIh2Qpu/cfe/ptZpJV8uIDH9tsKcs1FkSCa5dE?=
- =?us-ascii?Q?vdhvByMHp/ylHEtxxJNtPbOEh54OdfOfnN60xRtoHnOSlL4ArG5zaolz1dFa?=
- =?us-ascii?Q?xY8HAiBdMDvTcy9oJ6kjeN1Na2xZvtMM2yai/gxBUpIPLQv4kLm60PgK+Mzw?=
- =?us-ascii?Q?6dVkw+pG7gsZ9jGWvJxFyK+SPxermsbiFw8Dw0ZzHlHfw1NJT2v9k2bgXvmS?=
- =?us-ascii?Q?vLnQVXbagL8aT9qCbDCnNE7jA+gSrBs70JXPgvHMdFTgtITX59yHhJQnwUdQ?=
- =?us-ascii?Q?mxwVgA+bU+kOkUBX2YhxyJUfn5x+rAJWn9b4cB7T6FWNkaPZBjSA7UE6aEhk?=
- =?us-ascii?Q?rquKS4h2uZ7EUzbOQDVpSgl91AZtUGfWEahzB7y1R7j4GbSvMrP7PeoA5bGK?=
- =?us-ascii?Q?R8U6uPa5i0yDRc/Y0BZ/HPI+B7iR0nBqOoTI9ZiAR2vgewktvTFgcHQc2Rnq?=
- =?us-ascii?Q?iL/MzdRWbygyXAzakGyxXkHoprP7TuEQUIZVeF8uNo0ShuytyZbABBRuvyld?=
- =?us-ascii?Q?ifwLcxShAMvMquzwJ38XxO0L7I9Pe5gTdC9n18grMK+amvZ4w0NRJhb+0vVt?=
- =?us-ascii?Q?DXj/QE1B6rrlabRbTNNmbgNDo+oh821Zzj7E0c1cNpPmVYFrtorJZWXFHy+c?=
- =?us-ascii?Q?jZCRox2aDIk/0XZ2fQP9+TcxKi+Uv0bEHYUwqAxagRauS5+ngR37zTTEDKQm?=
- =?us-ascii?Q?ymQemAy/szfP1TGipd3nAcqZTeSDc+bq6AMNghtXukLfZE22uKhu1ikgT+av?=
- =?us-ascii?Q?K0nffWsbnxOJrdDr9s7tWbdQJGosEeEHizY+pV2XOlkpzkm07QIVBlFXrPQi?=
- =?us-ascii?Q?6G92nh7dZoJW/iywH2iVKJJnfI/LyhBJMnY4sN32Gy2feEGxnTs6J+Cx02MY?=
- =?us-ascii?Q?lIGx0hOG2kk4x3aB4Xk+Q7w/9L7rtt9//J8Lkb3fuhbBvkV/tnYDE/qnPSdl?=
- =?us-ascii?Q?pmbTyMC5yGryUV0iT9OnXCda6C9D6HTne8NoAxuDc4C7v4AIGpz5WNPOmaA2?=
- =?us-ascii?Q?wzhSwlNCkdV+AuiCjSlsqhLT8wZEs9gQL1zv0cnEAA1Ml9F0CXcIxeZDcFVw?=
- =?us-ascii?Q?ZmVxtz990HlkgSFrr9NAxqShxJOiynRsZNylrFtxGcbncCWkPZCxo5EGsFqD?=
- =?us-ascii?Q?cEhLKCWkhfvboEeSqDqTOfWY92IbdrvHQ0deyaHC3OIS/dkQiivFsOTfHrM/?=
- =?us-ascii?Q?tKJJ6dTob3SHLYBwYbiCicN4oPNJWZ31dEFN7W4weQ/iprOYAyixL6fbl/Kf?=
- =?us-ascii?Q?CnmL6OOZuqbyuYznNlvvMSR58faEinHlW40/X5pZbYqyu36gPwuQdFPFLO/y?=
- =?us-ascii?Q?0SgHSVnzOoStgr82aXQYd10aN1l5x+x9ZK5rkC33mEPOdWg09AO81zKdWN2N?=
- =?us-ascii?Q?pvoPOXcR5eyIjBLuUqpAhz+5anHxKY5a+Qgb8TZuaiqwEVDdEPpGxDgZYkP9?=
- =?us-ascii?Q?R0kQLys7rykQxUevoHAYxUXjoH3J/YPlL46NHpjy8UOoMkToeSl5DLdan7d9?=
- =?us-ascii?Q?o+mh15JQSnXzLMWPnj5Nnraw57y2wyLql7miy5VVwnvcNzRkUWP5dXUMaZu/?=
- =?us-ascii?Q?CyZoJzVPQjaCJ4IJpaVPcT6Y3B7jnalH1U5B5OtFsXGb+hxe+3Fy6B0vIaE2?=
- =?us-ascii?Q?zAe0iT+Qa38iXsAAZMRZCC36mgbfkF4MSmfVLFBHFizYCdsnhGK82e0O2O+H?=
- =?us-ascii?Q?4//vb22fBZFpbhxoc3n0JEs0Bd0z+c7pShdDFEEraEB9hNcJ68fIUCiCNXPK?=
- =?us-ascii?Q?aWdMP54e75Jx1raSJ0RO6y5VhAm8MkGLBI9EOd+m3r9rfmBYXtcnW5DhT+T/?=
-X-MS-Exchange-AntiSpam-MessageData-1: 4yd5noAtRnNLFg==
+	=?us-ascii?Q?wAtB9xsJlmbAQuYUCPjdkQm441ZDK1ibWGhKmgY7LJv9K0WRXWRE9ObsHiQ2?=
+ =?us-ascii?Q?0urb6aAj0aUxwdAR1SaD9ae8wklAv1fM6DQrYndKHvSx5j/ayZ+e2SFn3PUA?=
+ =?us-ascii?Q?E1hq1CJtZLPhE6rp3y5fCjBJwlZOFkY5ehZU+AQcN41wBm1OioRdIFPJKGdW?=
+ =?us-ascii?Q?zQfUo/+XuErPf+KfQzfTd2oL90nSjJ0Y0bo15+IMYVqTCJji9fSdZ1N35502?=
+ =?us-ascii?Q?411eBZX93vvuQyuX2vawJIDeQYBwn8lq93CfWqI0/jXYq4jArjIgBZ9w2gxm?=
+ =?us-ascii?Q?Ide0UQcWJz5sepUho8MAo7H3F/hCMYtockbtM6QpiHxXqw65DGhbPQUdo8mi?=
+ =?us-ascii?Q?hgK1veAvYy9bovDwPrW7hhDru2zRTFr3ZTQOqm+P/EWR+wMfiN9ynpMl3w+A?=
+ =?us-ascii?Q?2B3+WPSv+G2+t3lUMat2C9Enzu4K1/XCy5+TubknSKSEUURWh/zkefPuIPx5?=
+ =?us-ascii?Q?t8rIhEWHZF0ybP/M6xcDHJkGD1Tyz1N/lCKVSnHczT0DRIT8nYS2vpnQw167?=
+ =?us-ascii?Q?rkhHft854kbiuUxezj5YSFRGelhhevLsSEgOOKoa8WXyJ/X0F3SrKh7NH9E3?=
+ =?us-ascii?Q?Okrgq/tW4Ks4zQZ3EvJlIbNc7EK+dSCsK48N1sJSnzlH/K1/LCvoi2nEXW0k?=
+ =?us-ascii?Q?eWObhzbON95zHH/fEepgqDCeCwCnIaSVqRjx+Ch90exEHA4JSe5jKKWdRfO+?=
+ =?us-ascii?Q?hOFyvMe9Q87XcnWW3qQ6GtPUmdCwC/1bIcSPLApOgccFBMF2OM8XfDtzGuVc?=
+ =?us-ascii?Q?i10jhcX5T0AFo3FxMAaHzeup7biCmftMIN9LrJLSf/pEU1+Uu95MXITmr+EE?=
+ =?us-ascii?Q?A82CqibwhRAx1BAzAjORkR9HKkpoP9T/GLvLimmXwKBvqwCW4eeU36HPHD4m?=
+ =?us-ascii?Q?Jn0TDjtoJlfUblD8zy5vpDIcNW0csdxI9f9sOzCcy5TGJRcNnKfGyeOSf0vP?=
+ =?us-ascii?Q?09VGmwZUh1PGMplk2sQzXdUO1CpKYKLRBu9Lk+t/k3Nhyo8dyN2zDGHbO/nZ?=
+ =?us-ascii?Q?KPY96bDbAKJmHDx+nVMyiIedbd6A2epuCXRNpQ4kUFJUIN/HNajwwsiHl+ki?=
+ =?us-ascii?Q?8aaAckZFxKjhE2CtVw/ZzF1h5xlYm5QyQ3lzzVoojj9AuxfJmfbgC3yhhqJv?=
+ =?us-ascii?Q?sd4QlxblIzffbRpyPWQ9nyQMQSbHj9U9LThOlB9Zbrf1f8Bv8O/zcOUa4HJJ?=
+ =?us-ascii?Q?T2sUGhwhVptK0gLgEmbWLjYQq/n2kC0TMMyOiwUJMPxRxIq0xKPvvT45diOG?=
+ =?us-ascii?Q?dx1K80XJh+es+O/987kympm3yL2eaHbWs03BG3ZdnFISobOmPYo8TccdYXDS?=
+ =?us-ascii?Q?nCJwHUIDlVZmqPr+GGv222SoHSgOEUjWZEveSWEcQRdHWuCMTwID3kLJAeW+?=
+ =?us-ascii?Q?vOnArwVrLYSVzi9IGd6AbbpA6lRfJcCUGEoopicetokZCtsz5cc8Tnff+87t?=
+ =?us-ascii?Q?fLBQ+e9UCs7w6cTpipyBDxQ1UE0llyPW96LVl12v4NZsP8SrWGb8uBwIRcC/?=
+ =?us-ascii?Q?sz4esGKZpvBKEGBGFV+DBhYWRn8fwAQr3cDDDQKPak9H1wU+c1hqAOlJ6NNR?=
+ =?us-ascii?Q?CXLkun5sm41MgV0h6wgE8A2KsXk6h3Hhx4/NhUSUDYURSAxj6ZVJcyEWZlgw?=
+ =?us-ascii?Q?PFqKGWSuLA7nSB/IPIALin+UppVoJk08Ytijt/WpgCJCz9ZPiU20rESD64AB?=
+ =?us-ascii?Q?QDUAEphbuSnQKCU2omGW9rpF/2tcsHry+Lpb/8savBkAcL7UEk25sWplxdF/?=
+ =?us-ascii?Q?LzRxkTS8s8Mt6EPzvDRJN1lAbxPa3RozHWEtpgzfLmdv0SCvKSyHzbJA5gYP?=
+X-MS-Exchange-AntiSpam-MessageData-1: QenJdrpH/zE/yg==
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5a4bee68-b31f-43ec-4840-08df3b034302
+X-MS-Exchange-CrossTenant-Network-Message-Id: a88e690a-3473-4e0d-6d75-08df3b047102
 X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9730.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 06:08:50.6226
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Nov 2026 06:17:17.4500
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ab1IsVeIOdf2z7S6hDtQXxqX6ikh+IXLurjseHlIyz7N76BRL/67WYHHJQ/YLNPqprRG2fRC+qd6Kvd+gBgBdA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5875
+X-MS-Exchange-CrossTenant-UserPrincipalName: 5WGuv/XSnK/8pWy/MGNB26iIgQFkH6qJdjK5HcS1pZ0ibEAG7Qs7n7wkwrbbOxVPU/ddD/n8Vf8+JcVz0+/7BA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6496
 
-On Wed, Nov 04, 2026 at 03:30:22PM -0800, Joshua Hahn wrote:
-> Refactor try_charge_memcg by flattening the nested memsw/memory
-> page_counter operations to separate the logic between the two.
+On Wed, Nov 04, 2026 at 03:30:21PM -0800, Joshua Hahn wrote:
+> v7 --> v8
+> =========
+> - Rebase onto mm-new as of 11/03/2026. This picks up two memcg series
+>   that required some rework:
+>   - Kuniyuki Iwashima's memcg stock cleanups were worked into the
+>     series, so the changes now live in page_counter code instead.
+>   - Shakeel Butt's memory.high rework. Commit 4/7 folds in his
+>     PF_MEMALLOC change into the page_counter checks. This change was
+>     suggested by Shakeel.
+> - Commit 7/7 is new. It brings back an optimization from an earlier
+>   version of the series to let stock charge only accumulate on leaf
+>   cgroups.
+>   - To accommodate this change, sprinkle in READ_ONCE() for
+>     counter->stock reads since the pointer can change at runtime now.
+> - Cover letter rework as suggested by Michal Hocko.
 > 
-> When page_counter_try_charge is made stock-aware, this flattening makes
-> the control flow easier to follow since each page counter now has its
-> own success/failure paths.
+> INTRODUCTION
+> ============
+> Memcg keeps a per-CPU stock of precharged pages so that small and
+> frequent allocations do not walk the page_counter hierarchy every time.
+> Today, the stock implementation lives in memcontrol code, even though
+> the operation it caches is a page_counter charge. This makes it
+> difficult to add new page_counters to a memcg and preserve the fast path
+> behavior.
 > 
-> No functional changes intended.
+> This series moves the stock into the page_counter layer.
+> page_counter_try_charge() consumes the stock, charges a batch to the
+> hierarchy on a miss, and refills the stock with the surplus. Memcg no
+> longer manages the stock in try_charge_memcg.
 > 
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Reviewed-by: Harry Yoo (Meta) <harry@kernel.org>
-> Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-> ---
->  mm/memcontrol.c | 19 +++++++++++--------
->  1 file changed, 11 insertions(+), 8 deletions(-)
+> So the stock keeps the existing layout, which is still a per-CPU bank
+> of 7 slots, each holding a count of precharged pages that it hands out.
+> It maintains exclusion using local locks on each CPU, and for remote
+> drains we schedule on the memcg workqueue.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ffbcea28a608c..66f38efb800ab 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2811,18 +2811,21 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  		batch = nr_pages;
->  
->  	reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
-> -	if (!do_memsw_account() ||
-> -	    page_counter_try_charge(&memcg->memsw, batch, &counter)) {
-> -		if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> -			goto done_restock;
-> -		if (do_memsw_account())
-> -			page_counter_uncharge(&memcg->memsw, batch);
-> -		mem_over_limit = mem_cgroup_from_counter(counter, memory);
-> -	} else {
-> +	if (do_memsw_account() &&
-> +	    !page_counter_try_charge(&memcg->memsw, batch, &counter)) {
->  		mem_over_limit = mem_cgroup_from_counter(counter, memsw);
->  		reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
-> +		goto reclaim;
->  	}
->  
-> +	if (page_counter_try_charge(&memcg->memory, batch, &counter))
-> +		goto done_restock;
-> +
-> +	if (do_memsw_account())
-> +		page_counter_uncharge(&memcg->memsw, batch);
-> +	mem_over_limit = mem_cgroup_from_counter(counter, memory);
-> +
-> +reclaim:
->  	if (batch > nr_pages) {
->  		batch = nr_pages;
->  		goto retry;
+> This change gives us the following benefits:
+> - Separate charge caching (page_counter) from charge policy (memcg).
+> - Makes it simple to keep stock out of interior cgroups on cgroup v2.
+> - Prepares for future work for stock improvement, which can now be
+>   isolated from memcg changes.
 > 
+> With this change, make sure to preserve:
+> - All locking behavior is unchanged from before.
+> - Non-leaf cgroups do not hold stock. Specifically, their stock is
+>   drained when they become a parent, and remaining stock (isolated CPUs,
+>   concurrent refills, etc.) gets drained lazily on future stock misses.
+> - Exact charging for non-spinning callers.
+> - Stocks only exist for the memory and memsw page_counters as before.
+>   Other page_counters (swap, v1 kmem, v1 tcpmem, hugetlb_cgroup, dmem)
+>   don't stock as before.
+> 
+> EFFECT ON CGROUP V2 USERS
+> =========================
+> Currently when a cgroup becomes a parent, it doesn't drain the stock.
+> Rather, it just prevents new charges from accumulating by nature of
+> parent cgroups not having processes. Here, we can do a little better.
+> When a cgroup becomes a parent, schedule drains right away, in addition
+> to making sure parents don't accumulate new charges.
+> 
+> Everything else is preserved. We preserve all draining, refilling,
+> and (un)charging behavior, including the uncharge path's refills
+> and direct uncharges.
+> 
+> EFFECT ON CGROUP V1 USERS
+> =========================
+> The memory and memsw counters now have separate stocks, which can hit,
+> evict, and drain independently. Their raw values can therefore drift
+> apart by the stocked amounts, even though every charge is applied to
+> both.
+> 
+> To preserve the user-visible property that
+> memory.usage_in_bytes <= memory.memsw.usage_in_bytes, the memory
+> value reports the smaller of the two values. Both raw values are already
+> upper bounds on real usage, so this stays within the fuzz that
+> usage_in_bytes always had (and this is also already documented, see
+> section 5.5 usage_in_bytes in Documentation/admin-guide/cgroup-v1/
+> memory.rst).
+> 
+> TESTING
+> =======
+> This series should not have big changes to performance, so I ran some
+> benchmarks to verify that. I did testing on a 16-CPU, 32G machine VM.
+> I ran repeated anonymous memory faults and MADV_DONTNEED to measure the
+> CPU time spent per page. So + number is worse. I ran each experiment
+> 5 times, with 4 workers.
+> 
+> +-----------+-----------+--------------+-------+
+> |           | base (ns) | patched (ns) | delta |
+> +-----------+-----------+--------------+-------+
+> | cgroup v1 |     890.6 |        901.8 | +1.2% |
+> | cgroup v2 |     893.5 |        902.2 | +1.0% |
+> +-----------+-----------+--------------+-------+
+> 
+> Based on mm-new as of 11/03/26:
+> 74d73ffcffe03 "riscv: mm: fix concurrency in mark_new_valid_map()"
+> 
+> Joshua Hahn (7):
+>   mm/memcontrol: flatten try_charge_memcg control flow
+>   mm/page_counter: introduce per-CPU stock
+>   mm/page_counter: make page_counter_try_charge() stock-aware
+>   mm/memcontrol: check PF_MEMALLOC after trying the limits
+>   mm/memcontrol: move memory stock to page counters
+>   mm/memcontrol: add stock to the memsw page counter
+>   mm/memcontrol: restrict memory stock to leaf cgroups on v2
+> 
+>  include/linux/page_counter.h |  35 ++-
+>  kernel/cgroup/dmem.c         |   2 +-
+>  mm/hugetlb_cgroup.c          |   2 +-
+>  mm/memcontrol-v1.c           |  17 +-
+>  mm/memcontrol.c              | 430 +++++++++++++----------------------
+>  mm/page_counter.c            | 233 ++++++++++++++++++-
+>  6 files changed, 430 insertions(+), 289 deletions(-)
+>
 
-Acked-by: Balbir Singh <balbirs@nvidia.com>
+Is the main motivation ease of addition of page_counters to a memcg?
+What would those counters be, why not add them here?
+
+Balbir
