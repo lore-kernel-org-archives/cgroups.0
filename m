@@ -1,129 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.111
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793862954;
-	b=vbU9i8JahbuIm1d/v0uP4erG+sFspLGRsoqy+GM47/M+osrW5fZrXdmdLF8ylKbV5BdK
-	 5ODWTsCvFiCM/lPUUFL1qWzktEkhd8KCrW90xmj1GFYdot1ndzVV3EzVl39vNLaSx819W
-	 eJAi5q/P8AnD53Hb/Szt9+ezO1oTKuHWEziai4oDp/+bBbfpsayJpRXJfUzyBq/7bC4kW
-	 7o+M8FqZXJB9PFPzHhahBmUUA23FuZ1vHBR2R9Gj2flwi/7tkhGfzMsKQKxMGBNOkxrSo
-	 iKXDN/HuobHpd7sPQ4qnLc7XQvlcnJVb6BJynfcAt7saRK3wpgMtnzX7iUU6dCdZF2w==
+	t=1793870563;
+	b=r+SOzqUmWwrEuqCrgb3b3SwQQya34ZRrV14ehEBVNdhFL5Nf2ZQqbEZcflccr+GfJnr+
+	 dHMYpcK6B4c6ch1tnebra9FgUUvRhDfG0UQJrQQXgsaXtxVxt3E2FYSyphTb9B8mSTfOV
+	 obw10FLr+2yI+k4u3qZnIM7xwZ1DS1/YnyL+nmAoe6WrbEyUV5WXgbqIic4WKxYkeFdR/
+	 u31e0xI5JR4zZsoLQnbAM9KlA/9NJ3nZqggYUvtiZ0H5CNT7LPwHcFC8ma+XrkPZbL73/
+	 5GnVmMMRF5O68xPBwUmsGpsjpB5j+8XYgU2ZH+5079eq7mOhNFx6xRCO+AH6GWidPLQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793862954;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=OhNvDsZJpE4KS30+qaZ5e8X21eLLhO3Q56fZ1Ek8d2I=;
-	b=3VA1NVf2YcIOfC3HmyQZMuMubhVZ0N6XXeXUuzIiTbclBdTaA/dtMU9TUHWTsPz5s8xO
-	 9+UTy08KAz8FYB+pzmbd4wIzjrIBdkUXzy8yxcCaaMdGWXMeFHM0iwOWm1GTq97IQ+P8v
-	 ZiNyD0zqS989L1If7N06S5DGCmIVTwuN9LNrjuz+6aUkp9U7egozQL8Sn5LtwGh5qKyTW
-	 QPn50usqn7XzyBUB4PtYwMaN0e19xHJif0Q/DeIU6rahhMxTn/bfxh/v4LENrYQD4DIp+
-	 3qs6CdJwY+03aWfIJH2eXqOoft6i89XUUK7KCn4Lfn0I5PllKMqAHhakgrwFxXXXg+w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793870563;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:From:To:Cc:
+	 Subject:Date:Message-ID:X-Mailer:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=UWmb9HUpIQPQz6k2PGeMG/U7KreRlMRXLm0OBejdgFU=;
+	b=Bydw1tW1TWVmXJGYlXSTkO61uafgDPMe/dxtIcdDW33YdVVtzbX0/dcV0OmcjCSHNdVM
+	 kwF7UuIxcTsofeMuix//mzGui2QpwLieV83ugRsWHwlnuvbAT4PYrzw6PztlGQqF95KuY
+	 BVrRyoI73dqAlpWHjS0eRyCASc+VKQw8vSmnbG2qp1jD953yMFTPkBLtAG0a6tj3LXkER
+	 9d6BPFCNcPg+Rz1mWnaa7tKpOtBSSo7ipu0uHQNkptlUmcK1pN5xh9FzSlSKqrD7rJbwJ
+	 8OkKSTEtCf/eJKbuduUUgVycWjbBuxbMJC4OPg3Bav6wOVVqJzTPQr+aQYPt51F8F+Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=UpCupRSt;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=UC6dPSWO;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=KN81Oltm;
+	arc=none smtp.remote-ip=115.124.30.111
+Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CA8A606A328
-	for <cgroups@vger.kernel.org>; Thu,  5 Nov 2026 07:15:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6CA8A606A328
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41C95606A31B;
+	Thu,  5 Nov 2026 09:22:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 41C95606A31B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=UpCupRSt;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=UC6dPSWO
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1793862952;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OhNvDsZJpE4KS30+qaZ5e8X21eLLhO3Q56fZ1Ek8d2I=;
-	b=UpCupRStGTKdg7B7YlB41BNskmU1W/sNMsDCUS2glDMpU3+XjxxGt8C031tAkmswQZaKbI
-	m+waC29h34dcg2+DdVUcPms7xie7OY4yL9GY3II7wfqfoY43Xw9uHoUHocIs2NVXhZTT4Q
-	9DWW0vUH777z0EJw5C1cLeH8X4ZlzyE=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-455-58E4d0qBP1u4bq6Rfriz7w-1; Thu, 05 Nov 2026 02:15:51 -0500
-X-MC-Unique: 58E4d0qBP1u4bq6Rfriz7w-1
-X-Mimecast-MFC-AGG-ID: 58E4d0qBP1u4bq6Rfriz7w_1793862950
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4b0a307487aso8627375e9.1
-        for <cgroups@vger.kernel.org>; Wed, 04 Nov 2026 23:15:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1793862950; x=1794467750; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=OhNvDsZJpE4KS30+qaZ5e8X21eLLhO3Q56fZ1Ek8d2I=;
-        b=UC6dPSWOvEiKo+YH17r3sJM+YGz+JwKvul+7LxPXUtwj6RL+6qFbI6JugCqMlwcyIS
-         Ysz20AhBz904sHWlq8h5BrXnZnsCEuii2vQxyBozXHqHJpe8yAzyuW8QMBmoHYn8KEw5
-         5oqJiAMb1qYcWEo3xoktCD08dgQ90usype0flBeLFooyXgUSFzg/ECgJfMgnHl+4+Sc8
-         JSDfmVai8SdggbryHet7nQRwU4RWgeDgYkAdZhAZWz7EMKofHNM1nLReci5DfLuzZgyD
-         33E297uS6YQXtwVqkF3dE9u6mfSfxJU87cOwZSdf4n2+3p4+cjXj+1z208w+HtRXz2HY
-         hKZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1793862950; x=1794467750;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=OhNvDsZJpE4KS30+qaZ5e8X21eLLhO3Q56fZ1Ek8d2I=;
-        b=CKuYFf2HmwoGGrQ+CnXJqOL9snw658UYhVZ4X/PiiwbT2mGC2GCCkYcU4g33QOeH1n
-         v+rnm8pDXLklqJNsyb3YN3ygsojVEI/j/6uii56KQCKPTknvYSluazFWjhowZDE2+Hsh
-         dB4SKC/79hPuKXXTPmjJRc5c+s3TgubDJTCIuLi7gAd4m0p+6dt8zpR1/xMnIZ6xVG4p
-         MB4AbrsB98s6ELhwEo7JF0eHKBU2pUkJTngdBMAmnkLhRm8zxboiO8z59w63ghG3TLbR
-         n6GN+yxwDBm18HXN1NVFZdnp7+w/8j170Ylnv1Sco5hNB+tQ5R31HA/g8vdlR3AAcrUK
-         d46Q==
-X-Forwarded-Encrypted: i=1; AKwUvBxA15gnWOkv2jvJkYP35DvFm3OBSHqxdIPbScn6HxRBH5HFyRxS5EGYO4MIwMGi7g6Ak26MYNrL@vger.kernel.org
-X-Gm-Message-State: APuU4Z+63sYHfuJhaId/ueof0b8Oj/3+qh4CB43pbsHjEABmNoDvQIFv
-	LuU8JYqUnt0cQ/2x1/0Kbd3SdvuRdICVoaf5na/ZTJRRIx9JVsUA7v59lNvR1O5RjLsQMrX4YGW
-	jArS3bDR96ESYpFcxALETathjG9S0Oa39us26CDA0DNxCfZyv9FRfw95KDkU=
-X-Gm-Gg: AYBFou2qPbb4T7dc/XrwYX28km1NKePreZvcDE4OpKd53LsnrZ8doS68bmXrTNDMZNz
-	5HXYHO1OJjpf6trpeFzFUgPWysHzFQlDs/hmiAgFP5y4kCVex8anziS7PbT+ULjp4MF4VSfAZmv
-	8ZTlNyUchsMLTN13pBBLvPkrye51asDcUpzqLEpUyJ2Vca1EtsXv1p2RFE3Q9DOcFcyheRO3h0d
-	vST9Mokz+4KqTOtmfXOzHNAfcoIYrPUngqyJPeH6s7O67/B61n0RAX0jUn0NgVejGRdBXuLOJCc
-	d9fSoNl9B4zqG9bhtCvQQzUiY8QnSv7NIAb6hu2Q1wN3E/q3ktBMkJQqqKDTHJvKltXY6Z350qn
-	hy3gUDY2BvGevzWtoFkUpawBV8QKy0qKBrF/bPZqVrch4ChWg+4DXnJ5zhxgVhJUim8eTEF4n/y
-	9I8g==
-X-Received: by 2002:a05:600c:1f8d:b0:4a2:c9b:9b98 with SMTP id 5b1f17b1804b1-4ac177539f6mr393038955e9.17.1793862949756;
-        Wed, 04 Nov 2026 23:15:49 -0800 (PST)
-X-Received: by 2002:a05:600c:1f8d:b0:4a2:c9b:9b98 with SMTP id 5b1f17b1804b1-4ac177539f6mr393038455e9.17.1793862949360;
-        Wed, 04 Nov 2026 23:15:49 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b56f5e65c8sm42015295e9.12.2026.11.04.23.15.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Nov 2026 23:15:48 -0800 (PST)
-Date: Thu, 5 Nov 2026 08:15:46 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=KN81Oltm
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1793870557; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
+	bh=UWmb9HUpIQPQz6k2PGeMG/U7KreRlMRXLm0OBejdgFU=;
+	b=KN81Oltm2Terq6mHB0ZDn3JUUA6KjjAZNhrmt6Qk1pSttBittWJEZhhXlg1lTEbpnDyar8Yz6c5c5uvc+hWisnclaRah6uX4KnMEBmJorKtypfzn8/z9btS75ObdRagHpqYyfMWOuRvqOsIjSe4BNviL+lJn15Lr+ilaNP/o7oE=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R521e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=qinyuntan@linux.alibaba.com;NM=1;PH=DS;RN=23;SR=0;TI=SMTPD_---0XE8K-.B_1793870554;
+Received: from banye.tbsite.net(mailfrom:qinyuntan@linux.alibaba.com fp:SMTPD_---0XE8K-.B_1793870554 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Thu, 05 Nov 2026 17:22:36 +0800
+From: Qinyun Tan <qinyuntan@linux.alibaba.com>
+To: akpm@linux-foundation.org
+Cc: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	mkoutny@suse.com,
+	david@kernel.org,
+	ziy@nvidia.com,
+	baolin.wang@linux.alibaba.com,
+	usama.arif@linux.dev,
+	david@fromorbit.com,
+	qi.zheng@linux.dev,
+	yosry@kernel.org,
+	nphamcs@gmail.com,
+	chengming.zhou@linux.dev,
+	xlpang@linux.alibaba.com,
+	ryncsn@gmail.com,
+	gourry@gourry.net,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Luca Abeni <luca.abeni@santannapisa.it>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	Waiman Long <longman@redhat.com>,
-	Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Clark Williams <clrkwllms@kernel.org>, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH v2 02/21] sched: Refuse SCHED_FLAG_KEEP_PARAMS that would
- change the policy
-Message-ID: <auwtIqa4H4Fqjq6V@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261104211207.1392343-1-mathieu.desnoyers@efficios.com>
- <20261104211207.1392343-3-mathieu.desnoyers@efficios.com>
+	Qinyun Tan <qinyuntan@linux.alibaba.com>
+Subject: [PATCH v4 RESEND 0/5] mm: restore per-memcg reclaim for NONSLAB shrinkers under nokmem
+Date: Thu,  5 Nov 2026 17:22:28 +0800
+Message-ID: <20261105092233.3558950-1-qinyuntan@linux.alibaba.com>
+X-Mailer: git-send-email 2.43.7
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -133,50 +79,117 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261104211207.1392343-3-mathieu.desnoyers@efficios.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Resend: the original v4 went unanswered while reviewers were busy
+with merge-window fixes, and Andrew suggested sending it again now
+that the window has closed.  No changes of any kind since v4.
 
-On 04/11/26 16:11, Mathieu Desnoyers wrote:
-> SCHED_FLAG_KEEP_PARAMS keeps the parameters of a task: it skips
-> __setscheduler_params(), which is what sets p->policy. A request that
-> asks for another policy is then carried out by half, and succeeds:
-> SCHED_OTHER to SCHED_BATCH with SCHED_FLAG_KEEP_PARAMS returns 0 and
-> leaves the task where it was.
-> 
-> For SCHED_DEADLINE it costs bandwidth. A task that priority inheritance
-> boosted into the deadline class is of that class already, so
-> prev_class == next_class and the class check of
-> commit 8a70415351ba ("sched: Reject SCHED_FLAG_KEEP_PARAMS when it would
-> change scheduling class") lets the request through: sched_dl_overflow()
-> admits it and adds
-> its bandwidth, which the skipped __setscheduler_params() never gives to
-> the task. It keeps SCHED_NORMAL and a dl_bw of 0, so nothing releases
-> that bandwidth, and total_bw of the root domain holds it for good.
-> 
-> Refuse a policy change as well, where the class change was refused
-> alone.
-> 
-> A SCHED_OTHER owner of a PTHREAD_PRIO_INHERIT mutex with a slice of
-> 40ms, boosted by a deadline waiter blocked on it, leaves 0.4 of a CPU
-> behind at every such call: total_bw 419424 -> 838854 and there to stay,
-> in 8-CPU VMs of v7.4-rc1 with the four deadline fixes of sched/urgent,
-> and of this series up to here. With this change the call is refused and
-> total_bw is as it was. The selftest added later in this series has the
-> case, params_keep_boosted.
-> 
-> Found by the Sashiko AI review of the first posting of this series.
-> 
-> Fixes: a509a7cd7974 ("sched/uclamp: Extend sched_setattr() to support utilization clamping")
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> ---
+With cgroup.memory=nokmem, the THP deferred split shrinker and the
+zswap shrinker are degraded in two ways.
 
-Makes sense to me.
+First, both shrinkers are missing the SHRINKER_NONSLAB flag, so
+shrinker_memcg_alloc() demotes them to non-memcg-aware shrinkers:
+limit-induced reclaim of a cgroup neither splits its partially
+unmapped THPs nor writes back its zswapped pages.  v1 of this series
+[1] restored the flag to fix that.
 
-Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+However, as Sashiko's review of v1 pointed out [2], the flag alone
+is not enough.  __list_lru_init() also collapses every list_lru into
+per-node lists under nokmem, so even with the flag restored, the
+objects of all cgroups share one list per node: the per-memcg
+shrinker bit is only set for whichever memcg happens to repopulate
+the empty list, so pressure in other cgroups may not even trigger
+the scan, and when it does, the scan walks everyone's objects.
 
-Thanks,
-Juri
+Before commit fafaeceb89a5 ("mm: switch deferred split shrinker to
+list_lru"), THP had fully per-memcg deferred split queues embedded
+in struct mem_cgroup, working independently of kmem accounting.
+nokmem only opts out of kernel slab accounting; THPs and zswapped
+pages are user memory and remain charged to their cgroups, so
+per-memcg reclaim is still what these shrinkers want.
 
+This series keeps list_lrus backed by SHRINKER_NONSLAB shrinkers
+memcg aware under nokmem:
+
+Patch 1 passes the xarray index directly to the list_lru walker and
+drops the reverse memcg lookup that v3 still performed between the
+xarray iteration and the walk.  That lookup was the cause of the
+boot hang reported against v3 [3]: after the keys were switched to
+cgroup IDs, the walker kept resolving them as private memcg IDs, so
+the global drain kept skipping non-empty per-memcg sublists and
+shrink_dcache_sb() could loop forever.  Passing the index directly
+also removes the temporary css reference from the walk.
+
+Patch 2 drops the kmemcg_id copy, which is only assigned when kmem
+accounting is enabled, and indexes the list_lru xarray with
+mem_cgroup_id() instead, so the index works independently of kmem
+accounting.  The list_lru plumbing passes memcg pointers now, and
+memcg_online_kmem()/memcg_offline_kmem() are inlined into the css
+online/offline hooks.  It also drops the nokmem early return from
+the offline path so these lrus are reparented on offline.
+
+Patch 3 keeps a list_lru memcg aware under nokmem when its backing
+shrinker is registered SHRINKER_NONSLAB.
+
+Patches 4 and 5 restore/add SHRINKER_NONSLAB on the THP deferred
+split shrinker and the zswap shrinker.
+
+The savings of nokmem are preserved: slab-backed lrus (e.g. the
+superblock dentry/inode lrus) still fall back to per-node lists, and
+the per-memcg lists are only allocated when a memcg actually holds
+such objects.
+
+Changes in v4:
+ - Fix the boot hang reported by Kairui against v3 [3]: the walker
+   no longer reverse-resolves the xarray keys; the index is passed
+   directly through the internal walk path (new patch 1, split out
+   as a preparation so patch 2 remains a pure key switch).
+ - Drop the kmemcg_id member from memcg_struct_check() along with
+   the field removal, as pointed out by Gregory Price [4].
+ - Otherwise unchanged from v3.
+
+Changes in v3:
+ - Index the list_lru xarray with mem_cgroup_id() (the cgroup ID)
+   instead of the private memcg ID, whose lifetime only covers
+   online groups, and pass memcg pointers through the list_lru
+   plumbing; inline memcg_online_kmem()/memcg_offline_kmem() into
+   the css online/offline hooks (patch 1 as numbered in v3, per
+   Johannes's review of v2 [5]).
+ - Describe in the THP patch's changelog why the list_lru conversion
+   dropped SHRINKER_NONSLAB knowingly, per Johannes's pointer to the
+   original discussion [5].
+ - Collected review tags: Johannes's Reviewed-by on patches 2-4,
+   Nhat's and Yosry's Acked-by on patch 4 (numbering as in v3).
+
+Changes in v2:
+ - Keep the list_lrus behind the two shrinkers per-memcg under
+   nokmem, so the shrinker bits are set for the right memcgs and
+   scans stay scoped to the target cgroup's objects (patches 1-2
+   as numbered in v2, new; addresses Sashiko's review of v1 [2]).
+ - Patches 3-4 unchanged from v1; collected the review tags.
+
+[1] https://lore.kernel.org/lkml/20260904033503.4067283-1-qinyuntan@linux.alibaba.com/
+[2] https://sashiko.dev/#/patchset/20260904033503.4067283-1-qinyuntan@linux.alibaba.com
+[3] https://lore.kernel.org/lkml/20260910080722.3961351-1-qinyuntan@linux.alibaba.com/
+[4] https://lore.kernel.org/lkml/arNK64PxTXbVEhis@gourry-fedora-PF4VCD3F/
+[5] https://lore.kernel.org/lkml/20260907110111.2286932-1-qinyuntan@linux.alibaba.com/
+
+Qinyun Tan (5):
+  mm: list_lru: pass the memcg index directly to the walker
+  mm: memcontrol: drop kmemcg_id and use mem_cgroup_id() for list_lru
+    indexing
+  mm: list_lru: keep per-memcg lists with nokmem for NONSLAB-backed lrus
+  mm: thp: restore SHRINKER_NONSLAB on the deferred split shrinker
+  mm: zswap: mark the zswap shrinker SHRINKER_NONSLAB
+
+ include/linux/memcontrol.h |  16 ------
+ mm/huge_memory.c           |   3 +-
+ mm/list_lru.c             | 114 +++++++++++++++++++++----------------
+ mm/memcontrol.c            |  45 +++------------
+ mm/zswap.c                 |   4 +-
+ 5 files changed, 77 insertions(+), 105 deletions(-)
+
+-- 
+2.43.7
