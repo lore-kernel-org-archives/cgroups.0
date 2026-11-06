@@ -1,50 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.115
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.7
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793946647;
-	b=TLYWE5ehwjamB9TS0x2vtlTiDcPxneB3H1gZ8390PxpKc/bmdhyS6sawDihXemDEm/Ys
-	 S03AA3UWK7NXRILpaJSqipqABgziBYGrn3gSFeW9DNVg3DJ9658xFP8hR1ZKq1SYqPKJu
-	 hZIuOvW9FoAZotDfOySQjDTpCOgbOy4nMYjtO+rgT4WL7ffMaoSKo1L54UufjTT6Vnp+Y
-	 Q5gh16LszTSrJb1Nm83Er32blmf62DaslA2kaAQSB3Uam8NbR1pcA+LgDd27hzqe8prG2
-	 Bu8E2VTdFw8kAzZEhfDpmZCbK26suUDwEdgQuGP4ob/eB1O5fIPyMVlmy4IK7it3kfg==
+	t=1793950515;
+	b=SxSE+62g9R/J7C4fWsy3+pFsIgBtwgrcpx3u66pL/7JepuyFSQgwCAIDbTNiEsdBQhZ2
+	 Bwnr+mgKoEJryK70EgtbUmBIx5WInmKbRSs3g74KDM/wqV8WToN6gPeeG1FuV/0CLeWAS
+	 ZCVbr29uRRqeh6VFjlt/0xgU/556p61HxC2aDnZ3rSEP03Gy1PDkIxYNa+biN7FHwEsOP
+	 8y4VRrGjCSRiBd8q5E38eCHFXlq3zCJywnltK3v2imJXEecVHsmX1NUgOn0qxKvsx6DV3
+	 O9zi8prq+gDcvhlCmRjd99I1LGmGn5c/WIQaAqvD3F7F1Jk+NmdqpPkEEvgEaeg5mPQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793946647;
-	h=DMARC-Filter:DKIM-Signature:References:Mime-Version:User-Agent:
-	 Subject:Date:Message-Id:Content-Type:In-Reply-To:
-	 Content-Transfer-Encoding:To:Cc:X-Original-From:From:
-	 X-Lms-Return-Path;
-	bh=mX+GdBvA4yT9OKqPBs6xrJW5OhdpJfdnYKs9cQ6hIug=;
-	b=tbopwKOEMjyDMSbZb1ON1e5B+pFlKk50MOKaLX6KyKplAiBsvzU8+EyRZ0dBV41QjPq3
-	 o/H1pe2WSDA/bU0jM8kl38nTl2pCEk5YlMGcrm10/nWDVXcPTEhidRLG9z+Qi9nE0ISIY
-	 dCo4DF+MxVZsZuAYILhTHokD2LioGtLj0Qg/oAigd4lKVMEzaY7z19gAi1RujyelBsdcn
-	 uOVu3zku5rU7I/9QcTNJe2RMKvp0VvKWLROqQa2OfKUPLTFhrmEVuamo31dP0gtO0bQrY
-	 tJFVmkAW4ZgIBFO7YqWdHGUTvriNwGRTFxdDjUT7Eh2H9wg2ReMmk+5fmR30FLlWaSw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793950515;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=j6no1/Vpu6L+r0wRbefNhL88soVjvlfqiBGBjbBAWNo=;
+	b=aE3FpQTFGFykVPgcfzWSBCuJ+cfi7P6KCa80fLVIRcdP6GA7zQ7o+p+PHRX/IH+eRnpv
+	 Mp3r1wUDImCMu+4VPNzDcu3TBVQ9tRufQFMyk0E8btfKJ3hwOphDK7mbCKIkjEdD2WJ9S
+	 fuuwqxjXPMH2BzlsADD/uZz0o+crsHPQV6BnsMnzk3IDkd++SJSpSe36ZjtgPRPgZxoKK
+	 z70qtiGuKjDtfwrXgAgf7N8QPTlbXPasIlmEeWa0DG5VJpMnFNKcF03xk9XYcqkmszcPW
+	 aXp0F5rtEZkGF6BwDQxZTc6joA/Ot9aBG2RlSvVeddzHi7ekc2PyE3HWfMqaSB2eFig==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=bytedance.com;
-	spf=pass smtp.mailfrom=bytedance.com;
-	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=p4sn5M9G;
-	arc=none smtp.remote-ip=209.127.231.115
-Received: from va-2-115.ptr.blmpb.com (va-2-115.ptr.blmpb.com [209.127.231.115])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=IAkUzVFQ;
+	arc=none smtp.remote-ip=95.215.58.7
+Received: from mta1.migadu.com (out-7.mta1.migadu.com [95.215.58.7])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 258E3606A331
-	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 06:30:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 258E3606A331
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A840F606A326
+	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 07:35:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A840F606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=p4sn5M9G
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=2212171451; d=bytedance.com; t=1793946641; h=from:subject:
- mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
- mime-version:in-reply-to:message-id;
- bh=mX+GdBvA4yT9OKqPBs6xrJW5OhdpJfdnYKs9cQ6hIug=;
- b=p4sn5M9GuxhrN8PCzUt033kH7bQaoLzYR9vIZD8nfrGq+NdhxIAl9vXxigrYX9OaCKiU2K
- P2JmxymFPibPEM1J9jUR3hkqH/r5srmO9NDO52RLPHMD7OouLdX03dzFye3yKVgUDj94w9
- 7L7WF8b5S/KuOyqCENe7tDYEiOLd+2rjq3c+YOCZaAoBzR/a4PUbidGIHljCQVDcNBHxN+
- jYNE0PfkbKUlLb5M+HDHnrrziNoS10N6sqOD9/XVuuMY6FkaeajZlmh5kGSD4pvEWunGqI
- BP3shM9w/2yubWH48m4xuu/fxNVL+kEwaRNKWEwvOGw2WAEgdXQyDHiigCk5ug==
-References: <20261103122816.48037-1-lizhe.67@bytedance.com> <0efbf4db1decd8e6bb6a5fcdcf897314@kernel.org> <03bceb67-d362-47a6-b555-ed5aa1f9bd3e@bytedance.com> <aurTz8SiB-nQ22lJ@gourry-fedora-PF4VCD3F>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=IAkUzVFQ
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=HiRolt3GBwHkqyoypDw0ynRAMEkeBRNLheBJrN0mHK0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793950512; v=1; x=1794555312;
+ b=IAkUzVFQRvjRz9B0aOPIqxzr/BSHwMsk91EMTzM2B3CRoekgktP/4Y1mpOSgAoiavtazc33j
+ aytN3ePjAhZOAs+SE9FgRtAX8vpefjtYU7gs3Jn1uFqW1/5vaTCFyD0wiDRk0XWr5CH2PMR+7yW
+ nZxv5Q9PtZ3rMBztcS0HDwdQ=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 9d770d7a1c0543d0;
+	Fri, 06 Nov 2026 07:35:11 +0000
+X-Mizu-Trace-ID: 9d770d7a1c0543d0
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <7b661a26-70b5-47fd-af58-19e110c4b950@linux.dev>
+Date: Fri, 6 Nov 2026 15:35:03 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -53,138 +57,121 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
+MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/3] mm/mempolicy: add per-cgroup weighted interleave controls
-Date: Fri, 6 Nov 2026 14:30:17 +0800
-Message-Id: <67fcd8db-269d-43f1-aea2-8c41165747d0@bytedance.com>
+Subject: Re: [PATCH v2 3/3] cgroup/cpuset: Release isolated CPUs when the
+ parent is invalid
+To: Ridong Chen <ridong.chen@linux.dev>, longman@redhat.com, tj@kernel.org
+Cc: hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20261105130344.664336-1-guopeng.zhang@linux.dev>
+ <20261105130344.664336-4-guopeng.zhang@linux.dev>
+ <41a6de2b-e7eb-4574-a698-b4ff8af316fa@linux.dev>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <41a6de2b-e7eb-4574-a698-b4ff8af316fa@linux.dev>
 Content-Type: text/plain; charset=UTF-8
-In-Reply-To: <aurTz8SiB-nQ22lJ@gourry-fedora-PF4VCD3F>
-Content-Transfer-Encoding: 7bit
-To: "Gregory Price" <gourry@gourry.net>
-Cc: "Tejun Heo" <tj@kernel.org>, <hannes@cmpxchg.org>, <mkoutny@suse.com>, 
-	<akpm@linux-foundation.org>, <david@kernel.org>, <ziy@nvidia.com>, 
-	<joshua.hahnjy@gmail.com>, <ying.huang@linux.alibaba.com>, 
-	<ljs@kernel.org>, <liam@infradead.org>, <rppt@kernel.org>, 
-	<surenb@google.com>, <mhocko@suse.com>, <cgroups@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>, 
-	<bpf@vger.kernel.org>
-X-Original-From: Li Zhe <lizhe.67@bytedance.com>
-From: "Li Zhe" <lizhe.67@bytedance.com>
-X-Lms-Return-Path: <lba+26aed740f+481b53+vger.kernel.org+lizhe.67@bytedance.com>
+Content-Transfer-Encoding: 8bit
 
-On 11/4/26 2:42 PM, Gregory Price wrote:
-> On Wed, Nov 04, 2026 at 10:44:46AM +0800, Li Zhe wrote:
->> Does that distinction make the cgroup-scoped override acceptable? If not,
->> could you suggest a better way to support this kind of administrative
->> weight override without adding new mempolicy syscalls?
+
+
+在 2026/11/6 12:35, Ridong Chen 写道:
+> 
+> 
+> On 11/5/2026 9:03 PM, Guopeng Zhang wrote:
+>> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 >>
-> I'm a little confused why cgroup-anything is needed here when you could
-> just override the weight table / interleave functions.
->
-> I don't particularly like the idea of bpf hooks for a single mempolicy
-> mode as opposed to something more generally useful - and I question
-> how useful task-mempolicies are in general for tiered memory systems
-> (they also affect kernel allocation placement, which is not great).
->
-> You have many patch proposals recently trying to adjust the mempolicy
-> components and I think it might be helpful if we could chat a bit
-> about what big problems you're actually trying to solve.
->
-> I get that you want better control over task/task-groups, i think that
-> can be useful - but I also know that demotion immediately mucks all
-> this placement logic up (and we can't check vma / task policies at
-> demotion time) so I question how realisitic the value of these
-> extensions will be.
+>> An isolated partition can be invalidated after its parent has already
+>> become invalid. update_parent_effective_cpumask() then skips returning
+>> CPUs to the parent, but also skips removing them from isolated_cpus.
+>> The invalid child continues to isolate CPUs that no longer belong to
+>> any valid isolated partition.
+>>
+>> For example, on a 32-CPU system with all CPUs online and without
+>> isolcpus= or nohz_full= boot parameters:
+>>
+>>    cd /sys/fs/cgroup
+>>    echo +cpuset > cgroup.subtree_control
+>>    mkdir A
+>>    echo 0,2-31 > A/cpuset.cpus
+>>    echo root > A/cpuset.cpus.partition
+>>    echo +cpuset > A/cgroup.subtree_control
+>>    mkdir A/B
+>>    echo 2-3 > A/B/cpuset.cpus
+>>    echo isolated > A/B/cpuset.cpus.partition
+>>    cat cpuset.cpus.isolated
+>>    2-3
+>>    echo 0 > /sys/devices/system/cpu/cpu1/online
+>>    cat A/B/cpuset.cpus.partition
+>>    isolated invalid
+>>    cat cpuset.cpus.isolated
+>>    2-3
+>>
+>> Release the invalidated child's isolated CPUs when its parent is no
+>> longer a valid partition. Use isolated_cpus_release() to preserve CPUs
+>> still covered by a valid isolated ancestor and by boot isolation.
+>>
+>> After this fix, cpuset.cpus.isolated is empty for this reproducer.
+>>
+>> Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
+>> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+>> ---
+>>   kernel/cgroup/cpuset.c | 7 ++++++-
+>>   1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index fc5454c2740f..f3b808cea51c 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -1976,10 +1976,15 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>           /*
+>>            * Make the current partition invalid.
+>>            */
+>> -        if (is_partition_valid(parent))
+>> +        if (is_partition_valid(parent)) {
+>>               adding = cpumask_and(tmp->addmask,
+>>                            cs->effective_xcpus,
+>>                            parent->effective_xcpus);
+>> +        } else if (old_prs == PRS_ISOLATED) {
+>> +            /* No valid parent will release these isolated CPUs. */
+>> +            cpumask_copy(tmp->addmask, cs->effective_xcpus);
+>> +            isolated_cpus_release(cs, tmp->addmask);
+>> +        }
+>>           if (old_prs > 0)
+>>               new_prs = -old_prs;
+>>   
+> 
+> Hi Guopeng,
+> 
+> Thanks for the fix. Could you try this patch to see if it fixes the
+> issue?
+> 
+> https://lore.kernel.org/cgroups/20261105125215.2205892-4-ridong.chen@linux.dev/T/#u
+> 
 
+Yes, I took another look at the code and tested your patch. It fixes the issue, so I'll drop mine in v3.
 
-Thanks for the feedback.
+> I'm concerned about whether the related issue has been fixed in all
+> the places that need fixing. In your reproducer, CPUs 2-3 are already
+> wrong when A becomes invalid: partition_xcpus_del() only updates
+> isolated_cpus when the old state differs from the parent's state, so
+> the CPUs that A gave back but had distributed to the isolated child B
+> are left in isolated_cpus. This patch only cleans them up later, when
+> B is invalidated with an invalid parent. Other paths that give back
+> CPUs of an isolated descendant may have the same problem.
+> 
 
-Our target environment is a class of machines with both DRAM and CXL
-memory. On these machines, different services run together in different
-cgroups. For us, CXL memory has two main values: it increases the total
-memory capacity of the machine, and it lowers the memory cost for
-workloads that need a large resident memory footprint. DRAM is the
-faster but also more expensive tier, so the practical question becomes:
-how much DRAM does each workload really need, and how much of the rest
-can be placed on CXL memory?
-
- From our earlier testing, different workloads have different suitable
-DRAM/CXL ratios. By "suitable", I do not mean maintaining a fixed ratio
-for its own sake. I mean that, after using some CXL memory, the
-workload's important metrics, such as throughput, average latency, tail
-latency, or other SLOs, are still within an acceptable range.
-
-So the core problem I am trying to solve is: on a mixed DRAM/CXL memory
-machine, each workload in each cgroup should be able to run with its own
-suitable DRAM/CXL ratio, so that it can stay near its own
-performance/cost balance point.
-
-This is why a single system-wide weighted interleave table is not enough
-for our use case. Two co-located services may have completely different
-suitable DRAM/CXL ratios. The cgroup is also the more natural management
-unit for us, because resource isolation, charging, SLO monitoring, and
-userspace control logic are all organized by cgroup, not by individual
-task.
-
-I understand that Joshua's approach can solve part of this problem.
-However, based on the current discussion, that direction still seems to
-need more discussion before it can move forward upstream.
-
-Of course, initial allocation is not the whole story. Demotion and
-promotion will change the actual page placement over time, so I do not
-expect weighted interleave alone to provide long-term placement control.
-For long-term adjustment, using a userspace controller with
-memory.reclaim is a more natural and convenient way to adjust placement
-over time.
-
-The value of weighted interleave here is in the initial allocation
-phase. First, for bandwidth-sensitive workloads, it allows DRAM and CXL
-bandwidth to be used together from startup, instead of concentrating
-allocations on one tier first and relying on later reclaim or demotion to
-reshape the distribution. Second, it gives the container scheduler a
-more deterministic view of memory capacity, so the scheduler can place
-workloads based on the total memory capacity provided by both DRAM and
-CXL, rather than treating only DRAM as the schedulable capacity.
-
-In the long term, we want to maintain the target ratio through a dynamic
-control loop. Memory tiering promotes hot pages back to DRAM. A
-userspace controller observes each cgroup's per-tier memory footprint
-and workload metrics, decides whether the current ratio has deviated
-from the target, and then uses memory.reclaim to apply reclaim pressure
-to the source tier that should be relieved [1].
-
-The target ratio is not meant to be a strict hard limit. The userspace
-controller can adjust the policy based on workload metrics: when cost is
-the priority, it can keep more cold memory on CXL; when performance or
-SLO pressure becomes high, it can temporarily relax the ratio and allow
-the workload to use more DRAM. In other words, I am not trying to make
-demotion reinterpret task policy or VMA policy. I am trying to adjust
-the actual resident distribution at cgroup granularity through a
-userspace feedback loop.
-
-This is also the background for my other patchsets. The memory.reclaim
-source selector is intended to give the userspace controller a more
-precise actuator [1]. In our testing, this is an important capability for
-building the feedback loop.
-
-The sched/numa memory tiering patchset came from issues we found while
-testing this model [2]. Its goal is to make tiering promotion behavior
-adapt better to different scenarios, and to avoid tiering-only feedback
-being misused by the normal AutoNUMA task placement heuristic.
-
-I am not attached to the exact API shape in this RFC. If the
-per-cgroup weighted interleave BPF kfuncs are too narrow, or if you
-think there is a more general control plane, or a better control
-granularity, I am happy to adjust the direction.
-
-[1] 
-https://lore.kernel.org/all/20261102070440.16262-1-lizhe.67@bytedance.com/
-[2] 
-https://lore.kernel.org/all/20261028041253.74839-1-lizhe.67@bytedance.com/
+Haha, good point! I missed that again.
 
 Thanks,
-Zhe
+Guopeng
+> My patch makes partition_xcpus_del() always set the isolation state of
+> the given back CPUs, including those of the descendants, to the state
+> of the parent that receives them. With it, isolated_cpus_release()
+> should no longer be needed.
+> 
+> It would also be good to add your reproducer to test_cpuset_prs.sh.
+> It can be expressed with O1=0 in the test matrix.
+> 
 
->
-> ~Gregory
