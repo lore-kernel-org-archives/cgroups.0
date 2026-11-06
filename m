@@ -1,60 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793974619;
-	b=gCbxLySc6Xa1BJGz7kMt0FV5j9WpKhlm0kHtGZM++B30LA8Eo9um5u/APkRoWxSktZQv
-	 7qrGHtpLWKn8QmccK7LAwnNiFi131hGnC/HKN8LMk62Q26RWAYsNfwGSBbZcrJVeExU5s
-	 NNXAvPri4mceYhg0eKdEeBoqEqDJavCvWDkpQ0RVUUGG8X/Z/OGzgxlPh2Io6PStWOCa+
-	 is7Wr0UBU7FrNkQq5LTd2TGlN7Rc1InJcsHNHPBGgLGoVEc20u6aw4NJDmacQBl7JiRZP
-	 hSV2p9OtN4+n3XC3fybhwET89ygkO9qVSdEPZGwHkSpEvGDRCFlKuK3NJE5KxOkp7tQ==
+	t=1793974691;
+	b=S0CjzF8E/oynNxhTAAfxv2EaOUJpI68FWIvJ57wTcM2DX3nWj6l2F/blG7D7xHrYo+4U
+	 XPCV43mmZ7RNWJuJDxFFN2bthDhL3eKsmm63qSEMReLw1Dw7P1v9POuBdinAmYGjCcNoX
+	 H6BkjqcK8svf7Tpg+YzMxotHdHyLffLFIC8k0fa3JhegoIp2BgSniBR97YLbFd8HRYoF+
+	 4LmbQFZbnsHr3ck9Xc05tqp2pf2hi/PHTmUvIHYiCgmM4xrL49t7xXZ78iW+b1KhfXdYu
+	 IDuO3wix81eK+CBvNZXwVjTCiZDaKcCIB8AHNq3XmqAnQkL2/GrTmweZczLZhsAoOCw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793974619;
-	h=Received:DKIM-Signature:From:To:Cc:In-Reply-To:References:Subject:
-	 Message-Id:Date:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	 X-Mailer;
-	bh=uecgvdcnBS0ssXlLSJ0XuUQT+Bqc+3M+IkCyY0hC8q0=;
-	b=UQNu+nH8zXF9mgQpQNL+Cf2wcz2nWOh3sDQfMYUVOUQwknAYAx/2zhQOBrrC6HS+VF20
-	 iQM1CZ/J6y6csjtgYztQG0DoRgye652EhVLA7qFTHxAk2Ws491N/C09/uXJWKSrdZYA1c
-	 WfK+atKNx9xAH9fv2XjAAx0EYym5qGtjyoerd+2nRzW/P7CWVlfdWC9Qd3UV80Km5XuTH
-	 gAoKWXdSohWVfFK27fyRFOMn3iL6jWSl/CefYG0ph4XhVjei4Atxp0O1Rwp1JBVyFfnJ2
-	 44XQT0WLYwbjhmCqS1Z63GMtsA4wvyKhpg7SRbSkV54xqSF891oabbzbiopwoY3xh9g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793974691;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=DbXOMRc+RxyXDwhPgVxgq6OSlAD0HlpBTR9dAYmXezE=;
+	b=ZniozLnf5pBSyLz8i72JKxnr2VwCMQbOfKFC00z29VPny8Z8Sawc9bgjRjUFVkIOtTEn
+	 +jaziS8Z76UQFmf71TZQfxhCoUnuCHJkpEujxdOvlw7LTsqz6ibrWohlzsCrSYqksid+W
+	 fFkz66nGJkPeWBgjuiWV6VX4jIduECfg395KxEEqT0BkHOJJkt0+iCidEpUDuMkMrEcsp
+	 v0TFc8ycUzi1tzS4VerjWgDb4npoC95jYIQ8hwnUpiyI/QRLVpnBQ19nBWBJ0XWltkAuq
+	 A56/JB+hEEs2LCKEUiFqabpFnpNGbstIoGrwUzu7P52SgqTxD14VL2NxAF+PaoOPFgQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Brk88eoB;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=none header.from=suse.cz;
+	spf=pass smtp.mailfrom=suse.cz;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FIawBo5u;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=GAIC8+xY;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FIawBo5u;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=GAIC8+xY;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C393606D802
-	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 14:16:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E1AE606A326;
+	Fri,  6 Nov 2026 14:18:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1E1AE606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Brk88eoB
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81B5B1F008A1;
-	Fri,  6 Nov 2026 14:16:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1793974619;
-	bh=uecgvdcnBS0ssXlLSJ0XuUQT+Bqc+3M+IkCyY0hC8q0=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Date;
-	b=Brk88eoBEtDsQXHFyYUp+pJODIzkeWJ06z1vTkD7owXBB9aQ8/wPo0pGvH6yQsk5c
-	 xoOXKyjgBNAXeP0LWQ8hA3QYoapPGEdJa6mNg2MZzIHFTnMFGVWRjYbgYBW8+a9JZ1
-	 3kqtpzfbks3i/5u2/V+v7aIvPewO0SfbXGxvrd8ioj7V9ZDwvukpLn0Hg9qBHba7cF
-	 V8YGjZpxNJwgnuIbwA+7z/QpzruaITRvV6/mV2JHGD1UkIKdJMGiD8Hz9lZvGilZBA
-	 L2rUTnvzcU08BQINjJaG+G5BnhpAHMDbQ46VcMXUsLX7KEYD3od5CTRhpwP+zshTzQ
-	 VIbGgdz2574LA==
-From: David Hildenbrand <david@kernel.org>
-To: akpm@linux-foundation.org, Joanne Koong <joannelkoong@gmail.com>
-Cc: shakeel.butt@linux.dev, yosry@kernel.org, hannes@cmpxchg.org, 
- mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
- david@kernel.org, ljs@kernel.org, liam@infradead.org, vbabka@kernel.org, 
- rppt@kernel.org, surenb@google.com, kasong@tencent.com, qi.zheng@linux.dev, 
- baohua@kernel.org, baolin.wang@linux.alibaba.com, axelrasmussen@google.com, 
- yuanchu@google.com, weixugc@google.com, baoquan.he@linux.dev, 
- cgroups@vger.kernel.org, linux-mm@kvack.org
-In-Reply-To: <20261029204157.117879-1-joannelkoong@gmail.com>
-References: <20261029204157.117879-1-joannelkoong@gmail.com>
-Subject: Re: [PATCH v2] mm: move LRU size stat updates out of lru_lock in
- folio batches
-Message-Id: <179397461320.8873.1139979903597807353.b4-ty@b4>
-Date: Fri, 06 Nov 2026 15:16:53 +0100
+	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FIawBo5u;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=GAIC8+xY;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FIawBo5u;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=GAIC8+xY
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 1D076221AB;
+	Fri,  6 Nov 2026 14:18:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1793974689; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DbXOMRc+RxyXDwhPgVxgq6OSlAD0HlpBTR9dAYmXezE=;
+	b=FIawBo5uxM6qqiDjVJWp3+osfdJHTB7/9k/8ZXnfwSqMSVMQsrA+ls8eohG0IqsgJpshAu
+	4k11WqrTgHHWctbcwqEkg37q29R+/n7gnGuz2bQMgmmTJ/h2bxDAuTJMuFv97yn+PnssG4
+	8k8LiAdzcqtEIdwStCzpo35K3tJtj+M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1793974689;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DbXOMRc+RxyXDwhPgVxgq6OSlAD0HlpBTR9dAYmXezE=;
+	b=GAIC8+xY/rXGUL8rB7GiG/X98jUIopLTsD8tl90kFvlhyIwDk5QTCQpDh/2tRDj5r7pbP4
+	TKSB1zBzbcO0FBBw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1793974689; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DbXOMRc+RxyXDwhPgVxgq6OSlAD0HlpBTR9dAYmXezE=;
+	b=FIawBo5uxM6qqiDjVJWp3+osfdJHTB7/9k/8ZXnfwSqMSVMQsrA+ls8eohG0IqsgJpshAu
+	4k11WqrTgHHWctbcwqEkg37q29R+/n7gnGuz2bQMgmmTJ/h2bxDAuTJMuFv97yn+PnssG4
+	8k8LiAdzcqtEIdwStCzpo35K3tJtj+M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1793974689;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DbXOMRc+RxyXDwhPgVxgq6OSlAD0HlpBTR9dAYmXezE=;
+	b=GAIC8+xY/rXGUL8rB7GiG/X98jUIopLTsD8tl90kFvlhyIwDk5QTCQpDh/2tRDj5r7pbP4
+	TKSB1zBzbcO0FBBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EDB5D132C9;
+	Fri,  6 Nov 2026 14:18:08 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id WnUKNKDh7WpnaAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 06 Nov 2026 14:18:08 +0000
+Received: by quack.suse.cz (Postfix, from userid 1000)
+	id 8BE5F21B85; Fri, 06 Nov 2026 15:18:04 +0100 (CET)
+Date: Fri, 6 Nov 2026 15:18:04 +0100
+From: Jan Kara <jack@suse.cz>
+To: Breno Leitao <leitao@debian.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Julian Sun <sunjunchao@bytedance.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, kernel-team@meta.com, stable@vger.kernel.org
+Subject: Re: [PATCH 1/4] writeback: add the missing newline to the slow
+ writeback report
+Message-ID: <qmosz7e5iaxgadaltvzzcduym4z3dpzw7qrdcwahfvoh75mbzm@2gfo7v62qajq>
+References: <20261106-writeback_stall_report-v1-0-bf0c3b9023a5@debian.org>
+ <20261106-writeback_stall_report-v1-1-bf0c3b9023a5@debian.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -64,46 +119,73 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.16.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261106-writeback_stall_report-v1-1-bf0c3b9023a5@debian.org>
+X-Spamd-Result: default: False [-12.80 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[23];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Score: -12.80
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-On Thu, 29 Oct 2026 13:41:57 -0700, Joanne Koong wrote:
-> folio_batch_move_lru() and folios_put_refs() take the lruvec's lru_lock
-> once per batch, but they update the node and memcg lruvec stats for
-> every folio in the batch while holding the lock. Only the LRU lists and
-> the memcg lru_zone_size need lru_lock. Updating the stats while holding
-> the lru_lock is unnecessary, and they make up a large part of the
-> critical section, as seen in [1] where a change that added just a few
-> instructions to the memcg stat update path cost about 2% throughput
-> because the LRU stat updates run under lru_lock, and the overhead went
-> away once they were moved outside of the lock.
+On Fri 06-11-26 04:26:31, Breno Leitao wrote:
+> wb_wait_for_completion_cb() reports a writeback wait that exceeds
+> hung_task_timeout_secs with a pr_info() that has no trailing newline.
+> printk() keeps such a record open for a continuation and does not
+> finalize it, so dmesg, the consoles and netconsole only see the report
+> once the next message is logged.
 > 
-> [...]
+> Terminate the message with a newline.
+> 
+> Fixes: d6e621590764 ("writeback: Add logging for slow writeback (exceeds sysctl_hung_task_timeout_secs)")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Breno Leitao <leitao@debian.org>
 
-Applied, thanks!
+Sure. Feel free to add:
 
-tree: mm/core.git
-branch: core-7.5.misc
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Applied patches will appear soon in mm-next, followed by linux-next.
+								Honza
 
-Please report any outstanding bugs that were missed during review, so we
-can either drop the patch series or decide how to fix it up.
-
-It is encouraged to provide Acked-bys, Reviewed-bys, and Tested-bys even
-though the patches have already been applied. If possible, patch trailers
-will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. Further, this is not a guarantee that the
-patches will go upstream. If in doubt, please check the listed branch.
-
-[1/1] mm: move LRU size stat updates out of lru_lock in folio batches
-      https://git.kernel.org/mm/core/c/ee65a1da
-
+> ---
+>  fs/fs-writeback.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 15260cf2a29b09..01a00d7542b371 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -204,7 +204,7 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
+>  	done->progress_stamp = jiffies;
+>  	if (timeout && (waited_secs > timeout))
+>  		pr_info("INFO: The task %s:%d has been waiting for writeback "
+> -			"completion for more than %lu seconds.",
+> +			"completion for more than %lu seconds.\n",
+>  			current->comm, current->pid, waited_secs);
+>  
+>  	return !atomic_read(&done->cnt);
+> 
+> -- 
+> 2.53.0-Meta
+> 
 -- 
-Cheers,
-
-David
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
