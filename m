@@ -1,81 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.105
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793958206;
-	b=RjNjCX19Knhgz1+wCIjhXHTYFVdHiJCNcusXYo3Tx6NYpiMg8XnBUS/ThNnFlQhZf/vC
-	 0wNOmqzuHjnG//JJ3YQIlF6UtGAUG0OZXQN4dFc/t/hojjuyL0YYdRN1dgk/myhu+XpXT
-	 GZ4cpy+PBbzQy5OKKyyatiU3q+UlfRj3kQ3Zk+IOookMcdUltVnIBoHDI6AB7V6w/Hft9
-	 RLgj0tZynikEEGI6hBoH/4+lJTGTpCZRupoWCzRCMALCjQdOLOrYop3dsiirGZaOkPcwP
-	 YuLIp7s1c1p/Ao2V3M0ceM25hkXhAqCXrNdWtJ4utPF3bI/rB/hiD7toqfQGR2uiRNg==
+	t=1793959554;
+	b=HmNd0ZRMhmwqcNmfTtJj20U6BXrNkEvOS4AR6kogPrx1ekasxKw1dwJdV2mvApEWXW+k
+	 Q66iy4WaYYv6ZebtsrWfYylfHxmhFv64iQkfNh0u0RkSNnm1cBY8zq5+E/vP7CAzLcrs8
+	 WO98C2uZfNOOZlpo65meTOWub942Q7rU2S34UqPNFsqDSjSoe2aa74yZxmiXSws4MOPdJ
+	 HFDvq7Kh9z+3hSTpMrmKr9sYlNsfbzuyj9BtzsvcEZjKnKd8i035ANGhOOnt9H8Yq0Uuh
+	 jndCvoZD1BP93fcTF5ugqONTiO9X9smTmo8pquK35xRSLXZW+J9M9O3bd/YK+bHWVog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793958206;
-	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
-	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
-	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:
-	 References:MIME-Version:Content-Transfer-Encoding;
-	bh=H3fWSYpBrRNGL9jY1TKYKIUAFKC7Gm37XmKPIvJymqA=;
-	b=ORifI8N7gFzD5/SviHLY0EDd9FEX07tMKGEuGfjBhi9ujgOc+y0LNboPubt3qQRyl9Vp
-	 2pdfRIs014awjqSvnaIJ6cDJ6/NqYIpXKfaIk2H/RtYAtTvyFxTMEYyOJqC4EkX+OmmKf
-	 oJR16hFHENX1eSOjZIvpkdAl5HjX7F0QCHL+PEKv9j442EI2GZaL00JLK213AtiOPjUBh
-	 aAp8S3h1Aj5cOeEclT5rIRV+unpDdq1XWaD2xDwOT9czRCW+uHZUGWqMzUNuvayJfngNd
-	 ll+XcIbhzNyb7h2dSpuexuPXQuGJQ62NSaijzscxbJi3JmJ2fRgUxGxaJaJghanwRlw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793959554;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=3ZdWxtf70irIWN0cdRiIhxuODBDNKO9FqOy4Rvd9tt8=;
+	b=JrIwBcA5IhKssDk2gp7jzkC7MOOc+87K52t0V1Bx6NA6glzOQpAC/RUjPALNXXHUGivz
+	 QQSu09dguEMEFUrWoL+fbxTZmC+L+NVaABW1vtX21FmTIqSh+aGQqbWuuNOIf9FbesSZI
+	 pDEE+hFUzh+v2MvNOsrRtShqkGQ0G+jDd5a1oQoE5AIRfi7rYbwLd/iBTzrf56HrlE7ir
+	 XpWDizUxWdZFDFKbHIIGhfT1ZDvbe9Ipr0WePYPlfWZ5iElYGRJ1PSnCe/ZF9OTuXxw90
+	 PI6HZ4Hl9CkFpaH7tKQRv4EenoKJGSjhbtzL1E9TIb6AuukeaFuV5uGpdUH/gLmU+pA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=kylinos.cn;
-	spf=pass smtp.mailfrom=kylinos.cn;
-	arc=none smtp.remote-ip=124.126.103.232
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=JotcG0YC;
+	arc=none smtp.remote-ip=91.218.175.105
+Received: from mta0.migadu.com (out-105.mta0.migadu.com [91.218.175.105])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E5F606A920;
-	Fri,  6 Nov 2026 09:43:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 09E5F606A920
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: 7b5d52d2d9c611f19a56ed5b684f684d-20261106
-X-CTIC-Tags:
-	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NO_NAME, HR_CTE_8B, HR_CTT_MISS
-	HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME, HR_SJ_LANG
-	HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN
-	HR_SJ_PRE_RE, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME
-	IP_TRUSTED, SRC_TRUSTED, SA_TRUSTED, SA_EXISTED, SN_TRUSTED
-	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
-	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
-	AMN_GOOD, ABX_MISS_RDNS
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.19,REQID:4775f0a9-c2a7-4aaf-a34a-45783e1de2cc,IP:10,
-	URL:0,TC:0,Content:20,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:55
-X-CID-INFO: VERSION:1.3.19,REQID:4775f0a9-c2a7-4aaf-a34a-45783e1de2cc,IP:10,UR
-	L:0,TC:0,Content:20,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:55
-X-CID-META: VersionHash:7db8b62,CLOUDID:7bed247e6b3f11f2520c928d0fcff23c,BulkI
-	D:261105235241HZP5CT0K,BulkQuantity:1,SF:10|66|78|81|82|83|102|127|153|865
-	|898,TC:nil,Content:4|15|50|99,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,Q
-	S:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,
-	ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 7b5d52d2d9c611f19a56ed5b684f684d-20261106
-X-User: sunshaojie@kylinos.cn
-Received: from sunshaojie-pc [(114.244.3.119)] by mailgw.kylinos.cn
-	(envelope-from <sunshaojie@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1669217258; Fri, 06 Nov 2026 17:43:12 +0800
-From: Shaojie Sun <sunshaojie@kylinos.cn>
-To: tj@kernel.org
-Cc: cgroups@vger.kernel.org,
-	hannes@cmpxchg.org,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1847B606A32C
+	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 10:05:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1847B606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=JotcG0YC
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=boaUt3lXNw1pWwnwHBSwxbjYyF1gcSAqeO7ntekMlU8=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793959552; v=1; x=1794564352;
+ b=JotcG0YC6P7xRM8RJRgR6tDsE7QOdW9FcJ+0Y7vjDd/57cv9cnIuL+z5idChszYHwpI+RER/
+ 5DOws1g+8YLN1zF96yAZ3SeC472mkhz2z7XuzhKuFyQ2rZbiG5RZaRfUJjfv9AX6NpkRBBmXyuS
+ ewJVy4F0M4FxAE2ritB163L0=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 5c9245ec463c574a;
+	Fri, 06 Nov 2026 10:05:48 +0000
+X-Mizu-Trace-ID: 5c9245ec463c574a
+X-Migadu-Flow: FLOW_OUT
+From: Kaitao Cheng <kaitao.cheng@linux.dev>
+To: Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	David Hildenbrand <david@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Mani Tofigh <mt4022@columbia.edu>,
+	Zi Yan <ziy@nvidia.com>,
+	Mike Kravetz <mike.kravetz@oracle.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Miaohe Lin <linmiaohe@huawei.com>,
+	Naoya Horiguchi <nao.horiguchi@gmail.com>,
+	Frank van der Linden <fvdl@google.com>,
+	Chris Down <chris@chrisdown.name>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>,
+	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	mkoutny@suse.com,
-	sunshaojie@kylinos.cn
-Subject: Re: [PATCH] cgroup: replace BUG_ON()s in compare_css_sets() with WARN_ON_ONCE()
-Date: Fri,  6 Nov 2026 17:43:05 +0800
-Message-ID: <20261106094305.1103123-1-sunshaojie@kylinos.cn>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <auymPbeInX5BsUMT@slm.duckdns.org>
-References: <auymPbeInX5BsUMT@slm.duckdns.org>
+	cgroups@vger.kernel.org,
+	Kaitao Cheng <chengkaitao@kylinos.cn>
+Subject: [PATCH v3 0/4] Subject: [PATCH v3 0/4] mm/hugetlb: Fix CMA parsing, flags and usage accounting
+Date: Fri,  6 Nov 2026 18:05:17 +0800
+Message-ID: <20261106100521.30099-1-kaitao.cheng@linux.dev>
+X-Mailer: git-send-email 2.54.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -87,16 +84,58 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Thu, Nov 05, 2026 at 05:52:29AM -1000, Tejun Heo wrote:
-> Why are we changing this now? These never fired, and if they ever fire,
-> we're in a very deep doodoo.
+From: Kaitao Cheng <chengkaitao@kylinos.cn>
 
-Agreed -- these checks never fire in practice, and if they ever do the
-css_set bookkeeping is already inconsistent, so stopping right there is
-better than limping on with a broken css_set.  The BUG_ON()s are the
-right thing here.
+This series fixes three independent HugeTLB issues reported by Sashiko
+and includes a follow-up cleanup of NR_HUGETLB accounting.
 
-I'm withdrawing the patch.  Thanks for taking a look.
+Patch 1 rejects a global hugetlb_cma size following node-specific entries.
+This prevents malformed input from overwriting valid per-node reservations
+with an incorrectly parsed global size.
+
+Patch 2 preserves persistent folio flags when a failed vmemmap restore
+returns a folio to the pool. This retains CMA allocation tracking and
+raw hardware poison information, while ensuring transient flags are
+cleared before returning the folio.
+
+Patch 3 retains the minimal NR_HUGETLB accounting fix, as suggested by
+Muchun Song, to keep it straightforward to backport. It balances the
+counter before freeing unused surplus folios during reservation
+gathering or after a failed overcommit recheck.
+
+Patch 4 moves NR_HUGETLB node accounting to the underlying folio state
+transitions and separates it from memcg statistics. This cleans up
+the accounting in the allocation and surplus cleanup paths.
+
+Changes in v3:
+- Retain patch 3/3 from v1.
+- Fix code alignment.
+
+Changes in v2:
+- Patch 2: Preserve persistent flags, clear transient flags, and warn
+  about unexpected flags.
+- Patch 3: Account at folio state transitions and separate node and
+  memcg statistics.
+
+Link to v2:
+https://lore.kernel.org/all/20261102024910.31486-1-kaitao.cheng@linux.dev/
+
+Link to v1:
+https://lore.kernel.org/all/20261028113319.38544-1-kaitao.cheng@linux.dev/
+
+Kaitao Cheng (4):
+  mm/hugetlb_cma: fix incorrect hugetlb_cma_size assignment on malformed
+    input
+  mm/hugetlb: Preserve persistent flags when returning folios to the
+    pool
+  mm/hugetlb: fix NR_HUGETLB accounting for unused surplus folios
+  mm/hugetlb: Account NR_HUGETLB at folio state transitions
+
+ mm/hugetlb.c     | 52 +++++++++++++++++++++++++++++++-----------------
+ mm/hugetlb_cma.c |  3 +++
+ mm/memcontrol.c  |  6 +-----
+ 3 files changed, 38 insertions(+), 23 deletions(-)
 
 -- 
-Shaojie
+2.53.0
+
