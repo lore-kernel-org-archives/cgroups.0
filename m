@@ -1,76 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793962209;
-	b=yyOju/V9d0LlfmPKe21EPyRHin1IIQtjrp4VVKFVVypuDupEgHik+KbrQwtIVEFSjpIj
-	 o8A12Tks3TZoXL7bAltdbcDEUylcERWKD2R1a8XomoyrlT6UZh/1vcH8CyPcEjWDvvNVd
-	 ZIBJ4VI9LNbymtbMBZJMtMYXTu9DM4jcP8JPAbLkdE5B01/gcuzmUl6gLxDaEF9mIkJbl
-	 CVvUSDy5j5G9orz5zfqleTySj+ZPMLbD3waWHSZq0KRkaKs8f/gfmGC3kEY/wagGhYRtf
-	 4pidWhqHtY0Bqs70PJM7Tt61wclzgzBI8vhk44YLkqr6pchhh+uWtYBN9cK4/7HHcMQ==
+	t=1793962563;
+	b=RMSlRBBbi+HriWKchChrTAfNTqoSxe2SpEX6X2ZIY1F0aubY2gRRh2V2+YX7s53D+wQ9
+	 P1fRNRGrWfo96QPC50fsNbYbt88RBusd2MytprFiU8BxWT8pV1rArxg7GT6ZfQPYgpjeQ
+	 gfGPt7DCkTAXGBs7SLDkYlg7yxGti+JzHl38Nsl2R77Cu3y/hViuWNcNmkIcQVf5KOXZd
+	 ZhSCwKC5L9q5Ur47jFyJT8SvUcsmAaT8cbmMjxCxJrYkpE8j8IDnAtBdfiewLrNvywxLQ
+	 i2DINfg3XhgqfvU3+0BXCZsQx7SkSqg7oHZi9rySRfL2iHz8fY9REEzgGPyNdwPaAAQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793962209;
-	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
-	 Subject:Message-ID:References:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To;
-	bh=xYW39RZi6BQZ7wB7I4RRp3gBwQGPXTwbaw7HbZN2BsI=;
-	b=oOsiNTwS7I9lbRKxrgoonRf0EcgG12BbRuTewFnlOBdW5h+W70vj8STH7OETEp7JhS6j
-	 anKSeE46C01ArcUQX0FMJZdQAKeftqQWHnsCfK6BZhQPr2kw7v0NhmZ8Hdp9OD9dpiiiG
-	 zzJ3E9IWn1I4xOu/ZhfEPgaZHrhYb/cop2eqh0wddos8x9xTEfuyA9GCp6rHgZoLV9/yh
-	 ILpqi7kVvX+WqM2FZgkX8hZER1jKMk3zvvWTQ6a6mnpfM0c2slIP+pdR8iCj7/KxUBuoX
-	 /jpd9qSRnc9PT2GvuHQnKkkP/lrkMoCII7buX2swz1HU/6N/YNiX8fuWw3fobg0kjMg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793962563;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=9rHwkPMwxdMgha3QVXCkmngbsNTxtZexOOuCRv+XpNE=;
+	b=0Bk7S1kNJXE1/xpYQnUkBcDNVxAaW+cVMR++KANZEZwgeJJ4WlrnVZMdX7AFGoeJnlFB
+	 qzo5jDRwZYCSJiqVr9S5BhGreOWdBOWH8l28SM3lOGw/+4HeEklYMCbw9efyFKjfGa6oo
+	 TbtZPKs/lq8xNv39m8AQkSKFz2U2Wg9d66UdfX7Qp9XREJOx+PzFU91m7IxZeQkdgKByK
+	 dap5s00XKW5dTwaHVEPM2rF4Td+J9biWQLScVt2oRsz5Sko+pinjiXBBzMRHRhDuGRiLa
+	 hCFN9pnHTwVusJ7dMAog8IiM/AUqk33TAh7aco6gkioQpq4BVtxdxrKw0kLfJp9kkcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=pass smtp.mailfrom=infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=poBvO1j7;
-	arc=none smtp.remote-ip=90.155.50.34
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	arc=none smtp.remote-ip=91.218.175.18
+Received: from mta0.migadu.com (out-18.mta0.migadu.com [91.218.175.18])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB582606EEAC;
-	Fri,  6 Nov 2026 10:50:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB582606EEAC
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=casper.20170209 header.b=poBvO1j7
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=xYW39RZi6BQZ7wB7I4RRp3gBwQGPXTwbaw7HbZN2BsI=; b=poBvO1j7MwZvUIGsLTn3iJCmx/
-	CSuYqhq//CeM0atUd9aOwTyvnO52sxlX/0pRX7c2Ot1CP3q4viXf3nFpCGIBHXD93M654Z0GncDYY
-	0s/1FckqirvBZN5ryvJADB/GI+hUbi2XTPmU3wwN8X5ZPmYswmFE/ZducjrM0jNSxIMj6rssVzP9m
-	naSTva9/+9GWSpeTjIKwW9H2Kh5a3K+BKEQiwKWouEQlv379jB/f0yiHjPSVkzyaDpaWxCloZkqLM
-	bonIjdGN2fblCQ1oVoKGBsT8yFdWAO0Gqy+F/n5vYu55b3XvzakgJpRQJXhk5siDP9j1z63fgygBZ
-	pNqHHb5A==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xPHWF-000000039C3-3mMH;
-	Fri, 06 Nov 2026 10:50:03 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 7DB0E300882; Fri, 06 Nov 2026 11:50:03 +0100 (CET)
-Date: Fri, 6 Nov 2026 11:50:03 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-rt-devel@lists.linux.dev,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C162A606A32C
+	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 10:56:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C162A606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=PP1vC/2Py1tmxSvMadYBueWiOL9MqDxc72g6D5btaPo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793962558; v=1; x=1794567358;
+ b=Bcoy02Y/s24WwhNg4as3UCM+R6eoOYRjrJztOhDkgiUVp2EB2L+X5GLizj6M/kqBRuO4gacD
+ pko8ZQSsnvqHG21Lu5xgJjZVAteOSVijhyvU0BbZ6IfmG9014AXqsPZTNYk5FPrrLfwdBi+86qJ
+ sMs/76KfTt67j2bGFtr7MAWI=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id da0bf48ede6c7b6a;
+	Fri, 06 Nov 2026 10:55:58 +0000
+X-Mizu-Trace-ID: da0bf48ede6c7b6a
+X-Migadu-Flow: FLOW_OUT
+From: Ridong Chen <ridong.chen@linux.dev>
+To: Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	John Ogness <john.ogness@linutronix.de>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: Re: [PATCH] sched: Remove CONFIG_RT_GROUP_SCHED
-Message-ID: <20261106105003.GU1813469@noisy.programming.kicks-ass.net>
-References: <20261105164724.yxONBd03@linutronix.de>
- <auy6nyTUuHBlgrV_@slm.duckdns.org>
- <20261105193010.tXUDDu2w@linutronix.de>
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
+	Chen Ridong <chenridong@huawei.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH v2 0/4] cpuset: preparatory fixes and cleanups for partition rework
+Date: Fri,  6 Nov 2026 18:55:34 +0800
+Message-Id: <20261106105538.2915492-1-ridong.chen@linux.dev>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -80,24 +70,74 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261105193010.tXUDDu2w@linutronix.de>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Nov 05, 2026 at 08:30:10PM +0100, Sebastian Andrzej Siewior wrote:
-> On 2026-11-05 07:19:27 [-1000], Tejun Heo wrote:
-> > Hello, Sebastian.
-> Hi Tejun,
-> 
-> > 
-> > I'm not against it but wonder whether it'd be useful to do it more gradually
-> > so that people can pipe up if they depend on it. ie. Mark it deprecated and
-> > put it behind EXPORT for a bit and then BROKEN before actual removal.
-> 
-> I would be surprised if this is actually used especially since it is
-> cg-v1 and v2 is the default/ used by everyone (?). 
+From: Ridong Chen <chenridong@xiaomi.com>
 
-So I would love to actually delete this. But IIRC there were actually
-people who used it.
+This is the first part of the cpuset local partition rework posted as
+RFC v4 [1]. The rework is split into three parts to make it easier to
+review and merge:
 
-But yes, we need to replace this with that other thing.
+  1) fixes and preparatory cleanups (this series);
+  2) introduce partition_enable/disable/update() and rework the local
+     partition code on top of them;
+  3) clean up the remaining partition state handling outside these
+     helpers.
+
+Patch 1 is a fix for an existing bug, found while looking into a review
+comment on RFC v4: when cpuset.cpus.exclusive of an already invalid
+partition root is cleared, its effective_xcpus is not reset, so its
+former exclusive CPUs can't be claimed by a sibling. A test case is
+added for it.
+
+Patches 2-4 are the first three patches of RFC v4, rebased onto
+next-20261104:
+
+  2) add an early empty cpumask check in partition_xcpus_add/del(), so
+     callers don't need to check it;
+  3) settle the isolation state of CPUs given back to the parent in
+     partition_xcpus_del(), so isolated_cpus_release() can be removed;
+  4) generalize validate_partition() so it can be used for both local
+     and remote partitions.
+
+All patches build on their own, and test_cpuset_prs.sh passes with
+this series applied.
+
+[1] https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+
+Changes in v2:
+  - Patch 1: force update_cpumasks_hier() after reset_partition_data(),
+    so that the descendants don't keep the released exclusive CPUs, and
+    add a test case for it (Sashiko).
+  - Patch 1: fix the Fixes tags (Sashiko).
+  - Link to v1: https://lore.kernel.org/all/20261105125215.2205892-1-ridong.chen@linux.dev/
+
+Changes since RFC v4:
+  - New patch 1 to fix the invalid partition effective_xcpus reset.
+  - Patch 3: only settle the isolation state of the CPUs still owned by
+    the parent when invalidating a child partition in
+    compute_partition_effective_cpumask(), as the parent may be shrunk
+    and not updated yet. This code is removed later in the rework.
+  - Rebase onto next-20261104, which includes commit 362212853cd0
+    ("cgroup/cpuset: Fix incorrect CPU accounting with parent's effective_xcpus expansion").
+
+
+
+Chen Ridong (2):
+  cpuset: add early empty cpumask check in partition_xcpus_add/del
+  cpuset: generalize the validate_partition() interface
+
+Ridong Chen (2):
+  cgroup/cpuset: Reset partition data when an invalid partition stays
+    invalid
+  cpuset: settle isolation state when CPUs are given back to parent
+
+ kernel/cgroup/cpuset.c                        | 217 ++++++++----------
+ .../selftests/cgroup/test_cpuset_prs.sh       |   6 +
+ 2 files changed, 97 insertions(+), 126 deletions(-)
+
+
+base-commit: 8b7179210b22f8e48a82c5ceacb9d56a9c4cfec4
+-- 
+2.34.1
+
