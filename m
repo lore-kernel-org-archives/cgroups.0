@@ -1,70 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=178.63.66.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.70
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793995176;
-	b=QU/1PkWmQj+0TOvJK1XRVCyctTRII06byVoPygsck1MYRQf5ghfw5i9b5iSlHXvN0t0m
-	 t+NCdTfN0RrdnwgnFjejomSPd4Lz7vQnLTBRdROCRHnRtCi3bTthjKmJ1p0zoJZ+ezehT
-	 TrOqHbEDYLPpO747fj7OO1bvwpP9aJSHzhuSJy/9jO2SKyFzV+DIxXViLm+BOjtryre7L
-	 DYiXkO16FNAlsjR6wf966acYrIXBgYwIwx2myZfmffHsRffYvWmLy5GT/Z/bjwJsx2T3s
-	 GoWdEV2P1IxvxGLkKlKk6vI0tXFzKR19SIREV1UAJKtCZVkkeAO+979llTqiO81SCnA==
+	t=1794009553;
+	b=JanIOEhcKXl9xJg7a/7WiN3HPKPHkrtdq/Ufarxa+LGomzDL0P0KY8xZo9usJYdNT4ae
+	 5OEP3lQCecPnkBoRZm0FIgZp2pqjW+dR7epjLe7h95nuGbfVWDLt69eF77+IOcuc4XD+l
+	 O4epaUZYaGN+CMIc7rvXOJ8kmOirT6QrVAozF2IbIUWENlldTG0Jh+aByvOXzrKJif/EV
+	 sVllIf4QhqCyKEjE8dXBDYyqqRUzyar8DDEk3F+hyMC7NMSAfRKQHntdRh9/a/e25YpX8
+	 ZGdo1vEvDw1Q8sjBliAjjOhX4eUMUSvuG0HuJLH205NdDcYxbVA7r8IsA45WVSXf4GQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793995176;
-	h=DMARC-Filter:DKIM-Signature:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=4JJO7J4fojnA0nt5hwOEl9UDSFikUampjKz664dNgaI=;
-	b=UxnQ84L8ykdngxvojz6bpdDPZBcvEsOUcuYs6V8KAlg6/05+Q3a8uJQ6HUxutiGevRXg
-	 I9Gurp536qurXsqKQ7UNZKYRCFm8mfhGTAbNyTpBZxlt7zQzPIR0vkAlePJd58Nk3v8PT
-	 iGIOk18LL55kD3jaSD8kSNlpQFBNmXVugofDcYEnajulfWdh+G5yboLx4fgMMQUPcxRa+
-	 wU+y9i6gGs5SCO3Y1eHh/shT0+rkHCMOdHwL8LckWqijxqmFwzVPl4JyNmsttJRtq+TSp
-	 Y91av6Xqotm7R3s0f15DVn3IQjf7u1McZhFNNOxcl20t/8HWLe4VHibHnE1BpcilsHQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794009553;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:Mime-Version:
+	 X-Mailer:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=QLxBnr2dWVF7awuaywn040Wg1Wa6I8q0xUXMqEWtl88=;
+	b=zuD5oql/y0yIId11MuAhx1b/nElOMquazdffrSCTxdYXYQHY6h+Hy2fmIvayoG+RxV8w
+	 DudhjYLyvpvN8VSEMysUFu+kD9H8nveboek1IzqgSieHbNVtsX9Ou1rKmMvHesiQFxd9g
+	 oOraea5JT0whY3poxSpjMKc7wUm+oByL82f81PP3PHpi/kbt947c2dQjTG8etUYkTEeKV
+	 JaB9ttFvWmNOaat61TfNL7v5tqIHOSX9EKUsgIOaxp+byVpTZK1AJQuj7brcUW0kAKv85
+	 NV1pzhZ+BPw+rbLE8vEqhLAL812LEjZpTchld5OKtLgJVSSwgL4WlCyg3+c0rOtUmsQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=hallyn.com;
-	spf=pass smtp.mailfrom=hallyn.com;
-	dkim=pass header.d=hallyn.com header.i=@hallyn.com header.a=rsa-sha256 header.s=mail header.b=Opz9o4VQ;
-	arc=none smtp.remote-ip=178.63.66.53
-Received: from mail.hallyn.com (mail.hallyn.com [178.63.66.53])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--tjmercier.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=OMpqWCP3;
+	arc=none smtp.remote-ip=209.85.160.70
+Received: from mail-oa1-f70.google.com (mail-oa1-f70.google.com [209.85.160.70])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92459606A326;
-	Fri,  6 Nov 2026 19:59:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 92459606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hallyn.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=hallyn.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D82DA606A326
+	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 23:59:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D82DA606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tjmercier.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=hallyn.com header.i=@hallyn.com header.a=rsa-sha256 header.s=mail header.b=Opz9o4VQ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=hallyn.com; s=mail;
-	t=1793995173; bh=I8hBdflsjy5ULST78omV7Oaz6W+NqRtKI6XBIEd0n60=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Opz9o4VQjwN9tzX/hO5eSaQ5FQr2WLZl2g1ulAKlt/I2IxmzJ07EHL9LiEfJOVcZ1
-	 cx+7z1Uy5uM+BDh9hDXSmu4+YnsGU3op5jSCjUG33hSaM+zPGOjky5ElfFMhbwHAT1
-	 13EStbhliD7a6DbxEWKx0jLosOxuuYIn/Huix4qegeXUbaoah8N3m625DbjOYsK+4f
-	 7JNeWuVf9y2lKTxVFGvq2lheqSxd7h16n+LxptqmB8cjs41rJd9N/v+1Wiv0Up6Dmz
-	 pIMe67tgdd44TRJhG2FM9jstawe6mBUAFw5k4oHUGNTZOPLyKwPUmef05sBb2tl67/
-	 +C8idkqAnfGOQ==
-Received: by mail.hallyn.com (Postfix, from userid 1001)
-	id 952DC8B5; Fri,  6 Nov 2026 13:59:33 -0600 (CST)
-Date: Fri, 6 Nov 2026 13:59:33 -0600
-From: "Serge E. Hallyn" <serge@hallyn.com>
-To: Aaron Tomlin <atomlin@atomlin.com>
-Cc: tsbogend@alpha.franken.de, paul@paul-moore.com, jmorris@namei.org,
-	mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com,
-	vincent.guittot@linaro.org, stephen.smalley.work@gmail.com,
-	casey@schaufler-ca.com, longman@redhat.com, tj@kernel.org,
-	hannes@cmpxchg.org, mkoutny@suse.com, chenridong@huaweicloud.com,
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
-	mgorman@suse.de, vschneid@redhat.com, kprateek.nayak@amd.com,
-	omosnace@redhat.com, kees@kernel.org, neelx@suse.com, sean@ashe.io,
-	chjohnst@gmail.com, steve@abita.co, mproche@gmail.com,
-	nick.lange@gmail.com, cgroups@vger.kernel.org,
-	linux-mips@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5] security: Expand task_setscheduler LSM hook
-Message-ID: <au4xpT1D8WzBxdvY@hallyn.com>
-References: <20261105172210.76706-1-atomlin@atomlin.com>
- <au4ovp/Ghd25rtfZ@hallyn.com>
- <kn57okulm7cmodzdzvzqqswzafu3vopsatfcsptyrz5ztknx4w@ngwh6si3zgpo>
+	dkim=pass (2048-bit key, unprotected) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=OMpqWCP3
+Received: by mail-oa1-f70.google.com with SMTP id 586e51a60fabf-45e6091d8a1so609709fac.1
+        for <cgroups@vger.kernel.org>; Fri, 06 Nov 2026 15:59:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20260707; t=1794009552; x=1794614352; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QLxBnr2dWVF7awuaywn040Wg1Wa6I8q0xUXMqEWtl88=;
+        b=OMpqWCP3w2TNWkCpaGDqlfhPWO7GAkSXve+GiumCIEy+wpd8n9eBF0ZdfrQjNkuexF
+         gRixkS6t0FqUbM2FyUoEePBUWNxCS7oL6wnv48is0SPAG3aDwgoou0I36MZSMari3V7x
+         rtRpPyXLBYy2mXYNv3VZuhjEiywNom6v5ZaIhrUPAl4FgYnZT4SZItLe+vkIxhvxkKYM
+         CZn/Pghml7RHbdGLmq6P93YVS57kGfAIZiZ7JCuP7rXpdstHK7IxhJ15p6FTSbLHwkjv
+         uMFnW9vCglhhTTWakcpZM0gfC7pPCUhMScxetQKFDT7LIkkruatKFs3c4y24gQjktgwL
+         nYAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794009552; x=1794614352;
+        h=content-type:cc:to:from:subject:message-id:mime-version:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QLxBnr2dWVF7awuaywn040Wg1Wa6I8q0xUXMqEWtl88=;
+        b=SCLcapMh4g1PT5S9XCsgxHrMfhgPDXZp5sdgXW13Prow0cbh+AfZ4uo2pTSV2B1jb+
+         7K+VKax0Ow4CT3IJBCfyaIoEOZ+UZbP1ZQvt3GBz/gSYqu3uI+QtzUFWMVXsQHoNuZOn
+         6RCI3P6FLSJwJyDsQS54EXlEGzr+QgpR02W+p6d1/9Vnni+D3UcuG2brDNdLlrL3rmce
+         oj11ZAyLKMiVMoeOy3dSZpAIRnk4u+ceQQZn5Ldtt27nEDDtHulK/hNTod4XhF1vHfZG
+         BtyyLzUjILgSgVQ0zMFypXUGj/WsSZgL0gE4R2nMBjg0j98iGznDj1vKI2XgcQIIQtOB
+         87eA==
+X-Forwarded-Encrypted: i=1; AKwUvByxDgKCexLlorUL54Pox9nCRTjbN//2Bu2l2GdScbrsAvxNT0I92u9LTUvDVEusJaaeKRlSSYpa@vger.kernel.org
+X-Gm-Message-State: APuU4Z8QDhzRJHEq82r+V1L9ne7A7ngUDKS7eq3TQqT6vWG128idORpI
+	SL0U/uJTgEhrNifelvOPlZCbIWwfgr9/Z99wPvGsfT9H8CQq1nlNuREuksAPVN+Dteiobcrj652
+	FUNc8UgLXFEYyFAiTww==
+X-Received: from iokk25-n1.prod.google.com ([2002:a05:6602:8319:10b0:9c4:de2b:c40f])
+ (user=tjmercier job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6808:1985:b0:55c:8ee:a9c4 with SMTP id 5614622812f47-567e115e036mr3038381b6e.43.1794009551333;
+ Fri, 06 Nov 2026 15:59:11 -0800 (PST)
+Date: Fri,  6 Nov 2026 15:59:04 -0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -73,63 +75,86 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <kn57okulm7cmodzdzvzqqswzafu3vopsatfcsptyrz5ztknx4w@ngwh6si3zgpo>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.56.0.455.g6c5a503b38-goog
+Message-ID: <20261106235904.1092712-1-tjmercier@google.com>
+Subject: [PATCH] mm: workingset: compare shadow nodes node-wide without kmem accounting
+From: "T.J. Mercier" <tjmercier@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <qi.zheng@linux.dev>, Dave Chinner <david@fromorbit.com>, 
+	"=?UTF-8?q?Michal=20Koutn=C3=BD?=" <mkoutny@suse.com>, David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, "T.J. Mercier" <tjmercier@google.com>, 
+	Jaewon Kim <jaewon31.kim@samsung.com>, Jaeseon Sim <jason.sim@samsung.com>, 
+	Youngchan Kim <ycshark.kim@samsung.com>, Dmitry Skiba <dskiba@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Nov 06, 2026 at 02:50:34PM -0500, Aaron Tomlin wrote:
-> On Fri, Nov 06, 2026 at 01:21:34PM -0600, Serge E. Hallyn wrote:
-> > > This change updates all in-tree security modules (capabilities, SELinux,
-> > > and Smack) to accommodate the new parameters mechanically, while
-> > > providing LSMs with the necessary context to enforce strict scheduling
-> > > and affinity policies.
-> > > 
-> > > Reviewed-by: Casey Schaufler <casey@schaufler-ca.com>
-> > 
-> > This seems misleading - Casey explicitly said "for the smack bits".  This
-> > makes it seem like he reviewed and approved of the whole set.
-> 
-> Hi Serge,
-> 
-> Apologies for that, it was not my intention to misrepresent the scope of
-> Casey's review. The qualifier line was dropped when collecting the trailer.
-> I will update the tag in the next revision to explicitly scope it:
-> 
->     Reviewed-by: Casey Schaufler <casey@schaufler-ca.com> # Smack
-> 
-> > I see no issues with the commoncap.c and security.c changes, but as
-> > Paul said two versions ago in
-> > https://lore.kernel.org/lkml/CAHC9VhSROg6RGUN4_ZVBoEwYjRnKvyjnkbx2D88c09KiTgY3KQ@mail.gmail.com/
-> > nothing appaers to be using these.  Where is the user?
-> 
-> The intended consumer is the BPF LSM (via the generated
-> bpf_lsm_task_setscheduler() hook and the __nullable BTF annotations in
+count_shadow_nodes() limits the number of xarray nodes holding shadow
+entries to 1/8th of the pages that could be using them. For a memcg, it
+counts the LRU and slab pages local to that memcg.
 
-Ah, I see, thanks.
+With kmem accounting disabled (cgroup.memory=nokmem), shadow nodes are
+not charged to any memcg and __list_lru_init() makes the shadow_nodes
+list_lru non-memcg-aware, so all shadow nodes of a NUMA node are on a
+single list. shrinker_alloc() falls back to a non-memcg-aware shadow
+node shrinker, which shrink_slab() only invokes for the root memcg.
+count_shadow_nodes() therefore compares every shadow node on the NUMA
+node against the pages local to the root memcg.
 
-> include/linux/lsm_hook_defs.h). As discussed with Peter and Paul in the v3
-> thread [1], when sched_setaffinity() is called, the cpuset controller
-> silently intersects and truncates the requested mask without surfacing the
-> original request, and seccomp cannot safely dereference the __user cpumask
-> or sched_attr pointers without TOCTOU races. Exposing the copied-in
-> sched_attr and cpumask to task_setscheduler allows BPF LSM programs to
-> audit or mediate the actual userspace request before it is sanitised or
-> applied.
-> 
-> In my reply to Paul on v3 [1], I mentioned that once the MIPS prerequisite
-> landed, I would include a concrete in-tree demonstration alongside the hook
-> expansion, which I neglected to include in v4 and v5.
-> 
-> Would adding a BPF LSM selftest (under tools/testing/selftests/bpf/) that
-> attaches to lsm/task_setscheduler and exercises both the sched_attr and
-> cpumask parameters (including NULL and non-NULL paths) be sufficient as an
-> in-tree user/test?
+When most tasks run in child memcgs, the root memcg only holds a small
+fraction of all pages, so the shadow node limit derived from the root
+memcg page count is far below the number of shadow nodes on the NUMA
+node. Since the shrinker has seeks == 0, every root shrink_slab() call
+trims about half of the "excess" shadow nodes. Most refault information
+is thrown away, so refaults of recently evicted file folios are not
+detected. Refaulted folios lose PG_workingset and the workingset_refault
+and workingset_restore stats drop.
 
-Self-tests are good :)
+In testing on devices with kmem accounting disabled, moving tasks from
+the root memcg into per-application memcgs dropped workingset_nodes from
+~37,000 to ~900 and raised workingset_nodereclaim 4.6x while
+pgsteal_file rose by ~12%.
 
-> [1]: https://lore.kernel.org/lkml/ozsngetxq44lahategdi43sqrwdnpotsrebssczymqtkbh7snl@u6ytkznmpne5/
-> 
-> Kind regards,
-> -- 
-> Aaron Tomlin
+When kmem accounting is disabled, compare the shadow nodes against the
+whole NUMA node, as is done without memcg. Behavior with kmem
+accounting enabled is unchanged.
+
+Cc: Jaewon Kim <jaewon31.kim@samsung.com>
+Tested-by: Jaeseon Sim <jason.sim@samsung.com> # Galaxy A18 LTE
+Tested-by: Youngchan Kim <ycshark.kim@samsung.com> # Galaxy S27
+Tested-by: Dmitry Skiba <dskiba@google.com> # Pixel 10
+Signed-off-by: T.J. Mercier <tjmercier@google.com>
+---
+ mm/workingset.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 1504f91cdca5..87d5e55dd684 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -682,7 +682,16 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
+ 	 * PAGE_SIZE / xa_nodes / node_entries * 8 / PAGE_SIZE
+ 	 */
+ #ifdef CONFIG_MEMCG
+-	if (sc->memcg) {
++	/*
++	 * Without kmem accounting the shadow_nodes list_lru is not
++	 * memcg-aware. So the count above covers the whole NUMA node, and the
++	 * shrinker only runs for the root memcg, whose local pages can be a
++	 * small fraction of the node's when most tasks run in child memcgs.
++	 * Compare the shadow node count against the memcg page count only when
++	 * the shadow_nodes list_lru is memcg-aware. Otherwise use the NUMA node
++	 * page count as is done without memcg.
++	 */
++	if (sc->memcg && shadow_nodes.memcg_aware) {
+ 		struct lruvec *lruvec;
+ 		int i;
+ 
+-- 
+2.56.0.455.g6c5a503b38-goog
+
