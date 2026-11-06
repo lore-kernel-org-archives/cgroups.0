@@ -1,88 +1,72 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.104
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793964616;
-	b=OUcJNhWdg9lFIINXu8Pf2wU0Olk9CBt8FjIVHKMNIhumMD8qLzvu1n2djbBkSP16sU2F
-	 LIKMYzdVSacnhrw1a+npedLrYEMn5xSDWghMbiT1MeR8JqFYe7N9qKxnNc14LTYlbTSF5
-	 phevPQbhXdLK6j+AYdPotbHLTLgyQd2UCMebsTiG6K0lj/RkQCqXja7uNi6OH2HwCKl9G
-	 pQoPUoUO7IU1RW3KgdvPUNDOV4HeB5AufedD5OpOqJ0nUSNW9Ugh3BZSsNaGBmix3Djkl
-	 5DUyciDA1mM+elEebY0Q2WjRNFzPRWJ3jX9ngDG5bhllIr3D0gGJY1b28t/tLxVrgXg==
+	t=1793967857;
+	b=sEtMSwaf0Iaq3dposYwZMng0tM0Ijgs77AwubL0N/xpVJVI9Fl3BHJK9XX5THiNFFnLv
+	 XDPQ8eIqZBTXhUs6tuQaJ1oHevP57HtgtvlML1d7JD1b9Ng02NgtiaMbLX3oWzuEpuIEB
+	 Mh+vwmUjMn1uY1Y8XObEW6s1jP5hR2TfCE/P4fj2sLwm0qXVtR5OMWFSyWnWKI3wOTwvA
+	 2qEw5R08pnGXuM9TaxOqHBwlmyNxXHRkNMefaebaAbQTUGB47M/64AwVcQzZmSKjDhEb4
+	 KfSzMCfSJinsPUH8tmWyY8oeeZS9Xkjm/zTeZ18BbxQUCzh7c0hR6bbnwuIvrg9xlJg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793964616;
-	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=I9u+1gPJ7RC1FD5Cq1A3nqgz7H8YeuGoMr0x60qRtl4=;
-	b=JYzbusKN5RimGCL6hH+TRnvHrFSuocO6lXJsBqqTJkosl6KAuBTypcE+l9vzMZ7uymhR
-	 dx/KoRW1xnKeutzlcHxOvjX9aAyOIVvquY68m3ErHG2VjvqVYmDkjTQpkkAiAk/pjmURu
-	 tiiXj/+UQiOuMryS5f1Txhh44sXNIk0STB3roOVIJZ9UD0tUQJRGm8Bij7QZJCfD+XnyL
-	 VQiREhzwlfjdoE+NKJxy8ZxvzXLD9A77Cjv7jAgECna9tjNZzlTzBY7k17mBao96xUvDB
-	 b4SXvp31jf0OTQRfvyuwaBYeKoJ1nAdxjjkMrnB93OIAsZM/0C1nNGQ+LUhm3Q8it/Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1793967857;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=+WnGg6RHgnyqDd5ldVy5BEuIn5Cw/n9Yw7ajiiWZxlI=;
+	b=tavIMiFcrOmE5pkII0aMSvsOGbjHVmPVz/mIg7wYiz9QjZDfE7SG+m7/E3bxyfxTzOPO
+	 xPMS0dWjXi1JKTloho6LBHCoMQ7xbC1RdZTzOZ+EZSZp6nsfmQZfoyWtaqeVAcAO9sFsB
+	 VJ//D3KbDeroSb0X8XaW1i+yeGIoowEvr+XT4fJwhFAnN+gAIsdjlMEqUt7e6hDktE4ZC
+	 a+8it0BWC+JW5sTXplo2CFCXRHbVlcon1nSCdgbQ4J20L8BiO5ZHzfn1o6VtBcoXANbX4
+	 d09KyGQCy3UzfAMz6CIUCl4AtcI41s7yRcxlG4B89zs24qEMlZkglGJaeJg0EX5nDLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=VMFFsHQy;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=FWeHtxUB;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=c6TY7xq8;
+	arc=none smtp.remote-ip=95.215.58.104
+Received: from mta1.migadu.com (out-104.mta1.migadu.com [95.215.58.104])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D139A606D81B;
-	Fri,  6 Nov 2026 11:30:15 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D139A606D81B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21FA8606A329
+	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 12:24:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 21FA8606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=VMFFsHQy;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=FWeHtxUB
-Date: Fri, 6 Nov 2026 12:30:11 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1793964613;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I9u+1gPJ7RC1FD5Cq1A3nqgz7H8YeuGoMr0x60qRtl4=;
-	b=VMFFsHQytI6ikZVFcZNI7JeYZPL1Gs9ZpQtcJowxramnxFu/cG+jJ8c3ozvb/sKTm6LqVn
-	SGYXzIheDlRepx0gYXWH48Ph3hVMMx27dmjb1bgxgjqVXKvy93GIC3VgAIkCIXmUS/bE4A
-	xuqnqwqEXwp1Y9bpWWM65qe5LszYubnZ8WrEKkh1Q+ZibH6iToqQlGnI6eAS3YPPuGrfOH
-	+zl0PqELSOsn8W7k/KPccuNmNJM5+/iZiRsxFgSVtT24uA/zJc1adC4MFH+lORezLxNt75
-	SwUMLB9RdnBgjiiHClTqdaSRxTJHOkfdiNgg/lib2H9m089uUrvwdSxTcma2OA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1793964613;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I9u+1gPJ7RC1FD5Cq1A3nqgz7H8YeuGoMr0x60qRtl4=;
-	b=FWeHtxUBwziq1HFhfkWljmCdgpXsG7hw77f3rCpr8DJRqvVjpfkbaAk1Lk+JbN4kdf+FFY
-	Z836C5qhZA6/+zDQ==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-rt-devel@lists.linux.dev,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-	John Ogness <john.ogness@linutronix.de>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: Re: [PATCH] sched: Remove CONFIG_RT_GROUP_SCHED
-Message-ID: <20261106113011.B7YxCMJS@linutronix.de>
-References: <20261105164724.yxONBd03@linutronix.de>
- <auy6nyTUuHBlgrV_@slm.duckdns.org>
- <20261105193010.tXUDDu2w@linutronix.de>
- <20261106105003.GU1813469@noisy.programming.kicks-ass.net>
- <20261106110435.5MWA_4Hw@linutronix.de>
- <20261106111213.GG1779021@noisy.programming.kicks-ass.net>
- <20261106112158.-VI88lZb@linutronix.de>
- <20261106112454.GI1779021@noisy.programming.kicks-ass.net>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=c6TY7xq8
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=h/NpQVbSX0lmFSKYQ4kXG0v09GVq/A5mrfxqP7xtn18=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1793967853; v=1; x=1794572653;
+ b=c6TY7xq883Haj25OXqwpRsd4NIM3krJcHN0WzFuy1+uDp9Me8N96kyYLRSTGIAW9r+g6/aaj
+ BlyvACGixAkQZIk3B5PDaxB4cNlwJoqzVVX94cVQFMwKJFPqARyJgz6vVxwvQtxd9rEQzoSq0B+
+ 6t8bl95TWsNXIKRdw2eGmM34=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 69ffad1ec8c56768;
+	Fri, 06 Nov 2026 12:24:13 +0000
+X-Mizu-Trace-ID: 69ffad1ec8c56768
+X-Migadu-Flow: FLOW_OUT
+From: Tao Cui <cui.tao@linux.dev>
+To: tj@kernel.org,
+	josef@toxicopanda.com,
+	axboe@kernel.dk,
+	alexei.starovoitov@gmail.com
+Cc: cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	bpf@vger.kernel.org,
+	andrii@kernel.org,
+	eddyz87@gmail.com,
+	ast@kernel.org,
+	daniel@iogearbox.net,
+	linux-kselftest@vger.kernel.org,
+	cui.tao@linux.dev,
+	cuitao@kylinos.cn,
+	ameryhung@gmail.com
+Subject: [RFC PATCH v13 0/4] blk-iocost: BPF struct_ops cost model
+Date: Fri,  6 Nov 2026 20:23:52 +0800
+Message-ID: <20261106122356.3224638-1-cui.tao@linux.dev>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -92,14 +76,68 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20261106112454.GI1779021@noisy.programming.kicks-ass.net>
+Content-Transfer-Encoding: 8bit
 
-On 2026-11-06 12:24:54 [+0100], Peter Zijlstra wrote:
-> We can try marking it broken; see who screams this time ;-)
+From: Tao Cui <cuitao@kylinos.cn>
 
-okay. Let me try that then. Which reminds me of something=E2=80=A6
+This series lets a BPF program take over the cost model of one
+device.  The BPF model provides calc_cost() for charged IOs plus two
+transfer coefficients for the completion-time sizing, io.cost.model
+selects between the attached model and the builtin one, and enabling
+and disabling the controller stays with io.cost.qos.
 
-Sebastian
+The builtin model is a linear formula derived from a handful of device
+parameters, and the right formula is device specific.  A BPF model can
+be adapted to the device and updated without rebuilding the kernel.
+
+The series is based on next-20261105.
+
+Tao Cui (4):
+  blk-iocost: add BPF struct_ops cost model support
+  blk-iocost: add iocost_ioc_tick tracepoint for per-period device
+    summary
+  selftests/bpf: add iocost cost model test
+  docs: cgroup-v2: document the iocost BPF cost model attachment
+
+ Documentation/admin-guide/cgroup-v2.rst       |  49 +-
+ MAINTAINERS                                   |   1 +
+ block/Kconfig                                 |   4 +
+ block/blk-iocost.c                            | 284 +++++-
+ include/trace/events/iocost.h                 |  43 +
+ tools/testing/selftests/bpf/config            |   2 +
+ .../selftests/bpf/prog_tests/iocost_model.c   | 812 ++++++++++++++++++
+ .../selftests/bpf/progs/iocost_model.c        | 180 ++++
+ tools/testing/selftests/bpf/progs/iocost_ms.c | 197 +++++
+ 9 files changed, 1560 insertions(+), 12 deletions(-)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/iocost_model.c
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_model.c
+ create mode 100644 tools/testing/selftests/bpf/progs/iocost_ms.c
+
+Changes since v12:
+
+- the iocost_ioc_tick emission now sits inside the
+  trace_iocost_ioc_tick_enabled() check, as tracepoints.rst requires,
+  and the usage_pct trace field is widened to u64
+- detaching a model resets the autop stepping timestamps, so the
+  cooldown restarts fresh when the builtin model comes back
+- iocost_bpf_supported() probes kernel BTF for the struct_ops wrapper
+  type instead of /proc/config.gz, so an unavailable config no longer
+  skips the tests, and the probe result is cached across cases
+- the selftest sets up its private mount namespace and configfs mount
+  once instead of stacking them across cases
+- the multi-stream case feeds two interleaved streams and asserts that
+  calc_cost() actually priced them
+- the selftest cgroup names are created inside the per-pid work
+  directory (leading '/'), nullb_create() rolls back the instance on
+  its own error paths, and the streams test cleans up in the right
+  order
+- docs: document the attach rejection codes (-EOPNOTSUPP, -ENODEV,
+  -EBUSY) and that root-cgroup IOs still use the attached model's
+  transfer coefficients for completion-time sizing
+
+Tested on next-20261105 (qemu x86_64): the selftests pass, and the 2x
+example model doubles the charged cost over the builtin on a
+rotational device (2.00x measured), returning to 1.00x after
+"model=linear".
+
+Link: https://lore.kernel.org/r/20261103132613.1952975-1-cui.tao@linux.dev # v12
