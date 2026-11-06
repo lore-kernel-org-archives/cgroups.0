@@ -1,54 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.27
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793939715;
-	b=DsYiTkpLW8SWKbmBEDxJHaxxJUtYfe5U8mu4juHOabwHzWoNJusewE5vJKzWZmW+7MHR
-	 h3tUDmiwfL2EE5J4sDQMED+jMHUrb2xpTrg9DNKlLynM1VXXGqYGyw/HoXe74OP84vVmJ
-	 Mf89Lxwu71lLThQSyqqhkFsgqxuJ0SoHd7QlJimnPvzY984g9sMt2Qkl43ziGcWTdJbt3
-	 TARob2XAv5dxFoZ0F3oEHktm2d4d+RYtSV2zkAQ2hYQLR7nxakYJ0HryGLn0TX8OmEZ1q
-	 UTw9IY7ZnMcrKznuXACqtQuYRo1tl6DOIF0QUEKRVI1iwC0tQm80IgFTegUt5y3G2Tg==
+	t=1793945151;
+	b=ebHufbORolCLqAhiLoZqubuL57bEZcxKEb7Jw6RyqAzq6yuJVCc3TokXN4iZ1vfMKD+h
+	 du+H2ahkjjZIODHgJAchuLbVhdvw4stLxM1X/f/7AnfGypf2kRc7xGHepR/txmia+P1HX
+	 0BakCTzd5+nhGHlBNqmI8Po98XKf6GoIcYZq9HnXHT86gM3O06yJIVpP/W+L2FHr17B8W
+	 ebcpvggiOJ/pH1ITkwnQRhJVIbWfPINbXDl1ipb2mBuAXzg9yEMszbKO1X+jT7TRHKBe/
+	 zjRYXesYlDkNvqIv1YUlT163meM6lnqUXXwjE03v719hHL45q4yoWNSoi9AbEIMsv4A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793939715;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1793945151;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=BwiuTehFb0l7eRC5B4m7NryifiwaQ9TTfvkXePFUYCM=;
-	b=J0pxHv0AwOHKcjPDiyVYRjSVASAAT9ojhDLLu4cX4cUNL17DWfR3dzOV5UvfQGEpgAWf
-	 hvnKvhg5qUbsX6qvmCirx6avEsFY7BaAuJ0EQXWPStTyBBzBeKI311XhnkgF7qKEEfGi9
-	 0OQEqT5sCzR32tIuA/GKuOn0wIU+YH0Sa8d253/BbjKsgcHm6sjcgLvGTJy33VNzHjOug
-	 B347iyU9DZ6pQ9Ru8+DF74BOBe5VLBM7OX6VKAgDNWyGWL7CIijjRJcFdgn9LA+jWGrsr
-	 +EeTmL3QTiQoJkLAJbvk01U536vuJIjkyobEoIwYsJuERUjmXmE0RiwLbQb3e8IQhAQ==
+	bh=QYzpgT5zWntgfM1mnEHxsXKCCGNOpHFfMxgWgIGdnmY=;
+	b=pSaKXVIg6WpAtTzFD8xVBIwlszecoFEEzlz39BINfQRPkfUhZooJrpqshSt1sI1Tan2u
+	 xCAaVEYGYVefetJEHNzDsaMDr8kdpNN35cUqa2EtOZjCY8GaxE7TppL4ytNrSnd5LM7M2
+	 /ugfmGxskxCzMoeSKrPrZL+GdZnZrjWwdhHj/CwGNmCs14BO3oX7gKnSflKAvBjpHSSCG
+	 8kVyVk8WougRzNr+OxW9Ajxx7ly1wzSyL67wfCVNsXZTECV8SGZd5zQwPF88phQAMSFnR
+	 hwogYKn8VZF+m8mZa0OyYbxr73Z/+g/3V3DBbYf3o8LzanHYRdM+FXhkA7OziJeCVrw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=EpqItgjM;
-	arc=none smtp.remote-ip=95.215.58.27
-Received: from mta1.migadu.com (out-27.mta1.migadu.com [95.215.58.27])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UitchYbS;
+	arc=none smtp.remote-ip=209.85.215.181
+Received: from mail-pg1-f181.google.com (mail-pg1-f181.google.com [209.85.215.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9CFF606A31B
-	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 04:35:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A9CFF606A31B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 830C2606A329
+	for <cgroups@vger.kernel.org>; Fri,  6 Nov 2026 06:05:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 830C2606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=EpqItgjM
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=JwjmUZdfumXvV/jk+c2Ggo5iBE+Tmy51gA2vd7MMA6U=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1793939711; v=1; x=1794544511;
- b=EpqItgjMQGnLi/dl7QCtaK2xf1ahA1KeijGNiyaa4VtjU8t8ZLuA18D4jWx/+QpxPICA8WL2
- RfB2VVYH8VqWMqwd28E1X6lhqe640CWkvcLvMrLlZ0ujlxwl4yIYGlV/bWM7ilRgEJfubyP4uyL
- lr6t+MNO90LNrtppAt3RrQKA=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id bcb0b3e0b1c637ea;
-	Fri, 06 Nov 2026 04:35:10 +0000
-X-Mizu-Trace-ID: bcb0b3e0b1c637ea
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <41a6de2b-e7eb-4574-a698-b4ff8af316fa@linux.dev>
-Date: Fri, 6 Nov 2026 12:35:04 +0800
+	dkim=pass (2048-bit key, unprotected) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UitchYbS
+Received: by mail-pg1-f181.google.com with SMTP id 41be03b00d2f7-cc4be0e5351so100859a12.0
+        for <cgroups@vger.kernel.org>; Thu, 05 Nov 2026 22:05:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1793945150; x=1794549950; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=QYzpgT5zWntgfM1mnEHxsXKCCGNOpHFfMxgWgIGdnmY=;
+        b=UitchYbS6lfBJSDhPoHzzUIm8XiykMpS6zDi9o+dMNbpgt5926amZaAMpeFhdg2PFD
+         Lm3hHkq8Th4Swk9bv78b04vYgmc0bdIcbQ62YAqrEo1Gm/mbjVsr1AoQfLZiG18R6uWl
+         t+2fFaaTHNleC7ZcuWwE2+0+tglJzEL1q5sxYCl16O10mxeaGew2n25PT/VkLLHJmHcs
+         i9VtEEzuUZmJwyAtRLpdfyUHX6veDO67r6HqSKfxuQiY0oQlXJdpBtRzVlVJc3g5JoP3
+         LoB1LzBjEhaecbDDxmELnEnfw2TLFFRTiR2Fh9PN9sJE9ZneWDVC+GAO4VfU7YpQ05es
+         Blfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1793945150; x=1794549950;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=QYzpgT5zWntgfM1mnEHxsXKCCGNOpHFfMxgWgIGdnmY=;
+        b=UUnhnVKRzphYYSWwXXqP+Oi6Dqom9zZ7PjRHmPkzx9eB5km3PpGip7iSERqInWj3qX
+         94wi34zI6yDFIcXJzXh6OWyURYSOAKyO49IK3yL9fx8KXzo89dM7qH/zstluGsMEgway
+         7m4NxcTdpLNGO5A94B1/JUTdgWJ4/tyfXeYLV6y0onUo2i1+wPmiyD3PWN5RpU2/YypF
+         QFL5abSQyY1Qe8zKueRNke6pyH3Q62F5alAt6TgGU+Q344xO/rHOFpt9wcwCbF8SviRu
+         dJIo3USqcSH5cy0Q34ScuT21UHEdV6PwC+Eg4I68lny5aOx0k1FmacFUNhQqDQVj1GcR
+         ++kQ==
+X-Forwarded-Encrypted: i=1; AKwUvBzH4Q09Kfq1pArtEarfIhysXs9XckzNpjvQPyyAROLA7N7WEhko7kpeRoNOFaPVuRkvjj9fuIm2@vger.kernel.org
+X-Gm-Message-State: APuU4Z9BI7nK87o8cxYsNeVxwB69OE42sYb/j0D5npaGv7dSX7HvXfTY
+	CnotAnB9hHOugyF9aEPUCMCAzKyGx2x5bjHhdFHYEdFPiqwXGqq404vT
+X-Gm-Gg: AYBFou3kzzuWJe8+aHmXtvP8vsTWzgoLdr09wZRUFl7y7jf5eTz0+0RGvZQPm1p8sUC
+	mucp/yDsZNiA0ejqOnc153AbEoP+c06+opO0K3+3Jzq7eDzVDFZ1TqiqmOfsFpQpW3ihhcREfta
+	hpxR9fAW79y5oKb7675zFrj2P2fYQJvFCjFbwkf9Q0Py56akDmnm1yUXe3wjOfeWuZESS/VbERM
+	jaR07rTw5Sc/s4Vk4bY/7kfs/c+fqWgQwpp5IrZaAnWoFEqFaX0TfTrOVSPkHdUbpH/fhf1WNGv
+	qqnLwzqMMInZ0Xi4vmrrY8P4DU2lG7AC1OkAWZUbp6nKMJePmWFbExKB7S3Yqdy2uC7XlCBSDi4
+	L4cKiIUdmTsFs1aBKeJJ+LCE0AllQQ1DCPtMgFR8vFOiCMQYad9nWMm0uFmi2tnXVLj5S47HcqY
+	FxAHTfcLehY/jgAbbK0nMxk2N6awfSn8/qUbRkOx+IZdY8yglCJy73souYyK2xKkyNxurrNdC4D
+	DwLAxSKZ4R8+3rwrTrpipzHEaPFOHLC+f+3tBcyt1ks3TKoOgkm+nai/TfofozkM1BnZwrCmNf5
+	3sFNVdvPz2iZEkM7fxWMgAPyRvuS6lZKaM0QozQsMg==
+X-Received: by 2002:a05:6a20:9e97:b0:3eb:ace1:4b4a with SMTP id adf61e73a8af0-3ebb2addc3cmr1804269637.71.1793945149791;
+        Thu, 05 Nov 2026 22:05:49 -0800 (PST)
+Received: from ancienth-X870E-Nova-WiFi ([125.186.72.2])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-cdb70661c74sm241209a12.10.2026.11.05.22.05.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Nov 2026 22:05:49 -0800 (PST)
+From: Daehyeon Ko <4ncienth@gmail.com>
+To: muchun.song@linux.dev,
+	osalvador@suse.de,
+	akpm@linux-foundation.org
+Cc: david@kernel.org,
+	tj@kernel.org,
+	hongfu.li@linux.dev,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	4ncienth@gmail.com
+Subject: [PATCH v2 RESEND] mm/hugetlb_cgroup: prevent use-after-free during cgroup offlining
+Date: Fri,  6 Nov 2026 15:03:47 +0900
+Message-ID: <20261106060347.637480-1-4ncienth@gmail.com>
+X-Mailer: git-send-email 2.55.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,110 +102,134 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/3] cgroup/cpuset: Release isolated CPUs when the
- parent is invalid
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, longman@redhat.com, tj@kernel.org
-Cc: hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20261105130344.664336-1-guopeng.zhang@linux.dev>
- <20261105130344.664336-4-guopeng.zhang@linux.dev>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <20261105130344.664336-4-guopeng.zhang@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+A normal hugetlb charge obtains the current task's hugetlb cgroup with
+css_tryget(), charges its page counter, and drops the CSS reference before
+the folio is committed under hugetlb_lock.
 
+The task can be migrated while the allocation is in progress.  If the old
+CSS is then offlined, its final active-folio scan can finish before the
+charge becomes visible.  The allocation can subsequently charge that dying
+CSS and commit its pointer to the folio.  Once the CSS is freed, uncharging
+the folio accesses the freed hugetlb_cgroup, including its page counter and
+per-node usage.
 
-On 11/5/2026 9:03 PM, Guopeng Zhang wrote:
-> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> 
-> An isolated partition can be invalidated after its parent has already
-> become invalid. update_parent_effective_cpumask() then skips returning
-> CPUs to the parent, but also skips removing them from isolated_cpus.
-> The invalid child continues to isolate CPUs that no longer belong to
-> any valid isolated partition.
-> 
-> For example, on a 32-CPU system with all CPUs online and without
-> isolcpus= or nohz_full= boot parameters:
-> 
->    cd /sys/fs/cgroup
->    echo +cpuset > cgroup.subtree_control
->    mkdir A
->    echo 0,2-31 > A/cpuset.cpus
->    echo root > A/cpuset.cpus.partition
->    echo +cpuset > A/cgroup.subtree_control
->    mkdir A/B
->    echo 2-3 > A/B/cpuset.cpus
->    echo isolated > A/B/cpuset.cpus.partition
->    cat cpuset.cpus.isolated
->    2-3
->    echo 0 > /sys/devices/system/cpu/cpu1/online
->    cat A/B/cpuset.cpus.partition
->    isolated invalid
->    cat cpuset.cpus.isolated
->    2-3
-> 
-> Release the invalidated child's isolated CPUs when its parent is no
-> longer a valid partition. Use isolated_cpus_release() to preserve CPUs
-> still covered by a valid isolated ancestor and by boot isolation.
-> 
-> After this fix, cpuset.cpus.isolated is empty for this reproducer.
-> 
-> Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
-> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> ---
->   kernel/cgroup/cpuset.c | 7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index fc5454c2740f..f3b808cea51c 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1976,10 +1976,15 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->   		/*
->   		 * Make the current partition invalid.
->   		 */
-> -		if (is_partition_valid(parent))
-> +		if (is_partition_valid(parent)) {
->   			adding = cpumask_and(tmp->addmask,
->   					     cs->effective_xcpus,
->   					     parent->effective_xcpus);
-> +		} else if (old_prs == PRS_ISOLATED) {
-> +			/* No valid parent will release these isolated CPUs. */
-> +			cpumask_copy(tmp->addmask, cs->effective_xcpus);
-> +			isolated_cpus_release(cs, tmp->addmask);
-> +		}
->   		if (old_prs > 0)
->   			new_prs = -old_prs;
->   
+Keep the reference acquired by the charge until commit or cancellation.  At
+commit time, while holding hugetlb_lock, move an uncommitted charge out of
+each dying CSS to the first live ancestor.  The hierarchical charge already
+includes every ancestor, so moving it only requires canceling each dying
+CSS's local count.
 
-Hi Guopeng,
+This orders commit against the offline active-folio scan: either the scan
+runs after commit and reparents the folio, or commit observes the dying CSS
+after the scan and selects a live ancestor.  The retained reference also
+keeps the originally selected hugetlb_cgroup alive through this decision.
+Reservation charges retain their existing CSS lifetime and are not
+reparented.
 
-Thanks for the fix. Could you try this patch to see if it fixes the
-issue?
+On an unmodified v7.3 kernel with a 128-page 2 MiB pool, a
+capability-free uid 1000 allocator racing administrator rmdir reproduced
+KASAN writes to a freed hugetlb_cgroup in three of three boots.  Controller
+disable reproduced the same fault.  With this change, 5,000 rmdir rounds
+with over 1 million successful faults and 2,000 controller-disable rounds
+with over 1.6 million successful faults completed without KASAN, LOCKDEP,
+page-counter, or refcount reports.
 
-https://lore.kernel.org/cgroups/20261105125215.2205892-4-ridong.chen@linux.dev/T/#u
+AI-assisted source review was used to identify the race and to help draft
+the reproducer and fix.  The interleaving and the resulting allocation,
+free, and use-after-free stacks were verified with tracefs and KASAN.
 
-I'm concerned about whether the related issue has been fixed in all
-the places that need fixing. In your reproducer, CPUs 2-3 are already
-wrong when A becomes invalid: partition_xcpus_del() only updates
-isolated_cpus when the old state differs from the parent's state, so
-the CPUs that A gave back but had distributed to the isolated child B
-are left in isolated_cpus. This patch only cleans them up later, when
-B is invalidated with an invalid parent. Other paths that give back
-CPUs of an isolated descendant may have the same problem.
+Fixes: da1def55919f ("hugetlb/cgroup: add support for cgroup removal")
+Cc: stable@vger.kernel.org
+Signed-off-by: Daehyeon Ko <4ncienth@gmail.com>
+---
+V2 RESEND:
+- Resend v2 unchanged as a standalone thread for easier tracking, as
+  suggested by Hongfu Li.
 
-My patch makes partition_xcpus_del() always set the isolation state of
-the given back CPUs, including those of the descendants, to the state
-of the parent that receives them. With it, isolated_cpus_release()
-should no longer be needed.
+V1 -> V2:
+- Remove the redundant disabled-controller check from uncharge, as requested
+  by Andrew Morton.
 
-It would also be good to add your reproducer to test_cpuset_prs.sh.
-It can be expressed with O1=0 in the test matrix.
+v2: https://lore.kernel.org/r/20261022022146.506005-1-4ncienth@gmail.com
+v1: https://lore.kernel.org/r/20261020100345.1677643-1-4ncienth@gmail.com
 
--- 
-Best regards
-Ridong
+ mm/hugetlb_cgroup.c | 34 ++++++++++++++++++++++++++--------
+ 1 file changed, 26 insertions(+), 8 deletions(-)
 
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index 3fb41311e4c7dc..6921b185726662 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -310,11 +310,10 @@ static int __hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+ 		css_put(&h_cg->css);
+ 		goto done;
+ 	}
+-	/* Reservations take a reference to the css because they do not get
+-	 * reparented.
++	/*
++	 * Hold the CSS reference until commit. Reservations keep it longer
++	 * because they are not reparented.
+ 	 */
+-	if (!rsvd)
+-		css_put(&h_cg->css);
+ done:
+ 	*ptr = h_cg;
+ 	return ret;
+@@ -337,9 +336,26 @@ static void __hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
+ 					   struct hugetlb_cgroup *h_cg,
+ 					   struct folio *folio, bool rsvd)
+ {
++	struct hugetlb_cgroup *charged_h_cg = h_cg;
++
+ 	if (hugetlb_cgroup_disabled() || !h_cg)
+-		return;
++		goto out;
+ 	lockdep_assert_held(&hugetlb_lock);
++
++	/*
++	 * A task can be migrated after selecting h_cg. Once offlining starts,
++	 * redirect the uncommitted charge to a live ancestor. hugetlb_lock
++	 * serializes this decision with the offline scan, which reparents
++	 * earlier commits.
++	 */
++	if (!rsvd) {
++		while (css_is_dying(&h_cg->css)) {
++			page_counter_cancel(&h_cg->hugepage[idx], nr_pages);
++			/* The root CSS never dies. */
++			h_cg = parent_hugetlb_cgroup(h_cg);
++		}
++	}
++
+ 	__set_hugetlb_cgroup(folio, h_cg, rsvd);
+ 	if (!rsvd) {
+ 		unsigned long usage =
+@@ -352,6 +368,9 @@ static void __hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
+ 		WRITE_ONCE(h_cg->nodeinfo[folio_nid(folio)]->usage[idx],
+ 			   usage + nr_pages);
+ 	}
++out:
++	if (!rsvd && charged_h_cg)
++		css_put(&charged_h_cg->css);
+ }
+ 
+ void hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
+@@ -419,15 +438,14 @@ static void __hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+ 					     struct hugetlb_cgroup *h_cg,
+ 					     bool rsvd)
+ {
+-	if (hugetlb_cgroup_disabled() || !h_cg)
++	if (!h_cg)
+ 		return;
+ 
+ 	page_counter_uncharge(__hugetlb_cgroup_counter_from_cgroup(h_cg, idx,
+ 								   rsvd),
+ 			      nr_pages);
+ 
+-	if (rsvd)
+-		css_put(&h_cg->css);
++	css_put(&h_cg->css);
+ }
+ 
+ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
