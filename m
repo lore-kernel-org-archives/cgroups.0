@@ -1,100 +1,100 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1793975394;
-	b=UQPihn1F29XwvI1QDKMB2gF5z3jW8/bvEgResvC3L+Nuf/NOaNFeVl0kheZ7Bq3hPPl3
-	 0CbAQPuCQ3BFumdT1JQu1f3Cefy6tAj8D33hI0NLPA50Vk4Qv0QjHTn2U3ICLKnh3F3A4
-	 +PfviP5C8qqy4QJQz8DTwIE2P1i7TiDS04ckUnDE5nxNKnKLrScbv7EB3vnwE/rF97vDW
-	 zGPDJqwUavga0nd82CVvSXnhaG6B8/xPN25vgqnHh3SG7SUCXQBVV/qjyK6um16XL0a7c
-	 0Clc9i9Pw9WWZdV1d4JeisiDWu+xb6uroGUjKYP5Rr15+3ItRn3nabtMxuEbPdh8Tgg==
+	t=1793975884;
+	b=QcEWNderzz+vHcvB8Br+lRYq2R9hewKlgK8NBvBBwfKiwH1aPoGNnTVVhALoOYSQ1X+r
+	 EQHFrH+tBolB7YnSybI1wMP++Kxt7P31aIMg9+sArLgYxJmKXEohmYfhzjPCfAwzFPLfo
+	 CzIS75opkXIzObrj18WlAjCZyr0NPAxmVaBriuhO9oaZfdyjrK7PX8gGRuLpBCsvKioHQ
+	 whd/uoPrVro1rIk0wxj/539bsN5hM1HFpCw8+m9uuSCoPmSeTLcvgi8f/VRUGbMl9b3D5
+	 JkTtHAcR+qD2s/h04V141mNYK4ld+olSsm0jggIkeKWWDJjd1AQsU5/cvZY1nvS1ofQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1793975394;
+	a=rsa-sha256; c=relaxed/relaxed; t=1793975884;
 	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
 	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
 	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
 	 In-Reply-To:X-Rspamd-Queue-Id:X-Spam-Level:X-Rspamd-Server:
 	 X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:X-Spam-Score;
-	bh=O3BxtbkW6dUgg0e4SBYmdv0h0k2sMGxdODd1ZfZ8Kws=;
-	b=Uv6H5nSx16/I/bEwUMME8wJ70mUHEnjShBHcJb0WNbJ1hrDEjvUnL8Npj+s6P15ZzeC/
-	 hFI11X7YoCe7Ya/L23OKLdvJ3MSUBOWXcVP3ljY0uiHHG9Vz4S2D/k+KB5W1G5aR57Dih
-	 N5z3ZhGTink5UDE0mV8NaUDPu3EfenTpQfHpPV2JqKgAzq9A0OXFSefGDfa4BFTV7Dxf5
-	 woCi+bk3H0wkl6N3OIGKmVW15VjkeLKt8YfDIZunU4YDjYv7tSWqDuT5MQjyb4GEDZxGE
-	 hMKqQazktvg5imp/+D9z9AwBfYdIw/6UTbLKndkloJ8yc8aDb4Mf16DgktMJizYKbTw==
+	bh=U1z9CMMlVvK3cpazVIozIjM4XgDTPtKDlnzc7HGPx3U=;
+	b=hHRr6VrSk2SNMnQob08iOkoPAwabHKCJFBqk3v/TcJGIOi1x8jUwHVQMs69eeRFe3EIa
+	 mF8Gjy74M7Au9QKtKEZM/gsYV/y6uzN0t8sCEwkhVeI2YQ/aeqwiOw4LDgpjWWPpfOtVd
+	 DkaqrYwi59zkhficT/+dK5d7IQpO3s1vvzdrT5vgsslv+2sOSBzScqhxrbrcti8BDTV/b
+	 /PpZX4Bc4wDfXnTMkfVTNoK4jijKqY9qzcWCB7rNIT20UxRBDEZbjcM63T4yjKz6e2bw8
+	 V5VkRfc1ghTgbT69NgTmL7QT/jCo7JreRtOVV5I2h6WUkLeY84txGLZPbjCabLIxQVQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=suse.cz;
 	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=T9F6eGMH;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=T3BliDtd;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b="wP9/6bwL";
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JTKT7OmU;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=M+zsClbe;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=ypqcMtH1;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=M+zsClbe;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=ypqcMtH1;
 	arc=none smtp.remote-ip=195.135.223.130
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D865B606A326;
-	Fri,  6 Nov 2026 14:29:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D865B606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB470606A32D;
+	Fri,  6 Nov 2026 14:38:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AB470606A32D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=T9F6eGMH;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=T3BliDtd;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=wP9/6bwL;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=JTKT7OmU
+	dkim=pass (1024-bit key, unprotected) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=M+zsClbe;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=ypqcMtH1;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=M+zsClbe;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=ypqcMtH1
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C76B222218;
-	Fri,  6 Nov 2026 14:29:51 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 7646B221EB;
+	Fri,  6 Nov 2026 14:38:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793975392; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1793975881; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O3BxtbkW6dUgg0e4SBYmdv0h0k2sMGxdODd1ZfZ8Kws=;
-	b=T9F6eGMHRkO93M0BvqGAMusPFNwPVE2nZTwMPcHXoJFTTbB3+4NoLHOv1C+toGGOBKGOsM
-	Zk4TdOT631Sy0ozE6svg4m/sffbWzP/QAJ9aPH/eJBtbPI2nO8HVCr3M8wwf69BTk6F+b5
-	MK/wZecBX5OFBNb0NhG3xr2Kip7cVRY=
+	bh=U1z9CMMlVvK3cpazVIozIjM4XgDTPtKDlnzc7HGPx3U=;
+	b=M+zsClbeXawKRmbSoqHB8vSnhYLKmJu0p6scG/XFngMrof4NKMW5WU57BX+ALDhhWh8zdA
+	HiEoHs64z4KRdRn/SjV56lAOiqqKPdqQGCnXOc/vTupbZySjLolBP6yyT+KwgH4B3PayaS
+	a/utAwrfz6visoWpK4l3sJhLXQi+t/o=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793975392;
+	s=susede2_ed25519; t=1793975881;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O3BxtbkW6dUgg0e4SBYmdv0h0k2sMGxdODd1ZfZ8Kws=;
-	b=T3BliDtd9hpp3d6y1F+DcpLXvmp5oYhKc7XGdJvyWIGfamCNevWsZnL5z/zeAONom/Wnl4
-	zQDZz8EVxlBqibBg==
+	bh=U1z9CMMlVvK3cpazVIozIjM4XgDTPtKDlnzc7HGPx3U=;
+	b=ypqcMtH1se1Qo38hsRbeYY9AZlO51QMWCAFqrzHQSnRWsVHs7k2atX/I9V1UzcS1gJuH3q
+	u6mepYdynYhyV5BQ==
 Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b="wP9/6bwL";
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=JTKT7OmU
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=M+zsClbe;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=ypqcMtH1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1793975391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1793975881; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O3BxtbkW6dUgg0e4SBYmdv0h0k2sMGxdODd1ZfZ8Kws=;
-	b=wP9/6bwLd7Dg8vz1YAVSAYLlngNth8RT+ABVFG/3gC8noUpc2zJt3wyocGMDkrdQWl7x5I
-	WngtzrQB3YSlYjHF4Vl+HeqNxFwnSwYziKY4/4ODYOeCUmuJL3TWzdQFFciBGYPJk3dpMv
-	52qK1UnCZMrWr2M1XgV/nQ153kZ26bg=
+	bh=U1z9CMMlVvK3cpazVIozIjM4XgDTPtKDlnzc7HGPx3U=;
+	b=M+zsClbeXawKRmbSoqHB8vSnhYLKmJu0p6scG/XFngMrof4NKMW5WU57BX+ALDhhWh8zdA
+	HiEoHs64z4KRdRn/SjV56lAOiqqKPdqQGCnXOc/vTupbZySjLolBP6yyT+KwgH4B3PayaS
+	a/utAwrfz6visoWpK4l3sJhLXQi+t/o=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1793975391;
+	s=susede2_ed25519; t=1793975881;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=O3BxtbkW6dUgg0e4SBYmdv0h0k2sMGxdODd1ZfZ8Kws=;
-	b=JTKT7OmUoUh5jLYQxMNsM55o6rRZZSOOxNxxzyR4vBWtUM8EmfkSYsSlSJG9eJG0uMLMFu
-	FomoGh0SM6bwlGBA==
+	bh=U1z9CMMlVvK3cpazVIozIjM4XgDTPtKDlnzc7HGPx3U=;
+	b=ypqcMtH1se1Qo38hsRbeYY9AZlO51QMWCAFqrzHQSnRWsVHs7k2atX/I9V1UzcS1gJuH3q
+	u6mepYdynYhyV5BQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7AA7D132C9;
-	Fri,  6 Nov 2026 14:29:51 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4D2FA132C9;
+	Fri,  6 Nov 2026 14:38:01 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id eDMeN17k7WqTdAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Fri, 06 Nov 2026 14:29:51 +0000
+	id GgbfCknm7WrifAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Fri, 06 Nov 2026 14:38:01 +0000
 Received: by quack.suse.cz (Postfix, from userid 1000)
-	id 7FBCE21B8E; Fri, 06 Nov 2026 15:29:35 +0100 (CET)
-Date: Fri, 6 Nov 2026 15:29:35 +0100
+	id CB2B421B95; Fri, 06 Nov 2026 15:37:45 +0100 (CET)
+Date: Fri, 6 Nov 2026 15:37:45 +0100
 From: Jan Kara <jack@suse.cz>
 To: Breno Leitao <leitao@debian.org>
 Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
@@ -107,10 +107,11 @@ Cc: Alexander Viro <viro@zeniv.linux.org.uk>,
 	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
 	cgroups@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH 3/4] writeback: log the end of a slow writeback wait
-Message-ID: <ftkoesjrylhcmtij2gi63wnrkjdjf2ps65cwhz4g7rejhpjdh3@ieu2t4wtnjwo>
+Subject: Re: [PATCH 4/4] writeback: report a slow writeback wait once per
+ timeout
+Message-ID: <ysxh2sfvjikoh6cw2qmk2i6p7xripwnqxkx43jj7unxop5tkiw@gws5wezjt34g>
 References: <20261106-writeback_stall_report-v1-0-bf0c3b9023a5@debian.org>
- <20261106-writeback_stall_report-v1-3-bf0c3b9023a5@debian.org>
+ <20261106-writeback_stall_report-v1-4-bf0c3b9023a5@debian.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -122,8 +123,8 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261106-writeback_stall_report-v1-3-bf0c3b9023a5@debian.org>
-X-Rspamd-Queue-Id: C76B222218
+In-Reply-To: <20261106-writeback_stall_report-v1-4-bf0c3b9023a5@debian.org>
+X-Rspamd-Queue-Id: 7646B221EB
 X-Spam-Level: 
 X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
 X-Rspamd-Action: no action
@@ -137,98 +138,107 @@ X-Spamd-Result: default: False [-13.01 / 50.00];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
 	MX_GOOD(-0.01)[];
-	MIME_TRACE(0.00)[0:+];
 	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
 	ARC_NA(0.00)[];
 	RCPT_COUNT_TWELVE(0.00)[22];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email,suse.cz:dkim,suse.cz:email];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.com:email];
 	RCVD_COUNT_THREE(0.00)[3];
 	TO_DN_SOME(0.00)[];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
 	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_LAST(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_TLS_LAST(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
 	DKIM_TRACE(0.00)[suse.cz:+]
 X-Spam-Score: -13.01
 
-On Fri 06-11-26 04:26:33, Breno Leitao wrote:
-> A slow writeback wait ends with one more "has been waiting" report,
-> printed by the wakeup that sees the last work item complete:
+On Fri 06-11-26 04:26:34, Breno Leitao wrote:
+> The slow writeback report is printed on every wakeup of the waiter past
+> hung_task_timeout_secs, and the waiter is woken more often than that.
 > 
->   INFO: The task sync:180 has been waiting for writeback completion for more than 29 seconds.
->         bdi 252:0, work items left: 0
+> Each flusher working for it wakes it once it has not run for half the
+> timeout. All waiters on a bdi share bdi->wb_waitq, so a wakeup meant for
+> one of them reaches all of them.
 > 
-> That line reads as if the task were still waiting. To tell a slow
-> writeback from a stuck one, the reader has to notice that the reports
-> stopped, which is easy to miss in a busy log.
+> A sync of files dirtied from two cgroups, on a throttled null_blk device
+> with the timeout set to 5 seconds, gets a report every half timeout,
+> each printed twice, 18 reports for a 29 second wait:
 > 
-> Report only while work items are outstanding, and log how long the wait
-> took once it is over:
+>   [   10.327992] INFO: The task sync:276 has been waiting for writeback completion for more than 8 seconds.
+>   [   10.328000]       bdi 252:0, work items left: 2
+>   [   10.328003] INFO: The task sync:276 has been waiting for writeback completion for more than 8 seconds.
+>   [   10.328004]       bdi 252:0, work items left: 2
+>   [   12.888187] INFO: The task sync:276 has been waiting for writeback completion for more than 10 seconds.
+>   [   12.888195]       bdi 252:0, work items left: 2
+>   [   12.888197] INFO: The task sync:276 has been waiting for writeback completion for more than 10 seconds.
+>   [   12.888198]       bdi 252:0, work items left: 2
+>   ...
 > 
->   The task sync:181 waited 29 seconds for writeback completion on bdi 252:0
+> Remember when the waiter last reported, and report again only once
+> another timeout has passed. The wakeups do not change, so the hung task
+> detector still sees the waiter making progress. The same test now
+> prints 5 reports:
+> 
+>   [    7.661129] INFO: The task sync:277 has been waiting for writeback completion for more than 5 seconds.
+>   [    7.661136]       bdi 252:0, work items left: 2
+>   [   13.241102] INFO: The task sync:277 has been waiting for writeback completion for more than 11 seconds.
+>   [   13.241109]       bdi 252:0, work items left: 2
+>   ...
+>   [   31.801068] The task sync:277 waited 29 seconds for writeback completion on bdi 252:0
 > 
 > Signed-off-by: Breno Leitao <leitao@debian.org>
 
-Looks good. Feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
+Now I'm waiting for someone to complain it gets written out too
+infrequently :). Is this change substantially different from
+writeback_sb_inodes() waking up done->waitq less frequently?
 
 								Honza
 
 > ---
->  fs/fs-writeback.c | 16 +++++++++++++---
->  1 file changed, 13 insertions(+), 3 deletions(-)
+>  fs/fs-writeback.c                | 5 ++++-
+>  include/linux/backing-dev-defs.h | 1 +
+>  2 files changed, 5 insertions(+), 1 deletion(-)
 > 
 > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 3dee9d65eaf721..cdb2631b8552e1 100644
+> index cdb2631b8552e1..8d354784326f7a 100644
 > --- a/fs/fs-writeback.c
 > +++ b/fs/fs-writeback.c
-> @@ -201,17 +201,18 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done,
->  {
->  	unsigned long timeout = sysctl_hung_task_timeout_secs;
->  	unsigned long waited_secs = (jiffies - done->wait_start) / HZ;
-> +	int left = atomic_read(&done->cnt);
+> @@ -204,7 +204,9 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done,
+>  	int left = atomic_read(&done->cnt);
 >  
 >  	done->progress_stamp = jiffies;
-> -	if (timeout && (waited_secs > timeout)) {
-> +	if (left && timeout && (waited_secs > timeout)) {
+> -	if (left && timeout && (waited_secs > timeout)) {
+> +	if (left && timeout &&
+> +	    time_after(jiffies, done->report_stamp + timeout * HZ)) {
+> +		done->report_stamp = jiffies;
 >  		pr_info("INFO: The task %s:%d has been waiting for writeback "
 >  			"completion for more than %lu seconds.\n",
 >  			current->comm, current->pid, waited_secs);
->  		pr_info("      bdi %s, work items left: %d\n",
-> -			bdi_dev_name(bdi), atomic_read(&done->cnt));
-> +			bdi_dev_name(bdi), left);
->  	}
+> @@ -232,6 +234,7 @@ void wb_wait_for_completion(struct wb_completion *done,
+>  	unsigned long timeout, waited;
 >  
-> -	return !atomic_read(&done->cnt);
-> +	return !left;
->  }
->  
->  /**
-> @@ -228,9 +229,18 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done,
->  void wb_wait_for_completion(struct wb_completion *done,
->  			    struct backing_dev_info *bdi)
->  {
-> +	unsigned long timeout, waited;
-> +
 >  	done->wait_start = jiffies;
+> +	done->report_stamp = done->wait_start;
 >  	atomic_dec(&done->cnt);		/* put down the initial count */
 >  	wait_event(*done->waitq, wb_wait_for_completion_cb(done, bdi));
-> +
-> +	timeout = sysctl_hung_task_timeout_secs;
-> +	waited = jiffies - done->wait_start;
-> +	if (timeout && waited > timeout * HZ)
-> +		pr_info("The task %s:%d waited %lu seconds for writeback completion on bdi %s\n",
-> +			current->comm, current->pid, waited / HZ,
-> +			bdi_dev_name(bdi));
->  }
 >  
->  #ifdef CONFIG_CGROUP_WRITEBACK
+> diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
+> index 4f10849373150d..f9fd3b1bf4c609 100644
+> --- a/include/linux/backing-dev-defs.h
+> +++ b/include/linux/backing-dev-defs.h
+> @@ -67,6 +67,7 @@ struct wb_completion {
+>  	wait_queue_head_t	*waitq;
+>  	unsigned long progress_stamp;	/* The jiffies when slow progress is detected */
+>  	unsigned long wait_start;	/* The jiffies when waiting for the writeback work to finish */
+> +	unsigned long report_stamp;	/* The jiffies of the last report */
+>  };
+>  
+>  #define __WB_COMPLETION_INIT(_waitq)	\
 > 
 > -- 
 > 2.53.0-Meta
