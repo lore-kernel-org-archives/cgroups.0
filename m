@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794015904;
-	b=WZ0+gWB3fMxQart2saDKiJ+4nr75izn6ZXn6eV4kFony4+bA69kOmaZioDTiIbww03RM
-	 /mtRioA4uO4hMFGfXJ30+u4FmoVmK9X/XWcovAjzU3HuZ6Lk52RAP+F3dnfYovzvwFl3j
-	 FclrdpN1EODWrDs8T44Mm0Q+sIDH/PYgyIhcgcfgA65yei5eGgOxhWN9T5YwxXpvBWtEK
-	 nohFqyO4Mi+dZB+Se21fypoFTm8mA6OkfB79g+WD6iFydb6kf6ARhADSnhqmPIL8O6zuj
-	 UtL2Z0bYaxMmDKgBnZAIk/n48Youuiaq3Pa2ERRQrKrtkX0WBk2oyHe00GvGHnyf4cw==
+	t=1794015917;
+	b=O+amY3LiJFKCi2B35ttbAqBb82tMLd3/pdG1lihDkwMpSx++yQMVb2IJedm7hNOewPCW
+	 eiLLtBL6IC7DlCXyc/vZq8MZBfK4ziQLX7cad7yj/AC8wyq/giGMHe4gbQQniTv4X1POL
+	 3tDO/oVCRCs3yg/1rPrWe2WWuw0TlBe9Eu8urXUrSBN/B3PV0xFfn2fVAqPZPdQoStNMS
+	 a12HgYUzD5lQscVVioAbmq00PY7GdWOzggb9IqgaeP/tpd+tHTB0xNnu3YrKFiWB/8Cm1
+	 TfeyBgNAmG+Q3NEkJi5FYN1oETy9BJPYQygBSonGKeOIoPKKH8wTyacRmepOixb5ffQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794015904;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794015917;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=Pc5ztKchdT0htIObqdRormYTw+/1Ouv7x4J9+9w4Arg=;
-	b=olQ7af2uEAYsWg2ivt0fAfLoOjI7J8BxL7Y+bdfaN88E7Zak60qXO11RC5nh9zheOfec
-	 6qU2PWFIq9Fl7UZeEuLNu3XENGixH9PM/M5DeYV1koRPXDKGzBJHhEV0lzZKDzbRC6JNu
-	 PU7W++SRsCporXawIF+LClRKrQNO+0fUl4v2EjxYgWvpA6QXaYXYTXKSwUZbuQDummjhu
-	 DFMVnZUVR7FfQcSFTmDJYYeClR0Zct82lhgdH8iLj8eK76DBM4xmQnZ2kWFIodH1CBp1b
-	 Sxt3dQL8+1OL+h9pYfPg4JbI68za1M4kPDYbRQgzCzVCCKSYGVLz8iG7QbZ7dm+cKCg==
+	bh=VjM8Am2jAL/k/qxtGI9mzTyn8XGKaVXD0TYl5AfnZvE=;
+	b=06taX5vyaaEu9vS2OwKnPWXUszwI5nbFiivsfHIy/Ha1axShPSx2NyWgz6YnKy21wZKv
+	 ZcVbrF2KST5Nn6duYMq0iFUE43uG3sd7ZKAqnYsflqz6PpAtGQUp+pzFntivcbmtuRUV3
+	 lMEImLtNLWXNK0lO3Nct551Rac4091eAcdLt35Kap4DVuz9SqQnRXTTW+TCVz/T7d4ZQD
+	 Kf3Ku+6RJcuxt0sTuGixgkQSOmW5ylzm+UiiLh7q5Iqbv4d69uziqyjyGsRSVvZhzsJDj
+	 TkP+B+M9sT06+626ErQLKUzXE7p7DIBS52rlIOv/X7RwUbfzj8OjUH7gr6hpxBwyHog==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=f3AazASV;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=UfqGOhgW;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CA42606A335;
-	Sat,  7 Nov 2026 01:45:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1CA42606A335
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90DDD606D834;
+	Sat,  7 Nov 2026 01:45:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90DDD606D834
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=f3AazASV
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=UfqGOhgW
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794015903;
-	bh=Pc5ztKchdT0htIObqdRormYTw+/1Ouv7x4J9+9w4Arg=;
+	s=smtpout1; t=1794015901;
+	bh=VjM8Am2jAL/k/qxtGI9mzTyn8XGKaVXD0TYl5AfnZvE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=f3AazASVGLe7DIbB/2MifyXyB7JcpOoReChsXE5Xpl/frnw4t/b9fVWnlRUdKjrXq
-	 LsmtaVlOpYYkywWJC6C8LveADnn4gzwPhm0pnN93MpNYckN9Jkj2wLwUy9GTL4EetV
-	 jr7zrGbfiYmaC97nusQ8RCKsxUcw3vhDY0e9kquG1zNoYAF8ypI+JoBhlcuzqOEM3A
-	 nXRJyh5mBbFPnMMd8tf0yWijCrDHtGCrzwGs2jz2luoP0fmPi+5Jn4CTRDISH78rJO
-	 w4HimmBtKllscw8sAkQWLTHAJzMRSrCZfXcagugw7LZu2KgU1ASZ6C+eu+UAazx5Lo
-	 0R9GxKai08tfA==
+	b=UfqGOhgWQClItusxF+E3FP/PVFJMQI66lwSO8mPlKMzeBLo5YtZH3W58jqAxh3Jmg
+	 244qwGwE43IQBJ5XTyDQuHIRZRLAjTUMJzLe3K9YK2qlK5ypEV90JjyChkOLv9N9cZ
+	 Pv86RNR5pfEdyp0WY4GA/2Oi/KalETVzSr7GyJZtX9Lf5v9JiEF0VVshoM9zQuWVch
+	 5+1LPK1Qsezf0mOWMqvXo0LQoVMLFGIrhEkVWXqoxong8MuhKjyD/fmtroUUdofKnC
+	 qTqB77fkKeLlr+BlTXS/fUa/euK4BOl7PjMgukhd0MiMJat39IsejAXpDt4Z67kM7I
+	 srXH2+luobwvg==
 Received: from thinkos.internal.efficios.com (unknown [64.58.40.251])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jLzPq0wtSzM5P;
-	Fri, 06 Nov 2026 20:45:03 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jLzPn3KtDzMR4;
+	Fri, 06 Nov 2026 20:45:01 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v4 12/26] sched/deadline: Keep departing bandwidth across a root domain rebuild
-Date: Fri,  6 Nov 2026 20:44:37 -0500
-Message-Id: <20261107014451.1487825-13-mathieu.desnoyers@efficios.com>
+Subject: [PATCH v4 08/26] sched/deadline: Take a deadline boost from the waiter's rt_mutex node
+Date: Fri,  6 Nov 2026 20:44:33 -0500
+Message-Id: <20261107014451.1487825-9-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20261107014451.1487825-1-mathieu.desnoyers@efficios.com>
 References: <20261107014451.1487825-1-mathieu.desnoyers@efficios.com>
@@ -97,487 +97,616 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A task that leaves SCHED_DEADLINE, or dies, before its 0-lag time keeps
-its bandwidth in the total_bw of its root domain until then, when
-inactive_task_timer() removes it from the root domain of the CPU the
-task is on (commit 387e31300b57 ("sched/deadline: Fix the update of the
-total -deadline utilization")). Two things break that:
+A task boosted by a deadline waiter of an rt_mutex it holds runs on the
+waiter's reservation: pi_se points at the waiter's entity, whose
+dl_runtime, dl_deadline and dl_period replenish_dl_entity() reads. The
+waiter can leave SCHED_DEADLINE meanwhile. __sched_setscheduler()
+changes it under its runqueue lock, and walks the chain to the owner,
+rt_mutex_adjust_pi(), once that lock is released. In between,
+inactive_task_timer() at the waiter's 0-lag time, or
+task_non_contending() in the change itself for a waiter woken but not
+yet off the lock, clears the waiter's parameters. The owner is still
+boosted, and the next time its runtime runs out, at a tick or a switch,
+replenish_dl_entity() never leaves, under the runqueue lock with
+interrupts off:
 
- 1. a rebuild of the root domains' accounting, on any change of the
-    cpuset partitions and on CPU hotplug, clears every root domain and
-    adds back the bandwidth of the deadline tasks of the cpusets, which
-    a task out of the policy is not, and a dead one is in no cpuset: its
-    bandwidth is dropped, and the timer then removes it again, from
-    whichever root domain its CPU is in by then. total_bw wraps around,
-    and that root domain admits deadline tasks beyond its capacity until
-    the next rebuild;
- 2. the task may move meanwhile to a CPU of another cpuset partition:
-    the timer then removes the bandwidth from that root domain, which
-    never had it, and leaves it for good in the one that has it.
+	while (dl_se->runtime <= 0) {
+		dl_se->deadline += pi_of(dl_se)->dl_period;
+		dl_se->runtime += pi_of(dl_se)->dl_runtime;
+	}
 
-Keep each departing task on a list, from its departure to its timer,
-with the CPU it is on as it leaves: a CPU of the root domain that holds
-its bandwidth, but for a task moved asleep to another partition, which a
-later patch records. A rebuild puts that bandwidth back in the root
-domain of that CPU, and the timer removes it from there.
+Its CPU locks up, and so does the one walking the chain, waiting for the
+owner's runqueue lock.
 
-dl_non_contending tells a task departed, where hrtimer_active() stays
-true for a while after the handler returns. A count of the rebuilds,
-which each task records when its bandwidth is counted, keeps the timer
-from removing what a rebuild dropped since, such as the bandwidth of a
-task that exits while a rebuild runs, which neither the cpuset walk nor
-the list finds. The list's lock nests inside the rq and pi locks, and
-outside the root domains' dl_bw locks. dl_cookie and dl_bw_visited()
-have no user outside deadline.c left: make them static.
+A copy of the waiter's parameters taken at the boost is not enough:
+rt_mutex_setprio() reads the waiter with no lock of the waiter's, and a
+copy taken as the waiter leaves the class takes them cleared. The
+waiter's rt_mutex node records its priority and deadline under its
+pi_lock, which every change of its parameters holds, and every waiter
+enters its owner's pi_waiters with them current since "locking/rtmutex:
+Clone a waiter's sort keys as it enters pi_waiters", which this series
+applies on top of. Record there the reservation the waiter runs on, its
+own or the one a boost lent it, and take a deadline boost from the node
+of the top pi waiter: the priority, the deadline that decides whether a
+deadline owner is boosted, and a copy of the reservation, which the
+boosted task runs on from then on.
 
-The deadline_rebuild_test selftest added later in this series fails its
-three cases every time without this change, on v7.3 as on v7.4-rc1, and
-passes them with it: a task of 400ms every second runs 380ms, then
-exits, switches to SCHED_OTHER or moves, before a rebuild, and a one-CPU
-partition root admits two tasks of 600ms every second where it has room
-for one. A cgroup selftest under development found it, failing about
-once in ten runs after a test whose deadline task had just died.
+rt_mutex_setprio(), rt_effective_prio() and __setscheduler_dl_pi() read
+that node, rt_effective_prio() from the top pi waiter rather than
+p->pi_top_task, which try_to_take_rt_mutex() can leave stale. The chain
+walk and rt_mutex_adjust_pi() compare a deadline waiter's reservation
+too, so that a change of its parameters alone reaches the owner. struct
+rt_mutex_waiter, on the stack of every rt_mutex sleeper and, with
+PREEMPT_RT, of every sleeping lock waiter, grows from 112 to 160 bytes.
+rt_mutex_get_top_task() has no user left.
 
-Fixes: 387e31300b57 ("sched/deadline: Fix the update of the total -deadline utilization")
-Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
+Tested in VMs of 8 CPUs, 2 or 3 per case, with the same result in each:
+
+ - a debug delay of 300ms before rt_mutex_adjust_pi() opens the window:
+   a 1ms/100ms deadline waiter of a spinning owner, switched to
+   SCHED_OTHER with its inactive timer armed, locks up v7.4-rc1 and this
+   series without this patch, the owner's CPU warning in
+   replenish_dl_entity(); with this patch the owner is deboosted when
+   the change returns;
+ - without the delay, a deadline waiter switched in and out of
+   SCHED_DEADLINE 20000 times a second while a thread boosts the owner
+   again thousands of times a second, with a 50us timed lock: a copy
+   taken from the waiter itself locks the owner's CPU up within a
+   second, and this patch runs 600 seconds;
+ - a deadline waiter that changes class while another is ahead of it,
+   then is promoted, boosts the owner as its class says, either way;
+ - the locking API, ww_mutex, locktorture rtmutex_lock and futex
+   selftests pass, with and without PREEMPT_RT.
+
+Found by the Sashiko AI review of the third posting of this series; the
+window of a copy taken from the waiter itself, and a node not current on
+promotion, by reviews of this posting by a second model.
+
+Fixes: a5e7be3b28a2 ("sched/deadline: Clear dl_entity params when setscheduling to different class")
 Cc: stable@vger.kernel.org
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 ---
- include/linux/sched.h          |  14 ++
- include/linux/sched/deadline.h |   5 +-
- kernel/cgroup/cpuset.c         |  11 +-
- kernel/sched/deadline.c        | 227 ++++++++++++++++++++++++++++-----
- 4 files changed, 214 insertions(+), 43 deletions(-)
+ include/linux/sched.h           | 21 +++++++--
+ include/linux/sched/deadline.h  | 17 ++++++++
+ include/linux/sched/rt.h        | 11 -----
+ kernel/locking/rtmutex.c        | 41 +++++++++++++++---
+ kernel/locking/rtmutex_api.c    |  2 +-
+ kernel/locking/rtmutex_common.h |  5 +++
+ kernel/sched/core.c             | 69 ++++++++++++++++++++++++++----
+ kernel/sched/deadline.c         | 76 ++++++++++++++++++++++++---------
+ kernel/sched/sched.h            | 19 +++------
+ kernel/sched/syscalls.c         |  6 +--
+ 10 files changed, 198 insertions(+), 69 deletions(-)
 
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index f0b6a8a91323..eb06c541927e 100644
+index e4f6323d7855..f0b6a8a91323 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -745,6 +745,20 @@ struct sched_dl_entity {
- 	 */
- 	struct hrtimer			inactive_timer;
+@@ -640,6 +640,13 @@ struct sched_rt_entity {
+ struct rq_flags;
+ typedef struct task_struct *(*dl_server_pick_f)(struct sched_dl_entity *, struct rq_flags *rf);
  
-+	/*
-+	 * A task that leaves SCHED_DEADLINE, or dies, before its "0-lag
-+	 * time" keeps its bandwidth in its root domain until the inactive
-+	 * timer removes it. @dl_departed_cpu is then a CPU of the root domain
-+	 * that counts that bandwidth, and @dl_departed_node links it on the
-+	 * list that a rebuild of the root domains' accounting puts that
-+	 * bandwidth back from; -1 otherwise. @dl_bw_gen is the
-+	 * rebuild that last counted the task's bandwidth: one since then
-+	 * dropped it, and nothing is to be removed.
-+	 */
-+	struct list_head		dl_departed_node;
-+	int				dl_departed_cpu;
-+	unsigned int			dl_bw_gen;
++/* The parameters of a deadline reservation: runtime, relative deadline, period. */
++struct sched_dl_params {
++	u64				runtime;
++	u64				deadline;
++	u64				period;
++};
 +
- 	/*
- 	 * Bits for DL-server functionality. Also see the comment near
- 	 * dl_server_update().
-diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
-index 416ca548a038..12c5d8486b09 100644
---- a/include/linux/sched/deadline.h
-+++ b/include/linux/sched/deadline.h
-@@ -49,7 +49,7 @@ static inline bool dl_time_before(u64 a, u64 b)
- struct root_domain;
- extern void dl_add_task_root_domain(struct task_struct *p);
- extern void dl_clear_root_domain(struct root_domain *rd);
--extern void dl_clear_root_domain_cpu(int cpu);
-+extern void dl_clear_root_domains(void);
- /*
-  * Return whether moving DL task @p to @new_mask requires moving DL
-  * bandwidth accounting between root domains. This helper is specific to
-@@ -60,9 +60,6 @@ extern void dl_clear_root_domain_cpu(int cpu);
- extern bool dl_task_needs_bw_move(struct task_struct *p,
- 				  const struct cpumask *new_mask);
+ struct sched_dl_entity {
+ 	struct rb_node			rb_node;
  
--extern u64 dl_cookie;
--extern bool dl_bw_visited(int cpu, u64 cookie);
--
- static inline bool dl_server(struct sched_dl_entity *dl_se)
- {
- 	return dl_se->dl_server;
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 3219f927c35e..4159abfbbbb5 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -985,21 +985,14 @@ void dl_rebuild_rd_accounting(void)
- {
- 	struct cpuset *cs = NULL;
- 	struct cgroup_subsys_state *pos_css;
--	int cpu;
--	u64 cookie = ++dl_cookie;
- 
- 	lockdep_assert_cpuset_lock_held();
- 	lockdep_assert_cpus_held();
- 	lockdep_assert_held(&sched_domains_mutex);
- 
--	rcu_read_lock();
--
--	for_each_possible_cpu(cpu) {
--		if (dl_bw_visited(cpu, cookie))
--			continue;
-+	dl_clear_root_domains();
- 
--		dl_clear_root_domain_cpu(cpu);
--	}
-+	rcu_read_lock();
- 
- 	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
- 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index cb0cf9c15108..4f69ac1846ac 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -201,7 +201,13 @@ static inline unsigned long dl_bw_capacity(int i)
- 	}
- }
- 
--bool dl_bw_visited(int cpu, u64 cookie)
-+/*
-+ * Used for dl_bw check and update, used under sched_rt_handler()::mutex and
-+ * sched_domains_mutex.
-+ */
-+static u64 dl_cookie;
-+
-+static bool dl_bw_visited(int cpu, u64 cookie)
- {
- 	struct root_domain *rd = cpu_rq(cpu)->rd;
- 
-@@ -255,6 +261,86 @@ __dl_overflow(struct dl_bw *dl_b, unsigned long cap, u64 old_bw, u64 new_bw)
- 	       cap_scale(dl_b->bw, cap) < dl_b->total_bw - old_bw + new_bw;
- }
- 
-+/*
-+ * A task that leaves SCHED_DEADLINE, or dies, before its 0-lag time keeps
-+ * its bandwidth in total_bw until then: the inactive timer removes it. A
-+ * rebuild of the root domains' accounting meanwhile (dl_clear_root_domains()
-+ * and dl_add_task_root_domain(), on any change of the partitions or CPU
-+ * hotplug) finds no such task among the deadline tasks of the cpusets: it
-+ * puts that bandwidth back from dl_departed_list, which holds them from
-+ * their departure to their timer, in the root domain of the CPU each was
-+ * on when it left, or died. The task may run anywhere meanwhile, as
-+ * another policy; its timer holds a reference to it.
-+ *
-+ * dl_bw_gen counts the rebuilds, and each task records the one that last
-+ * counted its bandwidth. A rebuild that dropped it since then leaves
-+ * nothing to remove: the CPU recorded was no longer active, or the task
-+ * exited while the rebuild ran, which the cpuset walk skips, and was not
-+ * dead yet when the list was put back. Both counts, and the list, are under
-+ * dl_departed_lock, taken with interrupts disabled (under the task's rq
-+ * lock or pi_lock, or by the rebuild) and before any dl_bw lock.
-+ */
-+static LIST_HEAD(dl_departed_list);
-+static DEFINE_RAW_SPINLOCK(dl_departed_lock);
-+static unsigned int dl_bw_gen;
-+
-+/*
-+ * @p leaves SCHED_DEADLINE, or dies, its bandwidth kept for now in the root
-+ * domain of @cpu. Under its rq lock.
-+ */
-+static void dl_task_depart(struct task_struct *p, int cpu)
-+{
-+	struct sched_dl_entity *dl_se = &p->dl;
-+
-+	lockdep_assert_irqs_disabled();
-+	if (dl_se->dl_departed_cpu >= 0)
-+		return;
-+	guard(raw_spinlock)(&dl_departed_lock);
-+	dl_se->dl_departed_cpu = cpu;
-+	list_add(&dl_se->dl_departed_node, &dl_departed_list);
-+}
-+
-+/*
-+ * @p comes back to the deadline class, its bandwidth kept as a deadline
-+ * task's again. Under its rq lock.
-+ */
-+static void dl_task_undepart(struct task_struct *p)
-+{
-+	struct sched_dl_entity *dl_se = &p->dl;
-+
-+	lockdep_assert_irqs_disabled();
-+	guard(raw_spinlock)(&dl_departed_lock);
-+	dl_se->dl_departed_cpu = -1;
-+	list_del(&dl_se->dl_departed_node);
-+}
-+
-+/*
-+ * Remove @p's bandwidth from the root domain that counts it: that of the
-+ * CPU recorded when it departed, else that of @cpu. Nothing to remove
-+ * when a rebuild of the accounting has dropped it; and no rebuild running
-+ * counts it again. Under @p's rq lock.
-+ */
-+static void dl_task_release_bw(struct task_struct *p, int cpu)
-+{
-+	struct sched_dl_entity *dl_se = &p->dl;
-+	struct dl_bw *dl_b;
-+
-+	lockdep_assert_irqs_disabled();
-+	guard(raw_spinlock)(&dl_departed_lock);
-+	if (dl_se->dl_departed_cpu >= 0) {
-+		cpu = dl_se->dl_departed_cpu;
-+		dl_se->dl_departed_cpu = -1;
-+		list_del(&dl_se->dl_departed_node);
-+	}
-+	if (dl_se->dl_bw_gen == dl_bw_gen) {
-+		dl_b = dl_bw_of(cpu);
-+		raw_spin_lock(&dl_b->lock);
-+		__dl_sub(dl_b, dl_se->dl_bw, dl_bw_cpus(cpu));
-+		raw_spin_unlock(&dl_b->lock);
-+	}
-+	dl_se->dl_bw_gen = dl_bw_gen;
-+}
-+
- static inline
- void __add_running_bw(u64 dl_bw, struct dl_rq *dl_rq)
- {
-@@ -495,13 +581,9 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
- 				sub_running_bw(dl_se, dl_rq);
- 
- 			if (!dl_task || READ_ONCE(p->__state) == TASK_DEAD) {
--				struct dl_bw *dl_b = dl_bw_of(task_cpu(p));
--
- 				if (dl_task && READ_ONCE(p->__state) == TASK_DEAD)
- 					sub_rq_bw(dl_se, &rq->dl);
--				raw_spin_lock(&dl_b->lock);
--				__dl_sub(dl_b, dl_se->dl_bw, dl_bw_cpus(task_cpu(p)));
--				raw_spin_unlock(&dl_b->lock);
-+				dl_task_release_bw(p, task_cpu(p));
- 				__dl_clear_params(dl_se);
- 			}
- 		}
-@@ -510,8 +592,18 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
- 	}
- 
- 	dl_se->dl_non_contending = 1;
--	if (!dl_server(dl_se))
--		get_task_struct(dl_task_of(dl_se));
-+	if (!dl_server(dl_se)) {
-+		struct task_struct *p = dl_task_of(dl_se);
-+
-+		get_task_struct(p);
-+		/*
-+		 * Dying: its bandwidth is in the root domain of the CPU it
-+		 * runs on. switched_from_dl() records one that leaves
-+		 * SCHED_DEADLINE.
-+		 */
-+		if (READ_ONCE(p->__state) == TASK_DEAD)
-+			dl_task_depart(p, task_cpu(p));
-+	}
- 
- 	hrtimer_start(timer, ns_to_ktime(zerolag_time), HRTIMER_MODE_REL_HARD);
- }
-@@ -2236,17 +2328,13 @@ static enum hrtimer_restart inactive_task_timer(struct hrtimer *timer)
- 		goto no_task;
- 
- 	if (!dl_task(p) || READ_ONCE(p->__state) == TASK_DEAD) {
--		struct dl_bw *dl_b = dl_bw_of(task_cpu(p));
--
- 		if (READ_ONCE(p->__state) == TASK_DEAD && dl_se->dl_non_contending) {
- 			sub_running_bw(&p->dl, dl_rq_of_se(&p->dl));
- 			sub_rq_bw(&p->dl, dl_rq_of_se(&p->dl));
- 			dl_se->dl_non_contending = 0;
- 		}
- 
--		raw_spin_lock(&dl_b->lock);
--		__dl_sub(dl_b, p->dl.dl_bw, dl_bw_cpus(task_cpu(p)));
--		raw_spin_unlock(&dl_b->lock);
-+		dl_task_release_bw(p, task_cpu(p));
- 		__dl_clear_params(dl_se);
- 
- 		goto unlock;
-@@ -3507,12 +3595,33 @@ void dl_add_task_root_domain(struct task_struct *p)
- 	dl_get_task_effective_cpus(p, msk);
- 	cpu = cpumask_first_and(cpu_active_mask, msk);
- 	BUG_ON(cpu >= nr_cpu_ids);
-+
-+	raw_spin_lock(&dl_departed_lock);
-+	/*
-+	 * Counted already by this rebuild: put back by
-+	 * dl_clear_root_domains() as a departed task, which priority
-+	 * inheritance boosted into the class since, or its bandwidth
-+	 * gone since (dl_task_release_bw()), as that of one that died
-+	 * after the walk found it. One that died since with its 0-lag
-+	 * time ahead goes back to the root domain of the CPU recorded
-+	 * (dl_task_depart()), if active.
-+	 */
-+	if (p->dl.dl_bw_gen == dl_bw_gen)
-+		goto unlock;
-+	if (p->dl.dl_departed_cpu >= 0) {
-+		cpu = p->dl.dl_departed_cpu;
-+		if (!cpu_active(cpu))
-+			goto unlock;
-+	}
- 	rq = cpu_rq(cpu);
- 	dl_b = &rq->rd->dl_bw;
- 
- 	raw_spin_lock(&dl_b->lock);
- 	__dl_add(dl_b, p->dl.dl_bw, cpumask_weight(rq->rd->span));
- 	raw_spin_unlock(&dl_b->lock);
-+	p->dl.dl_bw_gen = dl_bw_gen;
-+unlock:
-+	raw_spin_unlock(&dl_departed_lock);
- 	raw_spin_unlock_irqrestore(&p->pi_lock, rf.flags);
- }
- 
-@@ -3570,9 +3679,45 @@ void dl_clear_root_domain(struct root_domain *rd)
- 		dl_server_add_bw(rd, i);
- }
- 
--void dl_clear_root_domain_cpu(int cpu)
-+/*
-+ * Clear every root domain ahead of a rebuild of their accounting, which
-+ * dl_add_task_root_domain() then fills with the deadline tasks of the
-+ * cpusets: put back their servers, and the bandwidth of the tasks that
-+ * left SCHED_DEADLINE, or died, before their 0-lag time, which no cpuset
-+ * holds as a deadline task, in the root domain of the CPU recorded for
-+ * each; dropped if it is no longer active.
-+ */
-+void dl_clear_root_domains(void)
- {
--	dl_clear_root_domain(cpu_rq(cpu)->rd);
-+	struct sched_dl_entity *dl_se;
-+	u64 cookie = ++dl_cookie;
-+	struct dl_bw *dl_b;
-+	int cpu;
-+
-+	guard(raw_spinlock_irqsave)(&dl_departed_lock);
-+	dl_bw_gen++;
-+	for_each_possible_cpu(cpu) {
-+		if (!dl_bw_visited(cpu, cookie))
-+			dl_clear_root_domain(cpu_rq(cpu)->rd);
-+	}
-+	list_for_each_entry(dl_se, &dl_departed_list, dl_departed_node) {
-+		cpu = dl_se->dl_departed_cpu;
-+		/*
-+		 * Counted in the generation that ends here, and nowhere
-+		 * since: one a rebuild dropped, for want of an active CPU to
-+		 * count it, is not to be put back, and its release takes
-+		 * nothing away either (dl_task_release_bw()).
-+		 */
-+		if (dl_se->dl_bw_gen != dl_bw_gen - 1)
-+			continue;
-+		if (!cpu_active(cpu))
-+			continue;
-+		dl_b = dl_bw_of(cpu);
-+		raw_spin_lock(&dl_b->lock);
-+		__dl_add(dl_b, dl_se->dl_bw, dl_bw_cpus(cpu));
-+		raw_spin_unlock(&dl_b->lock);
-+		dl_se->dl_bw_gen = dl_bw_gen;
-+	}
- }
- 
- static void switched_from_dl(struct rq *rq, struct task_struct *p)
-@@ -3616,7 +3761,7 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
- 			 * or sub_rq_bw (below) will complain.
- 			 *
- 			 * inactive_task_timer() will find !dl_task(p) and
--			 * release total_bw via __dl_sub().
-+			 * release total_bw (dl_task_release_bw()).
- 			 */
- 			sub_running_bw(&p->dl, &rq->dl);
- 		} else if (p->dl.dl_runtime && !dl_entity_is_special(&p->dl) &&
-@@ -3646,11 +3791,7 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
- 			 * deboosted from priority inheritance, nor for a
- 			 * special one: neither has bandwidth in total_bw.
- 			 */
--			struct dl_bw *dl_b = dl_bw_of(task_cpu(p));
--
--			raw_spin_lock(&dl_b->lock);
--			__dl_sub(dl_b, p->dl.dl_bw, dl_bw_cpus(task_cpu(p)));
--			raw_spin_unlock(&dl_b->lock);
-+			dl_task_release_bw(p, task_cpu(p));
- 			released = true;
- 		}
- 		sub_rq_bw(&p->dl, &rq->dl);
-@@ -3674,9 +3815,19 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
- 	 * We cannot use inactive_task_timer() to invoke sub_running_bw()
- 	 * at the 0-lag time, because the task could have been migrated
- 	 * while SCHED_OTHER in the meanwhile.
+@@ -706,6 +713,9 @@ struct sched_dl_entity {
+ 	 * contributes to the root domain's total_bw. Only meaningful for server
+ 	 * entities (@dl_server == 1). Allows toggling the reservation on/off
+ 	 * without losing the configured @dl_runtime/@dl_period.
 +	 *
-+	 * Nor can it take the task's bandwidth from the root domain of the
-+	 * CPU the task is on by then, and a rebuild of the root domains
-+	 * meanwhile would not find it among the deadline tasks: record a
-+	 * CPU of the root domain that keeps that bandwidth until the
-+	 * inactive timer removes it (dl_task_depart()). dl_non_contending
-+	 * tells that timer armed, its handler yet to run; hrtimer_active()
-+	 * stays true for a while after that handler returns.
++	 * @dl_boosted tells if priority inheritance boosted the entity: it
++	 * runs on the parameters copied in @pi_params.
  	 */
--	if (p->dl.dl_non_contending)
-+	if (p->dl.dl_non_contending) {
- 		p->dl.dl_non_contending = 0;
-+		dl_task_depart(p, task_cpu(p));
-+	}
+ 	unsigned int			dl_throttled      : 1;
+ 	unsigned int			dl_yielded        : 1;
+@@ -718,6 +728,7 @@ struct sched_dl_entity {
+ 	unsigned int			dl_defer_running  : 1;
+ 	unsigned int			dl_defer_idle     : 1;
+ 	unsigned int			dl_bw_attached    : 1;
++	unsigned int			dl_boosted        : 1;
  
  	/*
- 	 * Since this might be the only -deadline task on the rq,
-@@ -3696,6 +3847,16 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
- static void switched_to_dl(struct rq *rq, struct task_struct *p)
- {
- 	cancel_inactive_timer(&p->dl);
-+	/*
-+	 * Boosted back into the class before its 0-lag time (a policy change
-+	 * released that bandwidth in sched_dl_overflow()): the inactive
-+	 * timer will not remove it, but its leaving the class again. That
-+	 * forgets the CPU recorded: moved to another root domain meanwhile,
-+	 * the task then removes the bandwidth from that one, as it did
-+	 * before departures were recorded.
-+	 */
-+	if (p->dl.dl_departed_cpu >= 0)
-+		dl_task_undepart(p);
+ 	 * Bandwidth enforcement timer. Each -deadline task has its
+@@ -745,11 +756,13 @@ struct sched_dl_entity {
  
+ #ifdef CONFIG_RT_MUTEXES
  	/*
- 	 * In case a task is setscheduled to SCHED_DEADLINE we need to keep
-@@ -3810,12 +3971,6 @@ DEFINE_SCHED_CLASS(dl) = {
+-	 * Priority Inheritance. When a DEADLINE scheduling entity is boosted
+-	 * pi_se points to the donor, otherwise points to the dl_se it belongs
+-	 * to (the original one/itself).
++	 * Priority inheritance: the parameters of the reservation the
++	 * entity runs on while @dl_boosted, copied at the boost from the
++	 * node of the waiter that lends them (rt_waiter_node). Not read
++	 * from the waiter: it may leave SCHED_DEADLINE and have its own
++	 * cleared before the chain walk deboosts this one.
+ 	 */
+-	struct sched_dl_entity *pi_se;
++	struct sched_dl_params		pi_params;
  #endif
  };
  
--/*
-- * Used for dl_bw check and update, used under sched_rt_handler()::mutex and
-- * sched_domains_mutex.
-- */
--u64 dl_cookie;
--
- int sched_dl_global_validate(void)
- {
- 	u64 runtime = global_rt_runtime();
-@@ -3936,8 +4091,6 @@ int sched_dl_overflow(struct task_struct *p, int policy,
+diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
+index 273538200a44..416ca548a038 100644
+--- a/include/linux/sched/deadline.h
++++ b/include/linux/sched/deadline.h
+@@ -10,6 +10,23 @@
  
- 	if (dl_policy(policy) && !task_has_dl_policy(p) &&
- 	    !__dl_overflow(dl_b, cap, 0, new_bw)) {
--		if (hrtimer_active(&p->dl.inactive_timer))
--			__dl_sub(dl_b, p->dl.dl_bw, cpus);
- 		__dl_add(dl_b, new_bw, cpus);
- 		err = 0;
- 	} else if (dl_policy(policy) && task_has_dl_policy(p) &&
-@@ -3963,6 +4116,19 @@ int sched_dl_overflow(struct task_struct *p, int policy,
- 	}
- 	raw_spin_unlock(&dl_b->lock);
+ #include <linux/sched.h>
  
-+	/*
-+	 * Back before its 0-lag time, the task still has the bandwidth it
-+	 * left with, which the new one replaces: removed from the root
-+	 * domain that keeps it (dl_task_release_bw()). A rebuild cannot
-+	 * run meanwhile: the caller holds cpuset_mutex.
-+	 */
-+	if (!err && dl_policy(policy) && !task_has_dl_policy(p)) {
-+		lockdep_assert_cpuset_lock_held();
-+		if (p->dl.dl_departed_cpu >= 0)
-+			dl_task_release_bw(p, -1);
-+		p->dl.dl_bw_gen = dl_bw_gen;
-+	}
++#ifdef CONFIG_RT_MUTEXES
++/*
++ * The reservation @dl_se runs on: its own, or the one a priority
++ * inheritance boost lent it. Under its task's pi_lock or rq lock.
++ */
++static inline struct sched_dl_params dl_entity_params(const struct sched_dl_entity *dl_se)
++{
++	if (dl_se->dl_boosted)
++		return dl_se->pi_params;
++	return (struct sched_dl_params){
++		.runtime	= dl_se->dl_runtime,
++		.deadline	= dl_se->dl_deadline,
++		.period		= dl_se->dl_period,
++	};
++}
++#endif
 +
- 	return err;
+ static inline bool dl_prio(int prio)
+ {
+ 	return unlikely(prio < MAX_DL_PRIO);
+diff --git a/include/linux/sched/rt.h b/include/linux/sched/rt.h
+index 922935cc3383..a790428734db 100644
+--- a/include/linux/sched/rt.h
++++ b/include/linux/sched/rt.h
+@@ -57,20 +57,9 @@ extern void rt_mutex_schedule(void);
+ extern void rt_mutex_post_schedule(void);
+ extern void rt_mutex_futex_post_schedule(void);
+ 
+-/*
+- * Must hold either p->pi_lock or task_rq(p)->lock.
+- */
+-static inline struct task_struct *rt_mutex_get_top_task(struct task_struct *p)
+-{
+-	return p->pi_top_task;
+-}
+ extern void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task);
+ extern void rt_mutex_adjust_pi(struct task_struct *p);
+ #else
+-static inline struct task_struct *rt_mutex_get_top_task(struct task_struct *task)
+-{
+-	return NULL;
+-}
+ # define rt_mutex_adjust_pi(p)		do { } while (0)
+ #endif
+ 
+diff --git a/kernel/locking/rtmutex.c b/kernel/locking/rtmutex.c
+index e89f0f0e604b..c0869c63a476 100644
+--- a/kernel/locking/rtmutex.c
++++ b/kernel/locking/rtmutex.c
+@@ -363,16 +363,21 @@ static __always_inline int __waiter_prio(struct task_struct *task)
  }
  
-@@ -4099,6 +4265,7 @@ void init_dl_entity(struct sched_dl_entity *dl_se)
- 	init_dl_task_timer(dl_se);
- 	init_dl_inactive_task_timer(dl_se);
- 	__dl_clear_params(dl_se);
-+	dl_se->dl_departed_cpu = -1;
+ /*
+- * Update the waiter->tree copy of the sort keys.
++ * Update the waiter->tree copy of the sort keys, and of the reservation a
++ * deadline waiter lends the owner: under @task's pi_lock, which every
++ * change of its parameters holds, so that a boost never runs on those of
++ * a waiter that left the class before the chain walk came.
+  */
+ static __always_inline void
+ waiter_update_prio(struct rt_mutex_waiter *waiter, struct task_struct *task)
+ {
+ 	lockdep_assert_held(&waiter->lock->wait_lock);
++	lockdep_assert_held(&task->pi_lock);
+ 	lockdep_assert(RB_EMPTY_NODE(&waiter->tree.entry));
+ 
+ 	waiter->tree.prio = __waiter_prio(task);
+ 	waiter->tree.deadline = task->dl.deadline;
++	waiter->tree.dl = dl_entity_params(&task->dl);
  }
  
- bool dl_param_changed(struct task_struct *p, const struct sched_attr *attr)
+ /*
+@@ -387,6 +392,7 @@ waiter_clone_prio(struct rt_mutex_waiter *waiter, struct task_struct *task)
+ 
+ 	waiter->pi_tree.prio = waiter->tree.prio;
+ 	waiter->pi_tree.deadline = waiter->tree.deadline;
++	waiter->pi_tree.dl = waiter->tree.dl;
+ }
+ 
+ /*
+@@ -433,6 +439,27 @@ static __always_inline int rt_waiter_node_equal(struct rt_waiter_node *left,
+ 	return 1;
+ }
+ 
++/*
++ * Whether the lock tree copy of @waiter's node still has what @task would
++ * record in it: its sort keys and, for a deadline task, the reservation
++ * it lends the owner, which a change of its parameters moves without them
++ * (sched_setattr() leaves the deadline of a task that is not running).
++ */
++static __always_inline bool rt_waiter_node_current(struct rt_mutex_waiter *waiter,
++						   struct task_struct *task)
++{
++	struct sched_dl_params dl;
++
++	if (!rt_waiter_node_equal(&waiter->tree, task_to_waiter_node(task)))
++		return false;
++	if (!dl_prio(waiter->tree.prio))
++		return true;
++	dl = dl_entity_params(&task->dl);
++	return dl.runtime == waiter->tree.dl.runtime &&
++	       dl.deadline == waiter->tree.dl.deadline &&
++	       dl.period == waiter->tree.dl.period;
++}
++
+ static inline bool rt_mutex_steal(struct rt_mutex_waiter *waiter,
+ 				  struct rt_mutex_waiter *top_waiter)
+ {
+@@ -831,13 +858,13 @@ static int __sched rt_mutex_adjust_prio_chain(struct task_struct *task,
+ 	}
+ 
+ 	/*
+-	 * If the waiter priority is the same as the task priority
+-	 * then there is no further priority adjustment necessary.  If
+-	 * deadlock detection is off, we stop the chain walk. If its
+-	 * enabled we continue, but stop the requeueing in the chain
+-	 * walk.
++	 * If the waiter priority is the same as the task priority, and
++	 * so is the reservation of a deadline task, then there is no
++	 * further priority adjustment necessary.  If deadlock detection
++	 * is off, we stop the chain walk. If its enabled we continue,
++	 * but stop the requeueing in the chain walk.
+ 	 */
+-	if (rt_waiter_node_equal(&waiter->tree, task_to_waiter_node(task))) {
++	if (rt_waiter_node_current(waiter, task)) {
+ 		if (!detect_deadlock)
+ 			goto out_unlock_pi;
+ 		else
+diff --git a/kernel/locking/rtmutex_api.c b/kernel/locking/rtmutex_api.c
+index eb18b094473c..ba907636cc3c 100644
+--- a/kernel/locking/rtmutex_api.c
++++ b/kernel/locking/rtmutex_api.c
+@@ -510,7 +510,7 @@ void __sched rt_mutex_adjust_pi(struct task_struct *task)
+ 	raw_spin_lock_irqsave(&task->pi_lock, flags);
+ 
+ 	waiter = task->pi_blocked_on;
+-	if (!waiter || rt_waiter_node_equal(&waiter->tree, task_to_waiter_node(task))) {
++	if (!waiter || rt_waiter_node_current(waiter, task)) {
+ 		raw_spin_unlock_irqrestore(&task->pi_lock, flags);
+ 		return;
+ 	}
+diff --git a/kernel/locking/rtmutex_common.h b/kernel/locking/rtmutex_common.h
+index 1f56d40c3e66..9abd3184cfa3 100644
+--- a/kernel/locking/rtmutex_common.h
++++ b/kernel/locking/rtmutex_common.h
+@@ -33,6 +33,11 @@ struct rt_waiter_node {
+ 	struct rb_node	entry;
+ 	int		prio;
+ 	u64		deadline;
++	/*
++	 * A deadline waiter's reservation, its relative runtime, deadline
++	 * and period, recorded with @prio and the absolute @deadline.
++	 */
++	struct sched_dl_params dl;
+ };
+ 
+ /*
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 1a088d4576f5..55a4f2d8294e 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -95,6 +95,9 @@
+ #include "smp.h"
+ 
+ #include "../workqueue_internal.h"
++#ifdef CONFIG_RT_MUTEXES
++#include "../locking/rtmutex_common.h"
++#endif
+ #include "../../io_uring/io-wq.h"
+ #include "../smpboot.h"
+ #include "../locking/mutex.h"
+@@ -7742,6 +7745,55 @@ void rt_mutex_futex_post_schedule(void)
+ 	lockdep_assert(fetch_and_set(current->sched_rt_mutex, 0));
+ }
+ 
++/*
++ * The priority @pi_task, the top pi waiter of node @pi, lends a task of
++ * priority @prio: its own, read without its lock, as the chain walk that
++ * follows a change of it brings the change; but that of its node where
++ * either is a deadline one. A deadline boost runs on the reservation the
++ * node recorded with it under the waiter's pi_lock: past a change of the
++ * waiter's own, its parameters may be cleared before the walk comes
++ * (__dl_clear_params()), and replenish_dl_entity() never ends over a
++ * runtime of 0.
++ */
++static int __rt_effective_prio(struct task_struct *pi_task,
++			       struct rt_waiter_node *pi, int prio)
++{
++	int pi_prio;
++
++	if (!pi_task)
++		return prio;
++	pi_prio = pi_task->prio;
++	if (dl_prio(pi_prio) || dl_prio(pi->prio))
++		pi_prio = pi->prio;
++	return min(prio, pi_prio);
++}
++
++/* The node of @p's top pi waiter, or NULL. Under @p->pi_lock. */
++static struct rt_waiter_node *rt_mutex_top_pi_node(struct task_struct *p)
++{
++	lockdep_assert_held(&p->pi_lock);
++	return task_has_pi_waiters(p) ? &task_top_pi_waiter(p)->pi_tree : NULL;
++}
++
++/* The priority @p, of priority @prio of its own, runs at with its boost. */
++int rt_effective_prio(struct task_struct *p, int prio)
++{
++	struct rt_waiter_node *pi = rt_mutex_top_pi_node(p);
++
++	return __rt_effective_prio(pi ? task_top_pi_waiter(p)->task : NULL, pi, prio);
++}
++
++/*
++ * The reservation the top pi waiter of @p lends it, as its node recorded
++ * it, or NULL if that node is not a deadline one. Under @p->pi_lock.
++ */
++const struct sched_dl_params *rt_mutex_top_dl_params(struct task_struct *p)
++{
++	struct rt_waiter_node *pi = rt_mutex_top_pi_node(p);
++
++	return pi && dl_prio(pi->prio) ? &pi->dl : NULL;
++}
++
+ /*
+  * rt_mutex_setprio - set the current priority of a task
+  * @p: task to boost
+@@ -7758,11 +7810,11 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+ 	int prio, oldprio, queue_flag =
+ 		DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
+ 	const struct sched_class *prev_class, *next_class;
++	struct rt_waiter_node *pi = pi_task ? rt_mutex_top_pi_node(p) : NULL;
+ 	struct rq_flags rf;
+ 	struct rq *rq;
+ 
+-	/* XXX used to be waiter->prio, not waiter->task->prio */
+-	prio = __rt_effective_prio(pi_task, p->normal_prio);
++	prio = __rt_effective_prio(pi_task, pi, p->normal_prio);
+ 
+ 	/*
+ 	 * If nothing changed; bail early.
+@@ -7832,21 +7884,22 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+ 		 */
+ 		if (dl_prio(prio)) {
+ 			if (!dl_prio(p->normal_prio) ||
+-			    (pi_task && dl_prio(pi_task->prio) &&
+-			     dl_entity_preempt(&pi_task->dl, &p->dl))) {
+-				p->dl.pi_se = pi_task->dl.pi_se;
++			    (pi_task && dl_prio(pi->prio) &&
++			     (dl_entity_is_special(&pi_task->dl) ||
++			      dl_time_before(pi->deadline, p->dl.deadline)))) {
++				dl_boost(&p->dl, &pi->dl);
+ 				scope->flags |= ENQUEUE_REPLENISH;
+ 			} else {
+-				p->dl.pi_se = &p->dl;
++				p->dl.dl_boosted = 0;
+ 			}
+ 		} else if (rt_prio(prio)) {
+ 			if (dl_prio(oldprio))
+-				p->dl.pi_se = &p->dl;
++				p->dl.dl_boosted = 0;
+ 			if (oldprio < prio)
+ 				scope->flags |= ENQUEUE_HEAD;
+ 		} else {
+ 			if (dl_prio(oldprio))
+-				p->dl.pi_se = &p->dl;
++				p->dl.dl_boosted = 0;
+ 			if (rt_prio(oldprio))
+ 				p->rt.timeout = 0;
+ 		}
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 6cf33045d93a..b8b0076870a6 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -84,25 +84,63 @@ static inline int on_dl_rq(struct sched_dl_entity *dl_se)
+ }
+ 
+ #ifdef CONFIG_RT_MUTEXES
+-static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
++static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
+ {
+-	return dl_se->pi_se;
++	return dl_se->dl_boosted;
+ }
+ 
+-static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
++/*
++ * The parameters of the reservation @dl_se runs on: its own, or the
++ * donor's, copied by dl_boost().
++ */
++static inline u64 pi_runtime_of(struct sched_dl_entity *dl_se)
+ {
+-	return pi_of(dl_se) != dl_se;
++	return dl_se->dl_boosted ? dl_se->pi_params.runtime : dl_se->dl_runtime;
+ }
+-#else /* !CONFIG_RT_MUTEXES: */
+-static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
++
++static inline u64 pi_deadline_of(struct sched_dl_entity *dl_se)
+ {
+-	return dl_se;
++	return dl_se->dl_boosted ? dl_se->pi_params.deadline : dl_se->dl_deadline;
+ }
+ 
++static inline u64 pi_period_of(struct sched_dl_entity *dl_se)
++{
++	return dl_se->dl_boosted ? dl_se->pi_params.period : dl_se->dl_period;
++}
++
++/*
++ * Boost @dl_se with the reservation @params a waiter's rt_mutex node
++ * recorded, under the waiter's pi_lock: a copy, as the waiter may leave
++ * SCHED_DEADLINE, and __dl_clear_params() clear its own parameters,
++ * before the chain walk that follows deboosts @dl_se, and a replenishment
++ * over a dl_period and a dl_runtime of 0 never ends. Under the rq lock and
++ * pi_lock of @dl_se's task.
++ */
++void dl_boost(struct sched_dl_entity *dl_se, const struct sched_dl_params *params)
++{
++	dl_se->pi_params = *params;
++	dl_se->dl_boosted = 1;
++}
++#else /* !CONFIG_RT_MUTEXES: */
+ static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
+ {
+ 	return false;
+ }
++
++static inline u64 pi_runtime_of(struct sched_dl_entity *dl_se)
++{
++	return dl_se->dl_runtime;
++}
++
++static inline u64 pi_deadline_of(struct sched_dl_entity *dl_se)
++{
++	return dl_se->dl_deadline;
++}
++
++static inline u64 pi_period_of(struct sched_dl_entity *dl_se)
++{
++	return dl_se->dl_period;
++}
+ #endif /* !CONFIG_RT_MUTEXES */
+ 
+ static inline u8 dl_get_type(struct sched_dl_entity *dl_se, struct rq *rq)
+@@ -731,9 +769,8 @@ static void wakeup_preempt_dl(struct rq *rq, struct task_struct *p, int flags);
+ static inline void replenish_dl_new_period(struct sched_dl_entity *dl_se,
+ 					    struct rq *rq)
+ {
+-	/* for non-boosted task, pi_of(dl_se) == dl_se */
+-	dl_se->deadline = rq_clock(rq) + pi_of(dl_se)->dl_deadline;
+-	dl_se->runtime = pi_of(dl_se)->dl_runtime;
++	dl_se->deadline = rq_clock(rq) + pi_deadline_of(dl_se);
++	dl_se->runtime = pi_runtime_of(dl_se);
+ 
+ 	/*
+ 	 * If it is a deferred reservation, and the server
+@@ -808,7 +845,7 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
+ 	struct dl_rq *dl_rq = dl_rq_of_se(dl_se);
+ 	struct rq *rq = rq_of_dl_rq(dl_rq);
+ 
+-	WARN_ON_ONCE(pi_of(dl_se)->dl_runtime <= 0);
++	WARN_ON_ONCE(pi_runtime_of(dl_se) <= 0);
+ 
+ 	/*
+ 	 * This could be the case for a !-dl task that is boosted.
+@@ -822,8 +859,8 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
+ 	 */
+ 	if (dl_se->dl_deadline == 0 ||
+ 	    (dl_se->dl_defer_armed && dl_entity_overflow(dl_se, rq_clock(rq)))) {
+-		dl_se->deadline = rq_clock(rq) + pi_of(dl_se)->dl_deadline;
+-		dl_se->runtime = pi_of(dl_se)->dl_runtime;
++		dl_se->deadline = rq_clock(rq) + pi_deadline_of(dl_se);
++		dl_se->runtime = pi_runtime_of(dl_se);
+ 	}
+ 
+ 	if (dl_se->dl_yielded && dl_se->runtime > 0)
+@@ -836,8 +873,8 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
+ 	 * arbitrary large.
+ 	 */
+ 	while (dl_se->runtime <= 0) {
+-		dl_se->deadline += pi_of(dl_se)->dl_period;
+-		dl_se->runtime += pi_of(dl_se)->dl_runtime;
++		dl_se->deadline += pi_period_of(dl_se);
++		dl_se->runtime += pi_runtime_of(dl_se);
+ 	}
+ 
+ 	/*
+@@ -946,9 +983,9 @@ static bool dl_entity_overflow(struct sched_dl_entity *dl_se, u64 t)
+ 	 * of anything below microseconds resolution is actually fiction
+ 	 * (but still we want to give the user that illusion >;).
+ 	 */
+-	left = (pi_of(dl_se)->dl_deadline >> DL_SCALE) * (dl_se->runtime >> DL_SCALE);
++	left = (pi_deadline_of(dl_se) >> DL_SCALE) * (dl_se->runtime >> DL_SCALE);
+ 	right = ((dl_se->deadline - t) >> DL_SCALE) *
+-		(pi_of(dl_se)->dl_runtime >> DL_SCALE);
++		(pi_runtime_of(dl_se) >> DL_SCALE);
+ 
+ 	return dl_time_before(right, left);
+ }
+@@ -3977,10 +4014,7 @@ static void __dl_clear_params(struct sched_dl_entity *dl_se)
+ 	dl_se->dl_defer			= 0;
+ 	dl_se->dl_defer_running		= 0;
+ 	dl_se->dl_defer_armed		= 0;
+-
+-#ifdef CONFIG_RT_MUTEXES
+-	dl_se->pi_se			= dl_se;
+-#endif
++	dl_se->dl_boosted		= 0;
+ }
+ 
+ void init_dl_entity(struct sched_dl_entity *dl_se)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 1d76950dbb0a..a06cf2e0d983 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -356,6 +356,9 @@ extern int  sched_dl_global_validate(void);
+ extern void sched_dl_do_global(void);
+ extern int  sched_dl_overflow(struct task_struct *p, int policy, const struct sched_attr *attr);
+ extern void __setparam_dl(struct task_struct *p, const struct sched_attr *attr);
++#ifdef CONFIG_RT_MUTEXES
++extern void dl_boost(struct sched_dl_entity *dl_se, const struct sched_dl_params *params);
++#endif
+ extern void __getparam_dl(struct task_struct *p, struct sched_attr *attr, unsigned int flags);
+ extern bool __checkparam_dl(const struct sched_attr *attr);
+ extern bool dl_param_changed(struct task_struct *p, const struct sched_attr *attr);
+@@ -4244,20 +4247,8 @@ bool task_is_pushable(struct rq *rq, struct task_struct *p, int cpu)
+ 
+ #ifdef CONFIG_RT_MUTEXES
+ 
+-static inline int __rt_effective_prio(struct task_struct *pi_task, int prio)
+-{
+-	if (pi_task)
+-		prio = min(prio, pi_task->prio);
+-
+-	return prio;
+-}
+-
+-static inline int rt_effective_prio(struct task_struct *p, int prio)
+-{
+-	struct task_struct *pi_task = rt_mutex_get_top_task(p);
+-
+-	return __rt_effective_prio(pi_task, prio);
+-}
++extern int rt_effective_prio(struct task_struct *p, int prio);
++extern const struct sched_dl_params *rt_mutex_top_dl_params(struct task_struct *p);
+ 
+ #else /* !CONFIG_RT_MUTEXES: */
+ 
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index c3f404cddb9e..89c185f7d498 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -297,10 +297,10 @@ static inline void __setscheduler_dl_pi(int newprio, int policy,
+ 	 */
+ 
+ 	if (dl_prio(newprio) && !dl_policy(policy)) {
+-		struct task_struct *pi_task = rt_mutex_get_top_task(p);
++		const struct sched_dl_params *params = rt_mutex_top_dl_params(p);
+ 
+-		if (pi_task) {
+-			p->dl.pi_se = pi_task->dl.pi_se;
++		if (params) {
++			dl_boost(&p->dl, params);
+ 			scope->flags |= ENQUEUE_REPLENISH;
+ 		}
+ 	}
 -- 
 2.47.3
 
