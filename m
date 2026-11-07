@@ -1,54 +1,69 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.235
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.108
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794049290;
-	b=tVrskYKzXdqKUBa4l2sBOYwXaszRjzoy81JPr1aFxc8WZdWFw+oLhkAniNIdeQNhhlBt
-	 s8nvSSoIsZc0QkSUGUZFml6f3uAh3yo+LtB3nGExCeGQfYxLjLx7mijbB5GIgzCzPNGlK
-	 OjmyzI75uwys/Zw0lHltWiBBMATMuRb/wU/RiOou90Hb/gADu78wgbbrptcY5BCTERneA
-	 qZdihzTm2aSd0T6IhzQw0PiCb9icMtv+vnweYZ+JyLFjzkkjkma9HYyqdQjbwzv8N/LDH
-	 ZyKJ5D95QWuTdw8nUpaUNTtjys1aZEKpbuAS49vRZpwxSIjQ+S5ZTJFDRKFh1VlKsBQ==
+	t=1794052884;
+	b=eDSsaCkBhPHpO/GR4RB4JV/oKPFFAKBCRAgKce3GvsVYfots6rXnwuM7iTbuIJ4Ikrjk
+	 KtHf00NjnF170FSRQ2KkIITx8MkvJnorfvB+VXLtBE5XeuRzFKjOfqzn3L1GL/ztVFJdf
+	 BQyrVyZ7jI5hYDPSHv/uHtbevfcOrn0qEwKswJRQFfiju4vL7WqwsO2KT6w17qk7wJF+3
+	 nPXSxoLW7pkoS/GgJv0kamBXLAahhN+nN00+oBSGB9XF7UpHnImdGB0etdVaYXXjWT8WU
+	 ejZHA/JDqJPZCM5bhLsIV+6hM5oKKToX7MnlNelxHwVVuXKVaaxxv/sQX3ATSsZV+Xg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794049290;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794052884;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=gT/bSOyRms0CfCv/CcNwivCHN3jSHDK0xrdtvrS0jPw=;
-	b=kH8/QaIConsExZe7ppHg6VPNTI3ZPdX8GIypj/WLXFteo2QV7Sg6HEI8AIWkZ7HwQ+0g
-	 O6O4JUZArjM3CU3eGDnY5re1r8gBKkeU94vCHbeZa9tGgRFDIDcbri5Z/imJbphcGzL93
-	 9JhtfND+S8Jq+yRM8yD9LTDGScaPabVw+nK5K0SjnmXRUnpMfhbNys4zUamlur5j0J+dT
-	 Tn5CpXAFaA6mKxn6NliUu8DWLg3oeQaYpfFhP5J0VkSjn8UaFLnYwEiNGU4FRYQptPz2A
-	 HXbFrDkB0bCTEkt2RZEFNE1dEEy3Jvxk4aHFBpaxy4DvxfsR3kH1BiMykj1rqpg43Xg==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=hrj4JXzZ1TsgPylBSS9iKSCO976KUaXxCh80/VCZOeI=;
+	b=L3+lmz2O4gbyl3gPV6i/F6KoI//MZ/zp4wiFBWXlyj/OlhjBH6jcx7rmR8P7Ns2NnRpe
+	 xHtLwOglRY61pgsbFiLiusWGBM88MX/u9CYEJ3OqWFNLNTquyQf2O9GWgHkvITMUn/Ohi
+	 oGBmIwH1Z+i2XnSvBjWk8VyK4At4soenbTKh0rAIEtdcFLTK02ezb7HaM8WRoj8wtnoit
+	 xyC8aZ/6LnzmO8nrBakTomnqNmSAly2T2kns7HGSARkIzojQ5yOIcNLZicKFfkZXTZsuW
+	 Tom+2YmlZ+39tu1/Boshd+ySuAQ49JdHhhAtjVWMlthwTGT/asFsGEpAOa7j1laPdFA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Ed7cvGxx;
-	arc=none smtp.remote-ip=91.218.175.235
-Received: from mta0.migadu.com (out-235.mta0.migadu.com [91.218.175.235])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Y0+XV4Ox;
+	arc=none smtp.remote-ip=91.218.175.108
+Received: from mta0.migadu.com (out-108.mta0.migadu.com [91.218.175.108])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1248606A334
-	for <cgroups@vger.kernel.org>; Sat,  7 Nov 2026 11:01:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B1248606A334
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EFFD606A32E
+	for <cgroups@vger.kernel.org>; Sat,  7 Nov 2026 12:01:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3EFFD606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Ed7cvGxx
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Y0+XV4Ox
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=bsbRLEEmYqQAgfdT3XRrDoqlwaUFv3ZiesnIpNY61FQ=;
+DKIM-Signature: a=rsa-sha256; bh=WAwIwB/wG7QJwBBWa9yFosmUNQG9PZLiWt4eFYdlm30=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794049287; v=1; x=1794654087;
- b=Ed7cvGxxxaJIQ7zfV90P+dbCFBAtOan+zRoYzVRhmxl5IrPlx4hHBV4XSrJIpAqa3LPtfNQG
- SV5C7cgPZ8CCs185lC3Sudk404LqBLqfDDjLxFCVvOPyVGHYIlyOIcpqqsZix5dHnrL1O3c05wZ
- xNJT6NtvaB1AJdxoE0JpxJnA=
+ t=1794052881; v=1; x=1794657681;
+ b=Y0+XV4OxPgbsQLMjhSzjBW6hXX6MtJj/wIu6AAO9QsFWMF5Ul9lrWSQNiKzGF4cfxNlRo/06
+ Cbxb3RO3LgxT5sLEOmH8NemaJaaYqAgxYVZDYr7dB09alRel5rpIE7hh+Zyuq4ZsdGoLN8DuTAW
+ Aif3RCKdCeOcyX7TNK5/jSJc=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 51fdad1d384e6212;
-	Sat, 07 Nov 2026 11:01:27 +0000
-X-Mizu-Trace-ID: 51fdad1d384e6212
+Received: by smtp.migadu.com with ESMTPS id 5b9fe3969bd8cba9;
+	Sat, 07 Nov 2026 12:01:21 +0000
+X-Mizu-Trace-ID: 5b9fe3969bd8cba9
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <a9b6c97d-a0c0-4855-ae51-d938b4b9f82d@linux.dev>
-Date: Sat, 7 Nov 2026 19:01:22 +0800
+From: Ridong Chen <ridong.chen@linux.dev>
+To: Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
+	Chen Ridong <chenridong@huawei.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Sashiko <sashiko-bot@kernel.org>,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH v3 0/4] cpuset: preparatory fixes and cleanups for partition rework
+Date: Sat,  7 Nov 2026 20:00:56 +0800
+Message-Id: <20261107120100.3587595-1-ridong.chen@linux.dev>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,117 +73,80 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/4] cpuset: generalize the validate_partition()
- interface
-To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
-Cc: Chen Ridong <chenridong@huawei.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
- Sashiko <sashiko-bot@kernel.org>, Guopeng Zhang <zhangguopeng@kylinos.cn>,
- Ridong Chen <chenridong@xiaomi.com>
-References: <20261106105538.2915492-1-ridong.chen@linux.dev>
- <20261106105538.2915492-5-ridong.chen@linux.dev>
- <04c50e9b-954f-4869-a9bd-41b9341bdef8@redhat.com>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <04c50e9b-954f-4869-a9bd-41b9341bdef8@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
+From: Ridong Chen <chenridong@xiaomi.com>
+
+This is the first part of the cpuset local partition rework posted as
+RFC v4 [1]. The rework is split into three parts to make it easier to
+review and merge:
+
+  1) fixes and preparatory cleanups (this series);
+  2) introduce partition_enable/disable/update() and rework the local
+     partition code on top of them;
+  3) clean up the remaining partition state handling outside these
+     helpers.
+
+Patch 1 is a fix for an existing bug, found while looking into a review
+comment on RFC v4: when cpuset.cpus.exclusive of an already invalid
+partition root is cleared, its effective_xcpus is not reset, so its
+former exclusive CPUs can't be claimed by a sibling. A test case is
+added for it.
+
+Patches 2-4 are the first three patches of RFC v4, rebased onto
+next-20261104:
+
+  2) add an early empty cpumask check in partition_xcpus_add/del(), so
+     callers don't need to check it;
+  3) settle the isolation state of CPUs given back to the parent in
+     partition_xcpus_del(), so isolated_cpus_release() can be removed;
+  4) generalize validate_partition() so it can be used for both local
+     and remote partitions.
+
+All patches build on their own, and test_cpuset_prs.sh passes with
+this series applied.
+
+[1] https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+
+Changes in v3:
+  - Patch 3: merge isolated_cpus_set_state() into isolated_cpus_update(),
+    dropping its @old_prs argument and the WARN_ON_ONCE(), and drop the
+    state check in partition_xcpus_add() (Waiman).
+    Drop the Acked-by from Guopeng as the patch changed.
+  - Patch 4: use top_cpuset as the parent of a remote partition and pass
+    the parent to tasks_nocpu_error() instead of parent_cs(cs) (Waiman).
+
+Changes in v2:
+  - Patch 1: force update_cpumasks_hier() after reset_partition_data(),
+    so that the descendants don't keep the released exclusive CPUs, and
+    add a test case for it (Sashiko).
+  - Patch 1: fix the Fixes tags (Sashiko).
+  - Link to v1: https://lore.kernel.org/all/20261105125215.2205892-1-ridong.chen@linux.dev/
+
+Changes since RFC v4:
+  - New patch 1 to fix the invalid partition effective_xcpus reset.
+  - Patch 3: only settle the isolation state of the CPUs still owned by
+    the parent when invalidating a child partition in
+    compute_partition_effective_cpumask(), as the parent may be shrunk
+    and not updated yet. This code is removed later in the rework.
+  - Rebase onto next-20261104, which includes commit 362212853cd0
+    ("cgroup/cpuset: Fix incorrect CPU accounting with parent's effective_xcpus expansion").
+
+Chen Ridong (2):
+  cpuset: add early empty cpumask check in partition_xcpus_add/del
+  cpuset: generalize the validate_partition() interface
+
+Ridong Chen (2):
+  cgroup/cpuset: Reset partition data when an invalid partition stays
+    invalid
+  cpuset: settle isolation state when CPUs are given back to parent
+
+ kernel/cgroup/cpuset.c                        | 236 +++++++-----------
+ .../selftests/cgroup/test_cpuset_prs.sh       |   6 +
+ 2 files changed, 100 insertions(+), 142 deletions(-)
 
 
-On 11/7/2026 11:59 AM, Waiman Long wrote:
-> On 11/6/26 5:55 AM, Ridong Chen wrote:
->> From: Chen Ridong <chenridong@huawei.com>
->>
->> Refactor validate_partition() to take the parent partition, the new
->> partition root state, the new effective exclusive CPUs and the CPUs to
->> be deleted, instead of a trial cpuset. A NULL parent stands for a
->> remote partition, whose CPUs come from top_cpuset. This makes the
->> interface flexible enough to handle both local and remote partition
->> validation.
->>
->> The housekeeping conflict check is folded into validate_partition(). It
->> is skipped when the parent is not a valid partition root, as @cs can't
->> be a valid local partition in that case.
->>
->> Use the new interface for local partition enablement in
->> update_parent_effective_cpumask() and in partition_cpus_change(),
->> replacing the open-coded checks there. The order of the checks is now
->> the same for both paths: empty CPUs, housekeeping conflict, then no CPU
->> left for tasks.
->>
->> Signed-off-by: Chen Ridong <chenridong@huawei.com>
->> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
->> ---
->>   kernel/cgroup/cpuset.c | 112 +++++++++++++++++++----------------------
->>   1 file changed, 52 insertions(+), 60 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index a5ab9396eb61..1b0ac4e76ec7 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1434,6 +1434,41 @@ static bool prstate_housekeeping_conflict(int new_prs, 
->> int parent_prs,
->>       return res;
->>   }
->> +/**
->> + * validate_partition - Validate a cpuset partition configuration
->> + * @cs: The cpuset to validate
->> + * @parent: Parent partition of @cs, NULL for remote partition
->> + * @new_prs: The proposed new partition root state
->> + * @new_excpus: The new effective exclusive CPUs mask to validate
->> + * @del: exclusive CPUs to be deleted from @cs, can be NULL
->> + *
->> + * The housekeeping check is skipped if @parent is not a valid partition
->> + * root as @cs can't be a valid local partition in that case.
->> + *
->> + * Return: PRS error code (0 if valid, non-zero error code if invalid)
->> + */
->> +static enum prs_errcode validate_partition(struct cpuset *cs,
->> +        struct cpuset *parent, int new_prs,
->> +        struct cpumask *new_excpus, struct cpumask *del)
->> +{
->> +    int parent_prs = parent ? parent->partition_root_state : PRS_ROOT;
->> +
->> +    if (new_prs == PRS_MEMBER)
->> +        return PERR_NONE;
->> +
->> +    if (cpumask_empty(new_excpus))
->> +        return PERR_INVCPUS;
->> +
->> +    if ((parent_prs > 0) &&
->> +        prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
->> +        return PERR_HKEEPING;
->> +
->> +    if (tasks_nocpu_error(parent_cs(cs), cs, new_excpus))
->> +        return PERR_NOCPUS;
-> 
-> For remote partition, the parent should be top_cpuset. I think we should set 
-> parent to top_cpuset if NULL and pass it directly to tasks_nocpu_error().
-> 
-
-Good catch, thanks. parent_cs(cs) is wrong for a remote partition, since
-its CPUs come from top_cpuset rather than its cgroup parent. I'll set
-parent to &top_cpuset when it's NULL and pass it to tasks_nocpu_error():
-	
-	  if (!parent)
-			  parent = &top_cpuset;
-	  parent_prs = parent->partition_root_state;
-	  if (parent_prs > 0 &&
-		  prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
-			  return PERR_HKEEPING;
-	
-	  if (tasks_nocpu_error(parent, cs, new_excpus))
-			  return PERR_NOCPUS;
-
-> Other than that, the rests look good to me.
-> 
-
-Thanks for the review. Will fix it in v3.
-
+base-commit: 8b7179210b22f8e48a82c5ceacb9d56a9c4cfec4
 -- 
-Best regards
-Ridong
+2.34.1
 
