@@ -1,67 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794164816;
-	b=20I1VgeAQ14zBjPF6ga8Yq68H36ZO7slOuYkvLnI/B2iq8iTXzqWDXfmU1l+QiMquYM0
-	 x6bzef4bm5EaWKGUvLb8pw86pPAJFGx3c8COsS826FPbn+9f438zxHwCrR2p5SJfMQlYX
-	 QnFZwP5VqUaPghLNXMVBEcTx4GOOpvFVaBnKMHPXLHRG6+faG7aWJWZ8LVB9tqJNDBwmg
-	 GG7tZafdRGpA7yr8RUnF9noPuiCXnhkJXyQ900fg5xPE2mDHbpW2hzyoM+vGJZxBiEQfU
-	 zxM60F3i/bsNtBwH2lO5pZCbYpnqipfLs1gAyT2mE9jbtmKytm8TyrD4W7cdMBCWAgQ==
+	t=1794170913;
+	b=S3haGU6uMfr4TM/rnmLpYQnVFhz9NjdyeQHRDToa3tD+lBvh64TrCXc2dVw2VAQkSjHq
+	 3+H7dk10pubYHOsA8BYE+ta7qzLEzfFAxWjp+DGF7V1VZYd8beemdE/IUA81pWyQxiaSc
+	 kYJJm7F2GvEfhQ09jTcq9VW+TM3n5wgr1zdUQi6dGdY7Ihsb5/yBIQ88iMhiV8kle4HJO
+	 OjhAankUgzCag1Z5Ud1xEV2ZnZIgbTUX/sns0bRrv2lUgzQ/IHneDB6+MddvF7O8owudT
+	 8fljXa6x6TnKB0ItqcRRw0wTmQM+IUA8C3LEVht77u5QmvDZKMn/KB5KownPOqHulvQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794164816;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=Y4jPp9juh/bkku9sMbXXDzIqa6m97fcDaqqiz1Aksw4=;
-	b=Z8yLx4Mq89vh3VqgMzCKX15gvko/BKFiPDoojTaiuWx7DW4egx5L5j0IZXUWecF3s+cw
-	 c9qEj1s4tDgCLJh2P9czmOImixfGRjUHF/f1mvJt6/5yFKp9X+Zt6DkTcQC6fURJ6gimr
-	 2mjwnQdzHZ+0ezP01Ow6UwFOGlFuZQoptMQ6nIejdDdnkTJ2YsMdkZyBLp9CkoEQF5nQq
-	 l1kFDPLvGKCvcF4ckhVdkzN8zFf3rwwlmcWXG1x9j4+2AwmYOvI+WK1IuvuLjaLw04xco
-	 EFlS1svwWRUXq4I8TqjrmId1wJgpO2bilrrCxswRsJx32IgC8n6Sfk8/vXjdUmLteEQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794170913;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=djErT1YvUu0mkM8hSl51RULADOIRnOJrc/Fo5hTxu3A=;
+	b=W+WGikeeIKBPwMciyRtGcECl03YiS24GfWdVBlGQzGWqo6ybHXdhBOTtKm+VblwAvq9C
+	 uG2guMADsw3Bh+UfftsiLTTjB8dZ2fIv/Xi4PcgK3kXOw/HnxhEgAuoToagw2ZntBEAgu
+	 FeB4xU2kmDt+n4j6moauXhYvszsUl1U4qzfZWmWpVVA4QxmRSY/Wwz5Pppi/aOiAKdYC0
+	 0UB6KecmCafd9JsDAsI/OCE+HVo9lNXdHuQdZqW96vNrpb8F5MIG+dv4Chlsjd9Dk0rLy
+	 GIOxWXRsARdw/itkRwa/rUmcP9WjqLAzZBQ/aC9cVoOQQXc0GZmT+YPfI+ommVaWKqg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=NrdHTtoo;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VZ9dr7Vw;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8097606A320
-	for <cgroups@vger.kernel.org>; Sun,  8 Nov 2026 19:06:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D8097606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A144606D80A
+	for <cgroups@vger.kernel.org>; Sun,  8 Nov 2026 20:48:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=NrdHTtoo
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794164809;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Y4jPp9juh/bkku9sMbXXDzIqa6m97fcDaqqiz1Aksw4=;
-	b=NrdHTtooAs6m1/SmOz3PGy17hflYTuvCck1aaYxJid0a81n2cSU+T1CJY4DDYLJ91l2jYt
-	Px46hUUR7jOTK9YPbS/cWb4bW8Kq4GzAp/2RWosZsEYvzBVk0CtiWqTzcoXvFaG/kYDidM
-	ztu4nBghzODDtx9IZL+fRIoArxHlev4=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-44-yKWDWf4vPNqt_xUOfT2J6Q-1; Sun,
- 08 Nov 2026 14:06:46 -0500
-X-MC-Unique: yKWDWf4vPNqt_xUOfT2J6Q-1
-X-Mimecast-MFC-AGG-ID: yKWDWf4vPNqt_xUOfT2J6Q_1794164804
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F3AEA19560B2;
-	Sun,  8 Nov 2026 19:06:43 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B73F63001DA5;
-	Sun,  8 Nov 2026 19:06:41 +0000 (UTC)
-Message-ID: <a7919797-0146-48df-8549-fe36f7024e60@redhat.com>
-Date: Sun, 8 Nov 2026 14:06:40 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VZ9dr7Vw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10EBE1F0089F
+	for <cgroups@vger.kernel.org>; Sun,  8 Nov 2026 20:48:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794170912;
+	bh=djErT1YvUu0mkM8hSl51RULADOIRnOJrc/Fo5hTxu3A=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=VZ9dr7VwZlMqRCf2cZMC4mKBGmvOV4lXJUDDdnwvlDhOR0IigvXaYtuZTIbgdtsNL
+	 f7i8FNCsRcbBGJJWx/OiQOMQIOi7j/NPX9ieTBzSWYw8PLgkFZkhiWP9IWO9uPxVdo
+	 tNh1aka09dtSXfHWJG2oEajh3/HV2MYm0oZh42efak/XWKeBLkvbqt62djOGExRmGr
+	 TS3Gf5XOK1gSeOnsmKJgoyrGsTNpYdAAgaGblzNlLLA22lCk7JlnYaKHuKIh3QNglu
+	 0sL4bJmxZmhPf+AS132DBPMHIJ87VEQIBjTBRbj5lwRegYRCHJvHxHdIxJnl3pRujR
+	 Jqo4EGqr3vFmA==
+Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-93cc1ab5f6cso32206385a.0
+        for <cgroups@vger.kernel.org>; Sun, 08 Nov 2026 12:48:32 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErGvfPk2XQk25EWY/TfVhKfBSoRwdFlUD7X3IKkRyfit3RNqFXv0DQX2tIsq30aR/PMQpGE0pLBg@vger.kernel.org
+X-Gm-Message-State: APuU4Z9rLo328E1f+ALAthuZ2dG9QDAPQZifoW6jMx8s7lD6Jlw0dAEl
+	q6D/1trlyrUV+a9aeTeTJrZ6Hw0M0WIONKgAGW+S+htSM2dJbYUi909mbCiwpjymwqAUVEU+W3x
+	WKiFjNT3HAIFQiYDCchrEXMngFv0TDbU=
+X-Received: by 2002:a05:620a:1706:b0:944:d7b:e7a with SMTP id
+ af79cd13be357-9478427a79emr342902085a.52.1794170910757; Sun, 08 Nov 2026
+ 12:48:30 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,50 +59,179 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [BUG] cpuset: empty sched domain with isolcpus=domain, panic at
- CPU offline
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Chen Yu <yu.c.chen@intel.com>, Peter Zijlstra <peterz@infradead.org>,
- Guopeng Zhang <guopeng.zhang@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tim Chen <tim.c.chen@linux.intel.com>,
- Valentin Schneider <vschneid@redhat.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20261108145744.1532128-1-mathieu.desnoyers@efficios.com>
- <12cb0bee-57aa-4609-bc2e-77806e0b6805@redhat.com>
- <20261108184620.1548615-1-mathieu.desnoyers@efficios.com>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20261108184620.1548615-1-mathieu.desnoyers@efficios.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com> <20261016-mglru-fg-v4-6-2106750c0bfa@tencent.com>
+In-Reply-To: <20261016-mglru-fg-v4-6-2106750c0bfa@tencent.com>
+From: Barry Song <baohua@kernel.org>
+Date: Mon, 9 Nov 2026 04:48:19 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4zQh0TnAxifWPo2+DcyFFOtpXM+2QW91A07oumfyrqVYg@mail.gmail.com>
+X-Gm-Features: AclHuK_zbDT_3bnI0_EC4q_0TU7opSFYKTqi1euA2GlbUa3wQRMNDwIK1fC-8Kw
+Message-ID: <CAGsJ_4zQh0TnAxifWPo2+DcyFFOtpXM+2QW91A07oumfyrqVYg@mail.gmail.com>
+Subject: Re: [PATCH v4 06/17] mm/mglru: move add/del LRU size accounting out
+ of lru_gen_update_size()
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
+	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>, 
+	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
+	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
+	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
+	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
+	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
+	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
+	Kairui Song <ryncsn@gmail.com>, Xiang Liu <liuxiang.277@bytedance.com>, 
+	Ehab Ababneh <ehab.ababneh@intel.com>, zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, 
+	Lian Wang <lianux.mm@gmail.com>, Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, damon@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/8/26 1:46 PM, Mathieu Desnoyers wrote:
-> On 2026-11-08 13:35, Waiman Long wrote:
-> [...]
->> Yes, we are going to add the check to make sure that there will be at
->> least one housekeeping CPU left for the top_cpuset sched domain.
->>
->> See
->> https://lore.kernel.org/lkml/20261105130344.664336-1-guopeng.zhang@linux.dev/
-> Thanks, I had missed that series. Refusing such a partition is a better
-> fix than giving the top cpuset no sched domain.
+On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay
+<devnull+kasong.tencent.com@kernel.org> wrote:
 >
->> This patch is correct AFAICS. I am not against it but it may not be
->> necessary after we make sure that there is at least one HK online CPU in
->> the top sched domain.
-> Then I will drop my patch and rely on Guopeng's series. I can test its
-> v3 on the setup that hit the panic: 5 vCPUs with isolcpus=domain,0,1.
+> From: Kairui Song <kasong@tencent.com>
 >
-> By my reading, your _cpu_down() patch covers a case that cpuset cannot
-> fix. With no partition, the last online housekeeping CPU could go
-> offline. No partition could then give one back.
+> Pure code shuffle, no behavior change.  lru_gen_update_size() now only
+> updates the per-generation counters plus the promotion move; the
+> addition and deletion active/inactive accounting move to
+> lru_gen_add_folio() and lru_gen_del_folio(), which know the generation
+> and can apply the active-window test directly.
+>
+> The unevictable case is untouched: unevictable folios never enter
+> lru_gen_add_folio() and keep being accounted by lruvec_add_folio() as
+> before.
+>
+> Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
 
-Yes, that is the point.
+The patch looks good to me.
 
-Cheers,
-Longman
+Meanwhile, I've been struggling with the names of
+__update_lru_size() and lru_gen_update_size() for a long
+time.
 
+Given that lru_gen_update_size() now only updates
+nr_pages:
+static inline void lru_gen_update_size(struct lruvec *lruvec, int type,
+                struct folio *folio, int old_gen, int new_gen)
+{
+       ...
+
+        if (old_gen >=3D 0)
+                atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][zon=
+e]);
+        if (new_gen >=3D 0)
+                atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][zon=
+e]);
+}
+
+while __update_lru_size() only handles
+active/inactive accounting, could we rename them to make
+their roles clearer? For example:
+
+lru_gen_update_nr_pages()
+lru_gen_update_active_inactive_size()
+
+The names are longer, but the lru_gen_ prefix helps
+distinguish this accounting from the actual
+active/inactive LRU lists.
+
+
+>  include/linux/mm_inline.h | 28 ++++++++++++++--------------
+>  1 file changed, 14 insertions(+), 14 deletions(-)
+>
+> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> index cfcbe4a9aa85..65415eeac802 100644
+> --- a/include/linux/mm_inline.h
+> +++ b/include/linux/mm_inline.h
+> @@ -313,21 +313,9 @@ static inline void lru_gen_update_size(struct lruvec=
+ *lruvec, struct folio *foli
+>         if (new_gen >=3D 0)
+>                 atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][z=
+one]);
+>
+> -       /* addition */
+> -       if (old_gen < 0) {
+> -               if (lru_gen_is_active(lruvec, new_gen))
+> -                       lru +=3D LRU_ACTIVE;
+> -               __update_lru_size(lruvec, lru, zone, delta);
+> +       /* return now if not a promotion */
+> +       if (old_gen < 0 || new_gen < 0)
+>                 return;
+> -       }
+> -
+> -       /* deletion */
+> -       if (new_gen < 0) {
+> -               if (lru_gen_is_active(lruvec, old_gen))
+> -                       lru +=3D LRU_ACTIVE;
+> -               __update_lru_size(lruvec, lru, zone, -delta);
+> -               return;
+> -       }
+>
+>         /* promotion */
+>         if (!lru_gen_is_active(lruvec, old_gen) && lru_gen_is_active(lruv=
+ec, new_gen)) {
+> @@ -381,6 +369,8 @@ static inline bool lru_gen_add_folio(struct lruvec *l=
+ruvec, struct folio *folio,
+>         int gen =3D folio_lru_gen(folio);
+>         int type =3D folio_is_file_lru(folio);
+>         int zone =3D folio_zonenum(folio);
+> +       int delta =3D folio_nr_pages(folio);
+> +       enum lru_list lru =3D type * LRU_INACTIVE_FILE;
+>         struct lru_gen_folio *lrugen =3D &lruvec->lrugen;
+>
+>         BUILD_BUG_ON(BIT(LRU_GEN_WIDTH - 1) !=3D MAX_NR_GENS);
+> @@ -396,6 +386,10 @@ static inline bool lru_gen_add_folio(struct lruvec *=
+lruvec, struct folio *folio,
+>         set_mask_bits(folio_flags(folio, 0), LRU_GEN_MASK | BIT(PG_active=
+), flags);
+>
+>         lru_gen_update_size(lruvec, folio, -1, gen);
+> +       if (lru_gen_is_active(lruvec, gen))
+> +               lru +=3D LRU_ACTIVE;
+> +       __update_lru_size(lruvec, lru, zone, delta);
+> +
+>         /* for folio_rotate_reclaimable() */
+>         if (reclaiming)
+>                 list_add_tail(&folio->lru, &lrugen->folios[gen][type][zon=
+e]);
+> @@ -409,6 +403,9 @@ static inline bool lru_gen_del_folio(struct lruvec *l=
+ruvec, struct folio *folio,
+>  {
+>         unsigned long flags;
+>         int gen =3D folio_lru_gen(folio);
+> +       int zone =3D folio_zonenum(folio);
+> +       int delta =3D folio_nr_pages(folio);
+> +       enum lru_list lru =3D folio_is_file_lru(folio) * LRU_INACTIVE_FIL=
+E;
+>
+>         if (gen < 0)
+>                 return false;
+> @@ -422,6 +419,9 @@ static inline bool lru_gen_del_folio(struct lruvec *l=
+ruvec, struct folio *folio,
+>         gen =3D ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF) - 1;
+>
+>         lru_gen_update_size(lruvec, folio, gen, -1);
+> +       if (lru_gen_is_active(lruvec, gen))
+> +               lru +=3D LRU_ACTIVE;
+> +       __update_lru_size(lruvec, lru, zone, -delta);
+>         list_del(&folio->lru);
+>
+>         return true;
+>
+> --
+> 2.56.0
+>
+>
+
+Thanks,
+Barry
