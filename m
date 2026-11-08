@@ -1,72 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794149973;
-	b=ZH7ShZICxmkqN4vT05z4eKPcCCIszOHAKkw7RA211SzhV1Se7SazYop/Ig4z5SjOmL7b
-	 PIIkjEkj83+wj9KVXKmdB/Bm9ukcCXT2RIDUsLjRZEJ5jJAO5y8DIGaVkZRmWg1lND0x3
-	 WjOXd9RPON1wvBXRa6mAjEFRf83NAnP4yWOFsG7qf7AfZwiy9FEarB+nSXFR54DW5k1E6
-	 ikK7c6rGn8+uHiLbzJ4OC3eOMmPVI9Rl573g8W1uFVZvBWm6P5Oj6G+faIVcsWdc4745o
-	 I8ymiD2qNRDDCEfUBScJP0LD2rHoqukr18s6+srj/UH+1e93910gskTTgl2tTtFVYOw==
+	t=1794162927;
+	b=qSy6IKtq3kKdgj4AE5ZWX6sc0lLB5S5PEx0CNARskKGCqUiSpB2SYEkUvOO6jg7o7NNz
+	 KMf4dDzdMlVGLMlcfPnBr2ZpiqckHJoW4R9rTC3t2UyvRd4YVb4NGxaAKxm8v7nO9Nf2/
+	 PQNOFL+8FVSPbhpF9LcYpepBjtKw0WBmwRVdhkupdTRijTRopCr5NTpNZ1bFy9GhYXM0f
+	 iCom8b1I794IGa+5Pg3aCmsHyEj2QmgOtlFNnwhCZBnvtd13lkun8vw620tivc5WJzFW1
+	 fSK9AMx8Gbg8eoBYlqGnU8jiZJythoLHu0UL7F0xZYezkvtW9gqbLM/ovyJY385fHYg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794149973;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=tOMZcnKYokcXkrusu26zGOYaBn65SJppvslPeGvVPfA=;
-	b=ZzNfP/jZzTWP+QphIzs+9o/5Ed6JV6Jj15/9mGrAZ7Y6a8UN/Zg5BNvumacOpAm5kgL2
-	 eWuIH3O8C8C4otJ1B5A32enxOkbFW8MBkpllUVVw1FLofFPKkiXOoEE04zaI08qB8i3nc
-	 l1l7H2sGrLg90zzc1/vXcAMR3Agq6G6naUUW2mM84ceErIHvvQ+wgEhhpmnhf7m9fgQK1
-	 2Sd7cT4ZGZOt6rt/xnc6L6Tc/XgG/s1Xh/XdDsawrlzWGnAfA00Qu8YaLWIRRtZCHn970
-	 kVApuuZAcNmwRq7yABqN6saIY098JnkFaOUmK3H4ViOvpsMBrlVzAN5zJGO2jw4HFRQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794162927;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
+	bh=/59c3QrulEqumgXbuURXyaJldWPpFkzwKYE+rDJq53w=;
+	b=Wh56V19neVQT96x9rlxniTYk9EyzkmkX7wHH5asj9FvRlhO8qOY701L3JgwzECKUK+zB
+	 gM3xwVHDA5mjWwYmyn8NfAnbNEl6s0ZUR0Y/dZ05Joeb1/o6DOmHBFAk7vR1LCLfE5XcJ
+	 kSsRuCmH9eIOJOa9pBnYxkIoiA+0Nneid50VgV2WX2YJTZ4wB8K4ZgUU1JSOpc9jjx6ac
+	 bZ5MZR/AfintKgcdj032ocmaVCXo2LS7Ab3c6p/h6i24gSTCDWfcWBXxp9iqT+eBqPRIE
+	 /m1H6KoJ4phQrfZWB8dhMMsNjxGq/l+aYsRW8QWpv4FtQSc9shV8JyeKBkl2jQ14L3w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=efficios.com;
-	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=VEakP5om;
-	arc=none smtp.remote-ip=158.69.130.18
-Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=CxaJ8v1K;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 924D9606A31C;
-	Sun,  8 Nov 2026 14:59:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 924D9606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 164E9606A320
+	for <cgroups@vger.kernel.org>; Sun,  8 Nov 2026 18:35:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 164E9606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=VEakP5om
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794149971;
-	bh=tOMZcnKYokcXkrusu26zGOYaBn65SJppvslPeGvVPfA=;
-	h=From:To:Cc:Subject:Date:From;
-	b=VEakP5omB2AFUCO3YiwT4CO2u/tutKwsUbv2fbABHsLimXu9kusqVaFNg+VQ78eJH
-	 d+6nHIeHsHaIUMjxW0kYLtN0mqpTL8NE7mE707w/Pskgy9AoyJ2v8+rbQWn3c8oppz
-	 CMrPrbmkwYSIsBvtDKfWbzgpRTZiiy2nv7Q4PpF7hYg0G77Hiq6LLpyL9sGbn6AzA3
-	 P4omBIaJV4EXCmcIPZewRifCoRd/x/GU4QSTD0mQ9p2P0Bo8jrVjv+/RKfcDtFqFFM
-	 oR7XIjoW0FmtupU4V+Razrgxa0ohGmefMhshb+Q/h5MPd1E/t/aA09j8yefF0AktvZ
-	 ohDq7UOMgznoA==
-Received: from thinkos.internal.efficios.com (unknown [64.58.40.251])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jMx033QkPzMgr;
-	Sun, 08 Nov 2026 09:59:31 -0500 (EST)
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-To: Frederic Weisbecker <frederic@kernel.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Waiman Long <longman@redhat.com>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [BUG] sched/isolation: suspicious RCU usage with CONFIG_CPUSETS=n
-Date: Sun,  8 Nov 2026 09:59:31 -0500
-Message-Id: <20261108145931.1532447-1-mathieu.desnoyers@efficios.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=CxaJ8v1K
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794162926;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/59c3QrulEqumgXbuURXyaJldWPpFkzwKYE+rDJq53w=;
+	b=CxaJ8v1KdojPDZqOGkCwqbfZVLIFSPrEaE/SPyG1Pc1eeipvCPz/SJqvreUg446AcDsitD
+	4d0ofpUoit2t1TIW9Kn3OO6KAUZpb04T2xk23MlOq2rdo+jMs80s40sIRK8MH+s/nUqHMg
+	csWHXDK/l5xT+xXUaL3K28nfDoyKzro=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-120-Yfe4vYd0NUal8zs2sVuJ3w-1; Sun,
+ 08 Nov 2026 13:35:22 -0500
+X-MC-Unique: Yfe4vYd0NUal8zs2sVuJ3w-1
+X-Mimecast-MFC-AGG-ID: Yfe4vYd0NUal8zs2sVuJ3w_1794162920
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 41FED19560B4;
+	Sun,  8 Nov 2026 18:35:20 +0000 (UTC)
+Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0CE1E1956089;
+	Sun,  8 Nov 2026 18:35:17 +0000 (UTC)
+Message-ID: <12cb0bee-57aa-4609-bc2e-77806e0b6805@redhat.com>
+Date: Sun, 8 Nov 2026 13:35:17 -0500
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -76,234 +71,268 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [BUG] cpuset: empty sched domain with isolcpus=domain, panic at
+ CPU offline
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Chen Yu <yu.c.chen@intel.com>, Peter Zijlstra <peterz@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Ridong Chen <ridong.chen@linux.dev>, Tim Chen <tim.c.chen@linux.intel.com>,
+ Valentin Schneider <vschneid@redhat.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20261108145744.1532128-1-mathieu.desnoyers@efficios.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20261108145744.1532128-1-mathieu.desnoyers@efficios.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Hi,
+On 11/8/26 9:57 AM, Mathieu Desnoyers wrote:
+> Hi,
+>
+> With isolcpus=domain, cpuset partitions can take all the housekeeping
+> CPUs. The top cpuset then gets an empty sched domain. In a VM, this
+> gave a WARNING in build_sched_domains(), then a panic at the next CPU
+> offline. I hit it once, while testing a SCHED_DEADLINE series [1]. The
+> analysis below is from reading the code after that panic. A proposed
+> fix follows the scissors line.
+>
+> The code involved is the same in v7.4-rc1 and in tip sched/urgent
+> (006991aa8997). The series does not change it.
+>
+> Trigger
+> =======
+>
+> Boot 5 CPUs with isolcpus=domain,0,1. Then, with cgroup v2:
+>
+>    cd /sys/fs/cgroup
+>    echo +cpuset > cgroup.subtree_control
+>    mkdir P Q
+>    echo 4 > P/cpuset.cpus
+>    echo root > P/cpuset.cpus.partition
+>    echo 2-3 > Q/cpuset.cpus
+>    echo root > Q/cpuset.cpus.partition          # WARNING
+>    echo 0 > /sys/devices/system/cpu/cpu2/online  # panic
+>
+> The test that hit it made these writes. It also ran a deadline task in
+> Q, which the analysis does not need. After the writes, the top cpuset
+> keeps only CPUs 0 and 1, which are isolated.
+>
+> Log
+> ===
+>
+>    WARNING: kernel/sched/topology.c:3111 at build_sched_domains+0x1321/0x1830, CPU#0: orig/91
+>    CPU: 0 UID: 0 PID: 91 Comm: orig Not tainted 7.4.0-rc1-00300-gc36e8c1d51c9 #98 PREEMPT(lazy)
+>    Call Trace:
+>     partition_sched_domains+0x331/0x990
+>     cpuset_update_sd_hk_unlock+0x76/0x80
+>     cpuset_partition_write+0x9e/0xe0
+>     kernfs_fop_write_iter+0x14d/0x210
+>     vfs_write+0x252/0x550
+>     ksys_write+0x6c/0xe0
+>     do_syscall_64+0x109/0x5d0
+>    [...]
+>    BUG: unable to handle page fault for address: 0000000083cf6513
+>    #PF: supervisor read access in kernel mode
+>    #PF: error_code(0x0000) - not-present page
+>    Oops: Oops: 0000 [#1] SMP NOPTI
+>    CPU: 2 UID: 0 PID: 26 Comm: cpuhp/2 Tainted: G        W           7.4.0-rc1-00300-gc36e8c1d51c9 #98 PREEMPT(lazy)
+>    RIP: 0010:partition_sched_domains+0x5ee/0x990
+>    RAX: 0000000083cf58c3 RBX: 0000000000000003 RCX: ff11000004f60b58
+>    R10: 0000000000000200 R11: 0000000000000004 R12: 0000000000000040
+>    Call Trace:
+>     cpuset_update_active_cpus+0x512/0xb00
+>     sched_cpu_deactivate+0x1f3/0x300
+>     cpuhp_invoke_callback+0x1b4/0x780
+>     cpuhp_thread_fun+0x183/0x260
+>     smpboot_thread_fn+0x143/0x300
+>     kthread+0xfe/0x130
+>     ret_from_fork+0x22a/0x330
+>    Kernel panic - not syncing: Fatal exception
+>
+> Analysis
+> ========
+>
+> The top cpuset may hold CPUs isolated at boot. generate_sched_domains()
+> keeps a partition root if its effective_cpus is not empty. For the top
+> cpuset, it then builds the domain from effective_cpus without these
+> CPUs:
+>
+> 	if ((cp->partition_root_state == PRS_ROOT) &&
+> 	    !cpumask_empty(cp->effective_cpus))
+> 		csa[ndoms++] = cp;
+> 	[...]
+> 	if (!csa || csa[i] == &top_cpuset)
+> 		cpumask_and(doms[i], top_cpuset.effective_cpus,
+> 			    housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT));
+>
+> Here effective_cpus is 0-1, so the domain is empty.
+> build_sched_domains() warns and builds nothing. But
+> partition_sched_domains_locked() still records the empty mask in
+> doms_cur.
 
-With CONFIG_CPUSETS=n and isolcpus=domain, a read of
-/proc/sys/kernel/sched_rt_runtime_us gives a "suspicious RCU usage"
-lockdep report. A write gives the same report. I first saw it while
-testing a SCHED_DEADLINE series [1]. I then reproduced it in a VM on tip
-sched/urgent (006991aa8997), without the series. A proposed fix follows
-the scissors line.
+This is a known problem and we are working to address this in the cpuset 
+code to make sure that there is at least one online domain housekeeping 
+CPUs for the top_cpuset.
 
-Trigger
-=======
+>
+> At the CPU offline, cpuset passes the empty domain again. It matches
+> the empty one in doms_cur. The reuse branch then reads the runqueue of
+> the first CPU of the mask:
+>
+> 	int cpu = cpumask_first(doms_cur[j]);
+>
+> 	guard(rcu)();
+> 	sd = rcu_dereference(cpu_rq(cpu)->sd);
+>
+> On an empty mask, cpumask_first() returns NR_CPUS when NR_CPUS is at
+> most BITS_PER_LONG. This kernel has NR_CPUS=64. R12 = 0x40 is that
+> index into __per_cpu_offset[], one entry past its end. The load of
+> rq->sd then faults.
+>
+> The partition checks do not refuse Q. tasks_nocpu_error() tests the
+> effective_cpus of the top cpuset, which still holds CPUs 0 and 1.
+> prstate_housekeeping_conflict() keeps boot time isolated CPUs out of
+> root partitions. Nothing asks the top cpuset to keep a housekeeping
+> CPU.
+>
+> Versions:
+> - The empty domain comes from 9b496a8bbed9 ("cgroup/cpuset: Prevent
+>    leakage of isolated CPUs into sched domains"), in v6.13.
+> - The reuse branch comes from a7660ce1590f ("sched/cache: Fix
+>    has_multi_llcs iff at least one partition has multiple LLCs"), in
+>    v7.2.
+>
+>  From v6.13 to v7.1, a similar read would happen elsewhere. This is from
+> reading only:
+> - detach_destroy_domains() reads per_cpu() of cpumask_any() of the
+>    mask, when the empty domain goes away.
+> - With CONFIG_ENERGY_MODEL, build_perf_domains() reads
+>    cpu_rq(cpumask_first()) of the mask at its first build.
+>
+> Where to fix
+> ============
+>
+> Commit cd1cb3350561 ("sched/topology: Don't try to build empty sched
+> domains") fixed a crash of this kind in 2019. It made
+> generate_sched_domains() skip empty masks. Its changelog says that the
+> scheduler should not have to check cpumask_first() against nr_cpu_ids.
+> So the patch below fixes cpuset. It keeps a partition root only if its
+> effective_cpus holds a housekeeping CPU.
+>
+> Two questions:
+> - Should cpuset refuse a partition that leaves the top cpuset without
+>    a housekeeping CPU? The patch keeps the current behaviour. The
+>    partition is valid. The tasks of the top cpuset run on the isolated
+>    CPUs.
 
-Build with CONFIG_PROVE_RCU=y and CONFIG_CPUSETS=n. Boot 5 CPUs with
-isolcpus=domain,1,2. Then:
+Yes, we are going to add the check to make sure that there will be at 
+least one housekeeping CPU left for the top_cpuset sched domain.
 
-  cat /proc/sys/kernel/sched_rt_runtime_us
+See 
+https://lore.kernel.org/lkml/20261105130344.664336-1-guopeng.zhang@linux.dev/
 
-isolcpus=1,2 gives the same report, since the domain flag is the
-default. Without isolcpus, there is no report.
+> - Should the scheduler also skip empty masks? The reuse branch, the
+>    perf domain code and detach_destroy_domains() all take a CPU from
+>    the mask.
+>
+> Testing1
+> =======
+>
+> With the patch on tip sched/urgent (006991aa8997), in a VM with
+> 5 CPUs:
+> - isolcpus=domain,0,1 and the sequence above. There is no WARNING.
+>    All CPU offlines and onlines complete. Q gets the domain 2-3, and the
+>    top cpuset gets none. The top cpuset gets the domain 2-3 back when Q
+>    becomes a member again.
+> - The same boot, with P as an isolated partition. Q is a root
+>    partition first, then isolated too. With both isolated, no partition
+>    root has a housekeeping CPU. The scheduler then gets no domain, and
+>    CPU hotplug works. Making Q isolated also warns in
+>    cpuset_update_sd_hk_unlock(). That is a separate problem, which I
+>    report separately. The patch does not touch that path.
+> - No isolcpus, and the same sequence. There is no WARNING. The top
+>    cpuset keeps its domain 0-1.
+>
+> test_cpuset_prs.sh passes on 9 CPUs. It also passes on 10 CPUs with
+> isolcpus=domain,9. I did not run the crash sequence again on a kernel
+> without the fix.
+>
+> The analysis and the patch were written by an LLM coding assistant
+> under my direction and review.
+>
+> Thanks,
+>
+> Mathieu
+>
+> [1] https://lore.kernel.org/all/20261107014451.1487825-1-mathieu.desnoyers@efficios.com/
+>
+> -- >8 --
+> From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> Subject: cgroup/cpuset: Do not build an empty sched domain for the top cpuset
+>
+> The scheduler expects each sched domain from cpuset to hold at least
+> one CPU. Commit cd1cb3350561 ("sched/topology: Don't try to build empty
+> sched domains") made generate_sched_domains() skip a cpuset with an
+> empty effective_cpus. It also made build_sched_domains() warn on an
+> empty mask.
+>
+> The top cpuset may hold CPUs isolated at boot. Commit 9b496a8bbed9
+> ("cgroup/cpuset: Prevent leakage of isolated CPUs into sched domains")
+> removes them from its sched domain. The check for an empty domain was
+> not updated. It still tests effective_cpus, which includes the isolated
+> CPUs.
+>
+> So partitions that take all the housekeeping CPUs leave the top cpuset
+> with an empty domain. For example, boot 5 CPUs with isolcpus=domain,0,1.
+> Then make CPUs 2-3 and 4 root partitions. build_sched_domains() warns.
+> The scheduler still records the empty mask as a current domain. At the
+> next rebuild, the new empty domain matches it.
+> partition_sched_domains_locked() then calls cpu_rq() on cpumask_first()
+> of the empty mask, which is not a valid CPU. In a VM, the next CPU
+> offline panicked there.
+>
+> Fix this by keeping a partition root only if its effective_cpus holds a
+> housekeeping CPU. This tests the mask that the top cpuset gets.
+> prstate_housekeeping_conflict() keeps boot time isolated CPUs out of
+> the other partition roots. So nothing changes for them.
+>
+> This change was developed with assistance from an LLM.
+>
+> Fixes: 9b496a8bbed9 ("cgroup/cpuset: Prevent leakage of isolated CPUs into sched domains")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> ---
+>   kernel/cgroup/cpuset.c | 7 +++++--
+>   1 file changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 3219f927c35e..426c98cf4a08 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -894,10 +894,13 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>   	cpuset_for_each_descendant_pre(cp, pos_css, &top_cpuset) {
+>   		/*
+>   		 * Only valid partition roots that are not isolated and with
+> -		 * non-empty effective_cpus will be saved into csa[].
+> +		 * housekeeping CPUs in effective_cpus will be saved into csa[].
+> +		 * The top cpuset may keep only boot time isolated CPUs. It then
+> +		 * gets no sched domain.
+>   		 */
+>   		if ((cp->partition_root_state == PRS_ROOT) &&
+> -		    !cpumask_empty(cp->effective_cpus))
+> +		    cpumask_intersects(cp->effective_cpus,
+> +				       housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT)))
+>   			csa[ndoms++] = cp;
+>   
+>   		/*
 
-Log
-===
+This patch is correct AFAICS. I am not against it but it may not be 
+necessary after we make sure that there is at least one HK online CPU in 
+the top sched domain.
 
-  =============================
-  WARNING: suspicious RCU usage
-  7.4.0-rc1-00267-g006991aa8997 #1 Not tainted
-  -----------------------------
-  kernel/sched/isolation.c:62 suspicious rcu_dereference_check() usage!
-  other info that might help us debug this:
-  rcu_scheduler_active = 2, debug_locks = 1
-  locks held by cat/91: 3, last CPU#3:
-   #0: ff1100000613e260 (&pipe->mutex){+.+.}-{4:4}, at: splice_file_to_pipe+0x23/0xd0
-   #1: ffffffff8306c930 (cpu_hotplug_lock){++++}-{0:0}, at: sched_rt_handler+0xb5/0xf0
-   #2: ffffffff8307aac0 (sched_domains_mutex){+.+.}-{4:4}, at: partition_sched_domains+0x37/0x990
-  stack backtrace:
-  CPU: 3 UID: 0 PID: 91 Comm: cat Not tainted 7.4.0-rc1-00267-g006991aa8997 #1 PREEMPT(lazy)
-  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
-  Call Trace:
-   <TASK>
-   dump_stack_lvl+0x5d/0x80
-   lockdep_rcu_suspicious.cold+0x4e/0x9f
-   housekeeping_cpumask+0xaa/0xb0
-   partition_sched_domains+0x8e6/0x990
-   sched_rt_handler+0xc3/0xf0
-   proc_sys_call_handler+0x1cf/0x250
-   copy_splice_read+0x217/0x3b0
-   splice_file_to_pipe+0x60/0xd0
-   do_sendfile+0x161/0x480
-   __x64_sys_sendfile64+0xba/0xd0
-   do_syscall_64+0x109/0x5d0
-   entry_SYSCALL_64_after_hwframe+0x77/0x7f
-   </TASK>
+Cheers,
+Longman
 
-Analysis
-========
-
-sched_rt_handler() calls rebuild_sched_domains() after each read or
-write of sched_rt_period_us and sched_rt_runtime_us. Without
-CONFIG_CPUSETS, rebuild_sched_domains() is this stub in
-include/linux/cpuset.h:
-
-	static inline void rebuild_sched_domains(void)
-	{
-		guard(cpus_read_lock)();
-		partition_sched_domains(1, NULL, NULL);
-	}
-
-With no doms_new, partition_sched_domains_locked() builds one domain
-from the housekeeping mask:
-
-	cpumask_and(doms_new[0], cpu_active_mask,
-		    housekeeping_cpumask(HK_TYPE_DOMAIN));
-
-housekeeping_cpumask() reads housekeeping.cpumasks[HK_TYPE_DOMAIN] with
-rcu_dereference_all_check(). Its condition is
-housekeeping_dereference_check():
-
-	/* Cpuset isn't even writable yet? */
-	if (system_state <= SYSTEM_SCHEDULING)
-		return true;
-
-	/* CPU hotplug write locked, so cpuset partition can't be overwritten */
-	if (IS_ENABLED(CONFIG_HOTPLUG_CPU) && lockdep_is_cpus_write_held())
-		return true;
-
-	/* Cpuset lock held, partitions not writable */
-	if (IS_ENABLED(CONFIG_CPUSETS) && lockdep_is_cpuset_held())
-		return true;
-
-	return false;
-
-The caller holds cpus_read_lock(), not the write lock. It holds no RCU
-read lock. The cpuset case is compiled out. So the check fails, and
-lockdep warns.
-
-The report is a false positive. Only cpuset calls housekeeping_update().
-Without CONFIG_CPUSETS, housekeeping_init() sets the pointer at boot,
-and nothing changes it after that. Without isolcpus, the domain flag is
-not set. housekeeping_cpumask() then returns cpu_possible_mask without
-reading the pointer.
-
-Versions:
-- The check comes from 03ff73510169 ("cpuset: Update HK_TYPE_DOMAIN
-  cpumask from cpuset"), in v7.0. It is the same in tip sched/urgent.
-- 666a32836c8f ("sched/topology: Add a cpus_read_lock to
-  rebuild_sched_domains()"), in v7.3, fixed another warning on the same
-  read path. Before it, the stub held no lock at all. So the check also
-  fails from v7.0 to v7.2. This is from reading.
-
-Other callers of rebuild_sched_domains() would warn the same way with
-CONFIG_CPUSETS=n. Examples are the x86 sched_itmt_enabled debugfs file
-and rebuild_sched_domains_energy(). This is from reading. I did not
-run them.
-
-Where to fix
-============
-
-The patch adds one case to housekeeping_dereference_check(). It accepts
-all readers when CONFIG_CPUSETS is off. This covers every caller of the
-stub. With CONFIG_CPUSETS=y, the new case is compiled out.
-
-Another option is an RCU read-side section around the two reads in
-partition_sched_domains_locked(). It would fix this path only.
-
-Testing
-=======
-
-I ran tip sched/urgent (006991aa8997) in a VM with 5 CPUs. The kernel
-had CONFIG_PROVE_RCU=y and CONFIG_CPUSETS=n. Without the patch:
-- isolcpus=domain,1,2: one report from a read alone. In another boot,
-  one report from a write alone.
-- isolcpus=1,2: one report from a read.
-- No isolcpus: no report from reads and writes.
-
-With the patch, there is no report:
-- isolcpus=domain,1,2: a read alone. In another boot, a write alone.
-  In a third boot, reads and writes of sched_rt_runtime_us and
-  sched_rt_period_us.
-- isolcpus=1,2: reads and writes.
-- No isolcpus: reads and writes.
-
-debug_locks was still 1 at the end of each boot. So lockdep was still
-checking.
-
-With CONFIG_CPUSETS=y, the patch also builds. A boot with
-isolcpus=domain,1,2 and the same reads and writes gives no report. I
-did not run other tests.
-
-An open question, from reading only. Since a84097e625f2
-("cgroup/cpuset: Call housekeeping_update() without holding
-cpus_read_lock"), cpuset calls housekeeping_update() with only
-cpuset_top_mutex held. The check accepts the hotplug write lock or
-cpuset_mutex. Do these two locks still keep the mask from changing
-under a reader? I did not look at a reader that holds only
-cpuset_mutex.
-
-The analysis and the patch were written by an LLM coding assistant
-under my direction and review.
-
-Thanks,
-
-Mathieu
-
-[1] https://lore.kernel.org/all/20261107014451.1487825-1-mathieu.desnoyers@efficios.com/
-
--- >8 --
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Subject: sched/isolation: Fix suspicious RCU usage without CONFIG_CPUSETS
-
-Since commit 03ff73510169 ("cpuset: Update HK_TYPE_DOMAIN cpumask from
-cpuset"), cpuset can change the HK_TYPE_DOMAIN mask at run time. Readers
-use RCU. housekeeping_dereference_check() also accepts readers that hold
-a lock which keeps cpuset partitions from changing: the CPU hotplug
-write lock or cpuset_mutex. During boot, before cpuset is writable, it
-accepts all readers.
-
-Without CONFIG_CPUSETS, nothing changes the mask after boot. But the
-check still asks for one of these locks. In that configuration,
-rebuild_sched_domains() holds only cpus_read_lock(). It calls
-partition_sched_domains(1, NULL, NULL). That reads
-housekeeping_cpumask(HK_TYPE_DOMAIN). sched_rt_handler() calls
-rebuild_sched_domains() on each read or write of sched_rt_period_us and
-sched_rt_runtime_us. So with isolcpus=domain, a read of
-/proc/sys/kernel/sched_rt_runtime_us gives:
-
-  WARNING: suspicious RCU usage
-  kernel/sched/isolation.c:62 suspicious rcu_dereference_check() usage!
-  [...]
-  locks held by cat/91: 3, last CPU#3:
-   [...]
-   #1: (cpu_hotplug_lock){++++}-{0:0}, at: sched_rt_handler+0xb5/0xf0
-   #2: (sched_domains_mutex){+.+.}-{4:4}, at: partition_sched_domains+0x37/0x990
-  [...]
-  Call Trace:
-   lockdep_rcu_suspicious.cold+0x4e/0x9f
-   housekeeping_cpumask+0xaa/0xb0
-   partition_sched_domains+0x8e6/0x990
-   sched_rt_handler+0xc3/0xf0
-   proc_sys_call_handler+0x1cf/0x250
-
-The report is a false positive. It needs CONFIG_PROVE_RCU and isolcpus=
-with the domain flag, which is also the default when no flag is given.
-Test runs that check the kernel log for lockdep reports flag it.
-
-Fix this by accepting all readers when CONFIG_CPUSETS is off.
-
-This change was developed with assistance from an LLM.
-
-Fixes: 03ff73510169 ("cpuset: Update HK_TYPE_DOMAIN cpumask from cpuset")
-Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
----
- kernel/sched/isolation.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
-index 156025ef81b7..dac9a1735198 100644
---- a/kernel/sched/isolation.c
-+++ b/kernel/sched/isolation.c
-@@ -43,6 +43,10 @@ static bool housekeeping_dereference_check(enum hk_type type)
- 		if (system_state <= SYSTEM_SCHEDULING)
- 			return true;
- 
-+		/* No cpuset, so the mask never changes after boot */
-+		if (!IS_ENABLED(CONFIG_CPUSETS))
-+			return true;
-+
- 		/* CPU hotplug write locked, so cpuset partition can't be overwritten */
- 		if (IS_ENABLED(CONFIG_HOTPLUG_CPU) && lockdep_is_cpus_write_held())
- 			return true;
