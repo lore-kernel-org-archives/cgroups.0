@@ -1,82 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.45
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794242219;
-	b=DaELewALvQzv/qBRYOmTfeGt34waAyo5dkRtRIzAhNl6R7dS1KM4a0z8UrVxD1RVllaQ
-	 FRdVDlS042JOWK9snpyI7epBMs+O8RLkdSyTNnILt0mmGPZwyxcYXraRhlo7maa+Hdj7F
-	 P60nRmVPAwjtIEZDbNXHwbV1OwtX7egI2SCeBCcisOq0j2wN9TiMeHIUEvTRzsl53et5y
-	 YsdkcDNV8puYMtzezb3KsbPQWvRXmPrylpphhy6AQQoLfqpIjc3QnIskxY388RD09MAkh
-	 PFR2gkqd6rtWDoSA95zALyPGknepjlfRcZIfHkQPEOaeEhve1NkiurntxEqa4N9u+ig==
+	b=tAgSuCGCp0F2uRJhW8DhCex2YfPdl8GVptpC19LRsTPJZu4QFdYT0Bhz5aNarTTvlJzM
+	 cD0lYbc2CXuCBy8chXg+mnum+qLVhcmtZId4ptPPmRWGpEgmzgv99DrHpeYCcc5vBWtJ+
+	 ohxVFC8gG1jkrCmP9xDBNi00QmTihr+QyqinhcFGY9o2Riy/BWsoFOqYDGX1UaDx8sygX
+	 YKVcKskjkMCaFFE7bE9YcG3j0wO7QFC+sGxKPcHoYP0ci/QvQtq8RmeXKe7ClS+XWg98a
+	 LZjcqNKTSmTSxgtCTypnd2pFcDimnY1kAam1rzlA2oA1o3yRi+BW4b1I2WB/wkuTqRw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794242219;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=69bP/4rCl9jdLnFN99AScdBIIFJeIH0XLbeU93aGJjA=;
-	b=2OFxaoALomYD9wgpjOpBEGfC0j6SQ8hrkz1wj0L3flBGqNhk87wJqXxtMBgps4cBrgIr
-	 ZrK0csyEFh9vEgjdjyWuxvtm4mOaY6aQAJvJ5P8I+VYjwp+KT+1UCDBtbJ0a+ocliMLxp
-	 Ltj+VSnQXMbLKoEilfnGhXeUbmVuZRBu4Tyz34kaW2z7Cl+xbxmYjLPTQ/YOzhsfH4tDA
-	 06JsEwtsDwYvWlsF9EmMe4umtdkHB+65K+PF3klTLQY+JIRGF6zmQ2k+fPxD4Gh2rL0m1
-	 qzWGnc3r5jbuchEJBQpOEpLCTaq0h/tjJ//SSkqTLANIf6axTAdkcubQnipu0oPx7KA==
+	bh=JLlaKTPbLeb3/gH7AJPm/GuRoGA7hDQrgsFi/3akh7M=;
+	b=PbsJ9StmHUUfkL1q3EubZ1Vik/TdjAB8m6GvJkc4rlfCcD3cRLEhP2HC1k1Aj4NURwQf
+	 bvSBXVzEOV9FN4gFosURWn0DzVVCbur9fJCNoHnVc5s/eBjN13AzE3gfg2BfD76JoXRy1
+	 R65icwE00itwQWaVe5hZ8yjQy9UDlECH4NkQut0CjyE1ALxs1bmpuJk9wK+sIyJVN5jMw
+	 WiMqu/AZQFYnJkrEHYSNjTD2oSvhzMwl+P0BZTQ4cmS1Y+HxE0BVFwxMFrRI6ItdTE0Pp
+	 SQp3OUJyFe+iHCUWZYS3Or7vR0du+DRaYTkfB5He/LhT8ZhWltAwoaiAQ2Grv/HMukw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Ep1W7ePw;
-	arc=none smtp.remote-ip=209.85.128.54
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vqUgHQ2v;
+	arc=none smtp.remote-ip=209.85.128.45
+Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADC896073679
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org ADC896073679
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271E360A6F71
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 271E360A6F71
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Ep1W7ePw
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-4a5036bbac7so7537905e9.3
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vqUgHQ2v
+Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4a35a60499eso8475515e9.0
         for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:36:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20260707; t=1794242217; x=1794847017; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=69bP/4rCl9jdLnFN99AScdBIIFJeIH0XLbeU93aGJjA=;
-        b=Ep1W7ePwIQXen75mrt6J6STtIpmrwco+Tx1Vgp+NrUCzJiwL0grCFvIss/Ac8Rixew
-         ucIciFozXgIdYhqQ63XUIun1S86yOLc1uG2tjPEwVc6vUPZwfDqWqbAHG1qlXTdolOB0
-         8Zw5xdhjNOm/ACvOkybSijhu9gBJE+MHeSlEsTC+hjctTsP/1zzO4uwSkbM9OpRYK4RR
-         S/lTDhmlpi6tlR1TfM9UGhrk6MFEEura65jUH5nuGbIhEtDQZo5d3uPcWVkdICUV+kQJ
-         y2ykxzpqef+VC1hltG+uBwzmBRfA/TAOVT0zH+EGZZ1c2NtS/SEtVG3b+V23dwRRYtfM
-         LTvw==
+        bh=JLlaKTPbLeb3/gH7AJPm/GuRoGA7hDQrgsFi/3akh7M=;
+        b=vqUgHQ2vNCQ5nG+Dlu0E31TLu6AgQHG414t4NmyiyEfkjDF7U5c79e0+Pj0Hkj1kMX
+         mnl6fj7xBdzbvHhkFCASOv8y/2gqCw68E4KFwSKvwAjgGIIBAkfimEfo+3MJaZKbUjdP
+         1FEMUTrhzP96MzqZl0N97/ESBaTdzSJPabdO3/Phz15TUiaXihp9f2QSE67hK1Z+Zars
+         lfNTj0FEaGuVVAntOkWK+wvqEHzwHRJcJtSfWXpaVQcieItV5pNMiLizhdmE0PUjUg8y
+         71M0TvQab3uLzEfbQ1dGj8eWeIGZ8a8nhnhfICm9BIPgGHjLam10mI7NraAC73aSxoKQ
+         M4Ag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20260707; t=1794242217; x=1794847017;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=69bP/4rCl9jdLnFN99AScdBIIFJeIH0XLbeU93aGJjA=;
-        b=HlJK7HcE3k5THY/mLpqTKMfuBlh8zutvXCvmMKG5qBLM6iHv6S+Bc6T6+WBmLQZeht
-         D8vhKPCem291LfLbS2etGl/qt8Kn3cDHKcszLXFtLuY4I/N3646Sh6nZ5A5GJIOdrhkV
-         ITkn5kVYrQtTUmgaXxOo0tCM/t35y+vuTQJI0x8t+YLlJgbHJdVJ9zKfnh5QFr+Z297B
-         9UBOUjUqwN5uhrXDty3omtw44COtByEyjIqE8xMtMf05u68BjgtmErrcRcwVEo0mNIxA
-         l+m6YlMqXS9FUu15PMtwyxQjOvN0TRnEMftKLzaHScbwtWkHYfWwesVJs+CqSSh9Rw9f
-         R00g==
-X-Gm-Message-State: APuU4Z9cJPzK0YI9th7V7yWbcpZ7EcmBDKxLW5/0FFnQGm3WeXfmxCZ5
-	04JEYjkamM7ljX4jlFcnxaNYv2KdWhsv8lrLfiIIhcLL3kMJg+tXNU/M
-X-Gm-Gg: AYBFou2gTQKOa1uhe9t1tOL8XB/0cdeHqC2WN48vSk3cifjb826SdIDl1d4cQx995sB
-	nE8w3Ip9B+VhCwgp1nB/lCjcrTaCn16FOh//3/+Un/VXAC5ej3Pj0Aex3t7okQX5ZaqLj4cT2TG
-	j71rd08Pmw5rMVtZlxOLg1HL4DdXzzz/uY15qVRoCyHcTmRguWpxQtUr/jaQWdtxV5ko9AfLYfM
-	d5Ilhal4GhH278v4NpDbZPUwjHe0M1yxZnysCGdyPS5bcikcLCD5Q5cqRHsjwH4SjU8dywSp/DM
-	pKA1gbVxZAT3iOmoxGmDV9tZb22w9iSbJbXNzPRNKW7tYDcbZBPVE/2FwToO0iQGSIyXGtH6R9r
-	i942YozrJTmyeb5ZiStoBr5/iR/GbW5id8C2YiTcFeaN44ZIk8xnkRba5JOIxb032kphr8Bdo3y
-	HLMJpWx5JWbcSfsWV2qAqRPAMIBNYumViNX3bR8TWPko16+jwmIGBfIpM+EFRmMlh/EDPKszd6g
-	OVDzFXlhyO2kI6jITzUdSxxqOXhBA75iDRGEiIrFu52Ed43cxB2+Ahfci9iem7X0jCKUBNWltPX
-	CUtLSLWEDUl01Uz4MErbmsegCQ==
-X-Received: by 2002:a05:600c:4f4c:b0:4a1:ac66:6059 with SMTP id 5b1f17b1804b1-4b963c7d397mr106385035e9.26.1794242212383;
-        Mon, 09 Nov 2026 08:36:52 -0800 (PST)
+        bh=JLlaKTPbLeb3/gH7AJPm/GuRoGA7hDQrgsFi/3akh7M=;
+        b=Zmgi0VxQyokxJGD4uJ4p+rdTUkHAGkp2VwMkxHL6Ll0XaaGwFL/KedvNTpC+cUZAg2
+         z/CxzBglkyySDLz2CpjkjzqPqS2inr4EDWmA3HJvGghNQd0Z/QpI7wGDV39ld6zmItaD
+         E0K9JPPS9rlK/jol5EvC524tlTIU6f51DNo4YRmjdF5u9p9chFuDB+gJNTa/UPE5lXtD
+         jXHQWKywURshrW92dbkGvGDoSpsJT3Mz5VG47rs/lqgKfhdosrOFyad8NWTeDhxYBCjN
+         nLmljVfEecyNz6U0/3ZH9ECmPP0nCHEBTQXcdekitEJxS2t+Tm+CD1O/aVPdHGNuexSE
+         /awA==
+X-Gm-Message-State: APuU4Z9eDH8tg9qCZoeTxpZjxwI4QYhmpfy3SQRwTpX616r6O80YT1+8
+	tOq2K0rEXLHmgggHPC8Hsw+50MALdY8tYBK2BVpyT7O9l3GfKlwPzaot
+X-Gm-Gg: AYBFou3QT5H830Ej8J4FM0KV2JWOHoef+FFHozAjaWQqt6ICYDnshh+vOirfv9DySXl
+	ROlY3CuC8M8u9GGk7R0HbxI7WyLjOayB38vsMtVRiAFh2RM5TUawZfxxS6W70nf0SEmRfh9oJ/5
+	sWxMIgEJSSNlCF/wxFFR3ecUmgDMp8AMLOO9t8l8vZE0vGTrLWMD2FemvxaOs/li/Vh7XgqtkCI
+	A5jEsp2tzzUG52HB8jScYYq64+xPrL4dosltWfcrHGnmuIDZa+wj24ZNVRjpOFEv4XWdz1Spllh
+	3WPCeAQ6z6igDqIP3TJOdeDw3tydnhH3QkEkmXa33zzw3uUheoyfX1EjGGjHp9XUjFTNRX7nUBw
+	Fo7pyYBwtGGF+l5RQerlhtLLz/YG0MMavF9DlSNmlmsvdMy3Lhyc4ErHT4sxUtuCuS8DC7I8ouy
+	9crEnwp0pGPDuEwqiLJZN+S04WKnjxWhKAnUIzlmSLOv6PnywekZHU5igqf2tx6/Mu1yXEgKNaH
+	tXCj0grjM8hsGj2A8hc7YVCXEhes922kdMKxzvYejmAjJwRYrNTTbx+xqDBdQw1lroByYYmRVSr
+	n7hFzD/pnW3EAzOpyBXXidFbzw==
+X-Received: by 2002:a05:600c:3e0a:b0:4a7:d9b1:b684 with SMTP id 5b1f17b1804b1-4b94d762e54mr87248405e9.2.1794242217597;
+        Mon, 09 Nov 2026 08:36:57 -0800 (PST)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.51
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 08:36:51 -0800 (PST)
+        Mon, 09 Nov 2026 08:36:57 -0800 (PST)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -95,9 +95,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v7 18/29] sched/rt: Remove old RT_GROUP_SCHED data structures
-Date: Mon,  9 Nov 2026 17:36:04 +0100
-Message-ID: <20261109163616.195264-19-yurand2000@gmail.com>
+Subject: [RFC PATCH v7 22/29] sched/rt: Try pull task on empty server pick.
+Date: Mon,  9 Nov 2026 17:36:08 +0100
+Message-ID: <20261109163616.195264-23-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109163616.195264-1-yurand2000@gmail.com>
 References: <20261109163616.195264-1-yurand2000@gmail.com>
@@ -112,120 +112,73 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: luca abeni <luca.abeni@santannapisa.it>
+Try to pull task on a server with an empty runqueue before returning NULL (and
+thus shutting down).
 
-Completely remove the old RT_GROUP_SCHED's functions and data structures:
-
-- Remove the fields back and my_q from sched_rt_entity.
-- Remove the rt_bandwidth data structure.
-- Remove the field rt_bandwidth from task_group.
-- Remove the rt_bandwidth_enabled function.
-- Remove the fields rt_queued, rt_throttled, rt_time, rt_runtime,
-  rt_runtime_lock and rt_nr_boosted from rt_rq.
-
-All of the removed fields and data are similarly represented in previously
-added fields in rq, rt_rq, dl_bandwidth and in the dl server themselves.
-
-Co-developed-by: Yuri Andriaccio <yurand2000@gmail.com>
-Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
-Signed-off-by: luca abeni <luca.abeni@santannapisa.it>
 ---
- include/linux/sched.h |  3 ---
- kernel/sched/sched.h  | 33 ---------------------------------
- 2 files changed, 36 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 4816e408b332..112e6a450a16 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -627,12 +627,9 @@ struct sched_rt_entity {
- 	unsigned short			on_rq;
- 	unsigned short			on_list;
+When all the servers of a cgroup are throttled, work is pending, and any one of
+the servers is replenished, it may happen that the runqueue is empty and thus
+the replenished server is immediately shut down.
 
--	struct sched_rt_entity		*back;
- #ifdef CONFIG_RT_GROUP_SCHED
- 	/* rq on which this entity is (to be) queued: */
- 	struct rt_rq			*rt_rq;
--	/* rq "owned" by this entity/group: */
--	struct rt_rq			*my_q;
- #endif
- } __randomize_layout;
+The server may try to pull a task so that the cgroup could consume its
+allocated runtime as soon as it is replenished.
 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 10eb56aba3d4..1242d297532f 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -313,15 +313,6 @@ struct rt_prio_array {
- 	struct list_head queue[MAX_RT_PRIO];
- };
+Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
+---
+ kernel/sched/deadline.c |  8 ++++++++
+ kernel/sched/rt.c       | 13 +++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
--struct rt_bandwidth {
--	/* nests inside the rq lock: */
--	raw_spinlock_t		rt_runtime_lock;
--	ktime_t			rt_period;
--	u64			rt_runtime;
--	struct hrtimer		rt_period_timer;
--	unsigned int		rt_period_active;
--};
--
- struct dl_bandwidth {
- 	raw_spinlock_t		dl_runtime_lock;
- 	u64			dl_runtime;
-@@ -343,12 +334,6 @@ static inline int dl_bandwidth_enabled(void)
-  *  - cache the fraction of bandwidth that is currently allocated in
-  *    each root domain;
-  *
-- * This is all done in the data structure below. It is similar to the
-- * one used for RT-throttling (rt_bandwidth), with the main difference
-- * that, since here we are only interested in admission control, we
-- * do not decrease any runtime while the group "executes", neither we
-- * need a timer to replenish it.
-- *
-  * With respect to SMP, bandwidth is given on a per root domain basis,
-  * meaning that:
-  *  - bw (< 100%) is the deadline bandwidth of each CPU;
-@@ -515,11 +500,9 @@ struct task_group {
- 	 * different deadline server, and a runqueue per CPU. All the dl-servers
- 	 * share the same dl_bandwidth object.
- 	 */
--	struct sched_rt_entity	**rt_se;
- 	struct sched_dl_entity	**dl_se;
- 	struct rt_rq		**rt_rq;
-
--	struct rt_bandwidth	rt_bandwidth;
- 	struct dl_bandwidth	dl_bandwidth;
- #endif
-
-@@ -887,11 +870,6 @@ struct scx_rq {
- };
- #endif /* CONFIG_SCHED_CLASS_EXT */
-
--static inline int rt_bandwidth_enabled(void)
--{
--	return 0;
--}
--
- /* RT IPI pull logic requires IRQ_WORK */
- #if defined(CONFIG_IRQ_WORK) && defined(CONFIG_SMP)
- # define HAVE_RT_PUSH_IPI
-@@ -909,17 +887,6 @@ struct rt_rq {
- 	bool			overloaded;
- 	struct plist_head	pushable_tasks;
-
--	int			rt_queued;
--
--#ifdef CONFIG_RT_GROUP_SCHED
--	int			rt_throttled;
--	u64			rt_time; /* consumed RT time, goes up in update_curr_rt */
--	u64			rt_runtime; /* allotted RT time, "slice" from rt_bandwidth, RT sharing/balancing */
--	/* Nests inside the rq lock: */
--	raw_spinlock_t		rt_runtime_lock;
--
--	unsigned int		rt_nr_boosted;
--#endif
- #ifdef CONFIG_CGROUP_SCHED
- 	struct task_group	*tg; /* this tg has "this" rt_rq on given CPU for runnable entities */
- #endif
---
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 64df71ab370d..219493427e0b 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -2910,6 +2910,14 @@ static struct task_struct *__pick_task_dl(struct rq *rq, struct rq_flags *rf)
+ 
+ 	if (dl_server(dl_se)) {
+ 		p = dl_se->server_pick_task(dl_se, rf);
++
++		/*
++		 * server_pick_task may drop the runqueue lock, so check if
++		 * something has shifted.
++		 */
++		if (pick_next_dl_entity(dl_rq) != dl_se)
++			goto again;
++
+ 		if (!p) {
+ 			dl_server_stop(dl_se);
+ 			goto again;
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 9d95cf5fd520..839977b05d53 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -286,14 +286,23 @@ int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent)
+ }
+ 
+ static struct sched_rt_entity *pick_next_rt_entity(struct rt_rq *rt_rq);
++static void pull_rt_task(struct rq *);
+ 
+ static struct task_struct *rt_server_pick(struct sched_dl_entity *dl_se, struct rq_flags *rf)
+ {
+ 	struct rt_rq *rt_rq = &dl_se->my_q->rt;
++	struct rq *global_rq = global_rq_of_rt_rq(rt_rq);
+ 	struct task_struct *p;
+ 
+-	if (!sched_rt_runnable(dl_se->my_q))
+-		return NULL;
++	if (!sched_rt_runnable(dl_se->my_q)) {
++		rq_unpin_lock(global_rq, rf);
++		pull_rt_task(rq_of_rt_rq(rt_rq));
++		update_rq_clock(global_rq);
++		rq_repin_lock(global_rq, rf);
++
++		if (!sched_rt_runnable(dl_se->my_q))
++			return NULL;
++	}
+ 
+ 	p = rt_task_of(pick_next_rt_entity(rt_rq));
+ 
+-- 
 2.56.0
 
