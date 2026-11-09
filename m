@@ -1,82 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794242222;
-	b=LFl96zNqjnrpu4gfHc6IauUNfZLpSPesow1hm8V2OxqC1b+T1VtUr7phmgjaHrK+a3gj
-	 3bYeKm7W+7h4Th7IHCAw0uzTaaEykOV8wTMuUafH7Y9O48bZwdUwvFpkhza1f7l7ABFqJ
-	 9WqEy/fsDvaU2782cPl3ldeHTGVI9q4J974P8tD6P1Q98GxsYbZICMhCReRGJ9ymrGNqI
-	 wolSJx4p1eBVGvjWfg1ud1sFAEXV1dt8ytCS4SGqpiIeftAACkHcGOMhn3SwalMXZBe1d
-	 NYUgji4kgc4d6OSHPdegPDK9n71aSOy5lHm0lkK0zpzU94ReCSUje5iKY36bo9AZKSg==
+	t=1794242227;
+	b=jMI4ttCgGLFrl6zN3zun4QYzJZIyW8X4vACRmUD4WXk2aKHz6Tv5i5FwNvCA0o11QPqh
+	 wYO41qMWzTNIVOG2NFTOsEU3NwdDG8ZwrnKTkhEShwj/5z90Ty9DvdE/RC5kKPJF46gpR
+	 GUwyOS83+tVmu5a53RJHA4zbO1VjVo6XWMZSQZEXh7YfNWCFMfCq4/qGguzjPE5P1qdSU
+	 PRVl+J7o4stpTood5B8u65C3LZOvNPfDdUZU2/xfvEkogIFW0sIr/wBNKoIoZ++r6wiZl
+	 A+OFm14LgTVNPtf1JI9+KMr2cD78E1ofvw/ZgoI4QRRz+mhN/LMlfDkuA80Mo1URBlw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794242222;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794242227;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=qdVadI1hvmNJk+awA8RHjDIqE5xUOcTcDNFSytWKlh4=;
-	b=z4bxy9LaGBYtMXwHhyI7FawTkOqFyA2XSYODUNoEJXiAwqGw9grmP9/Rwpijxz/ibOV9
-	 Wnv7OdkT9GmGMp8I4QKDaToXpGx4tNgBbz6S08/oGHtelyEsHbvRsQkEAmGVJBDt4NTnZ
-	 rm4FQDBYL0v2Hd2rHhOQTizAAXNbfxmy7UnTd0sh30WnsjrD2BwymI+k8OMo/zyo5c29i
-	 V9gHF3O4PB17O7D+HRPceekkHkd7Lv4DjEhiRkXAo9psehZS1LidQg+sd+zvb6ssILo0V
-	 kbdOriXLUvRCHlgAhw0CbxMxxxGt5McbBMF0H+TfZr3Ct6U1KWqaiZy8i4VAjcKIMwA==
+	bh=SVT/DX3Qx5QX3fT0D0XLtiWgc2jruHl1ZHUq3Xr2ZxI=;
+	b=oqgLYSUK1o3I3QdYyIX5JpEDuX4dBJoeSNlT10EcXwk4zEjNARxQPaCSmivREvkxy9ne
+	 5Xqh84pB4CzE6Sv+8JQU0N1y3dg+keAk7rCuMJIw90BMQweMEHC8o/QqCYS69nOzipi98
+	 3XOVa2c67t3CfhAAI5t/sftW7hzz2Bycjr5AKX3sz/4Lbgq5LRDBoS5O3FCyP2bFCVggg
+	 8k9TbLLFboMdZmBvw4tn+qFMohqDVxd2XT8DxmvqAyUxn5PeKgt0LW1fEufcyNyMTv+WV
+	 73cw7NvHRw7Grpt8RVz4UVmjv9zJLUc8HYhGSCKcRbiiIHxwWbjbak+uceGr2k8fCgA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=H7gw4Nxw;
-	arc=none smtp.remote-ip=209.85.128.44
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b="xxOrue/X";
+	arc=none smtp.remote-ip=209.85.128.50
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2CA4606A86E
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:37:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2CA4606A86E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E97606AAE1
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:37:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40E97606AAE1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=H7gw4Nxw
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-4a35d5d4a20so13338505e9.2
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:37:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xxOrue/X
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-4ac95761c85so7939185e9.2
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:37:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794242220; x=1794847020; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794242226; x=1794847026; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=qdVadI1hvmNJk+awA8RHjDIqE5xUOcTcDNFSytWKlh4=;
-        b=H7gw4NxwqjeiByj/7rft0z1ChCs++jbTS2SciDzDaabPD9a5JFtSMxuZU1XLiwsqRA
-         akA2rBrrhIYOC0rdwsIlP61S2mJkbyxrQlkY7KM1nGz0Lq7P1AdMsod03z6tbfQ94jGY
-         cC774Ps6EUsSAPLDJ/AVx6YQX7spuvAOCLywh5nrwpwaLYfrjMzf/wvvDWpNi7zcDQa9
-         vK2ZaCcGY+p/aj+zRZYB6E/8Jtnbq+93G/wlWxCarjPRad3BKx6Ob/RNmE0FCCnKhsfV
-         lO9eRNSlKMsLq0iIg23RCfUj63ED5wpBmylHeOFGvfHhrT/IHDWe/dx+kedwaE3GbzRI
-         uyCQ==
+        bh=SVT/DX3Qx5QX3fT0D0XLtiWgc2jruHl1ZHUq3Xr2ZxI=;
+        b=xxOrue/XIP1cGeO805QDUjvWXOZZWysl0pKv3DN4oINbshIQXMxXwBSSepbZjUGwrA
+         Zs+jJkR2Ra8aTWBSjvSQFA55gJoZEFCmT0Z/IR6VWYhUF+gNenibQdk8HChejRXdbiiG
+         tXRL+PCiAYFG9v7P/TYP8ubqCofLSe3Q5A22TieJuBUvDdx6nbBiegCfwSmztI+6irzR
+         CVJiQlBAIw+LHUsNHfwgQPjPj0DTUz34bC1NC2e+rxS4IkVAzSVJD9WbmQEBhprsEm2/
+         C+EnIaQ8Id1Z7xThhIl5T+vfjtYGmBH3U1GSVXgzXlGX0RkBT48dLxY9AvNmF12pbTqR
+         SPeA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794242220; x=1794847020;
+        d=1e100.net; s=20260707; t=1794242226; x=1794847026;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qdVadI1hvmNJk+awA8RHjDIqE5xUOcTcDNFSytWKlh4=;
-        b=eTAyQVvfJjtGcvdnVw+ZN0djQLJh2fNbJKxgjEtubaBqeu7WC1Gw+yW82ewos4VNeG
-         nqXFOry5HAXTXa0T82LGAG1xHG56KVdmmbPTsIUjOp6gAptFMoRniT7LkJCbHE/tHynY
-         rvIl7bUk+u5zIUiw3peNmvAM0TXtvvL2T/vgMGn1wa/7xT+mx8z9qGwMsqFFRUujd3ys
-         VVhD+/XqYLNwvrUuWGu//bWrMi1dK/btkJyArjQFk1F3TEmzIJIOWq7qyhaGJx1kOef9
-         4IvnHbt7LpYbtTgjkkc0S+9VnTEWfuCXLz46ZAz9EKII/Yd8WK1RxnngnGfdc6fs/el/
-         9bQg==
-X-Gm-Message-State: APuU4Z9Oc08dQP/8bHULqfeonjR3n6yl7nZIlSlwc5V/CkZRid/yzIX/
-	J4NllCP7ln4Q/e+nrh4ZH4SWdBQncyh7XhX883QDolqvLijmTal4TXDG
-X-Gm-Gg: AYBFou1WiIYxRAcH+ZaeOFZML65rAuwG8t4RzDxue7x9JaK012yyUgFNNig4GvnQBi3
-	uzetwM9hVEVfD0W+W4J2f/ogKLqd5jFezXxMQIXRsShcYq6pj+y0ITTQP7Q06IN5HfJFFnbtxvb
-	yUfxGugLwUeKekrWXX8eNbpeudarkQopmcTZt2/UUBQKJm9/vMbw7n1WkaME2GG7yyEgHpSYvRw
-	qtqME1ipq0dup+hsMYi9PnZWJ1fgGX4gxibonuJNR1jBLqVj2WIBOgj6qEN+7qTy83wjAUeDVgn
-	5J0FDE2tB/6GT2VmIi7Uz+11UJAZhmXzdmuUocyFJL/x2X7H80BLgYbA1EeSzMcGEr6ULV51lZR
-	/YmeUTaoeeaOh4TXuq33I8TI/saFcK6LBumQ2/XlFg93G3X6OTGqXo0AXFzZBsuzr9z2aYUZDKJ
-	JcXY+AcFloIrVeubA4KKGRK25JTJuJBpC/Npy9mkPypzGdmIR8J25xZShDfig6eoPKckeUW58jf
-	bFCvBKm0CJZ3QB8OT9Xc1NxPyFcPI78vfRPP0vYrGuOoDACq1Qmn52+NVJ4UBxg2ohHMZH1+1X0
-	ajKiPyuwBb9uOFCLdXzCQ0kFZg==
-X-Received: by 2002:a05:600c:4e4e:b0:4a0:23f:8b0d with SMTP id 5b1f17b1804b1-4b94d763141mr82297085e9.2.1794242220166;
-        Mon, 09 Nov 2026 08:37:00 -0800 (PST)
+        bh=SVT/DX3Qx5QX3fT0D0XLtiWgc2jruHl1ZHUq3Xr2ZxI=;
+        b=ayW1rWV5CvcP2P8mHffQ9D7yhchZBf/g89vNCrrUKW3SNwdfxqqraWrnscfXHp2xK3
+         x7oox8XkCg2HWiNMhAvNKgN1zjnrKwS1pSXJSuntFtcA39glmII46VHo/zvGZ4qfpm+o
+         90JT544homKyGfwwkEq75kttr2tEEDkWOolsLtk0KPP0h7Ruh/WGAGmrC4M8TlZNKXvw
+         JKK9IG2oQeoDV535hbvT+Ep/wj5RtiWJewZQRIqDpzuwYykuyMgFOKoDJwgBsl0ZRnBa
+         A+ECI4PzEJCIZ3ehZ3u9cdWgo6q4/u9eQEYxmUSmBIpDdcF/jDm2CiC8eE/l1gRY69eP
+         O8aA==
+X-Gm-Message-State: APuU4Z9TsZ7CJctC1VUsywhckjkPh7AoWyyI0Y4Uh152hz8WGnPJXnzL
+	+iPAq5wNafNb3LlusYHYR6kS/yvfOVhZ4WOF1FGwIU8KEl/iL/47fp+2
+X-Gm-Gg: AYBFou108w9wNydVASpa5uDiI4tXn3sdwSQql4puBT175MDw3jjMFO6EfqfRu4uNxRr
+	PLfTKzxuSqJatdz2yHwQIui8mmBjcwVCfiBA2e0iqxsgk6gsoVSyKkYcUlmGquwhItahSVJLU4A
+	M/XwsnFc+4CWnV8BKyYycxjagLx6Dly0s3ScD5oZJzvLNoAfJzKblzk17WNJ3JBi6bxBbx6kM7Q
+	ZIxWhcXx7L+d8b1a8zkwBeU1678vSm+fpkLKfCAv4KYWyjTZmIPBg48R89+GkqQzNWKENEsL34l
+	rT1EWhBxBYOvN4scxcKfyqSGN3mWHirEi6UZtWU360ycsMJNpqTvJ9Edl1HWCVIHcgOWGxOadYZ
+	MNEoTWrippX3/XtsKcOZ0Byc25uXfk66Wj2bER55LXANfCG2fGrrojGuuxVBDwKy7Z+C957Rs+w
+	thLa4q4L67sPKATqzI6BlCO8Q9v+zw+bvsSmr0Gb8u/1M1aiJxzE2T+qbTaZpM0grbM99f0DGC/
+	3HRLC3WW7Pg00Vv8fdRCI5A+yYI/cD0fan1BBxlghnm/DSSxKnhOTI7eq1RPzbKOr8uWeedlY+K
+	a6K3mxE9GbpeZgloHwU/soDYeQk=
+X-Received: by 2002:a05:600c:8509:b0:4a1:a2c0:7b73 with SMTP id 5b1f17b1804b1-4b963c8da55mr78790525e9.30.1794242225594;
+        Mon, 09 Nov 2026 08:37:05 -0800 (PST)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.58
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.37.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 08:36:59 -0800 (PST)
+        Mon, 09 Nov 2026 08:37:04 -0800 (PST)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -95,9 +95,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v7 24/29] sched/syscalls: Allow unpriviledged tasks to set RT priority inside cgroups.
-Date: Mon,  9 Nov 2026 17:36:10 +0100
-Message-ID: <20261109163616.195264-25-yurand2000@gmail.com>
+Subject: [RFC PATCH v7 28/29] sched/rt: Prevent CPU offline operation on active rt-cgroups.
+Date: Mon,  9 Nov 2026 17:36:14 +0100
+Message-ID: <20261109163616.195264-29-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109163616.195264-1-yurand2000@gmail.com>
 References: <20261109163616.195264-1-yurand2000@gmail.com>
@@ -112,50 +112,80 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
+Introduce tg_can_offline_cpu and prevent CPU offlining if any rt-cgroup has
+requested bandwidth on the offlining core.
+
 Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
 ---
- kernel/sched/syscalls.c | 26 +++++++++++++++++++-------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+ kernel/sched/core.c  |  3 +++
+ kernel/sched/rt.c    | 27 +++++++++++++++++++++++++++
+ kernel/sched/sched.h |  1 +
+ 3 files changed, 31 insertions(+)
 
-diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
-index f1e9de478e1d..36bb07b10d41 100644
---- a/kernel/sched/syscalls.c
-+++ b/kernel/sched/syscalls.c
-@@ -444,15 +444,27 @@ static int user_check_sched_setscheduler(struct task_struct *p,
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 59bd9599c509..4321be11c6c7 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -8717,6 +8717,9 @@ int sched_cpu_deactivate(unsigned int cpu)
+ 	struct rq *rq = cpu_rq(cpu);
+ 	int ret;
 
- 	if (rt_policy(policy)) {
- 		unsigned long rlim_rtprio = task_rlimit(p, RLIMIT_RTPRIO);
-+		struct task_group *active_context;
-
--		/* Can't set/change the rt policy: */
--		if (policy != p->policy && !rlim_rtprio)
--			goto req_priv;
-+		if (!rt_group_sched_enabled())
-+			goto root_cgroup_checks;
-
--		/* Can't increase priority: */
--		if (attr->sched_priority > p->rt_priority &&
--		    attr->sched_priority > rlim_rtprio)
--			goto req_priv;
-+		scoped_guard(raw_spinlock_irq, dl_bw_lock_of_tg(p->sched_task_group)) {
-+			active_context = dl_bandwidth_read(p->sched_task_group)->active_context;
-+		}
++	if (!tg_can_offline_cpu(cpu))
++		return -EBUSY;
 +
-+		/* Allow changing to the rt policy when not in the root cgroup */
-+		if (active_context == &root_task_group) {
-+root_cgroup_checks:
-+			/* Can't set/change the rt policy: */
-+			if (policy != p->policy && !rlim_rtprio)
-+				goto req_priv;
-+
-+			/* Can't increase priority: */
-+			if (attr->sched_priority > p->rt_priority &&
-+			    attr->sched_priority > rlim_rtprio)
-+				goto req_priv;
-+		}
- 	}
+ 	ret = dl_bw_deactivate(cpu);
 
- 	/*
+ 	if (ret)
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 37e4b24183ab..e5f05aeabd5c 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -2853,6 +2853,33 @@ int cpuset_can_change(struct cgroup *cgroup) {
+ 	return 1;
+ }
+
++static int __tg_can_offline_cpu(struct task_group *tg, void *data) {
++	const struct dl_bandwidth *dl_b;
++	int *d = data;
++	int cpu = *d;
++
++	if (tg == &root_task_group)
++		return 0;
++
++	guard(raw_spinlock_irq)(dl_bw_lock_of_tg(tg));
++	dl_b = dl_bandwidth_read(tg);
++	if (dl_b->dl_runtime == RUNTIME_INF)
++		return 0;
++
++	return cpumask_test_cpu(cpu, dl_b->active_mask);
++}
++
++int tg_can_offline_cpu(int cpu) {
++	if (!rt_group_sched_enabled())
++		return 1;
++
++	guard(rcu)();
++	if (walk_tg_tree(__tg_can_offline_cpu, tg_nop, &cpu))
++		return 0;
++
++	return 1;
++}
++
+ int sched_rt_can_attach(struct task_group *tg)
+ {
+ 	struct task_group *ctx;
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 9410d1909729..a6aae4375a31 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -590,6 +590,7 @@ extern int tg_rt_internal_bandwidth(struct task_group *tg, int cpu,
+ 				    u64 *rt_period_us, u64 *rt_runtime_us);
+ extern int tg_set_rt_bandwidth(struct task_group *tg,
+ 			       u64 rt_period_us, u64 rt_runtime_us);
++extern int tg_can_offline_cpu(int cpu);
+ extern int sched_rt_can_attach(struct task_group *tg);
+
+ extern struct task_group *sched_create_group(struct task_group *parent);
 --
 2.56.0
 
