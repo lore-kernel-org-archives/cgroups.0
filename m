@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794239018;
-	b=dyTTCa1m/hPNDk+Z7JkKADW/ks6hLGKXv6LIEYU6w2p4F1ws4x+S1teSXTfh9B19i92w
-	 h/jYgrXnR/8B2Ub18gJKldZEvnNu/B3r6TlbyfYtnaq4rM2YBqbkBIgD6pe9R3ilQpB4Z
-	 6/l2UdFeSrQX8zlG5J9tnMJP2uV/Z1lEKoqiDg9FxnMLd8j4mylMyEZi7+Q3Ls4uLx1tv
-	 kX5Ji7E5bu6MZu+kB9JPM7APe6OvnBfVOzTpCx+YyDGUtl6htQglWFA/jN45raquW2f+x
-	 bG6frH4NBi5YBCUHpmklX5aq/j149oo7t0xeKxW9fj4HGWMsW1prANwhtyzoxkqM1Ng==
+	t=1794239297;
+	b=HwOHUfbcLS/mrqhKZT8B0liXB8X4ylNHQiMrCeLTrjQvBusrh88kcTHTgd1xRk5NPmm5
+	 5l8o8uSqsLD4pm4WZyCAJw6OwupfsEMVkuXKTUymclbqibLc6u6/F1WJsjXljPHLtEVWT
+	 e04SQJmGyy7O70gORgepb4cL6Gdmn541Ny0DOQC48kkGfnuolOGarKIeFnpAQHgaNwBt2
+	 WnUFm4Kxyja7x6OyVFn7Z+qnAX1X93NxDhSZZR/mL2WIL0BqYOEB4R1mBfHY/uvrwY8XK
+	 CdNDwr6zKG2S+TkuRAuQpl+dFZ4/es35WWEVqGtuYiBf/ZTFy1jKuQgXS0VhgrP88dg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794239018;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794239297;
 	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=wU1ifyjtBHXzPL8O1JAUpouGxPg8mwJS5MT55/0wkts=;
-	b=2ofN3rypyqt5t8mqg0Z6ynHvrH0iJT0GMLZHJxgUcF+P/ZMilqQJ/2RisqPG8u3zeKx/
-	 rFyvoPrqcu8Pq35oL9kW3/AS0ArQedIG1jiDLSGZ/Erv76YUwf7ND0XN1uJpzCVSdnbVC
-	 tzi2tTuknA8+kTlDGbGyvhTUGBjvn/5wpXIDz/iBjGGIha6DpJbYvYF8wjmI79feE72cE
-	 C7lYaa7a3xITQKZTvCLqchVX1peQPoMr82nh86aS/wmBj89q+0/ND8ABukMVAfaEqMAQu
-	 FGg/HpyzNOIt4SMgxa8PpvXJ+t7S2O0/n41hHoFiTi3qB28hXNJ65GFBtkToC9bcZPQ==
+	bh=H//rNZ0BIfKfHwVintyD9ZNWtHScbV2O92p6KUjFWUI=;
+	b=gWTh5iRLUlhkAeB1lQX73Y92O1zYaptTrnh0OCChL3yvl/U7ymKl4YZ0CesBuiZXTcuN
+	 /I9gHGltnZhv2EVt3jUJuJJyWWfak5uX1+gnY49N3YqjbZ6AN10izXB7m7UfRk+j5D9Fp
+	 LjwoEGHJn0vIffgT86kMbhrXUUPw6dj3hoLX7wvcg6R6aemP+NtgTOTK100tE5W6iXKyV
+	 7FGl1swyPYeyWJh1ySNUzR5url8CN/hGNuUkJ3HraOYnan0X4l5Io0ms5j9wx5HDdtk/O
+	 I1nkaiRAVDi8P/Ze5G9XrXz/6+Jd9xOd2+wKjvDjR6s1d+fHHdMt8xdce2v9fuHRS5A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UyxFsy5j;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gWrWHZ7c;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A2A0606A31C;
-	Mon,  9 Nov 2026 15:43:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E2FF606A31C;
+	Mon,  9 Nov 2026 15:48:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=UyxFsy5j
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AAAD1F0089F;
-	Mon,  9 Nov 2026 15:43:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gWrWHZ7c
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99D1C1F0089F;
+	Mon,  9 Nov 2026 15:48:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794239017;
-	bh=wU1ifyjtBHXzPL8O1JAUpouGxPg8mwJS5MT55/0wkts=;
+	s=k20260515; t=1794239296;
+	bh=H//rNZ0BIfKfHwVintyD9ZNWtHScbV2O92p6KUjFWUI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=UyxFsy5j1uexnMSXrnWEqLslhhH0CGTrpUNXtaJTFYNOhnN/7dWCA3huzZo/1zWgw
-	 o8ymlQoJFHCJloqJEPTKAyabLAwSbDevxBPr/35tfSMrGJNSoWqmvsli4ng6t1Z7Rc
-	 YksbunXIId3fAAGQvqiZoyzVkQ5NYXr5xodbdmfnUoafUMgB6+vDkQUtWGoYf3iyv9
-	 +vyZoBlMeSYqFB2G5fhXw22XGNnOF9zy6u4rctcmy+1lnJpB8U+YIoYAKCUg8ZnkAF
-	 Mhmhbn/eWpog5qz9Pb0/+iMkdkIiEn+d/r2Wn5nRbWbzOwrX7S8p+H8VWhRpTU/5GC
-	 YTAQcn+/ugMew==
-Date: Mon, 09 Nov 2026 05:43:36 -1000
-Message-ID: <91fa9a5de005245ed3c1bde305fc6778@kernel.org>
+	b=gWrWHZ7cuxYVFxFqF8YBSE79ELKCXGfoJ0E1j2Iqgej3O2yTlWXAcHXb9610PnwTj
+	 LCu7bjToViHzc8suuhnnYrJQwcYd7xSu7FNr+efj1W6Qwd+EbXi9rMCP/POIeFEgSm
+	 7a+1V71j3Tn/p9EhAIwauvqruHyPheZ/xKjayvy0N1jsHuXGO21l1NtMpx4RoG4M8t
+	 BSOLmd6q11WKfhupqdPND5MWlvZ3g7HCM/5pnH+ZkGqlikeJN465qZ6M7IjHykDRUq
+	 Bmy7I+m6nidBV2GKrJl6ZEoA58FhvcUAFuc2aaid6wTCRF33udWx7JRMnvZXClAfz+
+	 hw9VKP7SsRO1A==
+Date: Mon, 09 Nov 2026 05:48:15 -1000
+Message-ID: <2b3bf9c575111c840ec6a387f431d0cf@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Chris Down <chris@chrisdown.name>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, driver-core@lists.linux.dev, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH] kernfs: Build paths in linear time with respect to depth
-In-Reply-To: <au_pnu4s141ylqHD@chrisdown.name>
-References: <au_pnu4s141ylqHD@chrisdown.name>
+To: Ridong Chen <ridong.chen@linux.dev>
+Cc: Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, Chen Ridong <chenridong@huawei.com>, Ridong Chen <chenridong@xiaomi.com>, Guopeng Zhang <zhangguopeng@kylinos.cn>, Guopeng Zhang <guopeng.zhang@linux.dev>, Sashiko <sashiko-bot@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH v3 2/4] cpuset: add early empty cpumask check in partition_xcpus_add/del
+In-Reply-To: <20261107120100.3587595-3-ridong.chen@linux.dev>
+References: <20261107120100.3587595-1-ridong.chen@linux.dev> <20261107120100.3587595-3-ridong.chen@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -60,41 +60,11 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-Hello, Chris.
+Applied 1-2 to cgroup/for-7.4-fixes with the following tags added to
+patch 1:
 
-On Sat, Nov 07, 2026 at 07:16:46PM -0800, Chris Down wrote:
-> kernfs nodes only point to their parent. To build a path top-down,
-> kernfs_path_from_node_locked() walks back up from the leaf for each
-> name, so the work grows with the square of the depth. Reading
-> /proc/<pid>/cgroup does this with IRQs off and css_set_lock held, so a
-> read from a deep delegated subtree can hold up fork and exit elsewhere
-> on the machine, which is certainly suboptimal.
-...
-> In terms of operations, with a 15,000 deep path chain and a 4 KiB
-> buffer:
->
-> 1. Parent and name pointer reads go from 112.6 million to 75,003 with
->    this change
-> 2. On my machine the second read of /proc/self/cgroup takes 99.86% less
->    time.
-
-I don't think a 15,000 deep cgroup chain makes much sense as a use case.
-A lot of other stuff in the controllers will break down at five-digit
-depths, and quadratic isn't that expensive when the base number is
-small. Did you see this overhead in more realistic scenarios?
-
-> +	/*
-> +	 * We can only walk towards the root. Fill from the end and wrap
-> +	 * so that if the path is too long we keep its first bytes.
-> +	 */
-
-Even if it is worth doing, the implementation looks too convoluted. Most
-of the complication seems to come from supporting wrapping to keep the
-head of an overlong path. The only callers that care about what the
-buffer holds on overflow are debug outputs. How about changing the
-contract so that on overflow the buffer keeps the tail end of the path
-instead of the head, which is more useful anyway, and the function
-returns -E2BIG rather than the length?
+  Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+  Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
 Thanks.
 
