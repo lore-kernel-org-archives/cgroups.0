@@ -1,100 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.46
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794217340;
-	b=l4By8mvRWXZVE1NaZvDwSxb5cFAc+H0K3p9PNK+FIQGTsUIuOx5N1E2Wp6r1KaOuRyig
-	 rZkIE78iHYEinH5oYESyQb2hgyCjslv9aAnRqUcrT8LKr8Qr1fsie5suJnG3wSa+sKtON
-	 3DjUejD7U77vi85gImzViEp23yYZTaMUpgHveUBJnPp0FlB0giUtJ+TDENJiVAbshWm9k
-	 3ldMCA+fR9vR7jl/ObJ/wlqsyIDCcdtgABvsgSFYNfdP6UsUum1pZAICWUWTM1GEjqDqj
-	 gXgqrQiPqM2fDDdrHX4ykUrrrz9HX0/LBZ2E940J7lFSm63qqXs7LuUnnFz6wHmwLkw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794217340;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type;
-	bh=dnTFqC7NFZ6LKcry7zosB7nFvDvPqEPM5rGL/V6wgTk=;
-	b=z5+a5ByzK4vtweVph1ixgkbBepUB2MkwHh0jBvWnjY1T1kHa9fncXJ0hQfzEWD14d2Ly
-	 5hDrYYrEsNTCb8sj2N0YV+AOocmpS7NrUkPFpbymMLSfI51bkciI+Cy9fPgDVlaAnJqCs
-	 6L+pBLD9AcEVR1AsPLmMLog498Rh9I3/3Z06WZs4fxh7h+o7Ng4Uaw9PkRVwD6Xt4aPiV
-	 r0QIU63IjgdA4ojsBW0h5XnhmC5bcsfKqiCZPXiF2YpHWTTOnZ5hvBsE618OYE5tlopwA
-	 /pc2NmVc+poGk2BU6ENFL0sg7+CHZ3m4GlqMP30vU1zy+Qdmd83VznrjMjPbwrjUwaw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=IW2nD7TB;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.167.46
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794217539;
+	b=y4VPSGTLs50QIvVq03h2LmhpCZoAH7rpM1Wf+sDrH+8a6+W4FSrDW2rkDR2KflMbE/sn
+	 eEaQvrpZ8NaVSv6CMfYAvnyFDvdL3Ye34OnIAWSMP/bO2HlVmCrRkPQF0Rtoup7RDjcCQ
+	 ApMG5M6b7IZ5JbRk/zGFfGCLXkLVz5KvpT6Bj2QyNI2I+OCmS9vmcR6aznSLqWR1DAIU8
+	 1mnVm4rRGFDEEvaqgq5Prwb3XQbEZMt/TnkfBeY2YrMywheFo0BHMNixp9Jz2b703YBvK
+	 DTNPQazs2HBJJkJ2SjMqWlfpvdtEK89ziLFEKDCvwsicrgtzyI7opswx0lgzPlhiLaw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794217539;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=aVhDRH0Ejv2dP5BNHANZ6BfN36P5eG+GYmlsiu8O5i0=;
+	b=qe6KD47tvLjQ31iKa/+pJ5oJRBTlVHWChXiAt7RuM3xILevG8yHdbNfR9kBzcXLLGc8/
+	 U5iPnjJdyyK+GA3rxHPIUjabVGVFN1seN0F/W3BXL3uZaSAG+aKIVXpvu+tdm41h0zylh
+	 gN4WFOsRyd+fsqwernJlR5fU0dmEFuF4vz6LgCGdDxHVBCHLya8Frda6qRgXqRqPLWSAh
+	 /uGGEPVM98CW4biGHBXq/Szx0VY+eiprwg/MkANzx+y2zqSgumdpoUzPNy/ID6lFO4urM
+	 xM2l8Ul2NeXblMQbxIxhsPzHsufyQozrM4qTnPOMiWZvRf0RuOVJlY4cBA/JTYTsPnw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IIiDOn+6;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C990606A338
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:42:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C990606A338
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA24606A323
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:45:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=IW2nD7TB
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5c144eb2f43so2434e87.1
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:42:20 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794217338; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Yv4IhHb67DrxZ6Cj5y6R73LNguLT2xlOKQjWsBuQ0h8W/d5EVTXgtXUvOY8tQGJ6Et
-         aj92eQdDZr1p9RHhpwU0Ku5FiXF+J6F3PX1xJTZWWi3nrE5SNqYrRyWg+eLu2VMkZF0E
-         87DU+0yFipiOwA6kJ+yXi3gYLzUqQXj2ffpU//0L3MxY7/yEiz0hTEs9EnsDJukDt+uH
-         Ypl+VG79sORGRfheyr23PNC1z6vp7Y6bAho6wD4gdW7Jwtx3ro2U4nSobpA1ZJNfmFq9
-         +V4F5djeulXN4PgnLU1Osz9EvCpKsiXg32TooqLk2abG9GQ3OndbwBkY1RchUGo0DPU4
-         /OKw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:dkim-signature;
-        bh=dnTFqC7NFZ6LKcry7zosB7nFvDvPqEPM5rGL/V6wgTk=;
-        fh=yXawXvQx/iyZPEQlx+xpWFoKfHQDkrG22vgAb6mUGJQ=;
-        b=FbI0b3smS9w7q9edaHxDTkHx3bmaC1kckzc1oCwUkEqr+EnHP4xZ9EvpOdFymptFyV
-         8zC1OSIKZ282UJWh3mHtMRMhASev8csri72u2csdRQLL8dAvXBJwgexIpwv2uKhav8Q/
-         GgkQSxf9jG/dzFhG2tXRhlWYDhuVU7snt9W+j7jhiAJBqQH0OgBYr051XYTHmutIyzWH
-         Tud5TUZMI9D0ZOKI13eHfR4mIOdoiJ/y4tjE8Ptl6xgT8/QExbBIz1uoH7Nx3h1FJ+nC
-         wNM8hDtmUcqOoAyrcrDnTx5w32CDvB1yisGdXGQgc3zkGv/SV0KHdcsX+dBFYDNmH0ij
-         lhAg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794217338; x=1794822138; darn=vger.kernel.org;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=dnTFqC7NFZ6LKcry7zosB7nFvDvPqEPM5rGL/V6wgTk=;
-        b=IW2nD7TBfpylCv/Q4iwboGxtpYLm77TPNHjYntv3vZdOMn07KGEJ8Z+jzF7pqd73le
-         R6C3pFcK024lUnAUYKpxEFVxXng9CqVrBsfIHokmvrFogJT4mwvbtoNbjyd3zvhbR9dO
-         Tw4VheWTrTOXCPqeGvIvJzC0Z6HIIVEnDDj9Ns+YAcSq1balXLUBN48TiDzLXdzu41kR
-         9VnpZtANr8A3VW8NxsBcw0PmQ4QkW8RflYfoiuG3LnC/PhIWHCa6XOWCsah8JQe3bTgn
-         Z0femMdJtIO84tqoLbepZiwyEsrNjYhK8lTxSrG6d3YNLh0lwnObvVFb9AYP4xZUrn7u
-         1R7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794217338; x=1794822138;
-        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
-         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to:content-type;
-        bh=dnTFqC7NFZ6LKcry7zosB7nFvDvPqEPM5rGL/V6wgTk=;
-        b=kb2zDFinD5MULUdsb7zBLJxAntSJn3YOa3wA6B0jRoWdrhVeEF2vU1aZ6O61qBWuNa
-         AlmnDFltHBdHNG+35r3X9EltqE8k1SgZymN4r/AwhPGo6DUi17RbfxHpdtBFUAHRYZ5y
-         O6LEfkt3Px7X688O67PFLubpu2AeCUHwGXsTjfe8OWe+BJRRG0n4tntczOskuXv9qf1d
-         bRl64UnS6csM7yQzuMxcM0yhuwDYA2+P3Ntp72kMddFbMPtuNUE6Y1ZIUSkvnVj7XTVZ
-         t4i0FbEjXK0t1d7Cq/j/XpxuHvXfwM8ZRAOqkYxVBzGPHgrANYgJ+fJ8FLA+01lf4R+r
-         Ul1w==
-X-Forwarded-Encrypted: i=1; AL+hErEVUbXhbDFSPXOv0vvHL8qnMEMTUQIJe6erQHs9UPMZAadk9ZmVqWyYKidQaDosEGMOniCTxDwa@vger.kernel.org
-X-Gm-Message-State: APuU4Z9JbTCjHvIKAglpqtkFUf63eH0cfw5UiSAsIX1PSiDSpQWOkfI7
-	lstCGAJzwnoXQgCZ1Ob8UFCFlnCiIHCV7LRwYBvn6uAK5yDOMIafYWfN1d8sXAr1OaOA7NpW7NR
-	7a7zS/gURCjDf7JggE9+1IIADaxdOGAXqrDqhEubm
-X-Gm-Gg: AYBFou2BpkaFnaLS05/pJvnvdxxq2oVDs9ymnXUQi/WSMYioIVbNQM5gRg/d7kydsqF
-	adFWQNSTx+yz2/FwUHN9uSANchtBG1asg+ASnuAW5dowZDKxeglp6LSkq1anNfH2QSTzei2XpeM
-	QudoUJs8dlorUu4PDoHvZFYEJlnnM0w7xomvWG6ydqOxkmfFeQXC8Kkd4os7OEcF7YoliAZqgQa
-	T19rhgReTZAWbJ2njr3bO1JBzaR2GarLwO2ipC9NpZeLqo5B1LtgSN+zJkpmXU9YcmxuApAYbk9
-	MxvQxcltSdgAe/V5OagamzSC/E+QhuRxZoHl3vHLM4LUNdrpIqndgb2Yz7eTHTkFykq+yz3qxfC
-	4FwPkm85fXg4ZWncqb5t7DLPxI7kCjcFV5cJJtaBR5qGQ2GAVHnSFp0krsaHFIxR3Uy0fXmynGx
-	kD+rzuE/EokxRRhOIVnCtXOrZAuARVEtSa29TN3MEPggVOGag=
-X-Received: by 2002:a05:6512:304c:b0:5bf:f81a:f24e with SMTP id
- 2adb3069b0e04-5c00bd5bc9cmr144934e87.10.1794217337930; Mon, 09 Nov 2026
- 01:42:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IIiDOn+6
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FD161F008A2
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:45:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794217538;
+	bh=aVhDRH0Ejv2dP5BNHANZ6BfN36P5eG+GYmlsiu8O5i0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=IIiDOn+6mHfBnlcx8dhDV0FbXr2mIkgDI/paabPEfftwv+t/j09LPO0F9TMdLelU0
+	 tF2I7Yd6xJ8I9DUoadaKfVesvIhkMVneSGd/Yyc6alpGUegu/IMkgHDPJOxukl+4K9
+	 HVuGPXppT6pwICcvzAwKVAc9t3ftXP6BPM/xsK7sBY74+t775KrL45Z4Dj+6YK5a9b
+	 92SdWwCP63fFsXWmHTdJ9eLVu1/SoGtiU8M298cTk6P5HkN5ayeiHetEDIZELpuaRB
+	 znspq3nuzORltN9i94EKzRNFp9RwUmabvzdG5ZuUL7SO4xL9xcUbOSTMUAr/AaOJzh
+	 AkQbbHe0knYPA==
+Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-5eac6c5f927so238280e0c.0
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:45:38 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErHzgxh0m7LibDsELVPpHkJFm2UUXcIIM1D2nilNZB0ThkMxeZJdTOIQkPMk4CkV5IKAUVGx7YF9@vger.kernel.org
+X-Gm-Message-State: APuU4Z8OOGvd32ukZUm9nzbSvWsT4pnIhUJFZPRR683K3RnlLkDcldky
+	2D73pDyFTTRtmJmzZtn4HgVPjXmp4LS6Jr0Gc4tjtN03BjslZp61iUbIysfdT9l9GyoKe/y4O25
+	9ZVrI1aBV7WkJTZPDuFRwdLY9XwGmM/w=
+X-Received: by 2002:a05:6122:e203:b0:5c9:a60d:3276 with SMTP id
+ 71dfb90a1353d-5ece7246f6emr692804e0c.10.1794217537447; Mon, 09 Nov 2026
+ 01:45:37 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,25 +59,211 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20260922071945.693714-1-fuad.tabba@linux.dev> <20261007074037.316564-1-fuad.tabba@linux.dev>
-In-Reply-To: <20261007074037.316564-1-fuad.tabba@linux.dev>
-From: Fuad Tabba <tabba@google.com>
-Date: Mon, 9 Nov 2026 09:41:41 +0000
-X-Gm-Features: AclHuK_MaYET6PTkt0ZnvA66k0DV_1M55e3jB2HzY2bpxHczb0VPvo1hIAKLqfY
-Message-ID: <CA+EHjTzaJx2nV_9YEExgYn7STSP1Kvhsqan8va8M7ba4WtCiqQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] KVM: selftests: Fix incremental build dependencies
-To: Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>
-Cc: Shuah Khan <shuah@kernel.org>, Oliver Upton <oupton@kernel.org>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	James Houghton <jthoughton@google.com>, Will Deacon <will@kernel.org>, kvm@vger.kernel.org, 
-	kvmarm@lists.linux.dev, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
+ <20261016-mglru-fg-v4-15-2106750c0bfa@tencent.com> <CAGsJ_4wTFHJxzuiRDBcuevdULMcD+se6SuPbzWKA8wsUAG80_w@mail.gmail.com>
+ <CAMgjq7Atry0zRc_-xbrL_VubxTBQOT8R2_aumghXQaO9uTANHg@mail.gmail.com>
+In-Reply-To: <CAMgjq7Atry0zRc_-xbrL_VubxTBQOT8R2_aumghXQaO9uTANHg@mail.gmail.com>
+From: Barry Song <baohua@kernel.org>
+Date: Mon, 9 Nov 2026 17:45:24 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4wRw=z0fqWo8pK6cJ-NdnjxC-W7uLRw=_Y+VjNaAO2+kQ@mail.gmail.com>
+X-Gm-Features: AclHuK8xNVegVCW7QSB1W4kv0lSWF1rRdFvqk_1TYyR009hud_IPjR1oWsQQqAY
+Message-ID: <CAGsJ_4wRw=z0fqWo8pK6cJ-NdnjxC-W7uLRw=_Y+VjNaAO2+kQ@mail.gmail.com>
+Subject: Re: [PATCH v4 15/17] mm/mglru: make folio_inc_lru_refs lruvec lockless
+To: Kairui Song <ryncsn@gmail.com>
+Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
+	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>, 
+	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
+	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
+	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
+	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
+	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
+	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
+	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
+	zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
+	Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, damon@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Sean, Paolo,
+On Mon, Nov 9, 2026 at 4:08=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrote=
+:
+>
+> On Mon, Nov 9, 2026 at 5:48=E2=80=AFAM Barry Song <baohua@kernel.org> wro=
+te:
+> >
+> > On Fri, Oct 16, 2026 at 2:16=E2=80=AFAM Kairui Song via B4 Relay
+> > <devnull+kasong.tencent.com@kernel.org> wrote:
+> > >
+> > > From: Kairui Song <kasong@tencent.com>
+> > >
+> > > The lruvec spinlock in folio_inc_lru_refs was only taken to keep
+> > > concurrent aging from corrupting the size counters.  This is no
+> > > longer needed: the per-generation counters are atomic, and the
+> > > active/inactive ABI counters are updated per folio and linearized by
+> > > the CAS on the folio flags, so concurrent aging can no longer corrupt
+> > > them.  The same argument already allowed folio_reset_lru_refs() to
+> > > drop the lock.
+> > >
+> > > Use folio_lruvec_live_get()/folio_lruvec_live_put() to hold the RCU
+> > > read lock around the lruvec lookup, and drop the spinlock entirely.
+> > >
+> >
+> > Yes, this is cool. We have two paths calling
+> > folio_inc_lru_refs() or folio_inc_lru_refs_walk().
+> >
+> > 1. folio_mark_accessed() from syscall access
+> > 2. walk_update_folio() from page table walker or look_around
+> >
+> > For the latter, we can't actually cross multiple
+> > lruvecs/memcgs, because of get_pfn_folio() as shown
+> > below:
+> >
+> > static struct folio *get_pfn_folio(unsigned long pfn, struct mem_cgroup=
+ *memcg,
+> >                                    struct pglist_data *pgdat)
+> > {
+> >         ...
+> >         rcu_read_lock();
+> >         if (folio_memcg(folio) !=3D memcg)
+> >                 folio =3D NULL;
+> >         rcu_read_unlock();
+> >         ...
+> > }
+> >
+> > Consider a common library file used by 100 memcgs, with
+> > its folio residing in the root memcg.
+> >
+> > When walking the 99 non-root memcgs, even if the folio
+> > has been accessed, we won't get a chance to call
+> > folio_inc_lru_refs_walk() for it. As a result, this folio
+> > may eventually reach the eviction rmap path. With a high
+> > mapcount, folio_referenced() could become quite
+> > expensive.
+> >
+> > That's what I was trying to point out here as well:
+> >
+> > https://lore.kernel.org/linux-mm/20261102213915.57805-1-baohua@kernel.o=
+rg/#t
+>
+> Hi Barry,
+>
+> Thanks for the review, I saw that too, very interesting approach! And
+> I believe it will helpful.
+>
+> > For the former, you can get the lruvec with:
+> >
+> > lruvec =3D lruvec_live_lock_irq(folio_lruvec(folio));
+> >
+> > I'm wondering whether we could eventually unify them
+> > so that both support cross-memcg inc_refs.
+>
+> Definately, actually for that link you posted, combined with the code
+> snip above, after FG, I think we can further simplify that, no need to
+> check mem_cgroup_is_descendant, we just do:
+>
+> - folio_inc_lru_refs_walk: if the folio belongs to the lruvec being
+> walked, the batch stays in walk->lruvec
+> - folio_inc_lru_refs: if the folio is a remote one, per-folio, no batch
+>
+> non-descendant folio sharing across memcg are actually quite common
+> e.g., libc and shared mapped memory, this could be more helpful? And
+> it seems fast for the walker.
 
-Another gentle ping on this series. Is there anything else you'd like
-to see before it goes in?
+I agree. I mentioned mem_cgroup_is_descendant() because
+folio_referenced() checks for descendants and ignores
+folios belonging to non-descendant memcgs:
 
-Cheers,
-/fuad
+static bool invalid_folio_referenced_vma(struct vm_area_struct *vma, void *=
+arg)
+{
+        struct folio_referenced_arg *pra =3D arg;
+        struct mem_cgroup *memcg =3D pra->memcg;
+
+        ...
+        /*
+         * If we are reclaiming on behalf of a cgroup, skip counting on beh=
+alf
+         * of references from different cgroups.
+         */
+        if (memcg && !mm_match_cgroup(vma->vm_mm, memcg))
+                return true;
+
+        return false;
+}
+
+static inline bool mm_match_cgroup(struct mm_struct *mm,
+                                   const struct mem_cgroup *memcg)
+{
+        struct mem_cgroup *task_memcg;
+        bool match =3D false;
+
+        rcu_read_lock();
+        task_memcg =3D mem_cgroup_from_task(rcu_dereference(mm->owner));
+        if (task_memcg)
+                match =3D mem_cgroup_is_descendant(task_memcg, memcg);
+        rcu_read_unlock();
+        return match;
+}
+
+I actually wonder whether this is really correct...
+
+>
+> folio_inc_lru_refs_walk follow the same rule as folio_inc_lru_refs
+> (with MAPPED flag), just faster, skipping RCU and the speculative
+> check afterwards as the walker owns the seq it is advancing, and
+> caller handles the batch update of counter. While folio_inc_lru_refs
+> only requires the caller to hold an reference to the folio it heavily
+> relies on RCU / CAS conventions, not easy to batch things there, but
+> it's still accetablily fast already (e.g. the fio read test showed
+> almost no performance penalty).
+
+Yes. One tricky aspect is that update_batch_size() is
+designed for the current lruvec, not a remote one.
+
+static void walk_update_folio(struct lru_gen_mm_walk *walk, struct
+vm_area_struct *vma,
+                struct lruvec *lruvec, struct folio *folio, bool dirty)
+{
+        ...
+        if (walk) {
+                old_gen =3D folio_update_gen(folio, new_gen, &type, &vma->f=
+lags);
+                if (old_gen >=3D 0 && old_gen !=3D new_gen)
+                        update_batch_size(walk, folio, old_gen, new_gen, ty=
+pe);
+        } else if (lru_gen_set_refs(folio, &vma->flags)) {
+                ...
+        }
+}
+
+>
+> And I think the main reason MGLRU can't operate cross memcg was, lack
+> of a protocol to stablilze the memcg's gen and holding a lock is too
+> costly, now folio_inc_lru_refs handles that, and FG
+>  lives on top of that. So we can try that out right after the FG series.
+
+Yes, absolutely. With MGLRU-FG, we lay the groundwork
+for further cross-memcg optimizations.
+
+On Android, we observed that folios with very large mapcounts
+still reach the rmap path because walk and look-around cannot
+promote them across memcgs. In more than 99% of cases,
+folio_referenced() finds them PTE-young. As a result, these
+folios incur the rmap overhead but are unlikely to be
+reclaimed. It's essentially wasted rmap work.
+
+With the cross-memcg optimizations, we are likely to
+eliminate this overhead.
+
+Thanks,
+Barry
