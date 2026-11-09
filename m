@@ -1,82 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.49
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794242215;
-	b=o+TLg7PunELsg65AW6SELzSXlMXxvv7CV5S8ST+iFk517K3mN0vWa+fvnhSgKeMVvMlR
-	 Cz7e6B5no206TQehX5rqsVI1EnUnP6+WA+gHHygyfBbijf3yhG12UueLDWhCaKLSoItC/
-	 /FbVM5ak92ieha61a55n8Cd9QWRx8WIBGNzfc7FUfsBdzrikWE6jvcEswnGi2nDleQz5U
-	 2S712y8KPJ15zeFH0FSqI8SVx34tERv+6Z1E7TMRp7Eus78JtMIpTCRRRsJx8Wc6NfuCU
-	 GpZv+hcJsQh79obWEDiU3H3kR+2tG6IKP/u4R3lYQJ6x7G4xF46mC83c0Y4lC+5r0fg==
+	t=1794242216;
+	b=ma5EgaBleAgdteshLvtpEhARaf3JrUmLPIYBZRIwkaSrBUc4xsc7pE48vwf52nFIlEZ4
+	 XUBHHl/M+2TmjH6CMeIkLZARJ2C23gqn1QtN8bb87TTA2/mtUDWodaxbEMRmiemjfDCi3
+	 VcOV6VJVA5J9zldC+7uvQjkOhvhfpdeUCqmIFHT9rJtAAhd6z0XzMo5jWoZBCnHQ1wIG2
+	 yIDRVLprHyHRKLM6vOBPrBcFB7aHRo8vp7HlSz7kiQPVSMc1LCY8lyj8O0jWB4cF1R2kV
+	 cZ0SRiWvzDX8QYjDKzYkisx3cKK6EtuYmWNLiVnwtJq7ywMhA8EIxsYmt2UdNIHlf6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794242215;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794242216;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=SQakOIJ3odtJILa82eMvlmErnXwHne52IiOtyLJnsRs=;
-	b=edk1UeDYh9XwsSgfq5qgXfreLLtxeWe+jpMSJyWvpgZCBffbyrmg4kpKu0JOWcUnfZhA
-	 AgjTZhgW8crhlpwIReX+3xLPKIotYkCTFfEm11rscZ39RFvdY75rFoEMwsJRUwh+XD65d
-	 ipY2l2lEblASYGUIlQzSrJCh40kBtMqeQ3WbEcb8mPAh4jigN7yRo2l9xwpjtHAHNhrvb
-	 b/wmBPsdzfndHvNmO7i0PkyVsoTbXrYtmIzwJcqtixo7fGwucxMBR7Ymow79olDfG8RY6
-	 IwC9Zh9teAp6UO4hD+PKTyZzy7HCkn/ztGUkagnAk89J88V4MjnSB7xUNEtWZ/lgmSA==
+	bh=KcIjo2huR4gFwGnFpf64WoFNBDsnsdPcDg9Gewk+Kmg=;
+	b=2aheaPVG08kgEgnLaHQVjQDH4bcu8EFxspan5Woe/8M3c1CYyuwvOuA3roAzIMoxIp7Q
+	 +CpLXWdJsWHXnwixJcnH8zNuhN8Yjt4LwIaJMf7XID/1NX173gJAsHlQYzCHUVdRXhLe4
+	 0O/kfF70tMdf3G9vVYiOPwpI2sS5IgPCsxWg8Lqv6kGkwpZI7W2ynvNR2dkykd7gvWhBe
+	 za45t+hquUf/TVST790LwZFBU6z3+/5h7mYARekYOXTtBFNbXX3G8wdScAFJLUIawUvgz
+	 ePGxmW1ERlToiHf5T1eFZcvu4rJ4L2eqJEzsqUIGxkuiaAknuLkl9ZKItdAg07yY/tw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mXnkXHdU;
-	arc=none smtp.remote-ip=209.85.128.47
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mNidKtF4;
+	arc=none smtp.remote-ip=209.85.128.49
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E66A60A6F6D
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4E66A60A6F6D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5953F6073644
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5953F6073644
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mXnkXHdU
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4a3517554f7so11605465e9.2
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:36:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=mNidKtF4
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4b79502c27aso11542535e9.1
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:36:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794242214; x=1794847014; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794242215; x=1794847015; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=SQakOIJ3odtJILa82eMvlmErnXwHne52IiOtyLJnsRs=;
-        b=mXnkXHdU6KkL0B0nTKerWKVBtoZhM/eZ21/+gklRv6zFwEKUV+pr2qBWsGBcy8W7/4
-         2lub6WhRj8PCVzAsiDOzkHPuyHmFYTXi4NCAzYQnsL3/CStNdsSEmZVK0+VVGa53BOun
-         7tqpKC1XoSfTwV9i4lxqD0uAvfqbKsEj4aph72ylfZotq8Y4niM4iqPFuckPKqmxt5mG
-         zwAUAMgPxHcNppa4feXPkgylLIRTgXdfpRYTxkwTZtSfV+wrNWTOKmlNaGC5+M8Dgp0H
-         NU7MehkXMvo5CursI1CydKl7qkqv0qSyz6Q/ZmiSgjJze4+ADHnO1wvCMtecLyDL6aIP
-         Yn/g==
+        bh=KcIjo2huR4gFwGnFpf64WoFNBDsnsdPcDg9Gewk+Kmg=;
+        b=mNidKtF48zgO+YCbrgnhMwgek8M9YQFCr43AGDT7GmGLvxNAV+sAap7bvqx9qZRpyc
+         qfq5X2h4swn8zwYZIBppu50VkduStIaexbjdTko+RytF6O4Ot6jo/tWVD0YdfVdsSVc3
+         XAX8a/LbhJn5ctZYeXNL2XpW5BC2KOmCl0uqfu1nFsgDlNFGqYy+ZqPJE/pfIfDb348E
+         Ss4k6vflYyykqTbNHvrjjY9xvkfK5NRaRli0ft012bAqwea31JhewInlFR+nes7r2twZ
+         ftvXoCB4ZP4JGNDc1hH3wj/0C1AFq4u+Lvjrt+JW3HvoOFlhMSeqgJqxAb4zB085crHV
+         c39Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794242214; x=1794847014;
+        d=1e100.net; s=20260707; t=1794242215; x=1794847015;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=SQakOIJ3odtJILa82eMvlmErnXwHne52IiOtyLJnsRs=;
-        b=awmgNbZxMltJgXKXSpviUpfAz2KWKvK7AmeizJ738UBogd7XuiwZyXMGQ4MU8zWUnC
-         S+NbhYXNfNjm0K/UIKgx92BbvZtYNrCb61DiZE2DkZnhNHdMtWlhIBAxBBRmLpNdmKFm
-         0K7CLSZkr1kLeNMToXtEtvc/JKdXW9NRrbBOFNntHz4a4NpLrGy48LBHKoVv8jvMMgyT
-         5DGJBut9bIZi6f+joI1tcYBBerKQKtYTQxXc9srfXtYH9532rf+1a2XMRbk66AXXvqVM
-         Chm3bZs9SRSbbpQnpuVARoBrK+cvruUeS4MGPybJkfm7ZJQdcgQPeegUJlG/KbbBHE5a
-         WThA==
-X-Gm-Message-State: APuU4Z9i455CU940AfLVbLbSCD+zqq/Z9zVygTbttOffSskKeDYe9xaf
-	jaR1hIv2whMiaTdYvhMNxa3y7FgD25WSrD5TpO7p7euqRr+W8VCAh58Y
-X-Gm-Gg: AYBFou3vbbbZMuPt8tw51gSYDRbyuuNW020V+IYexxYiLBXNx8pfMM2kA5jRHyMYVCf
-	CdVleZSC/+YEDhQOO0GI13QXre/GpoXOtUGumzkE9xSKtTtUi4/tCp91XzwSyKTfgJVm5t1iG6h
-	ResRGa0nMk15KTJovdCfSJ/r6LPjGQVwKsf2cVKvUAo9ollDQaCXazy8b/GHRGBMgcrit1Tyh1h
-	avz+kjbhhk+HhtxqFtxHiYLtXzn0iPWO8pD+1N9BOWLC1Kh+zFGYTnkTaGrNr/Mnfqhho2+wvN+
-	U3V6PeFN8fZuJz5M15C4XSDYDwf8e+rXaq3ntGKAvSdFjrhQziSaGmXTVv94vWmXdlXOXV+dNV0
-	IGZKaRGSjBvvB4ChXw+3l9K5HYYQQ5DvRrLjYU5UEMg+CY85I6ZuIvrRhzlcJzKc8oZ7OzGcvIH
-	oYSlt1nr4gAPFOABEL7s+qEavpVFyHDpnK5yOVy7hgyhTafnhpvAPkcrDZ9NVM5UtSkgo7b6Phb
-	qbiQRky9u3e2w6KKitMqaxqkFSq5TS6I2pt2/qiwrwnvcLKjI/0wXL8wT2IYMoYp37DQuWTJdhl
-	6YyIWVE8dIhj6IzjuK00Ab22sA==
-X-Received: by 2002:a05:600c:34c9:b0:4a1:fa33:441a with SMTP id 5b1f17b1804b1-4b94d7631ccmr86729705e9.2.1794242213578;
-        Mon, 09 Nov 2026 08:36:53 -0800 (PST)
+        bh=KcIjo2huR4gFwGnFpf64WoFNBDsnsdPcDg9Gewk+Kmg=;
+        b=xcdR+IfloxaKBQIrdEzh6VixBrD4mf/aRd2qibFe5K9O8i9eUhgPxS+Va8ONyZ1Cqf
+         LBna2aw+0Pk7vwrBoJ+DgrHeFNseB2XzY6XjChSwonLG4Ft5h275vCTJI+UuJYgO0n1R
+         cCjxHtTeldisoPpn6jHq2kNM22A0Gjwmj/PqxhZKbeK/U6nKZmdUhRPnoJd8xaYJMtiT
+         ihJVFb1jMKxuv6GbgTM/eGOWTCWlyRUFFapvYsq8Uffw9Xrf4qKklxDpGhVB087mmm5F
+         EFhCUVrh0Q3LAqZzMLBAkgBOdciBpq/k7ergkRcPxQmfTygxTdu00mGwePimB8iow2hP
+         UNew==
+X-Gm-Message-State: APuU4Z8dkj+vjSlCnlGSAyhIeIrVYp4wrzTSMEttWrHmeRZk0YMCEQsc
+	bEzynW5m65oLd9ZbFSDbrvPZa07aFNqgFQ89tb39lvre64Fv953CV/1w
+X-Gm-Gg: AYBFou0lgUiU+G/8aUR7SUjCKHvaWR62qAkedP9PHWr8qyFQ5eN3dsuEQk6EWLCLFz1
+	RL1YMn11eB/EQxpaiCumQjmdAiNxtMm6EQaJq3FdoAF8s8fu7BfoQumEblLqO6zsJ3h8JCGLVEt
+	p0ix/oFfhaHn4OG7NTVDahi3cv9N60c+XipZAcqzNJAbF62R53l7P4Dj3BwE8a91NGdh+g+/6+L
+	gowxbNrFX8gEvRB2m7RJL2ijp6HZDcTtmy6dzYPrFPjPndkrSGUGBB04hI6qug4C0r4S+K2ALq9
+	hM2EqMYrqv15e0cILK7N2q18whI/EzszyT0FtJ1KCGx86AODA6XjvW42hEEFyf2sZ7AkXUMZfaH
+	KTgqzg20+1uDJgrD1MVLTv3pxZ+rYdIGR+5EXj0sTRmAG73Z/BpyL/gp7LkSi+5oH+S01FKjReG
+	GaKNOPyqShfkivuZEZUf8AVe0Ay6qS/rvqdiJypkN7OrECMq7MCGL2UkVWM9A9kufKTJf5fUZ2Z
+	D3E/HgWRS3nefPuXIAuReuZO3CY8sgcAihIYwoFQLZ6mFKvf9/2Hllm6UKiI7RR3FsrA5A2/4tZ
+	UcTan8F8YpVeRYNbYxXHWWLyOtjFCvTU8KBuOznj8h7wVkk=
+X-Received: by 2002:a05:600c:811b:b0:4a7:b304:253e with SMTP id 5b1f17b1804b1-4b963c6d1c8mr76438335e9.22.1794242214867;
+        Mon, 09 Nov 2026 08:36:54 -0800 (PST)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.52
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 08:36:53 -0800 (PST)
+        Mon, 09 Nov 2026 08:36:54 -0800 (PST)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -95,9 +95,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v7 19/29] sched/rt: Add HCBS migration code to related functions
-Date: Mon,  9 Nov 2026 17:36:05 +0100
-Message-ID: <20261109163616.195264-20-yurand2000@gmail.com>
+Subject: [RFC PATCH v7 20/29] sched/rt: Hook HCBS migration functions
+Date: Mon,  9 Nov 2026 17:36:06 +0100
+Message-ID: <20261109163616.195264-21-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109163616.195264-1-yurand2000@gmail.com>
 References: <20261109163616.195264-1-yurand2000@gmail.com>
@@ -112,34 +112,19 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update rt_queue_{push/pull}_task{s} to differentiate between cgroup and
-global runqueue balancing.
+Hook rt-cgroup migration functions:
 
-Introduce new balance callbacks for cgroup migration.
+- select_task_rt_rq
+  Always return the cpu where the task is scheduled.
+- balance_rt
+- put_prev_task_rt
+  If a server is throttled, put_prev_task_rt is invoked and a push is
+  necessary so that the task can keep running on another server if possible.
+- switched_to_rt
+  Keep track of the deadline server that is assigned to the task switching
+  to FIFO/RR priority.
 
-Add rq_to_push_from and rq_to_push_to fields for cgroup related migration.
-  Balance callbacks are only called on the root runqueues, thus it is
-  necessary to store which non-root runqueues need to be balanced. The rqs to
-  balance are stored as a forward-linked list/stack, with the top pointers
-  accessible on root runqueues.
-
-Update migration functions to specialize for cgroup migration:
-- find_lowest_rt_rq():
-  Scan all the cpus to get the cgroup specific lowest_mask.
-- find_lock_lowest_rt_rq():
-  Use appropriate rt_rqs to differentiate the cgroup being checked.
-  Prevent migration for throttled cgroups.
-- push_rt_rq_task():
-  Allow pushing away for migration disabled tasks only if the tasks
-  belong to the same cgroup.
-- pull_rt_rq_task():
-  Use appropriate rt_rqs and push away for migration disabled only
-  if the task to pull and curr are in the same runqueue.
-
-Add tg_of_se to get the task group a scheduling entity is assigned to.
-  This is different from the active context of the group.
-
-Add new macros for field access and non-CONFIG_RT_GROUP_SCHED code.
+Set rt-cgroups runqueues to online to allow balancing in balance_rt.
 
 Co-developed-by: Alessio Balsini <a.balsini@sssup.it>
 Signed-off-by: Alessio Balsini <a.balsini@sssup.it>
@@ -149,547 +134,117 @@ Co-developed-by: luca abeni <luca.abeni@santannapisa.it>
 Signed-off-by: luca abeni <luca.abeni@santannapisa.it>
 Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
 ---
- kernel/sched/rt.c    | 292 +++++++++++++++++++++++++++++++++----------
- kernel/sched/sched.h |  24 ++++
- 2 files changed, 248 insertions(+), 68 deletions(-)
+ kernel/sched/rt.c | 42 +++++++++++++++++++++++++++++++++---------
+ 1 file changed, 33 insertions(+), 9 deletions(-)
 
 diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index b16cc77d7015..0b7c36f8acdc 100644
+index 0b7c36f8acdc..9d95cf5fd520 100644
 --- a/kernel/sched/rt.c
 +++ b/kernel/sched/rt.c
-@@ -364,31 +364,83 @@ static inline int has_pushable_tasks(struct rt_rq *rt_rq)
-
- static DEFINE_PER_CPU(struct balance_callback, rt_push_head);
- static DEFINE_PER_CPU(struct balance_callback, rt_pull_head);
-+static DEFINE_PER_CPU(struct balance_callback, rt_group_push_head);
-+static DEFINE_PER_CPU(struct balance_callback, rt_group_pull_head);
-
- static void push_rt_tasks(struct rq *);
- static void pull_rt_task(struct rq *);
-+static void push_group_rt_tasks(struct rq *);
-+static void pull_group_rt_task(struct rq *);
+@@ -266,6 +266,7 @@ int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent)
+ 
+ 		init_rt_rq(&s_rq->rt);
+ 		s_rq->cpu = i;
++		s_rq->online = 1;
+ 		s_rq->rt.tg = tg;
+ 
+ 		init_dl_entity(dl_se);
+@@ -1017,6 +1018,10 @@ select_task_rq_rt(struct task_struct *p, int cpu, int flags)
+ 	struct rq *rq;
+ 	bool test;
+ 
++	/* Just return the task_cpu for processes inside task groups */
++	if (is_dl_group(rt_rq_of_se(&p->rt)))
++		goto out;
 +
-+#define rq_queue_field_push(global_rq, new_rq, field)		\
-+	do {							\
-+		struct rq *__rq = (global_rq);			\
-+		struct rq *__new_rq = (new_rq);			\
-+		__new_rq->field = __rq->field;			\
-+		__rq->field = __new_rq;				\
-+	} while (0)
-+
-+#define rq_queue_field_pop(global_rq, field)			\
-+	({							\
-+		struct rq *__rq = (global_rq);			\
-+		struct rq *__head = __rq->field;		\
-+		if (__head) {					\
-+			__rq->field = __head->field;	\
-+			__head->field = NULL;			\
-+		}						\
-+		__head;						\
-+	})
-+
-+#define push_rq_to_push_from(global_rq, new_rq) rq_queue_field_push((global_rq), (new_rq), rq_to_push_from)
-+#define pop_rq_to_push_from(global_rq) rq_queue_field_pop((global_rq), rq_to_push_from)
-+
-+#define push_rq_to_pull_to(global_rq, new_rq) rq_queue_field_push((global_rq), (new_rq), rq_to_pull_to)
-+#define pop_rq_to_pull_to(global_rq) rq_queue_field_pop((global_rq), rq_to_pull_to)
-
- static inline void rt_queue_push_tasks(struct rt_rq *rt_rq)
+ 	/* For anything but wake ups, just return the task_cpu */
+ 	if (!(flags & (WF_TTWU | WF_FORK)))
+ 		goto out;
+@@ -1106,27 +1111,30 @@ static void check_preempt_equal_prio(struct rq *rq, struct task_struct *p)
+ 	resched_curr(rq);
+ }
+ 
+-static int balance_rt(struct rq *rq, struct rq_flags *rf)
++static int balance_rt(struct rq *global_rq, struct rq_flags *rf)
  {
--	struct rq *rq = global_rq_of_rt_rq(rt_rq);
--
--	if (is_dl_group(rt_rq))
--		return;
-+	struct rq *rq = rq_of_rt_rq(rt_rq);
-+	struct rq *global_rq = global_rq_of_rt_rq(rt_rq);
-
- 	if (!has_pushable_tasks(rt_rq))
- 		return;
-
--	queue_balance_callback(rq, &per_cpu(rt_push_head, rq->cpu), push_rt_tasks);
-+	if (!rt_group_sched_enabled() || !is_dl_group(rt_rq)) {
-+
-+		queue_balance_callback(global_rq,
-+				       &per_cpu(rt_push_head, rq->cpu),
-+				       push_rt_tasks);
-+	} else {
-+
-+		push_rq_to_push_from(global_rq, rq);
-+		queue_balance_callback(global_rq,
-+				       &per_cpu(rt_group_push_head, global_rq->cpu),
-+				       push_group_rt_tasks);
-+	}
- }
-
- static inline void rt_queue_pull_task(struct rt_rq *rt_rq)
- {
--	struct rq *rq = global_rq_of_rt_rq(rt_rq);
-+	struct rq *rq = rq_of_rt_rq(rt_rq);
-+	struct rq *global_rq = global_rq_of_rt_rq(rt_rq);
-+	struct sched_dl_entity *dl_se;
-
--	if (is_dl_group(rt_rq))
--		return;
-+	if (!rt_group_sched_enabled() || !is_dl_group(rt_rq)) {
-+
-+		queue_balance_callback(global_rq,
-+				       &per_cpu(rt_pull_head, rq->cpu),
-+				       pull_rt_task);
-+	} else {
-+
-+		dl_se = dl_group_of(rt_rq);
-+		if (dl_se->dl_throttled)
-+			return;
-
--	queue_balance_callback(rq, &per_cpu(rt_pull_head, rq->cpu), pull_rt_task);
-+		push_rq_to_pull_to(global_rq, rq);
-+		queue_balance_callback(global_rq,
-+				       &per_cpu(rt_group_pull_head, global_rq->cpu),
-+				       pull_group_rt_task);
-+	}
- }
-
- static void push_rt_rq_tasks(struct rt_rq *rt_rq);
-@@ -403,6 +455,31 @@ static void pull_rt_task(struct rq *global_rq) {
- 	pull_rt_rq_task(&global_rq->rt);
- }
-
-+static void push_group_rt_tasks(struct rq *global_rq)
-+{
-+	struct rq *rq;
-+
-+	while ((rq = pop_rq_to_push_from(global_rq))) {
-+		struct rt_rq *rt_rq = &rq->rt;
-+
-+		if (rt_rq->rt_nr_running <= 1 && !dl_group_of(rt_rq)->dl_throttled)
-+			continue;
-+
-+		push_rt_rq_tasks(rt_rq);
-+	}
-+}
-+
-+static void pull_group_rt_task(struct rq *global_rq)
-+{
-+	struct rq *rq;
-+
-+	while ((rq = pop_rq_to_pull_to(global_rq))) {
-+		struct rt_rq *rt_rq = &rq->rt;
-+
+ 	/*
+ 	 * Note, rq->donor may change during rq lock drops,
+ 	 * so don't re-use p across lock drops
+ 	 */
+-	struct task_struct *p = rq->donor;
++	struct task_struct *p = global_rq->donor;
++	struct rt_rq *rt_rq = rt_rq_of_se(&p->rt);
+ 
+-	if (!on_rt_rq(&p->rt) && need_pull_rt_task(rq, p)) {
++	if (!on_rt_rq(&p->rt) && need_pull_rt_task(rq_of_rt_rq(rt_rq), p)) {
+ 		/*
+ 		 * This is OK, because current is on_cpu, which avoids it being
+ 		 * picked for load-balance and preemption/IRQs are still
+ 		 * disabled avoiding further scheduler activity on it and we've
+ 		 * not yet started the picking loop.
+ 		 */
+-		rq_unpin_lock(rq, rf);
+-		pull_rt_rq_task(&rq->rt);
+-		rq_repin_lock(rq, rf);
++		rq_unpin_lock(global_rq, rf);
 +		pull_rt_rq_task(rt_rq);
++		rq_repin_lock(global_rq, rf);
+ 	}
+ 
+-	return sched_stop_runnable(rq) || sched_dl_runnable(rq) || sched_rt_runnable(rq);
++	return sched_stop_runnable(global_rq) ||
++	       sched_dl_runnable(global_rq) ||
++	       sched_rt_runnable(global_rq);
+ }
+ 
+ /*
+@@ -1293,6 +1301,13 @@ static void put_prev_task_rt(struct rq *rq, struct task_struct *p, struct task_s
+ 	 */
+ 	if (on_rt_rq(&p->rt) && p->nr_cpus_allowed > 1)
+ 		enqueue_pushable_task(rt_rq, p);
++
++	if (is_dl_group(rt_rq)) {
++		struct sched_dl_entity *dl_se = dl_group_of(rt_rq);
++
++		if (dl_se->dl_throttled)
++			rt_queue_push_tasks(rt_rq);
 +	}
-+}
-+
- static void enqueue_pushable_task(struct rt_rq *rt_rq, struct task_struct *p)
- {
- 	plist_del(&p->pushable_tasks, &rt_rq->pushable_tasks);
-@@ -1246,35 +1323,74 @@ static DEFINE_PER_CPU(cpumask_var_t, local_cpu_mask);
- static int find_lowest_rt_rq(struct task_struct *task)
- {
- 	struct sched_domain *sd;
--	struct cpumask *lowest_mask = this_cpu_cpumask_var_ptr(local_cpu_mask);
--	int this_cpu = smp_processor_id();
--	int cpu      = task_cpu(task);
--	int ret;
--
--	/* Make sure the mask is initialized first */
--	if (unlikely(!lowest_mask))
--		return -1;
-+	cpumask_var_t mask __free(free_cpumask_var) = CPUMASK_VAR_NULL;
-+	struct cpumask *lowest_mask;
-+	struct sched_dl_entity *dl_se;
-+	struct rt_rq *rt_rq, *task_rt_rq = rt_rq_of_se(&task->rt);
-+	int cpu, this_cpu = smp_processor_id();
-+	int ret, prio, lowest_prio;
-
- 	if (task->nr_cpus_allowed == 1)
- 		return -1; /* No other targets possible */
-
--	/*
--	 * If we're on asym system ensure we consider the different capacities
--	 * of the CPUs when searching for the lowest_mask.
--	 */
--	if (sched_asym_cpucap_active()) {
-+	if (!rt_group_sched_enabled() || !is_dl_group(task_rt_rq)) {
-+
-+		lowest_mask = this_cpu_cpumask_var_ptr(local_cpu_mask);
-+
-+		/* Make sure the mask is initialized first */
-+		if (unlikely(!lowest_mask))
-+			return -1;
-+
-+		/*
-+		* If we're on asym system ensure we consider the different
-+		* capacities of the CPUs when searching for the lowest_mask.
-+		*/
-+		if (sched_asym_cpucap_active()) {
-+
-+			ret = cpupri_find_fitness(&task_rq(task)->rd->cpupri,
-+						  task, lowest_mask,
-+						  rt_task_fits_capacity);
-+		} else {
-+
-+			ret = cpupri_find(&task_rq(task)->rd->cpupri,
-+					  task, lowest_mask);
-+		}
-
--		ret = cpupri_find_fitness(&task_rq(task)->rd->cpupri,
--					  task, lowest_mask,
--					  rt_task_fits_capacity);
-+		if (!ret)
-+			return -1; /* No targets found */
- 	} else {
-+		if (!alloc_cpumask_var(&mask, GFP_KERNEL))
-+			return -ENOMEM;
-+
-+		lowest_prio = task->prio - 1;
-+		lowest_mask = mask;
-+		cpumask_clear(lowest_mask);
-+		for_each_cpu_and(cpu, cpu_online_mask, task->cpus_ptr) {
-+			dl_se = dl_se_of_tg(task_rt_rq->tg, cpu);
-+			rt_rq = &dl_se->my_q->rt;
-+			prio = rt_rq->highest_prio.curr;
-
--		ret = cpupri_find(&task_rq(task)->rd->cpupri,
--				  task, lowest_mask);
-+			/*
-+			* If we're on asym system ensure we consider the
-+			* different capacities of the CPUs when searching for
-+			* the lowest_mask.
-+			*/
-+			if (dl_se->dl_throttled || !rt_task_fits_capacity(task, cpu))
-+				continue;
-+
-+			if (prio >= lowest_prio) {
-+				if (prio > lowest_prio) {
-+					cpumask_clear(lowest_mask);
-+					lowest_prio = prio;
-+				}
-+
-+				cpumask_set_cpu(cpu, lowest_mask);
-+			}
-+		}
- 	}
-
--	if (!ret)
--		return -1; /* No targets found */
-+	if (cpumask_empty(lowest_mask))
-+		return -1;
-
- 	/*
- 	 * At this point we have built a mask of CPUs representing the
-@@ -1284,6 +1400,7 @@ static int find_lowest_rt_rq(struct task_struct *task)
- 	 * We prioritize the last CPU that the task executed on since
- 	 * it is most likely cache-hot in that location.
- 	 */
-+	cpu = task_cpu(task);
- 	if (cpumask_test_cpu(cpu, lowest_mask))
- 		return cpu;
-
-@@ -1294,30 +1411,27 @@ static int find_lowest_rt_rq(struct task_struct *task)
- 	if (!cpumask_test_cpu(this_cpu, lowest_mask))
- 		this_cpu = -1; /* Skip this_cpu opt if not among lowest */
-
--	rcu_read_lock();
--	for_each_domain(cpu, sd) {
--		if (sd->flags & SD_WAKE_AFFINE) {
-+	scoped_guard(rcu) {
-+		for_each_domain(cpu, sd) {
- 			int best_cpu;
-
-+			if (!(sd->flags & SD_WAKE_AFFINE))
-+				continue;
-+
- 			/*
- 			 * "this_cpu" is cheaper to preempt than a
- 			 * remote processor.
- 			 */
- 			if (this_cpu != -1 &&
--			    cpumask_test_cpu(this_cpu, sched_domain_span(sd))) {
--				rcu_read_unlock();
-+			    cpumask_test_cpu(this_cpu, sched_domain_span(sd)))
- 				return this_cpu;
--			}
-
- 			best_cpu = cpumask_any_and_distribute(lowest_mask,
- 							      sched_domain_span(sd));
--			if (best_cpu < nr_cpu_ids) {
--				rcu_read_unlock();
-+			if (best_cpu < nr_cpu_ids)
- 				return best_cpu;
--			}
- 		}
- 	}
--	rcu_read_unlock();
-
- 	/*
- 	 * And finally, if there were no matches within the domains
-@@ -1368,27 +1482,35 @@ static struct task_struct *pick_next_pushable_task(struct rt_rq *rt_rq)
- /* Will lock the rq it finds */
- static struct rt_rq *find_lock_lowest_rt_rq(struct task_struct *task, struct rt_rq *rt_rq)
- {
--	struct rq *rq = rq_of_rt_rq(rt_rq);
--	struct rq *lowest_rq = NULL;
--	int tries;
--	int cpu;
-+	struct rq *lowest_rq, *rq = global_rq_of_rt_rq(rt_rq);
-+	struct rt_rq *lowest_rt_rq;
-+	struct sched_dl_entity *lowest_dl_se;
-+	int tries, cpu;
-+	bool dl_group;
-+
-+	dl_group = rt_group_sched_enabled() && is_dl_group(rt_rq);
-
- 	for (tries = 0; tries < RT_MAX_TRIES; tries++) {
- 		cpu = find_lowest_rt_rq(task);
-
- 		if ((cpu == -1) || (cpu == rq->cpu))
--			break;
-+			return NULL;
-
- 		lowest_rq = cpu_rq(cpu);
-+		if (dl_group) {
-+			lowest_dl_se = dl_se_of_tg(rt_rq->tg, cpu);
-+			lowest_rt_rq = &lowest_dl_se->my_q->rt;
-+		} else {
-+			lowest_rt_rq = &lowest_rq->rt;
-+		}
-
--		if (lowest_rq->rt.highest_prio.curr <= task->prio) {
-+		if (lowest_rt_rq->highest_prio.curr <= task->prio) {
- 			/*
- 			 * Target rq has tasks of equal or higher priority,
- 			 * retrying does not release any lock and is unlikely
- 			 * to yield a different result.
- 			 */
--			lowest_rq = NULL;
--			break;
-+			return NULL;
- 		}
-
- 		/* if the prio of this runqueue changed, try again */
-@@ -1404,25 +1526,24 @@ static struct rt_rq *find_lock_lowest_rt_rq(struct task_struct *task, struct rt_
- 			 * check the task migration disable flag here too.
- 			 */
- 			if (unlikely(is_migration_disabled(task) ||
-+				     (dl_group && lowest_dl_se->dl_throttled) ||
- 				     !cpumask_test_cpu(lowest_rq->cpu, &task->cpus_mask) ||
- 				     task != pick_next_pushable_task(rt_rq))) {
-
- 				double_unlock_balance(rq, lowest_rq);
--				lowest_rq = NULL;
--				break;
-+				return NULL;
- 			}
- 		}
-
- 		/* If this rq is still suitable use it. */
--		if (lowest_rq->rt.highest_prio.curr > task->prio)
--			break;
-+		if (lowest_rt_rq->highest_prio.curr > task->prio)
-+			return lowest_rt_rq;
-
- 		/* try again */
- 		double_unlock_balance(rq, lowest_rq);
--		lowest_rq = NULL;
- 	}
-
--	return &lowest_rq->rt;
-+	return NULL;
  }
-
- static struct rq *find_lock_lowest_rq(struct task_struct *task, struct rq *rq) {
-@@ -1442,12 +1563,10 @@ static struct rq *find_lock_lowest_rq(struct task_struct *task, struct rq *rq) {
- static int push_rt_rq_task(struct rt_rq *rt_rq, bool pull)
+ 
+ /* Only try algorithms three times */
+@@ -2110,12 +2125,21 @@ static void switching_to_rt(struct rq *rq, struct task_struct *p) {}
+  */
+ static void switched_to_rt(struct rq *rq, struct task_struct *p)
  {
- 	struct task_struct *next_task;
--	struct rq *lowest_rq, *rq = rq_of_rt_rq(rt_rq);
-+	struct rq *lowest_rq, *rq = global_rq_of_rt_rq(rt_rq);
- 	struct rt_rq *lowest_rt_rq;
- 	int ret = 0;
--
--	if (is_dl_group(rt_rq))
--		return 0;
-+	bool dl_group;
-
- 	if (!rt_rq->overloaded)
- 		return 0;
-@@ -1462,7 +1581,8 @@ static int push_rt_rq_task(struct rt_rq *rt_rq, bool pull)
- 	 * higher priority than current. If that's the case
- 	 * just reschedule current.
++	struct rt_rq *rt_rq = rt_rq_of_se(&p->rt);
++
+ 	/*
+ 	 * If we are running, update the avg_rt tracking, as the running time
+ 	 * will now on be accounted into the latter.
  	 */
--	if (unlikely(next_task->prio < rq->donor->prio)) {
-+	dl_group = rt_group_sched_enabled() && is_dl_group(rt_rq);
-+	if (!dl_group && unlikely(next_task->prio < rq->donor->prio)) {
- 		resched_curr(rq);
- 		return 0;
- 	}
-@@ -1474,6 +1594,13 @@ static int push_rt_rq_task(struct rt_rq *rt_rq, bool pull)
- 		if (!pull || rq->push_busy)
- 			return 0;
-
-+		/*
-+		 * If the current task does not belong to the same task group
-+		 * we cannot push it away.
-+		 */
-+		if (dl_group && rq->donor->sched_task_group != rt_rq->tg)
-+			return 0;
+ 	if (task_current(rq, p)) {
+ 		update_rt_rq_load_avg(rq_clock_pelt(rq), rq, 0);
 +
- 		/*
- 		 * Invoking find_lowest_rt_rq() on anything but an RT task doesn't
- 		 * make sense. Per the above priority check, curr has to
-@@ -1550,7 +1677,7 @@ static int push_rt_rq_task(struct rt_rq *rt_rq, bool pull)
- 		goto retry;
- 	}
-
--	lowest_rq = rq_of_rt_rq(lowest_rt_rq);
-+	lowest_rq = global_rq_of_rt_rq(lowest_rt_rq);
- 	move_queued_task_locked(rq, lowest_rq, next_task);
- 	resched_curr(lowest_rq);
- 	ret = 1;
-@@ -1747,16 +1874,22 @@ void rto_push_irq_work_func(struct irq_work *work)
-
- static void pull_rt_rq_task(struct rt_rq *this_rt_rq)
- {
--	struct rq *this_rq = rq_of_rt_rq(this_rt_rq);
-+	struct rq* this_rq = global_rq_of_rt_rq(this_rt_rq);
- 	int this_cpu = this_rq->cpu, cpu;
- 	bool resched = false;
--	struct task_struct *p, *push_task;
-+	struct task_struct *p, *push_task = NULL;
-+	struct sched_dl_entity *src_dl_se;
- 	struct rt_rq *src_rt_rq;
- 	struct rq *src_rq;
--	int rt_overload_count = rt_overloaded(this_rq);
-+	int rt_overload_count;
-+	const struct cpumask *cpu_mask;
-+	bool dl_group;
-
--	if (is_dl_group(&this_rq->rt))
--		return;
-+	dl_group = rt_group_sched_enabled() && is_dl_group(this_rt_rq);
-+	if (dl_group)
-+		goto group_sched;
++		if (is_dl_group(rt_rq)) {
++			struct sched_dl_entity *dl_se = dl_group_of(rt_rq);
 +
-+	rt_overload_count = rt_overloaded(this_rq);
-
- 	if (likely(!rt_overload_count))
++			p->dl_server = dl_se;
++		}
++
  		return;
-@@ -1779,12 +1912,26 @@ static void pull_rt_rq_task(struct rt_rq *this_rt_rq)
  	}
- #endif
-
--	for_each_cpu(cpu, this_rq->rd->rto_mask) {
-+group_sched:
-+	if (!dl_group)
-+		cpu_mask = this_rq->rd->rto_mask;
-+	else
-+		cpu_mask = cpu_online_mask;
-+
-+	for_each_cpu(cpu, cpu_mask) {
- 		if (this_cpu == cpu)
- 			continue;
-
- 		src_rq = cpu_rq(cpu);
--		src_rt_rq = &src_rq->rt;
-+		if (!dl_group) {
-+			src_rt_rq = &src_rq->rt;
-+		} else {
-+			src_dl_se = dl_se_of_tg(this_rt_rq->tg, cpu);
-+			src_rt_rq = &src_dl_se->my_q->rt;
-+
-+			if (src_rt_rq->rt_nr_running <= 1 && !src_dl_se->dl_throttled)
-+				continue;
-+		}
-
- 		/*
- 		 * Don't bother taking the src_rq->lock if the next highest
-@@ -1825,12 +1972,21 @@ static void pull_rt_rq_task(struct rt_rq *this_rt_rq)
- 			 * This is just that p is waking up and hasn't
- 			 * had a chance to schedule. We only pull
- 			 * p if it is lower in priority than the
--			 * current task on the run queue
-+			 * current task on the run queue and p is
-+			 * in the same runqueue as donor.
- 			 */
--			if (p->prio < src_rq->donor->prio)
-+			if (tg_of_se(&src_rq->donor->rt) == this_rt_rq->tg &&
-+			    p->prio < src_rq->donor->prio)
- 				goto skip;
-
- 			if (is_migration_disabled(p)) {
-+				/*
-+				 * If the current task does not belong to the
-+				 * same task group we cannot push it away.
-+				 */
-+				if (tg_of_se(&src_rq->donor->rt) != this_rt_rq->tg)
-+					goto skip;
-+
- 				push_task = get_push_task(src_rq);
- 			} else {
- 				move_queued_task_locked(src_rq, this_rq, p);
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1242d297532f..835af319b78d 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -1403,6 +1403,16 @@ struct rq {
- 	struct list_head	cfsb_csd_list;
- #endif
-
-+#ifdef CONFIG_RT_GROUP_SCHED
-+	/*
-+	 * Balance callbacks operate only on global runqueues.
-+	 * These pointers allow referencing cgroup specific runqueues
-+	 * for balancing operations.
-+	 */
-+	struct rq		*rq_to_push_from;
-+	struct rq		*rq_to_pull_to;
-+#endif
-+
- 	atomic_t		nr_iowait;
- } __no_randomize_layout;
-
-@@ -3520,6 +3530,11 @@ static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
- 	return rt_se->rt_rq;
- }
-
-+static inline struct task_group *tg_of_se(struct sched_rt_entity *rt_se)
-+{
-+	return rt_rq_of_se(rt_se)->tg;
-+}
-+
- static inline int is_dl_group(struct rt_rq *rt_rq)
- {
- 	return rt_rq->tg != &root_task_group;
-@@ -3536,6 +3551,7 @@ static inline struct sched_dl_entity *dl_group_of(struct rt_rq *rt_rq)
- 	return rt_rq->tg->dl_se[rq_of_rt_rq(rt_rq)->cpu];
- }
-
-+#define dl_se_of_tg(tg, cpu) ((tg)->dl_se[(cpu)])
- #define dl_bw_lock_of_tg(tg) (&(tg)->dl_bandwidth.dl_runtime_lock)
- #else
- static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
-@@ -3560,6 +3576,11 @@ static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
- 	return &rq->rt;
- }
-
-+static inline struct task_group *tg_of_se(struct sched_rt_entity *rt_se)
-+{
-+	return &root_task_group;
-+}
-+
- static inline int is_dl_group(struct rt_rq *rt_rq)
- {
- 	return 0;
-@@ -3570,6 +3591,9 @@ static inline struct sched_dl_entity *dl_group_of(struct rt_rq *rt_rq)
- 	return NULL;
- }
-
-+#define rq_to_push_from(rq) (rq)
-+#define rq_to_pull_to(rq) (rq)
-+#define dl_se_of_tg(tg, cpu) ((struct sched_dl_entity*)NULL)
- #define dl_bw_lock_of_tg(tg) ((raw_spinlock_t*)NULL)
- #endif
-
---
+ 
+@@ -2125,8 +2149,8 @@ static void switched_to_rt(struct rq *rq, struct task_struct *p)
+ 	 * then see if we can move to another run queue.
+ 	 */
+ 	if (task_on_rq_queued(p)) {
+-		if (p->nr_cpus_allowed > 1 && rt_rq_of_se(&p->rt)->overloaded)
+-			rt_queue_push_tasks(rt_rq_of_se(&p->rt));
++		if (p->nr_cpus_allowed > 1 && rt_rq->overloaded)
++			rt_queue_push_tasks(rt_rq);
+ 
+ 		if (p->prio < rq->donor->prio && cpu_online(cpu_of(rq)))
+ 			resched_curr(rq);
+-- 
 2.56.0
 
