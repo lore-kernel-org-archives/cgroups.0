@@ -1,100 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.41
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794216847;
-	b=I1FMVt6+Lig1iNZxWOF/Hn4lhk77mcTM82mdZ7XsP0x5LSWZUyuKh1ChwE3yE1dtGSy6
-	 HHjO3FN+KDxff/0+TCTED7J/s6qOvakre4PUYv2vyLCUTa6DHFPYsYobUTDwQZwg9Au7c
-	 Abi4e7V+NX2QYj7IkeO545dknahiTCrziyLac8paMH1OJp86L2zjLETH0kyazhS4k86oL
-	 T1lWYGONezgxpaqTOXG0WxruN/p6PRUB0Uqy2PaM+A7apBliu1T08bktaG7+UPiI9SBKG
-	 dJu4UYLDS7xjp/pgX/MrLN1EY8tsjOmTkVJqytPBTzbS1YR17sgRedqBiQUItmzLZDg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794216847;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.174
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1794217103;
+	b=IGOv+wR72P0rkOkE0WlC9oCF5xKHRaFuuSfyx8A+jxAycXz35DuxMt1A7q1tgu5Tpke4
+	 NIY/tuUYVMq6aKh5kIj5WjAQUB4PVzMKTzcMPM7Rn1pPK4X2KfprX7OyaQKZFF35LClBh
+	 tESpsDeWtgCDNtQrGH3MgwwLG6p/QWb6W3K6jR/jZPPlBeQjNj6sAtl/YjYr92E9EJ6sp
+	 oJvqPQo/HHr6jYOpzRTHwW12wgGTKlnGgtZKE8TvsWY3/3AKxez2qTE8APdRE4bZwwOrO
+	 ZOV+Qei2uoCov71yYCyscl2ayiCleFtA+IC+y08wKPsz7jElkR5O0j6R4PX1Vv5Lt2w==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794217103;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=mu/oofPDsfg+LaVc2a1HnbHK3ydvC97UTzMxPHDp3UE=;
-	b=sazEOl5oOQW4nnJ+dxcHcM4TOhw25srP9gMT4kg9Ay1yxWwNB5vRqNYRYSoyB+fZaeYj
-	 InXNViTD2PNB9bUSuVLXQ+PrvDXMHrl1gOukm3WglP6WrYbqYC1mlXowZvvfEQrzVUZZk
-	 0cwhw2bJyAHEpAHsifmfHkwcFk137kRQz+YZWUEOJqX5dYt984Z4M2cuHOC/ZgZAoQYll
-	 wlJlk2bFWLBk37L1+2Lzrih4JrKf5u8xgkTeVnaLHX2I+Sj4QG63Be7thgZPCbA/0jCGZ
-	 wcHvFNSGye7s43m/dzzLPWnhvDnJ+rGX72KCe1zQm8NSSJywEDXVf/J/HnUC3+/D91g==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MnaUT61X;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.208.41
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=vMJSg0lmacnY+UcGHVNgSDJi3N4uyY4O9jJ0C/cw0zk=;
+	b=PjT/5otiExcyYbGgeFd3Pveo6yxuP7yWqJDmUHCiMpQV0S1yzcmM34kzTdAtD8PrtqpG
+	 w4YHVkBtP2sUL7IC9zxfRYp/9HVe1hVZAYjrhA0bxRwPiLv+3bDqTZ70kmy86pIgwr+Zb
+	 JYeTCnhTHxdeqmM5kwbjuh35JSd+gZXsvNSylnNZMIqqqilaIZvFm2HT5gOr5jcqscB4q
+	 I7ihgok8wPQsl6CGV2jtKNBhivpxqwuYpF2mgdV5bhKK+Vxep5j4w6EeGJUV4TuKXFR9N
+	 IcU/hkS6as9X6SqAQqfTKtHU5J/vIFbjD2qf35d1Qmj+WnlEDm9bv2H6tZK8lJSJv9Q==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=google header.b=KHuzvPDs;
+	arc=none smtp.remote-ip=74.125.82.174
+Received: from mail-dy1-f174.google.com (mail-dy1-f174.google.com [74.125.82.174])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EEF4606A321
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:34:07 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4EEF4606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF060606A321
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:38:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DF060606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MnaUT61X
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6b58cb69927so1093839a12.0
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:34:07 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794216846; cv=none;
-        d=google.com; s=arc-20260327;
-        b=aup80swfQ8/kCBiG+3tkJIDOUbK24niaeT9kKv3vblTUBJ/ZgNMhT/sHyByozPX3c4
-         CbZ6wqtNymbcNfOi8AbxRPya5JX5dOPzM0BMWQ7MBhPSmGHJGd9ynplzfK6Jz/DDVVNN
-         HZOBhsP4rRnlY6lewSmP+izwdVpdbvH4Q4Ay4iClJ9lEDMLVQbcNEgzsJoglZDSS8J1y
-         byFnza2ihyMvUlcqEMjHEmCgr4/w64C3KS6ZBYgI9JcVbtOCp5uUwScs3LOl3uUKDOJe
-         mogSYF9SIHzZtDt4yQS0zTCQYi51G1GNwzjAy8xTsT+QXBSBhFXodPmoPcwDumWnkz/G
-         92og==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=mu/oofPDsfg+LaVc2a1HnbHK3ydvC97UTzMxPHDp3UE=;
-        fh=OfDtlEcU+cn+Y3bolHmew78hrFzTFE6ggg5rK6BqqZ8=;
-        b=dGoOf2IAjRoaTWk8Q0+Ez1uVu+5iYtwCwYFQx/jUpe95UmARBfapke9386j7GvzUG1
-         dwOLTWFxvY2kb4h2A7aY7RSkpp4YBUlC10BBS2LDKigpnD7Rme9jvSDXRMpT970uME1M
-         AFMgddgxyjCRhqwowqunT1yb2zPoBpWgiFZ8qgdBzDWJPLN0yhuImNJO/eBKCCsI1QIK
-         6kK59zOS1ONE0TkfleUKKJi0hayRAOjBJXDVbksLFzYNBazQBFbd6wnT1BxVrdMrRH5o
-         TsB+Scm6ZzR7ZyjgoW9Lgp1nifc0oXH1enwr8NYDHGipEpDHD6QGk3P6tBqfQ9BfOqlX
-         nsrg==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=google header.b=KHuzvPDs
+Received: by mail-dy1-f174.google.com with SMTP id 5a478bee46e88-36dbde64409so1175765eec.0
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:38:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794216846; x=1794821646; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=mu/oofPDsfg+LaVc2a1HnbHK3ydvC97UTzMxPHDp3UE=;
-        b=MnaUT61XbjmMlTUe2HIZqIdcwCgZdIt7+gn5d1HjnEI+O0sowDyPF+utpv6VNZwPFL
-         TdZfQAXyxVDRBx9LyDDRBbyUIum5Z+7OIimjqyvotw5qjO4R1B9MjYG7PwjpdA6Z4YfF
-         JRzRKd1WZEaYL+QvZSZQA0tJALA0spXVjEsx8oLkTdFpoVP6YyGiA3mBbZQQRMvPFzpi
-         XtVs/XQ1kbBAjUpFDaIHJgKAmY61NbVs1yKCerV68ebWxyzag4j2hMzjMQH6+0jusscg
-         AMke0mTaYSLp5cPKc3tL26EK0sIUkXGT4xLhaxLzuL0yOUIrmn8+xkgb6do3YS70Bt6e
-         kDYw==
+        d=bytedance.com; s=google; t=1794217102; x=1794821902; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=vMJSg0lmacnY+UcGHVNgSDJi3N4uyY4O9jJ0C/cw0zk=;
+        b=KHuzvPDs+6IUSeE0sG+wgkRMym9JU7b7w/TEihVG7UtY5yKSCq3SU4YIsvUbbbqDUy
+         DxddA6ecwe9WpOv46viIOiPIdVbetXLJnqlGywEHNMrGl2mdO89xFMffuFFs6WiF/OiR
+         UVgbTxGt3rnTojai5e9wSzLKL+1PPCfI5Ua7Sat8QZBifbNzW+/gfXjwD0+0sY3Xl2ab
+         9JXB8ldl9AWkZf44j0wGcmqdlLQahqrp0LC1NhwZ7AZT3FZkrI26FymnMvf0uQXsC3uL
+         OOs5iEp7DtEdgrQZTn9/E76vpAZfksxvl3Q8hIXdktGmRE1N8EjlV2HKKzTior0FeMQi
+         uXfw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794216846; x=1794821646;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1794217102; x=1794821902;
+        h=content-transfer-encoding:content-type:in-reply-to:from:references
+         :cc:to:subject:user-agent:mime-version:date:message-id:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=mu/oofPDsfg+LaVc2a1HnbHK3ydvC97UTzMxPHDp3UE=;
-        b=y55qJL/459pvLWgMYWhojLpYXI78U0hw8+Biko1Uggb07PhL0mhAk9L8Yvio6T8ESB
-         vJ443VFL2d4YxeJkZteiOgyCYZkr5e41wCOYZZ95IKiUDMyPtVghG/ZQLLHCdK2JYv/v
-         ktTJI5TwX+F0yRn9G4mn6XT0PA6vNt1sqonYFLdNyT2CF6bFnVKMJXqwZfdVySzI3f89
-         VMK2D2Lvg3r4/uijzB1SdFKJ79jdxNSgOlH45dpAO/mm3DcqfzYpBKAzLttJjIxaooR/
-         g4IQstc0g6EQIXU/OyoLyJDXr50kfjD515JiFolf47uvEghlEx8t4PdSxOIxvGMqzEjk
-         VvKA==
-X-Forwarded-Encrypted: i=1; AL+hErHLEuJ7EX1RBpKZR4/rTj7six81R5Rw151IVy7WtNX36h3xFadKvp9G9gpXzCO38glnWi/TNkrK@vger.kernel.org
-X-Gm-Message-State: APuU4Z8ea5iPmIi26HX/lFRvpGPQ/u+MZpnxI1rBm6HtSHjx1zgO5nMn
-	NtE/mwmkkruVMzo8mzxBeZVgpLnSvggg+p2Sz8P+O3rOgJbvNPLeiHhNjbAuXWskL/UqU16hiBH
-	RDdRS40E05HOfMTgFMRDgeF9U1UTrWbA=
-X-Gm-Gg: AYBFou3rHC9otEzWMtYVgX9MM9SSTLZQfVdlZCe2aTi789EDsUqYMuhG2WNkHAeWF2n
-	2P6sEec4B1SYgy1Rxms0ewDH97qD7WY7goCtLARTDKYaWsTXg4tqpmDXc0xsw5svzrc52wx6apm
-	pcCekNVGcpRjTc1ymcaHm+QKLLBEjIYtnKA2mnrHWzmfhu81d01OUucOf4AUZSkAUH23+TrcDw8
-	DFd3H4La5kwWyJhjZ5NU1XczY6FC3LFZzuIG61hCK34pA6hl78cWyhTivbEDSPxypsQkSVAJKYe
-	tOslInUDbLNrl4KQwmOx19GA47tsvkKBRIlpgSXsZ1JimBh9hq8/wJobHlt9ZmZzgSI4WQ3vXag
-	2fwCyvU5F6Zy8iwfIecgW7vyxwPq4/0Vo0zwI9d+qJ/7W9jT0HbIizTj2ECLCMyOqhyS8
-X-Received: by 2002:a17:907:1609:b0:c46:78af:6150 with SMTP id
- a640c23a62f3a-c4d523bbb99mr398017966b.2.1794216845494; Mon, 09 Nov 2026
- 01:34:05 -0800 (PST)
+        bh=vMJSg0lmacnY+UcGHVNgSDJi3N4uyY4O9jJ0C/cw0zk=;
+        b=JhVO3ZwQsUQ60Hd4zyeBcCBGy4v+VzMrVr2mQT+dEXZ6zb7OeoWtde5gsNHmnu8eUt
+         giORzAllYv7z4EoPErzKAQVAGarHi3zOlJthLlzA5tYvbAQV3G98XrzOaqzk+GhdQB77
+         A6GGCGAnz9Nju4ChlKkKpT3TUsycGJFRNG6DXi8AVS9sMURZyErPQ9lPJb8LbJO5NCiN
+         F898RldnJici+XlXcYJ02PJUFzR2L+H7mnScCaoQmDuAxPwLA6r6O0ecZd5NueaFrDMN
+         dIxBJkS05YBCIcjkU8ui5wrD8/5w+XiPrmdeyrnrgHy0u21QDEMcdyi64Z4x13KVRIap
+         tzWA==
+X-Forwarded-Encrypted: i=1; AL+hErG9LOZDWEn0gBNExWejgMPlp/SEavd7fbe1JETs4ei+7FfZoFP47R9F3JiV4Ccf7eQYxssAckVY@vger.kernel.org
+X-Gm-Message-State: APuU4Z92uHQyi9wo4KjZYA9fZMx914PQoVwNFJ1K40xRXzMM+CwE580K
+	tqF4i5I9tCVad14RjsZ7TeBFodiWFMvtTG4nmubao7EfGN1GHQ0DUd6c9IcSJXnlnNg=
+X-Gm-Gg: AYBFou1RqnLApYqWDdFMr8kE6ILrD2b9lDzV++uNZMihzpc5VBrALwgVdqnsKuh42sO
+	V47pF+ho6OUB5jwvzWTWpMVXF0jkw2EZ+wclkfT2VDBQzGpIaJ+ouJqcmZjzf9U0+m3OS+zJJhp
+	M4JjTXo2q85+XI9CMGGW36tBustv8XWv4hj9mC9QbJkzdwPlj66n67kO3VTD7PYoixbmi9VO2m+
+	Nr3XCHzSoDvrRXMyJV+S/Raln0VJ9HalKx25D/RLljPxXb+5MVDLLt30E8K9cM1y/PAlRo4oHkk
+	JRSKDXCkNg+PaKM5DsdduvFnsQFe86E4ZNmDE4NyFyE3FKDrPVdofxPvbKoeNGoAHVfCpzLkp5S
+	tEBV4jxVYrbfv9uPjIYZZaY/YP3DD8YST0u1YpWyn2jmKD25/mng4crXD5tktnFAAA76bOdjT65
+	pvhrAUtXUZhEkIbHcnO9H9gkJrYaomI1W2DToHjFhjFKKlESF5kggouRUohR+I8zhqBYaXsDTHa
+	MEm4jt1ozygkYHXv0ZyJFu5N7JXlP1wNswb5tMtlciuiV/3F/C6Ca2BpHm2ckK1VL/lgz5jm+FX
+	p0sCGxdrlTGS2DH4Oq3ieLVUyWR9Mk00H5bCUfmXXh42FPH8QuXxwhY+rarxWnm1uR/dK+uT
+X-Received: by 2002:a05:7301:d80e:10b0:36a:50ec:db3f with SMTP id 5a478bee46e88-372575c557amr6835812eec.7.1794217101438;
+        Mon, 09 Nov 2026 01:38:21 -0800 (PST)
+Received: from [100.81.10.186] ([61.213.176.59])
+        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-372669d2826sm12719426eec.29.2026.11.09.01.38.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Nov 2026 01:38:20 -0800 (PST)
+Message-ID: <29bf4bce-cdb8-425c-8090-d8d84a749a73@bytedance.com>
+Date: Mon, 9 Nov 2026 17:38:17 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,91 +90,243 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016-mglru-fg-v4-6-2106750c0bfa@tencent.com> <CAGsJ_4zQh0TnAxifWPo2+DcyFFOtpXM+2QW91A07oumfyrqVYg@mail.gmail.com>
-In-Reply-To: <CAGsJ_4zQh0TnAxifWPo2+DcyFFOtpXM+2QW91A07oumfyrqVYg@mail.gmail.com>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Mon, 9 Nov 2026 17:33:28 +0800
-X-Gm-Features: AclHuK8oJGBgOQDKpdCDCogHbVwnPnC6cKJNTKD1XErUqqMirF8-gtHajt-txqQ
-Message-ID: <CAMgjq7DeC23zak6Xur=E29qo7JPNvQUMtbbO34Y62jrQjQgStA@mail.gmail.com>
-Subject: Re: [PATCH v4 06/17] mm/mglru: move add/del LRU size accounting out
- of lru_gen_update_size()
-To: Barry Song <baohua@kernel.org>
-Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
-	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>, 
-	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
-	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
-	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
-	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
-	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
-	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
-	zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
-	Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] fs: account filesystem bdev caches as kernel files
+To: Jan Kara <jack@suse.cz>, Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+ cgroups@vger.kernel.org, axboe@kernel.dk, viro@zeniv.linux.org.uk,
+ brauner@kernel.org, akpm@linux-foundation.org, tj@kernel.org
+References: <20261008130747.2868338-1-sunjunchao@bytedance.com>
+ <3xivdukdcs45x2lql3fh3pogrkeb3piiexo2np4xscmz5yk4ot@jqvlshpakn4c>
+From: Julian Sun <sunjunchao@bytedance.com>
+In-Reply-To: <3xivdukdcs45x2lql3fh3pogrkeb3piiexo2np4xscmz5yk4ot@jqvlshpakn4c>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, Nov 9, 2026 at 4:48=E2=80=AFAM Barry Song <baohua@kernel.org> wrote=
-:
->
-> On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay
-> <devnull+kasong.tencent.com@kernel.org> wrote:
-> >
-> > From: Kairui Song <kasong@tencent.com>
-> >
-> > Pure code shuffle, no behavior change.  lru_gen_update_size() now only
-> > updates the per-generation counters plus the promotion move; the
-> > addition and deletion active/inactive accounting move to
-> > lru_gen_add_folio() and lru_gen_del_folio(), which know the generation
-> > and can apply the active-window test directly.
-> >
-> > The unevictable case is untouched: unevictable folios never enter
-> > lru_gen_add_folio() and keep being accounted by lruvec_add_folio() as
-> > before.
-> >
-> > Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
-> > Signed-off-by: Kairui Song <kasong@tencent.com>
-> > ---
->
-> The patch looks good to me.
->
-> Meanwhile, I've been struggling with the names of
-> __update_lru_size() and lru_gen_update_size() for a long
-> time.
->
-> Given that lru_gen_update_size() now only updates
-> nr_pages:
-> static inline void lru_gen_update_size(struct lruvec *lruvec, int type,
->                 struct folio *folio, int old_gen, int new_gen)
-> {
->        ...
->
->         if (old_gen >=3D 0)
->                 atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][z=
-one]);
->         if (new_gen >=3D 0)
->                 atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][z=
-one]);
-> }
->
-> while __update_lru_size() only handles
-> active/inactive accounting, could we rename them to make
-> their roles clearer? For example:
->
-> lru_gen_update_nr_pages()
-> lru_gen_update_active_inactive_size()
+On 10/12/26 4:58 PM, Jan Kara wrote:
+> On Thu 08-10-26 21:07:47, Julian Sun wrote:
+>> Filesystems such as ext4 use buffer heads to cache shared metadata in
+>> the bdev mapping. Charging these pages to individual memcgs can trigger
+>> foreign writeback of the bdev inode's entire owner wb, including
+>> unrelated file data.
+>>
+>> Following the proposal in the linked discussion, set AS_KERNEL_FILE on
+>> the bdev mapping while it is used by a filesystem, so newly allocated
+>> cache pages are accounted to the root memcg. Empty the mapping before
+>> changing the flag to keep folio insertion and removal accounting
+>> consistent.
+>>
+>> Multiple EROFS superblocks can share an extra data device. For example,
+>> two metadata images on /dev/loop0 and /dev/loop1 can reference the same
+>> data blob on /dev/loop2:
+>>
+>>   mount -t erofs -o ro,device=/dev/loop2 /dev/loop0 /mnt/a
+>>   mount -t erofs -o ro,device=/dev/loop2 /dev/loop1 /mnt/b
+>>
+>> Unmounting /mnt/a must not clear AS_KERNEL_FILE on /dev/loop2 while
+>> /mnt/b still uses it. Keep the flag set until the last filesystem user
+>> releases the device.
+>>
+>> bd_openers includes raw-device opens that may outlive filesystem
+>> users, while bd_holders also counts partition claims on the whole
+>> device. Neither counts filesystem users of this mapping, so add
+>> bd_fs_users, protected by the bdev inode's i_rwsem.
+>>
+>> Update this count in fs_bdev_register() and fs_bdev_unregister().
+>> These hooks cover both device-open helpers and callers such as btrfs
+>> that unregister a device and close it separately, without calling
+>> fs_bdev_file_release().
+>>
+>> Buffered access to the mounted raw device also charges new cache
+>> pages to the root memcg. Such access is normally restricted to
+>> privileged users. Pages cached in ordinary file mappings retain their
+>> existing memcg accounting.
+>>
+>> For filesystems that cache metadata in the bdev mapping, the benefit
+>> is expected to be most pronounced when multiple cgroups perform
+>> buffered overwrites alongside direct I/O on the same bandwidth-limited
+>> device, such as an HDD. Frequent foreign writeback
+>> reduces write coalescing, producing additional I/O that can saturate
+>> the device. Direct I/O bypasses the page cache and competes with this
+>> writeback traffic for device bandwidth.
+>>
+>> An ext4 test combined repeated buffered overwrites of a 256 MiB file
+>> with foreground direct writes, while four source memcgs generated
+>> metadata and buffered writes. Device write bandwidth was capped at
+>> 200 MiB/s. In one baseline/patched pair, background file write I/O,
+>> including final sync, fell from 6.178 GiB to 1.652 GiB (-73.3%).
+>> Foreground bandwidth rose from 149.70 MiB/s to 184.19 MiB/s (+23.0%),
+>> and completion time fell from 109.444 s to 88.951 s (-18.7%).
+>>
+>> Link: https://lore.kernel.org/cgroups/20260925064444.3944820-1-sunjunchao@bytedance.com/T/#m55ee048deb0aad4d1f2293978f25ee6904a5725a
+>> Suggested-by: Christoph Hellwig <hch@lst.de>
+>> Suggested-by: Jan Kara <jack@suse.cz>
+>> Signed-off-by: Julian Sun <sunjunchao@bytedance.com>
+> 
+> Good catch with EROFS. The patch looks good to me so feel free to add:
+> 
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> 
+> FWIW the problem pointed by Sashiko looks real but it's a preexisting issue
+> with broken bdev write locking when falling back to buffered IO. So it
+> isn't much related to your patch.
+> 
+> 								Honza
+> 
+>> ---
+>>  block/bdev.c              |  2 +-
+>>  fs/super.c                | 59 +++++++++++++++++++++++++++++++++++++--
+>>  include/linux/blk_types.h |  1 +
+>>  include/linux/blkdev.h    |  1 +
+>>  4 files changed, 60 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/block/bdev.c b/block/bdev.c
+>> index cd8323083740..766e170286ca 100644
+>> --- a/block/bdev.c
+>> +++ b/block/bdev.c
+>> @@ -79,7 +79,7 @@ static void bdev_write_inode(struct block_device *bdev)
+>>  }
+>>  
+>>  /* Kill _all_ buffers and pagecache , dirty or not.. */
+>> -static void kill_bdev(struct block_device *bdev)
+>> +void kill_bdev(struct block_device *bdev)
+>>  {
+>>  	struct address_space *mapping = bdev->bd_mapping;
+>>  
+>> diff --git a/fs/super.c b/fs/super.c
+>> index 9d4025213521..7d271bb4cc6d 100644
+>> --- a/fs/super.c
+>> +++ b/fs/super.c
+>> @@ -25,6 +25,7 @@
+>>  #include <linux/slab.h>
+>>  #include <linux/blkdev.h>
+>>  #include <linux/memcontrol.h>
+>> +#include <linux/pagemap.h>
+>>  #include <linux/rhashtable.h>
+>>  #include <linux/mount.h>
+>>  #include <linux/security.h>
+>> @@ -1644,6 +1645,55 @@ static struct super_dev *super_dev_lookup(dev_t dev, struct super_block *sb)
+>>  	return NULL;
+>>  }
+>>  
+>> +/*
+>> + * Filesystem metadata is shared across users and should be accounted to the
+>> + * root cgroup. Charging it to individual cgroups can trigger foreign writeback
+>> + * of the bdev inode's entire owner wb, including unrelated file data. For
+>> + * buffered overwrites, premature writeback reduces write coalescing and
+>> + * competes with foreground I/O, particularly on bandwidth-limited devices.
+>> + * This foreign writeback problem primarily affects filesystems such as
+>> + * ext4 that cache metadata in the bdev mapping using buffer heads.
+>> + *
+>> + * Raw buffered I/O also uses kernel-file accounting while a filesystem uses
+>> + * the device. This is independent of CONFIG_BLK_DEV_WRITE_MOUNTED: writes to
+>> + * a mounted device are dangerous administrative operations, and charging
+>> + * their cache to the root cgroup is acceptable.
+>> + */
+>> +static void fs_bdev_set_kernel_file(struct block_device *bdev, bool enable)
+>> +{
+>> +	struct address_space *mapping = bdev->bd_mapping;
+>> +	struct inode *inode = mapping->host;
+>> +
+>> +	inode_lock(inode);
+>> +	/*
+>> +	 * Multiple superblocks can share an extra device, as in EROFS.
+>> +	 * Switch accounting only for the first user and the last release.
+>> +	 * Raw openers may outlive all filesystem users, so bd_openers cannot
+>> +	 * determine when to restore ordinary page-cache accounting.
+>> +	 * Count at registration/unregistration: btrfs can unregister a device
+>> +	 * and close it separately, bypassing fs_bdev_file_release().
+>> +	 */
+>> +	if (enable) {
+>> +		if (bdev->bd_fs_users++)
+>> +			goto out;
+>> +	} else {
+>> +		if (--bdev->bd_fs_users)
+>> +			goto out;
+>> +	}
+>> +
+>> +	filemap_invalidate_lock(mapping);
+>> +	/* Folio removal must use the same accounting mode as insertion. */
+>> +	sync_blockdev(bdev);
+>> +	kill_bdev(bdev);
+>> +	if (enable)
+>> +		set_bit(AS_KERNEL_FILE, &mapping->flags);
+>> +	else
+>> +		clear_bit(AS_KERNEL_FILE, &mapping->flags);
+>> +	filemap_invalidate_unlock(mapping);
+>> +out:
+>> +	inode_unlock(inode);
+>> +}
+>> +
+>>  static int fs_bdev_register(struct file *bdev_file, struct super_block *sb)
+>>  {
+>>  	struct super_dev *sb_dev __free(kfree) = NULL;
+>> @@ -1654,7 +1704,7 @@ static int fs_bdev_register(struct file *bdev_file, struct super_block *sb)
+>>  		sb_dev = super_dev_lookup(dev, sb);
+>>  		if (sb_dev && refcount_inc_not_zero(&sb_dev->sd_ref)) {
+>>  			retain_and_null_ptr(sb_dev);
+>> -			return 0;
+>> +			goto registered;
+>>  		}
+>>  	}
+>>  
+>> @@ -1674,7 +1724,11 @@ static int fs_bdev_register(struct file *bdev_file, struct super_block *sb)
+>>  	}
+>>  
+>>  	retain_and_null_ptr(sb_dev);
+>> -	return err;
+>> +	if (err)
+>> +		return err;
+>> +registered:
+>> +	fs_bdev_set_kernel_file(file_bdev(bdev_file), true);
+>> +	return 0;
+>>  }
+>>  
+>>  /**
+>> @@ -1765,6 +1819,7 @@ void fs_bdev_unregister(struct file *bdev_file, struct super_block *sb)
+>>  	sb_dev = super_dev_lookup(dev, sb);
+>>  	rcu_read_unlock();
+>>  	super_dev_put(sb_dev);
+>> +	fs_bdev_set_kernel_file(file_bdev(bdev_file), false);
+>>  }
+>>  EXPORT_SYMBOL_GPL(fs_bdev_unregister);
+>>  
+>> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+>> index 98e21b4cbf32..19daea93bdec 100644
+>> --- a/include/linux/blk_types.h
+>> +++ b/include/linux/blk_types.h
+>> @@ -58,6 +58,7 @@ struct block_device {
+>>  	struct address_space	*bd_mapping;	/* page cache */
+>>  
+>>  	atomic_t		bd_openers;
+>> +	unsigned int		bd_fs_users; /* Protected by bd_mapping->host->i_rwsem. */
+>>  	spinlock_t		bd_size_lock; /* for bd_inode->i_size updates */
+>>  	void *			bd_claiming;
+>>  	void *			bd_holder;
+>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>> index 4f7905c3412b..f84dff95eae7 100644
+>> --- a/include/linux/blkdev.h
+>> +++ b/include/linux/blkdev.h
+>> @@ -1706,6 +1706,7 @@ bool disk_live(struct gendisk *disk);
+>>  unsigned int block_size(struct block_device *bdev);
+>>  
+>>  #ifdef CONFIG_BLOCK
+>> +void kill_bdev(struct block_device *bdev);
+>>  void invalidate_bdev(struct block_device *bdev);
+>>  int sync_blockdev(struct block_device *bdev);
+>>  int sync_blockdev_range(struct block_device *bdev, loff_t lstart, loff_t lend);
+>> -- 
+>> 2.39.5
+>>
 
-Hmm but __update_lru_size is also used by CLRU, so it's not a
-"lru_gen" specific helper. If we can merge CLRU/MGLRU, then maybe we
-can rename them?
+Hi Jan, Christian,
+
+Thanks for the review, Jan.
+
+Christian, would you be willing to pick this up for linux-next,
+with Jan's Reviewed-by? Please let me know if anything else is
+needed from my side.
+
+Thanks,
+-- 
+Julian Sun <sunjunchao@bytedance.com>
