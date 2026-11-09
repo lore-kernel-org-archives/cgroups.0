@@ -1,82 +1,82 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794242219;
-	b=tAgSuCGCp0F2uRJhW8DhCex2YfPdl8GVptpC19LRsTPJZu4QFdYT0Bhz5aNarTTvlJzM
-	 cD0lYbc2CXuCBy8chXg+mnum+qLVhcmtZId4ptPPmRWGpEgmzgv99DrHpeYCcc5vBWtJ+
-	 ohxVFC8gG1jkrCmP9xDBNi00QmTihr+QyqinhcFGY9o2Riy/BWsoFOqYDGX1UaDx8sygX
-	 YKVcKskjkMCaFFE7bE9YcG3j0wO7QFC+sGxKPcHoYP0ci/QvQtq8RmeXKe7ClS+XWg98a
-	 LZjcqNKTSmTSxgtCTypnd2pFcDimnY1kAam1rzlA2oA1o3yRi+BW4b1I2WB/wkuTqRw==
+	t=1794242220;
+	b=Ry7rVgknRsEnazzW9TNTfdxMkNInm2p5xN18jSMM57V6wK6CjBiDBXTrriDdzSBudEBO
+	 MyKULM71ykV+Pbj0qGib5iUSgfOsRPbJ3LGl9XMupY1tniOaCoqH3cH0iMHOHaihHRIz/
+	 G1cwgAJwV5JS9PckPKnrWFyD604ONJEEBqkC7x4Qn6wy0/5DFoAkAWDwr5wyH7e+PrAWv
+	 MnKnjyxtb7LPcIXr9OefR97fBz/ZnRsHcpbOLgkTmZKs7gQkPeZvN3B4eU74Q4Oe9tO6T
+	 TfnpY+hhFp9Yz0xh3FFx5QfGK6GuYtobcOLvFodp15d56GLA6Rnprf1h/YKxpgTD3+w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794242219;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794242220;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=JLlaKTPbLeb3/gH7AJPm/GuRoGA7hDQrgsFi/3akh7M=;
-	b=PbsJ9StmHUUfkL1q3EubZ1Vik/TdjAB8m6GvJkc4rlfCcD3cRLEhP2HC1k1Aj4NURwQf
-	 bvSBXVzEOV9FN4gFosURWn0DzVVCbur9fJCNoHnVc5s/eBjN13AzE3gfg2BfD76JoXRy1
-	 R65icwE00itwQWaVe5hZ8yjQy9UDlECH4NkQut0CjyE1ALxs1bmpuJk9wK+sIyJVN5jMw
-	 WiMqu/AZQFYnJkrEHYSNjTD2oSvhzMwl+P0BZTQ4cmS1Y+HxE0BVFwxMFrRI6ItdTE0Pp
-	 SQp3OUJyFe+iHCUWZYS3Or7vR0du+DRaYTkfB5He/LhT8ZhWltAwoaiAQ2Grv/HMukw==
+	bh=U11DOD9x1cNusT7QAmX0bThmlm5Nlcj6algrIF2IlmQ=;
+	b=coJMug38aV94AVMFT82QobwAXM7IM2oAn07RABJCapMc4QgobVtGPgUqD5N+NmmLRXwe
+	 xN8AvcCZIjyOZHf28QSQ9OCFBCk+5O0JCnmcIls0hCFVoOGkpMQSqzI6lbGA659pbt9DP
+	 j/blHy0PT57GQFweweR9iOB29Qn5qtxsz+KBRL6XIyezhpxEjJ9je2jy9Z5MKqieHpdee
+	 ouvs2f5mQICS8Ocqpthn/UzqQ3SLum510LiCtLuF3WEt0RqbTPRaM6Mk1LtXS6whHe8jr
+	 UpPhQurqfhfj7s2n5+vz9owAP5tibiRCObJ1VmMBuJkC60sDfck8UGAylIQQMrnNQxQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vqUgHQ2v;
-	arc=none smtp.remote-ip=209.85.128.45
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GL2sWGvP;
+	arc=none smtp.remote-ip=209.85.128.54
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 271E360A6F71
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 271E360A6F71
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 619E3606A85D
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:37:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 619E3606A85D
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=vqUgHQ2v
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-4a35a60499eso8475515e9.0
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:36:58 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GL2sWGvP
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-49d05d51553so8142525e9.2
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:37:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794242217; x=1794847017; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794242219; x=1794847019; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=JLlaKTPbLeb3/gH7AJPm/GuRoGA7hDQrgsFi/3akh7M=;
-        b=vqUgHQ2vNCQ5nG+Dlu0E31TLu6AgQHG414t4NmyiyEfkjDF7U5c79e0+Pj0Hkj1kMX
-         mnl6fj7xBdzbvHhkFCASOv8y/2gqCw68E4KFwSKvwAjgGIIBAkfimEfo+3MJaZKbUjdP
-         1FEMUTrhzP96MzqZl0N97/ESBaTdzSJPabdO3/Phz15TUiaXihp9f2QSE67hK1Z+Zars
-         lfNTj0FEaGuVVAntOkWK+wvqEHzwHRJcJtSfWXpaVQcieItV5pNMiLizhdmE0PUjUg8y
-         71M0TvQab3uLzEfbQ1dGj8eWeIGZ8a8nhnhfICm9BIPgGHjLam10mI7NraAC73aSxoKQ
-         M4Ag==
+        bh=U11DOD9x1cNusT7QAmX0bThmlm5Nlcj6algrIF2IlmQ=;
+        b=GL2sWGvP5KOADZItlVVWu6JpHTutKbXU3SM3b3Frh6CccB/iCZQ6gcZkL23htQwXp2
+         4507352zKlmOIdYaE69s5bv1M7Ibrafq3RaJ3U5eArcQKYSMOK0OeLnR3m0+k01lCHkA
+         E/yWiFbLrCm/p9i+wzgpoVuoY2QFENzu59UEd/yU6ZHzdxqxDJfSZTaWwskFQ0gy+KIa
+         vzZhZUVOuRD6SLXLBROv3EhSqc5HrvcnaVp25cWJT7iflvW7cbR1QDraXFeVO/o6y0RP
+         bO3gjj21+3PvORsPnRwnllF9CPzGwAGXXV+rhaiBFN4xdaL4SrhajsXOdwh6vlNP7p+b
+         uvIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794242217; x=1794847017;
+        d=1e100.net; s=20260707; t=1794242219; x=1794847019;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=JLlaKTPbLeb3/gH7AJPm/GuRoGA7hDQrgsFi/3akh7M=;
-        b=Zmgi0VxQyokxJGD4uJ4p+rdTUkHAGkp2VwMkxHL6Ll0XaaGwFL/KedvNTpC+cUZAg2
-         z/CxzBglkyySDLz2CpjkjzqPqS2inr4EDWmA3HJvGghNQd0Z/QpI7wGDV39ld6zmItaD
-         E0K9JPPS9rlK/jol5EvC524tlTIU6f51DNo4YRmjdF5u9p9chFuDB+gJNTa/UPE5lXtD
-         jXHQWKywURshrW92dbkGvGDoSpsJT3Mz5VG47rs/lqgKfhdosrOFyad8NWTeDhxYBCjN
-         nLmljVfEecyNz6U0/3ZH9ECmPP0nCHEBTQXcdekitEJxS2t+Tm+CD1O/aVPdHGNuexSE
-         /awA==
-X-Gm-Message-State: APuU4Z9eDH8tg9qCZoeTxpZjxwI4QYhmpfy3SQRwTpX616r6O80YT1+8
-	tOq2K0rEXLHmgggHPC8Hsw+50MALdY8tYBK2BVpyT7O9l3GfKlwPzaot
-X-Gm-Gg: AYBFou3QT5H830Ej8J4FM0KV2JWOHoef+FFHozAjaWQqt6ICYDnshh+vOirfv9DySXl
-	ROlY3CuC8M8u9GGk7R0HbxI7WyLjOayB38vsMtVRiAFh2RM5TUawZfxxS6W70nf0SEmRfh9oJ/5
-	sWxMIgEJSSNlCF/wxFFR3ecUmgDMp8AMLOO9t8l8vZE0vGTrLWMD2FemvxaOs/li/Vh7XgqtkCI
-	A5jEsp2tzzUG52HB8jScYYq64+xPrL4dosltWfcrHGnmuIDZa+wj24ZNVRjpOFEv4XWdz1Spllh
-	3WPCeAQ6z6igDqIP3TJOdeDw3tydnhH3QkEkmXa33zzw3uUheoyfX1EjGGjHp9XUjFTNRX7nUBw
-	Fo7pyYBwtGGF+l5RQerlhtLLz/YG0MMavF9DlSNmlmsvdMy3Lhyc4ErHT4sxUtuCuS8DC7I8ouy
-	9crEnwp0pGPDuEwqiLJZN+S04WKnjxWhKAnUIzlmSLOv6PnywekZHU5igqf2tx6/Mu1yXEgKNaH
-	tXCj0grjM8hsGj2A8hc7YVCXEhes922kdMKxzvYejmAjJwRYrNTTbx+xqDBdQw1lroByYYmRVSr
-	n7hFzD/pnW3EAzOpyBXXidFbzw==
-X-Received: by 2002:a05:600c:3e0a:b0:4a7:d9b1:b684 with SMTP id 5b1f17b1804b1-4b94d762e54mr87248405e9.2.1794242217597;
-        Mon, 09 Nov 2026 08:36:57 -0800 (PST)
+        bh=U11DOD9x1cNusT7QAmX0bThmlm5Nlcj6algrIF2IlmQ=;
+        b=S882z/f5/Y9fxxzgYWDAe/mO0sJxji6q1IWNF4Msrf8qRYVTbfY8VJHP33XNEwR53a
+         8cseS/CZ3Awg2QFWmCEbIGzZ6w8MC6QwBW8J2/w0MdV9jkKvOX4YwwIe9ztoyRwq72R7
+         r+n93P0facCRmmSb5ocS6QG6yoq2xrW8DFjNKOrAS71Qo/vo/u8IsDzKXoTX20dazxL3
+         CckjSG8cW9228FW51hzrcNntmOH1sZxC8yUvUcbPtYcst0of2b6SmeODzDOnTSXa/CWw
+         mlBK5H7jmfRiCrumwKsN/rAefNvOY/ul28Kdt5R+BHAGGWI4R7LYtsHh62Fg4PuZkYy+
+         qCrw==
+X-Gm-Message-State: APuU4Z9mdHTta4R97hMnhlNfxj5QH9n1ah0Az5ISi3Pbc83Q9aYS/StL
+	nkxg8A7N7D34BFcM5i4sKu2pPsPVeoNio3GzazRqnyg8eV5ySWnUSUXW
+X-Gm-Gg: AYBFou2HHzGIzfelvM6Ko6/ED3ULXPbNWk9zdy132ZGZGAygvui8VvkXyz45WZuJujT
+	A3vSGRx+wXcSat5xmtwAqWolpHqQ+TdYTCcKdMcDQw34kfWd1KwDOeQ/ycaMNtHN0DWvmVTl+L3
+	jwDiu2k2P5vqaW/QzyZWl70SDrSVNFq95mgw0OQ2f9blJM4XiGFjFfjAOB8zkbx8+1HK6cLJit9
+	2fEKhR5W9wnnYRxyCNgQ7eVyj/Ei7hE07xtMmNt3pE0Gbx30Qpgv3kkyAv6ZqI+G9tbXzNyBZND
+	5yt4F28Y6Hia4/i4fgpk7HUAt0T1jBVOXXDsCcYSdRp1+wEHNB/LAhzPL8lU+Uvqgybx+yF/6iR
+	lzrCIev5QhszyV8i44XF1B8CiH3twxmy8seX0VBIxUxxA+r4JAnTNxk3R2FpG0sFHakc1MseGWH
+	COl10O8PDkwRKLZWzkcj1nwzIiCvExC7PC61aHor9SntMjEc6lmbxqGP5t6Wn8Bk2xzlRcST962
+	tDIiiTOaR3p6t6vDOBJrU4+D5bkSaQbu+b1olhiXMJlyd509+HYJNvcsZoQhDiQDM3c3XNV5hQu
+	/2fOnKhflqZh6Ra3uU5tSsnqDg==
+X-Received: by 2002:a05:600c:83c8:b0:4a3:18ca:806 with SMTP id 5b1f17b1804b1-4b963c6bc6amr78431705e9.20.1794242218834;
+        Mon, 09 Nov 2026 08:36:58 -0800 (PST)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.56
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 08:36:57 -0800 (PST)
+        Mon, 09 Nov 2026 08:36:58 -0800 (PST)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -95,9 +95,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v7 22/29] sched/rt: Try pull task on empty server pick.
-Date: Mon,  9 Nov 2026 17:36:08 +0100
-Message-ID: <20261109163616.195264-23-yurand2000@gmail.com>
+Subject: [RFC PATCH v7 23/29] sched/core: Execute enqueued balance callbacks after migrate_disable_switch
+Date: Mon,  9 Nov 2026 17:36:09 +0100
+Message-ID: <20261109163616.195264-24-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109163616.195264-1-yurand2000@gmail.com>
 References: <20261109163616.195264-1-yurand2000@gmail.com>
@@ -112,73 +112,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Try to pull task on a server with an empty runqueue before returning NULL (and
-thus shutting down).
-
----
-
-When all the servers of a cgroup are throttled, work is pending, and any one of
-the servers is replenished, it may happen that the runqueue is empty and thus
-the replenished server is immediately shut down.
-
-The server may try to pull a task so that the cgroup could consume its
-allocated runtime as soon as it is replenished.
+Execute balance callbacks after migrate_disable_switch.
+  Balancing may be requested on the __schedule path, in migrate_disable_switch,
+  when the running task is throttled and then pushed away from its runqueue.
 
 Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
 ---
- kernel/sched/deadline.c |  8 ++++++++
- kernel/sched/rt.c       | 13 +++++++++++--
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ kernel/sched/core.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 64df71ab370d..219493427e0b 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -2910,6 +2910,14 @@ static struct task_struct *__pick_task_dl(struct rq *rq, struct rq_flags *rf)
- 
- 	if (dl_server(dl_se)) {
- 		p = dl_se->server_pick_task(dl_se, rf);
-+
-+		/*
-+		 * server_pick_task may drop the runqueue lock, so check if
-+		 * something has shifted.
-+		 */
-+		if (pick_next_dl_entity(dl_rq) != dl_se)
-+			goto again;
-+
- 		if (!p) {
- 			dl_server_stop(dl_se);
- 			goto again;
-diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 9d95cf5fd520..839977b05d53 100644
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -286,14 +286,23 @@ int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent)
- }
- 
- static struct sched_rt_entity *pick_next_rt_entity(struct rt_rq *rt_rq);
-+static void pull_rt_task(struct rq *);
- 
- static struct task_struct *rt_server_pick(struct sched_dl_entity *dl_se, struct rq_flags *rf)
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index aef019cef859..e4e50202896d 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2470,6 +2470,9 @@ do_set_cpus_allowed(struct task_struct *p, struct affinity_context *ctx);
+
+ static void migrate_disable_switch(struct rq *rq, struct task_struct *p)
  {
- 	struct rt_rq *rt_rq = &dl_se->my_q->rt;
-+	struct rq *global_rq = global_rq_of_rt_rq(rt_rq);
- 	struct task_struct *p;
- 
--	if (!sched_rt_runnable(dl_se->my_q))
--		return NULL;
-+	if (!sched_rt_runnable(dl_se->my_q)) {
-+		rq_unpin_lock(global_rq, rf);
-+		pull_rt_task(rq_of_rt_rq(rt_rq));
-+		update_rq_clock(global_rq);
-+		rq_repin_lock(global_rq, rf);
++	struct rq_flags rf;
++	struct balance_callback *head;
 +
-+		if (!sched_rt_runnable(dl_se->my_q))
-+			return NULL;
-+	}
- 
- 	p = rt_task_of(pick_next_rt_entity(rt_rq));
- 
--- 
+ 	struct affinity_context ac = {
+ 		.new_mask  = cpumask_of(rq->cpu),
+ 		.flags     = SCA_MIGRATE_DISABLE,
+@@ -2481,8 +2484,13 @@ static void migrate_disable_switch(struct rq *rq, struct task_struct *p)
+ 	if (p->cpus_ptr != &p->cpus_mask)
+ 		return;
+
+-	scoped_guard (task_rq_lock, p)
+-		do_set_cpus_allowed(p, &ac);
++	rq = task_rq_lock(p, &rf);
++
++	do_set_cpus_allowed(p, &ac);
++
++	head = splice_balance_callbacks(rq);
++	task_rq_unlock(rq, p, &rf);
++	balance_callbacks(rq, head);
+ }
+
+ void ___migrate_enable(void)
+--
 2.56.0
 
