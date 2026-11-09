@@ -1,64 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.183
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794250737;
-	b=OuazBwoZdTbf4RYJR+zONaDHlpK/1GXBVVfnOg3NESYG+QzRxRQqJH6yNxabbMShA4yp
-	 6oNh9fRuuigk2/c2v3eypYVegWYIiOk+D5Cu42J9QdlMcpGAEpZ6L2tTlcbQFaX6hneVh
-	 ZNwJ3WiUVg4bqIhHY6uS2A4cHl0qd3ojetEjfxzQXXMzZ7K0y9lav9jEeby/VSGToax9z
-	 eIwGmv39otQiTrYNzxdn34Uh7WN5DpAM2VlCGToFqoaZ/6eqL7YuYTfj9+DF3JDvrgmfJ
-	 nCwi9jr3Bid+zzAPljAPgEmgcHK/+BGN7K1Y4XFniU9cquXOAZtA8RAuhoR7c27CElw==
+	t=1794251417;
+	b=4KljaWHOMezigI+JLXDYnHB04k469G19Z1pNpnWzGZY7StoR1BzVRRLGPWES9QkjofwV
+	 fljT+qWx9UKmEAJTFNGjiPxnXxkRNrrGAV4itzk46Ocw72cPzivjK8R04OfzXU90zTdjY
+	 Pib5SPUTHPl3RL8Rpg/5jvAvZwgDBYN6BW6Kba0gULMJB08kd+k8CuSJGgKJ9IQwD1uey
+	 1BI/14LdFS6/iNxlbGC9L1vwJBV9SLkw/L8Gw2eh/PadVwhAEbg7TrctUPlHnZmZCQZCJ
+	 viqge8GfzzngJOEpQgMFHwdTI87MHpLU49bYUS73ZdivWeSSkG8d1L8KL/QvsoIhU7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794250737;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=kScsvF5omIBGyCzx6Xt1u7IAsBNAtQ0U2ngEcowLFMQ=;
-	b=I2VNrdN7Bn/GkFRLxeBJcH83FvDPrCFrk5N8n7YbVY2pfpWpc7onA8McPptzeUrGPSP/
-	 8FjS11DpwU/vAI/ePGkAV4ymaEpBGh5gzboAJCxDGKmKXrlKB9S7nJYV3IEbixDP5kF73
-	 ck3GkwC86vVUOvlGBo1DgR1+UaU7MmjVoQaOXk240fWiMz/mmang26VN0iHMbDwFstjRL
-	 uUHI6+n9DcLBcUo990eoo/DJNsY+C2+SBIbocjZXSqwnCIoa28/2taHq2G2weqYYoA6+v
-	 xKqWFiEG5W6VXQ1Dt51Auk2uCMoDRqAoklaWcI1f3cfqupGjvvpXnaXGH5zZIf6Lw/A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794251417;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
+	 Message-ID:MIME-Version:Content-Transfer-Encoding:X-Scanned-By;
+	bh=1+VGOzdszmEm5r9Dtb+uNL8xaPZUQtUCtTE44595/w0=;
+	b=JXwbPHn2DEBQfuxhCRDq1oHyedvfA3eJ2Rdm2DpD9sIuQLV7TFD0aKozC+fSPi0Pooya
+	 0qt8hopp05GCJG2hI4AI/A0Gs0Z6EfN6r2/o8R9H/HA88Jk/7qmb+3Zqt8A7FuAtS/NB3
+	 fl8IW4WBvwHGShuCu5rJ4CyjkxRB7eEmqbpCPdzMcmzG4GZJTQURJNd5zy1EAMWJb8mNT
+	 d7miu77X0x287dvHu0SdYpS3E+BEucbOOqDco9V8V1iMHMRkPjjkg5IJX9fvH85K8g0kF
+	 DET/qZkHwoj59SAEWb4cjubCfeeY6YBWJsPRhkASwjIFndtnKFt+r7FBTRIOybJ4hug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BPuMJIeq;
-	arc=none smtp.remote-ip=91.218.175.183
-Received: from mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=iBBcUN7f;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE2A2606A321
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 18:58:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EE2A2606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C8D0606A321
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 19:10:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7C8D0606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=BPuMJIeq
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=5uFhdvDgxVAAgzuSFrp+bOOxogJv3XKqImRI03XYWSQ=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794250733; v=1; x=1794855533;
- b=BPuMJIeqJI0F0ZsTQf9N6zhrjSoZXQ6AuCiqnXzcCbRNuzPNNq8GmwdKwxov4FcVS14JxzoZ
- pT265pq9o/Mo+mhQgUCRKAQwiXc6f0SeUrOBMrrpXDyFxHwiK6d25wKcNUG/FZ5f06mWGsaTw41
- /t2OpoR3568A+7iSQ74zE5FU=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 785622e6d21c5f4f;
-	Mon, 09 Nov 2026 18:58:53 +0000
-X-Mizu-Trace-ID: 785622e6d21c5f4f
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 9 Nov 2026 10:58:48 -0800
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Zhan Xusheng <zhanxusheng1024@gmail.com>, 
-	cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	kernel-team@meta.com
-Subject: Re: [PATCH v2] mm: memcontrol: Don't lose track of exiting OOM
- victims
-Message-ID: <avIXz853VU6FSMX1@linux.dev>
-References: <avA1wXhTMs9eY2NF@chrisdown.name>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=iBBcUN7f
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794251415;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=1+VGOzdszmEm5r9Dtb+uNL8xaPZUQtUCtTE44595/w0=;
+	b=iBBcUN7fRTLuaJ4VjpNi/CAGEpXwkjfiaALp1ejDeJmeFRLNjAFJxPZZ4QxTiEeWSwNWVb
+	w9P2kbPE96Z7f87kD3aSaL8TAkt+3Zvwt8MOPeJ6DobcNlV9HzAhGMwGAcf5r/gQteh0Lh
+	PRYeYq5DFaAwLn/QzH/4xg7QrZCLdR0=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-336-iGvRxo4pMDuyUzyBPWroFA-1; Mon,
+ 09 Nov 2026 14:10:11 -0500
+X-MC-Unique: iGvRxo4pMDuyUzyBPWroFA-1
+X-Mimecast-MFC-AGG-ID: iGvRxo4pMDuyUzyBPWroFA_1794251410
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0F5D4180060F;
+	Mon,  9 Nov 2026 19:10:10 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E65EF195608C;
+	Mon,  9 Nov 2026 19:10:07 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Ridong Chen <ridong.chen@linux.dev>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v2 0/5] More fix patches
+Date: Mon,  9 Nov 2026 14:09:50 -0500
+Message-ID: <20261109190955.1398611-1-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -68,52 +81,32 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <avA1wXhTMs9eY2NF@chrisdown.name>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Sun, Nov 08, 2026 at 12:41:37AM -0800, Chris Down wrote:
-> When oom_evaluate_task() comes across a victim we've already killed, it
-> backs off until the victim's mm has MMF_OOM_SKIP. This gives the victim
-> a chance to free some memory before we kill anything else. However,
-> since commit a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup"),
-> css_task_iter skips exiting tasks once signal->live reaches zero. That
-> happens before exit_mm(), so a single-threaded victim can disappear
-> from the memcg scan while it still has all its memory.
-> 
-> This can kill another process when the first kill would have been
-> enough to recover, and we've seen it happen in production. If the
-> second victim is in a cgroup with memory.oom.group enabled, the extra
-> kill can take down the whole workload.
-> 
-> In tests I used a 64 MiB memcg with swap disabled. I started a process
-> that faults in 44 MiB of anonymous memory, submits a 4 KiB direct AIO
-> read to null_blk, and goes to sleep. I set null_blk to take 10 seconds
-> to complete the read so the victim would have to wait for it in
-> exit_aio(). Two seconds after starting the first process, I started a
-> second one that tries to fault in 40 MiB.
-> 
-> The 40 MiB allocation hits memory.max partway through and triggers an
-> OOM kill. The OOM killer picks the first process, which has more
-> resident memory. With the read still pending, the victim blocks in
-> exit_aio() before it can tear down its address space.
-> 
-> memory.events showed oom_kill 2 in three runs. In one of them the first
-> process hadn't submitted the read yet when it was killed. The slow read
-> just makes the window easier to hit.
-> 
-> The cgroup iterator hides these tasks so that cgroup.procs doesn't
-> show processes that waitpid() may already have reaped. That's fine for
-> cgroup.procs, but the OOM scan needs to see a victim even after its last
-> thread has started exiting. We already have CSS_TASK_ITER_WITH_DEAD
-> for sched_ext, so use it for mem_cgroup_scan_tasks() as well.
-> 
-> With this applied, OOM selection backs off while the first victim still
-> has memory to free. The 40 MiB allocation completes and memory.events
-> shows oom_kill 1 in three test runs.
-> 
-> Fixes: a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Chris Down <chris@chrisdown.name>
+ [v2]
+  - Reorder the series by putting the original patch 4 before patch 2.
+  - Update the Fixes tags in patch 1 and 5 as suggested by sashiko.
+  - Update the new patch 3 to remove obsolete WARN_ON_ONCE() and update
+    comment as reported by sashiko.
+  - Minor fix to the test case in patch 5 as reported by sashiko.
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+This patch series contains an additional set of cpuset fix patches.
+
+Waiman Long (5):
+  selftests/cgroup: Fix "test_cpuset_prs.sh -v" failures
+  cgroup/cpuset: Correctly set cpus_updated in
+    cpuset_hotplug_update_tasks()
+  cgroup/cpuset: Fix incorrect partition invalidation logic in
+    cpuset_hotplug_update_tasks()
+  cgroup/cpuset: Protect current->mems_allowed read in cpuset_fork()
+  cgroup/cpuset: Correctly set isolated_cpus when switching partition
+    state
+
+ kernel/cgroup/cpuset.c                        | 77 ++++++++++++-------
+ .../selftests/cgroup/test_cpuset_prs.sh       | 20 +++--
+ 2 files changed, 64 insertions(+), 33 deletions(-)
+
+-- 
+2.56.0
+
