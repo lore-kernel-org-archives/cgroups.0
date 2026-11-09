@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794217539;
-	b=y4VPSGTLs50QIvVq03h2LmhpCZoAH7rpM1Wf+sDrH+8a6+W4FSrDW2rkDR2KflMbE/sn
-	 eEaQvrpZ8NaVSv6CMfYAvnyFDvdL3Ye34OnIAWSMP/bO2HlVmCrRkPQF0Rtoup7RDjcCQ
-	 ApMG5M6b7IZ5JbRk/zGFfGCLXkLVz5KvpT6Bj2QyNI2I+OCmS9vmcR6aznSLqWR1DAIU8
-	 1mnVm4rRGFDEEvaqgq5Prwb3XQbEZMt/TnkfBeY2YrMywheFo0BHMNixp9Jz2b703YBvK
-	 DTNPQazs2HBJJkJ2SjMqWlfpvdtEK89ziLFEKDCvwsicrgtzyI7opswx0lgzPlhiLaw==
+	t=1794217921;
+	b=i1MQmgreqisbiaR0j3+zhsJJ/ICTb4Zw+HL0nNXXIFknQUEA9zPMMv0BDFVOHSg52RUG
+	 oq7PUEMfEH1aWkJhhg3bWg6TC1MD6b+TKfw5G6vnXsA7T3+DTSolNkZtrLs95ig8V+TEc
+	 x8ccJdSE3Hf+XkGO0PjK4Cm3re0mGi+b2zpBowKs3Luv42VMRPXT/R+K8VmHIGiTBi9l1
+	 6/gQMnwWbTrmrsJ0o1ItK4RzQ6cWhHqAxmv8e/oVGbVT0shjVdXsT4j03sWwV1SBzoNgW
+	 LXGS8YwEAKDnGoAtL0BsdXBJh5n1k5NsMJM9GU9Vh9lIBQaI1IVWD3XID4tbu6X177Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794217539;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794217921;
 	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
 	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
 	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
 	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=aVhDRH0Ejv2dP5BNHANZ6BfN36P5eG+GYmlsiu8O5i0=;
-	b=qe6KD47tvLjQ31iKa/+pJ5oJRBTlVHWChXiAt7RuM3xILevG8yHdbNfR9kBzcXLLGc8/
-	 U5iPnjJdyyK+GA3rxHPIUjabVGVFN1seN0F/W3BXL3uZaSAG+aKIVXpvu+tdm41h0zylh
-	 gN4WFOsRyd+fsqwernJlR5fU0dmEFuF4vz6LgCGdDxHVBCHLya8Frda6qRgXqRqPLWSAh
-	 /uGGEPVM98CW4biGHBXq/Szx0VY+eiprwg/MkANzx+y2zqSgumdpoUzPNy/ID6lFO4urM
-	 xM2l8Ul2NeXblMQbxIxhsPzHsufyQozrM4qTnPOMiWZvRf0RuOVJlY4cBA/JTYTsPnw==
+	bh=BPClaJ9k3pZ7M2HgIHwRGL9GY0oByLTbIb+UN2JvJdI=;
+	b=vo3QsYEMcrWO8GJZe1a3n8M1tL+Q6CDV5PacdLkyqE/f6p5oRBtFcKdVx6y0JVH4hoZ0
+	 kzO0Q6x08FC66apxtk58GUlSNlb3lk7JvBbugpTl3zdZBOUoOvvXNnLBEID0Tc7itrBmq
+	 gV++Zc/k33AKZW8tbx44E3/G2WAZ8fcipwifAh0++WTdmzDn5nnfEpgUJWi5g8uu3RW2h
+	 7PywkZ1QFnyKDH4JqvqYWEAqcXCJUXwNHy8jqmpReXVu6mQ4/0mGPOU/7+QyjEot+Iu94
+	 dpH+S5ErXD5O3YJjyPgh9b7pjKLr9oZNDK6sxESGKzIwuNMjI/uAB8WMcAnZle2wtoA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IIiDOn+6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ClskhasM;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFA24606A323
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:45:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02DCC606EE81
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:51:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IIiDOn+6
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FD161F008A2
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:45:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ClskhasM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BCE91F008BE
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:51:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794217538;
-	bh=aVhDRH0Ejv2dP5BNHANZ6BfN36P5eG+GYmlsiu8O5i0=;
+	s=k20260515; t=1794217919;
+	bh=BPClaJ9k3pZ7M2HgIHwRGL9GY0oByLTbIb+UN2JvJdI=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=IIiDOn+6mHfBnlcx8dhDV0FbXr2mIkgDI/paabPEfftwv+t/j09LPO0F9TMdLelU0
-	 tF2I7Yd6xJ8I9DUoadaKfVesvIhkMVneSGd/Yyc6alpGUegu/IMkgHDPJOxukl+4K9
-	 HVuGPXppT6pwICcvzAwKVAc9t3ftXP6BPM/xsK7sBY74+t775KrL45Z4Dj+6YK5a9b
-	 92SdWwCP63fFsXWmHTdJ9eLVu1/SoGtiU8M298cTk6P5HkN5ayeiHetEDIZELpuaRB
-	 znspq3nuzORltN9i94EKzRNFp9RwUmabvzdG5ZuUL7SO4xL9xcUbOSTMUAr/AaOJzh
-	 AkQbbHe0knYPA==
-Received: by mail-vk1-f173.google.com with SMTP id 71dfb90a1353d-5eac6c5f927so238280e0c.0
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:45:38 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErHzgxh0m7LibDsELVPpHkJFm2UUXcIIM1D2nilNZB0ThkMxeZJdTOIQkPMk4CkV5IKAUVGx7YF9@vger.kernel.org
-X-Gm-Message-State: APuU4Z8OOGvd32ukZUm9nzbSvWsT4pnIhUJFZPRR683K3RnlLkDcldky
-	2D73pDyFTTRtmJmzZtn4HgVPjXmp4LS6Jr0Gc4tjtN03BjslZp61iUbIysfdT9l9GyoKe/y4O25
-	9ZVrI1aBV7WkJTZPDuFRwdLY9XwGmM/w=
-X-Received: by 2002:a05:6122:e203:b0:5c9:a60d:3276 with SMTP id
- 71dfb90a1353d-5ece7246f6emr692804e0c.10.1794217537447; Mon, 09 Nov 2026
- 01:45:37 -0800 (PST)
+	b=ClskhasMy/BO/ZFdZwG+TW51LQNe0aK6dpQ2tXf3zXQZrXEHcm8neQwkSGJQK5bn8
+	 LSLm+/HBxMHZMxvoJu/FfopjGzpVjathiWg6LhLTjtHomqOV6NScv+voJMgOraZPB+
+	 /ycD4F1aoK068VBjmEHIzTpz6UCYVE334qo4AAnvYskYS657GvVKuV95oqJnh/isCp
+	 Ew07MQtp8jOpq34koBR4cll0v4jnwrIVmL3RYMomGUCU4+PMwbvb/yi5tiY3SPEdBZ
+	 YFw2QOk4Ib9EJpoMe7VKixgAJAlLv7+MJTeey2wVMPTTTLYNNHu/Q6loLUjbENBCIP
+	 uVqmfBr+FuxdQ==
+Received: by mail-vk1-f175.google.com with SMTP id 71dfb90a1353d-5ecda93627eso180384e0c.1
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:51:59 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErGA/7C8a8uviX1mkKdc+wGcD3slIDpsAAotXhCOxgmVk28I/7FyWLE+tRo7YssRUAxOluaeiR7x@vger.kernel.org
+X-Gm-Message-State: APuU4Z+3AFKVQOVpi+9GC4u0wWkkA5RSL20RMfpWPuPUObpk6wgvtqDE
+	Or66iTZQ0oqvBH0al+SAcgV5yuJ8u+WzUtv+Ns4ka32PEEQfxW6vqJPwgaeKLiVFODErACq3aYh
+	qtnIU7YazxRaV34C6vICAzopxLOdlgRI=
+X-Received: by 2002:a05:6122:a012:b0:5ea:c9ab:bd86 with SMTP id
+ 71dfb90a1353d-5edf9435d18mr565522e0c.21.1794217918356; Mon, 09 Nov 2026
+ 01:51:58 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -60,15 +60,16 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016-mglru-fg-v4-15-2106750c0bfa@tencent.com> <CAGsJ_4wTFHJxzuiRDBcuevdULMcD+se6SuPbzWKA8wsUAG80_w@mail.gmail.com>
- <CAMgjq7Atry0zRc_-xbrL_VubxTBQOT8R2_aumghXQaO9uTANHg@mail.gmail.com>
-In-Reply-To: <CAMgjq7Atry0zRc_-xbrL_VubxTBQOT8R2_aumghXQaO9uTANHg@mail.gmail.com>
+ <20261016-mglru-fg-v4-6-2106750c0bfa@tencent.com> <CAGsJ_4zQh0TnAxifWPo2+DcyFFOtpXM+2QW91A07oumfyrqVYg@mail.gmail.com>
+ <CAMgjq7DeC23zak6Xur=E29qo7JPNvQUMtbbO34Y62jrQjQgStA@mail.gmail.com>
+In-Reply-To: <CAMgjq7DeC23zak6Xur=E29qo7JPNvQUMtbbO34Y62jrQjQgStA@mail.gmail.com>
 From: Barry Song <baohua@kernel.org>
-Date: Mon, 9 Nov 2026 17:45:24 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4wRw=z0fqWo8pK6cJ-NdnjxC-W7uLRw=_Y+VjNaAO2+kQ@mail.gmail.com>
-X-Gm-Features: AclHuK8xNVegVCW7QSB1W4kv0lSWF1rRdFvqk_1TYyR009hud_IPjR1oWsQQqAY
-Message-ID: <CAGsJ_4wRw=z0fqWo8pK6cJ-NdnjxC-W7uLRw=_Y+VjNaAO2+kQ@mail.gmail.com>
-Subject: Re: [PATCH v4 15/17] mm/mglru: make folio_inc_lru_refs lruvec lockless
+Date: Mon, 9 Nov 2026 17:51:47 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4w275Z8ruQHNMFd9uL+wJgAusU2+QN-cwS5mZcBrg9fRA@mail.gmail.com>
+X-Gm-Features: AclHuK-xWTO8SHWDNdqRk7rNXhHpJft0o90jKbimD22mK-2buKuHz7N9dEvOsNg
+Message-ID: <CAGsJ_4w275Z8ruQHNMFd9uL+wJgAusU2+QN-cwS5mZcBrg9fRA@mail.gmail.com>
+Subject: Re: [PATCH v4 06/17] mm/mglru: move add/del LRU size accounting out
+ of lru_gen_update_size()
 To: Kairui Song <ryncsn@gmail.com>
 Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
 	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
@@ -95,175 +96,91 @@ Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kern
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 9, 2026 at 4:08=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrote=
+On Mon, Nov 9, 2026 at 5:34=E2=80=AFPM Kairui Song <ryncsn@gmail.com> wrote=
 :
 >
-> On Mon, Nov 9, 2026 at 5:48=E2=80=AFAM Barry Song <baohua@kernel.org> wro=
+> On Mon, Nov 9, 2026 at 4:48=E2=80=AFAM Barry Song <baohua@kernel.org> wro=
 te:
 > >
-> > On Fri, Oct 16, 2026 at 2:16=E2=80=AFAM Kairui Song via B4 Relay
+> > On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay
 > > <devnull+kasong.tencent.com@kernel.org> wrote:
 > > >
 > > > From: Kairui Song <kasong@tencent.com>
 > > >
-> > > The lruvec spinlock in folio_inc_lru_refs was only taken to keep
-> > > concurrent aging from corrupting the size counters.  This is no
-> > > longer needed: the per-generation counters are atomic, and the
-> > > active/inactive ABI counters are updated per folio and linearized by
-> > > the CAS on the folio flags, so concurrent aging can no longer corrupt
-> > > them.  The same argument already allowed folio_reset_lru_refs() to
-> > > drop the lock.
+> > > Pure code shuffle, no behavior change.  lru_gen_update_size() now onl=
+y
+> > > updates the per-generation counters plus the promotion move; the
+> > > addition and deletion active/inactive accounting move to
+> > > lru_gen_add_folio() and lru_gen_del_folio(), which know the generatio=
+n
+> > > and can apply the active-window test directly.
 > > >
-> > > Use folio_lruvec_live_get()/folio_lruvec_live_put() to hold the RCU
-> > > read lock around the lruvec lookup, and drop the spinlock entirely.
+> > > The unevictable case is untouched: unevictable folios never enter
+> > > lru_gen_add_folio() and keep being accounted by lruvec_add_folio() as
+> > > before.
 > > >
+> > > Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
+> > > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > > ---
 > >
-> > Yes, this is cool. We have two paths calling
-> > folio_inc_lru_refs() or folio_inc_lru_refs_walk().
+> > The patch looks good to me.
 > >
-> > 1. folio_mark_accessed() from syscall access
-> > 2. walk_update_folio() from page table walker or look_around
+> > Meanwhile, I've been struggling with the names of
+> > __update_lru_size() and lru_gen_update_size() for a long
+> > time.
 > >
-> > For the latter, we can't actually cross multiple
-> > lruvecs/memcgs, because of get_pfn_folio() as shown
-> > below:
-> >
-> > static struct folio *get_pfn_folio(unsigned long pfn, struct mem_cgroup=
- *memcg,
-> >                                    struct pglist_data *pgdat)
+> > Given that lru_gen_update_size() now only updates
+> > nr_pages:
+> > static inline void lru_gen_update_size(struct lruvec *lruvec, int type,
+> >                 struct folio *folio, int old_gen, int new_gen)
 > > {
-> >         ...
-> >         rcu_read_lock();
-> >         if (folio_memcg(folio) !=3D memcg)
-> >                 folio =3D NULL;
-> >         rcu_read_unlock();
-> >         ...
+> >        ...
+> >
+> >         if (old_gen >=3D 0)
+> >                 atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type]=
+[zone]);
+> >         if (new_gen >=3D 0)
+> >                 atomic_long_add(delta, &lrugen->nr_pages[new_gen][type]=
+[zone]);
 > > }
 > >
-> > Consider a common library file used by 100 memcgs, with
-> > its folio residing in the root memcg.
+> > while __update_lru_size() only handles
+> > active/inactive accounting, could we rename them to make
+> > their roles clearer? For example:
 > >
-> > When walking the 99 non-root memcgs, even if the folio
-> > has been accessed, we won't get a chance to call
-> > folio_inc_lru_refs_walk() for it. As a result, this folio
-> > may eventually reach the eviction rmap path. With a high
-> > mapcount, folio_referenced() could become quite
-> > expensive.
-> >
-> > That's what I was trying to point out here as well:
-> >
-> > https://lore.kernel.org/linux-mm/20261102213915.57805-1-baohua@kernel.o=
-rg/#t
+> > lru_gen_update_nr_pages()
+> > lru_gen_update_active_inactive_size()
 >
-> Hi Barry,
->
-> Thanks for the review, I saw that too, very interesting approach! And
-> I believe it will helpful.
->
-> > For the former, you can get the lruvec with:
-> >
-> > lruvec =3D lruvec_live_lock_irq(folio_lruvec(folio));
-> >
-> > I'm wondering whether we could eventually unify them
-> > so that both support cross-memcg inc_refs.
->
-> Definately, actually for that link you posted, combined with the code
-> snip above, after FG, I think we can further simplify that, no need to
-> check mem_cgroup_is_descendant, we just do:
->
-> - folio_inc_lru_refs_walk: if the folio belongs to the lruvec being
-> walked, the batch stays in walk->lruvec
-> - folio_inc_lru_refs: if the folio is a remote one, per-folio, no batch
->
-> non-descendant folio sharing across memcg are actually quite common
-> e.g., libc and shared mapped memory, this could be more helpful? And
-> it seems fast for the walker.
+> Hmm but __update_lru_size is also used by CLRU, so it's not a
+> "lru_gen" specific helper. If we can merge CLRU/MGLRU, then maybe we
+> can rename them?
 
-I agree. I mentioned mem_cgroup_is_descendant() because
-folio_referenced() checks for descendants and ignores
-folios belonging to non-descendant memcgs:
+I did a quick search in mm/vmscan.c and found that
+everything is MGLRU. But you're right, I missed
+update_lru_size(), which is part of CLRU.
 
-static bool invalid_folio_referenced_vma(struct vm_area_struct *vma, void *=
-arg)
-{
-        struct folio_referenced_arg *pra =3D arg;
-        struct mem_cgroup *memcg =3D pra->memcg;
-
-        ...
-        /*
-         * If we are reclaiming on behalf of a cgroup, skip counting on beh=
-alf
-         * of references from different cgroups.
-         */
-        if (memcg && !mm_match_cgroup(vma->vm_mm, memcg))
-                return true;
-
-        return false;
-}
-
-static inline bool mm_match_cgroup(struct mm_struct *mm,
-                                   const struct mem_cgroup *memcg)
-{
-        struct mem_cgroup *task_memcg;
-        bool match =3D false;
-
-        rcu_read_lock();
-        task_memcg =3D mem_cgroup_from_task(rcu_dereference(mm->owner));
-        if (task_memcg)
-                match =3D mem_cgroup_is_descendant(task_memcg, memcg);
-        rcu_read_unlock();
-        return match;
-}
-
-I actually wonder whether this is really correct...
-
->
-> folio_inc_lru_refs_walk follow the same rule as folio_inc_lru_refs
-> (with MAPPED flag), just faster, skipping RCU and the speculative
-> check afterwards as the walker owns the seq it is advancing, and
-> caller handles the batch update of counter. While folio_inc_lru_refs
-> only requires the caller to hold an reference to the folio it heavily
-> relies on RCU / CAS conventions, not easy to batch things there, but
-> it's still accetablily fast already (e.g. the fio read test showed
-> almost no performance penalty).
-
-Yes. One tricky aspect is that update_batch_size() is
-designed for the current lruvec, not a remote one.
-
-static void walk_update_folio(struct lru_gen_mm_walk *walk, struct
-vm_area_struct *vma,
-                struct lruvec *lruvec, struct folio *folio, bool dirty)
-{
-        ...
-        if (walk) {
-                old_gen =3D folio_update_gen(folio, new_gen, &type, &vma->f=
-lags);
-                if (old_gen >=3D 0 && old_gen !=3D new_gen)
-                        update_batch_size(walk, folio, old_gen, new_gen, ty=
-pe);
-        } else if (lru_gen_set_refs(folio, &vma->flags)) {
-                ...
-        }
-}
-
->
-> And I think the main reason MGLRU can't operate cross memcg was, lack
-> of a protocol to stablilze the memcg's gen and holding a lock is too
-> costly, now folio_inc_lru_refs handles that, and FG
->  lives on top of that. So we can try that out right after the FG series.
-
-Yes, absolutely. With MGLRU-FG, we lay the groundwork
-for further cross-memcg optimizations.
-
-On Android, we observed that folios with very large mapcounts
-still reach the rmap path because walk and look-around cannot
-promote them across memcgs. In more than 99% of cases,
-folio_referenced() finds them PTE-young. As a result, these
-folios incur the rmap overhead but are unlikely to be
-reclaimed. It's essentially wasted rmap work.
-
-With the cross-memcg optimizations, we are likely to
-eliminate this overhead.
+   1     62  include/linux/mm_inline.h <<update_lru_size>>
+             __update_lru_size(lruvec, lru, zid, nr_pages);
+   2    279  include/linux/mm_inline.h <<lru_gen_update_size>>
+             __update_lru_size(lruvec, lru, zone, delta);
+   3    287  include/linux/mm_inline.h <<lru_gen_update_size>>
+             __update_lru_size(lruvec, lru, zone, -delta);
+   4    293  include/linux/mm_inline.h <<lru_gen_update_size>>
+             __update_lru_size(lruvec, lru, zone, -delta);
+   5    294  include/linux/mm_inline.h <<lru_gen_update_size>>
+             __update_lru_size(lruvec, lru + LRU_ACTIVE, zone, delta);
+   6   3355  mm/vmscan.c <<reset_batch_size>>
+             __update_lru_size(lruvec, lru, zone, delta);
+   7   4101  mm/vmscan.c <<inc_max_seq>>
+             __update_lru_size(lruvec, lru, zone, delta);
+   8   4102  mm/vmscan.c <<inc_max_seq>>
+             __update_lru_size(lruvec, lru + LRU_ACTIVE, zone, -delta);
+   9   4632  mm/vmscan.c <<__lru_gen_reparent_memcg>>
+             __update_lru_size(child_lruvec, lru + child_lru_active,
+zone, -nr_pages);
+  10   4633  mm/vmscan.c <<__lru_gen_reparent_memcg>>
+             __update_lru_size(parent_lruvec, lru + parent_lru_active,
+zone, nr_pages);
 
 Thanks,
 Barry
