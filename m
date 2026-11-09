@@ -1,55 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794176104;
-	b=vTnDURyDQIQEAaNLAuyb8/ZoFJ4VUF5FQpe0yJQ1q0O2ztXaTDgxsqeO1dWADJLUI1X3
-	 +NZnFu5sQP4cVB5mEb2g9scCaLFgcNeckWXeUlHAeL0biAYxpj5LUaTN43LLe77CV51Ck
-	 tQAACQsWEFbC85+jMA+8GAjNq1h0FUA6pPsc3lNhqEh0yPpUIKVL7m5QzqL+FO1RQZo2/
-	 +wbcF1T3k/+C5MiBd32fYkp3DZ1HGW0HmuyOo1fsM908S2OKHfxu7bRE6M0f0uHx6NtXS
-	 BtFdCFzhi4kTeErPXkjlbj4f1yoA4/QIRQJmOqoFatqP36Occ5IoE7fjQoTfyq4D6iA==
+	t=1794191825;
+	b=Ha5FK4HO1SktQWSnIwFCmKxLkaqhWg3CtnRIOjDtnk3MUurzifdDol7Cs8Q7q4ETprTL
+	 IafxXJs0hW0MhMdjWOPvuawDMxtBzvcGnYTszKQ7UUg0rNVSe2FVqoZq+B9H2akMJgoAx
+	 Y/qhUX0137bn2ePE3RtRktB62dYxaCfCocqyz0QKkJa9mQ8+GokpujaackYBcNkkLT8Ih
+	 +aicKBH+XbWUzhGiTc20EatPRQEqhPyW6EWb2eNBIOgkEuPgoDZ8jtyf/HmtRQqXZD0ro
+	 AJjH4UGFFA+H2LhhrBbcGOZj3+4Cn307clbalqtRoEZefBYZhnaZZzwEwHShwFLiNGg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794176104;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=dYkSOS7lW77R25JXZ1I8J7Ye6eXp2ev/AWCnfjt0ivY=;
-	b=ye56Mer6rIuoTjXUnAZ/FFpo5A/moY3qO0Mv68O1o89dSJNtsw995VHnrrVq2gdo3qiL
-	 +txq7hfUO879AK2clZPRCVn48paNBFxexyFAQMom9FM2iVyrzkFqmiUBSkODGutaImOe1
-	 J62Ru3PLiKRJ9b0rZUBkPHSSI+iS4YrePM6mZo533Qyb7W5ZLWoWPzaEWv8p5RFhUbURC
-	 +N4Fd5/ndSAGOypn4r61JqNMlZTiACc/Jf+fBdgBtkUCyGRy3qd9yIQh7fpxm+IglvH0I
-	 Sgl+qloCGlC639c2X45s6JBP3OE9hX0DRJaGZ5DrB7j8EVl/b6trIGzECoaAbg2qe2A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794191825;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=2Do46NlydZKutDqVv5QFGwv55q73NYhW6ATlnOrb580=;
+	b=bWq/pw4/w+P72lLzyWN0JQmDKA6MNIOtM8rwBdiaaQ17C0Doy3bbb57F/7ZGeCBAfavF
+	 ZK/OU6YwT1QiYvbKo85TQMC0ozboQ+3l/JpwIvZH8d/+dIBoORxRoemWVCcNXJ+wS5oFY
+	 xSM80RBv0ORoGRVxklrl+uD3s88DZxCaPJx1ItuEJZWB6FcrRTFks7d+7WNMHDhBKdZ3w
+	 crE47X0VhlDJvm+uhdEQ0b2wPbMk8ezTLid9DAqCAp4HmlqLjo/fGRHAqbZBBMmawVzHy
+	 nECcp5T1gExzHHFEBD9IDn68DC6H1Z8POb7mh2gLxQsS7zZRyGAkQu8RFiVsD+BgsJQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jNOAjJAU;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=efficios.com;
+	spf=pass smtp.mailfrom=efficios.com;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b="OVpf/Zcj";
+	arc=none smtp.remote-ip=158.69.130.18
+Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66381606A333
-	for <cgroups@vger.kernel.org>; Sun,  8 Nov 2026 22:15:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF2B0606A322;
+	Mon,  9 Nov 2026 02:37:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF2B0606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jNOAjJAU
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7AAB1F008A7
-	for <cgroups@vger.kernel.org>; Sun,  8 Nov 2026 22:15:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794176102;
-	bh=dYkSOS7lW77R25JXZ1I8J7Ye6eXp2ev/AWCnfjt0ivY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=jNOAjJAUB9a5aYsLRCJIKZOrkvp62x+LRh+SAJ6hq+z/ORHz60AAku0ZqnCL1nSWS
-	 7VYzKUeoA57kkrXLINYL9o0nYQMBtMkVNuYbwXLsJ8nl5EUVvu4h+36JEgt4XZgi8D
-	 DpPN+rSGyV5/kKS1HNQ20LjavR22Z7q7iAGmR8mjwFXg63qqkS/PwHnn8VYLwQEGmR
-	 Zv9IwO18q6fTrgAqBiRwOKHoETQizGgNe2so8WecWkjjyb0zkgFj4prkS3el8iCOeF
-	 0pu7ODqxBGoUedgqMMj2SfGn4jLuibGeEQ2hLPrXmvwm+6fVLRxn15vVUulCkWFUTM
-	 8otq0ntBcjynw==
-Received: by mail-qk1-f178.google.com with SMTP id af79cd13be357-93a40a9a01aso46307785a.0
-        for <cgroups@vger.kernel.org>; Sun, 08 Nov 2026 14:15:02 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErF35S202/DjGil4L/Z9vKB03lagCvINzMxvLKCSorcSy6FOSsMpK04pB1Djb0iKIxsSA6dNdGBz@vger.kernel.org
-X-Gm-Message-State: APuU4Z9GylynmD7GO784M9Yo+Ito84iit2usDrHOMYVVR+JkSuucxszv
-	h1Hx0coKh2YPJeSj10X1rlnK6t8XiFqc03zOSMJYdUpJk8F3ueA78Rn4Cr35LuSS+y5HWnZoyU0
-	WiXZ+k7OeArqrB0UHXTY1rDslNDbe/D8=
-X-Received: by 2002:a05:620a:458b:b0:945:c3b8:62f2 with SMTP id
- af79cd13be357-94604df4c5emr848358685a.34.1794176102003; Sun, 08 Nov 2026
- 14:15:02 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=OVpf/Zcj
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+	s=smtpout1; t=1794191823;
+	bh=2Do46NlydZKutDqVv5QFGwv55q73NYhW6ATlnOrb580=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=OVpf/Zcj+TGbED8ldGS2qiEK6CtDPt94fPd6v4n/mQUEZ0bRLyE+xA+BvAnf8d28N
+	 rbUOQNGKdVsL04d3QzhSKFHI7vG6pbpVAWAHEKeL3T6cHcFed0idxdK1JYOYgwZAxQ
+	 HxzBEG57n16HX5xANIgTin+w+taJE+yJnuxKGIuur6YL1Q5zPt9rkDacZ2kacBVChk
+	 FiuJl6RMppQW7/bb4YorOV883KGX6JVpg/EkqRMZL6kbC7YURyREDqhQBDam9nyMnd
+	 8O1mcVYy6NRxWzEluEw6qB0RsivtSHGC3ZtGKAwS0e2Y4hbWrBIvJLJs+XT8gTone1
+	 EIZoWDr1rtQ5g==
+Received: from thinkos.internal.efficios.com (unknown [IPv6:2606:6d00:100:4000:cacb:9855:de1f:ded2])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jNDSv4MkkzMGJ;
+	Sun, 08 Nov 2026 21:37:03 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: Waiman Long <longman@redhat.com>
+Cc: Thomas Gleixner <tglx@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Tejun Heo <tj@kernel.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Ridong Chen <ridong.chen@linux.dev>,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] cpu: Fix online housekeeping CPU check in _cpu_down()
+Date: Sun,  8 Nov 2026 21:37:03 -0500
+Message-Id: <20261109023703.1551928-1-mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20261108180849.1268263-1-longman@redhat.com>
+References: <20261108180849.1268263-1-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,132 +72,67 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com> <20261016-mglru-fg-v4-12-2106750c0bfa@tencent.com>
-In-Reply-To: <20261016-mglru-fg-v4-12-2106750c0bfa@tencent.com>
-From: Barry Song <baohua@kernel.org>
-Date: Mon, 9 Nov 2026 06:14:50 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4y-7R07wFJTY2a8tMQ1xvG2kjuG0Q1rLjx8DOg4u3UwZA@mail.gmail.com>
-X-Gm-Features: AclHuK8HmC-Mujf1pZixYM-Y1dMwxxenrB0ml0fO-vwqyERAvkVtIlGDnC9BHUE
-Message-ID: <CAGsJ_4y-7R07wFJTY2a8tMQ1xvG2kjuG0Q1rLjx8DOg4u3UwZA@mail.gmail.com>
-Subject: Re: [PATCH v4 12/17] mm/huge_memory: mark folio as accessed more
- accurately on split
-To: kasong@tencent.com
-Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
-	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>, 
-	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
-	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
-	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
-	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
-	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
-	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
-	Kairui Song <ryncsn@gmail.com>, Xiang Liu <liuxiang.277@bytedance.com>, 
-	Ehab Ababneh <ehab.ababneh@intel.com>, zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, 
-	Lian Wang <lianux.mm@gmail.com>, Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 16, 2026 at 2:16=E2=80=AFAM Kairui Song via B4 Relay
-<devnull+kasong.tencent.com@kernel.org> wrote:
->
-> From: Kairui Song <kasong@tencent.com>
->
-> The behavior of updating the folio's access info isn't consistent for
-> huge mapping splitting or ordinary unmapping. The page table's young
-> flag has to be translated into folio's access info.
->
-> Right now it only check and set folio's referenced flag, which isn't
-> enough since folio flags update on access have its rules. Ordinary
-> unmapping (zapping) calls folio_mark_accessed(), and it also checks
-> if the VMA has recency to avoid false updates.
+[ Resent with the lists in Cc. The first copy went to Waiman only. ]
 
-This might be a bit off-topic, but I once proposed
-recency fading for the zapping case in Android workloads:
+On 2026-11-08 13:08, Waiman Long wrote:
+[...]
 
-https://lore.kernel.org/linux-mm/20250514070820.51793-1-21cnbao@gmail.com/
+This is not about the patch itself, but about the mask it reads. The
+Sashiko AI reviews of this patch and of my sched/isolation patch [1]
+both flag a race on the HK_TYPE_DOMAIN cpumask. I checked it against
+the code. It is real in some configurations, and older than this patch.
 
-folio_mark_accessed() might not be ideal for Android
-apps that are being killed, as we expect them to be
-relaunched only after a long period of time.
+Since commit a84097e625f2 ("cgroup/cpuset: Call housekeeping_update()
+without holding cpus_read_lock"), housekeeping_update() replaces the
+mask and frees the old one with only cpuset_top_mutex held. Its message
+says that CPU hotplug can run in parallel. But
+housekeeping_dereference_check() still accepts cpus_write_lock, or
+cpuset_mutex, as enough to read the mask without RCU. _cpu_down() reads
+it that way, with or without this patch:
 
-But for the splitting case, I guess there is no doubt
-that the accessed state should be set.
+  CPU 0                                  CPU 1
 
->
-> So first just use the right helper here to be more consistent.
->
-> Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
->  mm/huge_memory.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index bd44d58e8684..1e2b6448c010 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -3093,8 +3093,8 @@ static void __split_huge_pud_locked(struct vm_area_=
-struct *vma, pud_t *pud,
->
->         if (!folio_test_dirty(folio) && pud_dirty(old_pud))
->                 folio_mark_dirty(folio);
-> -       if (!folio_test_referenced(folio) && pud_young(old_pud))
-> -               folio_set_referenced(folio);
-> +       if (pud_young(old_pud) && vma_has_recency(vma))
-> +               folio_mark_accessed(folio);
->         folio_remove_rmap_pud(folio, page, vma);
->         add_mm_counter(vma->vm_mm, mm_counter_file(folio),
->                 -HPAGE_PUD_NR);
-> @@ -3216,8 +3216,8 @@ static void __split_huge_pmd_locked(struct vm_area_=
-struct *vma, pmd_t *pmd,
->                         folio =3D page_folio(page);
->                         if (!folio_test_dirty(folio) && pmd_dirty(old_pmd=
-))
->                                 folio_mark_dirty(folio);
-> -                       if (!folio_test_referenced(folio) && pmd_young(ol=
-d_pmd))
-> -                               folio_set_referenced(folio);
-> +                       if (pmd_young(old_pmd) && vma_has_recency(vma))
-> +                               folio_mark_accessed(folio);
+  write to cpuset.cpus.partition
+    cpuset_update_sd_hk_unlock()
+      mutex_unlock(&cpuset_mutex)
+      cpus_read_unlock()
+                                         echo 0 > .../cpuN/online
+                                           _cpu_down()
+                                             cpus_write_lock()
+                                             m = housekeeping_cpumask(
+                                                   HK_TYPE_DOMAIN)
+                                             <preempted>
+      housekeeping_update()
+        rcu_assign_pointer(...)
+        synchronize_rcu()
+          CPU 1 is not an RCU reader
+        flushes workqueues
+        tmigr_isolated_exclude_cpumask()
+          the !CONFIG_NO_HZ_COMMON stub
+        kfree(old)
+                                             cpumask_any_and(..., m)
+                                               reads freed memory
 
-We now have two inc_refs paths:
+With CONFIG_NO_HZ_COMMON, tmigr_isolated_exclude_cpumask() takes
+cpus_read_lock() before kfree(old). That waits for CPU 1. So most
+configurations are safe, but by accident. Without CONFIG_NO_HZ_COMMON,
+nothing makes kfree(old) wait. The same holds when one of its two
+allocations fails: it returns -ENOMEM before it takes the lock.
 
-- folio_inc_lru_refs_walk() for mapped folios;
-- folio_inc_lru_refs() for syscall accesses, or possibly
-  mapped folios with the appropriate flags such as
-  LRU_REF_MAPPED, LRU_REF_EXEC, LRU_REF_FORCE, etc.
+This comes from reading the code. I did not try to reproduce it.
 
-The interface is:
+A fix could make housekeeping_update() take and release
+cpus_read_lock() before kfree(old). That waits for any hotplug reader
+of the old mask, whatever the timer code does. It holds only
+cpuset_top_mutex there, which comes first in the cpuset lock order. I
+did not find a reader that holds cpuset_mutex without the hotplug
+lock, but I did not check every caller. I can send a patch, if you
+agree with that direction.
 
-void folio_inc_lru_refs(struct folio *folio, unsigned int flags);
-
-Here we call folio_mark_accessed(folio), which is the
-syscall path with flags =3D 0:
-
-folio_inc_lru_refs(folio, 0);
-
-Are we somehow applying the syscall access policy to
-folios accessed through the page table?
-
-This seems a bit strange to me, no?
-
->                         folio_remove_rmap_pmd(folio, page, vma);
->                         add_mm_counter(mm, mm_counter_file(folio), -HPAGE=
-_PMD_NR);
->                         folio_put(folio);
->
-> --
-> 2.56.0
+[1] https://lore.kernel.org/all/20261108185129.1549419-1-mathieu.desnoyers@efficios.com/
 
 Thanks,
-Barry
+
+Mathieu
