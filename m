@@ -1,125 +1,124 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794219458;
-	b=Sst38IoPvwiLBqPTnzzSjy3EW8KTcJog7HfKQqeYUOuiX7b3/D8hJ8ccXgmOUJA5sz7S
-	 UwAd/KrZw+blA3mBaHYTY+rqzMCpWJQ+X4HNcUJwsQbHnHiXdoqn4WTp1Z7Za4Jr6P4dU
-	 n7NJPToYZO0rKsHWKtR2x9WdJcu/zd/w9FVPCbrRhA3EqUmenaD6S4/G7tp2xki9ilxyS
-	 /syNZAGQzp1k3Keduf4kxVMAVLizatx6pI3Jr/B44VjV58UYFVAJ+QvO0Q+3ZiYpo9Iow
-	 N1UXLQskA7XGxEJ/u6poCUiONchUes++RKrwBJNprqPYhqMQ2SlSUQReSP1jai4RLQg==
+	t=1794228141;
+	b=b/d5/JKy4Z3Z+V9Pw28XykxKMOmcQTXY9sL8xylCap7sEwVM4sb9rzJgytPUnOYCpFrL
+	 IYBApM9MGevT/9rnDNCqfvt1HkbtnUUogrKfPIhaV+qdg+Y4/q+x4wd4EUlFLwEyAC1m/
+	 6oxjNUIfNwPaKAuxiglVqK+JrV8c7YfSiQUt9vAWWzo//PJXt9b4CI5T9E89p33WakB2d
+	 Uyq037Z2R6Y53sqdseMyFotVekH0pFHUg2aTq9W7rj1gEsK72iqACYr5VfP2FrpQf/RyU
+	 L0cRXLXgOnpVD0FVUGZNLb5MPGFP3+yVLJUbWnQj68vXrlEBuUVj3SQIXU9vXdi3OJQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794219458;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794228141;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=qEpeXh4n+Ip6h8mQUL16hZLbonLzBsEE2lau1nHqEmo=;
-	b=k6ez+GfTlY8AaIWYU23Y8Shu8wYDaHpCD9rVEykv561rr9b76F9VaB00jVAukTmyvDFu
-	 cmWclEfJr5FuAQkCtK+JkPcBuGta2VZDl3s9RInZy1dPXBS7e9oGTyicqTKwSqufs6TGP
-	 zqLluVrx36mLBCwrDWvK6XFXhZHNs74RQSTRdiTOaCBqqbnnwWVqRnetRmuGnIlyAmzYh
-	 sbQS3MELarIKZOHhkmvs1zHJQuUaxgqquzI2YH2QLikrW8GGmwMQazcLcDxAXVXe10IDT
-	 dWGAK1IRDO/78wF7qhmzb8wkY5RayGPr+LVdOKTvWZ9wTtdezgCa0mrRhoMERK6WxAQ==
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=iydcdsyCbn/1HMCuIAo5cr9JeqRLn8CAd0o0w+T8bOU=;
+	b=R9W97r4ZQMGO17jLK+N/Z5JJllBfT4rbL5nKeoRc7oim7CrbGcXR4ZF5xR0oihD4QB7q
+	 7ALcsbnCXHRn84XeVHhV3t51rc5TlzlTRUbHCx3ToNvyfc1xCMsWnwQ1V13sl+SFk/crf
+	 K0/7GR37PiVQhQdIDJMlnVe3IN+/nekSJMVZTclb2ij4MM/Ibt0i3Dg1M3G3aSMbq+jDB
+	 03TQIvscMBCUsMVnoeJy2AyPOkuPmaB42hgn4yqgf4KFnTfmiJm1GftKElolvgYN4KzhE
+	 mvB95Mqe3xBtj0Un13U5GTdpfolmLKHVf7zwnteVCS6nFzgB+d1ez0tl6utTcTpJHRw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=crsYu80L;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=AZFsxJji;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=SCTbZtzC;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=pluYaXYO;
 	arc=none smtp.remote-ip=170.10.129.124
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E65EE606EE9D
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 10:17:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E65EE606EE9D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC152606A31C
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 12:42:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC152606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=crsYu80L;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=AZFsxJji
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=SCTbZtzC;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=pluYaXYO
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794219457;
+	s=mimecast20190719; t=1794228138;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qEpeXh4n+Ip6h8mQUL16hZLbonLzBsEE2lau1nHqEmo=;
-	b=crsYu80L+O03Mdk9IyNt4g2TeVfc+AMEZ/+0vt95KmjScPbtqLmkUeLWUjjCKq1kmBEI04
-	ijuNgzzI3Zlxp15o6HzIIratvD93WWfu0id+1wEjb1EHNsUoSbJzxvi1577XIEO5pY7Nuk
-	1LPKIRcR881yL9fcesg8AzmVtkZd1Ro=
+	bh=iydcdsyCbn/1HMCuIAo5cr9JeqRLn8CAd0o0w+T8bOU=;
+	b=SCTbZtzCgH4lSPIUFIytRFcMYuiQAz/Rmb7MdGZlDEbOPqx+zpoK4p6C0e2rFoJP0xvC0F
+	mzY3SX0rFpFOx3nywftco7L5vuT8wE948sphvbm4IThab+w1yyQFGDl6JznwgitpE5r/D6
+	Gb6GXm3aGMBM3Snld+Xu6bNHe+YGj2E=
 Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
  [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-75-eJCj9hHSOuKqwLfplJJqMA-1; Mon, 09 Nov 2026 05:17:35 -0500
-X-MC-Unique: eJCj9hHSOuKqwLfplJJqMA-1
-X-Mimecast-MFC-AGG-ID: eJCj9hHSOuKqwLfplJJqMA_1794219454
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4a214a5f8a1so6709195e9.0
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 02:17:35 -0800 (PST)
+ us-mta-203-UIxyO5azOBiA7sft-e3jfA-1; Mon, 09 Nov 2026 07:42:17 -0500
+X-MC-Unique: UIxyO5azOBiA7sft-e3jfA-1
+X-Mimecast-MFC-AGG-ID: UIxyO5azOBiA7sft-e3jfA_1794228136
+Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-4a70b42bab0so8320385e9.1
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 04:42:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794219454; x=1794824254; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=qEpeXh4n+Ip6h8mQUL16hZLbonLzBsEE2lau1nHqEmo=;
-        b=AZFsxJjiZqZrL72YI//l2f88S1Zo8AtzYrL3FMNrR379eUWzcnayOE/cfH5U18gqM0
-         5VVr+x8YGYXw3RoHOvRXeb0wJruoSshj6G3yx9ycnng69Opfq3a3dnXTtrP1IceixiKM
-         S4sdRiNe1b0gtheaY8NSLaxe96FuCBx0S6eFh1LllCYntmj2dkAFRBaTAmofb3P2cyZ9
-         qRRb+E73H/aL1qoIDHnBHP/rHQTgZlS+iCsqhG/L3pffTnjLOD5CLOCyc+47UyV5X7EW
-         X0CH1hv0FQlHM8KtCwJIZxetv31oO+PIlKYAG49ZDbZp54lOkMz5FhlxvgOqnWx65kzL
-         64oA==
+        d=redhat.com; s=google; t=1794228136; x=1794832936; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=iydcdsyCbn/1HMCuIAo5cr9JeqRLn8CAd0o0w+T8bOU=;
+        b=pluYaXYO9Z9mXrCtps+gEWLNOMtSEIvVsckq8L6y6OF0oItWFAJi09sk5bpViNP0hJ
+         DPBx71ZOSSQ9us5U1YqnNGdn7FtDYxG/FW9j0+rng1m8YxNMvD9DfdfoPhvCtb7A5L15
+         Fn3nMMR+k3dJunGbtTqqFzHkg1MLG8DwOJbYUw49Qk8+tdVRvRrSTJpvP0PItBX5d/GW
+         hPq3BIlO1XCWUijlavaO9KSClYoyqy0tQHDnKXhQ0UNGlq5ehxbS1M/srm5x9PYofhgv
+         jQ7oNlvu9a2HPdJdaBflXSgz0tjEkAQFuDYMxnMrfmdcv3lNlzRXzDpkTR+pN9iySGUa
+         3S/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794219454; x=1794824254;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :content-type:mime-version:references:message-id:subject:cc:to:from
-         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=qEpeXh4n+Ip6h8mQUL16hZLbonLzBsEE2lau1nHqEmo=;
-        b=0stH6abhi0mTip9zN8uhJ+5MmPB3p2v+3PBJtAfYyYyNSNEi5RKh3mq/ozXc1FVzQk
-         Ell2yR4zouJ37fPSSI6++01wk/qN3prCg7LEOYCNuf4IM/QuQam5gjqs4APy2CAzZl8/
-         /oSx4pj5/WAJSS6niYMJavwWmCT1TA9kyOShulJWlveVTNfGF/sEM2fY9LFPgp366w1Q
-         +hLhOxl6DLbrPsETjMpnY7uM1yR5EgxdyH97nrK7D/NZYAIpR8sO4hd4WKIvTxbYbvFw
-         7ULD5JxH0XMddzryGIWhoEin3qHLYTnsdxx96yZhkcGLraTO1WgNjh00h4xJHBj3TpX9
-         TRiA==
-X-Forwarded-Encrypted: i=1; AL+hErGvAlmScfjda/sxVO+CZ8GTD5zT54yiacEqDEdBz4lO52/IDyv+Zi1FyrPtd5QmNgtsY9w5/R5W@vger.kernel.org
-X-Gm-Message-State: APuU4Z+tt2he/Ep2mUiSF5AFvDFOae+CuYghQaci5N9K+XN3HU0Ddg54
-	fiFlSE3KGWE9ileBj9EW1wsxHAH31L3o9r5DhYaxh7vQZwMbau0wUPCp2LKxflQaFx6XzRJlfn7
-	khHqm5e81z3bVQKsuiZi3Vt/lf/6lfOg1zlUy/kliNhMTihkd9tgCiTimM6U=
-X-Gm-Gg: AYBFou2nTj7hySUYWloXf1R2ZB0KXGDTQv0pvjsAl0XsMAzViy32i9hu8gZcSK6oR2G
-	KsB4sB8PNggq68mEPeCteihSIRoCFCQ2DmiioJk3UJxJBwK/FCorLAdkB8XOFK0uF4yTGN8f6MA
-	Hrz9mSEJH4i7n38lZQ/Oo21HNRjzQ0b0XqctNk18oMkLzcuG2xVLDQrQZp7udedqMd0qo2Zbv7j
-	tlD6om/fKSvsQrEl7BQH5+jOxBcCywQ3B3wcTtd7KmP6/KQyhL5hTedz+DqKZQQpZ/1InaybBpL
-	3MuY3ky8Ur0Le4Lt2XW30qavF2YXPcd/yK6LoOYBuTTPerhUccs/1sNjPrLaipEvKz5SIif4M4N
-	dg/uQZmnAHKI4HNY4DPq5urlV1hS8xWuHw9NrJEjjfB1+7E/0H9crZsidUxhE3f/W7Ra7tJ+yXP
-	PXWQ==
-X-Received: by 2002:a05:600c:4e4e:b0:4a0:23f:8b0d with SMTP id 5b1f17b1804b1-4b94d763141mr64174595e9.2.1794219454187;
-        Mon, 09 Nov 2026 02:17:34 -0800 (PST)
-X-Received: by 2002:a05:600c:4e4e:b0:4a0:23f:8b0d with SMTP id 5b1f17b1804b1-4b94d763141mr64174325e9.2.1794219453808;
-        Mon, 09 Nov 2026 02:17:33 -0800 (PST)
+        d=1e100.net; s=20260707; t=1794228136; x=1794832936;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=iydcdsyCbn/1HMCuIAo5cr9JeqRLn8CAd0o0w+T8bOU=;
+        b=CB4lOto7YG6j+N8bfxZk86eK19aNBLndYDjRiYbtDBKf4PBfFi6H3qo5Fr/mMCWffu
+         U5FjxFtw3FaKj96y/G07n/MXio24tQKHG7LZ6lGm1C76UfsF/TRIsdOycvz32nj6v1td
+         qpEA7Xnk8EqS2TLaMuVSqUjssrXlgq5HNZ5//foVLok20pC3tKqVRV9vuehZc66g+H82
+         xJIIAfHW6W/p6XX4QX0bbCFtePlPYkUiXVI0Nfa5evADl7nxZStbZ3a9InKxWBqeSi0a
+         NcKJgTh8e38BJ8Qh8zY+YoViF7ewagqwycJkTbHurU2n1NHY2+75i833c8tY9J9P72kr
+         glhw==
+X-Forwarded-Encrypted: i=1; AL+hErF69pL7cEE79K5IygIa4RNMBsVImzaq8ZkBprPeUErlpDGshs6gspWrD/y4gsNWfLimwVPxroLX@vger.kernel.org
+X-Gm-Message-State: APuU4Z8GolrwKGxpY7gCYsGe02yI0wnI8uKI4PpzFfjmCo6vNLoa0snk
+	eQ289rxoXiDacYk4JJ41+v59KytGZrrWd+sxECapkxG0rYpkH8Xdwsiz3Sw6RYL8XlJPOIKNBq7
+	Sv1yaQunXAEX/GTEVdRAI+YF80ZyUqlG5YItXzwvFmCIl5RitSgvMVA728Os=
+X-Gm-Gg: AYBFou0DhxrBcfdwpjFCCi4pFpzgfJl/MJyibZ+eoVTqNIijEc8etgF7SjHy9hNh10p
+	8myJB+MxC08kJJ9QjXo1+fskXIpqC5pwJkOcDmBghrLq7GDzbv4qtJm62h0XRFPI1hNPgLiXwN2
+	tEwT/OU38iNdCp+jOQbXC+7ALYpXq8hiHOJ9L+c3AVRiKWdIBq9fWhzgrQOvUoQIsjYZgutBVcx
+	UYjyaF4mLNpdXlFCKkAMP2/lgcFVMXzRjs+K6FXFiut+A9KLYQjJtnsaNJZy3MnZZ7jX/abc9vB
+	FpuvIZfWha81LAFQ+7rn/0YOOd42Z5BVlA/lGS4Bgv3shPU6dbI1aFJkCs1269P4iztrTkOC0hG
+	D6+L1huw1Loar6HoimKpxHqfQVQ3YfWXaY9X+YA8/FqosoY/xRN48LCAye4Sr6QDoMXeoB5wa+w
+	e4CQ==
+X-Received: by 2002:a05:600c:8506:b0:4a2:10f9:37db with SMTP id 5b1f17b1804b1-4b963c664fdmr75985985e9.7.1794228136176;
+        Mon, 09 Nov 2026 04:42:16 -0800 (PST)
+X-Received: by 2002:a05:600c:8506:b0:4a2:10f9:37db with SMTP id 5b1f17b1804b1-4b963c664fdmr75985755e9.7.1794228135838;
+        Mon, 09 Nov 2026 04:42:15 -0800 (PST)
 Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b9f93c04afsm71663785e9.3.2026.11.09.02.17.32
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b7efb1f3acsm247331855e9.14.2026.11.09.04.42.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 02:17:32 -0800 (PST)
-Date: Mon, 9 Nov 2026 11:17:29 +0100
+        Mon, 09 Nov 2026 04:42:14 -0800 (PST)
+Date: Mon, 9 Nov 2026 13:42:12 +0100
 From: Juri Lelli <juri.lelli@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-rt-devel@lists.linux.dev, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	K Prateek Nayak <kprateek.nayak@amd.com>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	John Ogness <john.ogness@linutronix.de>,
-	Shrikanth Hegde <sshegde@linux.ibm.com>
-Subject: Re: [RFC] RT throttling, DL/ fair server, RT_GROUP_SCHED and
- everything
-Message-ID: <avGduY8yVmZSfpMf@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261023161348.t3lpPLQZ@linutronix.de>
- <at8J1mimeQ2oPZDE@jlelli-thinkpadt14gen4.remote.csb>
- <20261105120932.lSBBenqn@linutronix.de>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
+	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
+	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org, longman@redhat.com,
+	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
+	clrkwllms@kernel.org, parri.andrea@gmail.com,
+	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v5 03/29] sched/deadline: Do not admit bandwidth for
+ parameters that are kept
+Message-ID: <avG_pJmgQr3V-PXZ@jlelli-thinkpadt14gen4.remote.csb>
+References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
+ <20261108185406.1549770-4-mathieu.desnoyers@efficios.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -129,106 +128,67 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261105120932.lSBBenqn@linutronix.de>
+In-Reply-To: <20261108185406.1549770-4-mathieu.desnoyers@efficios.com>
 
-On 05/11/26 13:09, Sebastian Andrzej Siewior wrote:
-> On 2026-10-26 09:05:42 [+0100], Juri Lelli wrote:
-> > Hi Sebastian,
-> Hi Juri,
-> 
-> > On 23/10/26 18:13, Sebastian Andrzej Siewior wrote:
-> > > Hi,
-> > > 
-> > > this is about the old RT throttling mechanism, the DL/fair server around
-> > > the RT tasks, the /proc/sys/kernel/sched_rt_* mechanism to control the
-> > > former and CONFIG_RT_GROUP_SCHED which never worked as it supposed to.
-> > > The current status looks like a mess and I'm not sure if there is a bug
-> > > somewhere leading to my headaches or if this is just not meant to be
-> > > working together. If so out with it.
-> > > 
-> > > tl;dr /proc/…/sched_rt_*, sched_rt_runtime_exceeded() probably
-> > > CONFIG_RT_GROUP_SCHED should be removed. A bit of docs should be added
-> > > for the fair server (or the right place).
-> > 
-> > Thanks for putting this recap together!
-> > 
-> > > Now. Details.
-> > 
-> > ...
-> > 
-> > > Without enabled RT_GROUP_SCHED the files can be set. Are they useful?
-> > > According to Documentation/scheduler/sched-deadline.rst it used for
-> > > "admission control" whatever that means. Anyway the fair server still
-> > > kicks if it is disabled. So I *think* this is just something else and
-> > > not part for the docs there.
-> > 
-> > Right, confusing, but for a root_domain comprising M CPUs, -deadline tasks can
-> > be created while the sum of their bandwidths stays below
-> > 
-> >   M * (sched_rt_runtime_us / sched_rt_period_us)
-> 
-> My understanding is that this is the runtime available to a DL task and
-> the length of a DL period (after the accounted runtime is reset). The
-> left over runtime (of runtime is less than period) is either buffer
-> (idle) or SCHED_OTHER runtime.
-> This defines how much runtime a DL task gets from the system, correct?
+Hello,
 
-How much bandwidth (runtime/period) DL tasks get from the system
-(comprised of M CPUs). And a corresponding cap (no more than that will
-be allowed to enter the system) - admission control.
-
-> > and writing -1 disables the check altogether. That's the "admission control"
-> > the docs hand-wave about, and it's also why the knobs can't simply be deleted.
-> > As you noticed already, the servers are completely independent of these knobs:
-> > writing -1 does not disable the fair server, it only lifts the DL admission
-> > cap. In principle we could move this to a different interface that reads closer
-> > to the underlying purpose, but I'm not sure how much breakage it could cause.
+On 08/11/26 13:53, Mathieu Desnoyers wrote:
+> __sched_setscheduler() runs the deadline admission test on a request
+> with SCHED_FLAG_KEEP_PARAMS. But the task keeps its parameters: the
+> call skips __setscheduler_params().
 > 
-> That is my point. The rt_ runtime/ period is about DL properties and not
-> RT as in SCHED_FIFO/ RR as it once was. Both are set to one second as of
-> today and can not be changed with enabled CONFIG_RT_GROUP_SCHED.
+> Commit f4dddf90d58d ("sched: Skip priority checks with
+> SCHED_FLAG_KEEP_PARAMS") made sys_sched_setattr() copy the task's own
+> parameters into such a request. Then the priority checks pass.
+> get_params() copies them without a lock.
 > 
-> Could we please move it to /sys/kernel/sched/ and rename it as dl
-> something? Is there any reason to keep as-is? There is
-> 	Documentation/scheduler/sched-deadline.rst
-> 	Documentation/arch/arm64/asymmetric-32bit.rst
+> Another call can change the task's parameters before
+> __sched_setscheduler() takes the runqueue lock. The request is then
+> stale, and dl_param_changed() takes it for a change. sched_dl_overflow()
+> would put the stale bandwidth in place of the task's own in total_bw,
+> and in this_bw for a sleeping task. But the task keeps its own dl_bw.
+> Its release at the 0-lag time takes that dl_bw, and the difference
+> stays behind.
 > 
-> referring to it in DL context. There is "ftracetest" writing
-> unconditionally -1 as a workaround, see commit 57c4cfd4a2eef
-> ("ftrace/selftests: workaround cgroup RT scheduling issues").
+> Fix this by skipping sched_dl_overflow() for SCHED_FLAG_KEEP_PARAMS.
+> There is nothing to admit for parameters that are kept.
 > 
-> If the runtime/ period arguments are fine then we could keep
-> it and make them only apply for the DL period.
+> Found by reading, after the Sashiko AI review of the first posting of
+> this series raised the boosted case of the previous patch. Not
+> reproduced: the parameter change must land inside that window.
 > 
-> Two files have been repurposed and if your intention as to disable the
-> RT throttler then you will be surprised.
+> Fixes: a509a7cd7974 ("sched/uclamp: Extend sched_setattr() to support utilization clamping")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> ---
 
-Right, it's indeed confusing. I believe the intent for keeping as it is
-today was that in the future, if we get to 'fix' RT_GROUP_SCHED with
-HCBS, the existing knobs will be control both group and simple DL tasks
-bandwidth (they share the same bandwidth). I'm not against making things
-clearer. Maybe let's hear from others what they think as well?
+The change looks good to me.
 
-...
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 
-> > With 820725b0eb59f ("sched: Add deadline tracepoints") we already have
-> > some of that: sched_dl_{throttle,replenish,update,server_start,server_stop},
-> > which fire for fair/ext servers too (there's a type field, DL_SERVER_FAIR
-> > and friends). They of course require something like this [1] to be
-> > activated. We could add more if they are still not enough to get a clear
-> > picture about what's going on.
+>  kernel/sched/syscalls.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 > 
-> Hmm. You may want to merge Qais's current master to get it compiled
-> again ;) But then nothing hooks it up, so I just replaced with with
-> trace_printk() just to see what happens and got:
+> diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+> index 0e8b5c7324f6..894f93a80d5d 100644
+> --- a/kernel/sched/syscalls.c
+> +++ b/kernel/sched/syscalls.c
+> @@ -690,8 +690,13 @@ int __sched_setscheduler(struct task_struct *p,
+>  	 * of a SCHED_DEADLINE task) we need to check if enough bandwidth
+>  	 * is available. Keep this check last. If a later check failed,
+>  	 * nothing would give back the bandwidth it reserves.
+> +	 *
+> +	 * With SCHED_FLAG_KEEP_PARAMS, the task keeps its parameters, so
+> +	 * there is nothing to admit. The parameters in attr may also be
+> +	 * stale: sys_sched_setattr() read them from the task without a lock.
 
-Ack, yeah, I didn't use them recently and they rotted. :/
-
-I will try to find some time soon to refresh and check what's missing
-from the information they provide (from a debugging point of view).
+However I had to wonder what usecase would still make sense for a
+KEEP_PARAMS call on a SCHED_DEADLINE task, I would say a !DL params
+change (UCLAMP for example) for a (at the moment) DEADLINE task that
+might become !DEADLINE in the future? Maybe we could add this to the
+comment.
 
 Thanks,
 Juri
