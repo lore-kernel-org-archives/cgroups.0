@@ -1,51 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.76
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794199354;
-	b=weoFJDZH5ncke0icKqVcTlFNgloCgqFbgoQ/hlICNyBD4vaa7kKWIMAV11v09OpwPohT
-	 DzkveRdDuyE2kXF5Uxaulz3Oaylr1r0JbaKscYr4J0RGnT3HL1pxKNBoOFatRopJQbUfo
-	 iTdL5Cf9t3HFANZ6x84ke8eZBX3LUEYvqbIH/s5SKV/8X/Rg/CCytF8I+xVgrhaAPqW4S
-	 syNrhHaPc/YFH40o+rf7B20YGVuuhBvxdCy3ysOu7p58W8jBvCYM71Xo7OJxZQunJrvKw
-	 dsay5oJIhtg3PFT6VRLnO7Rba17Apm8sGJmUdGtrMEwk6V6qIK6POkCLS3DG4nguK9g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794199354;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=trWAi5Piz+TfoxvZ+i9bTcPMGa4KPvntOK5yuCm8fi8=;
-	b=s+v53n2RNLrOowuMazkFMH+VtIaHReQ8xnYljJKy5KfDXfNOnIIIpRjYD2F/U4SkcYMz
-	 wPqwbJ8aepkE3fMmLIAnToT6bvYKYYsHgdeJ1acF3gGpaVX7pGbLJavCcT9WxW8rw3h2h
-	 e6Of+1D9XPoWDUoF9g7JAiP8ZiAwtcClQTkyTwu9pjIvjZcX2osihglyFxbbFQ8NEjx2Z
-	 GCQ/uTLV+5D7CQgWdj0yvH1qjCoCidKHMso9zFyPqLi3uTc1V1klSgGZcpEaoYlZpOVuD
-	 TYqLHDie6KpHFVAJdTieCID7Mb4K6V4WP1Ge7e+QdmPkoUw38itfb2UUmkl8adyt06w==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	arc=none smtp.remote-ip=95.215.58.76
-Received: from mta1.migadu.com (out-76.mta1.migadu.com [95.215.58.76])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794211731;
+	b=jK/pKXQ7r3FPkDtM8sq9z5//QBf+c/XXHo2/pknmm0FLqgyEdbfqgRRC791P3TxHcDvq
+	 33cjlNCzFToYN84Oy0Gj7/QMAut4yVJyvjt1+EuOzyV4pyPBOjsPQiLdmy4fTaydO5z+T
+	 aZkemGiVFzxRFbYOJ/hf5M4WA6MLlri8qg2lwGiBtT1MpLBNA1qep6fSma5e1G70gNglR
+	 uCy/7oHSFLunk5vzeTOfoQBxPZgT9sou+hS1/CStsU8HJzFxasIuoGB15+DSOSkJTdE5W
+	 QmGQNeVmp0hwI5ei4XlC03hcbLY4dnQ2mKO0RjvogM4e514T10JD2pX06wswhvnF2mg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794211731;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
+	b=dhFlZsSh+61lB4P7u+997vqKd12keUBtssBrkP/bmSeMYLvPWPakFL/evgK6O2I5ZePr
+	 gjXqExqLecqhollmvaLJsvMlRnv1IHxT+oK2AHjA1u/wMPdjE/bJBXpDsA3QUu/CKqRjf
+	 UJroS/PR4VK8LsAXWKR8QRuRghvs+mlECbPImyv1U3uC1DCvc/8MSO1Uj9vTLtI7zoOgy
+	 UzfLAabi8LgbDOkq9bfKPVfU9TbK8q1l3xS5CsU3pMmCWH0t5R3hYlppTNSkF+DuGL+rb
+	 O39QYha5LaR4NdAnbD2vMKhF+kvFKu1l3yiWf77ztiudqu0BxRRQWijdOg+wSoGN4bg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cPLD8fxg;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AAA9606A31C
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 04:42:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2AAA9606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=+YynzDIMyUHrOJjxiOLcSqW0bRst6C8KhYgx9VIUWYg=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794199346; v=1; x=1794804146;
- b=PmLEZzu5QgidXiFDu7KV3yw9Tt39bofaXHXH31CjbN1f3gSC5LNAJ4JVfcgW9Y+milSfrAiC
- otJqkp9ylvADDiFW3Dcmh+RBo4/wU40E26Mf2SmHCpYIxekT1wb4mEPQL8IEeNRKPfLLuOMcaVe
- kSMfRFgUTlnVMPFZ1ujg3Ysk=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 686fbad2d4a21252;
-	Mon, 09 Nov 2026 04:42:26 +0000
-X-Mizu-Trace-ID: 686fbad2d4a21252
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <0ae6fffe-d492-4e85-b464-fafdc4c2b064@linux.dev>
-Date: Mon, 9 Nov 2026 12:42:17 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7BA606A322
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 08:08:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2F7BA606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cPLD8fxg
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c4682977f9aso64125066b.1
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 00:08:50 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794211729; cv=none;
+        d=google.com; s=arc-20260327;
+        b=mrH9cMKvchcSbsqzFnUpievfRhW+VijPGtB8nAjYfJ9DH7x5nhDfjrjOSDtcOWwZco
+         gzkQJW2HNXTeaIU9d/jxUWvuiPGCU3BrbA3plg6ECuUZBexUzNjOk/VDpyjvgOp1t1Ay
+         T+2wasRa7JdP7N2lHd0DjoGCHaGgCzv1gYHu9AuFdnGyO3e9TCLgdRmSamo7zxZlPyZV
+         U4ApRl8jh5IGEocciyyI+kYIaRP2ciU4jtYZFJxNj7PXpuPM1mIFxSv/KV2i+rJPayxv
+         6OUXUnfKBvoCxFrhHZs7ZSP1pNbOJVrWmanIBO4zGBVaWnbjnKh/XYSPg7C4/1HXSW9d
+         R+fw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
+        fh=jxr/rAkaNS+B5e14IPHNK4K0TbAOdyfFhmocafKGhZ0=;
+        b=R6gtswMn3bQv0AqEH81pd2A4zV9wXucuVdE9Arh5VN+h1OhDgpJLVKk5iul6xhT0Ju
+         yXnwMMX9QLtVvApGO6QXaeuRWLGWKaGCQgPxGzXXyW/GMafe7DtpA5TZ7/JiyRFgcP8+
+         VA35f0hI1bfYQMBreN41//pEANMC2uvMxKlCxpIB23gnl0/BP6aBwIZdR47vnonfQ9LV
+         z+JgEDG0SGzMvUpGuQW5irrFTbcvqvfbmtr2QwI+wnSU1RA5L5CF4V7TNgm4mkl1m34i
+         ORg5DzyV5Pux865Y1nTAjm7+IbVG76IsplQsl1EWq+I4/ETdXhhDZQ/OXsN7cdbwcdZj
+         fgaQ==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794211729; x=1794816529; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
+        b=cPLD8fxguKoynFlGz2OK6UmitpF7qDa34GHBjjK5CPLpCbqNyVHoPCCjxY4SX/Fu2i
+         LY7icyhd+dhM035lPEX+xThVpk2/9s3VyfEkV4SvaCjy8Ro13ykNoRwFcQGz3rjmmHgT
+         jt2NOS38q9UxK2Ag/afOaCNM61f9lgHh4DfuDXn5bB48CrR/mN4iNsEBV+0SN2lRriyo
+         n6/A95FIil1AIcAc8WfZIv7WWXCd7WTwtJmoaI4mknRPHaDnT+GOTgsH1/nC/fXBiQ9B
+         qGoCBii5YE+SCEIonRxTaL0oW8EQ1TsG0zF/DqzdLYN0c1iR6CZgiato2MxRAkN2bvp6
+         6GMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794211729; x=1794816529;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
+        b=cBIsfMXCi3tQCEEUUdFscuNiEVMpAMrdbjhklbi8Dzb01Y+S2Mt7JY2NByvYn2F5sj
+         R8vffFGgwJV7jTzJKSEINd3sm/VFi+JvZ66cilonGToT0iQHP5veer8y1cOu3fchjP0c
+         wEp7Oxzy03d9wq+QB3BGhR82c3ecfhMbLV7G1OUe4ijtkgp61GxxiTnBbN0dPSzI4mPH
+         nAxpOKNfbW+6COTwIkS07m09MloJrjcGZFz2mhPddbO49oGhE1U8BeG8zcc6NfXuzYsZ
+         DXqxZTxgfloAKnuIqX5qPh+J4bG/hHfZahNQ5ISTlGvDCN5vWFzAJ291PSt6WuvJ8F9w
+         GM0w==
+X-Forwarded-Encrypted: i=1; AL+hErGzHZ7vED2wRep3Ej+wRsrtxcFOvFFGOUFJD5ykudsSS4LRQtmJgSFkSnC74MoODp0nDSLRjfus@vger.kernel.org
+X-Gm-Message-State: APuU4Z/yEhf6TAhQ+xu6qlDKrFpNU7OixeLKuxTRowFkwhcn7g4zC2Ij
+	+UyJJ8pTb1WvxnvWLvzJgbY/HvE9jjyHt+tVTp9Mck5u4arJACsLooYMX5SDX19OHvzkj/rJ20Q
+	45sw54W75ktx8vHtck4oeJgDxjz+SeNU=
+X-Gm-Gg: AYBFou3gpuWQ3OoGEE9m0lY0UKM2Oll9TkQCXPLOBkDtLGZV33HZFe5x7Zjb+PY5p9h
+	KiEuHePpDFX5DVjsVsALFQ+Z/Do09xyptYGl9duJLOA+2gjpaz4R4Lwts3bBEjjpkVwnexeviT1
+	7oYMFZzA0xtptf6+TedgA7vPevZZNarW7fNMmYNkQd0xXbzarZ5mw1Z67TnZyxuf34gyCDYW0Bf
+	kdgpYeJInX1RXtQs3RHly5l4A1IkQ+Fch7CwXSSUI7a/UG5uAWiyWE0W7wO8oSNyN/32cWNcTCa
+	3zAGxc3hirCD++JaLKor0slrYd0+ELCCzW2Ndk0KzGU9b9wpb+e31DJT6iW4e9VelMHrAOWCayQ
+	mHYbUmgQALRpiiZD/XjgPSfO9DwIe9SFK26axwowK4Nu1dizygnUnGm2HeoSxcyNHp0h5
+X-Received: by 2002:a17:906:d54d:b0:c42:4750:8d33 with SMTP id
+ a640c23a62f3a-c4d6d79c9e9mr220208366b.28.1794211729178; Mon, 09 Nov 2026
+ 00:08:49 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -55,238 +104,131 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] cgroup/cpuset: Reject updates that empty the top
- sched domain
-To: Waiman Long <longman@redhat.com>, tj@kernel.org, ridong.chen@linux.dev
-Cc: hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>
-References: <20261105130344.664336-1-guopeng.zhang@linux.dev>
- <20261105130344.664336-2-guopeng.zhang@linux.dev>
- <ccdab485-e1d1-4055-bb0b-f8f712fc0a9b@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <ccdab485-e1d1-4055-bb0b-f8f712fc0a9b@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
+ <20261016-mglru-fg-v4-15-2106750c0bfa@tencent.com> <CAGsJ_4wTFHJxzuiRDBcuevdULMcD+se6SuPbzWKA8wsUAG80_w@mail.gmail.com>
+In-Reply-To: <CAGsJ_4wTFHJxzuiRDBcuevdULMcD+se6SuPbzWKA8wsUAG80_w@mail.gmail.com>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Mon, 9 Nov 2026 16:08:12 +0800
+X-Gm-Features: AclHuK-rg_Epjx8c_oIR5RKRDfprNqzR2T_gknTk1R87bd-Y63IPVOAg_lUq4r0
+Message-ID: <CAMgjq7Atry0zRc_-xbrL_VubxTBQOT8R2_aumghXQaO9uTANHg@mail.gmail.com>
+Subject: Re: [PATCH v4 15/17] mm/mglru: make folio_inc_lru_refs lruvec lockless
+To: Barry Song <baohua@kernel.org>
+Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
+	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, 
+	Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>, 
+	Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
+	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
+	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
+	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
+	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
+	Chen Ridong <chenridong@xiaomi.com>, Tal Zussman <tz2294@columbia.edu>, 
+	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
+	zhaozhengzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
+	Kunwu Chan <kunwu.chan@gmail.com>, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, damon@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, Nov 9, 2026 at 5:48=E2=80=AFAM Barry Song <baohua@kernel.org> wrote=
+:
+>
+> On Fri, Oct 16, 2026 at 2:16=E2=80=AFAM Kairui Song via B4 Relay
+> <devnull+kasong.tencent.com@kernel.org> wrote:
+> >
+> > From: Kairui Song <kasong@tencent.com>
+> >
+> > The lruvec spinlock in folio_inc_lru_refs was only taken to keep
+> > concurrent aging from corrupting the size counters.  This is no
+> > longer needed: the per-generation counters are atomic, and the
+> > active/inactive ABI counters are updated per folio and linearized by
+> > the CAS on the folio flags, so concurrent aging can no longer corrupt
+> > them.  The same argument already allowed folio_reset_lru_refs() to
+> > drop the lock.
+> >
+> > Use folio_lruvec_live_get()/folio_lruvec_live_put() to hold the RCU
+> > read lock around the lruvec lookup, and drop the spinlock entirely.
+> >
+>
+> Yes, this is cool. We have two paths calling
+> folio_inc_lru_refs() or folio_inc_lru_refs_walk().
+>
+> 1. folio_mark_accessed() from syscall access
+> 2. walk_update_folio() from page table walker or look_around
+>
+> For the latter, we can't actually cross multiple
+> lruvecs/memcgs, because of get_pfn_folio() as shown
+> below:
+>
+> static struct folio *get_pfn_folio(unsigned long pfn, struct mem_cgroup *=
+memcg,
+>                                    struct pglist_data *pgdat)
+> {
+>         ...
+>         rcu_read_lock();
+>         if (folio_memcg(folio) !=3D memcg)
+>                 folio =3D NULL;
+>         rcu_read_unlock();
+>         ...
+> }
+>
+> Consider a common library file used by 100 memcgs, with
+> its folio residing in the root memcg.
+>
+> When walking the 99 non-root memcgs, even if the folio
+> has been accessed, we won't get a chance to call
+> folio_inc_lru_refs_walk() for it. As a result, this folio
+> may eventually reach the eviction rmap path. With a high
+> mapcount, folio_referenced() could become quite
+> expensive.
+>
+> That's what I was trying to point out here as well:
+>
+> https://lore.kernel.org/linux-mm/20261102213915.57805-1-baohua@kernel.org=
+/#t
 
+Hi Barry,
 
-在 2026/11/7 01:22, Waiman Long 写道:
-> On 11/5/26 8:03 AM, Guopeng Zhang wrote:
->> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
->>
->> Boot-isolated CPUs remain in top_cpuset.effective_cpus, but are excluded
->> from its scheduling domain by generate_sched_domains(). Checking only
->> effective_cpus when distributing CPUs to partitions can therefore allow
->> all boot domain housekeeping CPUs to be taken from the top cpuset.
->>
->> The resulting empty domain triggers a warning in build_sched_domains()
->> and can cause an out-of-bounds CPU access in build_perf_domains(). Both
->> root and isolated partitions can trigger this, whether local or remote.
->> For example, on a 32-CPU system booted with isolcpus=domain,10-31:
->>
->>    echo 0-9 > A/cpuset.cpus
->>    echo root > A/cpuset.cpus.partition
->>    Oops: general protection fault
->>    RIP: 0010:build_perf_domains+...
->>
->> Require local and remote partition creation and CPU mask updates to
->> leave an active boot domain housekeeping CPU in the top cpuset,
->> accounting for CPUs returned by the same update.
->>
->> Add test cases to test_cpuset_prs.sh to verify that every partition
->> update leaves an active boot domain housekeeping CPU in the top cpuset.
->>
->> Fixes: 9b496a8bbed9 ("cgroup/cpuset: Prevent leakage of isolated CPUs into sched domains")
->> Co-developed-by: Ridong Chen <ridong.chen@linux.dev>
->> Signed-off-by: Ridong Chen <ridong.chen@linux.dev>
->> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
->> ---
->>   kernel/cgroup/cpuset.c                        | 48 ++++++++++++++++++-
->>   .../selftests/cgroup/test_cpuset_prs.sh       | 47 ++++++++++++++++++
->>   2 files changed, 93 insertions(+), 2 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 3052413e41e7..c405719ccd12 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1180,12 +1180,56 @@ static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
->>           cpuset_force_rebuild();
->>   }
->>   +/*
->> + * top_cpuset_sd_nocpu - Check if top_cpuset will have no sched domain CPU
->> + * @add_cpus: CPUs to be taken away from top_cpuset
->> + * @del_cpus: CPUs to be given back to top_cpuset, can be NULL
->> + * Return: true if no active CPU will be left in the top_cpuset sched domain
->> + *
->> + * Note that @del_cpus may include CPUs that are also in @add_cpus and
->> + * will stay in the partition. They are skipped by the @add_cpus check,
->> + * so callers can pass the current effective_xcpus of a partition
->> + * without masking it first.
->> + *
->> + * Boot time isolated CPUs stay in top_cpuset.effective_cpus, but they are
->> + * excluded from the sched domain of top_cpuset in generate_sched_domains().
->> + * So checking top_cpuset.effective_cpus alone is not enough to ensure that
->> + * the top_cpuset sched domain won't become empty after @add_cpus are taken
->> + * away from it. The sched domain of top_cpuset must keep at least one
->> + * active boot domain housekeeping CPU.
->> + */
->> +static bool top_cpuset_sd_nocpu(const struct cpumask *add_cpus,
->> +                const struct cpumask *del_cpus)
->> +{
->> +    const struct cpumask *hk_mask = housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT);
->> +    int cpu;
->> +
->> +    for_each_cpu_and(cpu, hk_mask, cpu_active_mask) {
->> +        if (cpumask_test_cpu(cpu, add_cpus))
->> +            continue;
->> +        if (cpumask_test_cpu(cpu, top_cpuset.effective_cpus) ||
->> +            (del_cpus && cpumask_test_cpu(cpu, del_cpus)))
->> +            return false;
->> +    }
->> +    return true;
->> +}
->> +
->>   /*
->>    * tasks_nocpu_error - Return true if tasks will have no effective_cpus
->>    */
->>   static bool tasks_nocpu_error(struct cpuset *parent, struct cpuset *cs,
->>                     struct cpumask *xcpus)
->>   {
->> +    /*
->> +     * The top_cpuset always has tasks (kthreads at least), so its sched
->> +     * domain can't be empty. The current effective_xcpus of a valid
->> +     * partition will be given back to top_cpuset if not in @xcpus.
->> +     */
->> +    if (parent == &top_cpuset &&
->> +        top_cpuset_sd_nocpu(xcpus, is_partition_valid(cs)
->> +                     ? cs->effective_xcpus : NULL))
->> +        return true;
->> +
->>       /*
->>        * A populated partition (cs or parent) can't have empty effective_cpus
->>        */
->> @@ -1724,7 +1768,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
->>        */
->>       compute_excpus(cs, tmp->new_cpus);
->>       if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
->> -        cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
->> +        top_cpuset_sd_nocpu(tmp->new_cpus, NULL))
->>           return PERR_INVCPUS;
->>       if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
->>           return PERR_NOCPUS;
->> @@ -1828,7 +1872,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
->>           if (!capable(CAP_SYS_ADMIN))
->>               WRITE_ONCE(cs->prs_err, PERR_ACCESS);
->>           else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
->> -             cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
->> +             top_cpuset_sd_nocpu(tmp->addmask, tmp->delmask))
->>               WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
->>           else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
->>                                  excpus, tmp->delmask))
-> The code change above looks good to me.
-Thanks for reviewing the code.
->> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->> index bdca6c471f87..e813ea9959f4 100755
->> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
->> @@ -133,6 +133,15 @@ LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
->>   [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" = 8 &&
->>      "$LAST_NOHZ_FULL_CPU" = $LAST_PRESENT_CPU ]] && RUN_NOHZ_FULL_TESTS=1
->>   +# These tests require boot domain housekeeping CPUs to be exactly 0-9.
->> +# Check the actual masks to cover isolcpus= with or without explicit flags.
->> +DOMAIN_ISOLCPUS="10-$LAST_PRESENT_CPU"
->> +[[ "$LAST_PRESENT_CPU" = 10 ]] && DOMAIN_ISOLCPUS=10
-> I think you should use "==", not "=".
-Sure, I'll use "==" in v3.
->> +RUN_ISOLCPUS_DOMAIN_TESTS=
->> +[[ -z "$NOHZ_FULL_CPUS" &&
->> +    "$(cat /sys/devices/system/cpu/isolated)" = "$DOMAIN_ISOLCPUS" ]] &&
->> +    RUN_ISOLCPUS_DOMAIN_TESTS=1
-> 
-> Why there shouldn't be any nohz_full CPUs? Domain isolated CPUs and nohz_full CPUs don't need to be exclusive.
-> 
+Thanks for the review, I saw that too, very interesting approach! And
+I believe it will helpful.
 
-Agreed. I'll adjust the condition and verify the tests with both
-domain isolation and nohz_full enabled.
+> For the former, you can get the lruvec with:
+>
+> lruvec =3D lruvec_live_lock_irq(folio_lruvec(folio));
+>
+> I'm wondering whether we could eventually unify them
+> so that both support cross-memcg inc_refs.
 
-> Maybe you can move the new testing code below the ISOLCPUS section as the value of /sys/devices/system/cpu/isolated would have been read into the BOOT_ISOLCPUS variable which you can use instead of reading the sysfs file again.
-> 
+Definately, actually for that link you posted, combined with the code
+snip above, after FG, I think we can further simplify that, no need to
+check mem_cgroup_is_descendant, we just do:
 
-Good point. I'll move the test selection code below the ISOLCPUS
-section and reuse BOOT_ISOLCPUS.
+- folio_inc_lru_refs_walk: if the folio belongs to the lruvec being
+walked, the batch stays in walk->lruvec
+- folio_inc_lru_refs: if the folio is a remote one, per-folio, no batch
 
->> +
->>   #
->>   # If isolated CPUs have been reserved at boot time (as shown in
->>   # /sys/devices/system/cpu/isolated), these isolated CPUs should be outside of
->> @@ -602,6 +611,43 @@ ISOLCPUS_TEST_MATRIX=(
->>       " CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
->>   )
->>   +# Test matrix for isolcpus=domain,10-<last> or isolcpus=10-<last> boots.
->> +# The top cpuset must retain an active boot domain housekeeping CPU.
->> +ISOLCPUS_DOMAIN_TEST_MATRIX=(
->> +    #  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
->> +    #  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
->> +    # Neither a root nor an isolated partition may take all boot HK CPUs.
->> +    " C0-9      .      .      .     P1      .      .      .     0 A1:0-9 A1:P-1 ."
->> +    " C0-9      .      .      .     P2      .      .      .     0 A1:0-9 A1:P-2 ."
->> +
->> +    # Growing cpuset.cpus must not take the last top-level HK CPU.
->> +    " C0-8:P1   .      .      .    C0-9     .      .      .     0 A1:0-9 A1:P-1 ."
->> +
->> +    # CPUs returned by the same update can keep the top sched domain alive.
->> +    " C2-9:P2   .      .      .    C0-4     .      .      .     0 A1:0-4 A1:P2 0-4"
->> +
->> +    # Root and isolated partitions together must leave a top-level HK CPU.
->> +    " C0-4:P1   .      .     C5-9    .      .      .     P2    0 A1:0-4|B1:5-9 A1:P1|B1:P-2 ."
->> +
->> +    # Remote partition creation must enforce the same constraint.
->> +    " X0-9    CX0-9    .      .      .     P1      .      .     0 A2:0-9 A2:P-1 ."
->> +
->> +    # Growing a remote partition through cpuset.cpus.exclusive is rejected.
->> +    " X0-9 C0-9:X0-8:P1 .     .      .    X0-9     .      .     0 A2:0-9 A2:P-1 ."
->> +
->> +    # Remote CPU replacements must account for the CPUs being returned.
->> +    " X0-9 C0-9:X2-9:P2 .     .      .    X0-4     .      .     0 A2:0-4 A2:P2 0-4"
->> +
->> +    # Local exclusive CPU updates must not consume the last top-level HK CPU.
->> +    " C0-9:X0-8:P2 .   .      .    X0-9     .      .      .     0 A1:0-9 A1:P-2 ."
->> +
->> +    # Ancestor updates must not grow a remote partition over the last HK CPU.
->> +    " X0-8 CX0-9:P1    .      .    X0-9     .      .      .     0 A2:0-9 A2:P-1 ."
->> +
->> +    # An invalid partition can recover once it leaves a top-level HK CPU.
->> +    " C0-9:P1   .      .      .    C0-8     .      .      .     0 A1:0-8 A1:P1 ."
->> +)
->> +
-> 
-> Could you also put this new test matrix together with the other test matrices?
-> 
+non-descendant folio sharing across memcg are actually quite common
+e.g., libc and shared mapped memory, this could be more helpful? And
+it seems fast for the walker.
 
-I'm not quite sure what you mean here. In v2, the new matrix is between
-ISOLCPUS_TEST_MATRIX and NOHZ_FULL_TEST_MATRIX. Do you mean moving its
-definition elsewhere, or merging its test cases into an existing
-matrix?
+folio_inc_lru_refs_walk follow the same rule as folio_inc_lru_refs
+(with MAPPED flag), just faster, skipping RCU and the speculative
+check afterwards as the walker owns the seq it is advancing, and
+caller handles the batch update of counter. While folio_inc_lru_refs
+only requires the caller to hold an reference to the folio it heavily
+relies on RCU / CAS conventions, not easy to batch things there, but
+it's still accetablily fast already (e.g. the fio read test showed
+almost no performance penalty).
 
-Thanks,
-Guopeng
-
-> Thanks,
-> Longman
-> 
->>   # Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
->>   # This also means that CPU 8 is available and is a nohz_full CPU.
->>   NOHZ_FULL_TEST_MATRIX=(
->> @@ -1472,6 +1518,7 @@ test_inotify()
->>   run_state_test TEST_MATRIX
->>   run_remote_state_test REMOTE_TEST_MATRIX
->>   TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
->> +[[ -n "$RUN_ISOLCPUS_DOMAIN_TESTS" ]] && run_state_test ISOLCPUS_DOMAIN_TEST_MATRIX
->>   [[ -n "$RUN_NOHZ_FULL_TESTS" ]] && run_state_test NOHZ_FULL_TEST_MATRIX
->>   test_isolated
->>   test_boot_isolated
-> 
-
+And I think the main reason MGLRU can't operate cross memcg was, lack
+of a protocol to stablilze the memcg's gen and holding a lock is too
+costly, now folio_inc_lru_refs handles that, and FG
+ lives on top of that. So we can try that out right after the FG series.
