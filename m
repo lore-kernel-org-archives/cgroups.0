@@ -1,100 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.48
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794211731;
-	b=jK/pKXQ7r3FPkDtM8sq9z5//QBf+c/XXHo2/pknmm0FLqgyEdbfqgRRC791P3TxHcDvq
-	 33cjlNCzFToYN84Oy0Gj7/QMAut4yVJyvjt1+EuOzyV4pyPBOjsPQiLdmy4fTaydO5z+T
-	 aZkemGiVFzxRFbYOJ/hf5M4WA6MLlri8qg2lwGiBtT1MpLBNA1qep6fSma5e1G70gNglR
-	 uCy/7oHSFLunk5vzeTOfoQBxPZgT9sou+hS1/CStsU8HJzFxasIuoGB15+DSOSkJTdE5W
-	 QmGQNeVmp0hwI5ei4XlC03hcbLY4dnQ2mKO0RjvogM4e514T10JD2pX06wswhvnF2mg==
+	t=1794216809;
+	b=Qx5UOGXEpIH0Zgt48ot1tE7nCFqsS4ru3TwwWIaRKSTr08m21aspYg2AuDPA7qcm8wdP
+	 Brt0f64MG9EuPFnZcM+kDyxUD88fpZw//DN7LG0umdew9EZdH7RJUIy8TphVk13G5ZS4o
+	 pgxOWqOcIPOvUueuhzqyh8I5IjEDmYGUloUS0q96iVRjDmgkinxNa39f1TyNz5swaTe3G
+	 U6NjvlIya1dNC2BA/zLqTiGChJWlryvcU3ewqSG75NYDNUr67FK8KkCsNvu9VKoe301aX
+	 0g7b3ZB6rrzKC/XteMMorzvVxezG3ctRH3HOpk68vOhW8eq0o46HlFUZMWMUSEwzK0g==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794211731;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794216809;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
-	b=dhFlZsSh+61lB4P7u+997vqKd12keUBtssBrkP/bmSeMYLvPWPakFL/evgK6O2I5ZePr
-	 gjXqExqLecqhollmvaLJsvMlRnv1IHxT+oK2AHjA1u/wMPdjE/bJBXpDsA3QUu/CKqRjf
-	 UJroS/PR4VK8LsAXWKR8QRuRghvs+mlECbPImyv1U3uC1DCvc/8MSO1Uj9vTLtI7zoOgy
-	 UzfLAabi8LgbDOkq9bfKPVfU9TbK8q1l3xS5CsU3pMmCWH0t5R3hYlppTNSkF+DuGL+rb
-	 O39QYha5LaR4NdAnbD2vMKhF+kvFKu1l3yiWf77ztiudqu0BxRRQWijdOg+wSoGN4bg==
+	bh=HqOJkLXd0wmKotueuMhbylT2sufy9bI1CVmczzNeuOY=;
+	b=Jtkj6EYqEU5dwa9mV921fxsOwiFvaupD6p6oZDLiZ4gy/GyVilD1n8oz5l7gCSdwiURM
+	 zvPYM1AJyMSoBMQU1mWKk8Yjv7AXZWQakZW1HW5bCrWxlY/B0xLBufx5xsBfgP/ng8Ksa
+	 iTYkWSGEYA87qRN7O8PUbjuro8unGxTi07jhglVY0T89yP0qfqmpfKinedCEOCfZnPp2J
+	 qnpulVyBEfd4ObAFnESTzjXLL+sJ44R4soMQfmv+hcy1ebiHquzgZ7Mjn07vicljsQbwK
+	 qQkGkKVL/TIetcqBiKo/jhQMgOVPanvNg2gpydhIXIDwdsCGLnJUZz4RrE9t4fBhIlA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cPLD8fxg;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.51
-Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=d8CKQD7A;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.48
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7BA606A322
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 08:08:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2F7BA606A322
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7727A606A31C
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 09:33:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7727A606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cPLD8fxg
-Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-c4682977f9aso64125066b.1
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 00:08:50 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1794211729; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=d8CKQD7A
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-c3f8d72d7ceso90365966b.3
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 01:33:29 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794216808; cv=none;
         d=google.com; s=arc-20260327;
-        b=mrH9cMKvchcSbsqzFnUpievfRhW+VijPGtB8nAjYfJ9DH7x5nhDfjrjOSDtcOWwZco
-         gzkQJW2HNXTeaIU9d/jxUWvuiPGCU3BrbA3plg6ECuUZBexUzNjOk/VDpyjvgOp1t1Ay
-         T+2wasRa7JdP7N2lHd0DjoGCHaGgCzv1gYHu9AuFdnGyO3e9TCLgdRmSamo7zxZlPyZV
-         U4ApRl8jh5IGEocciyyI+kYIaRP2ciU4jtYZFJxNj7PXpuPM1mIFxSv/KV2i+rJPayxv
-         6OUXUnfKBvoCxFrhHZs7ZSP1pNbOJVrWmanIBO4zGBVaWnbjnKh/XYSPg7C4/1HXSW9d
-         R+fw==
+        b=PdXGNzutUcshVDvPQbx7+Iz21jjI/gHYRqg+efsu8kWPhKMWruDvVnulZ1JEX0dsu3
+         oeBiF8+L+03kc8d7/qjEgGRXm4+2hbwyYaqu//2acTJ2Z/MGnATh9HnGqlJllbYWjke2
+         LqQgpOE/r65La4ftYT8Whbmip/Ezm1zY71Jr/Jw9FsNB1iD3LT88JmmSu4Y6pc955DkR
+         mlv5tdYLtRUEEemv6G1/2jvdBtSulBicuvYoCabL3IYhp9wvLujesgT5Y/mQLINm1ZtQ
+         LxOXaMqDlHRmPohfMLrjENYpXMoihcmEyNNimj8jm7UYAp81RSNiqZvxzaNjfBb8ZGof
+         2wGg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
-        fh=jxr/rAkaNS+B5e14IPHNK4K0TbAOdyfFhmocafKGhZ0=;
-        b=R6gtswMn3bQv0AqEH81pd2A4zV9wXucuVdE9Arh5VN+h1OhDgpJLVKk5iul6xhT0Ju
-         yXnwMMX9QLtVvApGO6QXaeuRWLGWKaGCQgPxGzXXyW/GMafe7DtpA5TZ7/JiyRFgcP8+
-         VA35f0hI1bfYQMBreN41//pEANMC2uvMxKlCxpIB23gnl0/BP6aBwIZdR47vnonfQ9LV
-         z+JgEDG0SGzMvUpGuQW5irrFTbcvqvfbmtr2QwI+wnSU1RA5L5CF4V7TNgm4mkl1m34i
-         ORg5DzyV5Pux865Y1nTAjm7+IbVG76IsplQsl1EWq+I4/ETdXhhDZQ/OXsN7cdbwcdZj
-         fgaQ==;
+        bh=HqOJkLXd0wmKotueuMhbylT2sufy9bI1CVmczzNeuOY=;
+        fh=hEz1f+seFxoUCG8YSvlrOxytkCK20ZXG2SQDQGcLNQc=;
+        b=guJfK8a2QavISBTnjVlEzGR6+nQ7qaIoUyjRAVNKzneUiEnsm/v5QB7OOubBt2RMc5
+         f0Hshtv1Av9APKTszpEIUUuTwL7aWuJBFp5KNlX75i+z0gKJ6+jqTTZhpjno1MB+5Mwu
+         lr0W+lPLfWc/J4nsAEi/XRohXuRpfKSwJxx66V8Ygvuvm/7WvTgzl8gmrNE2nxfWX7+C
+         A6U+VNGRhyh+7yadqnUEkse/f5i8c65k7DpzM3YOF0C4OjXWkHs01VJB/o4DXl/N8t2c
+         Gpn9yHiY9KvHXJLZ94CXrO+7Z1+mYVsLSHKPgdXX8snuqbBnprBSWRTd80SawMUV9dCy
+         9z4g==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794211729; x=1794816529; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794216808; x=1794821608; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
-        b=cPLD8fxguKoynFlGz2OK6UmitpF7qDa34GHBjjK5CPLpCbqNyVHoPCCjxY4SX/Fu2i
-         LY7icyhd+dhM035lPEX+xThVpk2/9s3VyfEkV4SvaCjy8Ro13ykNoRwFcQGz3rjmmHgT
-         jt2NOS38q9UxK2Ag/afOaCNM61f9lgHh4DfuDXn5bB48CrR/mN4iNsEBV+0SN2lRriyo
-         n6/A95FIil1AIcAc8WfZIv7WWXCd7WTwtJmoaI4mknRPHaDnT+GOTgsH1/nC/fXBiQ9B
-         qGoCBii5YE+SCEIonRxTaL0oW8EQ1TsG0zF/DqzdLYN0c1iR6CZgiato2MxRAkN2bvp6
-         6GMg==
+        bh=HqOJkLXd0wmKotueuMhbylT2sufy9bI1CVmczzNeuOY=;
+        b=d8CKQD7AmQFWq5xRHoblvM0Fzjp3LOVqxc+agEXKrQSoN61liVReEPTibMKp1EL8d6
+         zSyiiakmeOcEaU0nQubLDJUM4kKZIGH5Yh81r6OHAYVOOapqmhbS18SActLCQKmh34+C
+         oqGKNsb/8QFmGzn6Pvco4VxXSzO97kgeVA7APX2iPK4/e6gOwkclotimHqB3I7OaMQtt
+         QFdcCPoLLyt5OIYX3b6al3IVsveoaHpkR0ZEDlcY8as0x9CeimBecKwjw1EuTPZhF78c
+         s/N0jPH/Xh4tSoegsQ6ydmvEmFelKC4bA4tZdrvSD0BwBOoBdVn2bnseYB89zsdtWB3V
+         TgIA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794211729; x=1794816529;
+        d=1e100.net; s=20260707; t=1794216808; x=1794821608;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=LiMJF1XvwF+Qc5jdWubo4n2qJDpryfHhpNFCa3GO55Y=;
-        b=cBIsfMXCi3tQCEEUUdFscuNiEVMpAMrdbjhklbi8Dzb01Y+S2Mt7JY2NByvYn2F5sj
-         R8vffFGgwJV7jTzJKSEINd3sm/VFi+JvZ66cilonGToT0iQHP5veer8y1cOu3fchjP0c
-         wEp7Oxzy03d9wq+QB3BGhR82c3ecfhMbLV7G1OUe4ijtkgp61GxxiTnBbN0dPSzI4mPH
-         nAxpOKNfbW+6COTwIkS07m09MloJrjcGZFz2mhPddbO49oGhE1U8BeG8zcc6NfXuzYsZ
-         DXqxZTxgfloAKnuIqX5qPh+J4bG/hHfZahNQ5ISTlGvDCN5vWFzAJ291PSt6WuvJ8F9w
-         GM0w==
-X-Forwarded-Encrypted: i=1; AL+hErGzHZ7vED2wRep3Ej+wRsrtxcFOvFFGOUFJD5ykudsSS4LRQtmJgSFkSnC74MoODp0nDSLRjfus@vger.kernel.org
-X-Gm-Message-State: APuU4Z/yEhf6TAhQ+xu6qlDKrFpNU7OixeLKuxTRowFkwhcn7g4zC2Ij
-	+UyJJ8pTb1WvxnvWLvzJgbY/HvE9jjyHt+tVTp9Mck5u4arJACsLooYMX5SDX19OHvzkj/rJ20Q
-	45sw54W75ktx8vHtck4oeJgDxjz+SeNU=
-X-Gm-Gg: AYBFou3gpuWQ3OoGEE9m0lY0UKM2Oll9TkQCXPLOBkDtLGZV33HZFe5x7Zjb+PY5p9h
-	KiEuHePpDFX5DVjsVsALFQ+Z/Do09xyptYGl9duJLOA+2gjpaz4R4Lwts3bBEjjpkVwnexeviT1
-	7oYMFZzA0xtptf6+TedgA7vPevZZNarW7fNMmYNkQd0xXbzarZ5mw1Z67TnZyxuf34gyCDYW0Bf
-	kdgpYeJInX1RXtQs3RHly5l4A1IkQ+Fch7CwXSSUI7a/UG5uAWiyWE0W7wO8oSNyN/32cWNcTCa
-	3zAGxc3hirCD++JaLKor0slrYd0+ELCCzW2Ndk0KzGU9b9wpb+e31DJT6iW4e9VelMHrAOWCayQ
-	mHYbUmgQALRpiiZD/XjgPSfO9DwIe9SFK26axwowK4Nu1dizygnUnGm2HeoSxcyNHp0h5
-X-Received: by 2002:a17:906:d54d:b0:c42:4750:8d33 with SMTP id
- a640c23a62f3a-c4d6d79c9e9mr220208366b.28.1794211729178; Mon, 09 Nov 2026
- 00:08:49 -0800 (PST)
+        bh=HqOJkLXd0wmKotueuMhbylT2sufy9bI1CVmczzNeuOY=;
+        b=dPdS0DoohvUzjI28u+qcmQKHI2XJmB6izC6yh9hrvq5d8hJFcdFLg2LuJQGeRq/qZS
+         DhTEWnuCEyI0l3AO/V+3aWGkhupcYmTOHn6HEsWuS+tpgglJaBRZ3PxS6B8HeHryM2a5
+         DQ5Jz9hw8UrC/5ei9TdrrfbN/RhiXcjA3NSwgJYE24nCuSXIWk5nqRRb8Ts1A2RJhdxt
+         CxenUgFHaRaUDavYyK8rgi8xnqEjHfLdqrDDt7D+RlKUJVd8C/GWakqPruFFhklvm6tr
+         H6T4QVljtcpAikz5uyYnX4CUZV23UoPI+OdKGVLSy2LkHGV7tw8aCO5+Nd3PD7TU6xHf
+         ntbA==
+X-Forwarded-Encrypted: i=1; AL+hErFX76ZaWbRbCfG1wisgp1JNgTM0orsv2TWOE3CXoJi/yDcj6k8cXPWSQaRImRL9gV+TRR+Wyg2l@vger.kernel.org
+X-Gm-Message-State: APuU4Z+LDtM/IOEw5Vbebzv32cjJdnMpIjgd8uRMLJD2zqDCCKM/9nsN
+	O4bzAe9udG/i12OKq3zUBG4U7q/FdHky/0ufefesoI61g6r64Hm5J7CE4CEdK8ZpLpf3U9QyE9+
+	p1z6IKQzKBpgrC4NkHPOktwc5fBEpbLw=
+X-Gm-Gg: AYBFou3ro+TCark7QEpo3akHMcJE/SwS7cyvVzW/VQw51oAgxrHE9Bl0PlGAVby7wN6
+	Qf3GnSJyg+i8WEguOArPZFBETDUf2gL28G/+c6GDsYvRnswMCnHCEFp5OTRCer6MxFRqETsICZg
+	VnZplAkwMtZsdIaBvHg80kCx6IysTThZHzUXtDksD68w5KDG7jDoCEyvS0slxuMy9u+LT77Fe6V
+	cdNaSITZldE7BUpPEbLuNR0iP6U3B6elWdm+tPf1W/pqPFkh92KwB9ZSO7CqM11as6xUU+e5xd6
+	/c4ilp6JhmMxd1kZhIq2Vjuj8T2KEXgT3l6kwQf1CKaBR+Z6b8+ijPk8267b4qwf+5+QBbHw9cf
+	11CglvBMD2djWgsKvRPC3PbqWAU77EVicmIzR7fKDNl+jUUhyBGp1K8LVTFBp07DUZNVX
+X-Received: by 2002:a17:907:2d94:b0:c40:3a99:3f96 with SMTP id
+ a640c23a62f3a-c4d6d35c245mr238537266b.10.1794216807560; Mon, 09 Nov 2026
+ 01:33:27 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,13 +105,13 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 References: <20261016-mglru-fg-v4-0-2106750c0bfa@tencent.com>
- <20261016-mglru-fg-v4-15-2106750c0bfa@tencent.com> <CAGsJ_4wTFHJxzuiRDBcuevdULMcD+se6SuPbzWKA8wsUAG80_w@mail.gmail.com>
-In-Reply-To: <CAGsJ_4wTFHJxzuiRDBcuevdULMcD+se6SuPbzWKA8wsUAG80_w@mail.gmail.com>
+ <20261016-mglru-fg-v4-7-2106750c0bfa@tencent.com> <CAGsJ_4wSDOgCC9AmLS-z670W-nkF3DXB_cNvNFnptX5F95fGMA@mail.gmail.com>
+In-Reply-To: <CAGsJ_4wSDOgCC9AmLS-z670W-nkF3DXB_cNvNFnptX5F95fGMA@mail.gmail.com>
 From: Kairui Song <ryncsn@gmail.com>
-Date: Mon, 9 Nov 2026 16:08:12 +0800
-X-Gm-Features: AclHuK-rg_Epjx8c_oIR5RKRDfprNqzR2T_gknTk1R87bd-Y63IPVOAg_lUq4r0
-Message-ID: <CAMgjq7Atry0zRc_-xbrL_VubxTBQOT8R2_aumghXQaO9uTANHg@mail.gmail.com>
-Subject: Re: [PATCH v4 15/17] mm/mglru: make folio_inc_lru_refs lruvec lockless
+Date: Mon, 9 Nov 2026 17:32:51 +0800
+X-Gm-Features: AclHuK-CEIJ-OmAap_Q_FmrC7aIH9q-wRCoxV2MMC7FO6jMxD0d_umEF-d1s_Ho
+Message-ID: <CAMgjq7Dw6QtM_VgTuReNs5duPeAZbRukVFZkGuDgbQOXLm7Mjg@mail.gmail.com>
+Subject: Re: [PATCH v4 07/17] mm/mglru, gup: mark folios referenced via a fast helper
 To: Barry Song <baohua@kernel.org>
 Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kernel.org>, 
 	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
@@ -138,97 +138,70 @@ Cc: linux-mm@kvack.org, "Liam R. Howlett" <liam@infradead.org>, SJ Park <sj@kern
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 9, 2026 at 5:48=E2=80=AFAM Barry Song <baohua@kernel.org> wrote=
+On Mon, Nov 9, 2026 at 5:04=E2=80=AFAM Barry Song <baohua@kernel.org> wrote=
 :
 >
-> On Fri, Oct 16, 2026 at 2:16=E2=80=AFAM Kairui Song via B4 Relay
+> On Fri, Oct 16, 2026 at 2:15=E2=80=AFAM Kairui Song via B4 Relay
 > <devnull+kasong.tencent.com@kernel.org> wrote:
 > >
 > > From: Kairui Song <kasong@tencent.com>
 > >
-> > The lruvec spinlock in folio_inc_lru_refs was only taken to keep
-> > concurrent aging from corrupting the size counters.  This is no
-> > longer needed: the per-generation counters are atomic, and the
-> > active/inactive ABI counters are updated per folio and linearized by
-> > the CAS on the folio flags, so concurrent aging can no longer corrupt
-> > them.  The same argument already allowed folio_reset_lru_refs() to
-> > drop the lock.
+> > Introduce folio_inc_lru_refs_fast(): raise refs from 0 to
+> > LRU_REFS_REFERENCED via cmpxchg, or just set PG_referenced for the
+> > classical LRU as before. No counter update, promotion, and guarteens
+> > no other complex operations in following commits.
 > >
-> > Use folio_lruvec_live_get()/folio_lruvec_live_put() to hold the RCU
-> > read lock around the lruvec lookup, and drop the spinlock entirely.
+> > Convert the gup fast-path sites. No behavior change for classical LRU.
 > >
+> > Tested-by: zhaozhengzhuo <zhaozhengzhuo@uniontech.com>
+> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > ---
+> >  include/linux/mm_inline.h | 25 +++++++++++++++++++++++++
+> >  mm/gup.c                  |  6 +++---
+> >  2 files changed, 28 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> > index 65415eeac802..effa13c63632 100644
+> > --- a/include/linux/mm_inline.h
+> > +++ b/include/linux/mm_inline.h
+> > @@ -454,6 +454,31 @@ static inline bool lru_gen_del_folio(struct lruvec=
+ *lruvec, struct folio *folio,
+> >  }
+> >  #endif /* CONFIG_LRU_GEN */
+> >
+> > +/**
+> > + * folio_inc_lru_refs_fast - Bump folio refs count without promotion.
+> > + * @folio: the folio
+> > + *
+> > + * Raise refs from 0 to LRU_REFS_REFERENCED and leave hotter folios
+> > + * untouched. For the classical LRU, a plain PG_referenced set.
+> > + */
+> > +static __always_inline void folio_inc_lru_refs_fast(struct folio *foli=
+o)
+> > +{
+> > +       unsigned long new_flags, old_flags;
+> > +
+> > +       if (!lru_gen_enabled()) {
+> > +               folio_set_referenced(folio);
+> > +               return;
+> > +       }
+> > +
+> > +       old_flags =3D READ_ONCE(*folio_flags(folio, 0));
+> > +       do {
+> > +               if (lru_get_refs_flags(old_flags))
+> > +                       break;
+> > +               new_flags =3D old_flags;
+> > +               lru_set_refs_flags(&new_flags, LRU_REFS_REFERENCED);
+> > +       } while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_fl=
+ags));
+> > +}
 >
-> Yes, this is cool. We have two paths calling
-> folio_inc_lru_refs() or folio_inc_lru_refs_walk().
->
-> 1. folio_mark_accessed() from syscall access
-> 2. walk_update_folio() from page table walker or look_around
->
-> For the latter, we can't actually cross multiple
-> lruvecs/memcgs, because of get_pfn_folio() as shown
-> below:
->
-> static struct folio *get_pfn_folio(unsigned long pfn, struct mem_cgroup *=
-memcg,
->                                    struct pglist_data *pgdat)
-> {
->         ...
->         rcu_read_lock();
->         if (folio_memcg(folio) !=3D memcg)
->                 folio =3D NULL;
->         rcu_read_unlock();
->         ...
-> }
->
-> Consider a common library file used by 100 memcgs, with
-> its folio residing in the root memcg.
->
-> When walking the 99 non-root memcgs, even if the folio
-> has been accessed, we won't get a chance to call
-> folio_inc_lru_refs_walk() for it. As a result, this folio
-> may eventually reach the eviction rmap path. With a high
-> mapcount, folio_referenced() could become quite
-> expensive.
->
-> That's what I was trying to point out here as well:
->
-> https://lore.kernel.org/linux-mm/20261102213915.57805-1-baohua@kernel.org=
-/#t
+> What is the actual purpose of this patch? Is it to skip
+> cmpxchg() when the folio already has non-zero refs for
+> better performance?
 
-Hi Barry,
-
-Thanks for the review, I saw that too, very interesting approach! And
-I believe it will helpful.
-
-> For the former, you can get the lruvec with:
->
-> lruvec =3D lruvec_live_lock_irq(folio_lruvec(folio));
->
-> I'm wondering whether we could eventually unify them
-> so that both support cross-memcg inc_refs.
-
-Definately, actually for that link you posted, combined with the code
-snip above, after FG, I think we can further simplify that, no need to
-check mem_cgroup_is_descendant, we just do:
-
-- folio_inc_lru_refs_walk: if the folio belongs to the lruvec being
-walked, the batch stays in walk->lruvec
-- folio_inc_lru_refs: if the folio is a remote one, per-folio, no batch
-
-non-descendant folio sharing across memcg are actually quite common
-e.g., libc and shared mapped memory, this could be more helpful? And
-it seems fast for the walker.
-
-folio_inc_lru_refs_walk follow the same rule as folio_inc_lru_refs
-(with MAPPED flag), just faster, skipping RCU and the speculative
-check afterwards as the walker owns the seq it is advancing, and
-caller handles the batch update of counter. While folio_inc_lru_refs
-only requires the caller to hold an reference to the folio it heavily
-relies on RCU / CAS conventions, not easy to batch things there, but
-it's still accetablily fast already (e.g. the fio read test showed
-almost no performance penalty).
-
-And I think the main reason MGLRU can't operate cross memcg was, lack
-of a protocol to stablilze the memcg's gen and holding a lock is too
-costly, now folio_inc_lru_refs handles that, and FG
- lives on top of that. So we can try that out right after the FG series.
+Right, as the name suggests, it's a faster helper, sacrificing some
+recency accuracy (limited to LRU_REFS_REFERENCED, so it never touch
+any counter). But the low bar for this helper is still equal to
+mainline so I think it's fine at this point. I can add more commit
+message or comment on this.
