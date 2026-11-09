@@ -1,82 +1,82 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794242192;
-	b=yqQ224zKowDEtb+wnQY6/XZ8JKTajIn8d9Z/N4FZfd4RdIx5d86FNivVYwLLG2pjmq1L
-	 uoQ/YkaytTZk2HeAtnRaVyHL8hkQ0j/DVmYXB4imgOgKzvqIG6lMr/sTxx6IDMFgLX9Zw
-	 kL9QugDuxLinM4aMKuyFCnEDfwt8xLcyuFdsDJWzzZ1f6/nGBo9PljBbkTznPSc8pMkth
-	 7jT28Y0zhCYen70lEppQTKGIoYlWs/IN1I7YOrn5QPyH7PNEzUbsiC1wm8z1luxbQf2Ep
-	 UT2qqGeMYC9YBKThUJZIxRqnQqTCI2raHxl7aavujawHcL5vYKbvan7H5qfrYl8swKw==
+	t=1794242196;
+	b=oPK7f7KIptCd/6qR8l2hpRFL3uYiNhZL/n+fA4dpJxBggkl54GUeU9JDGcmdZVU0tz+Y
+	 4Onf1khvib/wiVg8MEZtxksOUUOg1J8yhUlB972S2Xh0qGg2COde/OumrO3p1TMG/qdbZ
+	 UaqJAemYvv4gCV8aJVGo+ilj1H9R6Eux3JotAJtqtBegvph+Qut7a4a4PP/tL9o3k9ofK
+	 GTqHTBb8I8GrtEyN+SQ2IyOy2Yh4sxC6EnwmWnQsmTzFFg114F/qm3e/XfmQ6h7b4TH7A
+	 A4k68v+6V65aTUXjwSP1yviicYGkVa1+HEsmbAQYKkMDZ084DnzJ3pwUcyZdEnbHwVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794242192;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794242196;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
 	 Date:Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=HEJ+QQBd0iC35enWpK8vBgPoOeYQfDGSCF+rovxxelY=;
-	b=F/DEAPcXNx0zWpAv2JyzaMp3lsevaDHJqW+C/xF3Num/XT41oFspEVnHD5DDe2uPnx3L
-	 LoebMs8UdFqdi+WtfpvLx4XZjdPvVi/iPqwskiPu/Q6sItvJ88fM7liDLKOvDv8BDzJVy
-	 7+WH+G0BFrsVWUN57L5lyesp9hH7ux7awQX85Z/z+Fh1E6lIEKo63sbqy1tnFM5ANMeyC
-	 UacuoVcOScbnE88TumL/4kBinJlLso+Lez6rmAIskICRHJX9x67v3nywCkbjwNuaQJomr
-	 ErRBZ/ufw6dhq6J5U6LXQsw+D+fPJ0L0Wf/ODFNSFotpJG4g8LDgkKEbXeJn1RvS+LQ==
+	bh=IF9cXrQnpCZaMLl6tbZ/qIT+Y3H9j+DMc+Ad29JxSyU=;
+	b=Dnw5l43db+1WgPkhL2c6NRPZUqTskXolvR+V/8lTbBylRfL/gWVAe45ILKOuPPD0aGOF
+	 pKeOhgiiusWMF1IVaYU8OCkKrRc9rLkh+ezlGgzT0HEaH1M3YqaNVfrlB1ga33LMgmku5
+	 1h2XD2FtDD/+x+S82ILLmQYgvk3x1uJh/Wo2EFh7d/m49PiL7yi0vKbx9HWgCDOCuC7zD
+	 DCRt0tdy8aUc/3ZLpj8ZT7X/QJgRQ3JM0/ztxNbgDHnWMf6kkiVV3HNh+DKeQ1b+eAieH
+	 PlO3jZEmwq3hkeZkpCSbWlUgvTFKBq2xSJoo9vzWNo75h8hFKK+pmbhjsu0JmYGcb0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ce4dzgt4;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RtuD168J;
 	arc=none smtp.remote-ip=209.85.128.53
 Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FA65606EEB8
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5FA65606EEB8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54FD160A260B
+	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 16:36:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 54FD160A260B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ce4dzgt4
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a2d6d01ecbso6541885e9.0
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:36:32 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=RtuD168J
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a207b02a2cso7573325e9.1
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 08:36:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794242191; x=1794846991; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794242194; x=1794846994; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=HEJ+QQBd0iC35enWpK8vBgPoOeYQfDGSCF+rovxxelY=;
-        b=ce4dzgt47bGoaG62rHmRirIRztmdq3J5c2phQMU8RqoYCy5Dxwn/y+0E0aaHCZXJDe
-         B4szupjUZK+qd1H8dwkHk1CiGAUgmnwiLkgNeIQwtENslHs3gTKzOFGdY4puqJmu7k4U
-         fQqJhvnx+r6lr+gNNCVL3yVL+xudCZDxmsNqHRMQUfT2yOEYd6v9vB0qWDA2M6sRAKcJ
-         VYCwaLA4KMlTC8UQlQ8wWxx0v2tMVIRC8BTIo45gLvJcvszelyhUybRwxiO5nzFhFOyv
-         MYbtlh8vEpluKfiX0hHVssS7h8fF0NS5diwe65fZgoUqSfqyANNZc6wdnLT0d58j55OA
-         JWlw==
+        bh=IF9cXrQnpCZaMLl6tbZ/qIT+Y3H9j+DMc+Ad29JxSyU=;
+        b=RtuD168Jkqr9RnhP3VMpSCTS57mW0ngLJEssT/lggiAeqhJ1TGtnCYEy98hldAzYg1
+         +HIQKkkGGlz1rmBIMRVy4eRHzwJBC1uDy0Kecaqd5VtjjexTUe3TMA9mpLsRbMfJGm2g
+         dXmUgEBKOQWFuqB0O3CZkjf8zYBYIUqgcKdMvseGuUGPpSe+xZPgb5JYfcTOUiOi6ZK9
+         PF15UToNpsB7tLnNMRAer876U08Po1RtHBWhuv0NRjHC/onAiN8JR8DM382W3evZ+atb
+         nMByC4W/LckRhCYxZjhjwyes0ZjZZyzC4YpqbsHTFye+awZwS8suUJzhGpJpAZsWilyo
+         lGgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794242191; x=1794846991;
+        d=1e100.net; s=20260707; t=1794242194; x=1794846994;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=HEJ+QQBd0iC35enWpK8vBgPoOeYQfDGSCF+rovxxelY=;
-        b=NqMlALdtHfbL3prfpODF29AQMHMeIRoHf1pz8NWg1PWc4pIBqYybSR/TN/zmBj/FWW
-         WtamSGKyHX+gtF8CmlndlLBzsxAC+mWnLX9PfCZbAKbYg/Q0UYfHArUDZt5qeDkmRCoR
-         V3mCbUGl/p9iJOcUmASTygdXoY6n1fGZLIse/ouygGybhymHlshcoVR5MG9GGNJO3mJK
-         BmMrmincG/5YtFyIvuMaXgjza0rZ377RZkMtczHyyymsz1ZxAPwimfTie5YsZXMq/cRP
-         6n5AFCDjU01O2YR4Bs3ExBWh1sgO0RCJMmVM8Hm7dza6j61mhuWtd5c9JAYuia0oRcTm
-         ynqg==
-X-Gm-Message-State: APuU4Z8vEjP52ADVNlBH17Oateqc9gEdhhEqGPYOKcveVEtTPChKoEM/
-	w/+aWcavD64jX1YDjgavODrWYGcvxOfIMRC5U1/bXNbgVVRn2oVAUX29
-X-Gm-Gg: AYBFou2ONVdSratQg6rInj3SPsi4QknLlQsYFi8fRN0sfFrNfj05zVSHSMr0cdwEZOh
-	60poUhXzgg4IXOSin0yPXlN8vE1ECu5Fs5EOHnr4X8DaBQKlYfbgxrLrQFS2xIIhYlJcdlrMlhy
-	F6QwwLlXYzfML80C0vLHuXRfBXtv3FB1rIdot2xCpRfBHD9u5mH7qmh/xmOmwK+A+mauIVSQATM
-	pZGx3vZz/UDMnxKxOajSuv1ro3xWbYEvL54jPluLo+tGyw+s9S5z763FDWFG/mhz7PPG6cf2TVa
-	3b+Z/GRst5bcu6eR2HtQV0/Hdz0sqdhFL/0J0FYqV5MrquyNhEh0ThZ+DEYn9BFdUTFrj6wlCD3
-	4JDXEefQhPqQ+Fy8bdxMmuEBlnuBLAIJXjJHU5Yug3SsCmKERpjUBSrd+r5ISm69KbrZhrHfQKI
-	6Urd9iJg6IDRGodyExCRlNg2S0uWaReUQfNbqBlEX9CAMii3npS0aN1PRcClOlc6lS93b/5JqN6
-	vt83rEkAM7sQSiH7hc9Lnzfz8h6tmtUt7231JD1uXtHeXwsRXM7v7cXTYLx+ACveHbN5wPU5gtE
-	bXgwOlz84mUNv7G30CI5zHW/AA0=
-X-Received: by 2002:a05:600c:46cf:b0:4ac:aae6:6401 with SMTP id 5b1f17b1804b1-4b963c6a9d4mr87006605e9.12.1794242190658;
-        Mon, 09 Nov 2026 08:36:30 -0800 (PST)
+        bh=IF9cXrQnpCZaMLl6tbZ/qIT+Y3H9j+DMc+Ad29JxSyU=;
+        b=iYVjNCs49Hn3a59JIATbPjUbaUBpGmgjP0htrAOUVBLrGfknJxl7T9vM7eUXDPUidb
+         OV+Sb0g5GDfCLeF19SvuS9yKucYPZAsg79FJ1/QBrkV9puJI66U8qgSc8x9FemeiqyEI
+         eiDJSOvSf7p+cXYIkABgeZulIQZISfwFfRu0rSXrnGI4XdVc7XHHtWyh6GGckU7MHSGW
+         hg2IdajHpIWOGwAOy5fkALN8dgzxF9WmLNKBvLcXf2FRbugEtbiav8zTj/VY0PMetyRT
+         AYcIZZfvHu2k9+J4pivwfPubXdVeoe6/1wZ+RlNA4dNgdMhneb01qGyimnuGPhBBSJ7R
+         MVSg==
+X-Gm-Message-State: APuU4Z+aZNgMCSRok8f+dMS4qmyUO3fMcLwp7NvTsxEP8QiVkRBDu+nv
+	JrPgAvo/PgoRV3MI3uG64nKX0j6Zj9btzVlGSxghV49UTsSQ82jI63ik
+X-Gm-Gg: AYBFou1y3eGR3loMG+G5WRUum78hlXGPkoFYo93iJq76bL3/WhmyU81Ef5iHqA9ZI3w
+	lRykviRlOcd07FWXun1uZc5Ex7is/fZA0w2cgf4fueF+vbxZULXIAKE7RAwBII9uf448zaZn2I9
+	Rl69LY6GgkS4AlUpvGMapeIt6bo630jbyLF/tbUg3r9K54khJ08x11H+/3hlQ00iGu+jfS5cKUA
+	sldxb5daPgfwoI3DBxCtNef89SIU8JFzLZDCl00G50I4DFLVAHjtIM6MOZNNGECLW367vCPzSyB
+	DD9EvELRJMVx5qaWUmwW6NBDh2lkx7MLXvWVppThxIXltQhMfKerluAz7Wegh+KtPCKBAk77xIK
+	UQQLaXZzOP+RHpx7m3mlqo8MDSyhCj5e3/MzuO9SXzX/mef6ixYWB9OU7WW72hAatr8eUc5aiZF
+	djSuIIjkEYfYzjOC2+D0b3FkvOL8KR5aliH4UfNbWTRyuKHC1gjC5tGBoJWRetLcJ3Vn7xHiuJZ
+	R7qwI0bYPtcBIKPgRb6ta6lR3hs+q62D+ibqBTHPEWW0pekId+1MX3Hv1CM+izkDBElql8cVSfN
+	j0GWm4tmwiTAlsG2l5KTTY3M0w==
+X-Received: by 2002:a05:600c:524d:b0:4a2:397:73f6 with SMTP id 5b1f17b1804b1-4b960d9c550mr90005315e9.8.1794242193648;
+        Mon, 09 Nov 2026 08:36:33 -0800 (PST)
 Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.27
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4b96cd012e1sm138851295e9.8.2026.11.09.08.36.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 08:36:28 -0800 (PST)
+        Mon, 09 Nov 2026 08:36:32 -0800 (PST)
 From: Yuri Andriaccio <yurand2000@gmail.com>
 To: Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>,
@@ -95,9 +95,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Luca Abeni <luca.abeni@santannapisa.it>,
 	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>
-Subject: [RFC PATCH v7 05/29] sched/rt: Move functions from rt.c to sched.h
-Date: Mon,  9 Nov 2026 17:35:51 +0100
-Message-ID: <20261109163616.195264-6-yurand2000@gmail.com>
+Subject: [RFC PATCH v7 07/29] sched/rt: Remove unnecessary runqueue pointer in struct rt_rq
+Date: Mon,  9 Nov 2026 17:35:53 +0100
+Message-ID: <20261109163616.195264-8-yurand2000@gmail.com>
 X-Mailer: git-send-email 2.56.0
 In-Reply-To: <20261109163616.195264-1-yurand2000@gmail.com>
 References: <20261109163616.195264-1-yurand2000@gmail.com>
@@ -112,170 +112,155 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: luca abeni <luca.abeni@santannapisa.it>
+Remove the rq field in struct rt_rq.
+  The rq field now is just caching the pointer to the global runqueue of the
+  given rt_rq, so it is unnecessary as the global runqueue can be retrieved
+  in other ways.
 
-Make the following functions/macros be non-static and move them in
-sched.h, so that they can be also used in other source files:
+Introduce global_rq_of_rt_rq to retrieve the global runqueue which serves a
+rt_rq's dl_server.
+Rework rq_of_rt_rq to retrieve the runqueue a rt_rq is serving.
 
-- rt_entity_is_task()
-- rt_task_of()
-- rq_of_rt_rq()
-- rt_rq_of_se()
-- rq_of_rt_se()
-
-There are no functional changes, apart from the use of container_of_const()
-instead of container_of() where applicable. This is needed by future patches.
-
-Signed-off-by: luca abeni <luca.abeni@santannapisa.it>
 Signed-off-by: Yuri Andriaccio <yurand2000@gmail.com>
 ---
- kernel/sched/rt.c    | 56 ------------------------------------------
- kernel/sched/sched.h | 58 ++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 58 insertions(+), 56 deletions(-)
+ kernel/sched/rt.c    | 21 +++++++++------------
+ kernel/sched/sched.h | 16 ++++++++++++----
+ 2 files changed, 21 insertions(+), 16 deletions(-)
 
 diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 2b1c3ab5d6a4..0862ee8b088d 100644
+index 6b819adcab4a..16eb027d4bdd 100644
 --- a/kernel/sched/rt.c
 +++ b/kernel/sched/rt.c
-@@ -166,36 +166,6 @@ static void destroy_rt_bandwidth(struct rt_bandwidth *rt_b)
- 	hrtimer_cancel(&rt_b->rt_period_timer);
- }
- 
--#define rt_entity_is_task(rt_se) (!(rt_se)->my_q)
--
--static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
--{
--	WARN_ON_ONCE(!rt_entity_is_task(rt_se));
--
--	return container_of(rt_se, struct task_struct, rt);
--}
--
--static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
--{
--	/* Cannot fold with non-CONFIG_RT_GROUP_SCHED version, layout */
--	WARN_ON(!rt_group_sched_enabled() && rt_rq->tg != &root_task_group);
--	return rt_rq->rq;
--}
--
--static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
--{
--	WARN_ON(!rt_group_sched_enabled() && rt_se->rt_rq->tg != &root_task_group);
--	return rt_se->rt_rq;
--}
--
--static inline struct rq *rq_of_rt_se(struct sched_rt_entity *rt_se)
--{
--	struct rt_rq *rt_rq = rt_se->rt_rq;
--
--	WARN_ON(!rt_group_sched_enabled() && rt_rq->tg != &root_task_group);
--	return rt_rq->rq;
--}
--
- void unregister_rt_sched_group(struct task_group *tg)
+@@ -101,10 +101,7 @@ void init_tg_rt_entry(struct task_group *tg, struct rt_rq *rt_rq,
+ 		struct sched_rt_entity *rt_se, int cpu,
+ 		struct sched_rt_entity *parent)
  {
- 	if (!rt_group_sched_enabled())
-@@ -294,32 +264,6 @@ int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent)
- 
- #else /* !CONFIG_RT_GROUP_SCHED: */
- 
--#define rt_entity_is_task(rt_se) (1)
+-	struct rq *rq = cpu_rq(cpu);
 -
--static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
--{
--	return container_of(rt_se, struct task_struct, rt);
--}
--
--static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
--{
--	return container_of(rt_rq, struct rq, rt);
--}
--
--static inline struct rq *rq_of_rt_se(struct sched_rt_entity *rt_se)
--{
--	struct task_struct *p = rt_task_of(rt_se);
--
--	return task_rq(p);
--}
--
--static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
--{
--	struct rq *rq = rq_of_rt_se(rt_se);
--
--	return &rq->rt;
--}
--
- void unregister_rt_sched_group(struct task_group *tg) { }
- 
- void free_rt_sched_group(struct task_group *tg) { }
+ 	rt_rq->highest_prio.curr = MAX_RT_PRIO-1;
+-	rt_rq->rq = rq;
+ 	rt_rq->tg = tg;
+
+ 	tg->rt_rq[cpu] = rt_rq;
+@@ -184,7 +181,7 @@ static void pull_rt_task(struct rq *);
+
+ static inline void rt_queue_push_tasks(struct rt_rq *rt_rq)
+ {
+-	struct rq *rq = container_of_const(rt_rq, struct rq, rt);
++	struct rq *rq = global_rq_of_rt_rq(rt_rq);
+
+ 	if (!has_pushable_tasks(rt_rq))
+ 		return;
+@@ -194,7 +191,7 @@ static inline void rt_queue_push_tasks(struct rt_rq *rt_rq)
+
+ static inline void rt_queue_pull_task(struct rt_rq *rt_rq)
+ {
+-	struct rq *rq = container_of_const(rt_rq, struct rq, rt);
++	struct rq *rq = global_rq_of_rt_rq(rt_rq);
+
+ 	queue_balance_callback(rq, &per_cpu(rt_pull_head, rq->cpu), pull_rt_task);
+ }
+@@ -222,7 +219,7 @@ static void enqueue_pushable_task(struct rt_rq *rt_rq, struct task_struct *p)
+ 		rt_rq->highest_prio.next = p->prio;
+
+ 	if (!rt_rq->overloaded) {
+-		rt_set_overload(rq_of_rt_rq(rt_rq));
++		rt_set_overload(global_rq_of_rt_rq(rt_rq));
+ 		rt_rq->overloaded = 1;
+ 	}
+ }
+@@ -240,7 +237,7 @@ static void dequeue_pushable_task(struct rt_rq *rt_rq, struct task_struct *p)
+ 		rt_rq->highest_prio.next = MAX_RT_PRIO-1;
+
+ 		if (rt_rq->overloaded) {
+-			rt_clear_overload(rq_of_rt_rq(rt_rq));
++			rt_clear_overload(global_rq_of_rt_rq(rt_rq));
+ 			rt_rq->overloaded = 0;
+ 		}
+ 	}
+@@ -495,7 +492,7 @@ update_stats_wait_start_rt(struct rt_rq *rt_rq, struct sched_rt_entity *rt_se)
+ 	if (!stats)
+ 		return;
+
+-	__update_stats_wait_start(rq_of_rt_rq(rt_rq), p, stats);
++	__update_stats_wait_start(global_rq_of_rt_rq(rt_rq), p, stats);
+ }
+
+ static inline void
+@@ -512,7 +509,7 @@ update_stats_enqueue_sleeper_rt(struct rt_rq *rt_rq, struct sched_rt_entity *rt_
+ 	if (!stats)
+ 		return;
+
+-	__update_stats_enqueue_sleeper(rq_of_rt_rq(rt_rq), p, stats);
++	__update_stats_enqueue_sleeper(global_rq_of_rt_rq(rt_rq), p, stats);
+ }
+
+ static inline void
+@@ -540,7 +537,7 @@ update_stats_wait_end_rt(struct rt_rq *rt_rq, struct sched_rt_entity *rt_se)
+ 	if (!stats)
+ 		return;
+
+-	__update_stats_wait_end(rq_of_rt_rq(rt_rq), p, stats);
++	__update_stats_wait_end(global_rq_of_rt_rq(rt_rq), p, stats);
+ }
+
+ static inline void
+@@ -564,11 +561,11 @@ update_stats_dequeue_rt(struct rt_rq *rt_rq, struct sched_rt_entity *rt_se,
+ 		state = READ_ONCE(p->__state);
+ 		if (state & TASK_INTERRUPTIBLE)
+ 			__schedstat_set(p->stats.sleep_start,
+-					rq_clock(rq_of_rt_rq(rt_rq)));
++					rq_clock(global_rq_of_rt_rq(rt_rq)));
+
+ 		if (state & TASK_UNINTERRUPTIBLE)
+ 			__schedstat_set(p->stats.block_start,
+-					rq_clock(rq_of_rt_rq(rt_rq)));
++					rq_clock(global_rq_of_rt_rq(rt_rq)));
+ 	}
+ }
+
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1b04b4c40ae9..e7e4da78340c 100644
+index 13eebde95ec0..27cb594cdfe9 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -3495,6 +3495,64 @@ extern void set_rq_offline(struct rq *rq);
- 
- extern bool sched_smp_initialized;
- 
-+#ifdef CONFIG_RT_GROUP_SCHED
-+#define rt_entity_is_task(rt_se) (!(rt_se)->my_q)
-+
-+static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
-+{
-+	WARN_ON_ONCE(!rt_entity_is_task(rt_se));
-+
-+	return container_of(rt_se, struct task_struct, rt);
+@@ -902,8 +902,6 @@ struct rt_rq {
+ 	raw_spinlock_t		rt_runtime_lock;
+
+ 	unsigned int		rt_nr_boosted;
+-
+-	struct rq		*rq; /* this is always top-level rq, cache? */
+ #endif
+ #ifdef CONFIG_CGROUP_SCHED
+ 	struct task_group	*tg; /* this tg has "this" rt_rq on given CPU for runnable entities */
+@@ -3500,9 +3498,14 @@ static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
+
+ static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
+ {
+-	/* Cannot fold with non-CONFIG_RT_GROUP_SCHED version, layout */
+ 	WARN_ON(!rt_group_sched_enabled() && rt_rq->tg != &root_task_group);
+-	return rt_rq->rq;
++	return container_of_const(rt_rq, struct rq, rt);
 +}
 +
-+static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
++static inline struct rq *global_rq_of_rt_rq(struct rt_rq *rt_rq)
 +{
 +	/* Cannot fold with non-CONFIG_RT_GROUP_SCHED version, layout */
-+	WARN_ON(!rt_group_sched_enabled() && rt_rq->tg != &root_task_group);
-+	return rt_rq->rq;
-+}
-+
-+static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
++	return cpu_rq(rq_of_rt_rq(rt_rq)->cpu);
+ }
+
+ static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
+@@ -3521,6 +3524,11 @@ static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
+ 	return container_of(rt_rq, struct rq, rt);
+ }
+
++static inline struct rq *global_rq_of_rt_rq(struct rt_rq *rt_rq)
 +{
-+	WARN_ON(!rt_group_sched_enabled() && rt_se->rt_rq->tg != &root_task_group);
-+	return rt_se->rt_rq;
++	return container_of_const(rt_rq, struct rq, rt);
 +}
 +
-+static inline struct rq *rq_of_rt_se(struct sched_rt_entity *rt_se)
-+{
-+	struct rt_rq *rt_rq = rt_se->rt_rq;
-+
-+	WARN_ON(!rt_group_sched_enabled() && rt_rq->tg != &root_task_group);
-+	return rt_rq->rq;
-+}
-+#else
-+#define rt_entity_is_task(rt_se) (1)
-+
-+static inline struct task_struct *rt_task_of(struct sched_rt_entity *rt_se)
-+{
-+	return container_of(rt_se, struct task_struct, rt);
-+}
-+
-+static inline struct rq *rq_of_rt_rq(struct rt_rq *rt_rq)
-+{
-+	return container_of(rt_rq, struct rq, rt);
-+}
-+
-+static inline struct rq *rq_of_rt_se(struct sched_rt_entity *rt_se)
-+{
-+	struct task_struct *p = rt_task_of(rt_se);
-+
-+	return task_rq(p);
-+}
-+
-+static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
-+{
-+	struct rq *rq = rq_of_rt_se(rt_se);
-+
-+	return &rq->rt;
-+}
-+#endif
-+
- DEFINE_LOCK_GUARD_2(double_rq_lock, struct rq,
- 		    double_rq_lock(_T->lock, _T->lock2),
- 		    double_rq_unlock(_T->lock, _T->lock2))
--- 
+ static inline struct rt_rq *rt_rq_of_se(struct sched_rt_entity *rt_se)
+ {
+ 	struct rq *rq = task_rq(rt_task_of(rt_se));
+--
 2.56.0
 
