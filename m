@@ -1,124 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794316742;
-	b=PUVLXCUPEucqPphbr5FTkOMTpAU1UuRgvC+5su856CyEQVzfGVfqiJD0CMUs/zON1xsM
-	 lz1m/ej9KUIh+1tElb55vQsm3q6RXkRubkPV4qplWW1QmfD7ryM2uMpW3Q1VH3kI7P6TT
-	 iD87Hw5p8zU9QwdWaw3HxYJjCFDxrn2Xo+oGr8yncZLyj8yVJm6ct75jChJBW5P2mo2Dd
-	 wW9aVuhftZXvHeGH+VEbQvpKBJZP6iEpIpQFgewMxtONVOMZt9RqCK8eQSDN44UwnIU3W
-	 4REId80FB1lZ/Th7mnJcD2qqj6qs8Mur/clR3PbY5oPIiS0ALoP48uL0RRKdRp0N2QA==
+	t=1794317240;
+	b=bmaYwZ6ZFTF6Y1P4URjDY9FpUhOv1p7RA7jFujm4vUdSCrwlyOfE8KZgc6jWSBGmOymB
+	 +xVRvWbkgwoes5SBa+TDVU62Q/UGJCAGsS+NCNkBq9TRThUZwauUsbBMdidDaJ/LNqHN9
+	 HTMBR2mtuQ0P8tQrp7OW23lt5yYgpt9srfijESA2x7+pJeHfGWzAJqS1COeze1lWjZo+l
+	 jweuN33S5q51WtJlqYdT/S4D31Nr0iIkEdtvOWES0Pt6OSRCrxr4LcwbnyuuL7jS36KZw
+	 zdyKSE46wi0PQSU3SA5awpTltE2UkQyMFiUeURB1121NE+8dGNboRxkYukimXmtENNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794316742;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=uCK3DWsW5brHcg2UrNGkrWpwotXCDgVLqXuyjt+/CDE=;
-	b=EH0bGx7J/UjO+OApUHubzpltWUHzzujn+y76UbXhY3jkgNlmEmsuprn7zTVo04oE1Eft
-	 vhidcDqaHu8q1nREQHU1Xu+KUCmQCMvm9dQNtUofO15/oWdBQi5gLNtLiim+m62dlaG3C
-	 OL542OoVGYXVYGkkMvH8P03nyJNmG8ICBk0bnQcOSjes2eyDqSDmhow/aqi29Ih7pyYqB
-	 pbaQSeuxcFmJ1peH/eWVr1b1T+dnhS6QXjo9RZhRdfl0g6pfwisFu0VvRmoDgt13qe2VW
-	 v60Kxx15zyTNW0mOpdi13m5MNZo387mL5KBY3B8MSszFx7RgdjccqwAxs5O5g7SX4VQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794317240;
+	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
+	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
+	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
+	b=TjaC6TK+Ekl+A3heooFKriRHs64IJvz2GQ27CnyNwYptEIntACDIQ+M/jZM131WDZZKR
+	 jrS+muVbkrgvezPVZ3v/N2144Q02B0E26C1HawOIUDGT38CQ7nX3o/o2l9eZP+L18l8Ps
+	 Yr1GjFgrXuuhW6NvAqg8XBVkp1KoSa7xRgWGmxBv7W2mCcNrsWV52gG3lGQtv+Ro2PGO3
+	 wJxrfju78+7/XzSTb98oxS1O5ftphEd2nmzLXEg86668xG+N+DmhIT6FbMxgS0GlwfQwJ
+	 We6fWeRLBEQ8gh+MHhdkIKTRy+Ws/brz+it1XkbuiNV7jbLZZnrbb0TcEPKWElWX4Jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=irgaFATm;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=NJBumCqO;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dmarc=none header.from=suse.cz;
+	spf=pass smtp.mailfrom=suse.cz;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ;
+	arc=none smtp.remote-ip=195.135.223.130
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1965A6073B03
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 13:19:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1965A6073B03
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C726F606A33C;
+	Tue, 10 Nov 2026 13:27:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C726F606A33C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=irgaFATm;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=NJBumCqO
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794316741;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
+	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
+	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id F1D6521EB9;
+	Tue, 10 Nov 2026 13:27:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1794317238; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=uCK3DWsW5brHcg2UrNGkrWpwotXCDgVLqXuyjt+/CDE=;
-	b=irgaFATmW7i1hwv7tnQawh/3pf72iYXWNzzBFUG4GwABRgi4cWvnnVUWHqGxmVB1+Zxf/C
-	JFmvivtNpbaYBp31o00Ocumigrzrv9NFgLBiA7rR5cRpPQsRwEULeoylbAW3T0lXCWmdhN
-	7fkptwwoTKXEVJE267g4+/IZufv7a68=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-360-J5WEApPkOGq9eEGFz2PDLw-1; Tue, 10 Nov 2026 08:18:59 -0500
-X-MC-Unique: J5WEApPkOGq9eEGFz2PDLw-1
-X-Mimecast-MFC-AGG-ID: J5WEApPkOGq9eEGFz2PDLw_1794316738
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-48e00f3929bso1232235f8f.0
-        for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 05:18:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794316738; x=1794921538; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=uCK3DWsW5brHcg2UrNGkrWpwotXCDgVLqXuyjt+/CDE=;
-        b=NJBumCqObc+eY0/qBEhU38pm05rcyolsQTZaUxXYVbxPwYBwCJwgF439lA4PENvlqD
-         pjbGMLTs7j7UAK/YKXJpwEVRutWKUeoT41AmWGs/Vyyrr4Nrluqjp/ABJoym1rR0KvAx
-         C3FilF0Um11cWyOieP6xJ9SY9Ug1aIar8o+GABHy8F+edd6bL1FD8JXwhDpRmGEyj4/a
-         X+/WaYCoX6G6Xbz/AuZj7bFeeX83EMfzxsRuY+fFPaJFTmlzEiWr8rqHKD/g63FOSSlm
-         lxQQhnEfA9k1dKR8I6Ye9ii0obYsM/PC12Mh7oS7KagG8H21tbvnBMNt2PbFaDNcqt2t
-         zs1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794316738; x=1794921538;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=uCK3DWsW5brHcg2UrNGkrWpwotXCDgVLqXuyjt+/CDE=;
-        b=dvteRH8HHX8o3XuSldvxCWA4GDaimawk/ZfBPRM7sLmzzstuLwgbJBi4huJ2sqL8ts
-         hs6ocQ+TMsLniVfGoiJFQa8/bxzrrri0r7eZcJ2hWc5jwQkajmV75cX6vh8UW34DNeL0
-         q89qSVzHMDRcWlfmQbJQO6o1hsuDBDvr4TTjzYkC0t/lZMpChmXIO25rhB0NOQ8fONOS
-         SMAkr9toUjUam3kwOc2QzHIZ8Wbg8TGjMS4SKx1vlIUqHnrULRghSJbMexli3r84IQ5N
-         n05VuunBsbuFw1M2kZyrcxJOzFMdNTC2gpN4W+MnOsOZ/viu/A0XzgWJHTiZ7XoGDyx2
-         Ncww==
-X-Forwarded-Encrypted: i=1; AL+hErFbriRfcQHnO1aB/jFJUci+Xy5Ml2Mih3yMe2jnGhVOdS2/kLF87qTjnMOs014SXz2T1FwZ1chB@vger.kernel.org
-X-Gm-Message-State: APuU4Z8QF7jPYLyMJY5gwe2oaeV4JDBYsm8FbTCyjgh5q55JNUs8dCVb
-	H++h44ShGz26s2U0JbVA+Y2tSzE1yjXILRJEZw+5eAzr9EKowoOGJcHaZ2woYyD27dsZOWfKIV/
-	LgfE/ZjAJnwy0L/qemM5f/MYNSNblRiNi+oD6lRsi/xpEaONYN94ofv09Z7U=
-X-Gm-Gg: AYBFou3M61LaxZOX9lWhu1vRJW3dRY7uxD9Dq+0XzUdgKtlmF31eh3TlOpIZWa5s3t4
-	rIF/ql/tLse6Oe5wHTKphjrEIbofhIY43sjNM9Z9ehC++3RCA6wiJS92EuGMtOqR4dTwKUmZePX
-	PoWdyFD5STQahskv9t3x2ftNRxettRB/xJOIR5WZkK/boIP0Y1o8YiaZwHGgrNs1Y9XGyWlOOTv
-	klZjnsmqnO7oiZHpgU7F78j+4DzqR26pR55qUVP/tOzMpJw1KhyVHualL0efRESkcpaNGDsJYu/
-	RIGgpWFmnsTurrhq19PGRJom2Dbau96BNII1pibuxIUdiJDzGv4iLCI/9l9fp8URbF3L+SxkOwN
-	V0iICBIQjafow6VBmzOsznwohPO/75mrHo0ZSBvliWS1yqXdUHbSTQG7B9qEYFXuCrOUlZCEsNP
-	ymUT0=
-X-Received: by 2002:a05:600c:870e:b0:49f:c5aa:9ef4 with SMTP id 5b1f17b1804b1-4ba0234267amr43353485e9.8.1794316738368;
-        Tue, 10 Nov 2026 05:18:58 -0800 (PST)
-X-Received: by 2002:a05:600c:870e:b0:49f:c5aa:9ef4 with SMTP id 5b1f17b1804b1-4ba0234267amr43352395e9.8.1794316737684;
-        Tue, 10 Nov 2026 05:18:57 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ba0236f03esm49827465e9.3.2026.11.10.05.18.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 05:18:57 -0800 (PST)
-Date: Tue, 10 Nov 2026 14:18:54 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
-	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org, longman@redhat.com,
-	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
-	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v5 09/29] sched/deadline: Reset the deadline and the
- runtime with the parameters
-Message-ID: <avMZvuEdV8ua36jy@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
- <20261108185406.1549770-10-mathieu.desnoyers@efficios.com>
+	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
+	b=FSjbyIy9Eh1iq1WYwFosAs5h+QdUj3JseqQK+/Fyngw44MBKrqZiWFoCj6JPHfk+Yor7Yv
+	Ef5CjXcET1VuoMjCctjuHDtpjbgZxWKDM3CGgXt37JOHFI5plgNG9+eiFs1UOtmBezmV/9
+	jBnnqcWbLq3hzUNPZS5kkwXUdmqfEuA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1794317238;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
+	b=qKQcYFUJwJDWgKs0ErrbPdtu7yBepQbcQ6AITcH4Or8odAuLrS/V+qsslwZsMkhAvyIErp
+	kS7QeLuGL42NmECg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1794317238; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
+	b=FSjbyIy9Eh1iq1WYwFosAs5h+QdUj3JseqQK+/Fyngw44MBKrqZiWFoCj6JPHfk+Yor7Yv
+	Ef5CjXcET1VuoMjCctjuHDtpjbgZxWKDM3CGgXt37JOHFI5plgNG9+eiFs1UOtmBezmV/9
+	jBnnqcWbLq3hzUNPZS5kkwXUdmqfEuA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1794317238;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
+	b=qKQcYFUJwJDWgKs0ErrbPdtu7yBepQbcQ6AITcH4Or8odAuLrS/V+qsslwZsMkhAvyIErp
+	kS7QeLuGL42NmECg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CE66B13479;
+	Tue, 10 Nov 2026 13:27:17 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Bx7ZKrUb82paYwAAD6G6ig
+	(envelope-from <jack@suse.cz>); Tue, 10 Nov 2026 13:27:17 +0000
+Received: by quack.suse.cz (Postfix, from userid 1000)
+	id 6146B2250C; Tue, 10 Nov 2026 14:27:17 +0100 (CET)
+Date: Tue, 10 Nov 2026 14:27:17 +0100
+From: Jan Kara <jack@suse.cz>
+To: Breno Leitao <leitao@debian.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
+	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Julian Sun <sunjunchao@bytedance.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH v2 2/4] writeback: name the bdi in the slow writeback
+ report
+Message-ID: <llelav5t3bcbtyiujoe6lmqrzlgfcgc7oq7o2mfrzpio4c34d3@6ak5d4z7jqmz>
+References: <20261110-writeback_stall_report-v2-0-9e0ed75074ca@debian.org>
+ <20261110-writeback_stall_report-v2-2-9e0ed75074ca@debian.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -130,88 +121,172 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261108185406.1549770-10-mathieu.desnoyers@efficios.com>
+In-Reply-To: <20261110-writeback_stall_report-v2-2-9e0ed75074ca@debian.org>
+X-Spamd-Result: default: False [-12.80 / 50.00];
+	SUSE_INTERNAL_BYPASS(-9.00)[];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_COUNT_THREE(0.00)[3];
+	MIME_TRACE(0.00)[0:+];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[22];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_TLS_LAST(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,imap1.dmz-prg2.suse.org:helo,suse.com:email]
+X-Spam-Score: -12.80
+X-Spam-Level: 
+X-Spam-Flag: NO
 
-Hello,
+On Tue 10-11-26 03:39:28, Breno Leitao wrote:
+> The slow writeback report names the waiting task and how long it has
+> waited, but not what it is waiting on. On a machine with several
+> filesystems there is no way to tell which device is slow.
+> 
+> Pass the bdi to wb_wait_for_completion() and add its name to the
+> report, together with the number of work items still outstanding. A
+> sync issues one work item per cgroup wb with dirty inodes, so the count
+> also shows whether a single cgroup is holding up the others.
+> 
+> wb_wait_for_completion() took the bdi until commit 5b9cce4c7eb0
+> ("writeback: Generalize and expose wb_completion") made it usable for
+> the memcg foreign flushes. memcg tracks those by bdi id only and passes
+> NULL, which bdi_dev_name() prints as "(unknown)".
+> 
+> A sync of files dirtied from two cgroups, on a throttled null_blk
+> device, now reports:
+> 
+>   [   10.043698] INFO: The task sync:276 has been waiting for writeback completion for more than 7 seconds (bdi 252:0, work items left: 2).
+> 
+> Signed-off-by: Breno Leitao <leitao@debian.org>
 
-On 08/11/26 13:53, Mathieu Desnoyers wrote:
-> A task that leaves SCHED_DEADLINE keeps its parameters until its 0-lag
-> time, so that leaving and coming back gains nothing. Commit 209a0cbda7a0
-> ("sched/deadline: Improve the tracking of active utilization") moved
-> their reset to that time. Before it, the replenishment timer did the
-> reset at the deadline. So a task back after the reset found its
-> deadline passed, and started a new period. But __dl_clear_params()
-> resets neither the deadline nor the runtime.
-> 
-> Now a task back after its 0-lag time can be enqueued on its old
-> deadline and runtime. With runtime left, its 0-lag time comes before
-> its deadline. Back before that deadline, it would first spend the runtime
-> of the reservation it gave back. Back after it, a constrained task
-> would be throttled until its old period ends. "sched/deadline: Do not
-> lose a throttled task switched out and back" moves the deadline of a
-> throttled task on. This widens the window before the deadline to about
-> a period.
-> 
-> A task with no parameters of its own, boosted by a deadline waiter,
-> keeps the donor's deadline and runtime after its deboost. If it then
-> enters SCHED_DEADLINE before that deadline, it runs on the donor's
-> runtime. On v7.4-rc1, a task of 10ms per 100ms ran 40ms of its first
-> period.
-> 
-> Fix this by resetting the deadline and the runtime in
-> __dl_clear_params(), and in switched_from_dl() at the deboost of a task
-> with no parameters. The next enqueue then starts a new period.
-> 
-> The Sashiko AI review found the first case in the second posting of
-> this series, and the deboost in the third. The deboost_resets_period
-> case of deadline_bw_test, added later in this series, tests the
-> deboost.
-> 
-> Fixes: 209a0cbda7a0 ("sched/deadline: Improve the tracking of active utilization")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Looks good. Feel free to add:
+
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
 > ---
-
-Nit below, other than that
-
-Acked-by: Juri Lelli <juri.lelli@redhat.com>
-
->  kernel/sched/deadline.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
+>  fs/fs-writeback.c           | 20 ++++++++++++--------
+>  include/linux/backing-dev.h |  3 ++-
+>  mm/memcontrol.c             |  2 +-
+>  3 files changed, 15 insertions(+), 10 deletions(-)
 > 
-> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-> index cf24d2df6bfc..cc43c5eeae51 100644
-> --- a/kernel/sched/deadline.c
-> +++ b/kernel/sched/deadline.c
-> @@ -3573,6 +3573,16 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
->  	if (task_on_rq_queued(p) && p->dl.dl_runtime)
->  		task_non_contending(&p->dl, false);
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 01a00d7542b371..c5e9e5c0d506a9 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -196,7 +196,8 @@ static void wb_queue_work(struct bdi_writeback *wb,
+>  	spin_unlock_irq(&wb->work_lock);
+>  }
 >  
-> +	/*
-> +	 * A task with no parameters of its own was boosted into the class.
-> +	 * Its deadline and runtime are the donor's. Reset them, so that its
-> +	 * next entry into the class starts a new period.
-> +	 */
-> +	if (!p->dl.dl_runtime) {
-> +		p->dl.deadline = 0;
-> +		p->dl.runtime = 0;
-> +	}
-> +
->  	/*
->  	 * In case a task is setscheduled out from SCHED_DEADLINE we need to
->  	 * keep track of that on its cpuset (for correct bandwidth tracking).
-> @@ -3999,6 +4009,9 @@ static void __dl_clear_params(struct sched_dl_entity *dl_se)
-
-Think we want to update the comment that comes with this function (as it
-now clears also dynamic parameters).
-
->  	dl_se->dl_bw			= 0;
->  	dl_se->dl_density		= 0;
+> -static bool wb_wait_for_completion_cb(struct wb_completion *done)
+> +static bool wb_wait_for_completion_cb(struct wb_completion *done,
+> +				      struct backing_dev_info *bdi)
+>  {
+>  	unsigned long timeout = sysctl_hung_task_timeout_secs;
+>  	unsigned long waited_secs = (jiffies - done->wait_start) / HZ;
+> @@ -204,8 +205,9 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
+>  	done->progress_stamp = jiffies;
+>  	if (timeout && (waited_secs > timeout))
+>  		pr_info("INFO: The task %s:%d has been waiting for writeback "
+> -			"completion for more than %lu seconds.\n",
+> -			current->comm, current->pid, waited_secs);
+> +			"completion for more than %lu seconds (bdi %s, work items left: %d).\n",
+> +			current->comm, current->pid, waited_secs,
+> +			bdi_dev_name(bdi), atomic_read(&done->cnt));
 >  
-> +	dl_se->deadline			= 0;
-> +	dl_se->runtime			= 0;
-> +
-
-Thanks,
-Juri
-
+>  	return !atomic_read(&done->cnt);
+>  }
+> @@ -213,6 +215,7 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
+>  /**
+>   * wb_wait_for_completion - wait for completion of bdi_writeback_works
+>   * @done: target wb_completion
+> + * @bdi: bdi work items were issued to, NULL for the memcg foreign flushes
+>   *
+>   * Wait for one or more work items issued to @bdi with their ->done field
+>   * set to @done, which should have been initialized with
+> @@ -220,11 +223,12 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
+>   * are completed.  Work items which are waited upon aren't freed
+>   * automatically on completion.
+>   */
+> -void wb_wait_for_completion(struct wb_completion *done)
+> +void wb_wait_for_completion(struct wb_completion *done,
+> +			    struct backing_dev_info *bdi)
+>  {
+>  	done->wait_start = jiffies;
+>  	atomic_dec(&done->cnt);		/* put down the initial count */
+> -	wait_event(*done->waitq, wb_wait_for_completion_cb(done));
+> +	wait_event(*done->waitq, wb_wait_for_completion_cb(done, bdi));
+>  }
+>  
+>  #ifdef CONFIG_CGROUP_WRITEBACK
+> @@ -1164,7 +1168,7 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
+>  		last_wb = wb;
+>  
+>  		rcu_read_unlock();
+> -		wb_wait_for_completion(&fallback_work_done);
+> +		wb_wait_for_completion(&fallback_work_done, bdi);
+>  		goto restart;
+>  	}
+>  	rcu_read_unlock();
+> @@ -2972,7 +2976,7 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
+>  	WARN_ON(!rwsem_is_locked(&sb->s_umount));
+>  
+>  	bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
+> -	wb_wait_for_completion(&done);
+> +	wb_wait_for_completion(&done, bdi);
+>  }
+>  
+>  /**
+> @@ -3069,7 +3073,7 @@ void sync_inodes_sb(struct super_block *sb)
+>  	/* protect against inode wb switch, see inode_switch_wbs_work_fn() */
+>  	bdi_down_write_wb_switch_rwsem(bdi);
+>  	bdi_split_work_to_wbs(bdi, &work, false);
+> -	wb_wait_for_completion(&done);
+> +	wb_wait_for_completion(&done, bdi);
+>  	bdi_up_write_wb_switch_rwsem(bdi);
+>  
+>  	wait_sb_inodes(sb);
+> diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+> index c2284466e7aa66..808d939d2ca7f9 100644
+> --- a/include/linux/backing-dev.h
+> +++ b/include/linux/backing-dev.h
+> @@ -39,7 +39,8 @@ struct backing_dev_info *bdi_alloc(int node_id);
+>  void wb_start_background_writeback(struct bdi_writeback *wb);
+>  void wb_workfn(struct work_struct *work);
+>  
+> -void wb_wait_for_completion(struct wb_completion *done);
+> +void wb_wait_for_completion(struct wb_completion *done,
+> +			    struct backing_dev_info *bdi);
+>  
+>  extern spinlock_t bdi_lock;
+>  extern struct list_head bdi_list;
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ac6c43ea8c5a6d..df462d279a655e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4525,7 +4525,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+>  
+>  #ifdef CONFIG_CGROUP_WRITEBACK
+>  	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
+> -		wb_wait_for_completion(&memcg->cgwb_frn[i].done);
+> +		wb_wait_for_completion(&memcg->cgwb_frn[i].done, NULL);
+>  #endif
+>  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
+>  		static_branch_dec(&memcg_sockets_enabled_key);
+> 
+> -- 
+> 2.53.0-Meta
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
