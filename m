@@ -1,71 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=44.246.77.92
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=35.155.198.111
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794308982;
-	b=QPRrienX0AT1r1eFZtIYsvhtC4EVqyblj60pZXku1zCQFV48mAI1oAuVPcje9Vj96TAp
-	 lUuQF5gotqA/3N45M6kDYnQQrstFPCAJpeubkj4oDeSv2XdDDxXrS6ipVnon4urRFsByS
-	 CsmRwCDQ8ZKGy0Agf7SgUq4JztSI7iiW1pG29Ibo5dHknt+e+bmAMSrv7wko5woLfW10f
-	 CQAtAB5+e3X1mv2LY48gV6ei9Rs5zGlk+0rVedmYLIBtJRKV9hDS9RUg7+ZdTbdrAlQBr
-	 15NG2O+dSI3ck+KTjzzbRslQOSxarVjNoKc8Pea0zwz82IhSm3JvCr7SEb6wG+YbvyQ==
+	t=1794309004;
+	b=iyfiDxfTDcTjBApshbr1xoGOReWooOAUE4OEiOyOK+WKwSh4VHkRhO1th+AYRI+RgKha
+	 V5+2+NLnlyD8X+FrZATBtoy7t/LhsgBNKG05bx12w/gGtgS6H+nvX6PnrhjxslOxuKGpt
+	 +lPvUCcAulhT42lPU6Mf0zHHGBK3rFAFbdbEzH0CxTby/FJXS5ImldcgnujeqiDeBZ18o
+	 lkwf6tSfU3ksBZMaVmUCKSZIhH8WSalBJj53S6Ndr8EsXxyG2mbaB1rKBuFLJShxFzr2E
+	 xtESwwkyqs1yXkDtIrLqqi43r99x7hZtfJ7ED2LFnqkGzQBxzTRvI2tQFrJU9qMJ/VQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794308982;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794309004;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
 	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:X-Originating-IP:X-ClientProxiedBy:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=srT10sgvyfnqt4jFr2uRXYbuq0AbDIOaXtTGsqLNQn4=;
-	b=DD4iD9o9OsWagXmvL9TVQffgKd9TOIGkK1/n9NRHubAaPT3a+Dzfut+GwKEmUv/R2ovu
-	 6DWOPZqjKkhzEZAEovg0o8gpUoVwbbsdNK4Ia+ptXrdFRZwbMOOwZ/vrHA1w0uTOYIBo1
-	 p3m8C+AKbVLNS8NLKMLWQAs59xBsW+tsOGB7beR5Ho4sb0aO45bPTcACZgCKhHr49l+K/
-	 B/fPVkiSdMjXifa8ORxhJ3A7keegAJ0sw5WnUJ40tGLCpFivhaHz3i7SQJoXx1NwxDH1B
-	 hp8covcPAyqaQKv8LAVkbONF+fVMo4TC+dTgFCAehhYC4pzrRVVWoUdyfFcBAaJ89dg==
+	bh=Mvw0TsgFURMJSUqs9pb48vMPCPDkBjPnh47dx0cihh8=;
+	b=5Yp5vUys7r6w8g6cXQxgABzMfOXsC3YzD3erfqYa/N91t8PIgiv3LuD9M9iiYMiKM6IM
+	 kAa6DDZHSPmbQSt0orFxch/rT+jmb5T2kALOsmmgiD3TXUJIMbPR2R23W6s01SjIxPTMS
+	 YdEn/5TaEfKztyTsIFwXu84bNVOEQu44dg+kAAOo6Ud0LEA0sYgWq0F+aft299IjrwsHZ
+	 XSxGzIDp2bSVbb8VSl2fJlTh6UuSM10dBo8TTdeyOAeGR2fn+TYRFF/LfeEP790PtvrOr
+	 2LEo/Hf6yy0ZDbTFGGW8bA9UaLtIlF7h73qPzxF+dWQ3b6VczFn1iP8e4rEGOqUxp8A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=amazon.com;
 	spf=pass smtp.mailfrom=amazon.com;
-	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=ZnCIHwwp;
-	arc=none smtp.remote-ip=44.246.77.92
-Received: from pdx-out-004.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-004.esa.us-west-2.outbound.mail-perimeter.amazon.com [44.246.77.92])
+	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=Ji6bUNlv;
+	arc=none smtp.remote-ip=35.155.198.111
+Received: from pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com [35.155.198.111])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B543606A31C;
-	Tue, 10 Nov 2026 11:09:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0B543606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE16F606A321;
+	Tue, 10 Nov 2026 11:10:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CE16F606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=ZnCIHwwp
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=Ji6bUNlv
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1794308982; x=1825844982;
+  t=1794309003; x=1825845003;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=srT10sgvyfnqt4jFr2uRXYbuq0AbDIOaXtTGsqLNQn4=;
-  b=ZnCIHwwp7PdMEx03JhbBpdhxp4XO08QOrzWviiLWDP4qXFuujinKr4yw
-   3TCpr4YypLDn0Y1ErUqwff7QXRVERAs6GLHcZSGof7dSBUpaFkeo43LT5
-   4ZosfKPmUVmZNDVGGfnzbdd7jgafy5nbKQa7TorSsic727lFL5Gzgsx0J
-   2OdaY7N3aPiO7e52WnS/8pBZvRu0GGkrzZ8/A1Z/0+Ew76+QF+9EdJOFx
-   LPW3NiLDFtB0lxKNz/157hWIXJnCTQ19f+6lCZChlleFETENHqA81ndyQ
-   4HBLFpDnXhEi0ockUBIQCtJMmbe7v1EAeC2m4tHypIP3GFX/qbNWZCsHm
-   A==;
-X-CSE-ConnectionGUID: ++0M3ukhS5i+xXwbs277QQ==
-X-CSE-MsgGUID: 6nEbJO6MRuGAB/dBUdyUjw==
+  bh=Mvw0TsgFURMJSUqs9pb48vMPCPDkBjPnh47dx0cihh8=;
+  b=Ji6bUNlvg6klxmQth7yryM2IY75+ujDHOSxAhjbrBHCe3s/yM/po/V3J
+   RBE0JHH3ikFu7cLPl0JBbPfOXWAkySwCSAitWQ6B/Qk6sHYwJg69osI3v
+   IzML+X07DkXdgTkTCFa9REyKiE/8WG8e5V0aBcs1DPZ91s6ssAJsvM5K7
+   jbis+SQQE0aEbVNJbRKpnPcbGrFl1U9dDuK7ZdzjaAJBLp78ey+J4Fis7
+   KboyvOHm/acfoT+krzwaC2oWiuBiDgtnG4QJ3XHl3QVBs/+q/wKYMF+sT
+   GHfKAAb6FVal56gE31U/k7oI9+F/HbwpNXq6tuXxJyV5IeDWj3PJxSfAP
+   Q==;
+X-CSE-ConnectionGUID: +xTmVE22TF2oPtKVIFOmTA==
+X-CSE-MsgGUID: gWpq6dWvRzS7w7Hfl1EJrg==
 X-IronPort-AV: E=Sophos;i="6.27,205,1787011200"; 
-   d="scan'208";a="33605056"
+   d="scan'208";a="33508508"
 Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-004.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2026 11:09:39 +0000
-Received: from EX19MTAUWB001.ant.amazon.com [205.251.233.104:3418]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.10.61:2525] with esmtp (Farcaster)
- id c82859f7-4f74-4ffe-977b-ecbe10b15324; Tue, 10 Nov 2026 11:09:39 +0000 (UTC)
-X-Farcaster-Flow-ID: c82859f7-4f74-4ffe-977b-ecbe10b15324
+  by internal-pdx-out-009.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2026 11:10:01 +0000
+Received: from EX19MTAUWC002.ant.amazon.com [205.251.233.111:14851]
+ by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.46.128:2525] with esmtp (Farcaster)
+ id eda8a907-d371-442c-bf41-a7cd90490911; Tue, 10 Nov 2026 11:10:00 +0000 (UTC)
+X-Farcaster-Flow-ID: eda8a907-d371-442c-bf41-a7cd90490911
 Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB001.ant.amazon.com (10.250.64.248) with Microsoft SMTP Server
+ EX19MTAUWC002.ant.amazon.com (10.250.64.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Tue, 10 Nov 2026 11:09:39 +0000
+ Tue, 10 Nov 2026 11:10:00 +0000
 Received: from dev-dsk-sieberf-metal-1a-7543e84d.eu-west-1.amazon.com
  (172.19.116.227) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56; Tue, 10 Nov 2026
- 11:09:34 +0000
+ 11:09:55 +0000
 From: Fernand Sieber <sieberf@amazon.com>
 To: <mingo@redhat.com>, <peterz@infradead.org>, <juri.lelli@redhat.com>,
 	<vincent.guittot@linaro.org>, <tj@kernel.org>
@@ -79,9 +79,9 @@ CC: <bsegall@google.com>, <dietmar.eggemann@arm.com>, <rostedt@goodmis.org>,
 	<linux-kernel@vger.kernel.org>, <nh-open-source@amazon.com>,
 	<hborghor@amazon.de>, <fmubeen@amazon.de>, <dwmw@amazon.co.uk>,
 	<karataev@amazon.com>, <sieberf@amazon.com>
-Subject: [PATCH v2 2/4] sched/fair: refill bandwidth for the periods the timer slept through
-Date: Tue, 10 Nov 2026 13:08:49 +0200
-Message-ID: <681751a52093faada8da25d8dbccc59444c3d251.1794303670.git.sieberf@amazon.com>
+Subject: [PATCH v2 3/4] sched_ext: add cgroup_set_runtime ops callback
+Date: Tue, 10 Nov 2026 13:08:50 +0200
+Message-ID: <a07b9717684d5e20d8ff7a778a5f031d1092f18a.1794303670.git.sieberf@amazon.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.1794303670.git.sieberf@amazon.com>
 References: <cover.1794303670.git.sieberf@amazon.com>
@@ -99,443 +99,239 @@ X-ClientProxiedBy: EX19D031UWA001.ant.amazon.com (10.13.139.88) To
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 
-cpu.max.burst lets a group accumulate unused quota up to quota + burst.
-But the period timer stops after a period in which the group took no
-runtime, and start_cfs_bandwidth() restarts it with hrtimer_forward_now()
-and discards the periods that passed. A group that sits idle stops
-accumulating, and one that wakes after idling for a long time has only
-what it had when the timer stopped.
+Add a sched_ext_ops callback, and its cid-form variant, that is invoked
+when userspace writes cpu.max.runtime. A BPF scheduler that implements
+ops.cgroup_set_bandwidth() to enforce a cgroup's CPU bandwidth also
+needs the written runtime, so that its budget for the cgroup matches the
+fair class's, for example after userspace restores a saved runtime or
+adds to it.
 
-Count the missed periods instead. While the timer is stopped, its expiry
-is the first period boundary it missed, so the overrun at restart is the
-number of refills owed. Add quota for each, capped at quota + burst as
-__refill_cfs_bandwidth_runtime() caps it.
+The callback is invoked on every write, after the fair class has applied
+it. Unlike cgroup_set_bandwidth(), it does not skip a write of the value
+last written. The runtime goes down as the cgroup runs, so writing the
+same value again is a top-up.
 
-Without a burst the cap is quota. The timer stops right after a refill
-that nothing drew from, so the runtime is at quota then, and groups
-without a burst see no change. Groups with a burst do see a change. A
-group that has been idle now has up to quota + burst when it runs again.
-The documentation of cpu.max.burst, cpu.max.runtime and cpu.cfs_burst_us
-says so.
+A new tg_bandwidth_mutex is held across the fair class's update and the
+callback, by the cpu.max.runtime write and by tg_set_bandwidth(), which
+the cpu.max and cgroup v1 cpu.cfs_* writes go through and which calls
+cgroup_set_bandwidth(). The runtime passed is then at most the quota +
+burst the scheduler was last given, and cpu.max and cpu.max.runtime
+writes reach it in the order the fair class applied them. The mutex is
+taken before, and the callbacks run after, the fair class's
+cpus_read_lock() and cfs_constraints_mutex sections, so
+cgroup_set_bandwidth() runs as it did before.
 
-A change of the bandwidth (cpu.max, cpu.max.burst) applies from that
-moment, and the group keeps what it earned before it. The periods owed
-are first refilled at the bandwidth they were earned under, capped at
-its quota + burst, and then the new bandwidth applies, with its own cap.
-A group that had no quota earned nothing, so one given a quota after a
-long time unconstrained does not start full. A cpu.max.runtime write
-also refills the periods owed first, so that it replaces them, and only
-the periods after the write refill.
-
-cpu.max.runtime reports the runtime the group has now, owed refills
-included, without starting the timer.
-
-The idle periods are not added to cpu.stat's nr_periods, which counts the
-periods in which the timer ran. A timer that runs late by several
-periods still refills only once, unlike a stopped one; this patch leaves
-that as it is.
+Like cgroup_set_bandwidth(), the callback runs in process context and
+may be sleepable.
 
 Signed-off-by: Fernand Sieber <sieberf@amazon.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst   |  15 +-
- Documentation/scheduler/sched-bwc.rst     |   5 +-
- kernel/sched/core.c                       |   6 +
- kernel/sched/fair.c                       |  79 +++++++++-
- kernel/sched/sched.h                      |   1 +
- tools/testing/selftests/cgroup/test_cpu.c | 183 ++++++++++++++++++++++
- 6 files changed, 278 insertions(+), 11 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  4 +++-
+ kernel/sched/core.c                     | 25 +++++++++++++++++++++++--
+ kernel/sched/ext/ext.c                  | 19 +++++++++++++++++++
+ kernel/sched/ext/ext.h                  |  2 ++
+ kernel/sched/ext/internal.h             | 21 +++++++++++++++++++++
+ 5 files changed, 68 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index c5a02057f0242..2c220e5998639 100644
+index 2c220e5998639..b77ca6f8ca548 100644
 --- a/Documentation/admin-guide/cgroup-v2.rst
 +++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1232,9 +1232,9 @@ will be referred to. All time durations are in microseconds.
- 	cgroups.  The default is "0".
- 
- 	The burst. The cgroup can accumulate the runtime it does not
--	use, up to $MAX + cpu.max.burst. The burst may exceed $MAX, as
--	long as $MAX + cpu.max.burst is at most 2^44 - 1 (about 203
--	days).
-+	use, up to $MAX + cpu.max.burst, also in the periods in which it
-+	does not run. The burst may exceed $MAX, as long as $MAX +
-+	cpu.max.burst is at most 2^44 - 1 (about 203 days).
- 
- 	This file affects only processes under the fair-class scheduler and a BPF
- 	scheduler with the ``cgroup_set_bandwidth`` callback depending on what
-@@ -1246,10 +1246,11 @@ will be referred to. All time durations are in microseconds.
- 
- 	The runtime the cgroup has accumulated and not used yet, in
- 	microseconds. Each period refills it by $MAX, up to $MAX +
--	cpu.max.burst, and a read returns at most $MAX + cpu.max.burst.
--	A write sets it, up to $MAX + cpu.max.burst, and lets a cgroup
--	that ran out of runtime run again at once. A write fails with
--	EINVAL while $MAX is "max".
-+	cpu.max.burst, whether the cgroup runs in it or not. A read
-+	returns at most $MAX + cpu.max.burst. A write sets it, up to
-+	$MAX + cpu.max.burst, and lets a cgroup that ran out of runtime
-+	run again at once. A write fails with EINVAL while $MAX is
-+	"max".
- 
- 	The runtime does not include what the cgroup's CPUs already took
+@@ -1256,7 +1256,9 @@ will be referred to. All time durations are in microseconds.
  	from it, at most a slice each (sched_cfs_bandwidth_slice_us).
-diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
-index c22b3c8c14e29..ccf7434ca73f0 100644
---- a/Documentation/scheduler/sched-bwc.rst
-+++ b/Documentation/scheduler/sched-bwc.rst
-@@ -103,8 +103,9 @@ A value of 0 for cpu.cfs_burst_us indicates that the group can not accumulate
- any unused bandwidth. It makes the traditional bandwidth control behavior for
- CFS unchanged. Writing any (valid) positive value(s) into cpu.cfs_burst_us
- will enact the cap on unused bandwidth accumulation: the group can accumulate
--up to cpu.cfs_quota_us + cpu.cfs_burst_us. The burst may be larger than the
--quota, as long as their sum is at most 2^44 - 1 microseconds (about 203 days).
-+up to cpu.cfs_quota_us + cpu.cfs_burst_us, also over periods in which it does
-+not run. The burst may be larger than the quota, as long as their sum is at
-+most 2^44 - 1 microseconds (about 203 days).
+ 	A write leaves that with the CPUs.
  
- Any updates to a group's bandwidth specification will result in it becoming
- unthrottled if it is in a constrained state.
+-	This file affects only processes under the fair-class scheduler.
++	This file affects only processes under the fair-class scheduler and a BPF
++	scheduler with the ``cgroup_set_runtime`` callback depending on what
++	the callback actually does.
+ 
+   cpu.pressure
+ 	A read-write nested-keyed file.
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 76fcd70ff207a..75a5f5d1b8f54 100644
+index 75a5f5d1b8f54..25a4acb72106c 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -9856,6 +9856,12 @@ static int tg_set_cfs_bandwidth(struct task_group *tg,
- 		cfs_bandwidth_usage_inc();
- 
- 	scoped_guard (raw_spinlock_irq, &cfs_b->lock) {
-+		/*
-+		 * The new bandwidth applies from now on. The group keeps what
-+		 * it earned while idle under the old one.
-+		 */
-+		cfs_bandwidth_refill_idle_periods(cfs_b);
-+
- 		cfs_b->period = ns_to_ktime(period);
- 		cfs_b->quota = quota;
- 		cfs_b->burst = burst;
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 58e948ed1792f..bc068b3fa4ed1 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -7813,6 +7813,75 @@ static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq)
- 	INIT_LIST_HEAD(&cfs_rq->throttled_limbo_list);
+@@ -10099,6 +10099,14 @@ static u64 cpu_period_read_u64(struct cgroup_subsys_state *css,
+ 	return period_us;
  }
  
 +/*
-+ * Runtime after @periods refills of quota, capped at quota + burst as each
-+ * refill in __refill_cfs_bandwidth_runtime() caps it. The runtime can be above
-+ * the cap (__return_cfs_rq_runtime() does not cap it), and a refill then cuts
-+ * it to the cap.
++ * Held across a bandwidth or runtime write and the sched_ext callback that
++ * follows it, so that the BPF scheduler gets the writes in the order the fair
++ * class applied them. The callback runs after the fair class's update has
++ * dropped cpus_read_lock() and cfs_constraints_mutex.
 + */
-+static u64 cfs_bandwidth_refilled(struct cfs_bandwidth *cfs_b, u64 periods)
-+{
-+	u64 cap = cfs_b->quota + cfs_b->burst;
-+	u64 runtime = cfs_b->runtime;
++static DEFINE_MUTEX(tg_bandwidth_mutex);
 +
-+	if (!periods || cfs_b->quota == RUNTIME_INF)
-+		return runtime;
-+	if (runtime >= cap ||
-+	    periods >= div64_u64(cap - runtime, cfs_b->quota) + 1)
-+		return cap;
-+	return runtime + periods * cfs_b->quota;
-+}
-+
-+/*
-+ * The period timer stops after a period in which the group took no runtime
-+ * (do_sched_cfs_period_timer()), and start_cfs_bandwidth() restarts it on
-+ * the next demand. The periods it slept through refill quota too: unused
-+ * quota accumulates up to quota + burst whether or not the group ran. While
-+ * the timer is stopped its expiry is the first period boundary it missed,
-+ * so the boundaries passed since then are the refills still owed.
-+ *
-+ * Without burst the cap is quota. The timer stops right after a refill that
-+ * nothing drew from, so the runtime is at quota then, and this changes nothing
-+ * for groups without a burst.
-+ *
-+ * This is the overrun that hrtimer_forward_now() returns, without moving the
-+ * expiry: one for the expiry itself, plus one for each full period since.
-+ */
-+static u64 cfs_bandwidth_idle_periods(struct cfs_bandwidth *cfs_b)
-+{
-+	ktime_t now = ktime_get();
-+	s64 delta;
-+
-+	if (cfs_b->period_active)
-+		return 0;
-+
-+	delta = ktime_to_ns(ktime_sub(now, hrtimer_get_expires(&cfs_b->period_timer)));
-+	if (delta < 0)
-+		return 0;
-+	return div64_u64(delta, ktime_to_ns(cfs_b->period)) + 1;
-+}
-+
-+/*
-+ * Refill the periods a stopped timer slept through, at the bandwidth they
-+ * were earned under, and move its expiry past them so that they are not
-+ * counted again. A change of the bandwidth or a cpu.max.runtime write calls
-+ * this first, so that the change applies from then on and the group keeps
-+ * what it earned before. A group without a quota earned nothing.
-+ */
-+void cfs_bandwidth_refill_idle_periods(struct cfs_bandwidth *cfs_b)
-+{
-+	u64 idle_periods;
-+
-+	lockdep_assert_held(&cfs_b->lock);
-+
-+	if (cfs_b->period_active)
-+		return;
-+
-+	idle_periods = hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
-+	cfs_b->runtime = cfs_bandwidth_refilled(cfs_b, idle_periods);
-+	cfs_b->runtime_snap = cfs_b->runtime;
-+}
-+
- /*
-  * The runtime of @cfs_b, as cpu.max.runtime reads it.
-  *
-@@ -7826,7 +7895,7 @@ u64 cfs_bandwidth_get_runtime(struct cfs_bandwidth *cfs_b)
+ static int tg_set_bandwidth(struct task_group *tg,
+ 			    u64 period_us, u64 quota_us, u64 burst_us)
+ {
+@@ -10140,6 +10148,8 @@ static int tg_set_bandwidth(struct task_group *tg,
+ 	if (quota_us != RUNTIME_INF && burst_us > max_bw_runtime_us - quota_us)
+ 		return -EINVAL;
  
- 	guard(raw_spinlock_irq)(&cfs_b->lock);
++	guard(mutex)(&tg_bandwidth_mutex);
++
+ #ifdef CONFIG_CFS_BANDWIDTH
+ 	ret = tg_set_cfs_bandwidth(tg, period_us, quota_us, burst_us);
+ #endif /* CONFIG_CFS_BANDWIDTH */
+@@ -10204,12 +10214,23 @@ static int cpu_runtime_write_u64(struct cgroup_subsys_state *css,
+ 				 struct cftype *cftype, u64 runtime_us)
+ {
+ 	struct task_group *tg = css_tg(css);
++	int ret;
  
--	runtime = cfs_b->runtime;
-+	runtime = cfs_bandwidth_refilled(cfs_b, cfs_bandwidth_idle_periods(cfs_b));
- 	if (cfs_b->quota != RUNTIME_INF)
- 		runtime = min(runtime, cfs_b->quota + cfs_b->burst);
+ 	if (runtime_us > max_bw_runtime_us)
+ 		return -EINVAL;
  
-@@ -7849,6 +7918,12 @@ int cfs_bandwidth_set_runtime(struct cfs_bandwidth *cfs_b, u64 runtime)
- 		    runtime > cfs_b->quota + cfs_b->burst)
- 			return -EINVAL;
- 
-+		/*
-+		 * Refill the periods that passed before the write, so that the
-+		 * write replaces them and only the periods after it refill.
-+		 */
-+		cfs_bandwidth_refill_idle_periods(cfs_b);
-+
- 		/*
- 		 * The next refill counts runtime_snap - runtime as burst usage.
- 		 * Move runtime_snap by what the write adds or takes away, so
-@@ -7879,8 +7954,8 @@ void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
- 	if (cfs_b->period_active)
- 		return;
- 
-+	cfs_bandwidth_refill_idle_periods(cfs_b);
- 	cfs_b->period_active = 1;
--	hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
- 	hrtimer_start_expires(&cfs_b->period_timer, HRTIMER_MODE_ABS_PINNED);
- }
- 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1f60c84e0dc38..676e6371d0265 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -580,6 +580,7 @@ extern void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b);
- extern void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b);
- u64 cfs_bandwidth_get_runtime(struct cfs_bandwidth *cfs_b);
- int cfs_bandwidth_set_runtime(struct cfs_bandwidth *cfs_b, u64 runtime);
-+void cfs_bandwidth_refill_idle_periods(struct cfs_bandwidth *cfs_b);
- extern void unthrottle_cfs_rq(struct cfs_rq *cfs_rq);
- extern bool cfs_task_bw_constrained(struct task_struct *p);
- 
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index 278d7e16eeb2c..04a061da514ce 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -1140,6 +1140,186 @@ static int test_cpucg_max_runtime_read_capped(const char *root)
- 	return ret;
- }
- 
-+/*
-+ * A group with a burst keeps earning quota while it is idle, up to
-+ * quota + burst, and cpu.max.runtime reads what it has earned. Without a
-+ * burst the runtime stays at quota.
-+ */
-+static int test_cpucg_max_idle_refill(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long quota_usec = 10000;	/* 10ms */
-+	long period_usec = 100000;	/* 100ms */
-+	long burst_usec = 990000;	/* cap 1s */
-+	long runtime_usec;
-+	char *cpucg;
-+	char buf[64];
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_test");
-+	if (!cpucg)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg))
-+		goto cleanup;
-+
-+	snprintf(buf, sizeof(buf), "%ld %ld", quota_usec, period_usec);
-+	if (cg_write(cpucg, "cpu.max", buf))
-+		goto cleanup;
-+
-+	/* No burst: the runtime stays at quota while idle. */
-+	sleep(1);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != quota_usec)
-+		goto cleanup;
-+
-+	/* Burst: the write refills once (20ms), then 1s idle earns 10 more. */
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", burst_usec))
-+		goto cleanup;
-+	sleep(1);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 110000 || runtime_usec > 130000)
-+		goto cleanup;
-+
-+	/* Capped at quota + burst. */
-+	sleep(10);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != quota_usec + burst_usec)
-+		goto cleanup;
-+
+-	return cfs_bandwidth_set_runtime(&tg->cfs_bandwidth,
+-					 runtime_us * NSEC_PER_USEC);
 +	/*
-+	 * A write sets the runtime from now on: 500ms later, five refills, or
-+	 * six if the sleep overruns into the next period.
++	 * Serialize against tg_set_bandwidth(), so that the BPF scheduler gets
++	 * the runtime checked against the current quota + burst, and this and
++	 * cpu.max writes reach it in the order the fair class took them.
 +	 */
-+	if (cg_write_numeric(cpucg, "cpu.max.runtime", 0))
-+		goto cleanup;
-+	usleep(500000);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 50000 || runtime_usec > 60000)
-+		goto cleanup;
++	guard(mutex)(&tg_bandwidth_mutex);
 +
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	cg_destroy(cpucg);
-+	free(cpucg);
++	ret = cfs_bandwidth_set_runtime(&tg->cfs_bandwidth,
++					runtime_us * NSEC_PER_USEC);
++	if (!ret)
++		scx_group_set_runtime(tg, runtime_us);
 +	return ret;
-+}
-+
-+/*
-+ * A cpu.max or cpu.max.burst write applies from then on: what a group with
-+ * a quota earned while idle is kept, capped at the new quota + burst, and a
-+ * group that had no quota has earned nothing while it had none.
-+ */
-+static int test_cpucg_max_idle_refill_write(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long quota_usec = 10000;	/* 10ms */
-+	long period_usec = 100000;	/* 100ms */
-+	long runtime_usec;
-+	char *cpucg = NULL, *fresh = NULL;
-+	char buf[64];
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_write_test");
-+	fresh = cg_name(root, "cpucg_idle_refill_fresh_test");
-+	if (!cpucg || !fresh)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg) || cg_create(fresh))
-+		goto cleanup;
-+
-+	snprintf(buf, sizeof(buf), "%ld %ld", quota_usec, period_usec);
-+	if (cg_write(cpucg, "cpu.max", buf))
-+		goto cleanup;
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 190000))
-+		goto cleanup;
-+
-+	/* 3s idle fills the group to quota + burst. */
-+	sleep(3);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 200000)
-+		goto cleanup;
-+
-+	/* Writing the same cpu.max keeps what the group earned. */
-+	if (cg_write(cpucg, "cpu.max", buf))
-+		goto cleanup;
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 200000)
-+		goto cleanup;
-+
-+	/* A lower burst keeps it too, capped at the new quota + burst. */
-+	sleep(2);
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 90000))
-+		goto cleanup;
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 100000)
-+		goto cleanup;
-+
-+	/* A group given a quota after idling without one starts with a refill. */
-+	if (cg_write_numeric(fresh, "cpu.max.burst", 190000))
-+		goto cleanup;
-+	sleep(2);
-+	if (cg_write(fresh, "cpu.max", buf))
-+		goto cleanup;
-+	runtime_usec = cg_read_long(fresh, "cpu.max.runtime");
-+	if (runtime_usec != quota_usec)
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	if (fresh)
-+		cg_destroy(fresh);
-+	if (cpucg)
-+		cg_destroy(cpucg);
-+	free(fresh);
-+	free(cpucg);
-+	return ret;
-+}
-+
-+/*
-+ * A cpu.max.runtime write sets the runtime exactly, and only the periods
-+ * after it refill.
-+ */
-+static int test_cpucg_max_idle_refill_runtime_write(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long runtime_usec;
-+	char *cpucg;
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_runtime_test");
-+	if (!cpucg)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg))
-+		goto cleanup;
-+
-+	if (cg_write(cpucg, "cpu.max", "10000 100000"))
-+		goto cleanup;
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 190000))
-+		goto cleanup;
-+
-+	sleep(3);
-+	if (cg_write_numeric(cpucg, "cpu.max.runtime", 30000))
-+		goto cleanup;
-+	/* One refill if a period boundary passes before the read. */
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 30000 && runtime_usec != 40000)
-+		goto cleanup;
-+
-+	/* 250ms after the write: two or three refills, by the boundaries. */
-+	usleep(250000);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 50000 || runtime_usec > 60000)
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	cg_destroy(cpucg);
-+	free(cpucg);
-+	return ret;
-+}
-+
- #define T(x) { x, #x }
- struct cpucg_test {
- 	int (*fn)(const char *root);
-@@ -1159,6 +1339,9 @@ struct cpucg_test {
- 	T(test_cpucg_max_runtime_unthrottle),
- 	T(test_cpucg_max_runtime_burst_kept),
- 	T(test_cpucg_max_runtime_read_capped),
-+	T(test_cpucg_max_idle_refill),
-+	T(test_cpucg_max_idle_refill_write),
-+	T(test_cpucg_max_idle_refill_runtime_write),
- };
- #undef T
+ }
  
+ static u64 cpu_runtime_read_u64(struct cgroup_subsys_state *css,
+diff --git a/kernel/sched/ext/ext.c b/kernel/sched/ext/ext.c
+index ebdf7b91f9d37..265a80dd93282 100644
+--- a/kernel/sched/ext/ext.c
++++ b/kernel/sched/ext/ext.c
+@@ -5817,6 +5817,19 @@ void scx_group_set_bandwidth(struct task_group *tg,
+ 
+ 	percpu_up_read(&scx_cgroup_ops_rwsem);
+ }
++
++void scx_group_set_runtime(struct task_group *tg, u64 runtime_us)
++{
++	struct scx_sched *sch;
++
++	percpu_down_read(&scx_cgroup_ops_rwsem);
++	sch = scx_tg_knob_sched(tg);
++
++	if (scx_cgroup_enabled && sch && SCX_HAS_OP(sch, cgroup_set_runtime))
++		SCX_CALL_OP(sch, cgroup_set_runtime, NULL, tg_cgrp(tg), runtime_us);
++
++	percpu_up_read(&scx_cgroup_ops_rwsem);
++}
+ #endif	/* CONFIG_EXT_GROUP_SCHED */
+ 
+ #if defined(CONFIG_EXT_GROUP_SCHED) || defined(CONFIG_EXT_SUB_SCHED)
+@@ -9230,6 +9243,7 @@ static int bpf_scx_check_member(const struct btf_type *t,
+ 	case offsetof(struct sched_ext_ops, cgroup_exit):
+ 	case offsetof(struct sched_ext_ops, cgroup_prep_move):
+ 	case offsetof(struct sched_ext_ops, cgroup_set_bandwidth):
++	case offsetof(struct sched_ext_ops, cgroup_set_runtime):
+ #endif
+ 	case offsetof(struct sched_ext_ops, cpu_online):
+ 	case offsetof(struct sched_ext_ops, cpu_offline):
+@@ -9392,6 +9406,7 @@ static void sched_ext_ops__cgroup_cancel_move(struct task_struct *p, struct cgro
+ static void sched_ext_ops__cgroup_set_weight(struct cgroup *cgrp, u32 weight) {}
+ static void sched_ext_ops__cgroup_set_bandwidth(struct cgroup *cgrp, u64 period_us, u64 quota_us, u64 burst_us) {}
+ static void sched_ext_ops__cgroup_set_idle(struct cgroup *cgrp, bool idle) {}
++static void sched_ext_ops__cgroup_set_runtime(struct cgroup *cgrp, u64 runtime_us) {}
+ #endif	/* CONFIG_EXT_GROUP_SCHED */
+ static s32 sched_ext_ops__sub_attach(struct scx_sub_attach_args *args) { return -EINVAL; }
+ static void sched_ext_ops__sub_detach(struct scx_sub_detach_args *args) {}
+@@ -9434,6 +9449,7 @@ static struct sched_ext_ops __bpf_ops_sched_ext_ops = {
+ 	.cgroup_set_weight	= sched_ext_ops__cgroup_set_weight,
+ 	.cgroup_set_bandwidth	= sched_ext_ops__cgroup_set_bandwidth,
+ 	.cgroup_set_idle	= sched_ext_ops__cgroup_set_idle,
++	.cgroup_set_runtime	= sched_ext_ops__cgroup_set_runtime,
+ #endif
+ 	.sub_attach		= sched_ext_ops__sub_attach,
+ 	.sub_detach		= sched_ext_ops__sub_detach,
+@@ -9502,6 +9518,7 @@ static struct sched_ext_ops_cid __bpf_ops_sched_ext_ops_cid = {
+ 	.cpuctl_set_weight	= sched_ext_ops__cgroup_set_weight,
+ 	.cpuctl_set_bandwidth	= sched_ext_ops__cgroup_set_bandwidth,
+ 	.cpuctl_set_idle	= sched_ext_ops__cgroup_set_idle,
++	.cpuctl_set_runtime	= sched_ext_ops__cgroup_set_runtime,
+ #endif
+ 	.sub_attach		= sched_ext_ops__sub_attach,
+ 	.sub_detach		= sched_ext_ops__sub_detach,
+@@ -12226,6 +12243,7 @@ static const u32 scx_kf_allow_flags[] = {
+ 	[SCX_OP_IDX(cgroup_set_weight)]	= SCX_KF_ALLOW_UNLOCKED,
+ 	[SCX_OP_IDX(cgroup_set_bandwidth)] = SCX_KF_ALLOW_UNLOCKED,
+ 	[SCX_OP_IDX(cgroup_set_idle)]	= SCX_KF_ALLOW_UNLOCKED,
++	[SCX_OP_IDX(cgroup_set_runtime)] = SCX_KF_ALLOW_UNLOCKED,
+ #endif	/* CONFIG_EXT_GROUP_SCHED */
+ 	[SCX_OP_IDX(sub_attach)]	= SCX_KF_ALLOW_UNLOCKED,
+ 	[SCX_OP_IDX(sub_detach)]	= SCX_KF_ALLOW_UNLOCKED,
+@@ -12395,6 +12413,7 @@ static int __init scx_init(void)
+ 	CID_OFFSET_MATCH(cgroup_set_weight, cpuctl_set_weight);
+ 	CID_OFFSET_MATCH(cgroup_set_bandwidth, cpuctl_set_bandwidth);
+ 	CID_OFFSET_MATCH(cgroup_set_idle, cpuctl_set_idle);
++	CID_OFFSET_MATCH(cgroup_set_runtime, cpuctl_set_runtime);
+ #endif
+ 	/* @priv tail must align since both share the same data block */
+ 	CID_OFFSET_MATCH(priv, priv);
+diff --git a/kernel/sched/ext/ext.h b/kernel/sched/ext/ext.h
+index d32bc01071b01..6d1ce582bf724 100644
+--- a/kernel/sched/ext/ext.h
++++ b/kernel/sched/ext/ext.h
+@@ -94,6 +94,7 @@ void scx_cgroup_cancel_attach(struct cgroup_taskset *tset);
+ void scx_group_set_weight(struct task_group *tg, unsigned long cgrp_weight);
+ void scx_group_set_idle(struct task_group *tg, bool idle);
+ void scx_group_set_bandwidth(struct task_group *tg, u64 period_us, u64 quota_us, u64 burst_us);
++void scx_group_set_runtime(struct task_group *tg, u64 runtime_us);
+ #else	/* CONFIG_EXT_GROUP_SCHED */
+ static inline void scx_tg_init(struct task_group *tg) {}
+ static inline int scx_tg_online(struct task_group *tg) { return 0; }
+@@ -104,5 +105,6 @@ static inline void scx_cgroup_cancel_attach(struct cgroup_taskset *tset) {}
+ static inline void scx_group_set_weight(struct task_group *tg, unsigned long cgrp_weight) {}
+ static inline void scx_group_set_idle(struct task_group *tg, bool idle) {}
+ static inline void scx_group_set_bandwidth(struct task_group *tg, u64 period_us, u64 quota_us, u64 burst_us) {}
++static inline void scx_group_set_runtime(struct task_group *tg, u64 runtime_us) {}
+ #endif	/* CONFIG_EXT_GROUP_SCHED */
+ #endif	/* CONFIG_CGROUP_SCHED */
+diff --git a/kernel/sched/ext/internal.h b/kernel/sched/ext/internal.h
+index ff0a3d508533f..e794507596d6f 100644
+--- a/kernel/sched/ext/internal.h
++++ b/kernel/sched/ext/internal.h
+@@ -863,6 +863,26 @@ struct sched_ext_ops {
+ 	 */
+ 	void (*cgroup_set_idle)(struct cgroup *cgrp, bool idle);
+ 
++	/**
++	 * @cgroup_set_runtime: A cgroup's runtime is being set
++	 * @cgrp: cgroup whose runtime is being set
++	 * @runtime_us: runtime in microseconds
++	 *
++	 * Set the runtime @cgrp has accumulated and not used yet to
++	 * @runtime_us. This is from the cpu.max.runtime cgroup interface,
++	 * which exists with CONFIG_CFS_BANDWIDTH only. It is called on every
++	 * write, also of an unchanged value. The runtime goes down as @cgrp
++	 * runs, so a write of the same value is a top-up.
++	 *
++	 * @cgrp has a quota, and @runtime_us is at most the quota + burst the
++	 * scheduler was last given, by @cgroup_init or @cgroup_set_bandwidth:
++	 * cpu.max and cpu.max.runtime writes reach the scheduler in the order
++	 * the fair class applied them.
++	 *
++	 * Delivery follows the same rule as cgroup_set_weight().
++	 */
++	void (*cgroup_set_runtime)(struct cgroup *cgrp, u64 runtime_us);
++
+ #endif	/* CONFIG_EXT_GROUP_SCHED */
+ 
+ 	/**
+@@ -1239,6 +1259,7 @@ struct sched_ext_ops_cid {
+ 	void (*cpuctl_set_bandwidth)(struct cgroup *cgrp, u64 period_us, u64 quota_us,
+ 				     u64 burst_us);
+ 	void (*cpuctl_set_idle)(struct cgroup *cgrp, bool idle);
++	void (*cpuctl_set_runtime)(struct cgroup *cgrp, u64 runtime_us);
+ #endif	/* CONFIG_EXT_GROUP_SCHED */
+ 	s32 (*sub_attach)(struct scx_sub_attach_args *args);
+ 	void (*sub_detach)(struct scx_sub_detach_args *args);
 -- 
 2.47.3
 
