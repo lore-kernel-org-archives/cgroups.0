@@ -1,115 +1,56 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=109.224.244.118
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794317240;
-	b=bmaYwZ6ZFTF6Y1P4URjDY9FpUhOv1p7RA7jFujm4vUdSCrwlyOfE8KZgc6jWSBGmOymB
-	 +xVRvWbkgwoes5SBa+TDVU62Q/UGJCAGsS+NCNkBq9TRThUZwauUsbBMdidDaJ/LNqHN9
-	 HTMBR2mtuQ0P8tQrp7OW23lt5yYgpt9srfijESA2x7+pJeHfGWzAJqS1COeze1lWjZo+l
-	 jweuN33S5q51WtJlqYdT/S4D31Nr0iIkEdtvOWES0Pt6OSRCrxr4LcwbnyuuL7jS36KZw
-	 zdyKSE46wi0PQSU3SA5awpTltE2UkQyMFiUeURB1121NE+8dGNboRxkYukimXmtENNw==
+	t=1794317351;
+	b=HY38qLWkgXLmFQvKiu+rqxgckqof9iVNpZEfDHyN6KbpC1h5DTfeq9wOZIsPLjpkd5Dh
+	 MaRKsGs9EDvhyx3Od0YxhRYzRG8GG9QT45ogs/GpAwn7XcBYAdXiJWTcnHdfPPqZXTUV8
+	 u45Ct4PYNGIKDXHx1hDF6HrpR0SONh+Y5UGOsL6R9TDXWURdYUmvaNGpvENzGh1Fp/njM
+	 dOpKNKwrjPmC/HOvl46e26mpayVUMXe9qjeVesqDe5phDyP/Mm21g3D9VY/cPn496FKMU
+	 L9/rINrwCkGoLWvtiDsn+Mavy9kq8eLglKxomBbHJy7qfSWSpClspZyTYJV5noKUJUg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794317240;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Spamd-Result:X-Spam-Score:X-Spam-Level:X-Spam-Flag;
-	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
-	b=TjaC6TK+Ekl+A3heooFKriRHs64IJvz2GQ27CnyNwYptEIntACDIQ+M/jZM131WDZZKR
-	 jrS+muVbkrgvezPVZ3v/N2144Q02B0E26C1HawOIUDGT38CQ7nX3o/o2l9eZP+L18l8Ps
-	 Yr1GjFgrXuuhW6NvAqg8XBVkp1KoSa7xRgWGmxBv7W2mCcNrsWV52gG3lGQtv+Ro2PGO3
-	 wJxrfju78+7/XzSTb98oxS1O5ftphEd2nmzLXEg86668xG+N+DmhIT6FbMxgS0GlwfQwJ
-	 We6fWeRLBEQ8gh+MHhdkIKTRy+Ws/brz+it1XkbuiNV7jbLZZnrbb0TcEPKWElWX4Jw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794317351;
+	h=DMARC-Filter:DKIM-Signature:Date:To:From:Cc:Subject:Message-ID:
+	 Feedback-ID:X-Pm-Message-ID:MIME-Version:Content-Type;
+	bh=Tm9ik6SmFveJObzddD7RvCN+mOXxxypXf1joHKK0Mw8=;
+	b=ib54exwRd/ueFIvyVBj5FxRiy7mxxYnkjIzL1QU5+bCxk1LySXK9jDhCiAljwng1UlxR
+	 tqV0h9NYH681JBpLbD/+m2sZCRtPru/AKyc0Yi6QSartlGSNTZ611SQFKZSgM869lcUYJ
+	 haZANEqLiTlYneh20MsprBTXaoM9RNcA22j+oEMl91jd1k8BA3Rnma7GqcXAU5q9nE81x
+	 ekzq/2/KboICjQagbGW8dUYTNGKPFdpDagGUfkfUn3jgML1zxFBpMDrTgqDHCTfv+/3hw
+	 6NWE9AXFyczu3qV5TdcJo0KAcvMZh0KnFko6YStGFHfAcZ6pzvgN0A5tcWJAqKEvltg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ;
-	arc=none smtp.remote-ip=195.135.223.130
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	dmarc=pass header.from=feldt.systems;
+	spf=pass smtp.mailfrom=feldt.systems;
+	dkim=pass header.d=feldt.systems header.i=@feldt.systems header.a=rsa-sha256 header.s=protonmail2 header.b=YdRU7kuM;
+	arc=none smtp.remote-ip=109.224.244.118
+Received: from mail-244118.protonmail.ch (mail-244118.protonmail.ch [109.224.244.118])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C726F606A33C;
-	Tue, 10 Nov 2026 13:27:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C726F606A33C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65770606A74C
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 13:29:09 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 65770606A74C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=feldt.systems
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=feldt.systems
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=FSjbyIy9;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=qKQcYFUJ
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id F1D6521EB9;
-	Tue, 10 Nov 2026 13:27:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794317238; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
-	b=FSjbyIy9Eh1iq1WYwFosAs5h+QdUj3JseqQK+/Fyngw44MBKrqZiWFoCj6JPHfk+Yor7Yv
-	Ef5CjXcET1VuoMjCctjuHDtpjbgZxWKDM3CGgXt37JOHFI5plgNG9+eiFs1UOtmBezmV/9
-	jBnnqcWbLq3hzUNPZS5kkwXUdmqfEuA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794317238;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
-	b=qKQcYFUJwJDWgKs0ErrbPdtu7yBepQbcQ6AITcH4Or8odAuLrS/V+qsslwZsMkhAvyIErp
-	kS7QeLuGL42NmECg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1794317238; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
-	b=FSjbyIy9Eh1iq1WYwFosAs5h+QdUj3JseqQK+/Fyngw44MBKrqZiWFoCj6JPHfk+Yor7Yv
-	Ef5CjXcET1VuoMjCctjuHDtpjbgZxWKDM3CGgXt37JOHFI5plgNG9+eiFs1UOtmBezmV/9
-	jBnnqcWbLq3hzUNPZS5kkwXUdmqfEuA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1794317238;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=OEj0ekxd6A5KeTUcTn8WVZemqTJFfGo7oDr4aSPmVaA=;
-	b=qKQcYFUJwJDWgKs0ErrbPdtu7yBepQbcQ6AITcH4Or8odAuLrS/V+qsslwZsMkhAvyIErp
-	kS7QeLuGL42NmECg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id CE66B13479;
-	Tue, 10 Nov 2026 13:27:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Bx7ZKrUb82paYwAAD6G6ig
-	(envelope-from <jack@suse.cz>); Tue, 10 Nov 2026 13:27:17 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id 6146B2250C; Tue, 10 Nov 2026 14:27:17 +0100 (CET)
-Date: Tue, 10 Nov 2026 14:27:17 +0100
-From: Jan Kara <jack@suse.cz>
-To: Breno Leitao <leitao@debian.org>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Julian Sun <sunjunchao@bytedance.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Vlastimil Babka <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, kernel-team@meta.com
-Subject: Re: [PATCH v2 2/4] writeback: name the bdi in the slow writeback
- report
-Message-ID: <llelav5t3bcbtyiujoe6lmqrzlgfcgc7oq7o2mfrzpio4c34d3@6ak5d4z7jqmz>
-References: <20261110-writeback_stall_report-v2-0-9e0ed75074ca@debian.org>
- <20261110-writeback_stall_report-v2-2-9e0ed75074ca@debian.org>
+	dkim=pass (2048-bit key, unprotected) header.d=feldt.systems header.i=@feldt.systems header.a=rsa-sha256 header.s=protonmail2 header.b=YdRU7kuM
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=feldt.systems;
+	s=protonmail2; t=1794317347; x=1794576547;
+	bh=Tm9ik6SmFveJObzddD7RvCN+mOXxxypXf1joHKK0Mw8=;
+	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
+	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector;
+	b=YdRU7kuMCNHT+dX/aNW42vwTfCdXk0BBc7nyBQMGlE3NSAU6XwgkYpgPjtxwF5/eG
+	 HqgnBw3lZLhJyW/JqMVV+BwO+UMLEi9/5Gfv+eViwuHOBC2//rs2esM1hLaPatS1Kv
+	 UKwXfrSxcIzB1DIRG/Zm8HpmsfVyyhlZHmw0MYqgCuJ4pcxcTLytLsq+3grcR/wDTD
+	 qvWQ7t0zs5PW9AdtNoPAyKj0e/AEARZfplX12QAW8J/XdR0dcPCxC+f3E/cTGmSp/2
+	 SAD3p/SlSRP/RC3EO4gWX5QUIQlE+niEgO76jCNN4g+8+LP1SCzhcjH/rAJWkUqem7
+	 8KOtNf43pOVzA==
+Date: Tue, 10 Nov 2026 13:29:02 +0000
+To: Shakeel Butt <shakeel.butt@linux.dev>
+From: Noah Feldt <noah@feldt.systems>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Karl Erik Hofseth <karl.e.hofseth@opoint.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, regressions@lists.linux.dev
+Subject: [REGRESSION] mm/memcg: list_del corruption on memcg LRU on 7.2.11 despite bf4ade7dbd76 (single NUMA node machines)
+Message-ID: <20261110132853.71228-1-noah@feldt.systems>
+Feedback-ID: 113045274:user:proton
+X-Pm-Message-ID: 1b093913891b0d2bc6fb796bb6c6aa31983b626a
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -119,174 +60,236 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261110-writeback_stall_report-v2-2-9e0ed75074ca@debian.org>
-X-Spamd-Result: default: False [-12.80 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_COUNT_THREE(0.00)[3];
-	MIME_TRACE(0.00)[0:+];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[22];
-	FROM_HAS_DN(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_LAST(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:email,imap1.dmz-prg2.suse.org:helo,suse.com:email]
-X-Spam-Score: -12.80
-X-Spam-Level: 
-X-Spam-Flag: NO
+Content-Type: multipart/signed; protocol="application/pgp-signature"; micalg=pgp-sha256; boundary="------b18b6120c6030061e1225a42a0132a3263a9c01fa07275d24bf39956cce819ce"; charset=utf-8
 
-On Tue 10-11-26 03:39:28, Breno Leitao wrote:
-> The slow writeback report names the waiting task and how long it has
-> waited, but not what it is waiting on. On a machine with several
-> filesystems there is no way to tell which device is slow.
-> 
-> Pass the bdi to wb_wait_for_completion() and add its name to the
-> report, together with the number of work items still outstanding. A
-> sync issues one work item per cgroup wb with dirty inodes, so the count
-> also shows whether a single cgroup is holding up the others.
-> 
-> wb_wait_for_completion() took the bdi until commit 5b9cce4c7eb0
-> ("writeback: Generalize and expose wb_completion") made it usable for
-> the memcg foreign flushes. memcg tracks those by bdi id only and passes
-> NULL, which bdi_dev_name() prints as "(unknown)".
-> 
-> A sync of files dirtied from two cgroups, on a throttled null_blk
-> device, now reports:
-> 
->   [   10.043698] INFO: The task sync:276 has been waiting for writeback completion for more than 7 seconds (bdi 252:0, work items left: 2).
-> 
-> Signed-off-by: Breno Leitao <leitao@debian.org>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------b18b6120c6030061e1225a42a0132a3263a9c01fa07275d24bf39956cce819ce
+Content-Type: multipart/mixed;
+ boundary=e7b0ba2e7c37b4766ae18e46f2318176cce4015ea32e8a4d02671084f264
+From: Noah Feldt <noah@feldt.systems>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Qi Zheng <qi.zheng@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Karl Erik Hofseth <karl.e.hofseth@opoint.com>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	regressions@lists.linux.dev
+Subject: [REGRESSION] mm/memcg: list_del corruption on memcg LRU on 7.2.11 despite bf4ade7dbd76 (single NUMA node machines)
+Date: Tue, 10 Nov 2026 14:28:48 +0100
+Message-ID: <20261110132853.71228-1-noah@feldt.systems>
+X-Mailer: git-send-email 2.54.0
+MIME-Version: 1.0
 
-Looks good. Feel free to add:
+--e7b0ba2e7c37b4766ae18e46f2318176cce4015ea32e8a4d02671084f264
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Hi,
 
-								Honza
+we are hitting list_del corruption on memcg LRU lists on 7.2.11. The
+signature is the same as in Karl's report [1], but 7.2.11 already
+contains both fixes from that thread:
 
-> ---
->  fs/fs-writeback.c           | 20 ++++++++++++--------
->  include/linux/backing-dev.h |  3 ++-
->  mm/memcontrol.c             |  2 +-
->  3 files changed, 15 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 01a00d7542b371..c5e9e5c0d506a9 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -196,7 +196,8 @@ static void wb_queue_work(struct bdi_writeback *wb,
->  	spin_unlock_irq(&wb->work_lock);
->  }
->  
-> -static bool wb_wait_for_completion_cb(struct wb_completion *done)
-> +static bool wb_wait_for_completion_cb(struct wb_completion *done,
-> +				      struct backing_dev_info *bdi)
->  {
->  	unsigned long timeout = sysctl_hung_task_timeout_secs;
->  	unsigned long waited_secs = (jiffies - done->wait_start) / HZ;
-> @@ -204,8 +205,9 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
->  	done->progress_stamp = jiffies;
->  	if (timeout && (waited_secs > timeout))
->  		pr_info("INFO: The task %s:%d has been waiting for writeback "
-> -			"completion for more than %lu seconds.\n",
-> -			current->comm, current->pid, waited_secs);
-> +			"completion for more than %lu seconds (bdi %s, work items left: %d).\n",
-> +			current->comm, current->pid, waited_secs,
-> +			bdi_dev_name(bdi), atomic_read(&done->cnt));
->  
->  	return !atomic_read(&done->cnt);
->  }
-> @@ -213,6 +215,7 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
->  /**
->   * wb_wait_for_completion - wait for completion of bdi_writeback_works
->   * @done: target wb_completion
-> + * @bdi: bdi work items were issued to, NULL for the memcg foreign flushes
->   *
->   * Wait for one or more work items issued to @bdi with their ->done field
->   * set to @done, which should have been initialized with
-> @@ -220,11 +223,12 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
->   * are completed.  Work items which are waited upon aren't freed
->   * automatically on completion.
->   */
-> -void wb_wait_for_completion(struct wb_completion *done)
-> +void wb_wait_for_completion(struct wb_completion *done,
-> +			    struct backing_dev_info *bdi)
->  {
->  	done->wait_start = jiffies;
->  	atomic_dec(&done->cnt);		/* put down the initial count */
-> -	wait_event(*done->waitq, wb_wait_for_completion_cb(done));
-> +	wait_event(*done->waitq, wb_wait_for_completion_cb(done, bdi));
->  }
->  
->  #ifdef CONFIG_CGROUP_WRITEBACK
-> @@ -1164,7 +1168,7 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
->  		last_wb = wb;
->  
->  		rcu_read_unlock();
-> -		wb_wait_for_completion(&fallback_work_done);
-> +		wb_wait_for_completion(&fallback_work_done, bdi);
->  		goto restart;
->  	}
->  	rcu_read_unlock();
-> @@ -2972,7 +2976,7 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
->  	WARN_ON(!rwsem_is_locked(&sb->s_umount));
->  
->  	bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
-> -	wb_wait_for_completion(&done);
-> +	wb_wait_for_completion(&done, bdi);
->  }
->  
->  /**
-> @@ -3069,7 +3073,7 @@ void sync_inodes_sb(struct super_block *sb)
->  	/* protect against inode wb switch, see inode_switch_wbs_work_fn() */
->  	bdi_down_write_wb_switch_rwsem(bdi);
->  	bdi_split_work_to_wbs(bdi, &work, false);
-> -	wb_wait_for_completion(&done);
-> +	wb_wait_for_completion(&done, bdi);
->  	bdi_up_write_wb_switch_rwsem(bdi);
->  
->  	wait_sb_inodes(sb);
-> diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-> index c2284466e7aa66..808d939d2ca7f9 100644
-> --- a/include/linux/backing-dev.h
-> +++ b/include/linux/backing-dev.h
-> @@ -39,7 +39,8 @@ struct backing_dev_info *bdi_alloc(int node_id);
->  void wb_start_background_writeback(struct bdi_writeback *wb);
->  void wb_workfn(struct work_struct *work);
->  
-> -void wb_wait_for_completion(struct wb_completion *done);
-> +void wb_wait_for_completion(struct wb_completion *done,
-> +			    struct backing_dev_info *bdi);
->  
->  extern spinlock_t bdi_lock;
->  extern struct list_head bdi_list;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ac6c43ea8c5a6d..df462d279a655e 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4525,7 +4525,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
->  
->  #ifdef CONFIG_CGROUP_WRITEBACK
->  	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
-> -		wb_wait_for_completion(&memcg->cgwb_frn[i].done);
-> +		wb_wait_for_completion(&memcg->cgwb_frn[i].done, NULL);
->  #endif
->  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
->  		static_branch_dec(&memcg_sockets_enabled_key);
-> 
-> -- 
-> 2.53.0-Meta
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+  bf4ade7dbd76 ("memcg: keep folio's objcg same as its node")
+               -> 7.2.y as 6165478eaa, in v7.2.5
+  0e0ac326c511 ("memcg: move LRU size accounting on reparenting
+                instead of copying it")
+               -> 7.2.y as 007bc18423, in v7.2.6
+
+All three affected machines are single-socket with a single NUMA node
+(AMD EPYC 9655 and EPYC 7702P, "NUMA node(s): 1"). So cross-node
+migration, the trigger fixed by bf4ade7dbd76 and a requirement for
+Karl's reproducer, cannot be involved. This looks like a different race
+in the reparenting/LRU code.
+
+We saw three panics in eight days on one cluster, on hardware from two
+vendors. Nothing in v7.2.12..v7.2.15, v7.3.3, v7.4-rc2 or the
+mm-unstable/mm-hotfixes-unstable branches looks like it addresses this.
+
+Kernel:   Debian 7.2.11-
+1 (7.2.11+deb14+1-amd64), PREEMPT(lazy), MGLRU on,
+          cgroup v2
+Workload: Kubernetes nodes (CRI-O) with high pod and cgroup churn:
+          constant pod start/stop, frequent XFS mount/umount of zvols,
+          memcg OOM kills with memory.oom.group, and memory.high
+          reclaim. Every crash was preceded by memcg OOM kills and/or
+          heavy mount/umount churn minutes to hours before.
+
+In all three cases the corrupted pointer is an LRU list head inside a
+mem_cgroup_per_node (slab start + offset == the bad pointer):
+
+  #1: next == head, but head->prev == head (head list is empty)
+  #2: prev == head, but head->next == head (head list is empty)
+  #3: prev == head (different list, offset 368), but head->next points
+      to another folio
+
+So in #1 and #2 a folio still points at a lruvec list head that is
+already empty, which looks like a folio stranded on the LRU of a memcg
+whose lists have already been spliced to the parent. #3 may or may not
+be the same
+ event.
+
+The entry paths differ (memory.high reclaim via lru_gen_look_around,
+and compaction from an XFS mount), which suggests that the list is
+already corrupted and the next LRU operation trips over it. Both
+signatures match Karl's in-vivo cases #1 (lru_activate) and #2
+(isolate_migratepages_block) in [1].
+
+#1: 2026-11-02 08:19:59 UTC, Giga Computing R163-ZG2 (1 socket, 1 NUMA node)
+-------------------------------------------------------------------------------
+[1165000.986266]  slab mem_cgroup_per_node start ff31bfa36a3c9e00 pointer offset 528 size 1920
+[1165000.995872] list_del corruption. next->prev should be ffacf881ccc70e08, but was ff31bfa36a3ca010. (next=ff31bfa36a3ca010)
+[1165001.014102] kernel BUG at lib/list_debug.c:65!
+[1165001.019464] Oops: invalid opcode: 0000 [#1] SMP NOPTI
+[1165001.048442] Hardware name: Giga Computing R163-ZG2-AAJ2-000/MZG3-GU0-000, BIOS R20_F18 10/23/2025
+[1165001.058744] RIP: 0010:__list_del_entry_valid_or_report+0xd2/0xf0
+Call Trace
+:
+ lru_gen_del_folio.constprop.0+0x194/0x390
+ lru_activate+0x80/0x380
+ folio_batch_move_lru+0xb5/0x280
+ __folio_batch_add_and_move+0x7c/0x100
+ lru_gen_look_around+0x3ea/0x6b0
+ folio_referenced_one+0x262/0x4e0
+ __rmap_walk_file+0xb4/0x1a0
+ folio_referenced+0x109/0x130
+ shrink_folio_list+0x910/0xfd0
+ evict_folios+0x126/0x5b0
+ try_to_shrink_lruvec+0xb4/0x200
+ shrink_lruvec+0x119/0xfe0
+ shrink_node+0x22f/0xd00
+ do_try_to_free_pages+0xb3/0x4d0
+ try_to_free_mem_cgroup_pages+0xf0/0x210
+ reclaim_high+0x83/0xd0
+ __mem_cgroup_handle_over_high+0xf1/0x2c0
+ exit_to_user_mode_loop+0x1c4/0x560
+ do_syscall_64+0x263/0x640
+[1165001.906773] Kernel panic - not syncing: Fatal exception
+
+#2: 2026-11-08 ~04:58 UTC, Giga Computing R163-ZG2 (1 socket, 1 NUMA node)
+-------------------------------------------------------------------------------
+[1670289.398643]  slab mem_cgroup_per_node start ff16459986b32580 pointer offset 528 size 1920
+[1670289.408376] list_del corruption. prev->next s
+hould be ffc1e319d5020a08, but was ff16459986b32790. (prev=ff16459986b32790)
+[1670289.426642] kernel BUG at lib/list_debug.c:62!
+[1670289.431977] Oops: invalid opcode: 0000 [#1] SMP NOPTI
+[1670289.461060] Hardware name: Giga Computing R163-ZG2-AAJ2-000/MZG3-GU0-000, BIOS R20_F18 10/23/2025
+[1670289.471224] RIP: 0010:__list_del_entry_valid_or_report+0xb2/0xf0
+Call Trace:
+ isolate_migratepages_block+0x9d1/0x1720
+ compact_zone+0x6da/0x10f0
+ compact_zone_order+0xa1/0xd0
+ try_to_compact_pages+0x124/0x290
+ __alloc_pages_slowpath.constprop.0+0x70b/0x1400
+ __alloc_frozen_pages_noprof+0x2e9/0x330
+ alloc_pages_mpol+0xa6/0x180
+ ___kmalloc_large_node+0xbc/0xf0
+ __kvmalloc_node_noprof+0x4b5/0x730
+ xlog_find_verify_log_record+0x43/0x210 [xfs]
+ xlog_find_zeroed+0x19c/0x1f0 [xfs]
+ xlog_find_head+0x52/0x370 [xfs]
+ xlog_find_tail+0x53/0x380 [xfs]
+ xlog_recover+0x3d/0x190 [xfs]
+ xfs_log_mount+0xb5/0x1f0 [xfs]
+ xfs_mountfs+0x439/0xad0 [xfs]
+ xfs_fs_fill_super+0x756/0xa00 [xfs]
+ get_
+tree_bdev_flags+0x132/0x1d0
+ vfs_get_tree+0x29/0xd0
+ fc_mount+0x13/0x90
+ path_mount+0x34a/0xc40
+ __x64_sys_mount+0x121/0x150
+ do_syscall_64+0xea/0x640
+[1670290.504046] Kernel panic - not syncing: Fatal exception
+
+#3: 2026-11-10 09:53:55 UTC, Supermicro H11SSL-i (1 socket, 1 NUMA node)
+-------------------------------------------------------------------------------
+[585952.686020]  slab mem_cgroup_per_node start ffff8af9df25e180 pointer offset 368 size 1920
+[585952.695593] list_del corruption. prev->next should be fffff38a68aff788, but was fffff38a202f8808. (prev=ffff8af9df25e2f0)
+[585952.713751] kernel BUG at lib/list_debug.c:62!
+[585952.719475] Oops: invalid opcode: 0000 [#1] SMP NOPTI
+[585952.748716] Hardware name: Supermicro Super Server/H11SSL-i, BIOS 3.2 01/24/2025
+[585952.757460] RIP: 0010:__list_del_entry_valid_or_report+0xb2/0xf0
+Call Trace:
+ lru_gen_del_folio.constprop.0+0x194/0x390
+ lru_activate+0x80/0x380
+ folio_batch_move_lru+0xb5/0x280
+ __folio_batch_add
+_and_move+0x7c/0x100
+ lru_gen_look_around+0x3ea/0x6b0
+ folio_referenced_one+0x262/0x4e0
+ __rmap_walk_file+0xb4/0x1a0
+ folio_referenced+0x109/0x130
+ shrink_folio_list+0x910/0xfd0
+ evict_folios+0x126/0x5b0
+ try_to_shrink_lruvec+0xb4/0x200
+ shrink_lruvec+0x119/0xfe0
+ shrink_node+0x22f/0xd00
+ do_try_to_free_pages+0xb3/0x4d0
+ try_to_free_mem_cgroup_pages+0xf0/0x210
+ reclaim_high+0x83/0xd0
+ __mem_cgroup_handle_over_high+0xf1/0x2c0
+ try_charge_memcg+0x4e3/0x650
+ charge_memcg+0x55/0xc0
+ __mem_cgroup_charge+0x2c/0x80
+ filemap_add_folio+0x61/0x210
+ page_cache_ra_unbounded+0x13e/0x250
+ do_page_cache_ra+0x5e/0x80
+ filemap_fault+0x7e0/0x12b0
+ ...
+ asm_exc_page_fault+0x26/0x30
+[585953.604861] Kernel panic - not syncing: Fatal exception
+
+We are happy to test patches or debug options on affected nodes.
+
+[1] https://lore.kernel.org/all/anMmd1ADrDVwMO6v@work/
+
+
+Thanks,
+Noah Feldt
+mittwald
+
+--e7b0ba2e7c37b4766ae18e46f2318176cce4015ea32e8a4d02671084f264
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="publickey - noah@feldt.systems -
+ 0x9B02BBB4.asc"; name="publickey - noah@feldt.systems - 0x9B02BBB4.asc"
+Content-Type: application/pgp-keys; filename="publickey - noah@feldt.systems
+ - 0x9B02BBB4.asc"; name="publickey - noah@feldt.systems - 0x9B02BBB4.asc"
+
+LS0tLS1CRUdJTiBQR1AgUFVCTElDIEtFWSBCTE9DSy0tLS0tCkNvbW1lbnQ6IGh0dHBzOi8vZ29w
+ZW5wZ3Aub3JnClZlcnNpb246IEdvcGVuUEdQIDIuMTAuMAoKeGpNRVpuV2ZveFlKS3dZQkJBSGFS
+dzhCQVFkQWpjOWlieHJoOExkN2E3YjdBM1hXUnZSdGt6V2cwcEZUaUpDTgoza3J1ZnM3TkoyNXZZ
+V2hBWm1Wc1pIUXVjM2x6ZEdWdGN5QThibTloYUVCbVpXeGtkQzV6ZVhOMFpXMXpQc0tNCkJCQVdD
+Z0ErQllKbWRaK2pCQXNKQndnSmtFQlN1OWFxLzJDcUF4VUlDZ1FXQUFJQkFoa0JBcHNEQWg0QkZp
+RUUKbXdLN3RGM0s0QUt5ZXdZWVFGSzcxcXIvWUtvQUFFSjdBUURaRlZLOGpTa3FDSk9oS1NsTVp6
+T01Ibk4vQjhyYwpHZzlXei9UdW1lejVwQUQvV2l6V2xGem4xT3NibzBzV0U3L25FLzRMaXRKS2k0
+bjlObUVGczRob01BVE9PQVJtCmRaK2pFZ29yQmdFRUFaZFZBUVVCQVFkQTc4U0JLZkc1Ymd6SjQw
+bVZxTmNGUnhqc0lTT0ovVW4rZU1TaC83MkQKVUVJREFRZ0h3bmdFR0JZS0FDb0ZnbVoxbjZNSmtF
+QlN1OWFxLzJDcUFwc01GaUVFbXdLN3RGM0s0QUt5ZXdZWQpRRks3MXFyL1lLb0FBTWJHQVA0anZ3
+YlBacnFSY3dzRk5VdWI3aSthSFVTY2pwQTJIazFUdTBKTG5HWTlMQUVBCjRBOGQrWGNsdEVhUEtp
+Vi9sbzh2RFdPaFBBQVBhbTFuQi8wQWhlenh1UTA9Cj1jQkVoCi0tLS0tRU5EIFBHUCBQVUJMSUMg
+S0VZIEJMT0NLLS0tLS0=
+--e7b0ba2e7c37b4766ae18e46f2318176cce4015ea32e8a4d02671084f264--
+
+--------b18b6120c6030061e1225a42a0132a3263a9c01fa07275d24bf39956cce819ce
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: ProtonMail
+
+wqsEARYIAF0FgmrzHB0JEEBSu9aq/2CqNRQAAAAAABwAEHNhbHRAbm90YXRp
+b25zLm9wZW5wZ3Bqcy5vcmfnJcwfO31tZ+MWKQGfT0VaFiEEmwK7tF3K4AKy
+ewYYQFK71qr/YKoAADIiAP4hPFGvdIURoIulfVBiYSOJB0RwaBpDuJN9WsaT
+yFp3nQD8C2mtr7uf4piZueGYChdmuMxyk+O7CsX/NWoHdvTvwAc=
+=qEeq
+-----END PGP SIGNATURE-----
+
+
+--------b18b6120c6030061e1225a42a0132a3263a9c01fa07275d24bf39956cce819ce--
+
