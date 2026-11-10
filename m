@@ -1,60 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794332143;
-	b=ImzpCzJAX3SJX3CMRMVLvhnbAMMoyjMweVbTupIL6If35KIle1Wh5U7xcNm0yw8O7qvN
-	 OdOuyLuMKgl3AA546YsR2rl22OjRp/SfHZbbloeBbZ08cGGjS97ub4/xSI7iRpB5cRI40
-	 OKn7fKRnyWypLH6CPXFT/dYE3PgJzFlekPzSwqkMu7twoiKal2tepgjoVImUHfXFFeCDW
-	 Gk9v8SnsThCUMi0/ZYL4fDTd1zaDzvri5Lgo7099l3vlAyC1NTjkaP18wlcY6TrIYS93s
-	 bhvt8sKm5ZwCE1WSexmKFEzOPrBordM3vEwcp9ZARJUoJctTDOUMz6E6Ne6wd5ZqC5A==
+	b=sYqu6bbTQDgQQVxg60NAWQH6crgyg/nwkCDIWo20Z1OfED+OMg1byn9oNHlrTPpfrDlk
+	 UDyP/TXuBGZVoGO0mAVIV6VDhTBWlxxHO87aVKyVBfOI1OvRCdjDp1goHJUWtEDrN6AVV
+	 hpGTqEjweQcTHQnU4SKaVgG++IgYX5Q8hfPy5cuhAjcYBHsX4dWSJDcMT8nKkaOJfxztF
+	 g3IHiGhqD0OGZzC921NZWHubGwK7ZKdcPwMQRchziTWP3xo0aEZTn3fj/bqRG+AjtfVn7
+	 y6JRn3Kdd4xhp7AtDJJ/7Nwh/pDWfA8BWyOyoQkdh2cNWQzQKQ+QgE9pgX8m+mpeCNw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794332143;
 	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
-	 Message-ID:MIME-Version:Content-Type:X-Change-ID:
+	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=lJCysJP6dPhJVgiT7W4LzYstHZpICtrOkT+9H+h9uKA=;
-	b=bDJrIO6RmZNlUMih1HbNG6y5875wQl85MlmDZ7Dhl7BylT6k90t8/biObRmNtBJZPhyL
-	 mqow/OfZzCYG/xlHGT0g+1SqpQtImwXIwROFgU3Yoi9toHatK3BwiI28maMkRtqImQFxt
-	 fxRK2aS+w3g2Ys6FRJntxJOQSagIZ1O87vkrD+s9TJfkE7f4Shn/HCONBgAvaiDiSfyda
-	 iuEpBlXQIx38AmQt+t59G4N/Ra0m3rJJzbs9tjaOWbmUzKHXKTIwo+xhrarAjU/pKb0z1
-	 EkR0vD0FGCHx6pWo6fe/6Tj2u1+VSedj9NCVfYauG+QpXlUaUobd3M24y0dqIT+BatQ==
+	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
+	b=MJNhRdeoKGt/pWjocA8AjTAa63UAJzCuYqJPleNZ3LGx0TqJfI5aUHh3c/ufNluHL79q
+	 wxPVIr35Ymp+cJF1Xx6rkjI66+HAdJeS0TGkFBqEJVDMexU8i0A3yHVYaJZtMQCq6xJUg
+	 /sAuK497xa62N8KpCc4hYmo+56UjHHcsOVPoSToPooiJwBAQy1V8vxydt0O+PgMUfu9VK
+	 0FBrdZXLprxlslBLpedsBVY3mr0PD6sKYn4/yNmoh+ubhzKLKtM89DjINM3wplolIIQOe
+	 hDsAsKuk7dkFAktLTbwP80KM45MHL8KGGFPjPISOm8cWMieS3qqo/whcMb9qjR4FGlw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linutronix.de;
 	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=nrKi431Q;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=TGcoEEDd;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=i1sfQVYj;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=BzT6gKr6;
 	arc=none smtp.remote-ip=193.142.43.55
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446CF60A2600;
-	Tue, 10 Nov 2026 17:35:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 446CF60A2600
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8681F60A2601;
+	Tue, 10 Nov 2026 17:35:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8681F60A2601
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=nrKi431Q;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=TGcoEEDd
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=i1sfQVYj;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=BzT6gKr6
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1794332139;
+	s=2020; t=1794332141;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=lJCysJP6dPhJVgiT7W4LzYstHZpICtrOkT+9H+h9uKA=;
-	b=nrKi431QoIQw1F8VjMzNNtO8sRXalWE4P6llH5Ib55VeFLt5qDrPfUPWko8/fTxFfAq3iw
-	1WvFi+/KTj0ce2N8wXQTkqW2v2fJx+r1GptKY8b5Z3mqd4M9WommOm6maOPr/K+L8LT0Kk
-	tyfrpWJY1/QgIBgLGumIsHB07Hai0G2r3t8hEtaIpc5WJ9kV90WVMHBBQfLtWDAtJ3nxgz
-	MnyxRfeQVsTBt9EWlk38r4vHJuDNQv9LvLnz22ynG9hs2TKqexSHX++rx8rdEkkSK2pR54
-	//D7ja+7Rjr6nBXio4jZZLJUMYwN3UgdIIaPCkrsG0ghfakkLTHW6ZzmiI4CMw==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
+	b=i1sfQVYjdv7Glk+c/iQHPNVTEqtT0whf6VRXvyuUxKnP/9SJPQbD6ts3LyLMivXJhuajDw
+	66tSlsfAoR0DdXr4oDRuMLUOfDKgYuo+j/E33r16ax81rPhY7Y/hfCuBGEWKN/JqQzz0R8
+	A7MiZOpsLERGu5qgDK2nG66vmot2rWB7zDvPugKCUlSY9xkmXO0b3A9KtCFtxTGFAnNxKU
+	Ur1KL9q9U9NN9fvSMpv0oEnkooqUGGiV9j6J8j1U0/QabYHn3L5ArLI79iMv0OeN2owMOz
+	QmhAzYOy66iyOStrlP+7ejX6+UvLoLAmIkdE0hhbTSS5bcQQPLsfjdGCPUSVCA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1794332139;
+	s=2020e; t=1794332141;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=lJCysJP6dPhJVgiT7W4LzYstHZpICtrOkT+9H+h9uKA=;
-	b=TGcoEEDd+gNuqYwEWlY03xnhZS6r/QOKJIrCA0tlZUHmQQhzVheLaCPf5URUWrzDKXrJ2E
-	u/KTEKsxCp0zlVBA==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
+	b=BzT6gKr6E5kwSvvhCL65bDrFF6NcWkK8dVkKgLqE77+xMCSAuQIHUA6syuj/IriJtBO00y
+	yUv44O5ykfns1DBQ==
 To: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	rcu@vger.kernel.org,
@@ -92,9 +94,11 @@ Cc: John Ogness <john.ogness@linutronix.de>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
 	Qais Yousef <qyousef@layalina.io>
-Subject: [PATCH v2 0/7] sched: RT throttling cleanup and a bit of documentation
-Date: Tue, 10 Nov 2026 18:34:42 +0100
-Message-ID: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
+Subject: [PATCH v2 2/7] rcutorture: Don't try to disable to RT throttling.
+Date: Tue, 10 Nov 2026 18:34:44 +0100
+Message-ID: <20261110-sched_dl-v2-2-cc9399f7aeb1@linutronix.de>
+In-Reply-To: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
+References: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,83 +109,105 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-X-Change-ID: 20261110-sched_dl-a9727787112f
 Content-Transfer-Encoding: quoted-printable
 
-People used to disable the RT throttling mechanism by writing -1 to=0D
-/proc/sys/kernel/sched_rt_runtime_us. Since v6.12 they can still do this=0D
-but they don't disable RT throttling anymore. Instead this throttling=0D
-mechanism has been taken over by the fair_server which can be configured=0D
-via debugfs.=0D
-This is not really documented by a hint appeared a few cycles later in=0D
-Documentation/scheduler/sched-rt-group.rst. This can be found once you=0D
-know what you are looking for because this document describes the RT=0D
-group scheduling (CONFIG_RT_GROUP_SCHED). The fair_server is used even=0D
-without it.=0D
-The then there is global DL resource control which also shares this=0D
-file proc file (which is stuck if CONFIG_RT_GROUP_SCHED is enabled).=0D
-=0D
-This little series:=0D
-- Marks CONFIG_RT_GROUP_SCHED as broken because I was not allowed to=0D
-  remove it.=0D
-=0D
-- Untangles DL usage of sched_rt_runtime_us and moves it to=0D
-    /sys/kernel/sched/dl_period_us=0D
-    /sys/kernel/sched/dl_runtime_us=0D
-=0D
-  This keeps the _us sematic that we used to have /proc. It _could_ be=0D
-  changed to ns instead.=0D
-=0D
-- Moves rcutorture away from the procfs interface since it tries to=0D
-  shutdown the fair_server for its testing.=0D
-=0D
-- Adds sysfs interface under /sys/kernel/sched/cpuX to represent the=0D
-  runqueues. The only knob for now is fair_server_{period|runtime}=0D
-  representing the fair_server parameters. If all goes well, debugfs=0D
-  could be removed. The ext server could be moved, too.=0D
-=0D
-- I tried to correct/ update documentation while at it. I added the -doc=0D
-  folks on Cc so they are aware. I can drop them in the next posting, I=0D
-  expect that this gets routed via the sched/-tip.=0D
-=0D
-v1=E2=80=A6v2: https://lore.kernel.org/all/20261105164724.yxONBd03@linutron=
-ix.de/=0D
-  - Tejun and PeterZ asked for marking CONFIG_RT_GROUP_SCHED broken=0D
-    first.=0D
-  - Everything after patch #1 that got queued up.=0D
-=0D
-RFC=E2=80=A6v1: https://lore.kernel.org/all/20261023161348.t3lpPLQZ@linutro=
-nix.de/=0D
-  - Try to remove RT-GROUP-sched after figuring out that it is useless.=0D
-=0D
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>=0D
----=0D
-Sebastian Andrzej Siewior (7):=0D
-      sched: Mark RT_GROUP_SCHED broken=0D
-      rcutorture: Don't try to disable to RT throttling.=0D
-      sched: rcutorture: Allow to disable DL fair_server=0D
-      sched: Move DL's admission control to sysfs=0D
-      sched: Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED=0D
-      sched: Add sysfs files for the per-CPU fair_server knobs=0D
-      Documentation/sched: Add fairserver to sched-deadline=0D
-=0D
- Documentation/arch/arm64/asymmetric-32bit.rst |   2 +-=0D
- Documentation/scheduler/sched-deadline.rst    |  36 ++-=0D
- Documentation/scheduler/sched-rt-group.rst    |   7 +-=0D
- init/Kconfig                                  |   2 +-=0D
- kernel/rcu/rcu.h                              |   2 -=0D
- kernel/rcu/rcutorture.c                       |  37 +--=0D
- kernel/sched/deadline.c                       | 338 ++++++++++++++++++++++=
-+++-=0D
- kernel/sched/debug.c                          |  56 +----=0D
- kernel/sched/features.h                       |   2 +=0D
- kernel/sched/rt.c                             |  61 ++---=0D
- kernel/sched/sched.h                          |  55 +++--=0D
- 11 files changed, 423 insertions(+), 175 deletions(-)=0D
----=0D
-base-commit: fd9230005e85472b81c1c7c16afe93dd878996b1=0D
-change-id: 20261110-sched_dl-a9727787112f=0D
-=0D
-Best regards,=0D
---  =0D
-Sebastian Andrzej Siewior <bigeasy@linutronix.de>=0D
+Commit 450efca7182a5 ("rcutorture: Disable RT throttling for boost
+tests") added the ability to disable RT throttling while rcutorture was
+run.
+
+Since v6.12 the DL fair_server takes control of throttling and this
+interface no longer serves this purpose. That sysctl control still
+exists but serves a different cause.
+
+There is no in-kernel interface to provide this feature, one needs to
+echo 0 to each /sys/kernel/debug/sched/fair_server/cpu*/runtime file.
+
+Since sysctl_sched_rt_runtime does not do what it once did, remove it
+from rcutorture.
+
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ kernel/rcu/rcu.h        |  2 --
+ kernel/rcu/rcutorture.c | 35 -----------------------------------
+ 2 files changed, 37 deletions(-)
+
+diff --git a/kernel/rcu/rcu.h b/kernel/rcu/rcu.h
+index d60444bf3a02d..6d1034e49d411 100644
+--- a/kernel/rcu/rcu.h
++++ b/kernel/rcu/rcu.h
+@@ -69,8 +69,6 @@
+ /* A complete grace period count */
+ #define RCU_SEQ_GP (RCU_SEQ_STATE_MASK + 1)
+=20
+-extern int sysctl_sched_rt_runtime;
+-
+ /*
+  * Return the counter portion of a sequence number previously returned
+  * by rcu_seq_snap() or rcu_seq_current().
+diff --git a/kernel/rcu/rcutorture.c b/kernel/rcu/rcutorture.c
+index 93ca7f06371e4..aecc4da7161bb 100644
+--- a/kernel/rcu/rcutorture.c
++++ b/kernel/rcu/rcutorture.c
+@@ -1333,39 +1333,6 @@ static unsigned long rcutorture_seq_diff(unsigned lo=
+ng new, unsigned long old)
+ 	return cur_ops->gp_diff(new, old);
+ }
+=20
+-/*
+- * RCU torture priority-boost testing.  Runs one real-time thread per
+- * CPU for moderate bursts, repeatedly starting grace periods and waiting
+- * for them to complete.  If a given grace period takes too long, we assume
+- * that priority inversion has occurred.
+- */
+-
+-static int old_rt_runtime =3D -1;
+-
+-static void rcu_torture_disable_rt_throttle(void)
+-{
+-	/*
+-	 * Disable RT throttling so that rcutorture's boost threads don't get
+-	 * throttled. Only possible if rcutorture is built-in otherwise the
+-	 * user should manually do this by setting the sched_rt_period_us and
+-	 * sched_rt_runtime sysctls.
+-	 */
+-	if (!IS_BUILTIN(CONFIG_RCU_TORTURE_TEST) || old_rt_runtime !=3D -1)
+-		return;
+-
+-	old_rt_runtime =3D sysctl_sched_rt_runtime;
+-	sysctl_sched_rt_runtime =3D -1;
+-}
+-
+-static void rcu_torture_enable_rt_throttle(void)
+-{
+-	if (!IS_BUILTIN(CONFIG_RCU_TORTURE_TEST) || old_rt_runtime =3D=3D -1)
+-		return;
+-
+-	sysctl_sched_rt_runtime =3D old_rt_runtime;
+-	old_rt_runtime =3D -1;
+-}
+-
+ static bool rcu_torture_boost_failed(unsigned long gp_state, unsigned long=
+ *start)
+ {
+ 	int cpu;
+@@ -3390,7 +3357,6 @@ static int rcutorture_booster_cleanup(unsigned int cp=
+u)
+ 	mutex_lock(&boost_mutex);
+ 	t =3D boost_tasks[cpu];
+ 	boost_tasks[cpu] =3D NULL;
+-	rcu_torture_enable_rt_throttle();
+ 	mutex_unlock(&boost_mutex);
+=20
+ 	/* This must be outside of the mutex, otherwise deadlock! */
+@@ -3428,7 +3394,6 @@ static int rcutorture_booster_init(unsigned int cpu)
+=20
+ 	/* Don't allow time recalculation while creating a new task. */
+ 	mutex_lock(&boost_mutex);
+-	rcu_torture_disable_rt_throttle();
+ 	VERBOSE_TOROUT_STRING("Creating rcu_torture_boost task");
+ 	boost_tasks[cpu] =3D kthread_run_on_cpu(rcu_torture_boost, NULL,
+ 					      cpu, "rcu_torture_boost_%u");
+
+--=20
+2.55.0
+
