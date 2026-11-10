@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794336338;
-	b=KFn4v4ifzBvlZA22wiJTzznDSvuM9d3NT3WwJJIN4U0O1L/tGC22Ec/H2Z7S3rU6nwGO
-	 RbxwevcmitQElTHehWFaqoPpmtsAouwW6r1WiFNuLhRtd+7K/ohUKweC+aTKsDkpKfObN
-	 NEgRU01PfMTilDU7HOT0insVoYRBWlSzC2wPFP3pn5ZIl0y7ln4mXPh6Hlautj6XkQvJO
-	 1KygW2PWq+HEMHCOf0hCU71mXaqiX5/f7Bi2m1v3Ikn4bz5maistaCKI/UGwiTwyjw0Ca
-	 mxpATax+OHyrk0XCU0HxoOAbf0URq3eTRUXPujLhKAsj9ORWWLvoC5QxMeM5LQ0II4Q==
+	t=1794338859;
+	b=C4MKcqw09fxrfWaXqfo61l6UdMBpA4dqh/g/XaGs25+zF6/Xywre9CBMIHd+p6kDWaes
+	 eLFXjNovXELxD9y5aY5DcR2vuCT/6Lw/3iZEJue5OFJMhavm106sDTj2CIvCLpLoWsXL7
+	 sNWrDoEC60123M+FmRTX3Fql05AQEC1Sq1mm1yh5WKXgtoWWHP6DVFIPvMFxMXRYL1dIq
+	 NeZpZFNjPQYxPzbBVjuGt8poxDuFmFWvfxUoUVk11YWpoLBkdA6dajUYAZmbzmtMESDm/
+	 3F58jrOPt3nyBbn14zQB3fRSQtQ77tD3rDtTYcfjxx4SoK3rS6KUuHkO2RiFuBmsv6Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794336338;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794338859;
 	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=jDn+kAHlJ1YKV/vSjJMTOq+sX3gPOQ26dm9cQX+T7Co=;
-	b=3wq5odEzAhSqP9izttmh8hvoTiH1KKmIFtkC3zW4UcsFl8qurh4T18VnE6BkoyR8weHZ
-	 4ySud70RReRzmyA//eR3usLdGehMoFFZWWUbGlfOC3H47OmzGZz9J702eHDJr9HuvIXnl
-	 4Oyf7xa4Xv0dpnfUi/78ll+i01LVUGi2wtawlwPPZ/8HHQZycqmqbzfpimm2Xie+bF1OG
-	 /Y/+LGTXly6+Yj6bYustpBren7yqHsNSZCCq0TS/lve8p3t2WLQ1/PVkumkh2MgVJodQu
-	 aziW6pUB+E5Yr7BAWihQX3LZvKFF9D+At/E4A0AWtRcJdwImYV4+4ykFz30CMyursoA==
+	bh=JhoX3osY26F1MqRN+osOMk8T+9PdZqeDfzPnj4Ocp3w=;
+	b=DJGjYcov3mXooexhPigxQYM54feauDxbBFHy9shfUjyl9ArpqzInjZlEuPZN2sp3iyJg
+	 5dXP8OrJ/y9rw1ESqtGY4mYbFsfH7fgJ4lrK+CHB+ClDsTBheE/kGWzYzFhgZx3yfIOdn
+	 yismgo4MXBCM+eqpvk2epnQlPHOYnWaT6KIfjDLjW1mP+e7ks1Mi2lQROmK9g/9vb4zx9
+	 rVrpT7ihnyitDVNPwUuyyPHuzrXHAbGdEDg9n60yczt7Yt+PCxEb5C5xdNZWopzFTz6Ac
+	 JZsEc1XuPxk4UmTTu1eZ5cT4l435kHh8xrWTnCDa2uGLnYsyEKIABe+yEHwmdT2TXwQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fhQiG7uu;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ikmk3pxA;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18EA3606A327;
-	Tue, 10 Nov 2026 18:45:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B17606A321;
+	Tue, 10 Nov 2026 19:27:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fhQiG7uu
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F6381F008A2;
-	Tue, 10 Nov 2026 18:45:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ikmk3pxA
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C3D91F0089F;
+	Tue, 10 Nov 2026 19:27:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794336337;
-	bh=jDn+kAHlJ1YKV/vSjJMTOq+sX3gPOQ26dm9cQX+T7Co=;
+	s=k20260515; t=1794338858;
+	bh=JhoX3osY26F1MqRN+osOMk8T+9PdZqeDfzPnj4Ocp3w=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=fhQiG7uuYywqrnJ1To2XB3v7Jidj1RPi/wyyYjpeBPZsVAD2HJiQvdshP5yDQtNk+
-	 4bTubfTT36iMuNB1Ux18/gUn2k3On06ctHzcZEuBQnMkgxqs+x4LUgW4of1uB7x2Ck
-	 ec4z61FshOMCHLn6R8c1NPikkLK9oWiPbijkXnFJ1LB+MWK1wd1fcEFx6w5UwyMavF
-	 CBauDfjcfYpa/CcWwAWFF6fB+st3chmIvfVWqHr1bB49moU8seP0H+MBmIR3+zaES+
-	 05MS8ATN4ERryl56oZDf7o0kx+GHrN4E8Qln2FW0U3E1w9HdGDcgJ7Lp2BlODpAiVo
-	 F5faYuv83ydDg==
-Date: Tue, 10 Nov 2026 08:45:36 -1000
-Message-ID: <3296ff1ecad6573e1719cb205d9128f7@kernel.org>
+	b=ikmk3pxAY/SwBAYX+1FYoDk3XIXo2sUOx1rH6r9L7YDZesC1mmOQWEnxPSYekP9be
+	 1TBo2gykXeNCtYlkdIJs/TzgKHeeArN+ocJLcAnSNsQN42DeV02puqaDsYdwpnJp0o
+	 h08CFPnRir1nUEHWrdXn7qHKuaKWFLO8Q+PCQIItmZL5f+iRsojmX9s9FncJDJ1CkP
+	 LGpAIW1wyib35VLfsATFLHggCyfcXgP8ga36rVT6wlaAtO8WbOFBRR75eGik0x9HJR
+	 6Jn8lvvtbIWfplTGC4y3NqENeV7i2CbTe/FAVmpzRqfH+xnmLGn9N/qYTdoIeFCWN8
+	 xoam6TraMLnWA==
+Date: Tue, 10 Nov 2026 09:27:37 -1000
+Message-ID: <898b08d81ed8e3f1ee7d4985e4b47992@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, eddyz87@gmail.com, memxor@gmail.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, akpm@linux-foundation.org, david@kernel.org, gourry@gourry.net, hannes@cmpxchg.org, mkoutny@suse.com, shakeel.butt@linux.dev, roman.gushchin@linux.dev, yu.c.chen@intel.com, zhao1.liu@intel.com, tim.c.chen@linux.intel.com, lizhe.67@bytedance.com, ziy@nvidia.com, mgorman@suse.de, bpf@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH bpf-next v4 0/4] BPF-based per-cgroup NUMA balancing mode selection
-In-Reply-To: <20261110032913.71974-1-laoar.shao@gmail.com>
-References: <20261110032913.71974-1-laoar.shao@gmail.com>
+To: Waiman Long <longman@redhat.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>, sashiko-bot@kernel.org
+Subject: Re: [PATCH-next v2 0/5] More fix patches
+In-Reply-To: <20261109190955.1398611-1-longman@redhat.com>
+References: <20261109190955.1398611-1-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -60,55 +60,29 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-Hello, Yafang.
+>   selftests/cgroup: Fix "test_cpuset_prs.sh -v" failures
+>   cgroup/cpuset: Correctly set cpus_updated in
+>     cpuset_hotplug_update_tasks()
+>   cgroup/cpuset: Fix incorrect partition invalidation logic in
+>     cpuset_hotplug_update_tasks()
+>   cgroup/cpuset: Protect current->mems_allowed read in cpuset_fork()
+>   cgroup/cpuset: Correctly set isolated_cpus when switching partition
+>     state
 
-I'm not going to engage further in this series until the situation
-changes.
+Applied 1, 4 and 5 (5 as v2.1) to cgroup/for-7.4-fixes with the following
+changes:
 
-LLMs have made it much cheaper to produce plausible-looking patchsets
-for new features. That makes it easy to keep sending iterations of a
-feature which touches code that the submitter doesn't really understand
-or hasn't thought through in depth. The reviewer ends up doing much of
-the developer's work while the submitter sits between the reviewer and
-whatever the LLM produces. I think this series is an example of that.
+- 1: Nonexistent commit ID 6e4834ba8986 in the description corrected to
+  362212853cd0.
+- 5: "update_cpumasks_heir()" typo in the description fixed.
+- 5: Missing trailing "\" line continuation added to the first line of the
+  two new TEST_MATRIX entries in test_cpuset_prs.sh.
 
-Some examples from v4:
+The following tags were also added:
 
-- A folio belongs to a memcg and that memcg decides the policies around
-  it. That's how memcg works for every other memory policy, and tasks
-  belong to a memcg too. The series still splits NUMA balancing into a
-  task side and a folio side with different semantics. DISABLED applies
-  to tasks but not to their memory, and the two sides combine the
-  hierarchy differently.
-
-  On v3, I asked why. v4 moves the storage into memcg and keeps the
-  split, but doesn't give a high-level reason why NUMA balancing should
-  work differently from how memcg handles every other memory policy.
-  More generally, the major design decisions come without the reasoning
-  behind them, and asking didn't produce it. Each iteration only barely
-  updates what was pointed out in the previous one.
-
-- numab_memcg_mode() walks up to the root memcg and recombines the
-  requests on every call. The callers include every load-balancing
-  candidate in can_migrate_task(), every task migration, every NUMA hint
-  fault and every page migration including compaction. This happens
-  whenever any cgroup has a mode set, although the result changes only
-  when a mode is set or a memcg goes offline.
-
-- numab_memcg_active() reads css->flags once and the comment says that
-  this makes the three state bits describe the same moment. However,
-  nothing synchronizes those flags with the mode. In the lookups, the
-  check is redundant anyway because offlining a memcg or disabling its
-  controller already clears the mode.
-
-A developer could cost reviewers time before too, but each round took
-the developer much more effort in comparison. That kept the effort
-balanced between developer and reviewer in a sustainable way, and it
-made sure that the developer learned and improved while working through
-each iteration. LLMs broke that balance.
-
-I don't know what the right solution is, but at this point shepherding
-patchsets like this doesn't make sense for me.
+  Reviewed-by: Ridong Chen <ridong.chen@linux.dev> (1, 4, 5)
+  Tested-by: Ridong Chen <ridong.chen@linux.dev> (1, 5)
+  Cc: stable@vger.kernel.org # v6.8+ (5)
 
 Thanks.
 
