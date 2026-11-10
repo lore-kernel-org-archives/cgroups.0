@@ -1,60 +1,59 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=82.195.75.108
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794311211;
-	b=gps2fDE+O980HXUwNhyCqItN/aVtw4UtTcnIx5xea7tni+tiDsHaaJm3akggTmqRWKrG
-	 NbBY9t3Lmm5YMS1FUTpeMgOUUr1v7dA25joTbiQLbTN/AL86youB/veOImZ/DaT3TMzaF
-	 DqfyIj3UhlLiFkRL2f8wfds3Vq5voCtFdsfBuMY4K2X43lJsRAG1+xt771Y1YtYd590S8
-	 tlRxZGRYDuy1IyQ6rGY4UKpoOIISG9qv9EBVf3Tgek6mZN9V0juCU0U+S4myP37VT8yCx
-	 Z4jqLJz4TafLg3e5zgYTpFfWfIYoWJvwf4+UqMWZn2kcn06qtJ1KdhOQPq00jp4zSzw==
+	t=1794311212;
+	b=K0a6lBtKkdregFpHuzNyQLBHlm2VMsJs4NmqiueiLUHIRUg6c048rlEwIwRfcHlvwEnU
+	 DmNjgr+L2i+nPkpLNjiYA9/bs8gydb5cAJQH8RXJ9pB7HIM3G9bMZzmj1eCjHzs1CTCeW
+	 VEcDklDjdRr5yuSWxpsybhsHodexRoHIwpowM1zRnihlxHptnuDGqLsgLQnDUg9LE4VOC
+	 fWnFZjls063rHxLwLurd2gt9f3QtjB0WR3lEFBqZpZzSNmj3pcJkDbVH4GD+6UCBO1nbu
+	 07OwqA7LbRiq/9dxZovib3vwL9KpNSAPISvKEIC8SoOw6vjTgBsIG0t2VQP4PX4ZGRg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794311211;
-	h=DMARC-Filter:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794311212;
+	h=DMARC-Filter:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
+	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
 	 X-Debian-User;
-	bh=hbY0RzxFM5S4ir9xTxtZ6iuWd15w11W3iqB+mvroyYQ=;
-	b=AaqRStJfswLo7WnzC35S3e0tj6LEI9CwZQgkKSmpPN9zjhAQj46wfb3FfNLl/mmfNI1l
-	 frlhrtMFbsR3kVKuLBaCHN4K7qTXi9iLTR+XBzLDhJG6qnIlpKnYWhjlyY1wbUOy8xXws
-	 qpzXTLO4f4KuUehdFmPFZopzLyKU1lJY2g0suVJ41Q0Tc/gnMQxXUiLuqop40xK3OZWmF
-	 iqcJ12zMftpq1L2Go8R1d/5ouV0gXLIySy3CqGeQib8BABr1EAgnG02fJ07xn3LcixPnr
-	 x7DdQHgtT/DFjk5r5YdvoaA+7cX8rrkM4loqn8ylV9OY3Aa31YD00OlFf6kkdZC/efg==
+	bh=TMjTt/yM65LJnfLBEkqU4HceoGuAe/XUxe0Ej6UzqFs=;
+	b=jQdrgGgfgFfoXAMT4bQYG7bGOGJgi2esdNbdu/Q+cJdlqS7EajnFEIXAx6tv9plYLLxT
+	 RBxniq7jEIeJ+fa7ao2evWQGQ7+7edVoZB7TeEv+G3pAMP2tlHXNtbOkBqO/krloD5nEh
+	 FMrrj1UQWkcEwcXH002TnVZYW2eIbAE9xLrBQZMK1t8jkwdizoQaYTv67O72NAhKNh9Nb
+	 cE9HIZvSAdS+uymkOGhyyKiwoO0AEbrbcTCuYmMZcljrFlSGI2bJ4zp8wocxcnua3QYoB
+	 iMPH9T4gK+41EZzJAVAjbfU6Fu+j4sCWgXBsXrgjyCBI5wiu0MfvNompmg2F9HJBLcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=debian.org;
 	spf=pass smtp.mailfrom=debian.org;
-	dkim=pass header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=i2Y39OAK;
+	dkim=pass header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=iyixgFAg;
 	arc=none smtp.remote-ip=82.195.75.108
 Received: from stravinsky.debian.org (stravinsky.debian.org [82.195.75.108])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12490606A335;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12412606A32E;
 	Tue, 10 Nov 2026 11:46:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12490606A335
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 12412606A32E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=debian.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=debian.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=i2Y39OAK
+	dkim=pass (2048-bit key) header.d=debian.org header.i=@debian.org header.a=rsa-sha256 header.s=smtpauto.stravinsky header.b=iyixgFAg
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=debian.org;
-	s=smtpauto.stravinsky; h=X-Debian-User:Cc:To:Content-Transfer-Encoding:
-	Content-Type:MIME-Version:Message-Id:Date:Subject:From:Reply-To:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=hbY0RzxFM5S4ir9xTxtZ6iuWd15w11W3iqB+mvroyYQ=; b=i2Y39OAKDD7hr3QUivUv78G+OL
-	n5jO35f1Bx7pUETtXw0IGi60mc3dkEEogbQC+IvFULrLl9/Y5Ima8+eCu+K/YEF0adnS2Fd3ylzqZ
-	nMpVWQFvUqQsbZrioEYskqKBn49/ZVgidB5CJXjSDAUOyEIle3yRnBXe9Pb/fKD+i4Obj7pkoHMa2
-	Fb3ftpWz2WS1KW2OP8Q1ugJTolMQrGbm2n0IIyYq12X9l7V//9LZeBk2qdFqF3INRBrtC0wx9KIRc
-	qjfQlPeFQ9+u1t5FFtljEPE6QikTu7Qk1QVbKDSo7tIQ3PKM7tkBE3n71ZlUfkfxtDGZiKFfRsdD1
-	A+sBEMaw==;
+	s=smtpauto.stravinsky; h=X-Debian-User:Cc:To:In-Reply-To:References:
+	Message-Id:Content-Transfer-Encoding:Content-Type:MIME-Version:Subject:Date:
+	From:Reply-To:Content-ID:Content-Description;
+	bh=TMjTt/yM65LJnfLBEkqU4HceoGuAe/XUxe0Ej6UzqFs=; b=iyixgFAg9qREIYke8njMawXuIx
+	m+6DM4Uqz9vuRKRMNTS0WtEuw7lwrRzO+dqy61GCeyqhy/5nfW/VPdGm+Q9QyBvuQGWkMSkMK7lPI
+	MGk/hYTjmx9FbtzL9vBmtflZ6A1gUpXHjVEp/jB3Na/Q4SqPsQe2m+a/oZ/sRsfzEVunoXZSzi5+o
+	pmLhZuxFG16tl6QgFE9g5fn/7IfTQYgAAee5GlO/OWWUy6qbfBFppcHComW9Sb11YqYo6l3AMb0hO
+	61bPtWO+VfG30QK+x/Ewx8Usbm/VHCYUwt2AZWKncW5rYsxbB9rbccgIA2dXwP5XiQvhfjCnXWzZG
+	nPDYeeqw==;
 Received: from authenticated-user
 	by stravinsky.debian.org with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
 	(Exim 4.96)
 	(envelope-from <leitao@debian.org>)
-	id 1xQkJB-00CNSj-2Z;
-	Tue, 10 Nov 2026 11:46:38 +0000
+	id 1xQkJH-00CNSq-33;
+	Tue, 10 Nov 2026 11:46:44 +0000
 From: Breno Leitao <leitao@debian.org>
-Subject: [PATCH v2 0/4] writeback: make slow writeback report more
- actionable
-Date: Tue, 10 Nov 2026 03:39:26 -0800
-Message-Id: <20261110-writeback_stall_report-v2-0-9e0ed75074ca@debian.org>
+Date: Tue, 10 Nov 2026 03:39:27 -0800
+Subject: [PATCH v2 1/4] writeback: add the missing newline to the slow
+ writeback report
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -66,11 +65,9 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHMC82oC/3XNQQqDMBBA0auEWZuSxBrRVe9RRBIddagYmQTbI
- t69VOiy2794f4eITBihFjswbhQpLFALkwnoJreMKKmHWoBRxmqtCvlkSuhd92hjcvPcMq6Bk9S
- lKgvlbFVdLWQCVsaBXid8bzIBE8UU+H1+Nv2tP9L+IzctlfSD6nJfKZO74tajJ7dcAo/QHMfxA
- aSccuq9AAAA
-X-Change-ID: 20261105-writeback_stall_report-170750a69946
+Message-Id: <20261110-writeback_stall_report-v2-1-9e0ed75074ca@debian.org>
+References: <20261110-writeback_stall_report-v2-0-9e0ed75074ca@debian.org>
+In-Reply-To: <20261110-writeback_stall_report-v2-0-9e0ed75074ca@debian.org>
 To: Alexander Viro <viro@zeniv.linux.org.uk>, 
  Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
  Julian Sun <sunjunchao@bytedance.com>, 
@@ -86,91 +83,54 @@ Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
  Breno Leitao <leitao@debian.org>, kernel-team@meta.com, 
  stable@vger.kernel.org
 X-Mailer: b4 0.17-dev-ce4c1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3450; i=leitao@debian.org;
- h=from:subject:message-id; bh=tDJ++Af7+O4AhquRgYHiOK13KG8D1GnF3NPlto0zneA=;
- b=owEBbQKS/ZANAwAIATWjk5/8eHdtAcsmYgBq8wQYtHhI/oKszB0e1xtawWAcoGeX226O8qce/
- EKj6+dxdU+JAjMEAAEIAB0WIQSshTmm6PRnAspKQ5s1o5Of/Hh3bQUCavMEGAAKCRA1o5Of/Hh3
- bcG2D/4rlCu3WQSAMkq9YS/yA/bsW3D4kFIaKGgigSHX02WG5qO6O7lisQ6Cjjtm8hR+xO6n4GN
- L+23KZS954trl4EIRd9oh7zktc+8kMLZIbSDRd0ex1nDDkjxksbBSOP64TQsqt/ssLTPunD2Nie
- v7qPb0OmBze/MtyLH/bw7IByqEaeLJVqjbfic0B2f4ndRUAN1DbcPxux+4DKcr2YzZlTwk9iuIe
- FeESxWiJO2YRfG5ldvpsBeQBNybcNNc1s/aNFFJ8dpalx51+Flqnp4VWLXwlf5p7rzalWZYzElU
- 0gr39q6oyyJ5PBZ6d96wvbbKyacaqiFLwsNVnXD8e7uj/bm6rnI4sd/bgGb90AHk55BXBA2cBoe
- lD88KM7EqRjS8Xta14Ho5heYeHhyCA7ewxwpw9UJhjlTMAAOgTKi9n2tD96/1QMWFQE05zlFo0O
- EYU//p7M5IPjyGMtbnsUCnr7QV7qsuxsduao+ZfKTZzPk2zkdkltXktVmTAoLKYCZSMUnJ7VvKj
- FAEg9ukR6pmINzE+oB7kyiA2d5FUR8CAedZHQm2tiqiUmlmrtxr7Eema3X4VqVtssH27sb9W6zw
- qcE5JHnXfNRCbsGF84qqxmhSxaIbAhHBcIUH0TogcVlCRPDs4YBKFPqurUjw+63soAv1h0eITCS
- MxlTkeAwFFz7s0Q==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1238; i=leitao@debian.org;
+ h=from:subject:message-id; bh=NeGmKN3thvdahCzcgtVy86L0XUPUwXecQRMKsZHaZVs=;
+ b=owEBbQKS/ZANAwAIATWjk5/8eHdtAcsmYgBq8wQYn+tO0/VLlCpKrWAiFk/NDyAXlM8rdRiIY
+ 5NVV3z7jQmJAjMEAAEIAB0WIQSshTmm6PRnAspKQ5s1o5Of/Hh3bQUCavMEGAAKCRA1o5Of/Hh3
+ bWPjD/4+JCpUjzQC7+wpcfuUqpIQ257Du7Kdozk0zxWRhZyLexwAvUq8MrMgAjj9pnefRjX9WH3
+ bWh8IdLz/x6p/emum/ddOOCpq3hS+yUpA/Nw95efr5YI8+ZvmnfA5ktJxMMv2sJz1oBmluexzFA
+ nZeObq4sZfp5rXLA19Y7xnISHT2sbijtsVazm1m3J7obgvMW0MIgiKIfHB2pMEVOlxBa3i3lZQb
+ SDnuQUj2GQHnRCUUSsvmSqF6vhFkp0dRey95qurL+iKwKPt9kIF5u0vXJEHWNQzLwUYEluPPYLJ
+ McvMXURJb8e/B92meu65MID8Dl/2R/RkF3Qs0lUq97w9oqZzyUcGYzftDhvC/hOzGh/+mG7OWGm
+ J7Z0jhZWaMpZe/VP7J8D+XYMv5uhZrw96OUGkxSc1Rr3hkq0EauSRPUszKGN/MmEJgIQ6lLqsrp
+ OPVBX9zrFualqhV/iPBqMe2OpO5kM/4zZKY/FAz1VVs8WP6YrSrrCyLFblXa1cNheJiSgM0XGfi
+ q+AAV7axQ6aiP1c9HaHF9cv8T5jhlpXvsFsiuBZNUQ/a3RevfIE300XwXtpANw7qu4lhGMipzqS
+ 8xT3Ci+znxzd8wA7nVV3xaEj+NHOdyfyPQ1QvQKO++VKHpyrwJfguFsWJpBK4+xXUaAfqZ53tx2
+ GZBW8VwocVvy/9Q==
 X-Developer-Key: i=leitao@debian.org; a=openpgp;
  fpr=AC8539A6E8F46702CA4A439B35A3939FFC78776D
 X-Debian-User: leitao
 
-Since v6.19, writeback waiters are woken while their writeback makes
-progress, so a slow sync no longer trips the hung task detector.
-Instead, a waiter past hung_task_timeout_secs logs:
+wb_wait_for_completion_cb() reports a writeback wait that exceeds
+hung_task_timeout_secs with a pr_info() that has no trailing newline.
+printk() keeps such a record open for a continuation and does not
+finalize it, so dmesg, the consoles and netconsole only see the report
+once the next message is logged.
 
-  INFO: The task sync:180 has been waiting for writeback completion for more than 28 seconds.
+Terminate the message with a newline.
 
-Across the Meta fleet, this line is logged about 19,000 times a day
-(the median over 40 days), and up to 82,000 times on a busy day.
-
-Over one day, 194 hosts logged 16,858 of these lines for only about
-2,000 waits, half of them longer than 160 seconds. Most reports were
-printed twice, and a wait logged a median of 7 lines.
-
-Going through these reports, a few things made them hard to use and
-quickly act on:
-
-1. The message has no trailing newline, so it only shows up once the
-   next message is logged. Patch 1 fixes that, for stable.
-2. It does not say which device is slow. Patch 2 adds the bdi and the
-   number of work items left.
-3. The end of the wait is logged as one more "has been waiting" line.
-   Patch 3 logs the total wait instead.
-4. It is printed every half timeout, often twice. Patch 4 wakes the
-   waiter and prints it once per timeout.
-
-With the series, a sync of files dirtied from two cgroups, on a null_blk
-device throttled to 4 MB/s and with hung_task_timeout_secs set to 5,
-logs:
-
-  [    9.262814] INFO: The task sync:276 has been waiting for writeback completion for more than 5 seconds (bdi 252:0, work items left: 2).
-  [   14.683024] INFO: The task sync:276 has been waiting for writeback completion for more than 10 seconds (bdi 252:0, work items left: 2).
-  [   20.103027] INFO: The task sync:276 has been waiting for writeback completion for more than 16 seconds (bdi 252:0, work items left: 2).
-  [   25.222884] INFO: The task sync:276 has been waiting for writeback completion for more than 21 seconds (bdi 252:0, work items left: 2).
-  [   30.542836] INFO: The task sync:276 has been waiting for writeback completion for more than 26 seconds (bdi 252:0, work items left: 2).
-  [   33.562975] The task sync:276 waited 29 seconds for writeback completion on bdi 252:0
-
-Without patch 4, the same test logs 18 reports.
-
+Fixes: d6e621590764 ("writeback: Add logging for slow writeback (exceeds sysctl_hung_task_timeout_secs)")
+Cc: stable@vger.kernel.org
+Reviewed-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Breno Leitao <leitao@debian.org>
 ---
-Changes in v2:
-- Print the bdi and the work items left on the report line itself (Jan)
-- Patch 4: wake the waiter once per timeout instead of adding
-  report_stamp (Jan); its changelog shows the hung task warnings that
-  this can bring back
-- Patch 4: the doubled reports come from wait_event() checking the
-  condition twice per wakeup, not from the two flushers
-- Collect Jan's Reviewed-by on patches 1 and 3 (patch 3 rebased on the
-  one-line report)
-- Link to v1: https://patch.msgid.link/20261106-writeback_stall_report-v1-0-bf0c3b9023a5@debian.org
+ fs/fs-writeback.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
----
-Breno Leitao (4):
-      writeback: add the missing newline to the slow writeback report
-      writeback: name the bdi in the slow writeback report
-      writeback: log the end of a slow writeback wait
-      writeback: report a slow writeback wait once per timeout
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 15260cf2a29b09..01a00d7542b371 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -204,7 +204,7 @@ static bool wb_wait_for_completion_cb(struct wb_completion *done)
+ 	done->progress_stamp = jiffies;
+ 	if (timeout && (waited_secs > timeout))
+ 		pr_info("INFO: The task %s:%d has been waiting for writeback "
+-			"completion for more than %lu seconds.",
++			"completion for more than %lu seconds.\n",
+ 			current->comm, current->pid, waited_secs);
+ 
+ 	return !atomic_read(&done->cnt);
 
- fs/fs-writeback.c           | 40 ++++++++++++++++++++++++++++------------
- include/linux/backing-dev.h |  3 ++-
- mm/memcontrol.c             |  2 +-
- 3 files changed, 31 insertions(+), 14 deletions(-)
----
-base-commit: 8b7179210b22f8e48a82c5ceacb9d56a9c4cfec4
-change-id: 20261105-writeback_stall_report-170750a69946
-
-Best regards,
---  
-Breno Leitao <leitao@debian.org>
+-- 
+2.53.0-Meta
 
