@@ -1,83 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.53
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794275631;
-	b=OgJc7xgrNQYQjZbP1b38YhEGWjxxHTV6PQMrx9HMjAL6yTiNb7SCA4BgHj1qr6egyYfh
-	 xL9G/wsiNSJt4ekRrzCkQYogIh3Ym/ags6etma1XqrcWbPrLn9epwSWEiK0GZalt+ENMG
-	 qQMBS0CflIvAA0w4wATwVh/mAUMQge0Pufb6F2F+fqjMQD7PyIznRCTbUxDbFbBLNHq1s
-	 KdqhEEdOww6SG1Sgz23LMGuVrAepPiDH2Z9aSxNPfS6yg9AndjJ9rxI7jEMEn1Ly21S1I
-	 rW5psuDQPL3VDTMRHbBhIFnIqxwziSWs4RUYfiaskOpUldnMejkM/9mVaoAoqoaHTkg==
+	t=1794275633;
+	b=OAwt0TQbCu3UHKZyba5qLiCBbPBMOAn24qAzFipgczgteovTXke3bA0N624Dfrz+rGPT
+	 /IIxTU0Fb2qOYxNa7qNGqewr6spOK/6hYR0eUl9aiA+I4EGzQjnvRLAFPlye03Wu3rEX+
+	 uDCz75zOpaQdZb8QRQ/VqWMkKp0L2699E7zKMmJeqQLg/WogWoDgQ7ZDvI3SLb6bfZciU
+	 j6voQRqZQvcP6fhZy7bD9iWVmp6dXXa0mFogkwzKa8FyQbECWPo6fo8bh2YebRTwlCUEn
+	 hnPIpg0wPEP2D1teWQq9sWk/0tbUQL+P52vzX7UbwKqf9g8De0EMmb4ViWb6jiA7rew==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794275631;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794275633;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=1b9Gm52IiM/h9OrZZh1jFEopd/R8VOMTojmLWfiROik=;
-	b=YVOxGIrOa9a5roHsfdJ2z1gqMZ+Gf95Jli76ZFmRvh8sn8KG7Sz5oY2TmE6/mt7lZRe5
-	 QOJwN0XVvLqqpAxTTZ0Z51usL/z+fYYqRYCpru/YDnX68PjK7CEPA9+aKwBr4/YSKNWf6
-	 1y1gxAa2k/9HXQOyJ5fw79peEyD2KRVx3k1Ss2hQLTBttMnB+58VsFa5F88/7rKSVNIQR
-	 h1JyGXoMcDxcSgSkqt4Dzq66FfsFS1J1hxUbyrPM3kfpPa+ihUzVa1n+aUi36btxHrH/3
-	 uwyZZgI4eWyWk5DfrJo4nR25BtZeDw029rNZgHnPq7DBvKhVVA07kY3Ply5vAzjrkMw==
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=GdLDSDC+vsdZUjVsXlUGs2pDDNs9Duz5UHyhjDf0AK8=;
+	b=F8oELyHEK2ZxZhSpHcil8dIOwcxMP8a7sfDae8UIdQxhsaaJmDWXVqHteMAlk7gcnuQ1
+	 gM5ndvQFj2kvE8npPIkc6BoEWTaY0wlUMkjbJKx0iipoxWcJIW2nTodKbXBPZ2IqAmp9v
+	 aPuBlB5LYaVd3bcr7LqSFbaugq2b35kGCFgQxcR22WQCehmcXKVmQf1Oi23iVjV+OnxZq
+	 Ra61aopITtt7wz1SBOK2XyyE2+MTKZo6lbhS0UlFvUnOA8RZn2CYYSEBeqGoVL3C0BjLO
+	 Mp4A/LluQPfOjLlBt3+XG3QtzwFuJKclawUjEMaboTdjY9es8Q4dQ6z4XJLTzbS/gUw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZraHMuko;
-	arc=none smtp.remote-ip=209.85.214.180
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MMp2czio;
+	arc=none smtp.remote-ip=209.85.216.53
+Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96F24606A321
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 01:53:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 96F24606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A2DF606A31C
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 01:53:52 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A2DF606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=ZraHMuko
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2ed3d8877e6so8741265ad.3
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 17:53:50 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=MMp2czio
+Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-3ae7626d14aso779471a91.2
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 17:53:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794275630; x=1794880430; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1b9Gm52IiM/h9OrZZh1jFEopd/R8VOMTojmLWfiROik=;
-        b=ZraHMukoYuWbeDf06dc2H7240y1pgD9viLx6SKbJgnThT+n6A621A8T2FaSix6a+lB
-         mhgluOut7A/XahfJzxGskHJb5dgtn/9a8WuKvdcYQDM6hqCcVyL6cA2gsAte02kHHk+o
-         BRRFjNrLB9oDdXnM9ew2ZIW0+I0oJaO9iBgtjFe+ceE79vjkX1Jbnz9kMxhll6Fu4Q5Z
-         9miAa1zK4dG5ifeDDjAbWlN2zfYEEgUi+WaahpDpctKA/3VawbEilJo2yvN+dGxiykpH
-         M+iDf+5lkE464Yjj6MrcvzRNglj49s5mB5pA9lQXh/rwvEiPYrx/33otZbmlQ1DzMI6y
-         HTzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794275630; x=1794880430;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20260707; t=1794275632; x=1794880432; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=1b9Gm52IiM/h9OrZZh1jFEopd/R8VOMTojmLWfiROik=;
-        b=sglHa4pMrMpMQ/j5uOjvl8gl0Bo7T6mb+O0GWCxg0I7fNesKMKQ6qQZNtX46arMVxZ
-         0fOPPlsVRoOKfXridyPiwMtExvIm9lUtSdUYTNtVOJ12l8WU2VdGBVmD26Aaj3kryvTe
-         Oz2IGbibSxwNG2coo+ZJU6ucgSIX/j3ddI4F+GpyJ4onJ5ppCvd1G8BHTzVU42YN0Zzb
-         7tZ1Y5AFjHKvPJtxRXTb95v2qfFPu9Wn9OdmUVafgtT3QSkxVJxM7CFNtzi8OegLcL9H
-         C6xCsAYwXHEyjH3+pSXlfUdGKekSrGP/pEfI7/l5xoFef5OUQrI6iJL2Z0R3p/AFBP3e
-         bYvw==
-X-Forwarded-Encrypted: i=1; AL+hErFbxqS36gVTmzHE1i5aIFJw1/adD5xBv08lqAHDVrcODpo5ZfkHsRDpkJievq8NgsHCr85IAfp/@vger.kernel.org
-X-Gm-Message-State: APuU4Z9+mA1zEUwLpOf/oOELRiFNqvKutptP9YAynAstxkpHiZLKCqD9
-	9z00YDv+jhmnXWmL4Fs9ByyVRMPRugg/CbcVRzGa9TodaiCxjQdVRpnu
-X-Gm-Gg: AYBFou2xbq+7LG2YZ2BngtkHu1+zFY1v/kTx4NOc4kWPrNeE5xdFoBuyHNunDgwhRbz
-	MCu0c+5lEThU6L5f7KEHJ8B0ZlFPl36Bez/GCQuhBM63Ws3y1PB1cn4EX1HWbEEaaO+l20Xiutm
-	CDpfftYNRF7KHa9wcFXuof3NV7J/J4/tJOTqv/pqGWp800yxzfJiGQ7iPLaHg/ZtqMBKnZplGVi
-	H8r+7W0xic6RYrr+yk+9tBab8Zd5hlyr+McA7Rhx8afahU+bZJ1+8VXH/HTStya4+Vll9Okr5wL
-	b6gV2pBn7FcZb2U2+I0DnaW6dI6w72hSIenHkE6+6vODMIqcyhQnkvzWabgW2jv4r9Lv6OFsSUb
-	XCR1pL2dvYHhMCpzyBI6Id1d3OJjloLE617ELcfCpDcItyC1TkQUD2Xn0H16YasIbY2IykbX1aP
-	hkybbkYLAE0WCe1VczDAKGuFRub+P4pQeSlPhgt4ovx+eP9HiYVhvE4mKD/j8IeCIVO+mzGtLNE
-	YJgkn0cc1LKDLfu+Fya2IbbUXtv6B5owtlOyPhmwG0dPr+uxR/nq6o+8vyKBStZDpIZ+QT9OGS+
-	dvJ+ZkHI1njEXQqM4Evmc7YSLmITBwMHFcwXh6s4ZY7nCsxsZ3J67hd8NQ+BNAshKHJB10k61cV
-	R79OYy2M9yjt9087bfumJ6gQzbg==
-X-Received: by 2002:a17:903:120b:b0:2e9:660a:7944 with SMTP id d9443c01a7336-2edb92c846bmr9971635ad.58.1794275629806;
-        Mon, 09 Nov 2026 17:53:49 -0800 (PST)
-Received: from localhost ([2a03:2880:ff:1::])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2edb6a3e61bsm3307325ad.11.2026.11.09.17.53.48
+        bh=GdLDSDC+vsdZUjVsXlUGs2pDDNs9Duz5UHyhjDf0AK8=;
+        b=MMp2czio1mmyfW+X12s/9F6SDx2pMsmwmKbM9lxHPqf7gN7fhk8oRj6xezaeMgZXCU
+         sZnhN6H7fADhJmckvQAwIFmzLBndOBkeyGafXCDpknLgqtquG2Ja3mrHxIUQ0wqIeeW2
+         2mqu69NKZa30KDGZqhR3oWguOgFKVjgKc+eNovkHIuXx/Kd47oi1vS/hLVu+DvGCQh9F
+         DBcAFIUDV6fS+au6kQ1VaaRghR8Djn9ryMFzMt/vyxObX6sWD8KxaEHUa2FWc8jj4cYy
+         jtpFchFXroEL1Jwi0LhlByIuS/FpBd/X2Y1L7y7AeDBOOy9Zt0VXNc4BeX72lSHfTESS
+         LuNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794275632; x=1794880432;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=GdLDSDC+vsdZUjVsXlUGs2pDDNs9Duz5UHyhjDf0AK8=;
+        b=oACdHwQqpCqWKrpTgtCpxzYl8tXKG3tvScKClCgmDee/hkI68uNMp0LRefat1j06CR
+         QiMWnimRdIDlZioE1qBlS8pZAydl/sJb6neICZlSfIka001PWUITZoNTbn1L8h3Ne45G
+         VcmQRYVAZBsMNMdL8J0Su4wHNjXi8ph8943Chv9K93dO1EQQplKLq//E8nHXb7CC/vBC
+         TgkViQfKcCa7aVuXdudYoE7qQx2F91PnE6Zz3myScD9oLtfgg9yCfe++OpfF3PKJq/t/
+         BoWsp8Uzd8ntkKpHtWoE/cTwdT3jGeDIXIFiLwJFEJ2VN7fBvh3AH0S6r+lltlt5IgA5
+         wrDA==
+X-Forwarded-Encrypted: i=1; AL+hErG9nUjFqbONeB7KrvDyiM0buB3zdPcf6A2wE4VnANTlN9rerTAoP5rWen1xd+spH63yK14LvyXU@vger.kernel.org
+X-Gm-Message-State: APuU4Z9KefAiwHSCixWnbgFbIMPjMyRspmDexJE7pVJaTgHeOiSLtym6
+	ZUQVp+TFFSmtbfFaS5DP+viJVoENqwssNIcBrDiCh0bBQ9RTrXaKUfqy
+X-Gm-Gg: AYBFou18wVNrOsaIN/6SFV4mmAHCFHRUnKjsKsRlrkZF1rThaIgKVOTZUXUM0JFLpdW
+	w+vxhHlHnGPwaBy9UY3oYj7gVb/CYq7y4wbT83emcq1rNIRjsvBCoqqX2MPMqOdElnQF0IifBOD
+	4Idx1oYwg97+wDkDM7JSbtLj6HR9zYSo1dvOKBEH95gzxuW8eZX1OXec443JtqA+qxylG9kAik9
+	CtslsDMVYbA/5Wv/yWHt9CpUDnD62DQ+DlN9yEe8YI9oeQEpkTdpnRiSGzp3uKaZ81D6AUoC6nF
+	XxDIY4ZmXeWgQq+c89SJ9GTwm8rr9051ZZFdLub63RkHcpHJShh+ezeispG6aF36wN6GT/dnI1m
+	yafoxyRQ9SQ2Q//6Nx4YehRWjTag+IQFibVF2LPAGvsMacH7bJkeY30XzcB6KlokooYTOr2VYA7
+	tjwW1MYAtszs+SPu+nqZzAKzvOl90fdcLRdnrqeodZgODWDgTE7lF6kc7OxOdyVv7Dm1MKP1tL7
+	9fOq22145RC5Z7VO0pO9IBYCNGqAkcFF9exRn0c7+UsiqT7953BTQMn4BPHvVr5AtJLlVi4PUwX
+	1gBH/KjQcHcZkwMQ2Nxox9sbnhHN1DrNOSlyyxFEvhUHq9yEDVSVc5mh6tOh18kj9F6WfjWj67s
+	X8sNRfQ==
+X-Received: by 2002:a17:90a:ec83:b0:3a7:b260:9ced with SMTP id 98e67ed59e1d1-3b166cecc28mr1377225a91.58.1794275631979;
+        Mon, 09 Nov 2026 17:53:51 -0800 (PST)
+Received: from localhost ([2a03:2880:ff:40::])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b167970669sm1564096a91.13.2026.11.09.17.53.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 17:53:49 -0800 (PST)
+        Mon, 09 Nov 2026 17:53:51 -0800 (PST)
 From: Joanne Koong <joannelkoong@gmail.com>
 To: akpm@linux-foundation.org
 Cc: yosry@kernel.org,
@@ -94,10 +95,12 @@ Cc: yosry@kernel.org,
 	linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	damon@lists.linux.dev
-Subject: [PATCH v2 0/4] mm: read root memcg stats from global counters instead of flushing
-Date: Mon,  9 Nov 2026 17:53:17 -0800
-Message-ID: <20261110015321.611093-1-joannelkoong@gmail.com>
+Subject: [PATCH v2 1/4] mm: zswap: fix shrinker count for the root memcg
+Date: Mon,  9 Nov 2026 17:53:18 -0800
+Message-ID: <20261110015321.611093-2-joannelkoong@gmail.com>
 X-Mailer: git-send-email 2.52.0
+In-Reply-To: <20261110015321.611093-1-joannelkoong@gmail.com>
+References: <20261110015321.611093-1-joannelkoong@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -109,89 +112,61 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Reclaim, refault detection, the zswap shrinker, and DAMON quota goals all
-flush the memcg rstat stats before reading them. When the target is the
-root memcg (eg global reclaim), that flushes every cgroup in the system,
-which is expensive. Most of these flushes are ratelimited today, but the
-stats they read can be stale for seconds.
+zswap_shrinker_count() scales the number of freeable entries on a
+memcg's zswap LRU by the memcg's compression ratio. That compression
+ratio is computed from the memcg's MEMCG_ZSWAP_B and MEMCG_ZSWAPPED
+stats.
 
-For the root memcg, the call sites can read global counters directly
-instead of going through rstat. Global counters are always up to date
-and don't need flushing. For stats that only track memory charged to a
-memcg (eg LRU sizes, workingset, rotation, and reclaim writeback
-counts), the root memcg's hierarchical value equals the node counter.
+However, for the root memcg, the zswap entries owned by the root memcg
+itself are never accounted for in the stats (obj_cgroup_charge_zswap()
+skips the root objcg, and before the root memcg had an objcg, its
+entries weren't charged at all). The stats only reflect the entries
+owned by the root memcg's descendants. When the root memcg's descendants
+have no zswap entries (eg when the whole workload runs in the root
+cgroup), the shrinker reports nothing to reclaim for the root memcg, and
+its zswap entries are never written back by the shrinker. When its
+descendants do have entries, the root memcg's entries are scaled by the
+descendants' compression ratio instead of a ratio that includes them.
 
-Patch 1 is a zswap fix for the shrinker's count for the root memcg and
-can be applied independently of the rest. It doesn't have the stable
-tag, since the zswap shrinker is opt-in and the fix can change writeback
-behavior. With a workload running in the root cgroup, the shrinker wrote
-back 0 pages before the fix and drained the whole pool after it.
+Fix this by using the zswap pool-wide counters for the root memcg
+instead. The zswap pool-wide counters cover every zswap entry, including
+those owned by the root memcg.
 
-Patch 2 makes lruvec_page_state() and lruvec_page_state_monotonic() read
-the node counters for the root memcg by default, except for the stats
-whose node counters also count memory that isn't charged to a memcg.
+This also gets rid of having to flush the root memcg's stats, which
+flushes every cgroup in the system.
 
-Patch 3 skips the flush in workingset_test_recent() when the eviction
-memcg is the root memcg. Reclaim keeps its flush for now, since global
-and root reclaim also read the stats of the child memcgs they scan.
+In a VM running a reclaim-heavy workload in the root cgroup with the
+zswap shrinker enabled, the shrinker wrote back no pages before this
+change (zswpwb stayed at 0) and 1016 pages with it.
 
-Patch 4 skips the root flush for DAMON's node_memcg_used_bp and
-node_memcg_free_bp quota goals, whose flush is not ratelimited.
+Fixes: b5ba474f3f51 ("zswap: shrink zswap pool based on memory pressure")
+Acked-by: Yosry Ahmed <yosry@kernel.org>
+Reviewed-by: SJ Park <sj@kernel.org>
+Acked-by: Nhat Pham <nphamcs@gmail.com>
+Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+---
+ mm/zswap.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Of the excluded stats, kernel stack, secondary page tables and
-WORKINGSET_NODERECLAIM only differ from the node counters because
-accounted kernel memory allocated by tasks in the root cgroup isn't
-charged to the root memcg. If the root memcg's stats should include that
-memory, then those could read the node counters as well. This is left
-for a separate subsequent patchset though since that changes what the
-root memcg reports and needs more upstream consensus.
-
-Three root flushes remain. Reclaim also reads the stats of the child
-memcgs it scans, and count_shadow_nodes() and filemap_cachestat() need
-the root memcg's own (local) stats or the stats of arbitrary memcgs,
-which means global counters can't be used as a substitute there. This
-will be addressed in a subsequent patchset, as well as getting rid of
-ratelimiting for most call sites.
-
-On an 80-CPU machine running proactive reclaim on the root cgroup, a
-root flush took 69us on average with little cgroup activity and ~0.9ms
-with 128 memcgs repeatedly allocating and freeing memory (wall time,
-including waiting for the rstat lock). Reading a node counter doesn't
-add any cost: it took the same amount of time as reading the rstat
-counter (~150ns, which includes bpftrace probe overhead).
-
-For more context on the background of this series, please see the
-discussion about memcg stats flushing in [1].
-
-Changes since v1 [2]:
-- Read the node counters for the root memcg by default in
-  lruvec_page_state()/lruvec_page_state_monotonic(), with explicit
-  exclusions, instead of adding lruvec_lru_page_state() helpers that
-  callers opt in to (Yosry). As a result, the root memcg's memory.numa_stat
-  now also reports the node counters for the non-excluded stats
-- Split the workingset_test_recent() flush skip out into its own patch
-  (patch 3)
-- The DAMON patch (now patch 4) only skips the flush, as
-  lruvec_page_state() reads the node counters for the root memcg
-- Rebased onto current mm-new
-
-[1] https://lore.kernel.org/linux-fsdevel/CAJnrk1aHdBm4CofvKfx7B3H-uF2xRXZUQs47J_4xeRmRZ4hcZg@mail.gmail.com/
-[2] https://lore.kernel.org/linux-mm/20261102225030.2743129-1-joannelkoong@gmail.com/
-
-Joanne Koong (4):
-  mm: zswap: fix shrinker count for the root memcg
-  mm: memcg: read root lruvec stats from the node counters
-  mm: workingset: skip the root memcg flush in workingset_test_recent()
-  mm/damon/core: use node counters instead of flushing the root memcg
-
- mm/damon/core.c |  7 ++++++-
- mm/memcontrol.c | 52 ++++++++++++++++++++++++++++++++++++++++++++++---
- mm/workingset.c |  5 ++++-
- mm/zswap.c      |  7 +++++--
- 4 files changed, 64 insertions(+), 7 deletions(-)
-
-
-base-commit: b95f8bb86713c860ce8536d22a988b949b884d5f
+diff --git a/mm/zswap.c b/mm/zswap.c
+index 37d217860a6b..c11cd2a6e24e 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -1332,9 +1332,12 @@ static unsigned long zswap_shrinker_count(struct shrinker *shrinker,
+ 	 * runtime-disabled: we can get sc->memcg == NULL, which is ok
+ 	 * for the lruvec, but not for memcg_page_state().
+ 	 *
+-	 * Without memcg, use the zswap pool-wide metrics.
++	 * Without memcg, or for the root memcg, use the zswap pool-wide
++	 * metrics. The root memcg's stats don't count the entries it owns
++	 * itself (obj_cgroup_charge_zswap() skips the root objcg), whereas the
++	 * pool-wide metrics cover every entry and don't need a flush.
+ 	 */
+-	if (!mem_cgroup_disabled()) {
++	if (!mem_cgroup_disabled() && !mem_cgroup_is_root(memcg)) {
+ 		mem_cgroup_flush_stats_ratelimited(memcg);
+ 		nr_backing = memcg_page_state(memcg, MEMCG_ZSWAP_B) >> PAGE_SHIFT;
+ 		nr_stored = memcg_page_state(memcg, MEMCG_ZSWAPPED);
 -- 
 2.52.0
 
