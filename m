@@ -1,119 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.177
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794281424;
-	b=hPl4TTAbyxdaCROmlCZCKmx2HWVusggGLgjfX+q9T2kEGZHvGraK/G/Oj2vbLBmeQiD/
-	 xiM2g0+a3ad9xNy5jPrzZYRTXazeXzzXdnz5Iec/Qboko1Y/CCvPAEn7k1C6JMMeB5mst
-	 iwUoNJUTUkNxs8XR7w76WUEFejS1Tfcl0c7E5qPtSqtB6AvZ8ysWP19ZMnOTk85Fc68Og
-	 Nq64JQqgLiVb9NKel5Ge/Z9rqRiTtvmQEJzvDNdOo4GqQRaIqE74IBwLid/9dZIsSy2oN
-	 C57EqjfDf/ra+I7Sg+NHsT56toHLTun0rsTd5z+/+L0AvI0ZXZTbFevmiuxW9rOsWQQ==
+	t=1794281592;
+	b=Qdv3We8gltrRGOvoQ6P6JeGRLOLI5FV+Y5acnpjnDamFxgCm8bvmugODQsEiEf8cPf8p
+	 YahGpr0NRjQ0n7g2EOd9LKPBkjJQb9M3glN0mETg3pO3MEV+448o+RLmb86zGb7e7J92u
+	 7vRkcwqkYB/a00paAvGn7uOr91t4x7rvnNsXaSCZkM/W8lYz44SmrXjUUqyuj7piBVo/2
+	 i/LDBE4AvmLpw8RtAM8kSCHtnDrOUiMOy3I7evuvV3y/JIFKhtezvyFXFIK/2UBBY/UCu
+	 LqZ3Jzf4wvlYO0XXfu+Acypb1ANvVfh4DKHfpXctmw2OH+EP4guqsjlbEJDEgqOhsQg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794281424;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=gxdjfkE2u6hMgUrERKs9IK41dx8VvemjPSvlkCJqFUU=;
-	b=Xcg2a+2ocnW8cHPsd3hZYVLh7NnaNJ5bTWJDFWy8YnFwGZchh6YJtBBEwR5DFHgXQbgy
-	 ftRePCAzqnDY7ReTFA+gzNhIK+/WIn0HTjXVxmwjFEYp2nAgFE4ppWOhgk8JC0ln9zyKs
-	 Y27iLdpmFtHKWUFdalAQrJtmzqgTW8s+wugqsvVbnzQKKZWo83NYRObWpc9HKj8G9hr07
-	 4j4jL5HAt0cHWrHjZ5RV2R2Z57hVF+Bl1gLcI3VzQRpxGzhSUiKhAYY6ATMfN3ZH5IOPE
-	 WnA5dpyLWEWnEooJybhXwFssL+D+L9wfncCaggxphl7t638m5XOp4VgvFAStPAappCA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794281592;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
+	bh=N0SqkNbWeuHVFNNkfBhjb5eQ8Str/7iSCr6imSM6DLw=;
+	b=aEV9WGqNoNjTK+1ezGvTwV8OT5A84i9ovM6glN+77m7NMaIX6RLxEFDx3iFRCIRvO+98
+	 RSjm7wn5gKx3gnj/IvyVpCJMj6I4pyGJBUti/RZbrwyKimUjKLve/GDJePNk8cvlg+SS1
+	 hlmgmK3EFOjMeD8Oiwq7XFQSJ0GWuyc3ehN+bMZld4wDvuVb9mDQOEoOmObLZESDA6Yww
+	 6px9aGum6hLYQOW0fQoentmeS8iuHwgY8CKa9uA2Fq2plIHNoON6IOycf/HLmVG6l//Pt
+	 YXRs8fxzd0Ed2Wz+S61dGlgV7qdudjDkrI80sEClEvmWftfIrlwjYdfkoTQh7Tq43AA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=AtTkhZae;
-	arc=none smtp.remote-ip=209.85.215.177
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZJUxApJ9;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0E5D606A31C
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 03:30:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0E5D606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22C7606A321
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 03:33:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E22C7606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=AtTkhZae
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-cc758830601so993524a12.2
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 19:30:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794281423; x=1794886223; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=gxdjfkE2u6hMgUrERKs9IK41dx8VvemjPSvlkCJqFUU=;
-        b=AtTkhZaeU4hUtuGnRtS0F/N3iO+1WlWiKDM4IHXPrTmT37Z72Qbpkeu80eTmvSZz1x
-         AOiLkMjr9VvaO6BXCIp6zPi09rXrwfIlg6eUx9QNDXS94b9GRPE5nJeUg+U04ltfJegk
-         NeJPojTsts2wX0CGibfvU4BXioqxU9amayLrlaUZ3DNU3T2PvSfZoMADJMfLW72c+weH
-         mid1sbiKiU3UFS1h35zuS6M09zx4cyWj4tiNUioRG4LWjWPehHSzU8X48KZUY8Vod05f
-         +rYgjcYRO6VyDI/9dzqrSiXq51iiV1YIqefrLkeCvnthY7SMT/Sb/JNek/ZQMxEheQk8
-         /lDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794281423; x=1794886223;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=gxdjfkE2u6hMgUrERKs9IK41dx8VvemjPSvlkCJqFUU=;
-        b=mBevpvaJm7o82vF9V+L0kWzfOIlFaJr28S429wQiOigbLebiJq7p2rAKgf9k2BcjgB
-         /RrjMH8ZtDcTZGK/I4lLKb6RWqnXzHjwrl1v2zm54+li0y8CqNGzXzktBdgMtIj5N85H
-         saHUdlW1zDDqevgshToc9V1/j+O0xQ/WyH/KJXXE9WQsZxjsYU63PiWwBcNpQJODA/qC
-         /Gnt+xELtNFbtXBqW9PC35ytkEf+XkC6lMzQG9cQu+lembvq/ovEYxwB6dRDm6VW+r07
-         MTp0HFCFzx5Hec72+602fDJ9g9sDa2SR9GyptsGDDN+HuVLKyH92XxywC0i5dYvf/kWI
-         U1pQ==
-X-Forwarded-Encrypted: i=1; AL+hErHgEApvAfKhTt0VRe4lk2SoVnpm3qMJwb+hCgQylWCyYHOhlaSj1ZqYgRBTdh2c7QnbtOYWUm6c@vger.kernel.org
-X-Gm-Message-State: APuU4Z/qalhkV7BWNuAIA4AGht+BwWRDSaolIP7t+wVVajhT6aWcAULY
-	JkmtL/Cx2OhNBqBHGxdbs866ZTSu4VXjTZcq7Zx3NZMFuiI2PpoRIJz+
-X-Gm-Gg: AYBFou2TuQ6X8C90H2SC1qaPA3zrwal9Ux6r68Hz3hY/TkrvasQ/3b3D8gi1gUtebqR
-	vdtrxuvUqtYtUZh4ZODbNJlUOIsQ1NelzJAJLmBBS7oToWL6bV9uswbE7xV9BuPFHKh6ZyPaz3L
-	1whLI9qt9PES8rL/Fxk+wpJwekoSH4h4YmiGxY1ZCyu9oOnp0KCvlyr4ea2Tu83FBMdgq8rkida
-	/ESufleGVISpRPNcEsEF89ziJFTDmT29DVIMWpGnPi5k/MoG2STVlpeUVMmNalmqhWzcZAblp8p
-	0bC1wrRwus5TfGCTGJLtHaFcq1OJ30zskhasabolcw1/hQNtZ5D3hDjctbgzLPMdj+sypcMzGxO
-	d22xMZgm970DW1mo5uH/Iuw+MZPN62sAUEXqbDQBHZBq52HkhjN4ntfap+eKgTYPL9WqLX9dKgf
-	VSUJgzkjfMphRuIGKC/+IP88jdxK1nXukHY5N7U3W44YGoZE8akYwboNV/HcqtL3PukCeFzcMsy
-	KNqsqkBJw1zFeauAdg8WOAzLr8qTVs5eiGbBwJc3GT/r4ekwSqkIGBFGfr9xJLyLHTVUK9F4XrL
-	mGEI8LeJ+tk6TXHcibiVqKByKuxyUxH0bk+Yn6X/gTqxiT8MgkXV+Klzl+KVuptMD5YsOxioYp/
-	nhkFDssCtP51RM+hsy5rZ0szq
-X-Received: by 2002:a05:6a21:2013:b0:3e2:a9cc:3ece with SMTP id adf61e73a8af0-3f18e8c5cb6mr1040170637.23.1794281423096;
-        Mon, 09 Nov 2026 19:30:23 -0800 (PST)
-Received: from localhost.localdomain ([240e:46d:1d00:5ed4:58d0:d294:d44c:6ae8])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8baab21835fsm336973b3a.42.2026.11.09.19.30.11
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Mon, 09 Nov 2026 19:30:22 -0800 (PST)
-From: Yafang Shao <laoar.shao@gmail.com>
-To: ast@kernel.org,
-	daniel@iogearbox.net,
-	andrii@kernel.org,
-	eddyz87@gmail.com,
-	memxor@gmail.com,
-	mingo@redhat.com,
-	peterz@infradead.org,
-	juri.lelli@redhat.com,
-	vincent.guittot@linaro.org,
-	akpm@linux-foundation.org,
-	david@kernel.org,
-	gourry@gourry.net,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	shakeel.butt@linux.dev,
-	roman.gushchin@linux.dev,
-	yu.c.chen@intel.com,
-	zhao1.liu@intel.com,
-	tim.c.chen@linux.intel.com,
-	lizhe.67@bytedance.com,
-	ziy@nvidia.com,
-	mgorman@suse.de
-Cc: bpf@vger.kernel.org,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Yafang Shao <laoar.shao@gmail.com>
-Subject: [RFC PATCH bpf-next v4 4/4] selftests/bpf: add tests for the numab kfuncs
-Date: Tue, 10 Nov 2026 11:29:13 +0800
-Message-ID: <20261110032913.71974-5-laoar.shao@gmail.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20261110032913.71974-1-laoar.shao@gmail.com>
-References: <20261110032913.71974-1-laoar.shao@gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ZJUxApJ9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794281591;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=N0SqkNbWeuHVFNNkfBhjb5eQ8Str/7iSCr6imSM6DLw=;
+	b=ZJUxApJ9tQAwbjoe2cmbTFDQCfz+p6ohrUvkxT0xJex9RGauCYhTjuYdl4AEMFncu8bTFe
+	q9YcouZDpVxt6cnTnsokG+BD+jZC9/5a+/aqu3U7gD73UeSJNevyIEGI+Bojn1+4U5wrs1
+	2AtpHNf3gdKCb12fq1KWjlS2u9Hbauo=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-619-h-m1eTdwNSidEgxfOL7IbQ-1; Mon,
+ 09 Nov 2026 22:33:04 -0500
+X-MC-Unique: h-m1eTdwNSidEgxfOL7IbQ-1
+X-Mimecast-MFC-AGG-ID: h-m1eTdwNSidEgxfOL7IbQ_1794281583
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5E6A01955D98;
+	Tue, 10 Nov 2026 03:33:02 +0000 (UTC)
+Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 74D3F1956087;
+	Tue, 10 Nov 2026 03:32:59 +0000 (UTC)
+Message-ID: <c37c7ed1-5730-4e33-b0b9-3ebd45caf602@redhat.com>
+Date: Mon, 9 Nov 2026 22:32:58 -0500
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -123,364 +71,303 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/4] cpuset: settle isolation state when CPUs are given
+ back to parent
+To: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
+Cc: Chen Ridong <chenridong@huawei.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Sashiko <sashiko-bot@kernel.org>, Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <20261107120100.3587595-1-ridong.chen@linux.dev>
+ <20261107120100.3587595-4-ridong.chen@linux.dev>
+ <09c033dd-41dc-4503-9def-4e662e946dc4@redhat.com>
+ <fe49691f-54d9-410e-9110-bf2522ab17e8@linux.dev>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <fe49691f-54d9-410e-9110-bf2522ab17e8@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Exercise the bpf_numab_set_mode() and bpf_numab_get_mode() kfuncs
-through BPF_PROG_TYPE_SYSCALL programs: the set/get roundtrip, the
-mode domain (NUMAB_FOLLOW_SYSTEM and the NUMA_BALANCING_* bitmasks
-accepted, anything else rejected with -EINVAL), unknown cgroup ids
-rejected with -ENOENT, and the hierarchy combination the memcg walk
-produces (inheritance, OR-ing, and an opt-out winning over every
-request in the chain). Also verify the memory-controller requirement:
-setting on a cgroup without a memcg is rejected with -EOPNOTSUPP,
-while bpf_numab_get_mode() resolves it to the nearest ancestor memcg.
 
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
----
- tools/testing/selftests/bpf/config            |   2 +
- .../selftests/bpf/prog_tests/bpf_numab.c      | 273 ++++++++++++++++++
- tools/testing/selftests/bpf/progs/bpf_numab.c |  32 ++
- 3 files changed, 307 insertions(+)
- create mode 100644 tools/testing/selftests/bpf/prog_tests/bpf_numab.c
- create mode 100644 tools/testing/selftests/bpf/progs/bpf_numab.c
+On 11/9/26 10:14 PM, Ridong Chen wrote:
+>
+>
+> On 11/9/2026 10:51 PM, Waiman Long wrote:
+>> On 11/7/26 7:00 AM, Ridong Chen wrote:
+>>> From: Ridong Chen <chenridong@xiaomi.com>
+>>>
+>>> partition_xcpus_del() only updates isolated_cpus when the partition 
+>>> that
+>>> gives back the CPUs has a different state than its parent. CPUs that 
+>>> were
+>>> further distributed to descendant isolated partitions are not taken 
+>>> into
+>>> account, so isolated_cpus_release() has to be called afterwards in
+>>> several places to walk up the ancestors and fix isolated_cpus.
+>>>
+>>> Make partition_xcpus_del() always set the isolation state of the given
+>>> back CPUs to the state of the parent that receives them. As the
+>>> effective_xcpus of a partition covers the CPUs distributed to its
+>>> descendants, the isolation state of those CPUs is settled at the same
+>>> time. Boot-time isolated CPUs are still preserved by 
+>>> isolated_cpu_update().
+>>>
+>>> compute_partition_effective_cpumask() invalidates a child partition
+>>> without going through partition_xcpus_del(), so do the same there: the
+>>> CPUs of the invalidated child take the isolation state of its parent.
+>>>
+>>> As the parent may be shrunk and its effective_xcpus not updated yet,
+>>> only do so for the CPUs the parent still owns. This is to keep the
+>>> isolation state correct for now, the in-place invalidation here will be
+>>> removed later in the partition rework.
+>>>
+>>> isolated_cpus_update() assumes the old and new states are different,
+>>> which no longer holds now that partition_xcpus_del() proceeds 
+>>> regardless
+>>> of the states. Drop its @old_prs argument and the WARN_ON_ONCE() so 
+>>> that
+>>> it simply sets the isolation state of the given CPUs, and use it
+>>> everywhere. The state check in partition_xcpus_add() is dropped as 
+>>> well,
+>>> as setting the state is a no-op when the states are the same.
+>>>
+>>> isolated_cpus_release() is no longer needed and is removed.
+>>>
+>>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+>>> ---
+>>>   kernel/cgroup/cpuset.c | 98 
+>>> ++++++++----------------------------------
+>>>   1 file changed, 19 insertions(+), 79 deletions(-)
+>>>
+>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>> index 85e5b529d144..fc9de6e16ff5 100644
+>>> --- a/kernel/cgroup/cpuset.c
+>>> +++ b/kernel/cgroup/cpuset.c
+>>> @@ -1244,17 +1244,17 @@ static bool isolated_cpu_update(int new_prs, 
+>>> int cpu)
+>>>   }
+>>>   /*
+>>> - * isolated_cpus_update - Update the isolated_cpus mask
+>>> - * @old_prs: old partition_root_state
+>>> - * @new_prs: new partition_root_state
+>>> - * @xcpus: exclusive CPUs with state change
+>>> + * isolated_cpus_update - Set the isolation state of @xcpus
+>>> + * @new_prs: partition root state that @xcpus will belong to
+>>> + * @xcpus: exclusive CPUs whose isolation state may change
+>>> + *
+>>> + * CPUs isolated at boot time are kept isolated.
+>>>    */
+>>> -static void isolated_cpus_update(int old_prs, int new_prs, struct 
+>>> cpumask *xcpus)
+>>> +static void isolated_cpus_update(int new_prs, struct cpumask *xcpus)
+>>>   {
+>>>       bool updated = false;
+>>>       int cpu;
+>>> -    WARN_ON_ONCE(old_prs == new_prs);
+>>>       lockdep_assert_held(&callback_lock);
+>>>       lockdep_assert_held(&cpuset_mutex);
+>>>       for_each_cpu(cpu, xcpus)
+>>> @@ -1263,45 +1263,6 @@ static void isolated_cpus_update(int old_prs, 
+>>> int new_prs, struct cpumask *xcpus
+>>>           update_housekeeping = true;
+>>>   }
+>>> -/*
+>>> - * isolated_cpus_release - Remove the relevant CPUs in @xcpus from 
+>>> isolated_cpus
+>>> - * @cs: the current cpuset
+>>> - * @xcpus: the set of effective xcpus to be considered for removal
+>>> - *
+>>> - * This function is called when an isolated partition is 
+>>> invalidated or when
+>>> - * some of its effective xcpus are to be removed from isolated_cpus 
+>>> due to
+>>> - * changes in parent cpuset. The given @xcpus must be modifiable as 
+>>> the function
+>>> - * will update its value to determine the right set of CPUs to be 
+>>> removed.
+>>> - */
+>>> -static void isolated_cpus_release(struct cpuset *cs, struct cpumask 
+>>> *xcpus)
+>>> -{
+>>> -    struct cpuset *ancestor = parent_cs(cs);
+>>> -    struct cpuset *iancestor = NULL;
+>>> -
+>>> -    /*
+>>> -     * Search the furthest isolated partition root ancestor available
+>>> -     * until top_cpuset or a remote partition root is hit.
+>>> -     */
+>>> -    for (; ancestor; ancestor = parent_cs(ancestor)) {
+>>> -        if (ancestor->partition_root_state == PRS_ISOLATED)
+>>> -            iancestor = ancestor;
+>>> -        if (is_remote_partition(ancestor))
+>>> -            break;
+>>> -    }
+>>> -
+>>> -    /*
+>>> -     * If a furthest isolated partition acnestor is found, use it to
+>>> -     * determine which of the CPUs in @xcpus should be removed from
+>>> -     * isolated_cpus. Otherwise, all of them will be removed.
+>>> -     */
+>>> -    if (iancestor && !cpumask_andnot(xcpus, xcpus, 
+>>> iancestor->effective_xcpus))
+>>> -        return; /* No CPU should be removed from isolated_cpus */
+>>> -
+>>> -    spin_lock_irq(&callback_lock);
+>>> -    isolated_cpus_update(PRS_ISOLATED, PRS_ROOT, xcpus);
+>>> -    spin_unlock_irq(&callback_lock);
+>>> -}
+>>> -
+>>>   /*
+>>>    * partition_xcpus_add - Add new exclusive CPUs to partition
+>>>    * @new_prs: new partition_root_state
+>>> @@ -1325,9 +1286,7 @@ static void partition_xcpus_add(int new_prs, 
+>>> struct cpuset *parent,
+>>>       if (parent == &top_cpuset)
+>>>           cpumask_or(subpartitions_cpus, subpartitions_cpus, xcpus);
+>>> -    if (new_prs != parent->partition_root_state)
+>>> -        isolated_cpus_update(parent->partition_root_state, new_prs,
+>>> -                     xcpus);
+>>> +    isolated_cpus_update(new_prs, xcpus);
+>>>       cpumask_andnot(parent->effective_cpus, parent->effective_cpus, 
+>>> xcpus);
+>>>   }
+>>> @@ -1355,9 +1314,8 @@ static void partition_xcpus_del(int old_prs, 
+>>> struct cpuset *parent,
+>>>       if (parent == &top_cpuset)
+>>>           cpumask_andnot(subpartitions_cpus, subpartitions_cpus, 
+>>> xcpus);
+>>> -    if (old_prs != parent->partition_root_state)
+>>> -        isolated_cpus_update(old_prs, parent->partition_root_state,
+>>> -                     xcpus);
+>>> +    /* CPUs given back, including those of descendants, take 
+>>> parent's state */
+>>> +    isolated_cpus_update(parent->partition_root_state, xcpus);
+>>>       cpumask_or(parent->effective_cpus, parent->effective_cpus, 
+>>> xcpus);
+>>>       cpumask_and(parent->effective_cpus, parent->effective_cpus, 
+>>> cpu_active_mask);
+>>> @@ -1612,6 +1570,7 @@ static void 
+>>> compute_partition_effective_cpumask(struct cpuset *cs,
+>>>       struct cgroup_subsys_state *css;
+>>>       struct cpuset *child;
+>>>       bool populated = partition_is_populated(cs, NULL);
+>>> +    static cpumask_t xcpus;        /* Protected by cpuset_mutex */
+>>>       /*
+>>>        * Check child partition roots to see if they should be 
+>>> invalidated
+>>> @@ -1640,14 +1599,15 @@ static void 
+>>> compute_partition_effective_cpumask(struct cpuset *cs,
+>>>               int parent_prs = cs->partition_root_state;
+>>>               /*
+>>> -             * Invalidate child partition and update isolated_cpus
+>>> -             * if necessary.
+>>> +             * Invalidate child partition. Its CPUs still owned by
+>>> +             * cs take the isolation state of cs. effective_xcpus
+>>> +             * of cs may not be updated yet, so recompute it.
+>>>                */
+>>>               spin_lock_irq(&callback_lock);
+>>>               WRITE_ONCE(child->prs_err, PERR_NOCPUS);
+>>> -            if ((old_prs == PRS_ISOLATED) && (parent_prs == PRS_ROOT))
+>>> -                isolated_cpus_update(PRS_ISOLATED, PRS_ROOT,
+>>> -                             child->effective_xcpus);
+>>> +            compute_excpus(cs, &xcpus);
+>>> +            cpumask_and(&xcpus, &xcpus, child->effective_xcpus);
+>>> +            isolated_cpus_update(parent_prs, &xcpus);
+>>>               child->partition_root_state = -old_prs;
+>>>               spin_unlock_irq(&callback_lock);
+>>>               notify_partition_change(child, old_prs);
+>>> @@ -2080,22 +2040,8 @@ static int 
+>>> update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>>            *
+>>>            * A partition error happens when parent has tasks and all
+>>>            * its effective CPUs will have to be distributed out.
+>>> -         *
+>>> -         * For an isolated partition with a shrunk root partition 
+>>> parent
+>>> -         * we may need to return some or all of its isolated CPUs.
+>>>            */
+>>>           nocpu |= cpumask_empty(tmp->delmask);
+>>> -        if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED)) {
+>>> -            cpumask_clear(tmp->addmask);
+>>> -            if (nocpu)
+>>> -                cpumask_copy(tmp->addmask, cs->effective_xcpus);
+>>> -            else if (!cpumask_subset(cs->effective_xcpus, parent- 
+>>> >effective_xcpus))
+>>> -                cpumask_andnot(tmp->addmask, cs->effective_xcpus,
+>>> -                                 parent->effective_xcpus);
+>>> -            if (!cpumask_empty(tmp->addmask))
+>>> -                isolated_cpus_release(cs, tmp->addmask);
+>>> -            /* Expansion of parent's effective_xcpus is handled 
+>>> below */
+>>> -        }
+>>>           if (nocpu) {
+>>>               part_error = PERR_NOCPUS;
+>>>               if (is_partition_valid(cs))
+>>> @@ -2341,18 +2287,12 @@ static void update_cpumasks_hier(struct 
+>>> cpuset *cs, struct tmpmasks *tmp,
+>>>                   /*
+>>>                    * When parent is not a valid partition root,
+>>>                    * child partition roots become invalid too.
+>>> -                 *
+>>> -                 * For a to be invalidated isolated partition,
+>>> -                 * call return_isolated_cpus() to remove the
+>>> -                 * relevant CPUs from isolated_cpus.
+>>> +                 * The isolation state of their CPUs has been
+>>> +                 * settled when the parent gave them back.
+>>>                    */
+>>>                   if (is_partition_valid(cp))
+>>>                       new_prs = -old_prs;
+>>> -                if (old_prs == PRS_ISOLATED) {
+>>> -                    cpumask_copy(tmp->delmask, cp->effective_xcpus);
+>>> -                    isolated_cpus_release(cp, tmp->delmask);
+>>> -                }
+>>>                   WRITE_ONCE(cp->prs_err,
+>>>                          is_partition_invalid(parent)
+>>>                          ? PERR_INVPARENT : PERR_NOTPART);
+>>> @@ -3108,7 +3048,7 @@ static int update_prstate(struct cpuset *cs, 
+>>> int new_prs)
+>>>       if (!is_partition_valid(cs))
+>>>           reset_partition_data(cs);
+>>>       else if (isolcpus_updated)
+>>> -        isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
+>>> +        isolated_cpus_update(new_prs, cs->effective_xcpus);
+>>>       spin_unlock_irq(&callback_lock);
+>>>       /* Force update if partition is disabled & update 
+>>> effective_xcpus */
+>>
+>> The code change looks good to me. However this is not just a code 
+>> restructuring, it also includes a bug fix. I wonder if we should 
+>> clarify that and maybe add a Fixes tag.
+>>
+> Hi Longman,
+>
+> Thanks for the review. You are right, it also fixes the isolated CPU
+> leak reported by Guopeng [1]. When a root partition with an isolated
+> child partition is invalidated, partition_xcpus_del() gives the CPUs
+> back to the parent without updating isolated_cpus as both are root
+> partitions, so the CPUs of the isolated child are left in
+> isolated_cpus.
+>
+> I'd like to describe it in the commit message and add the following
+> tags in the next version:
+>
+> Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated 
+> partitions")
+> Reported-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> Closes: 
+> https://lore.kernel.org/all/20261105130344.664336-4-guopeng.zhang@linux.dev/
+>
+> Does that look OK to you?
+>
+> [1] 
+> https://lore.kernel.org/all/20261105130344.664336-4-guopeng.zhang@linux.dev/
+>
+Yes, that looks good to me.
 
-diff --git a/tools/testing/selftests/bpf/config b/tools/testing/selftests/bpf/config
-index 49dfe939467c..e56c8872e51a 100644
---- a/tools/testing/selftests/bpf/config
-+++ b/tools/testing/selftests/bpf/config
-@@ -7,6 +7,7 @@ CONFIG_BPF_JIT=y
- CONFIG_BPF_KPROBE_OVERRIDE=y
- CONFIG_BPF_LIRC_MODE2=y
- CONFIG_BPF_LSM=y
-+CONFIG_BPF_NUMAB=y
- CONFIG_BPF_STREAM_PARSER=y
- CONFIG_BPF_SYSCALL=y
- # CONFIG_BPF_UNPRIV_DEFAULT_OFF is not set
-@@ -78,6 +79,7 @@ CONFIG_NET_CLS_FLOWER=y
- CONFIG_NET_CLS_MATCHALL=y
- CONFIG_NET_FOU=y
- CONFIG_NET_FOU_IP_TUNNELS=y
-+CONFIG_NUMA_BALANCING=y
- CONFIG_NET_IPGRE=y
- CONFIG_NET_IPGRE_DEMUX=y
- CONFIG_NET_IPIP=y
-diff --git a/tools/testing/selftests/bpf/prog_tests/bpf_numab.c b/tools/testing/selftests/bpf/prog_tests/bpf_numab.c
-new file mode 100644
-index 000000000000..6fb6a4d9f291
---- /dev/null
-+++ b/tools/testing/selftests/bpf/prog_tests/bpf_numab.c
-@@ -0,0 +1,273 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+#include <test_progs.h>
-+#include "cgroup_helpers.h"
-+#include "bpf_numab.skel.h"
-+
-+#define CGROUP_PATH	"/bpf_numab"
-+#define CHILD_PATH	CGROUP_PATH "/child"
-+#define HIER_PATH	"/bpf_numab_hier"
-+#define HIER_CHILD_PATH	HIER_PATH "/child"
-+#define NOMEM_PATH	"/bpf_numab_nomem"
-+#define NOMEM_CHILD_PATH NOMEM_PATH "/child"
-+
-+/* The per-cgroup request domain, mirroring the kernel constants. */
-+#define NUMAB_FOLLOW_SYSTEM	(-1)
-+#define NUMAB_DISABLED		0
-+#define NUMAB_NORMAL		1
-+#define NUMAB_TIERING		2
-+#define NUMAB_NORMAL_TIERING	3
-+
-+static int numab_set(struct bpf_numab *skel, u64 cgid,
-+		     long mode)
-+{
-+	LIBBPF_OPTS(bpf_test_run_opts, opts);
-+	int ret;
-+
-+	skel->bss->set_cgid = cgid;
-+	skel->bss->set_mode = mode;
-+	ret = bpf_prog_test_run_opts(bpf_program__fd(skel->progs.numab_set),
-+				     &opts);
-+	if (!ASSERT_OK(ret, "set run"))
-+		return -1;
-+	return skel->bss->set_ret;
-+}
-+
-+static long numab_get(struct bpf_numab *skel, u64 cgid)
-+{
-+	LIBBPF_OPTS(bpf_test_run_opts, opts);
-+	int ret;
-+
-+	skel->bss->get_cgid = cgid;
-+	ret = bpf_prog_test_run_opts(bpf_program__fd(skel->progs.numab_get),
-+				     &opts);
-+	if (!ASSERT_OK(ret, "get run"))
-+		return -EIO;
-+	return skel->bss->get_mode;
-+}
-+
-+static void test_set_get(void)
-+{
-+	struct bpf_numab *skel;
-+	int cgroup_fd;
-+	u64 cgid;
-+
-+	cgroup_fd = test__join_cgroup(CGROUP_PATH);
-+	if (!ASSERT_GE(cgroup_fd, 0, "join_cgroup"))
-+		return;
-+
-+	skel = bpf_numab__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "open_and_load"))
-+		goto cleanup;
-+
-+	cgid = get_cgroup_id(CGROUP_PATH);
-+	if (!ASSERT_GT(cgid, 0, "get_cgroup_id"))
-+		goto cleanup;
-+
-+	ASSERT_EQ(numab_set(skel, cgid, NUMAB_NORMAL), 0, "set normal");
-+	ASSERT_EQ(numab_get(skel, cgid), NUMAB_NORMAL, "get normal");
-+
-+	ASSERT_EQ(numab_set(skel, cgid, NUMAB_TIERING), 0, "set tiering");
-+	ASSERT_EQ(numab_get(skel, cgid), NUMAB_TIERING, "get tiering");
-+
-+	ASSERT_EQ(numab_set(skel, cgid, NUMAB_NORMAL_TIERING), 0, "set both");
-+	ASSERT_EQ(numab_get(skel, cgid), NUMAB_NORMAL_TIERING, "get both");
-+
-+	ASSERT_EQ(numab_set(skel, cgid, NUMAB_DISABLED), 0, "set disabled");
-+	ASSERT_EQ(numab_get(skel, cgid), NUMAB_DISABLED, "get disabled");
-+
-+	/* Back to the system setting. */
-+	ASSERT_EQ(numab_set(skel, cgid, NUMAB_FOLLOW_SYSTEM), 0, "unset");
-+	ASSERT_EQ(numab_get(skel, cgid), NUMAB_FOLLOW_SYSTEM, "get unset");
-+
-+cleanup:
-+	bpf_numab__destroy(skel);
-+	close(cgroup_fd);
-+}
-+
-+static void test_invalid_mode(void)
-+{
-+	struct bpf_numab *skel;
-+	int cgroup_fd;
-+	u64 cgid;
-+
-+	cgroup_fd = test__join_cgroup(CGROUP_PATH);
-+	if (!ASSERT_GE(cgroup_fd, 0, "join_cgroup"))
-+		return;
-+
-+	skel = bpf_numab__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "open_and_load"))
-+		goto cleanup;
-+
-+	cgid = get_cgroup_id(CGROUP_PATH);
-+	if (!ASSERT_GT(cgid, 0, "get_cgroup_id"))
-+		goto cleanup;
-+
-+	ASSERT_EQ(numab_set(skel, cgid, -2), -EINVAL, "set below domain");
-+	ASSERT_EQ(numab_set(skel, cgid, 4), -EINVAL, "set above domain");
-+	ASSERT_EQ(numab_set(skel, cgid, 0x1000), -EINVAL, "set far above");
-+
-+	/* The rejected requests must not have stuck. */
-+	ASSERT_EQ(numab_get(skel, cgid), NUMAB_FOLLOW_SYSTEM, "get unchanged");
-+
-+cleanup:
-+	bpf_numab__destroy(skel);
-+	close(cgroup_fd);
-+}
-+
-+static void test_bad_cgid(void)
-+{
-+	struct bpf_numab *skel;
-+
-+	skel = bpf_numab__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "open_and_load"))
-+		return;
-+
-+	ASSERT_EQ(numab_set(skel, 0, NUMAB_NORMAL), -ENOENT, "set cgid 0");
-+	ASSERT_EQ(numab_get(skel, 0), -ENOENT, "get cgid 0");
-+	ASSERT_EQ(numab_set(skel, 0xdeadbeef, NUMAB_NORMAL), -ENOENT,
-+		  "set bad cgid");
-+	ASSERT_EQ(numab_get(skel, 0xdeadbeef), -ENOENT, "get bad cgid");
-+
-+	bpf_numab__destroy(skel);
-+}
-+
-+static void test_hierarchy(void)
-+{
-+	u64 parent_cgid, child_cgid;
-+	int runner_fd, parent_fd, child_fd;
-+	struct bpf_numab *skel;
-+
-+	runner_fd = test__join_cgroup("/bpf_numab_runner");
-+	if (!ASSERT_GE(runner_fd, 0, "join_runner_cgroup"))
-+		return;
-+
-+	parent_fd = create_and_get_cgroup(HIER_PATH);
-+	if (!ASSERT_GE(parent_fd, 0, "create_parent_cgroup"))
-+		goto cleanup_runner;
-+
-+	if (!ASSERT_OK(enable_controllers(HIER_PATH, "memory"),
-+		       "enable_memory_controller"))
-+		goto cleanup_parent;
-+
-+	child_fd = create_and_get_cgroup(HIER_CHILD_PATH);
-+	if (!ASSERT_GE(child_fd, 0, "create_child_cgroup"))
-+		goto cleanup_parent;
-+
-+	skel = bpf_numab__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "open_and_load"))
-+		goto cleanup;
-+
-+	parent_cgid = get_cgroup_id(HIER_PATH);
-+	child_cgid = get_cgroup_id(HIER_CHILD_PATH);
-+	if (!ASSERT_GT(parent_cgid, 0, "get_parent_cgid") ||
-+	    !ASSERT_GT(child_cgid, 0, "get_child_cgid"))
-+		goto cleanup;
-+
-+	/* The child inherits an ancestor's request untouched. */
-+	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_TIERING), 0,
-+		  "set parent tiering");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_TIERING,
-+		  "child inherits");
-+
-+	/* A request ORs with the ancestor's; NORMAL does not undo TIERING. */
-+	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_NORMAL), 0,
-+		  "set child normal");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_NORMAL_TIERING,
-+		  "or both");
-+
-+	/* The child's own opt-out wins. */
-+	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_DISABLED), 0,
-+		  "set child disabled");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_DISABLED,
-+		  "own opt-out wins");
-+
-+	/* So does an ancestor's: a task is never forced into balancing. */
-+	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_TIERING), 0,
-+		  "set child tiering");
-+	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_DISABLED), 0,
-+		  "set parent disabled");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_DISABLED,
-+		  "ancestor opt-out wins");
-+
-+	/* Unsetting the parent re-exposes the child's own request. */
-+	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_FOLLOW_SYSTEM), 0,
-+		  "unset parent");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_TIERING,
-+		  "child request again");
-+
-+	/* Unsetting the child leaves the chain with no request. */
-+	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_FOLLOW_SYSTEM), 0,
-+		  "unset child");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_FOLLOW_SYSTEM,
-+		  "no request");
-+
-+cleanup:
-+	bpf_numab__destroy(skel);
-+	close(child_fd);
-+	remove_cgroup(HIER_CHILD_PATH);
-+cleanup_parent:
-+	close(parent_fd);
-+	remove_cgroup(HIER_PATH);
-+cleanup_runner:
-+	close(runner_fd);
-+}
-+
-+static void test_no_memcg(void)
-+{
-+	struct bpf_numab *skel;
-+	int parent_fd, child_fd;
-+	u64 parent_cgid, child_cgid;
-+
-+	parent_fd = test__join_cgroup(NOMEM_PATH);
-+	if (!ASSERT_GE(parent_fd, 0, "join_nomem_parent"))
-+		return;
-+
-+	child_fd = create_and_get_cgroup(NOMEM_CHILD_PATH);
-+	if (!ASSERT_GE(child_fd, 0, "create_nomem_child"))
-+		goto cleanup_parent;
-+
-+	skel = bpf_numab__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "open_and_load"))
-+		goto cleanup;
-+
-+	parent_cgid = get_cgroup_id(NOMEM_PATH);
-+	child_cgid = get_cgroup_id(NOMEM_CHILD_PATH);
-+	if (!ASSERT_GT(parent_cgid, 0, "get_nomem_parent_cgid") ||
-+	    !ASSERT_GT(child_cgid, 0, "get_nomem_child_cgid"))
-+		goto cleanup;
-+
-+	/*
-+	 * The parent has a memcg; the child was created without enabling
-+	 * the memory controller in the parent's subtree, so it has none.
-+	 */
-+	ASSERT_EQ(numab_set(skel, parent_cgid, NUMAB_NORMAL), 0,
-+		  "set parent normal");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_NORMAL,
-+		  "child resolves to parent memcg");
-+	ASSERT_EQ(numab_set(skel, child_cgid, NUMAB_TIERING), -EOPNOTSUPP,
-+		  "child set rejected");
-+	ASSERT_EQ(numab_get(skel, child_cgid), NUMAB_NORMAL,
-+		  "child get unchanged");
-+
-+cleanup:
-+	bpf_numab__destroy(skel);
-+	close(child_fd);
-+	remove_cgroup(NOMEM_CHILD_PATH);
-+cleanup_parent:
-+	close(parent_fd);
-+}
-+
-+void test_bpf_numab(void)
-+{
-+	if (test__start_subtest("set_get"))
-+		test_set_get();
-+	if (test__start_subtest("invalid_mode"))
-+		test_invalid_mode();
-+	if (test__start_subtest("bad_cgid"))
-+		test_bad_cgid();
-+	if (test__start_subtest("hierarchy"))
-+		test_hierarchy();
-+	if (test__start_subtest("no_memcg"))
-+		test_no_memcg();
-+}
-diff --git a/tools/testing/selftests/bpf/progs/bpf_numab.c b/tools/testing/selftests/bpf/progs/bpf_numab.c
-new file mode 100644
-index 000000000000..25da97bce82f
---- /dev/null
-+++ b/tools/testing/selftests/bpf/progs/bpf_numab.c
-@@ -0,0 +1,32 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+#include <vmlinux.h>
-+#include <bpf/bpf_helpers.h>
-+
-+/* Inputs, set from userspace before each run. */
-+u64 set_cgid;
-+long set_mode;
-+u64 get_cgid;
-+
-+/* Results, read back after each run. */
-+long set_ret;
-+long get_mode;
-+
-+extern int bpf_numab_set_mode(u64 cgid, enum numab_mode mode) __ksym;
-+extern s64 bpf_numab_get_mode(u64 cgid) __ksym;
-+
-+SEC("syscall")
-+int numab_set(void *ctx)
-+{
-+	set_ret = bpf_numab_set_mode(set_cgid, (enum numab_mode)set_mode);
-+	return 0;
-+}
-+
-+SEC("syscall")
-+int numab_get(void *ctx)
-+{
-+	get_mode = bpf_numab_get_mode(get_cgid);
-+	return 0;
-+}
-+
-+char _license[] SEC("license") = "GPL";
--- 
-2.52.0
+Thanks,
+Longman
 
