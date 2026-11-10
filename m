@@ -1,106 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794275640;
-	b=wbNCP4FpU0elz3ad8+U84kiefgYYQP92KyX+ka+lGowRVYIoT9hExuhyt06uGD+uKhlz
-	 SuOCns0flIP1UTc1YYUnpVzUJKqEnkjgXW3M+fk9DGCTPQGMCelQB8syo4878gwALK27u
-	 y6w7VHn4x2I3gIwBXkIulKZHW5aOh9gB7ouie/OM+VORmK9jzvMcdirXckqX4r2GeLQdV
-	 6aazE2aqsoyBzHqNQrq53qVWbC2j9Gxlfa31/YLrnicBRch7tmfTqitSnmcVZBUnhYzSV
-	 bSzX5lFnX/LFWuFWKmuW19pkuSY+ZH3nG2bqFGDcaTz2z1E0UaC+TdiNRt/RDhZ2Ozg==
+	t=1794277424;
+	b=YK3EyxIl6gov5wkaXI1DXfkyK582c/T72aL5YOw3sexT7Ry+jiOgRmJmv0yFtbuXd+CM
+	 9dcvlbM8Wuh1v5CvYifIzQgfOUfz0BlaoJ1WHu6Sdhgf12d0pIoFYnoBoPpOKYPnK30ja
+	 pjOjR40Qe8MHHGTsmpaXZDxwt6QDf/8todioEjCHvDlrisGklPKEkPtP3U1OLC0cItxuO
+	 VpOReR6/hT5YhqoXWevs09IW+ZtItejz7ajljF71/TsuZTCoIHl4juhTpMKty10CBGdQe
+	 oZBKyPmYySJABdcmO1/EQzpWmyfL+sCR9m4dpG1F/ibpfJ9oS1XJT3O5VqJHUtPSk0w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794275640;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=BHlakyrx19DFI00OyTV3/5itJ6vPo7FNJRTP0VUFhsQ=;
-	b=nIL+kLUwSo83MeASetrNI87vuRZ76AWhJdDhBOSduoJuj2rawRScI8sXxTNbg9MDbkFG
-	 zKhWnMW/cd3kyRppZts0a2jUkbZSONAB0XKCXUu5HolLcdRXhB7qqveDOpNM3opSsuCOv
-	 VGg2jEI6ZwdvL0Xkkey7sAK1XTBTv5chTCfiRC5bROeoG26+4N+nRZjYNwyQlCMGRpWOb
-	 DiPfaVHAs1lz9GrL+3AaBeHZSIRj9cybIgGU1Vvuh4nK71sKgDnuXBaT23nZJ9q2YPOiU
-	 hpbgwvEvaCo0Pc6vKw3llCi9RfR1ePvrOfv2OQfzyBijCXUsqtx7S8QWlJtIXmNtYmA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794277424;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
+	bh=DEGqL3suX9ldocZQ29zAd0b1mBO1aL2nD99fH9fUKlo=;
+	b=2PG5Z020WpBkjppXM0eRweFH+4K0Ao2IjH1Z53XE9k5RuxBh8ZZR+ipbRlvtm5NCCpN9
+	 h2KQTzI73Y2O0Vh9Xu/L0D6LT2PnKoJyh0xASPaJnAXy7aOm/Fztx1iF3AG27dX1ACNf0
+	 BsiSWtqkdPNHtj68fQfO5W/JUPJjZywtE/kHj4OPNGQZlpUA96Gzoo24lqrxB/ehvYdmY
+	 NZ87pg0lrufDZpidMlsZkYhCo8DOkOB/0r8/nwDQhtTtdkoyhOKEdzh22OWCSJzYxsi24
+	 SQWOElPPV+M5Wsc+YFDxTO6mEuW9UTsS3jFFhOEfqh9+uTqYNxQBrcVcu0rABIvZEkA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XRFO+Qln;
-	arc=none smtp.remote-ip=209.85.216.54
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=A9kMMjJu;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2F42606A325
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 01:53:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D2F42606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0139606A31C
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 02:23:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0139606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=XRFO+Qln
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3b12cb3c37bso777172a91.2
-        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 17:53:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794275639; x=1794880439; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=BHlakyrx19DFI00OyTV3/5itJ6vPo7FNJRTP0VUFhsQ=;
-        b=XRFO+QlnUqXHx9l01cCZXiAfGrvO9X/kE3tLXT13QI1/Qvw3orxZEUOIOSd21N757e
-         kQjB4zcMy0Tah2sskZBUpYJgoAOrTmCsGVZdr6KsErCpzyANtybRU3hKLBXS8F9+qMwO
-         Qi3lwhvt2+qFxK4P/BRz/3L88KxyluC6evvXOTa9lG06esb7HFntu+ys6ui2O1gKoPbY
-         vCviFhuPDytT1V+M9CPcsyOCwZYyGbQWE0rhhmsdAI9ebsAfe7o2RGXJkiJcuruTnior
-         eXWpcw6/1MjN/1oWsAdwPgWluT1y6rBYtEsKTwzrePniOfQR5fYjTEJhMvjBgLE7Bk9u
-         N2zQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794275639; x=1794880439;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=BHlakyrx19DFI00OyTV3/5itJ6vPo7FNJRTP0VUFhsQ=;
-        b=d590wyy3f7M2K1eooitgB/Rj5QP6XiDkDLQ/8dnDhrAJmBmWr9zvYyzIY7arCTUH1b
-         8YFjtI7W3mvf3BwIchhRtcHTjaZfVRDBFsUXXv4Jdw4o5TRe6hJ+Qxl6ks784a4fwsnb
-         am7VGXyJtn30wpEr9rBwjCWqbg0VrOfD1eL61gnTrtTduE38Q5m5KcyA/2/1bV+1i4BJ
-         O21r4kRVHx4oPjvgUt3RHaESdxyU4xjR36La3X5A1af280JNClnjgp0KCZFyp9NQ5TUs
-         qv6izaC214Mn8u0vH40XWSCWCnQpI7rnBVgM9wCLdxvRgNJjKEbZKiWBr8rfmxHUZ4Vv
-         n9JA==
-X-Forwarded-Encrypted: i=1; AL+hErEsaP3jDbUX3bhHoGslHivZZ8dDETgOHMvrb7WGo/XSM+ZLqXoyL5NZKEwSezjFHcAuxARVJJKm@vger.kernel.org
-X-Gm-Message-State: APuU4Z/DAuuoFAOiBNnV+gD/BH+uvRnShG/BM2tduKpnSPMK7afXkNMI
-	XINcwf05AUzbUrBteDPV8LZb86pPx+HP9tSAIfuGsPiuPS61JHqWqeoN
-X-Gm-Gg: AYBFou1EGPTdFCvSQbi4eBpupAOMqDZoJi7Y/N13OwS9CWtfKwhui/FbHOydG9RmHLI
-	HFHtm1BAEiSNMYwByLPgM+lt4Ow+9YkGfJ5np+XUtO96/bCwIipUe0pKxz8YZFyVclgPIQ0mbWc
-	oyGT0rl5D/zuvX1M+cz3wCxeHuMIWnUD8dOXUJSIqDvmj2RoAWBghISqIcsZYFWPDfHcUF4HW6t
-	jmo59nzyMDFLdkdY02aXpLQHPH5mlT9rNLZkr/a01jF5lOLw1Is6Bq0OW1P3WNfw32hRsRTjolZ
-	1+bS1E5w2NBAZgykNrB9BGo1vdkBNVYMhpDl//NJIDkMTQqgtmtM+8W4dYsO4v0xID+hBi9Mq/i
-	spX1on7phIsThnTTyrFvyF8RZxqtJGjlETKrxE3KJNEgUJDYNIKeVFNtoWunw/dEeDaHFecrsEA
-	JsfXS0SOHJNuDjm9O4t8CjWp0NmpRX9QtZNBFYnF2ZmrlVuiQOR2nHVuVFWB+vbAu6ar8sahTvo
-	CLDTSk0zO+gL99GANPYhyo6iJpSKv1QMFNQNZtQxxFfAW1woPSE0IMAyw3rXc4N89VJy6lQu7Wc
-	HgWNv5z/p67G1pNRTuOmS43GRZaRZNORy1EpNwA8CgyHdWhagnoWoljWC4E3xDLm+KM0O2a3p1V
-	VrCFoZOIwPR3YT85fQ57DlVtYpW4=
-X-Received: by 2002:a17:90b:2d8a:b0:3ac:ea3b:f28b with SMTP id 98e67ed59e1d1-3b166ceb599mr1275045a91.24.1794275639153;
-        Mon, 09 Nov 2026 17:53:59 -0800 (PST)
-Received: from localhost ([2a03:2880:ff:45::])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b1690f4733sm552422a91.3.2026.11.09.17.53.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Nov 2026 17:53:58 -0800 (PST)
-From: Joanne Koong <joannelkoong@gmail.com>
-To: akpm@linux-foundation.org
-Cc: yosry@kernel.org,
-	shakeel.butt@linux.dev,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	nphamcs@gmail.com,
-	chengming.zhou@linux.dev,
-	sj@kernel.org,
-	david@kernel.org,
-	ljs@kernel.org,
-	linux-mm@kvack.org,
-	cgroups@vger.kernel.org,
-	damon@lists.linux.dev
-Subject: [PATCH v2 4/4] mm/damon/core: use node counters instead of flushing the root memcg
-Date: Mon,  9 Nov 2026 17:53:21 -0800
-Message-ID: <20261110015321.611093-5-joannelkoong@gmail.com>
-X-Mailer: git-send-email 2.52.0
-In-Reply-To: <20261110015321.611093-1-joannelkoong@gmail.com>
-References: <20261110015321.611093-1-joannelkoong@gmail.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=A9kMMjJu
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794277422;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DEGqL3suX9ldocZQ29zAd0b1mBO1aL2nD99fH9fUKlo=;
+	b=A9kMMjJuNoLQ517FPgJXLh9+zbP57XrYopx2A9sUN4L1gkhLCKRtJ1gutW9LF4p+w3fhwj
+	QEHhVAEc38fxQnDmoJAq1wZmjS3Y6xtiM6Cc/3RfRaO1mjciWkf3Pk1wCV2ffSP2NHow5n
+	Mx18YnymXC2TxZAN+EowHiXVzgYMwW0=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-675-N34bE_7FOdCtzLIhwB2lOw-1; Mon,
+ 09 Nov 2026 21:23:38 -0500
+X-MC-Unique: N34bE_7FOdCtzLIhwB2lOw-1
+X-Mimecast-MFC-AGG-ID: N34bE_7FOdCtzLIhwB2lOw_1794277417
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 750C7180047B;
+	Tue, 10 Nov 2026 02:23:36 +0000 (UTC)
+Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 974E0180029D;
+	Tue, 10 Nov 2026 02:23:34 +0000 (UTC)
+Message-ID: <06a435e7-6bfd-442e-a541-84813b993600@redhat.com>
+Date: Mon, 9 Nov 2026 21:23:33 -0500
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -110,40 +71,118 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH-next v2 5/5] cgroup/cpuset: Correctly set isolated_cpus
+ when switching partition state
+To: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>
+References: <20261109190955.1398611-1-longman@redhat.com>
+ <20261109190955.1398611-6-longman@redhat.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20261109190955.1398611-6-longman@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-damos_get_node_memcg_used_bp() flushes the memcg stats before reading
-the LRU sizes of the goal's memcg on the goal's node. For the root
-memcg, that flushes every cgroup in the system. The flush is not
-ratelimited, which means it happens every time the goal is evaluated.
+On 11/9/26 2:09 PM, Waiman Long wrote:
+> When update_prstate() is called to switch the partition state from
+> root to isolated or vice versa, the whole effective_xcpus is passed to
+> isolated_cpus_update(). However, if there are child partitions present,
+> some of the effective_xcpus are dedicated to those child partitions
+> and their partition states will remain the same or get invalidated in
+> the case of child root partition with isolated parent in the latter
+> update_cpumasks_heir() call. In the latter case, their exclusive CPUs
+> will be returned to their parent.
+>
+> Therefore isolated_cpus may be set incorrectly with child partitions
+> underneath. Fix that by excluding their exclusive CPUs in computing
+> the correct cpumask of exclusive CPUs used by that partition alone.
+>
+> Add new test cases into test_cpuset_prs.sh to test for such cases.
+>
+> Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>   kernel/cgroup/cpuset.c                        | 30 +++++++++++++++----
+>   .../selftests/cgroup/test_cpuset_prs.sh       |  7 +++++
+>   2 files changed, 32 insertions(+), 5 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 7aa614c6ac4d..41048997a955 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3054,12 +3054,32 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>   						  cs->effective_xcpus, NULL))
+>   			err = PERR_HKEEPING;
+>   		else if (parent_prs == PRS_ISOLATED)
+> -			err = PERR_ISOPARENT;
+> +			err = PERR_ISOPARENT;	/* old_prs should be isolated */
+>   
+> -		if (!err)
+> -			isolcpus_updated = true;
+> -		else
+> +		if (err) {
+>   			disable_partition = true;
+> +		} else {
+> +			struct cgroup_subsys_state *css;
+> +			struct cpuset *child;
+> +
+> +			/*
+> +			 * Need to scan child partitions, if present, and
+> +			 * exclude their effective_xcpus from cs. In the case
+> +			 * of switching to isolated partition with child root
+> +			 * partitions, those child partitions will be
+> +			 * invalidated in update_cpumasks_hier().
+> +			 */
+> +			isolcpus_updated = true;
+> +			cpumask_copy(tmpmask.new_cpus, cs->effective_xcpus);
+> +			rcu_read_lock();
+> +			cpuset_for_each_child(child, css, cs) {
+> +				if (!is_partition_valid(child))
+> +					continue;
+> +				cpumask_andnot(tmpmask.new_cpus, tmpmask.new_cpus,
+> +					       child->effective_xcpus);
+> +			}
+> +			rcu_read_unlock();
+> +		}
+>   	} else {
+>   		/*
+>   		 * Switching back to member is always allowed even if it
+> @@ -3093,7 +3113,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>   	if (!is_partition_valid(cs))
+>   		reset_partition_data(cs);
+>   	else if (isolcpus_updated)
+> -		isolated_cpus_update(old_prs, new_prs, cs->effective_xcpus);
+> +		isolated_cpus_update(old_prs, new_prs, tmpmask.new_cpus);
+>   	spin_unlock_irq(&callback_lock);
+>   
+>   	/* Force update if partition is disabled & update effective_xcpus */
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index 2d4744f2d6ac..741a13bbeda7 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -556,6 +556,13 @@ TEST_MATRIX=(
+>   	" C2-6:X2-5:P1 CX3-6:P2 \
+>   	                    .      .   T:X4-6    .      .      .     0 A1:4-6|A2:4-6 A1:P1|A2:P-2 ."
+>   
+> +	# Switch PRS state (root <=> isolated) will properly update cpuset.cpus.isolated
+> +	# even if child partitions are present.
+> +	" C1-6:P1 C3-6:P1 C5-6:P2  .       .    P2      .      .     0 A1:1-2:A2:3-4:A3:5-6
+> +								       A1:P1|A2:P2:A3:P2 3-6"
+> +	" C1-6:P1 C3-6:P2 C5-6:P2  .       .    P1      .      .     0 A1:1-2:A2:3-4:A3:5-6
+> +								       A1:P1|A2:P1:A3:P2 5-6"
+> +
+>   	#
+>   	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
+>   	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
 
-lruvec_page_state() now reads the LRU sizes of the root memcg from the
-node counters, which are always up to date, so skip the flush for the
-root memcg.
+Sorry, I thought I had fixed the test case bug. Apparently I haven't 
+completely fixed it. I will send a v2.1 with the correct test cases.
 
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
----
- mm/damon/core.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/mm/damon/core.c b/mm/damon/core.c
-index 0a056949604f..14f2a36c1025 100644
---- a/mm/damon/core.c
-+++ b/mm/damon/core.c
-@@ -3057,7 +3057,12 @@ static unsigned long damos_get_node_memcg_used_bp(
- 			return 10000;
- 	}
- 
--	mem_cgroup_flush_stats(memcg);
-+	/*
-+	 * The root memcg's LRU sizes are read directly from the node counters
-+	 * (see lruvec_page_state()).
-+	 */
-+	if (!mem_cgroup_is_root(memcg))
-+		mem_cgroup_flush_stats(memcg);
- 	lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(goal->nid));
- 	used_pages = lruvec_page_state(lruvec, NR_ACTIVE_ANON);
- 	used_pages += lruvec_page_state(lruvec, NR_INACTIVE_ANON);
--- 
-2.52.0
+Thanks,
+Longman
 
