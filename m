@@ -1,63 +1,74 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.200
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794270209;
-	b=VgfFXm39l/QkDiEzLjEFe/tE/jPZaM3HvbiAPds+R45u5zO3bglPonaBJG+f8bii2myu
-	 rT610KRPoLixyLKs3+7v3KcFwh9PINJpzX236Q4OeRjiBtIXUuCXSC2hR6z4HdXM9VxXT
-	 cnV9AJ1uMNWSQMSSH6bjwLa1+LThl2J3GXzlIld2htAuT7jKEI/+lUuOS4bUNVgtyMuJ3
-	 Fk3TDFfXVUWpFzB97utwwPDwJC3MZYcGVSpCCaNp/9DZoJLrploBVQBzaNslIw38m9kK/
-	 CwY4gfkezeTfrOlC8AlF95LQh+DOUz9DnvD+3/TQ5Fs1ewMmSvCXbn8o3d0EbN9k14w==
+	t=1794271849;
+	b=zyV4jRoiEssboJzkQDhnOsvqYmC9/TdkM9TFwCzYNCvcXKFEJMA8Mw7q37P547wc7+1c
+	 /dXRCVip/5OZHL/H9R9IGt/mL/F1S+SKApVD6zme68KDw2ScoH3WwwqILZzGe1FZcn6zp
+	 8vrYyCgLq2xVYwRaxmEq+Hxh1WYAPO9atRrv2lHg2KgRXiukH7pyXQlDr6ajdUm5ThbG+
+	 2Sn5iEUayq87temwqbzYvpEL3xC8zKYEim6Iyz7hEG6AOeEEtxzxYwVp4/k/1LCUZxRP/
+	 IcJRBJ4XZu9Coscnkf9tPY1cpzmZp3oECmcLcUsDD3ooqKzA11F/9hpJxHD7VD887mA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794270209;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
-	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=Or/iwEJV3s6/OZb+G94Yla/RPMj3Q8ZsEYH3A6tdUpY=;
-	b=360wO0qfLBRvc0rhScF3/xroMU2EyhqYfFOqqzvpW9BIZRBqDw/Ygbxjl5T/hK0EAzEN
-	 X9QnA3ms9UR/hk45n67924Hs8UAcubEcOZkln04xUTQ8ZhAN2ssRLjd+zrscNdBWzGCZ1
-	 ML9FAWS+jaC2+EkCAg47JAQp8wr9aR4XVcg9m0Kc3kqu07F5PDznEeuIsO2TbcBBDJ1TN
-	 V0EFsA9MQhFFMzKrv0rIRdCB2L5l7VaUqOsFdWop2/8Aea/djWGNDEYbyNh4w/WdFVWYy
-	 vFmz17IR9WN8w+wvcRBlx87uppLrLlbiDeqqMxcJHP+cyFGOoSvSnRcWxCNnNwPLYgQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794271849;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
+	 Mime-Version:References:Message-ID:Subject:From:To:Cc:Content-Type;
+	bh=9aUmjjXy2UpFvwIaZx+Kc6emVkBoaRCWFUjyBYUuXe4=;
+	b=ZMxqHZG6tp4NCyVBpwQam8D2sue4JxlO+JMhPj/HabL4jzw8DAvdI7dRLwI6BTMVF2n6
+	 mXo63rvggUaGlwIrcy/6mWz2dAVtF3MbLsEK8TgOjOnjCYuHY+yTyoOEaDUqwFvXHSdWw
+	 18zf7hXb9Q5Gf9n9yN42qz612pGxPeXLlPK5SBtNHm/So+9eshqpsLJ1tFwXLC0Eigd3h
+	 nPr/75Jm5+I2qnr2iJwg3M/qV+V8ANGoOlLrUqsZnGyXGpA8WlmuuC5zJrTRg0HnvRgOf
+	 d/9vig7O35gMvnfOSAQA2eIZhxu7xjmwyC4QAYEqUID/2g00E0TepnFYWjbbnyAEX6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=gINnAD2O;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=google.com;
+	spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com;
+	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Rxqy6ixe;
+	arc=none smtp.remote-ip=209.85.215.200
+Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com [209.85.215.200])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF63B606A321;
-	Tue, 10 Nov 2026 00:23:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C58606A32A
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 00:50:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01C58606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=gINnAD2O
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AFEF1F008A2;
-	Tue, 10 Nov 2026 00:23:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=Rxqy6ixe
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-cd5fd34fee0so863352a12.3
+        for <cgroups@vger.kernel.org>; Mon, 09 Nov 2026 16:50:48 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=korg; t=1794270208;
-	bh=Or/iwEJV3s6/OZb+G94Yla/RPMj3Q8ZsEYH3A6tdUpY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=gINnAD2O6rE5FAzCv2/fDxSlenMynl3hkBpwj6TR7CLiVWp0H7UZwY8fxSgt7o+j6
-	 NsuZro4PlPsnIG7yIZu7YGjdNXd8v9jI7dVMBfQMkEkycWL7Ky72sR8RpznLOLG5PY
-	 eeZTWRwZcOu7MeeO/st4JcoP4f34QlO1yPrnKGZE=
-Date: Mon, 9 Nov 2026 16:23:27 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Kaitao Cheng <kaitao.cheng@linux.dev>
-Cc: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
- David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
- <shakeel.butt@linux.dev>, Mani Tofigh <mt4022@columbia.edu>, Zi Yan
- <ziy@nvidia.com>, Mike Kravetz <mike.kravetz@oracle.com>, Baolin Wang
- <baolin.wang@linux.alibaba.com>, Miaohe Lin <linmiaohe@huawei.com>, Naoya
- Horiguchi <nao.horiguchi@gmail.com>, Frank van der Linden
- <fvdl@google.com>, Chris Down <chris@chrisdown.name>, Joshua Hahn
- <joshua.hahnjy@gmail.com>, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Kaitao Cheng
- <chengkaitao@kylinos.cn>
-Subject: Re: [PATCH v3 0/4] Subject: [PATCH v3 0/4] mm/hugetlb: Fix CMA
- parsing, flags and usage accounting
-Message-Id: <20261109162327.f1477705ec4374b5a243068d@linux-foundation.org>
-In-Reply-To: <20261106100521.30099-1-kaitao.cheng@linux.dev>
-References: <20261106100521.30099-1-kaitao.cheng@linux.dev>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        d=google.com; s=20260707; t=1794271848; x=1794876648; darn=vger.kernel.org;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9aUmjjXy2UpFvwIaZx+Kc6emVkBoaRCWFUjyBYUuXe4=;
+        b=Rxqy6ixetikDYH4GXTU6DVlNgIzULph56hr/ylPgKBEq0LAlCxBeqtn3zqJLm8xcn9
+         /8L8gEpu0FFua1AhJKLHLRbGekFetzUJMpAhLvBkyd6Io4I8yVRJ1QPbOdpOumJxKtNh
+         oMHHHRmbLW+xy9nfrbL3O/Y/GIENxUCBo+qprlcK5nHvk8Mf74MAkBQAagwOLqXMK0gK
+         01XQLwADmqO9ZRtOrPv4jag12vYH76y4TtBVV6TFN0ri4rMmBiFegEp+AZT1vNUQOljj
+         UCk05FbvXMpWSKjhnKf5Yt/0k1VwOGa3C7NyCBNMU6nsHzQkxBdxpMV8/sXi1UpwGU7s
+         PIyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794271848; x=1794876648;
+        h=content-type:cc:to:from:subject:message-id:references:mime-version
+         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=9aUmjjXy2UpFvwIaZx+Kc6emVkBoaRCWFUjyBYUuXe4=;
+        b=RpcD0F48MEsj8TCGz+w6Vs/lDrWeIE2LKs3lk1xPCn509mvbwfZWAPSvYIUS8LVytW
+         EhC0nbz4IGMh9IFTT5U3SJw0110cvE98a5Xk49E8LamKbzt6EH6q4ugJNRUsvN9ssVfn
+         9u2AWjsC9623u5Ur8z0mhJ3RkDLLY0TUooTeDzsnxYdHwGxvNoB/DFeRFN0VNFCcAKNQ
+         jQ8esbq33KOQ3Vjc3UxF+Y8XVETjft5mPxQKwFI0DV19IlEo1oaV208uIUbxYxDekxQg
+         BjzHIy0ILPugymHgOpL0H1eorcFvDsyVFiXDocHdUZ9v1KmNzDtKTkI1nMoTIb+sFKkZ
+         3IMw==
+X-Forwarded-Encrypted: i=1; AL+hErGTCUoDI/DzdsFt2NMCHjqFALP7cK+qmkgWoAelJzXwJCzBF/IrK/sCB+m68fo/LEIc9dySGFLY@vger.kernel.org
+X-Gm-Message-State: APuU4Z/pqNgqcoR22xE3Qaqea6+n31cMNoP8DI/tZ/+Z2a/Z2aSejWF7
+	4C5CJDLBIWK+ne9dOw06VsZXCWk6twGB9mK8NRHZb6BT6StQpuhvS2mbmxwSh7sKudMJXqIbCrs
+	7nSqpKw==
+X-Received: from pjdq9.prod.google.com ([2002:a17:90a:2e09:b0:3ad:32d0:ca0a])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:4a48:b0:3ae:898e:a123
+ with SMTP id 98e67ed59e1d1-3b166cd70c0mr1265220a91.14.1794271848067; Mon, 09
+ Nov 2026 16:50:48 -0800 (PST)
+Date: Mon, 9 Nov 2026 16:50:47 -0800
+In-Reply-To: <CA+EHjTzaJx2nV_9YEExgYn7STSP1Kvhsqan8va8M7ba4WtCiqQ@mail.gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -67,42 +78,25 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20260922071945.693714-1-fuad.tabba@linux.dev> <20261007074037.316564-1-fuad.tabba@linux.dev>
+ <CA+EHjTzaJx2nV_9YEExgYn7STSP1Kvhsqan8va8M7ba4WtCiqQ@mail.gmail.com>
+Message-ID: <avJqZzKX1ZVAMGr-@seanjc-mac.roam.internal>
+Subject: Re: [PATCH v2 0/2] KVM: selftests: Fix incremental build dependencies
+From: Sean Christopherson <seanjc@google.com>
+To: Fuad Tabba <tabba@google.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Shuah Khan <shuah@kernel.org>, 
+	Oliver Upton <oupton@kernel.org>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	"Michal =?utf-8?Q?Koutn=C3=BD?=" <mkoutny@suse.com>, James Houghton <jthoughton@google.com>, Will Deacon <will@kernel.org>, 
+	kvm@vger.kernel.org, kvmarm@lists.linux.dev, cgroups@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 
-On Fri,  6 Nov 2026 18:05:17 +0800 Kaitao Cheng <kaitao.cheng@linux.dev> wrote:
-
-> From: Kaitao Cheng <chengkaitao@kylinos.cn>
+On Mon, Nov 09, 2026, Fuad Tabba wrote:
+> Hi Sean, Paolo,
 > 
-> This series fixes three independent HugeTLB issues reported by Sashiko
-> and includes a follow-up cleanup of NR_HUGETLB accounting.
+> Another gentle ping on this series. Is there anything else you'd like
+> to see before it goes in?
 
-Thanks, I've updated mm.git's mm-unstable branch to this version.
-
-> Changes in v3:
-> - Retain patch 3/3 from v1.
-> - Fix code alignment.
-> 
-
-Here's how v3 altered mm.git:
-
- mm/hugetlb.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
---- a/mm/hugetlb.c~b
-+++ a/mm/hugetlb.c
-@@ -1450,9 +1450,9 @@ void add_hugetlb_folio(struct hstate *h,
- 
- 	/* Callers must clear transient flags before returning to the pool. */
- 	VM_WARN_ON_ONCE_FOLIO((unsigned long)folio->private &
--			     ~(BIT(HPG_vmemmap_optimized) |
--			       BIT(HPG_raw_hwp_unreliable) |
--			       BIT(HPG_cma)), folio);
-+			      ~(BIT(HPG_vmemmap_optimized) |
-+				BIT(HPG_raw_hwp_unreliable) |
-+				BIT(HPG_cma)), folio);
- 
- 	INIT_LIST_HEAD(&folio->lru);
- 	h->nr_huge_pages++;
-_
-
+I'll grab the KVM change, but I would prefer the cgroup change go through the
+cgroup tree, even though Michal already acked it. AFAICT there are no dependencies,
+and it really has nothing to do with KVM.
