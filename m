@@ -1,75 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794292265;
-	b=ASLbgOCO9poYGAG0M9NgIbNvZzAj7krEos/uKrbZ7cAq2GNdE1+SHEwF7gra65VgnaM/
-	 J1J2bx1jGYSr6wpa90XzZtaZpNyKAqvxoflnalBFMkkGlHjj8cLlPy30bI58WBPALmeJ2
-	 vZt35XkYff4MwQAI0ZpnratpuQ1P5QQKsXrsD3u2WqLxyHa6iCldXErr9kGHqWcLR9k8s
-	 ARFTdDKyuAvEllVyytCvrWT8hulKTNGP/wDEMmjsV8dLS+dzlfKs/QnTjA8L1zEJEnqxJ
-	 oNzh/QAdfAxtfueQ9+OX2s9OA4l02P+Lqp9WSLPOmuP7JMpPC4wEWUm6WLdmz6q9nVA==
+	t=1794292270;
+	b=DK7wJqdf/jey2mV5hmXfouAGqzSPslsc3CY1XwYm2UVcr8ihtPwVQ4eXRH133WOkMG/W
+	 +mbn2o3NiN//7nlEiGkPVAjqyPZCIsS5FUuUbKFZ4xAZINQ2nHICL+i4rfiT4MJasOt/G
+	 Ec7UOZlgvJ1ozY3yEsmnSIu+vaMciItcfi1VyNs0fP/GC9gdOeebvcXgbHx0W3Y7QdL9L
+	 2n/T5C5altOAR3TYxhq3zGCNIN0H8pXiz+7706SzpXK4XZbeOxeBI9CYt7HNLh7YdDb3g
+	 6JugdLx30FNrg+QEPUlfIL+flVmh+++5Cp65yOgPsFYEZncF95pSCTK7w9yXheIMeqA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794292265;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794292270;
 	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
 	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
 	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
 	 Cc:Subject:Message-ID:User-Agent;
-	bh=AdRQP69Vf75Zcd//I9obMaTuhZlz7OlMR3X6PS3dHro=;
-	b=ILeQlp2czL/qExDG4f4tyFWfN0v3zTYphpfM+CDb7kJIsPRZP/gA0O4W4IZ5brcuTAV8
-	 zYFVcp8w0j7C61S/XhFLeuzWkhUK1CiaykkIj+geKebqHRo2hc1gaNe/BKterUg1UP5ic
-	 6DIwqJbxTyhXr7S98ioZNbCBxzSxhUklqy4Tnfze7nk3c05v2O5SjEtVBwe8EqXpdutlW
-	 67lsEltpAXZUFK7XFJ1Kc2VvzeesAoIdlgWWnETBvTgD54F3SWTkRgFuGgaM6MxK07dIK
-	 73OySpQ07/YaoQRKgzbvkeKB/elZbkA64qN9bPFw6mC6Z21ExRUz6XiVYiO5d0GRdzQ==
+	bh=kRRH56Y1wEZJAt1sbKyIPEVhbTL1EsOKplSpY9dmhIQ=;
+	b=MPZG6kmy1zEZ59D/l23nVc3qM7fMa2ZP/EvD251wmFOEGcfZdLYXWJpnV4cF2YEq4bb/
+	 6RYFkXfIps4eM3iB6tRKkBdusH1eCAd7D4kmVMCwz3hR+7Bd9bY/b0yNrLxz8IzmAkOy4
+	 fMIjJUs0VXV/cvwnntOkTqn/sUym9eFiSLC6gwaPEE2eEceExCy0h88WMilpNcjrvQ6Od
+	 YYPScsVwN7RO0TpXcYsdEYPsKBwijf7hQMm+PP76lJyIedynE59V4tizUFZ8QUroJO62G
+	 2DLKpr69xfsgIt2I0LXIZ5U5/6wBSTjDctxMASByPQdqY9eaeuYhCpMSnGHQB5+Wi6g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=intel.com;
 	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KZUiCklv;
-	arc=none smtp.remote-ip=192.198.163.10
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=IpkikhX4;
+	arc=none smtp.remote-ip=198.175.65.20
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87CE7606A325
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 06:31:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 87CE7606A325
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7D70606A326
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 06:31:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7D70606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=KZUiCklv
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=IpkikhX4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794292264; x=1825828264;
+  t=1794292269; x=1825828269;
   h=date:from:to:cc:subject:message-id;
-  bh=W0pEehq9A4QQh3IJe/7oX7CFAoIyULMvvKrE0Jfcaao=;
-  b=KZUiCklvz0Zrzf8tFC9GlyWsLCk7I3pLdpzT8oRLKGUOAYIb5GVU7HF5
-   zllmfd18jsMtL207jc8DWz6Xw0/m3SDxi/FpERLuI2dfbF2kBDIsqMAm3
-   meDw8RNTLpA6EN/1Yvjsf4W9aFcQrcxcHgPKipv7SgIhqQjTwtDbl1qHB
-   rIB/aSXConngDpHQ1b2skXf/puZ2BiaofF/juOGS1Bp3jgz/r3Th27Bs6
-   3v2X0BI5uumcKrNvK1ptO6bXW6dntZ0CByr8uM7BV4SEqCXjlZ5eaz7Dv
-   W2vts77Dthlft/TF0Jl3u6gSSAuovHUaKAXqbTBRFvhf6wk3U/M18sBEA
-   g==;
-X-CSE-ConnectionGUID: sSlKsRr7Sy6AF0nWR6tP5w==
-X-CSE-MsgGUID: ms6krOnoQH6Dt2hF/QD5ww==
-X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="2927940"
+  bh=DqNiPmrrqj53DDIFr+rKGPVhre8vUnLKIQ9Eb72sEKM=;
+  b=IpkikhX4GMFgnJ2ZZOa3G3VAmmFQkKX5b/Vy4cMunNfH8u9wSKHZTAYA
+   Eo5yTjavFHVz/lsWITWWwLG9/2MwWUoYgNtdOgN2nJCeRnkrgXAwm0PBO
+   ytBZOrRcTNCQoGpcrph6MZQyR85XzilCaEOPhVsrLLugw8EScMWHznHz8
+   txS2uZty4cJF9iwrZnn+a2JjHovtVI6rcA/lGG198bXKk3vEsPVG/cJFR
+   C3E7kDh2VYgT44QZAQBFYwXZhpLLDsAk+am1VK2BfEJLeUiZF6pL39tmA
+   ZZ7r1SMn5pliGjrIeCfM3/ttWdaOuYc+Kqj2kZP76jYc34OyartpEYbtK
+   A==;
+X-CSE-ConnectionGUID: tyS8FwCLTUCntscQT56GkQ==
+X-CSE-MsgGUID: Da7GF1xiRy2w0MyiYGkQxg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3058854"
 X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
-   d="scan'208";a="2927940"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 22:31:04 -0800
-X-CSE-ConnectionGUID: SSXIZwUzTqeF8qZCsJ0SYw==
-X-CSE-MsgGUID: MOacKvMDSbmcZabyWN/CGQ==
+   d="scan'208";a="3058854"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 22:31:09 -0800
+X-CSE-ConnectionGUID: 0zVV4Oq9Thq66/bgylG+wA==
+X-CSE-MsgGUID: qiMwI7cpTbq9lWwOtr1hyA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
-   d="scan'208";a="8214830"
+   d="scan'208";a="8073618"
 Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 09 Nov 2026 22:31:02 -0800
+  by orviesa002.jf.intel.com with ESMTP; 09 Nov 2026 22:31:02 -0800
 Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
 	(envelope-from <lkp@intel.com>)
-	id 1xQfNg-00000000wBF-2uHW;
-	Tue, 10 Nov 2026 06:30:56 +0000
-Date: Tue, 10 Nov 2026 14:29:56 +0800
+	id 1xQfNh-00000000wBH-040y;
+	Tue, 10 Nov 2026 06:30:57 +0000
+Date: Tue, 10 Nov 2026 14:30:09 +0800
 From: kernel test robot <lkp@intel.com>
 To: Tejun Heo <tj@kernel.org>
 Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-7.5] BUILD SUCCESS
- 79922ba71c838f68e7b3128a1a24e4f1dfbc99c7
-Message-ID: <20261110142956.lu88mUub-lkp@intel.com>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 91b3dc9472be5115b0f1fa0ce829f5119cae5d0d
+Message-ID: <20261110143009.VGXlRaCn-lkp@intel.com>
 User-Agent: s-nail v14.9.25
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -80,13 +80,13 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.5
-branch HEAD: 79922ba71c838f68e7b3128a1a24e4f1dfbc99c7  selftests/cgroup: convert cg_read_*long*() helpers to s64
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 91b3dc9472be5115b0f1fa0ce829f5119cae5d0d  Merge branch 'for-7.5' into for-next
 
 elapsed time: 827m
 
-configs tested: 209
-configs skipped: 4
+configs tested: 207
+configs skipped: 2
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -96,7 +96,6 @@ alpha                              allnoconfig    gcc-16.2.0
 alpha                             allyesconfig    gcc-16.2.0
 alpha                                defconfig    gcc-16.2.0
 arc                               allmodconfig    clang-24
-arc                               allmodconfig    gcc-16.2.0
 arc                                allnoconfig    gcc-16.2.0
 arc                               allyesconfig    clang-24
 arc                                  defconfig    gcc-16.2.0
@@ -170,7 +169,6 @@ loongarch             randconfig-1001-20261110    clang-17
 m68k                              allmodconfig    gcc-16.2.0
 m68k                               allnoconfig    gcc-16.2.0
 m68k                              allyesconfig    clang-24
-m68k                              allyesconfig    gcc-16.2.0
 m68k                                 defconfig    clang-24
 m68k                         m5307c3_defconfig    clang-24
 m68k                         m5407c3_defconfig    gcc-16.2.0
