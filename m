@@ -1,76 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.59
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794292270;
-	b=DK7wJqdf/jey2mV5hmXfouAGqzSPslsc3CY1XwYm2UVcr8ihtPwVQ4eXRH133WOkMG/W
-	 +mbn2o3NiN//7nlEiGkPVAjqyPZCIsS5FUuUbKFZ4xAZINQ2nHICL+i4rfiT4MJasOt/G
-	 Ec7UOZlgvJ1ozY3yEsmnSIu+vaMciItcfi1VyNs0fP/GC9gdOeebvcXgbHx0W3Y7QdL9L
-	 2n/T5C5altOAR3TYxhq3zGCNIN0H8pXiz+7706SzpXK4XZbeOxeBI9CYt7HNLh7YdDb3g
-	 6JugdLx30FNrg+QEPUlfIL+flVmh+++5Cp65yOgPsFYEZncF95pSCTK7w9yXheIMeqA==
+	t=1794292617;
+	b=F0QWrc90BBqgC5YL7ExoFFE0SiqHJwO/PAC/afjtVi2QX0x9x9j7WXeiNFg0oNuvaJlc
+	 TJ3ymIW1uYtomprPokURNTo4m2J7i5Dmhb1MoXvW+hoewCzR5+0WIGu4ZwcStMXF0KDQA
+	 p0LG2+zlzf/80XPJjIiB+zqn8CNXvKd7gCCLoxBG4ZQClJmI6CAHcDCxMJjMtedWZu9Lt
+	 oZupKDRypz64yg8ft3KxPeWGfVvjhwBDn2Ity+xFoBrKluiuHcQIAhL3HwAhwE9++wXQx
+	 Tbs7p82M4p65MrbMpUxJajfdYnDFofFUkZ/8FSq4z6mtu2aUCUc42Z0PlgNOT4pNU+Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794292270;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
-	 Cc:Subject:Message-ID:User-Agent;
-	bh=kRRH56Y1wEZJAt1sbKyIPEVhbTL1EsOKplSpY9dmhIQ=;
-	b=MPZG6kmy1zEZ59D/l23nVc3qM7fMa2ZP/EvD251wmFOEGcfZdLYXWJpnV4cF2YEq4bb/
-	 6RYFkXfIps4eM3iB6tRKkBdusH1eCAd7D4kmVMCwz3hR+7Bd9bY/b0yNrLxz8IzmAkOy4
-	 fMIjJUs0VXV/cvwnntOkTqn/sUym9eFiSLC6gwaPEE2eEceExCy0h88WMilpNcjrvQ6Od
-	 YYPScsVwN7RO0TpXcYsdEYPsKBwijf7hQMm+PP76lJyIedynE59V4tizUFZ8QUroJO62G
-	 2DLKpr69xfsgIt2I0LXIZ5U5/6wBSTjDctxMASByPQdqY9eaeuYhCpMSnGHQB5+Wi6g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794292617;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=xI/Mw+wKpfQ51uGssBou6KQdHiosm5ZcBFVWJhhdHVI=;
+	b=Ouy1T4GnH2EvDba7sZ4nYfiCZrRjeFgR4dTWlWWhDtKilyWFiTxJldfMlLTCxwsUztyj
+	 PZ2oA9AFbNYDBfFbTWEkGfxrcqpVeJijd0RPzL/MQsroCYbIy+8XxPoWdJQUoj3k6PpDq
+	 swUgjEhS53WtGzDU5eRwmaPXFSge+rNtOG+aNNixDjqfjisypoWdDH6UKIr0077zxwU2v
+	 fVEvjO9xG4Nz0TRQQIgYcNqftGDvgf675/p3mpzipaoQEQF7rLvySGrs/74Jx90YwvklM
+	 zRQXd6GIRutPJ2u2dvtukScJ5LR28In5smrW9IC+0maUdINyG0cEswaBv1mSgGqVgbA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=intel.com;
-	spf=pass smtp.mailfrom=intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=IpkikhX4;
-	arc=none smtp.remote-ip=198.175.65.20
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QC5AJa20;
+	arc=none smtp.remote-ip=91.218.175.59
+Received: from mta0.migadu.com (out-59.mta0.migadu.com [91.218.175.59])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7D70606A326
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 06:31:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A7D70606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9BF606A321
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 06:36:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB9BF606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=IpkikhX4
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794292269; x=1825828269;
-  h=date:from:to:cc:subject:message-id;
-  bh=DqNiPmrrqj53DDIFr+rKGPVhre8vUnLKIQ9Eb72sEKM=;
-  b=IpkikhX4GMFgnJ2ZZOa3G3VAmmFQkKX5b/Vy4cMunNfH8u9wSKHZTAYA
-   Eo5yTjavFHVz/lsWITWWwLG9/2MwWUoYgNtdOgN2nJCeRnkrgXAwm0PBO
-   ytBZOrRcTNCQoGpcrph6MZQyR85XzilCaEOPhVsrLLugw8EScMWHznHz8
-   txS2uZty4cJF9iwrZnn+a2JjHovtVI6rcA/lGG198bXKk3vEsPVG/cJFR
-   C3E7kDh2VYgT44QZAQBFYwXZhpLLDsAk+am1VK2BfEJLeUiZF6pL39tmA
-   ZZ7r1SMn5pliGjrIeCfM3/ttWdaOuYc+Kqj2kZP76jYc34OyartpEYbtK
-   A==;
-X-CSE-ConnectionGUID: tyS8FwCLTUCntscQT56GkQ==
-X-CSE-MsgGUID: Da7GF1xiRy2w0MyiYGkQxg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11961"; a="3058854"
-X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
-   d="scan'208";a="3058854"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2026 22:31:09 -0800
-X-CSE-ConnectionGUID: 0zVV4Oq9Thq66/bgylG+wA==
-X-CSE-MsgGUID: qiMwI7cpTbq9lWwOtr1hyA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,205,1787036400"; 
-   d="scan'208";a="8073618"
-Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 09 Nov 2026 22:31:02 -0800
-Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1xQfNh-00000000wBH-040y;
-	Tue, 10 Nov 2026 06:30:57 +0000
-Date: Tue, 10 Nov 2026 14:30:09 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 91b3dc9472be5115b0f1fa0ce829f5119cae5d0d
-Message-ID: <20261110143009.VGXlRaCn-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QC5AJa20
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=4ldduMkRN9py7oBtMZAvrIPqG9pOjDa0Ze0haB4M5iI=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794292612; v=1; x=1794897412;
+ b=QC5AJa20qTBqMHA6N/5j4zajfrAS+T+P6qUzg3wdvV3PY2DvqAV9Zdsm7NrLaTqwYQlc2ldF
+ 0JhGfsbEIN/Fw7zMA31SDxblcbv62sGdQYEK3wEjuGfjU+OZ3mw9G995UsbGaajIqXl7y4Mf4OH
+ KKkcKMLpO/bGvCByUgF2Bu8U=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 88cdc0a77461dabf;
+	Tue, 10 Nov 2026 06:36:52 +0000
+X-Mizu-Trace-ID: 88cdc0a77461dabf
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <df5c2cbc-6a81-4ac8-8160-9475a9876ef7@linux.dev>
+Date: Tue, 10 Nov 2026 14:36:47 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -79,227 +57,265 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 4/4] cpuset: generalize the validate_partition()
+ interface
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
+Cc: Chen Ridong <chenridong@huawei.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Sashiko <sashiko-bot@kernel.org>, Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <20261107120100.3587595-1-ridong.chen@linux.dev>
+ <20261107120100.3587595-5-ridong.chen@linux.dev>
+ <d37903cd-21bc-4a07-835f-aa074c85660c@redhat.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <d37903cd-21bc-4a07-835f-aa074c85660c@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 91b3dc9472be5115b0f1fa0ce829f5119cae5d0d  Merge branch 'for-7.5' into for-next
 
-elapsed time: 827m
 
-configs tested: 207
-configs skipped: 2
+On 11/9/2026 10:52 PM, Waiman Long wrote:
+> On 11/7/26 7:01 AM, Ridong Chen wrote:
+>> From: Chen Ridong <chenridong@huawei.com>
+>>
+>> Refactor validate_partition() to take the parent partition, the new
+>> partition root state, the new effective exclusive CPUs and the CPUs to
+>> be deleted, instead of a trial cpuset. A NULL parent stands for a
+>> remote partition, whose CPUs come from top_cpuset. This makes the
+>> interface flexible enough to handle both local and remote partition
+>> validation.
+>>
+>> The no CPU left for tasks check now uses the given parent instead of
+>> parent_cs(cs), and top_cpuset for a remote partition, as that is where
+>> its CPUs are taken from. The cgroup parent of a remote partition does
+>> not give it any CPU.
+>>
+>> The housekeeping conflict check is folded into validate_partition(). It
+>> is skipped when the parent is not a valid partition root, as @cs can't
+>> be a valid local partition in that case.
+>>
+>> Use the new interface for local partition enablement in
+>> update_parent_effective_cpumask() and in partition_cpus_change(),
+>> replacing the open-coded checks there. The order of the checks is now
+>> the same for both paths: empty CPUs, housekeeping conflict, then no CPU
+>> left for tasks.
+>>
+>> Signed-off-by: Chen Ridong <chenridong@huawei.com>
+>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 119 ++++++++++++++++++++---------------------
+>>   1 file changed, 59 insertions(+), 60 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index fc9de6e16ff5..0ec20412b3ce 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -1414,6 +1414,48 @@ static bool prstate_housekeeping_conflict(int new_prs, 
+>> int parent_prs,
+>>       return res;
+>>   }
+>> +/**
+>> + * validate_partition - Validate a cpuset partition configuration
+>> + * @cs: The cpuset to validate
+>> + * @parent: Parent partition of @cs, NULL for remote partition
+>> + * @new_prs: The proposed new partition root state
+>> + * @new_excpus: The new effective exclusive CPUs mask to validate
+>> + * @del: exclusive CPUs to be deleted from @cs, can be NULL
+>> + *
+>> + * A remote partition gets its CPUs from top_cpuset, so top_cpuset is used
+>> + * as the parent when @parent is NULL.
+>> + *
+>> + * The housekeeping check is skipped if @parent is not a valid partition
+>> + * root as @cs can't be a valid local partition in that case.
+>> + *
+>> + * Return: PRS error code (0 if valid, non-zero error code if invalid)
+>> + */
+>> +static enum prs_errcode validate_partition(struct cpuset *cs,
+>> +                       struct cpuset *parent, int new_prs,
+>> +                       struct cpumask *new_excpus,
+>> +                       struct cpumask *del)
+>> +{
+>> +    int parent_prs;
+>> +
+>> +    if (new_prs == PRS_MEMBER)
+>> +        return PERR_NONE;
+>> +
+>> +    if (cpumask_empty(new_excpus))
+>> +        return PERR_INVCPUS;
+>> +
+>> +    if (!parent)
+>> +        parent = &top_cpuset;
+>> +    parent_prs = parent->partition_root_state;
+>> +    if (parent_prs > 0 &&
+>> +        prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
+>> +        return PERR_HKEEPING;
+>> +
+>> +    if (tasks_nocpu_error(parent, cs, new_excpus))
+>> +        return PERR_NOCPUS;
+>> +
+>> +    return PERR_NONE;
+>> +}
+>> +
+>>   /*
+>>    * cpuset_update_sd_hk_unlock - Rebuild sched domains, update HK & unlock
+>>    *
+>> @@ -1934,18 +1976,10 @@ static int update_parent_effective_cpumask(struct 
+>> cpuset *cs, int cmd,
+>>       if ((cmd == partcmd_enable) || (cmd == partcmd_enablei)) {
+>>           new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
+>> -        /*
+>> -         * Enabling partition root is not allowed if its
+>> -         * effective_xcpus is empty.
+>> -         */
+>> -        if (cpumask_empty(tmp->delmask))
+>> -            return PERR_INVCPUS;
+>> -
+>> -        if (prstate_housekeeping_conflict(new_prs, parent_prs, tmp->delmask, 
+>> NULL))
+>> -            return PERR_HKEEPING;
+>> -
+>> -        if (nocpu)
+>> -            return PERR_NOCPUS;
+>> +        part_error = validate_partition(cs, parent, new_prs,
+>> +                        tmp->delmask, NULL);
+>> +        if (part_error)
+>> +            return part_error;
+>>           /*
+>>            * This function will only be called when all the preliminary
+>> @@ -2424,32 +2458,6 @@ static int parse_cpuset_cpulist(const char *buf, struct 
+>> cpumask *out_mask)
+>>       return 0;
+>>   }
+>> -/**
+>> - * validate_partition - Validate a cpuset partition configuration
+>> - * @cs: The cpuset to validate
+>> - * @trialcs: The trial cpuset containing proposed configuration changes
+>> - *
+>> - * If any validation check fails, the appropriate error code is set in the
+>> - * cpuset's prs_err field.
+>> - *
+>> - * Return: PRS error code (0 if valid, non-zero error code if invalid)
+>> - */
+>> -static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset 
+>> *trialcs)
+>> -{
+>> -    struct cpuset *parent = parent_cs(cs);
+>> -
+>> -    if (cs_is_member(trialcs))
+>> -        return PERR_NONE;
+>> -
+>> -    if (cpumask_empty(trialcs->effective_xcpus))
+>> -        return PERR_INVCPUS;
+>> -
+>> -    if (tasks_nocpu_error(parent, cs, trialcs->effective_xcpus))
+>> -        return PERR_NOCPUS;
+>> -
+>> -    return PERR_NONE;
+>> -}
+>> -
+>>   /**
+>>    * partition_cpus_change - Handle partition state changes due to CPU mask 
+>> updates
+>>    * @cs: The target cpuset being modified
+>> @@ -2463,33 +2471,24 @@ static void partition_cpus_change(struct cpuset *cs, 
+>> struct cpuset *trialcs,
+>>                     struct tmpmasks *tmp)
+>>   {
+>>       enum prs_errcode prs_err;
+>> -    int parent_prs = is_remote_partition(cs)
+>> -               ? PRS_ROOT : parent_cs(cs)->partition_root_state;
+>> +    struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
+>>       if (cs_is_member(cs))
+>>           return;
+>> -    prs_err = validate_partition(cs, trialcs);
+>> -    if (!prs_err && (parent_prs > 0) &&
+>> -        !cpumask_empty(trialcs->effective_xcpus)) {
+>> -        int prs = cs->partition_root_state;
+>> -
+>> -        /*
+>> -         * Check for housekeeping conflict by passing the whole
+>> -         * effective_xcpus as well as those CPUs that are to be
+>> -         * removed from cs as delmask.
+>> -         */
+>> -        if (prs > 0)
+>> -            cpumask_andnot(tmp->delmask, cs->effective_xcpus,
+>> -                       trialcs->effective_xcpus);
+>> -        else
+>> -            cpumask_clear(tmp->delmask);
+>> -
+>> -        if (prstate_housekeeping_conflict(prs, parent_prs,
+>> -                          trialcs->effective_xcpus, tmp->delmask))
+>> -            prs_err = PERR_HKEEPING;
+>> -    }
+>> +    /*
+>> +     * Check for housekeeping conflict by passing the whole
+>> +     * effective_xcpus as well as those CPUs that are to be
+>> +     * removed from cs as delmask.
+>> +     */
+>> +    if (is_partition_valid(cs))
+>> +        cpumask_andnot(tmp->delmask, cs->effective_xcpus,
+>> +                   trialcs->effective_xcpus);
+>> +    else
+>> +        cpumask_clear(tmp->delmask);
+>> +    prs_err = validate_partition(cs, parent, trialcs->partition_root_state,
+>> +                     trialcs->effective_xcpus, tmp->delmask);
+>>       if (prs_err) {
+>>           WRITE_ONCE(cs->prs_err, prs_err);
+>>           trialcs->prs_err = prs_err;
+> 
+> Again, this code change looks good to me. Similar to previous patch, it includes 
+> both code restructuring and bug fixes.
+> 
+Hi Longman,
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks for the review. Yes, besides the restructuring, it fixes a false
+PERR_NOCPUS error for remote partitions. The no CPU left for tasks check
+in partition_cpus_change() is done against the cgroup parent, but the
+CPUs of a remote partition come from top_cpuset, not from its parent.
 
-tested configs:
-alpha                              allnoconfig    gcc-16.2.0
-alpha                             allyesconfig    gcc-16.2.0
-alpha                                defconfig    gcc-16.2.0
-arc                               allmodconfig    clang-24
-arc                                allnoconfig    gcc-16.2.0
-arc                               allyesconfig    clang-24
-arc                                  defconfig    gcc-16.2.0
-arc                   randconfig-1000-20261110    gcc-10.5.0
-arc                   randconfig-1001-20261110    gcc-10.5.0
-arm                                allnoconfig    gcc-16.2.0
-arm                               allyesconfig    clang-24
-arm                          assabet_defconfig    gcc-16.2.0
-arm                          axm55xx_defconfig    gcc-16.2.0
-arm                                  defconfig    gcc-16.2.0
-arm                           gemini_defconfig    clang-17
-arm                       integrator_defconfig    clang-17
-arm                       jornada720_defconfig    clang-24
-arm                          lpc32xx_defconfig    clang-17
-arm                             mmp2_defconfig    gcc-16.2.0
-arm                         multi_v7_defconfig    gcc-16.2.0
-arm                          mv78xx0_defconfig    clang-24
-arm                   randconfig-1000-20261110    gcc-10.5.0
-arm                   randconfig-1001-20261110    gcc-10.5.0
-arm                   randconfig-1002-20261110    gcc-10.5.0
-arm                   randconfig-1003-20261110    gcc-10.5.0
-arm                           sp7021_defconfig    gcc-16.2.0
-arm                          vf610m4_defconfig    clang-17
-arm64                             allmodconfig    clang-24
-arm64                              allnoconfig    gcc-16.2.0
-arm64                                defconfig    gcc-16.2.0
-arm64                 randconfig-1000-20261110    gcc-12.5.0
-arm64                 randconfig-1001-20261110    gcc-12.5.0
-arm64                 randconfig-1002-20261110    gcc-12.5.0
-arm64                 randconfig-1003-20261110    gcc-12.5.0
-csky                              allmodconfig    gcc-16.2.0
-csky                               allnoconfig    gcc-16.2.0
-csky                                 defconfig    gcc-16.2.0
-csky                  randconfig-1000-20261110    gcc-12.5.0
-csky                  randconfig-1001-20261110    gcc-12.5.0
-hexagon                           allmodconfig    gcc-16.2.0
-hexagon                            allnoconfig    gcc-16.2.0
-hexagon                              defconfig    gcc-16.2.0
-hexagon               randconfig-1000-20261110    clang-17
-hexagon               randconfig-1001-20261110    clang-17
-i386                              allmodconfig    clang-22
-i386                               allnoconfig    gcc-16.2.0
-i386                              allyesconfig    clang-22
-i386        buildonly-randconfig-1000-20261110    clang-22
-i386        buildonly-randconfig-1001-20261110    clang-22
-i386        buildonly-randconfig-1002-20261110    clang-22
-i386        buildonly-randconfig-1003-20261110    clang-22
-i386        buildonly-randconfig-1004-20261110    clang-22
-i386        buildonly-randconfig-1005-20261110    clang-22
-i386                                 defconfig    gcc-16.2.0
-i386                  randconfig-1000-20261110    gcc-14
-i386                  randconfig-1001-20261110    gcc-14
-i386                  randconfig-1002-20261110    gcc-14
-i386                  randconfig-1003-20261110    gcc-14
-i386                  randconfig-1004-20261110    gcc-14
-i386                  randconfig-1005-20261110    gcc-14
-i386                  randconfig-1006-20261110    gcc-14
-i386                  randconfig-1007-20261110    clang-22
-i386                  randconfig-1008-20261110    clang-22
-i386                  randconfig-1009-20261110    clang-22
-i386                  randconfig-1010-20261110    clang-22
-i386                  randconfig-1011-20261110    clang-22
-i386                  randconfig-1012-20261110    clang-22
-i386                  randconfig-1013-20261110    clang-22
-loongarch                         alldefconfig    clang-24
-loongarch                         allmodconfig    clang-24
-loongarch                          allnoconfig    gcc-16.2.0
-loongarch                            defconfig    clang-24
-loongarch             randconfig-1000-20261110    clang-17
-loongarch             randconfig-1001-20261110    clang-17
-m68k                              allmodconfig    gcc-16.2.0
-m68k                               allnoconfig    gcc-16.2.0
-m68k                              allyesconfig    clang-24
-m68k                                 defconfig    clang-24
-m68k                         m5307c3_defconfig    clang-24
-m68k                         m5407c3_defconfig    gcc-16.2.0
-m68k                         stmark2_defconfig    clang-24
-microblaze                         allnoconfig    gcc-16.2.0
-microblaze                        allyesconfig    gcc-16.2.0
-microblaze                           defconfig    clang-24
-mips                              allmodconfig    gcc-16.2.0
-mips                               allnoconfig    gcc-16.2.0
-mips                              allyesconfig    gcc-16.2.0
-mips                           ath79_defconfig    clang-24
-mips                   decstation_64_defconfig    gcc-16.2.0
-mips                      eyeq6lplus_defconfig    clang-24
-mips                      eyeq6lplus_defconfig    gcc-16.2.0
-mips                             gpr_defconfig    clang-24
-mips                            ip27_defconfig    clang-17
-mips                            jazz_defconfig    clang-24
-mips                            jazz_defconfig    gcc-16.2.0
-nios2                             allmodconfig    clang-20
-nios2                              allnoconfig    clang-24
-nios2                                defconfig    clang-24
-nios2                 randconfig-1000-20261110    clang-17
-nios2                 randconfig-1001-20261110    clang-17
-openrisc                          allmodconfig    clang-20
-openrisc                           allnoconfig    clang-24
-openrisc                             defconfig    gcc-16.2.0
-parisc                            allmodconfig    gcc-16.2.0
-parisc                             allnoconfig    clang-24
-parisc                            allyesconfig    clang-17
-parisc                               defconfig    gcc-16.2.0
-parisc                randconfig-1000-20261110    gcc-14.4.0
-parisc                randconfig-1001-20261110    gcc-14.4.0
-parisc64                          alldefconfig    gcc-16.2.0
-parisc64                             defconfig    clang-24
-powerpc                           allmodconfig    gcc-16.2.0
-powerpc                            allnoconfig    clang-24
-powerpc                         cell_defconfig    clang-24
-powerpc                     ge_imp3a_defconfig    gcc-16.2.0
-powerpc                  mpc836x_rdk_defconfig    clang-24
-powerpc                      powernv_defconfig    clang-17
-powerpc                      ppa8548_defconfig    clang-17
-powerpc               randconfig-1000-20261110    gcc-14.4.0
-powerpc               randconfig-1001-20261110    gcc-14.4.0
-powerpc                   storcenter_defconfig    clang-24
-powerpc                         warp_defconfig    clang-17
-powerpc                         warp_defconfig    clang-24
-powerpc                         warp_defconfig    gcc-16.2.0
-powerpc64             randconfig-1000-20261110    gcc-14.4.0
-powerpc64             randconfig-1001-20261110    gcc-14.4.0
-riscv                             allmodconfig    clang-24
-riscv                              allnoconfig    clang-24
-riscv                             allyesconfig    clang-24
-riscv                                defconfig    gcc-16.2.0
-riscv                     nommu_k210_defconfig    clang-24
-riscv                 randconfig-1000-20261110    clang-24
-riscv                 randconfig-1001-20261110    clang-24
-s390                              allmodconfig    clang-17
-s390                               allnoconfig    clang-24
-s390                              allyesconfig    gcc-16.2.0
-s390                                 defconfig    gcc-16.2.0
-s390                  randconfig-1000-20261110    clang-24
-s390                  randconfig-1001-20261110    clang-24
-sh                                allmodconfig    gcc-16.2.0
-sh                                 allnoconfig    clang-24
-sh                                allyesconfig    clang-17
-sh                                   defconfig    gcc-14
-sh                    randconfig-1000-20261110    clang-24
-sh                    randconfig-1001-20261110    clang-24
-sh                            se7751_defconfig    gcc-16.2.0
-sh                   sh7785lcr_32bit_defconfig    clang-24
-sparc                              allnoconfig    clang-24
-sparc                                defconfig    gcc-16.2.0
-sparc                 randconfig-1000-20261110    gcc-12.5.0
-sparc                 randconfig-1001-20261110    gcc-12.5.0
-sparc                        sparc32_defconfig    gcc-16.2.0
-sparc                        sparc64_defconfig    clang-24
-sparc64                           allmodconfig    clang-20
-sparc64                              defconfig    gcc-14
-sparc64               randconfig-1000-20261110    gcc-12.5.0
-sparc64               randconfig-1001-20261110    gcc-12.5.0
-um                                allmodconfig    clang-17
-um                                 allnoconfig    clang-24
-um                                allyesconfig    gcc-16.2.0
-um                                   defconfig    gcc-14
-um                              i386_defconfig    gcc-14
-um                              i386_defconfig    gcc-16.2.0
-um                    randconfig-1000-20261110    gcc-12.5.0
-um                    randconfig-1001-20261110    gcc-12.5.0
-um                            x86_64_defconfig    gcc-14
-x86_64                            allmodconfig    clang-22
-x86_64                             allnoconfig    clang-24
-x86_64                            allyesconfig    clang-22
-x86_64      buildonly-randconfig-1000-20261110    gcc-14
-x86_64      buildonly-randconfig-1001-20261110    gcc-14
-x86_64      buildonly-randconfig-1002-20261110    gcc-14
-x86_64      buildonly-randconfig-1003-20261110    gcc-14
-x86_64      buildonly-randconfig-1004-20261110    gcc-14
-x86_64      buildonly-randconfig-1005-20261110    gcc-14
-x86_64                               defconfig    gcc-14
-x86_64                                   kexec    clang-22
-x86_64                randconfig-1000-20261110    gcc-14
-x86_64                randconfig-1001-20261110    gcc-14
-x86_64                randconfig-1002-20261110    gcc-14
-x86_64                randconfig-1003-20261110    gcc-14
-x86_64                randconfig-1004-20261110    gcc-14
-x86_64                randconfig-1005-20261110    gcc-14
-x86_64                randconfig-1006-20261110    gcc-14
-x86_64                randconfig-1007-20261110    gcc-14
-x86_64                randconfig-1008-20261110    gcc-14
-x86_64                randconfig-1009-20261110    gcc-14
-x86_64                randconfig-1010-20261110    gcc-14
-x86_64                randconfig-1011-20261110    gcc-14
-x86_64                randconfig-1012-20261110    gcc-14
-x86_64                randconfig-1013-20261110    gcc-14
-x86_64                randconfig-1014-20261110    gcc-14
-x86_64                randconfig-1015-20261110    gcc-14
-x86_64                randconfig-1016-20261110    gcc-14
-x86_64                randconfig-1017-20261110    gcc-14
-x86_64                                rhel-9.4    clang-22
-x86_64                            rhel-9.4-bpf    gcc-14
-x86_64                           rhel-9.4-func    clang-22
-x86_64                     rhel-9.4-kselftests    clang-22
-x86_64                          rhel-9.4-kunit    gcc-14
-x86_64                            rhel-9.4-ltp    gcc-14
-x86_64                           rhel-9.4-rust    clang-22
-xtensa                             allnoconfig    clang-24
-xtensa                            allyesconfig    clang-20
-xtensa                        common_defconfig    gcc-16.2.0
-xtensa                randconfig-1000-20261110    gcc-12.5.0
-xtensa                randconfig-1001-20261110    gcc-12.5.0
+It can be reproduced on a 4-CPU system:
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+	cd /sys/fs/cgroup
+	echo +cpuset > cgroup.subtree_control
+	mkdir P
+	echo 2-3 > P/cpuset.cpus
+	echo 2-3 > P/cpuset.cpus.exclusive
+	echo +cpuset > P/cgroup.subtree_control
+	mkdir P/C
+	echo 2-3 > P/C/cpuset.cpus
+	echo 2 > P/C/cpuset.cpus.exclusive
+	echo root > P/C/cpuset.cpus.partition
+	sleep 1000 &
+	echo $! > P/cgroup.procs
+	echo 2-3 > P/C/cpuset.cpus.exclusive
+	cat P/C/cpuset.cpus.partition
+	root invalid (Parent is not a partition root)
+
+The effective_cpus of P is 3, a subset of the new exclusive CPUs 2-3 of
+C, and P has a task, so the expansion is rejected. However, P is not a
+partition root and does not give any CPU to C, and top_cpuset still has
+CPUs 0-1 for the task. Enabling C directly with exclusive CPUs 2-3
+succeeds, as remote_partition_enable() checks top_cpuset instead. With
+this patch, the expansion succeeds too:
+
+	cat P/C/cpuset.cpus.partition
+	root
+
+The issue has been there since remote partitions were introduced. I
+reproduced it on commit 181c8e091aae as well, so I'd like to describe
+it in the commit message and add
+
+	Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
+
+in the next version.
+
+Does that look OK to you? Please let me know if you are referring to something else.
+
+-- 
+Best regards
+Ridong
+
