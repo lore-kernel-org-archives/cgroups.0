@@ -1,54 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794332525;
-	b=Ux2i8wkGk5w85rTk8TDd+MHt5B/RiNjV6rjRZDoRFRDc4ibKv/kjIAikrnUWdbc1Mifw
-	 WkOAdiI70qPQE4WT0UE125/S5E7u64qjW0ruA+or/Kqqjb/cKUHAehXC7idPEwayUuBfF
-	 +JZtrJ+ojbzvAq9tr5MhWN/YD9y07S1ckNfn7TGxUYNhSKtehu4t//4D1v64fqapLdXd+
-	 7bmIISRy/eaPEr/3JcbdEFPoEMGabsjmyR5ZV8hWSixauVlGE5YtBdr/A4yRSxLa5Tdcb
-	 SdC0q6KSm6iZ5rWcTGwJ2pEnYc3RSs39CguhZLUM7C0tcvSG0ClDCYPYYmrttVREW+A==
+	t=1794336338;
+	b=KFn4v4ifzBvlZA22wiJTzznDSvuM9d3NT3WwJJIN4U0O1L/tGC22Ec/H2Z7S3rU6nwGO
+	 RbxwevcmitQElTHehWFaqoPpmtsAouwW6r1WiFNuLhRtd+7K/ohUKweC+aTKsDkpKfObN
+	 NEgRU01PfMTilDU7HOT0insVoYRBWlSzC2wPFP3pn5ZIl0y7ln4mXPh6Hlautj6XkQvJO
+	 1KygW2PWq+HEMHCOf0hCU71mXaqiX5/f7Bi2m1v3Ikn4bz5maistaCKI/UGwiTwyjw0Ca
+	 mxpATax+OHyrk0XCU0HxoOAbf0URq3eTRUXPujLhKAsj9ORWWLvoC5QxMeM5LQ0II4Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794332525;
-	h=DMARC-Filter:DKIM-Signature:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=z6qhmSVVpuzuoGiVpBIjsGohvtx1OvBYwJqje5IRlEA=;
-	b=VGkRl0117BikZJ5WHBXrbXn+tDrS8r/ltLT/EjDTJJ3X/snS2Fyw/nVB0M7XbN6ywlkd
-	 9IzzHhmmQwpm2OVEHmcd1wso70bHXyHpYMYpU/Ws4FH5BfAsGuW6TG58eau5ctFxj22Hk
-	 Rgcq0GuCwIPe97bG4IGbt/lDRzajuM4+74yaRc2+9gOxYL02LOcNQzttJJhVJrs+e8bUZ
-	 iR3IkqCRNaQjkqzpdedwQXRFRHGb8BgAT3osCFp8oS0f6U1F7qJrbpiiQShaVgIkYvcr9
-	 S7wGtrjHc9prZVJ0zwy612aeBKJ4IXgQCP5xZg0d32YZ3p3/QwGnTRlJnxcJQrYrhnA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794336338;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=jDn+kAHlJ1YKV/vSjJMTOq+sX3gPOQ26dm9cQX+T7Co=;
+	b=3wq5odEzAhSqP9izttmh8hvoTiH1KKmIFtkC3zW4UcsFl8qurh4T18VnE6BkoyR8weHZ
+	 4ySud70RReRzmyA//eR3usLdGehMoFFZWWUbGlfOC3H47OmzGZz9J702eHDJr9HuvIXnl
+	 4Oyf7xa4Xv0dpnfUi/78ll+i01LVUGi2wtawlwPPZ/8HHQZycqmqbzfpimm2Xie+bF1OG
+	 /Y/+LGTXly6+Yj6bYustpBren7yqHsNSZCCq0TS/lve8p3t2WLQ1/PVkumkh2MgVJodQu
+	 aziW6pUB+E5Yr7BAWihQX3LZvKFF9D+At/E4A0AWtRcJdwImYV4+4ykFz30CMyursoA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=infradead.org;
-	spf=pass smtp.mailfrom=infradead.org;
-	dkim=pass header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=ADIqkJTK;
-	arc=none smtp.remote-ip=198.137.202.133
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fhQiG7uu;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FB30606A321;
-	Tue, 10 Nov 2026 17:42:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4FB30606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=infradead.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18EA3606A327;
+	Tue, 10 Nov 2026 18:45:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.a=rsa-sha256 header.s=bombadil.20210309 header.b=ADIqkJTK
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=z6qhmSVVpuzuoGiVpBIjsGohvtx1OvBYwJqje5IRlEA=; b=ADIqkJTKAtvjpq7/dfR8LPX80y
-	Y2NsltStTJhp6BWwpgTUgzZoFXfsBbbdDmz4OZdYaJDKRzwoMSiKN+0SOWGSG5OZ9kp1QUR4ElkI2
-	CV3qiRAUsDcpxZPMu4chxZx34LCGOAkS0MplFPiezBoufqNbAIWv5ar9P2ZenFNtC7QxPxCQbSbJY
-	KSrYOYwAT0Um8DaltWGQwNiUXjcNJjBWU9feEb+0wJa11RCgnMluWtGr/Y9TM/kzUZEx/eQghRwFO
-	ptOMrW4R4by+8PTgXEQAnyqjBrN/w9U12K74ve6up5WByn+zSB7UmXySJ8KhIUK48VVipisvuRB/x
-	NjlJvGyw==;
-Received: from [50.53.43.113] (helo=[192.168.254.34])
-	by bombadil.infradead.org with esmtpsa (Exim 4.100.1 #2 (Red Hat Linux))
-	id 1xQpr7-00000004ht1-39q4;
-	Tue, 10 Nov 2026 17:42:01 +0000
-Message-ID: <1927ace7-86f4-463e-bdda-b3a5bc300eb2@infradead.org>
-Date: Tue, 10 Nov 2026 09:42:00 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fhQiG7uu
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F6381F008A2;
+	Tue, 10 Nov 2026 18:45:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794336337;
+	bh=jDn+kAHlJ1YKV/vSjJMTOq+sX3gPOQ26dm9cQX+T7Co=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=fhQiG7uuYywqrnJ1To2XB3v7Jidj1RPi/wyyYjpeBPZsVAD2HJiQvdshP5yDQtNk+
+	 4bTubfTT36iMuNB1Ux18/gUn2k3On06ctHzcZEuBQnMkgxqs+x4LUgW4of1uB7x2Ck
+	 ec4z61FshOMCHLn6R8c1NPikkLK9oWiPbijkXnFJ1LB+MWK1wd1fcEFx6w5UwyMavF
+	 CBauDfjcfYpa/CcWwAWFF6fB+st3chmIvfVWqHr1bB49moU8seP0H+MBmIR3+zaES+
+	 05MS8ATN4ERryl56oZDf7o0kx+GHrN4E8Qln2FW0U3E1w9HdGDcgJ7Lp2BlODpAiVo
+	 F5faYuv83ydDg==
+Date: Tue, 10 Nov 2026 08:45:36 -1000
+Message-ID: <3296ff1ecad6573e1719cb205d9128f7@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, eddyz87@gmail.com, memxor@gmail.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, akpm@linux-foundation.org, david@kernel.org, gourry@gourry.net, hannes@cmpxchg.org, mkoutny@suse.com, shakeel.butt@linux.dev, roman.gushchin@linux.dev, yu.c.chen@intel.com, zhao1.liu@intel.com, tim.c.chen@linux.intel.com, lizhe.67@bytedance.com, ziy@nvidia.com, mgorman@suse.de, bpf@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH bpf-next v4 0/4] BPF-based per-cgroup NUMA balancing mode selection
+In-Reply-To: <20261110032913.71974-1-laoar.shao@gmail.com>
+References: <20261110032913.71974-1-laoar.shao@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,67 +57,60 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/7] sched: Mark RT_GROUP_SCHED broken
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, rcu@vger.kernel.org,
- linux-doc@vger.kernel.org
-Cc: John Ogness <john.ogness@linutronix.de>, Jonathan Corbet
- <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>,
- Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Juri Lelli <juri.lelli@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Dietmar Eggemann <dietmar.eggemann@arm.com>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- K Prateek Nayak <kprateek.nayak@amd.com>,
- luca abeni <luca.abeni@santannapisa.it>,
- Yuri Andriaccio <yurand2000@gmail.com>,
- Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
- "Paul E. McKenney" <paulmck@kernel.org>,
- Frederic Weisbecker <frederic@kernel.org>,
- Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
- Joel Fernandes <joelagnelf@nvidia.com>, Josh Triplett
- <josh@joshtriplett.org>, Boqun Feng <boqun@kernel.org>,
- Uladzislau Rezki <urezki@gmail.com>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- Lai Jiangshan <jiangshanlai@gmail.com>, Zqiang <qiang.zhang@linux.dev>,
- Davidlohr Bueso <dave@stgolabs.net>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Qais Yousef <qyousef@layalina.io>
-References: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
- <20261110-sched_dl-v2-1-cc9399f7aeb1@linutronix.de>
-Content-Language: en-US
-From: Randy Dunlap <rdunlap@infradead.org>
-In-Reply-To: <20261110-sched_dl-v2-1-cc9399f7aeb1@linutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
+Hello, Yafang.
 
+I'm not going to engage further in this series until the situation
+changes.
 
-On 11/10/26 9:34 AM, Sebastian Andrzej Siewior wrote:
-> diff --git a/Documentation/scheduler/sched-rt-group.rst b/Documentation/scheduler/sched-rt-group.rst
-> index ab464335d3204..788df93cb3a04 100644
-> --- a/Documentation/scheduler/sched-rt-group.rst
-> +++ b/Documentation/scheduler/sched-rt-group.rst
-> @@ -18,6 +18,11 @@ Real-Time group scheduling
->  0. WARNING
->  ==========
->  
-> + This document applies to RT group scheduling provided by CONFIG_RT_GROUP_SCHED.
-> + If you don't use, schedule real-time tasks and experience throttling issues
+LLMs have made it much cheaper to produce plausible-looking patchsets
+for new features. That makes it easy to keep sending iterations of a
+feature which touches code that the submitter doesn't really understand
+or hasn't thought through in depth. The reviewer ends up doing much of
+the developer's work while the submitter sits between the reviewer and
+whatever the LLM produces. I think this series is an example of that.
 
--ENOPARSE.  Is that:
-    If you don't use or schedule real-time tasks and experience throttling issues,
+Some examples from v4:
 
+- A folio belongs to a memcg and that memcg decides the policies around
+  it. That's how memcg works for every other memory policy, and tasks
+  belong to a memcg too. The series still splits NUMA balancing into a
+  task side and a folio side with different semantics. DISABLED applies
+  to tasks but not to their memory, and the two sides combine the
+  hierarchy differently.
 
+  On v3, I asked why. v4 moves the storage into memcg and keeps the
+  split, but doesn't give a high-level reason why NUMA balancing should
+  work differently from how memcg handles every other memory policy.
+  More generally, the major design decisions come without the reasoning
+  behind them, and asking didn't produce it. Each iteration only barely
+  updates what was pointed out in the previous one.
 
-> + please look into Documentation/scheduler/sched-deadline.rst and there for the
+- numab_memcg_mode() walks up to the root memcg and recombines the
+  requests on every call. The callers include every load-balancing
+  candidate in can_migrate_task(), every task migration, every NUMA hint
+  fault and every page migration including compaction. This happens
+  whenever any cgroup has a mode set, although the result changes only
+  when a mode is set or a memcg goes offline.
 
-                                                                for the
+- numab_memcg_active() reads css->flags once and the comment says that
+  this makes the three state bits describe the same moment. However,
+  nothing synchronizes those flags with the mode. In the lookups, the
+  check is redundant anyway because offlining a memcg or disabling its
+  controller already clears the mode.
 
-> + fair_server.
+A developer could cost reviewers time before too, but each round took
+the developer much more effort in comparison. That kept the effort
+balanced between developer and reviewer in a sustainable way, and it
+made sure that the developer learned and improved while working through
+each iteration. LLMs broke that balance.
 
--- 
-~Randy
+I don't know what the right solution is, but at this point shepherding
+patchsets like this doesn't make sense for me.
 
+Thanks.
+
+--
+tejun
