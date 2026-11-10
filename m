@@ -1,53 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794338859;
-	b=C4MKcqw09fxrfWaXqfo61l6UdMBpA4dqh/g/XaGs25+zF6/Xywre9CBMIHd+p6kDWaes
-	 eLFXjNovXELxD9y5aY5DcR2vuCT/6Lw/3iZEJue5OFJMhavm106sDTj2CIvCLpLoWsXL7
-	 sNWrDoEC60123M+FmRTX3Fql05AQEC1Sq1mm1yh5WKXgtoWWHP6DVFIPvMFxMXRYL1dIq
-	 NeZpZFNjPQYxPzbBVjuGt8poxDuFmFWvfxUoUVk11YWpoLBkdA6dajUYAZmbzmtMESDm/
-	 3F58jrOPt3nyBbn14zQB3fRSQtQ77tD3rDtTYcfjxx4SoK3rS6KUuHkO2RiFuBmsv6Q==
+	t=1794339621;
+	b=ryaFNcQgQQNdNqiufVk/rJezEC9hwdg33FjMqpX1TIZSkDHotLz4tyY9otrYuDsLxoIm
+	 FEGgYw+168GXoaFT6HvyR1/lImCyUTKdsRkacwLPM87PW7Ac0zY2Ay2CsaqD1xeTGb7BI
+	 TEY7GVRf4ZhKXTBCNuVmDsQ+I5r87MhPX6iDdaiQDtAqcP9URYLaoWyuRpU03bN/pTaJs
+	 vCLxe8d2kEbLUsLSjxhb7Ds076YPWY+F8zoFjhAMUg9CstTSZ1jOTWwleOhIZYVgWWhbt
+	 AHGKf5o7fhkwCX1gBN2ekqHlFWUlG0mWLPqjTZJHP8GGyxzW5dyNPROxYfc9JGjnUZA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794338859;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794339621;
 	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=JhoX3osY26F1MqRN+osOMk8T+9PdZqeDfzPnj4Ocp3w=;
-	b=DJGjYcov3mXooexhPigxQYM54feauDxbBFHy9shfUjyl9ArpqzInjZlEuPZN2sp3iyJg
-	 5dXP8OrJ/y9rw1ESqtGY4mYbFsfH7fgJ4lrK+CHB+ClDsTBheE/kGWzYzFhgZx3yfIOdn
-	 yismgo4MXBCM+eqpvk2epnQlPHOYnWaT6KIfjDLjW1mP+e7ks1Mi2lQROmK9g/9vb4zx9
-	 rVrpT7ihnyitDVNPwUuyyPHuzrXHAbGdEDg9n60yczt7Yt+PCxEb5C5xdNZWopzFTz6Ac
-	 JZsEc1XuPxk4UmTTu1eZ5cT4l435kHh8xrWTnCDa2uGLnYsyEKIABe+yEHwmdT2TXwQ==
+	bh=G73EY9C4EDTA4M9pcyoo0q/AnVA2mgjUcIBxeIwlhbg=;
+	b=jxJ4CHR+IAlMwsGqDrujyo/QD9d8WM6/KwcqTf0YWV5iWqb8tCodwjCo0S1SoRsREWbG
+	 59LrmgHlS2PQy7bJDK40dpoAzYxGAXDlq8n+JB1c2qRYPEce6dVtafrcMvfSA5ptaHPWY
+	 VT13uFVlayZBJO2z/7vTz73V08/v3KK7o+NL4m2ew2gamtdXMg57JU+3cyj4SENgFno0D
+	 00Hf7YorQeNes2fV0pVo6FyGE2OSCZP6x0WmD9BmCeXXht5tWOF7zwJ8vHGl2Owcpnnnt
+	 TwsKEFe3Gbvg8ZR9x4sPn1bLLTNsgqrAh2B0kg2m+DCN5WQn6v/POf5XGjunpgRmwkQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ikmk3pxA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jolVrtOH;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9B17606A321;
-	Tue, 10 Nov 2026 19:27:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 798BE606A326;
+	Tue, 10 Nov 2026 19:40:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ikmk3pxA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C3D91F0089F;
-	Tue, 10 Nov 2026 19:27:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=jolVrtOH
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 275BD1F008BC;
+	Tue, 10 Nov 2026 19:40:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794338858;
-	bh=JhoX3osY26F1MqRN+osOMk8T+9PdZqeDfzPnj4Ocp3w=;
+	s=k20260515; t=1794339621;
+	bh=G73EY9C4EDTA4M9pcyoo0q/AnVA2mgjUcIBxeIwlhbg=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=ikmk3pxAY/SwBAYX+1FYoDk3XIXo2sUOx1rH6r9L7YDZesC1mmOQWEnxPSYekP9be
-	 1TBo2gykXeNCtYlkdIJs/TzgKHeeArN+ocJLcAnSNsQN42DeV02puqaDsYdwpnJp0o
-	 h08CFPnRir1nUEHWrdXn7qHKuaKWFLO8Q+PCQIItmZL5f+iRsojmX9s9FncJDJ1CkP
-	 LGpAIW1wyib35VLfsATFLHggCyfcXgP8ga36rVT6wlaAtO8WbOFBRR75eGik0x9HJR
-	 6Jn8lvvtbIWfplTGC4y3NqENeV7i2CbTe/FAVmpzRqfH+xnmLGn9N/qYTdoIeFCWN8
-	 xoam6TraMLnWA==
-Date: Tue, 10 Nov 2026 09:27:37 -1000
-Message-ID: <898b08d81ed8e3f1ee7d4985e4b47992@kernel.org>
+	b=jolVrtOHWRVXPvbUc7zJiTa26lBRn0uUo4pfZLpn1ofBw4k3knn6PPZIGjAKomBnM
+	 Jjtuqkjy2gC03w7F6uUmaHjyoFKjnnZHDdUNigqu8AQlHxwn7HDJ6n/2MGIy7XZYqo
+	 8SiA14NEo+0ZB+UzDKttkjB/0FMut2AUH80e4M40Ya8wrMKgXDrD2AHoobEXDEb02S
+	 /GVVoip3d/a70LKI+YrzoComxdI7WmE5gxMBldH/s/nmgP6bHuuegr5AvK4ob+NwBk
+	 D1bChjXHIdDGbK4Z/lVqB1BGt4QMOdRkKUNMFkhZIvbPoiLWDVVuwLmxU9l1l9GPrg
+	 PGdbZamv+KIEQ==
+Date: Tue, 10 Nov 2026 09:40:20 -1000
+Message-ID: <d81460af8053a51f9be8a73186025ce7@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Ridong Chen <ridong.chen@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>, sashiko-bot@kernel.org
-Subject: Re: [PATCH-next v2 0/5] More fix patches
-In-Reply-To: <20261109190955.1398611-1-longman@redhat.com>
-References: <20261109190955.1398611-1-longman@redhat.com>
+To: Kang Chen <k.chen@smail.nju.edu.cn>
+Cc: Yonghong Song <yonghong.song@linux.dev>,
+ Alexei Starovoitov <ast@kernel.org>,
+ Daniel Borkmann <daniel@iogearbox.net>,
+ Andrii Nakryiko <andrii@kernel.org>,
+ Eduard Zingerman <eddyz87@gmail.com>,
+ Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+ bpf@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ cgroups@vger.kernel.org
+Subject: Re: [PATCH] bpf: make css iterator stay drained after NULL
+In-Reply-To: <20261110125110.2935707-1-k.chen@smail.nju.edu.cn>
+References: <20261110125110.2935707-1-k.chen@smail.nju.edu.cn>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -60,29 +69,28 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
->   selftests/cgroup: Fix "test_cpuset_prs.sh -v" failures
->   cgroup/cpuset: Correctly set cpus_updated in
->     cpuset_hotplug_update_tasks()
->   cgroup/cpuset: Fix incorrect partition invalidation logic in
->     cpuset_hotplug_update_tasks()
->   cgroup/cpuset: Protect current->mems_allowed read in cpuset_fork()
->   cgroup/cpuset: Correctly set isolated_cpus when switching partition
->     state
+On Tue, Nov 10, 2026 at 08:51:10PM +0800, Kang Chen wrote:
+> The css_next_*() helpers start from @start when given a NULL position.
+> bpf_iter_css_next() leaves kit->pos == NULL after the last element, but
+> keeps kit->start set, so a next() call after exhaustion starts the
+> iteration over from @start again.
+>
+> The verifier relies on the iterator contract that once next() returns
+> NULL it keeps returning NULL: process_iter_next_call() marks the
+> iterator DRAINED and treats the result of later next() calls as the
+> constant zero.  A restarted css iteration therefore hands the BPF
+> program a kernel pointer while the verifier believes R0 == 0.
+>
+> Clear kit->start when the position becomes NULL.  bpf_iter_css_destroy()
+> is a no-op, so no cleanup depends on @start after exhaustion.
+>
+> Fixes: 7251d0905e75 ("bpf: Introduce css open-coded iterator kfuncs")
+> Signed-off-by: Kang Chen <k.chen@smail.nju.edu.cn>
 
-Applied 1, 4 and 5 (5 as v2.1) to cgroup/for-7.4-fixes with the following
-changes:
+Acked-by: Tejun Heo <tj@kernel.org>
 
-- 1: Nonexistent commit ID 6e4834ba8986 in the description corrected to
-  362212853cd0.
-- 5: "update_cpumasks_heir()" typo in the description fixed.
-- 5: Missing trailing "\" line continuation added to the first line of the
-  two new TEST_MATRIX entries in test_cpuset_prs.sh.
-
-The following tags were also added:
-
-  Reviewed-by: Ridong Chen <ridong.chen@linux.dev> (1, 4, 5)
-  Tested-by: Ridong Chen <ridong.chen@linux.dev> (1, 5)
-  Cc: stable@vger.kernel.org # v6.8+ (5)
+BPF folks, how do you want to route this? It can go through the bpf
+tree or I can take it through cgroup/for-7.4-fixes.
 
 Thanks.
 
