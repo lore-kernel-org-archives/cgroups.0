@@ -1,62 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794332143;
-	b=sYqu6bbTQDgQQVxg60NAWQH6crgyg/nwkCDIWo20Z1OfED+OMg1byn9oNHlrTPpfrDlk
-	 UDyP/TXuBGZVoGO0mAVIV6VDhTBWlxxHO87aVKyVBfOI1OvRCdjDp1goHJUWtEDrN6AVV
-	 hpGTqEjweQcTHQnU4SKaVgG++IgYX5Q8hfPy5cuhAjcYBHsX4dWSJDcMT8nKkaOJfxztF
-	 g3IHiGhqD0OGZzC921NZWHubGwK7ZKdcPwMQRchziTWP3xo0aEZTn3fj/bqRG+AjtfVn7
-	 y6JRn3Kdd4xhp7AtDJJ/7Nwh/pDWfA8BWyOyoQkdh2cNWQzQKQ+QgE9pgX8m+mpeCNw==
+	t=1794332144;
+	b=uHKKEBJAcVLbGVWjaG8wsQ31COFz9DIwH+G2sGy+w8suwxzzerVpXK2sJu7NT7NYkqMm
+	 eZWxeggOX5b04aqknxkGnMtJJGHrGM7oUYT80jXGOL9ijx+dUdvglUcx17+KEI/i9jnlA
+	 v4GSFsB51ikk1ZIw4Ui9VtYm8RGzJcOI8QaU2ypBxjjwTamHXcPtUwmy8e/x/XsrRkRvU
+	 g3Nh2y2qRfVjR5y1yNIn1HU0FDQ3GpSeyAvtEI26IVJxGQlY0DwARjDKvzQ2CPGsZo+iP
+	 614tq4zjdYmrt7ICSTX6KRZxhjewEF5/rAzVDD5AuqCpTJUQldrCnw486rHLhNKwNHQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794332143;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794332144;
 	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
-	b=MJNhRdeoKGt/pWjocA8AjTAa63UAJzCuYqJPleNZ3LGx0TqJfI5aUHh3c/ufNluHL79q
-	 wxPVIr35Ymp+cJF1Xx6rkjI66+HAdJeS0TGkFBqEJVDMexU8i0A3yHVYaJZtMQCq6xJUg
-	 /sAuK497xa62N8KpCc4hYmo+56UjHHcsOVPoSToPooiJwBAQy1V8vxydt0O+PgMUfu9VK
-	 0FBrdZXLprxlslBLpedsBVY3mr0PD6sKYn4/yNmoh+ubhzKLKtM89DjINM3wplolIIQOe
-	 hDsAsKuk7dkFAktLTbwP80KM45MHL8KGGFPjPISOm8cWMieS3qqo/whcMb9qjR4FGlw==
+	bh=qThPFwQh/YlsuXHUZSO9OIPn8uv/mcMeWuP0/iLWm/M=;
+	b=q2mnlPzWqLqL4bYbPkCBNSpwv0uXpze6m/Wctlmw4p5LRTDQWRyW+TRAdr+yqah/a1MK
+	 0+qr8Q3EciNnRD/alz5gXrjk1Z/CjuFguncttz5BKZxDjjVfo7SMjYvykmA16S0yU9tpz
+	 jzWFzlvEZgbZ0x4Ciin3iARAZK4cg5LoWqKemsWUOxqYtJ2IvM2sg0cPJGbjlzkakkkB8
+	 dwuwHj5lJRJ5cbeo96JMmG8kqaVsMyoVjPkMllrLA7awZLzMLmbp1AqmQTPlwvr2hRrLU
+	 0UM2ng81yDlkYEkC6l1j1YzAlde77MA7Ji6+IwESwOoFa0m+NPma1rgYd3v+RDS62jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linutronix.de;
 	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=i1sfQVYj;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=BzT6gKr6;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=TIFXR1gL;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=ZKyr49vR;
 	arc=none smtp.remote-ip=193.142.43.55
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8681F60A2601;
-	Tue, 10 Nov 2026 17:35:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8681F60A2601
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 686A960A3821;
+	Tue, 10 Nov 2026 17:35:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 686A960A3821
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=i1sfQVYj;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=BzT6gKr6
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=TIFXR1gL;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=ZKyr49vR
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1794332141;
+	s=2020; t=1794332143;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
-	b=i1sfQVYjdv7Glk+c/iQHPNVTEqtT0whf6VRXvyuUxKnP/9SJPQbD6ts3LyLMivXJhuajDw
-	66tSlsfAoR0DdXr4oDRuMLUOfDKgYuo+j/E33r16ax81rPhY7Y/hfCuBGEWKN/JqQzz0R8
-	A7MiZOpsLERGu5qgDK2nG66vmot2rWB7zDvPugKCUlSY9xkmXO0b3A9KtCFtxTGFAnNxKU
-	Ur1KL9q9U9NN9fvSMpv0oEnkooqUGGiV9j6J8j1U0/QabYHn3L5ArLI79iMv0OeN2owMOz
-	QmhAzYOy66iyOStrlP+7ejX6+UvLoLAmIkdE0hhbTSS5bcQQPLsfjdGCPUSVCA==
+	bh=qThPFwQh/YlsuXHUZSO9OIPn8uv/mcMeWuP0/iLWm/M=;
+	b=TIFXR1gL/W3mCTLQ0SuJim344Vw8LMC1tDMgN5nXuLDDbn05A9f93/xzcB2sfGkTyu6b5g
+	l+pNinEX/FLmE6QRDCapda90DkBDJG1Ll+xU3XakPov5oaah1+tEU+uothXQNuxbc9N2qo
+	AI0xsNRnEGeRp2lEwKkElUTvsjhAPzsVRxLEo0xbhHOzKAZ76+W1smwdfYgF+GHTq9yEmO
+	F4HafTsYNOopRqMQi1OYmoHPGYbx0667GuQYETQBfQjnX9H8suYUz/sPjo/JjuflHNFh/8
+	/TOQy+4AqTsXOPXuujmIi8yNCWMQFFm1fiFdhHgNRH4K8MJnao6uq/RIWNmhAw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1794332141;
+	s=2020e; t=1794332143;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
-	b=BzT6gKr6E5kwSvvhCL65bDrFF6NcWkK8dVkKgLqE77+xMCSAuQIHUA6syuj/IriJtBO00y
-	yUv44O5ykfns1DBQ==
+	bh=qThPFwQh/YlsuXHUZSO9OIPn8uv/mcMeWuP0/iLWm/M=;
+	b=ZKyr49vRhR8SNTnOBremmuW9OJw3mRZt4bDur2ZXqgOebyx7f+st7NC5zahBWMo7+FnEFI
+	H4NdhHcafN6W+9AQ==
 To: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	rcu@vger.kernel.org,
@@ -94,9 +94,9 @@ Cc: John Ogness <john.ogness@linutronix.de>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
 	Qais Yousef <qyousef@layalina.io>
-Subject: [PATCH v2 2/7] rcutorture: Don't try to disable to RT throttling.
-Date: Tue, 10 Nov 2026 18:34:44 +0100
-Message-ID: <20261110-sched_dl-v2-2-cc9399f7aeb1@linutronix.de>
+Subject: [PATCH v2 5/7] sched: Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED
+Date: Tue, 10 Nov 2026 18:34:47 +0100
+Message-ID: <20261110-sched_dl-v2-5-cc9399f7aeb1@linutronix.de>
 In-Reply-To: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
 References: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -111,102 +111,112 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-Commit 450efca7182a5 ("rcutorture: Disable RT throttling for boost
-tests") added the ability to disable RT throttling while rcutorture was
-run.
+The admission control for SCHED_DL has been moved to sysfs and RT
+throttling has been moved (long ago) to the fair_server and its debugfs
+interface.
 
-Since v6.12 the DL fair_server takes control of throttling and this
-interface no longer serves this purpose. That sysctl control still
-exists but serves a different cause.
+This file remains to have an impact only on RT_GROUP_SCHED. Keeping it
+for ABI/ compatibility reasons makes no sense because its original
+purpose (RT throttling) is no longer served. Anyone changing this file
+and hoping to change the throttling behaviour will be surprised.
 
-There is no in-kernel interface to provide this feature, one needs to
-echo 0 to each /sys/kernel/debug/sched/fair_server/cpu*/runtime file.
-
-Since sysctl_sched_rt_runtime does not do what it once did, remove it
-from rcutorture.
+Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED so everyone
+using this outdated file is aware.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- kernel/rcu/rcu.h        |  2 --
- kernel/rcu/rcutorture.c | 35 -----------------------------------
- 2 files changed, 37 deletions(-)
+ kernel/sched/rt.c | 30 +++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/kernel/rcu/rcu.h b/kernel/rcu/rcu.h
-index d60444bf3a02d..6d1034e49d411 100644
---- a/kernel/rcu/rcu.h
-+++ b/kernel/rcu/rcu.h
-@@ -69,8 +69,6 @@
- /* A complete grace period count */
- #define RCU_SEQ_GP (RCU_SEQ_STATE_MASK + 1)
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 1a6450f91d567..855e4ee470f69 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -25,11 +25,22 @@ int sysctl_sched_rt_runtime =3D 1000000;
 =20
--extern int sysctl_sched_rt_runtime;
--
- /*
-  * Return the counter portion of a sequence number previously returned
-  * by rcu_seq_snap() or rcu_seq_current().
-diff --git a/kernel/rcu/rcutorture.c b/kernel/rcu/rcutorture.c
-index 93ca7f06371e4..aecc4da7161bb 100644
---- a/kernel/rcu/rcutorture.c
-+++ b/kernel/rcu/rcutorture.c
-@@ -1333,39 +1333,6 @@ static unsigned long rcutorture_seq_diff(unsigned lo=
-ng new, unsigned long old)
- 	return cur_ops->gp_diff(new, old);
+ #ifdef CONFIG_SYSCTL
+ static int sysctl_sched_rr_timeslice =3D (MSEC_PER_SEC * RR_TIMESLICE) / H=
+Z;
+-static int sched_rt_handler(const struct ctl_table *table, int write, void=
+ *buffer,
+-		size_t *lenp, loff_t *ppos);
+ static int sched_rr_handler(const struct ctl_table *table, int write, void=
+ *buffer,
+ 		size_t *lenp, loff_t *ppos);
+ static const struct ctl_table sched_rt_sysctls[] =3D {
++	{
++		.procname       =3D "sched_rr_timeslice_ms",
++		.data           =3D &sysctl_sched_rr_timeslice,
++		.maxlen         =3D sizeof(int),
++		.mode           =3D 0644,
++		.proc_handler   =3D sched_rr_handler,
++	},
++};
++
++#ifdef CONFIG_RT_GROUP_SCHED
++static int sched_rt_handler(const struct ctl_table *table, int write, void=
+ *buffer,
++		size_t *lenp, loff_t *ppos);
++static const struct ctl_table sched_rt_group_sysctls[] =3D {
+ 	{
+ 		.procname       =3D "sched_rt_period_us",
+ 		.data           =3D &sysctl_sched_rt_period,
+@@ -48,18 +59,15 @@ static const struct ctl_table sched_rt_sysctls[] =3D {
+ 		.extra1         =3D SYSCTL_NEG_ONE,
+ 		.extra2         =3D (void *)&sysctl_sched_rt_period,
+ 	},
+-	{
+-		.procname       =3D "sched_rr_timeslice_ms",
+-		.data           =3D &sysctl_sched_rr_timeslice,
+-		.maxlen         =3D sizeof(int),
+-		.mode           =3D 0644,
+-		.proc_handler   =3D sched_rr_handler,
+-	},
+ };
++#endif
+=20
+ static int __init sched_rt_sysctl_init(void)
+ {
+ 	register_sysctl_init("kernel", sched_rt_sysctls);
++#ifdef CONFIG_RT_GROUP_SCHED
++	register_sysctl_init("kernel", sched_rt_group_sysctls);
++#endif
+ 	return 0;
+ }
+ late_initcall(sched_rt_sysctl_init);
+@@ -2845,6 +2853,7 @@ int sched_rt_can_attach(struct task_group *tg, struct=
+ task_struct *tsk)
+ #endif /* !CONFIG_RT_GROUP_SCHED */
+=20
+ #ifdef CONFIG_SYSCTL
++#ifdef CONFIG_RT_GROUP_SCHED
+ static int sched_rt_global_validate(void)
+ {
+ 	if ((sysctl_sched_rt_runtime !=3D RUNTIME_INF) &&
+@@ -2853,13 +2862,11 @@ static int sched_rt_global_validate(void)
+ 			NSEC_PER_USEC > max_rt_runtime)))
+ 		return -EINVAL;
+=20
+-#ifdef CONFIG_RT_GROUP_SCHED
+ 	if (!rt_group_sched_enabled())
+ 		return 0;
+=20
+ 	scoped_guard(mutex, &rt_constraints_mutex)
+ 		return __rt_schedulable(NULL, 0, 0);
+-#endif
+ 	return 0;
  }
 =20
--/*
-- * RCU torture priority-boost testing.  Runs one real-time thread per
-- * CPU for moderate bursts, repeatedly starting grace periods and waiting
-- * for them to complete.  If a given grace period takes too long, we assume
-- * that priority inversion has occurred.
-- */
--
--static int old_rt_runtime =3D -1;
--
--static void rcu_torture_disable_rt_throttle(void)
--{
--	/*
--	 * Disable RT throttling so that rcutorture's boost threads don't get
--	 * throttled. Only possible if rcutorture is built-in otherwise the
--	 * user should manually do this by setting the sched_rt_period_us and
--	 * sched_rt_runtime sysctls.
--	 */
--	if (!IS_BUILTIN(CONFIG_RCU_TORTURE_TEST) || old_rt_runtime !=3D -1)
--		return;
--
--	old_rt_runtime =3D sysctl_sched_rt_runtime;
--	sysctl_sched_rt_runtime =3D -1;
--}
--
--static void rcu_torture_enable_rt_throttle(void)
--{
--	if (!IS_BUILTIN(CONFIG_RCU_TORTURE_TEST) || old_rt_runtime =3D=3D -1)
--		return;
--
--	sysctl_sched_rt_runtime =3D old_rt_runtime;
--	old_rt_runtime =3D -1;
--}
--
- static bool rcu_torture_boost_failed(unsigned long gp_state, unsigned long=
- *start)
- {
- 	int cpu;
-@@ -3390,7 +3357,6 @@ static int rcutorture_booster_cleanup(unsigned int cp=
-u)
- 	mutex_lock(&boost_mutex);
- 	t =3D boost_tasks[cpu];
- 	boost_tasks[cpu] =3D NULL;
--	rcu_torture_enable_rt_throttle();
- 	mutex_unlock(&boost_mutex);
+@@ -2887,6 +2894,7 @@ static int sched_rt_handler(const struct ctl_table *t=
+able, int write, void *buff
 =20
- 	/* This must be outside of the mutex, otherwise deadlock! */
-@@ -3428,7 +3394,6 @@ static int rcutorture_booster_init(unsigned int cpu)
+ 	return ret;
+ }
++#endif /* !CONFIG_RT_GROUP_SCHED */
 =20
- 	/* Don't allow time recalculation while creating a new task. */
- 	mutex_lock(&boost_mutex);
--	rcu_torture_disable_rt_throttle();
- 	VERBOSE_TOROUT_STRING("Creating rcu_torture_boost task");
- 	boost_tasks[cpu] =3D kthread_run_on_cpu(rcu_torture_boost, NULL,
- 					      cpu, "rcu_torture_boost_%u");
+ static int sched_rr_handler(const struct ctl_table *table, int write, void=
+ *buffer,
+ 		size_t *lenp, loff_t *ppos)
 
 --=20
 2.55.0
