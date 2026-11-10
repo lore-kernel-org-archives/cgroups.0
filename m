@@ -1,68 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.231.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794301853;
-	b=uabRaCyIYC/UUmzXmww2jCUK5l+rviBB+j92FJM5jjDgA33iinQb/Tc65XBM3rjk+CH6
-	 zqYJ1yd7HPl3Z4SOmzEYTCG0q7qYkIV5sYNRd/oUX2R/nEGjf8eIwb6ttyCND657GdV1V
-	 37ikOVBcktWmc7dqVsaojWsPUv8/+aQ9drTZW5ECopk5fhLcEvtlmd5vpIqQ4omdOddmn
-	 OlHWN4GwbBKI6Bk7N6ephAU4UX0svxnrRw2GoK1WgIw5rs3WblT6hCVZNMKYluyxDwojV
-	 KCWiAAKZkY8sTE3/QPNcfE7o8TfiLsJMrtM2aIHBNh4viISnK5advVyr2pg0p8sj5aA==
+	t=1794306772;
+	b=GBmW8zzXPggsb1jIChc9Djc47Ui29BW8CA97/JYkOv0d1COh2ScBij/YlbYohh21dOOM
+	 OW29mUzSiA9NdT3axkw9rroCy8kDilvwW5ycm+3+F+/724DhGpWKrC6AfIfM1H5hmYsWw
+	 ioavX9pus5S0KO6ftj5I6BcGlEc33p6NbJX3hydL4neJlm2OpfuMlsmHHhTPe+rg5n4IP
+	 7e0B75DfzNOdqvXJnXNtldO6yfxCcZRR0a9HHdiWbGkoLqNqXLK9sRom9RGKKkackBOzQ
+	 mbDtEJFpCZPZrtOcYKayk/D1iWSmFOV0IT32fBDbUPaqNPjAuq4GwLTjH9JwafqnopA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794301853;
-	h=DMARC-Filter:DKIM-Signature:User-Agent:Content-Transfer-Encoding:
-	 Received:Subject:Date:Cc:In-Reply-To:Reply-To:To:Message-Id:
-	 X-Original-From:References:X-Lms-Return-Path:Content-Type:From:
-	 Mime-Version;
-	bh=WdNqNT+bFHTM+YyZgJqU98xQjZavflwKu1yOJyM3vLg=;
-	b=PezuyviKWpt4sHz3ObaOyk4SEkF1Dvo+HyrWUNBFJaGmz5TCwlal3sHre96jzqJcnqXv
-	 IqjUwWS35ymBxfSulnzAyb0qi/J1mHQzERHavmDgma3JlUzN4PVaxAU0UtS2qxx70M4l6
-	 6qTWTGqajNOvwQJhAtnc2vljSXmkhSDB0ElfGgGJSBfrOxYhEhSGqwEuFUE6wiegVC9E0
-	 mgrmGkO7ebiXxYBqlUe2Duye6apAXV9uX8cdkIxMX9aq3xvUajkJNzcLEBooSnGbyZwB4
-	 aFQnlnR9wEXE+xFXkbCWVcQSH28olVvu82DI/DzHsDhiIqhBfDtateb+LIBfspAMFHg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794306772;
+	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
+	 Received:From:To:Cc:Subject:Date:Message-Id:X-Mailer:In-Reply-To:
+	 References:MIME-Version:Content-Transfer-Encoding;
+	bh=YofW718Ei/kOgJz1IxEpxNDde2F/2qyBvVa7gM8OOgo=;
+	b=mejpYJRgOl1QTrV/kmtPd4aK/42/+7QCwDUuOsTjEB3hixZR2p1Zfgjm7le9/ovkZEhK
+	 JcZeGaigQVESmd4DErF6Qgw8SyiF0owDqk5blFBKluoxWD8tGrV5ldpm7HxFk9q4WCGeb
+	 Gkl0CUzHNZMDvky3v2xYlFL5OBaEDxUyLBKT4m/5EnVKBcb+QP5/VKc9C0dXsoZh4lo8b
+	 XC7ECzEXSxLKHOarXHwf2ZQ7oWtj3y4TCQ8NaL8AQ9qRtMG7jRziTKW5dyAmoZ7XrjYB7
+	 asJJdjGqHeVQ5mR5dE3r9Rt81YLL7Qtc19eurZQMuZmTtcueIIyy4NnG3AHj4VPPY9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=fygo.io;
-	spf=pass smtp.mailfrom=fygo.io;
-	dkim=pass header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=BxmIuClX;
-	arc=none smtp.remote-ip=209.127.231.16
-Received: from va-2-16.ptr.blmpb.com (va-2-16.ptr.blmpb.com [209.127.231.16])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DF6D606A32A
-	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 09:10:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2DF6D606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fygo.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fygo.io
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=fygo-io.20200929.dkim.larksuite.com header.i=@fygo-io.20200929.dkim.larksuite.com header.a=rsa-sha256 header.s=s1 header.b=BxmIuClX
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fygo-io.20200929.dkim.larksuite.com; t=1794301843;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=WdNqNT+bFHTM+YyZgJqU98xQjZavflwKu1yOJyM3vLg=;
- b=BxmIuClX1355HwMzKzj5df0p6A0O7fv0BuE36sLsSuUc7+ZGshKXdsZgs+sj/bfx1ssqGF
- OtAMrohjAp2fs4QCA1+/TK7AcVnK0gWRSVnHoFWL5Z8147gkh92Z7rFmOQqhofpNICOE1h
- 1716zy/8X1Ehbuzs20aKGhENnjrLmEwtyXMdYFmEfuCjc2Bdkp0+XHE8S9dtgXOqRn0s+v
- tVXFJwNv8CF7xbC+0Z5I1DLmLXQEzpNziEIqQ6f+t06CC/xqhBMj5zcLnvhtTGBJUY2x8X
- BU2xbnFOrFsbnrXE71QV0Vy+lm2KjpYHYKv/eu65CS4AtBuOfPRS46sdd682+g==
-User-Agent: Mozilla Thunderbird
-Content-Transfer-Encoding: quoted-printable
-Received: from [192.168.1.104] ([39.182.0.55]) by smtp.larksuite.com with ESMTPS; Tue, 10 Nov 2026 09:10:41 +0000
-Subject: Re: [PATCH] bfq: Transfer allocated request counts when moving queues
-Date: Tue, 10 Nov 2026 17:10:38 +0800
-Cc: <linux-block@vger.kernel.org>, <cgroups@vger.kernel.org>, 
-	<linux-kernel@vger.kernel.org>, "Tejun Heo" <tj@kernel.org>, 
-	"Josef Bacik" <josef@toxicpanda.com>, "Jan Kara" <jack@suse.cz>, 
-	"Paolo Valente" <paolo.valente@linaro.org>, <stable@vger.kernel.org>
-In-Reply-To: <20261028094208.716946-1-sunyangkai@fnnas.com>
-Reply-To: yukuai@fygo.io
-To: "sunyangkai" <sunyangkai@fnnas.com>, "Jens Axboe" <axboe@kernel.dk>, 
-	"yu kuai" <yukuai@fygo.io>
-Message-Id: <b38bfc29-62a6-4f55-b6d4-f312111b6490@fygo.io>
-X-Original-From: yu kuai <yukuai@fygo.io>
-References: <20261028094208.716946-1-sunyangkai@fnnas.com>
-X-Lms-Return-Path: <lba+26af2df92+45a504+vger.kernel.org+yukuai@fygo.io>
-Content-Type: text/plain; charset=UTF-8
-From: "yu kuai" <yukuai@fygo.io>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F351606A31C;
+	Tue, 10 Nov 2026 10:32:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F351606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: 0eae7678dcf211f19a56ed5b684f684d-20261110
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_DIGIT_LEN
+	HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER
+	HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT
+	HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, SA_EXISTED
+	SN_EXISTED, SPF_NOPASS, DKIM_NOPASS, DMARC_NOPASS, CIE_BAD
+	CIE_GOOD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO, GTI_C_BU
+	AMN_GOOD, ABX_MISS_RDNS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:0aced988-7dcd-49b1-b93a-07c99ac1a29e,IP:10,
+	URL:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTI
+	ON:release,TS:-15
+X-CID-INFO: VERSION:1.3.19,REQID:0aced988-7dcd-49b1-b93a-07c99ac1a29e,IP:10,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-15
+X-CID-META: VersionHash:7db8b62,CLOUDID:a9fb8514fc75b26edad4bad52e3362e9,BulkI
+	D:261110183244XSNP24HZ,BulkQuantity:0,SF:17|19|38|66|78|81|82|102|127|153|
+	850|865|898,TC:nil,Content:0|15|50|99,EDM:-3,IP:-2,URL:0,File:nil,RT:nil,B
+	ulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR
+	:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_FAS,TF_CID_SPAM_FSD,TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 0eae7678dcf211f19a56ed5b684f684d-20261110
+X-User: liuzhe1@kylinos.cn
+Received: from localhost.localdomain [(114.244.3.119)] by mailgw.kylinos.cn
+	(envelope-from <liuzhe1@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 1381404826; Tue, 10 Nov 2026 18:32:41 +0800
+From: Zhe Liu <liuzhe1@kylinos.cn>
+To: axboe@kernel.dk,
+	tj@kernel.org,
+	josef@toxicpanda.com
+Cc: yukuai@fygo.io,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Zhe Liu <liuzhe1@kylinos.cn>
+Subject: [PATCH 1/3] blkcg: allow printing rwstat samples without policy data
+Date: Tue, 10 Nov 2026 18:31:59 +0800
+Message-Id: <20261110103201.762861-2-liuzhe1@kylinos.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20261110103201.762861-1-liuzhe1@kylinos.cn>
+References: <20261110103201.762861-1-liuzhe1@kylinos.cn>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,45 +86,86 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-=E5=9C=A8 2026/10/28 17:42, sunyangkai =E5=86=99=E9=81=93:
+The existing rwstat formatter takes a blkg_policy_data pointer, although
+it only uses it to obtain the associated blkg. This unnecessarily ties
+statistics formatting to a policy.
 
-> When bfq_bfqq_move() moves a queue with outstanding requests to another
-> group, it changes entity->parent without transferring these charges.
-> The old ancestors retain the charges, while subsequent request releases
-> decrement the new ancestors even though they were never charged. This
-> can leave the destination group's allocated count negative and the
-> source group's count inflated after all requests have completed,
-> distorting the limits enforced by bfqq_request_over_limit().
->
-> Subtract the queue's outstanding request count from its old ancestors
-> before dropping the old group reference, and add it to the new ancestors
-> after reparenting. Leave the queue's own count unchanged. Shared
-> ancestors have no net change, and bfqd->lock serializes the transfer
-> with request accounting.
->
-> Fixes: 98f044999ba1 ("bfq: Track number of allocated requests in bfq_enti=
-ty")
-> Cc:stable@vger.kernel.org
-> Signed-off-by: sunyangkai<sunyangkai@fnnas.com>
-> ---
-> Validation used a QEMU guest running a 6.18.18-based kernel, with BFQ
-> on a virtio block device. The workload submitted direct asynchronous
-> reads in /a/child, moved the task to /b, submitted more reads, and waited
-> for all completions before repeating. A read-only kretprobe observed
-> bfq_bfqq_move() entry and return counters.
->
-> Without the fix, the drained destination group reached allocated=3D-1
-> and then -2. With the fix, outstanding charges were transferred and
-> the drained group counts were zero. Both runs covered migrations with
-> outstanding requests, completed all reads successfully, and reported
-> zero missed probes. This was not a runtime test of upstream master.
->
->   block/bfq-cgroup.c | 6 ++++++
->   1 file changed, 6 insertions(+)
-Reviewed-by: Yu Kuai <yukuai@fygo.io>
+Introduce blkg_print_rwstat() to print rwstat samples directly from a
+blkg, allowing cgroup v1 I/O statistics to be reported independently of
+the throttle policy.
 
---=20
-Thanks,
-Kuai
+Keep __blkg_prfill_rwstat() as a wrapper for existing policy users,
+including BFQ. The output format and total calculation remain unchanged.
+
+Signed-off-by: Zhe Liu <liuzhe1@kylinos.cn>
+---
+ block/blk-cgroup-rwstat.c | 18 ++++++++++++------
+ block/blk-cgroup-rwstat.h |  2 ++
+ 2 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/block/blk-cgroup-rwstat.c b/block/blk-cgroup-rwstat.c
+index 2e9bf081cce2..604d8414dec6 100644
+--- a/block/blk-cgroup-rwstat.c
++++ b/block/blk-cgroup-rwstat.c
+@@ -26,15 +26,15 @@ void blkg_rwstat_exit(struct blkg_rwstat *rwstat)
+ EXPORT_SYMBOL_GPL(blkg_rwstat_exit);
+ 
+ /**
+- * __blkg_prfill_rwstat - prfill helper for a blkg_rwstat
++ * blkg_print_rwstat - print a blkg_rwstat sample
+  * @sf: seq_file to print to
+- * @pd: policy private data of interest
++ * @blkg: block cgroup and queue association
+  * @rwstat: rwstat to print
+  *
+- * Print @rwstat to @sf for the device assocaited with @pd.
++ * Print @rwstat to @sf for the device associated with @blkg.
+  */
+-u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+-			 const struct blkg_rwstat_sample *rwstat)
++u64 blkg_print_rwstat(struct seq_file *sf, struct blkcg_gq *blkg,
++		      const struct blkg_rwstat_sample *rwstat)
+ {
+ 	static const char *rwstr[] = {
+ 		[BLKG_RWSTAT_READ]	= "Read",
+@@ -43,7 +43,7 @@ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+ 		[BLKG_RWSTAT_ASYNC]	= "Async",
+ 		[BLKG_RWSTAT_DISCARD]	= "Discard",
+ 	};
+-	const char *dname = blkg_dev_name(pd->blkg);
++	const char *dname = blkg_dev_name(blkg);
+ 	u64 v;
+ 	int i;
+ 
+@@ -60,6 +60,12 @@ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+ 	seq_printf(sf, "%s Total %llu\n", dname, v);
+ 	return v;
+ }
++
++u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
++			 const struct blkg_rwstat_sample *rwstat)
++{
++	return blkg_print_rwstat(sf, pd->blkg, rwstat);
++}
+ EXPORT_SYMBOL_GPL(__blkg_prfill_rwstat);
+ 
+ /**
+diff --git a/block/blk-cgroup-rwstat.h b/block/blk-cgroup-rwstat.h
+index 703a16fe1404..014ac2a73306 100644
+--- a/block/blk-cgroup-rwstat.h
++++ b/block/blk-cgroup-rwstat.h
+@@ -41,6 +41,8 @@ static inline u64 blkg_rwstat_read_counter(struct blkg_rwstat *rwstat,
+ 
+ int blkg_rwstat_init(struct blkg_rwstat *rwstat, gfp_t gfp);
+ void blkg_rwstat_exit(struct blkg_rwstat *rwstat);
++u64 blkg_print_rwstat(struct seq_file *sf, struct blkcg_gq *blkg,
++		      const struct blkg_rwstat_sample *rwstat);
+ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+ 			 const struct blkg_rwstat_sample *rwstat);
+ u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+-- 
+2.25.1
+
