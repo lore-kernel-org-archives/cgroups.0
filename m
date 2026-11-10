@@ -1,82 +1,63 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794251427;
-	b=CTw2Iz9b/vsPZrytAvrjZgKwhW+tH/AdCGEdW6olBfKTzpo0BhwlOdN1V3ASIzOuL086
-	 uNkTox9qdumrl5uheC2h9bmlRBoi7mfGrsEfo49jOmxiBteKIKhLzUpgoxTFIyrdji8VN
-	 qcs5oxdbFj4pLmgtjsWMNJFfVqWEbikGtqYoHR1r2RiKCHqk/gqX49RXFal81PzvuUJnO
-	 twLjbPo5eHrrtYm4JfKhHBQoFK2a6f2UB6/f6uxv9PC8sYTj9nLN2m8biNvTBJWqRa8Aj
-	 kxPmrVqC5bBLdvQJQuPBVjMDx+hJGTy0U0iibgusJSC3YSfOq7TreAnT3yGDWjV8nlA==
+	t=1794270209;
+	b=VgfFXm39l/QkDiEzLjEFe/tE/jPZaM3HvbiAPds+R45u5zO3bglPonaBJG+f8bii2myu
+	 rT610KRPoLixyLKs3+7v3KcFwh9PINJpzX236Q4OeRjiBtIXUuCXSC2hR6z4HdXM9VxXT
+	 cnV9AJ1uMNWSQMSSH6bjwLa1+LThl2J3GXzlIld2htAuT7jKEI/+lUuOS4bUNVgtyMuJ3
+	 Fk3TDFfXVUWpFzB97utwwPDwJC3MZYcGVSpCCaNp/9DZoJLrploBVQBzaNslIw38m9kK/
+	 CwY4gfkezeTfrOlC8AlF95LQh+DOUz9DnvD+3/TQ5Fs1ewMmSvCXbn8o3d0EbN9k14w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794251427;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=v0mBl7hoWWZxgfiDy74OaVykDzjYIYsVcPspg6hZ9zc=;
-	b=c4S8ErLBW0vObNDIHU6A4CSaGxFTaft/3sqy4B5QZIbJ81B9lWF3i0qiRHCSkTD1jDyb
-	 zLWkVSA5c1W4iPa/SyGCqcqG/jqsuNe31O3Wn3+7l3S6DbaJAxiI/wJj6QKYbX/+6l3wy
-	 9n5rKtvDTfCW+bWKUXoyPXu41ky9maENYsQyxnlfN4ZBuqXg9p4Cb3EAtpQ5tkd9DMups
-	 NVtECbqt/zVhyG3q4ukoaycwl37chtuW870T2TWb4zaCfr3GO4ZrsF2y/TwFS2HUhYjLV
-	 +wu2r0WimXKlV0QVr9KQsOyF0pYCbsUDXAUEAnZeJCWDPhrFo4+G/On4Qndyk4NUHog==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794270209;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
+	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=Or/iwEJV3s6/OZb+G94Yla/RPMj3Q8ZsEYH3A6tdUpY=;
+	b=360wO0qfLBRvc0rhScF3/xroMU2EyhqYfFOqqzvpW9BIZRBqDw/Ygbxjl5T/hK0EAzEN
+	 X9QnA3ms9UR/hk45n67924Hs8UAcubEcOZkln04xUTQ8ZhAN2ssRLjd+zrscNdBWzGCZ1
+	 ML9FAWS+jaC2+EkCAg47JAQp8wr9aR4XVcg9m0Kc3kqu07F5PDznEeuIsO2TbcBBDJ1TN
+	 V0EFsA9MQhFFMzKrv0rIRdCB2L5l7VaUqOsFdWop2/8Aea/djWGNDEYbyNh4w/WdFVWYy
+	 vFmz17IR9WN8w+wvcRBlx87uppLrLlbiDeqqMxcJHP+cyFGOoSvSnRcWxCNnNwPLYgQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=KipFw4d9;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=gINnAD2O;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD94160A2607
-	for <cgroups@vger.kernel.org>; Mon,  9 Nov 2026 19:10:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD94160A2607
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF63B606A321;
+	Tue, 10 Nov 2026 00:23:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=KipFw4d9
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794251426;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v0mBl7hoWWZxgfiDy74OaVykDzjYIYsVcPspg6hZ9zc=;
-	b=KipFw4d9psaNfkIoaS8V1Pv/tNBD4bzf7QHZs8HT2OJc1kipqOpDqHZB4B/0KD7YAcnjIp
-	7l7/xenAMe59PTXrH7qO6zBFStYS1xbTP52DLFz4O/oGdrXBLhfoUnmCleWLOM4Jfp5w9Q
-	iO8CcTkYpaaCu8O48i+eIFocavuuawo=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-602-BrF_51FsOnOdx0YXRB8gKA-1; Mon,
- 09 Nov 2026 14:10:20 -0500
-X-MC-Unique: BrF_51FsOnOdx0YXRB8gKA-1
-X-Mimecast-MFC-AGG-ID: BrF_51FsOnOdx0YXRB8gKA_1794251418
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 79EE81955F6A;
-	Mon,  9 Nov 2026 19:10:18 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9A7C1195608B;
-	Mon,  9 Nov 2026 19:10:16 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Ridong Chen <ridong.chen@linux.dev>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Waiman Long <longman@redhat.com>,
-	Sashiko <sashiko-bot@kernel.org>
-Subject: [PATCH-next v2 4/5] cgroup/cpuset: Protect current->mems_allowed read in cpuset_fork()
-Date: Mon,  9 Nov 2026 14:09:54 -0500
-Message-ID: <20261109190955.1398611-5-longman@redhat.com>
-In-Reply-To: <20261109190955.1398611-1-longman@redhat.com>
-References: <20261109190955.1398611-1-longman@redhat.com>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=gINnAD2O
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AFEF1F008A2;
+	Tue, 10 Nov 2026 00:23:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1794270208;
+	bh=Or/iwEJV3s6/OZb+G94Yla/RPMj3Q8ZsEYH3A6tdUpY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=gINnAD2O6rE5FAzCv2/fDxSlenMynl3hkBpwj6TR7CLiVWp0H7UZwY8fxSgt7o+j6
+	 NsuZro4PlPsnIG7yIZu7YGjdNXd8v9jI7dVMBfQMkEkycWL7Ky72sR8RpznLOLG5PY
+	 eeZTWRwZcOu7MeeO/st4JcoP4f34QlO1yPrnKGZE=
+Date: Mon, 9 Nov 2026 16:23:27 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Kaitao Cheng <kaitao.cheng@linux.dev>
+Cc: Muchun Song <muchun.song@linux.dev>, Oscar Salvador <osalvador@suse.de>,
+ David Hildenbrand <david@kernel.org>, Mike Rapoport <rppt@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>, Mani Tofigh <mt4022@columbia.edu>, Zi Yan
+ <ziy@nvidia.com>, Mike Kravetz <mike.kravetz@oracle.com>, Baolin Wang
+ <baolin.wang@linux.alibaba.com>, Miaohe Lin <linmiaohe@huawei.com>, Naoya
+ Horiguchi <nao.horiguchi@gmail.com>, Frank van der Linden
+ <fvdl@google.com>, Chris Down <chris@chrisdown.name>, Joshua Hahn
+ <joshua.hahnjy@gmail.com>, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Kaitao Cheng
+ <chengkaitao@kylinos.cn>
+Subject: Re: [PATCH v3 0/4] Subject: [PATCH v3 0/4] mm/hugetlb: Fix CMA
+ parsing, flags and usage accounting
+Message-Id: <20261109162327.f1477705ec4374b5a243068d@linux-foundation.org>
+In-Reply-To: <20261106100521.30099-1-kaitao.cheng@linux.dev>
+References: <20261106100521.30099-1-kaitao.cheng@linux.dev>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -85,57 +66,43 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Reading mems_allowed of the current task outside of cpuset_mutex critical
-section should be protected by using mems_allowed_seq seqlock as the
-nodemask can be updated concurrently leading to a torn read. Such
-protection is currently not implemented in cpuset_fork() for the
-!CLONE_INTO_CGROUP case. As a result, the child task may inherit an empty
-or corrupted mems_allowed nodemask. This violates NUMA memory policy
-constraints and causes subsequent page allocations to unconditionally
-fail, potentially leading to crashes or spurious OOM killer invocations
-for the child task.
+On Fri,  6 Nov 2026 18:05:17 +0800 Kaitao Cheng <kaitao.cheng@linux.dev> wrote:
 
-Fix that by using a read_mems_allowed_begin/read_mems_allowed_retry()
-loop to protect the mems_allowed read.
+> From: Kaitao Cheng <chengkaitao@kylinos.cn>
+> 
+> This series fixes three independent HugeTLB issues reported by Sashiko
+> and includes a follow-up cleanup of NR_HUGETLB accounting.
 
-Fixes: 06f4e9489891 ("cpuset: make sure new tasks conform to the current config of the cpuset")
-Reported-by: Sashiko <sashiko-bot@kernel.org>
-Link: https://sashiko.dev/#/bug/linux-601100b4-fa77-45fd-99f9-bfbd4385201f
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+Thanks, I've updated mm.git's mm-unstable branch to this version.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index e9b84671af21..7aa614c6ac4d 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3868,11 +3868,20 @@ static void cpuset_fork(struct task_struct *task)
- 	rcu_read_unlock();
+> Changes in v3:
+> - Retain patch 3/3 from v1.
+> - Fix code alignment.
+> 
+
+Here's how v3 altered mm.git:
+
+ mm/hugetlb.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+--- a/mm/hugetlb.c~b
++++ a/mm/hugetlb.c
+@@ -1450,9 +1450,9 @@ void add_hugetlb_folio(struct hstate *h,
  
- 	if (cs == oldcs) {
-+		unsigned int seq;
-+
- 		if (cs == &top_cpuset)
- 			return;
+ 	/* Callers must clear transient flags before returning to the pool. */
+ 	VM_WARN_ON_ONCE_FOLIO((unsigned long)folio->private &
+-			     ~(BIT(HPG_vmemmap_optimized) |
+-			       BIT(HPG_raw_hwp_unreliable) |
+-			       BIT(HPG_cma)), folio);
++			      ~(BIT(HPG_vmemmap_optimized) |
++				BIT(HPG_raw_hwp_unreliable) |
++				BIT(HPG_cma)), folio);
  
- 		set_cpus_allowed_ptr(task, current->cpus_ptr);
--		task->mems_allowed = current->mems_allowed;
-+		/*
-+		 * A cpuset.mems update can update current->mems_allowed
-+		 * concurrently, so retry it again if it really happens.
-+		 */
-+		do {
-+			seq = read_mems_allowed_begin();
-+			task->mems_allowed = current->mems_allowed;
-+		} while (read_mems_allowed_retry(seq));
- 		return;
- 	}
- 
--- 
-2.56.0
+ 	INIT_LIST_HEAD(&folio->lru);
+ 	h->nr_huge_pages++;
+_
 
