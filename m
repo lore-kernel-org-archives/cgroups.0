@@ -1,70 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=54.204.34.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.236
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794315084;
-	b=j/Cb1sJ5uAHhT5OX3vA5sCre3eBXKs6RSu9iiQGUNC6F2vWWw7EQ+UosF0IW9jJx4Pr/
-	 A876P1Sh+AYlR3XzDWyJw2sQ03yua3CMcR2X7VqLK/ZlgkSNl4U2MjMiYXPkt0BhKUIYS
-	 F/NM2wyVN8ovEik0Sy5i1Lmc9wuWqvLURROuFLWq22OU4466sbDclUAFnrAqz+oF5IUdO
-	 t+s8D3v9vGX+joCVhYNZFlz40t7x9CGTavHvz7Kej9buXCxAaQ0E2NVaqZnVao+SLdH/9
-	 kayp9XrDQkiHC9WW+XgYGCB1FkZfNOhBRLh+e3F5PpxeAak5rVWwjcdHFBMgJ94Q6CQ==
+	t=1794315341;
+	b=QmgA6nMgfmSz5AEHPr0OR2H/L5s5eyD0VSFKuM4tvjbGI6FaqqczIS141sVZX1+lehf5
+	 bupMcQ96H+UGrUpMpYFZPsikPvdR+a5x1KL+Ohnf0uTtvxSH26E1JB5tcFN80NWWu5gP1
+	 aHqLde/bwjMW/1AhyYthUVWJAFMh3DWgfbB5HYxcUQMRBy/0B+thls8qH+qYlnWkj8YJi
+	 wtIUs1Wk973AJ/uj9u/ZHDYRIYJHGgxFunT3a7q4yY8tddKPr0sKKFZreEVrn2djAH58z
+	 KbCq5jk20yTz7B3H9l9zUh0neOB3PrTxo7CEPxinD+zCCnXvbjSCQoBlRMn5D5VrtWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794315084;
-	h=DMARC-Filter:DKIM-Signature:X-QQ-mid:X-QQ-Originating-IP:Received:
-	 X-QQ-SSF:X-QQ-GoodBg:X-BIZMAIL-ID:From:To:Cc:Subject:Date:Message-Id:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding:X-QQ-SENDSIZE:
-	 Feedback-ID:X-QQ-XMAILINFO:X-QQ-XMRINFO:X-QQ-RECHKSPAM;
-	bh=O/4t0fmDlw3ey9yibz/+cpBbJK+aVAgemr+JbdbCis4=;
-	b=vWiEuSXBjHXtMZNTJ0Vf6WVDhdlIJ+b5VzdIaaZDqj/giz7d92SeY5ZHH/5UGJJwj4Mg
-	 /n/Iho6F/GldMPKvgD22BIX9cqukaPEPHvj/w2DAV/t2KcE5s7z+joWZzgs+TXbYP+VjW
-	 A9EGw35eayJzDPWv3eIhbht7yybIXCNf4otVBkSkkl7d4kjBwKJMIZ01cFqN4OvbzOAkg
-	 xRMdtyoPL1/86nMhQPBJ/lf/0X8V5i+vEHRF3+9gSYQQy+98IYdJ4BZa/FRlwIlT821RS
-	 n0DrAWvZFLR/V44qaCwGIjNzfrmoIvaSAfd3YkzMkTZDERWsD1776tEMebWlEzsAp3w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794315341;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=0YrNyvOkrO10J37Rz2X2JIGF70cIhICM0P7YzECl+1k=;
+	b=Io5pd2TP5mF3x+P9xRzm3KHEqd3Yu/Y7hHtbL8jIPjil03xuKDO+t6SEtPpBso8M2H++
+	 PSqB+EQTk5VH+9WDAXu6+rSFsghjU7Frtixop0EUsxWt1JvfliiND+aTnwuU47v8ESOfv
+	 0iRv41xmaFi8SA8SVe0XGA7VWOSSPHpghUPYA4je2sgWSa0P5WEdtHhrfLMmAiARekZCf
+	 U5T+yE4Z/3zT0hTPQAxwK6hTi9CJUFuTfmFyw0TXYjciMbrXM+Sx4RV5g/I8JBRR0Iq6Y
+	 W2mdhjN1qX2pNKMbfkN1hmDTOviDynbArBOD/dClyRiOeG4FISTloB/bDgTnG3qmmSg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=smail.nju.edu.cn;
-	spf=pass smtp.mailfrom=smail.nju.edu.cn;
-	dkim=pass header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.a=rsa-sha256 header.s=iohv2404 header.b="aVvjw/hp";
-	arc=none smtp.remote-ip=54.204.34.130
-Received: from smtpbguseast2.qq.com (smtpbguseast2.qq.com [54.204.34.130])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=kXnyNkFd;
+	arc=none smtp.remote-ip=91.218.175.236
+Received: from mta0.migadu.com (out-236.mta0.migadu.com [91.218.175.236])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ECB760A260D;
-	Tue, 10 Nov 2026 12:51:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2ECB760A260D
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smail.nju.edu.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=smail.nju.edu.cn
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BAF4606A335
+	for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 12:55:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6BAF4606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=smail.nju.edu.cn header.i=@smail.nju.edu.cn header.a=rsa-sha256 header.s=iohv2404 header.b=aVvjw/hp
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=smail.nju.edu.cn;
-	s=iohv2404; t=1794315073;
-	bh=O/4t0fmDlw3ey9yibz/+cpBbJK+aVAgemr+JbdbCis4=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version;
-	b=aVvjw/hpJcwffUAD3ZJb8WosgfOpDSSEIvdMOHTUqrt6tFElF5BK+LYgmP6d43qmB
-	 C9bbNv4He8wF4l+U41F9DlRg9gQFsyOfP5JIXAk0KBl4ariKW9EtR1nE1AZR25ZgjH
-	 guK7NB7KsoAqcVzzAdOwGhzTJCQQbs679chUlYRo=
-X-QQ-mid: zesmtpip2t1794315072td94b9037
-X-QQ-Originating-IP: kUPMYRU8RXedmnEzvofaVAd6aIx214/gp9wE5oQPGe8=
-Received: from workstation-Precision-7920-Towe ( [localhost])
-	by bizesmtp.qq.com (ESMTP) with 
-	id ; Tue, 10 Nov 2026 20:51:10 +0800 (CST)
-X-QQ-SSF: 0000000000000000000000000000000
-X-QQ-GoodBg: 1
-X-BIZMAIL-ID: 14794258371886372565
-From: Kang Chen <k.chen@smail.nju.edu.cn>
-To: Yonghong Song <yonghong.song@linux.dev>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>
-Cc: bpf@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	cgroups@vger.kernel.org
-Subject: [PATCH] bpf: make css iterator stay drained after NULL
-Date: Tue, 10 Nov 2026 20:51:10 +0800
-Message-Id: <20261110125110.2935707-1-k.chen@smail.nju.edu.cn>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=kXnyNkFd
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=YXNTJ8EvTAje+v+yw6YmnQb/hbXtkj5MXzXnPyCZFEE=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794315338; v=1; x=1794920138;
+ b=kXnyNkFdHwMGIlKryzmC4olwC6vefPlrAb0PMxl8pelBVcW/khfy6ZMjoOR0KC84KFYqFmlp
+ xgWcUp2wBaKWZeuUdxB+TXHgyquHuPNG4QTflGjFXltI5xk/ppabVx5upvJk9BsKgHpCe1pg3ta
+ TrBg2Rpjglrv2BaazhpfSQ7c=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 425a090c15f8c4fd;
+	Tue, 10 Nov 2026 12:55:36 +0000
+X-Mizu-Trace-ID: 425a090c15f8c4fd
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <19708635-67de-45ab-9539-8d686caa7132@linux.dev>
+Date: Tue, 10 Nov 2026 20:55:29 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -74,69 +58,242 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: zesmtpip:smail.nju.edu.cn:qybglogicsvrgz:qybglogicsvrgz5b-1
-X-QQ-XMAILINFO: MACXe2l6e7j9/++3jLIITc06cpcQ64cTdZReiCI/CQ+524grdLXPi7lK
-	TCyPU4QSTQOlGUkAhQF2QeH+WHJz8lV9A2Mp0gD8gPyJdwYzeHboC2EXF+sVPsC3qINbLe0
-	MajzBnrvoDd3nHYHiC4yp0XGITso+Az9j81XZNOq5BS7js+4I402cyx8oM4PGUCj8iDeD7V
-	HAanYcgQs2H02vHViUn93Sg4ToqQiRHTLsXkOZLIMXCa7FgBzxMrcmmBmNrVsWD92z8BTQH
-	FiNGI9j5ENyxZeJ7iec3ksb8aD45a7VTJMBHQRf6PLQC6ifVEI7F7Ani3ws+bHMCqO/hOQ9
-	ERLC+9xyAwbjdh81qbetDE8TOvZt/BJWxDWj5xq/ttyK5eg8yXFsWS5C3NH6cW8rF+A+TZL
-	ESeVHwMWOj18Kh0H6vj3HyUSH1m7YCj8GnZztuGpb5Wks19upe6M81DKUO5ifEnAbs50LRU
-	c+drtj7n7G/pN3duM7oBCdbRJF1H7pH2Zl9ztKFTiY7MRwXXrcX/ZephfpvL2lv88Fornth
-	gE9gKbQsTyFdsYK/HJZYsK0U5/+Gcpxl37iDC8uXVygeNLOn6EQmiw71MfSWqmcTup3oUPF
-	47Os4wDhmHNebd99ce1R7MSOJbdWIODXzoXhwA+bau1/Hh+F8GnNfyFF00dpWYejifjgiLc
-	z/QMboZ4aHSKIjtz4s/QE6yMWu45YTcbLxceQK1FkXJRRLotQBcxzxQdKA8f9pMboSVebq0
-	7HHdl3+mjzw5vEY8+g72uuNCb24GI2jXvdrJNehIq/i8/nWEj8XKhxy6CkOxsEQhAfXX/H7
-	a9g6Qg2vZBdWzIskylsbmxNO9htWzHv6lF6ttoRUfcMGyUspXwxQZz0LGoDSMts07gXtOzQ
-	9PMNlumkRGmTMNUxO+aVFnb9nQkxRwPkFFKQsIMjO2dDtF3VfFnsLbMVtLlkzeDzB+wBzg4
-	2gX/Y8C5XVT6u7ntPXknGEgS93wMbHTpi2jToM6yHqPfDS25lgrghTAfJhlmNBZmehfJcfX
-	uY53mWsDqNlbVjlsh7
-X-QQ-XMRINFO: Nq+8W0+stu50tPAe92KXseR0ZZmBTk3gLg==
-X-QQ-RECHKSPAM: 0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 3/3] cgroup/cpuset: Keep the top sched domain non-empty
+ on CPU hotplug
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
+ <longman@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Guopeng Zhang <zhangguopeng@kylinos.cn>
+References: <20261110050324.173461-1-guopeng.zhang@linux.dev>
+ <20261110050324.173461-4-guopeng.zhang@linux.dev>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20261110050324.173461-4-guopeng.zhang@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The css_next_*() helpers start from @start when given a NULL position.
-bpf_iter_css_next() leaves kit->pos == NULL after the last element, but
-keeps kit->start set, so a next() call after exhaustion starts the
-iteration over from @start again.
 
-The verifier relies on the iterator contract that once next() returns
-NULL it keeps returning NULL: process_iter_next_call() marks the
-iterator DRAINED and treats the result of later next() calls as the
-constant zero.  A restarted css iteration therefore hands the BPF
-program a kernel pointer while the verifier believes R0 == 0.
 
-Clear kit->start when the position becomes NULL.  bpf_iter_css_destroy()
-is a no-op, so no cleanup depends on @start after exhaustion.
+On 11/10/2026 1:03 PM, Guopeng Zhang wrote:
+> From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> 
+> In cpuset_hotplug_update_tasks(), the local partition check passes only
+> the partition's own effective CPUs to tasks_nocpu_error(). For a
+> top-level partition with children, top_cpuset_sd_nocpu() treats the
+> children's CPUs as being returned, although hotplug does not return
+> them. This can leave the top sched domain empty when its last boot
+> domain housekeeping CPU goes offline.
+> 
+> For example, on a 32-CPU system with isolcpus=domain,10-31:
+> 
+>    echo 0,2-9 > A/cpuset.cpus
+>    echo root > A/cpuset.cpus.partition
+>    echo 5-9 > A/B/cpuset.cpus
+>    echo root > A/B/cpuset.cpus.partition
+>    echo 0 > /sys/devices/system/cpu/cpu1/online
+>    Oops: general protection fault
+>    RIP: 0010:build_perf_domains+...
+> 
+> The remote hotplug path does not check whether the top sched domain
+> is empty.
+> 
+> Check the full effective_xcpus of top-level local and remote partitions
+> without assuming any CPUs have been returned. Only invalidate a
+> partition to restore the top domain if it can return an active boot
+> domain housekeeping CPU. Partitions holding only boot-isolated or
+> offline housekeeping CPUs cannot do that.
+> 
+> Add hotplug regression tests.
+> 
+> Fixes: 9b496a8bbed9 ("cgroup/cpuset: Prevent leakage of isolated CPUs into sched domains")
+> Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> ---
+>   kernel/cgroup/cpuset.c                        | 23 ++++++++++++++++---
+>   .../selftests/cgroup/test_cpuset_prs.sh       | 19 +++++++++++++++
+>   2 files changed, 39 insertions(+), 3 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 8b6831983803..0b392d50df27 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -4043,6 +4043,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>   	static nodemask_t new_mems;
+>   	bool cpus_updated;
+>   	bool mems_updated;
+> +	bool nocpu;
+>   	int partcmd = -1;
+>   	struct cpuset *parent;
+>   
+> @@ -4054,9 +4055,24 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>   	if (!tmp || !cs->partition_root_state)
+>   		goto update_tasks;
+>   
+> +	if (parent == &top_cpuset || is_remote_partition(cs)) {
+> +		/*
+> +		 * Hotplug does not return CPUs held by child partitions. Only
+> +		 * invalidate a partition for an empty top sched domain if it
+> +		 * can return an active boot domain housekeeping CPU.
+> +		 */
+> +		cpumask_and(tmp->addmask, cs->effective_xcpus,
+> +			    housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT));
+> +		nocpu = cpumask_intersects(tmp->addmask, cpu_active_mask) &&
+> +			top_cpuset_sd_nocpu(cs->effective_xcpus, NULL);
+> +		nocpu |= cpumask_empty(&new_cpus) &&
+> +			 partition_is_populated(cs, NULL);
+> +	} else {
+> +		nocpu = tasks_nocpu_error(parent, cs, &new_cpus);
+> +	}
+> +
+>   	if (is_remote_partition(cs) && (cpumask_empty(subpartitions_cpus) ||
+> -				       (cpumask_empty(&new_cpus) &&
+> -					partition_is_populated(cs, NULL)))) {
+> +				       nocpu)) {
+>   		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
+>   		remote_partition_disable(cs, tmp);
+>   		compute_effective_cpumask(&new_cpus, cs, parent);
+> @@ -4069,10 +4085,11 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>   	 * 2) parent is invalid or doesn't grant any cpus to child
+>   	 *    partitions.
+>   	 * 3) subpartitions_cpus is empty.
+> +	 * 4) top_cpuset needs an active boot domain housekeeping CPU from cs.
+>   	 */
+>   	if (is_local_partition(cs) &&
+>   	    (!is_partition_valid(parent) ||
+> -	     tasks_nocpu_error(parent, cs, &new_cpus) ||
+> +	     nocpu ||
+>   	     cpumask_empty(subpartitions_cpus)))
+>   		partcmd = partcmd_invalidate;
+>   	/*
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index ee4d57b7e35b..f345696e5b53 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -648,8 +648,27 @@ ISOLCPUS_DOMAIN_TEST_MATRIX=(
+>   
+>   	# An invalid partition can recover once it leaves a top-level HK CPU.
+>   	" C0-9:P1   .      .      .    C0-6,8-9 .      .      .     0 A1:0-6,8-9 A1:P1 7|"
+> +
+> +	# A local root must not count its child's CPUs as already returned.
+> +	" C0,2-9:P1 C5-9:P1 . . O1=0 . . . 0 A1:0,2-9|A2:5-9 A1:P-1|A2:P-1 1|"
+> +
+> +	# A remote root must return CPUs when the top domain loses its last HK CPU.
+> +	" X0,2-9 CX0,2-9:P1 . . O1=0 . . . 0 A2:0,2-9 A2:P-1 1|"
+>   )
+>   
+> +# Keep an online boot-isolated CPU at the top so hotplug does not
+> +# clear subpartitions_cpus before checking the individual partitions.
+> +if [[ "$ONLINE_LAST" -gt 10 ]]; then
+> +	ISOLCPUS_DOMAIN_TEST_MATRIX+=(
+> +		# An offline HK CPU cannot restore the top domain. Keep this local
+> +		# partition valid while its sibling returns active HK CPUs.
+> +		" O2=0:C2,10:P2 . . C0,3-9:P1 O1=0 . . . 0 A1:10|B1:0,3-9 A1:P2|B1:P-1 1-2|2"
+> +
+> +		# Check the same active-CPU rule for a remote partition.
+> +		" O2=0:X2,10 CX2,10:P2 . C0,3-9:P1 O1=0 . . . 0 A2:10|B1:0,3-9 A2:P2|B1:P-1 1-2|2"
+> +	)
+> +fi
+> +
+>   # Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
+>   # This also means that CPU 8 is available and is a nohz_full CPU.
+>   NOHZ_FULL_TEST_MATRIX=(
 
-Fixes: 7251d0905e75 ("bpf: Introduce css open-coded iterator kfuncs")
-Signed-off-by: Kang Chen <k.chen@smail.nju.edu.cn>
----
- kernel/bpf/cgroup_iter.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Hi Guopeng,
 
-diff --git a/kernel/bpf/cgroup_iter.c b/kernel/bpf/cgroup_iter.c
-index fd51fe3d92cc..fb7ba1e45590 100644
---- a/kernel/bpf/cgroup_iter.c
-+++ b/kernel/bpf/cgroup_iter.c
-@@ -365,6 +365,16 @@ __bpf_kfunc struct cgroup_subsys_state *bpf_iter_css_next(struct bpf_iter_css *i
- 		kit->pos = kit->pos ? kit->pos->parent : kit->start;
- 	}
- 
-+	/*
-+	 * A NULL position means either "not started yet" or "drained" for
-+	 * css_next_*(), and all of them restart from @start when passed a
-+	 * NULL position.  The verifier relies on an iterator which returned
-+	 * NULL to keep returning NULL (see process_iter_next_call()), so
-+	 * clear @start on exhaustion to make the next call return NULL.
-+	 */
-+	if (!kit->pos)
-+		kit->start = NULL;
-+
- 	return kit->pos;
- }
- 
+Looking at patches 1-3, the same check is changed back and forth in
+several places, and the places don't do it in the same way. I'd prefer
+a single helper that is unified and easy to understand, so that every
+place can just call it.
+
+As tasks_nocpu_error() is shared by the CPU mask update paths and the
+hotplug path, patches 1-3 end up checking the same thing in several
+places with different masks. How about making tasks_nocpu_error() take
+the CPUs to be returned as an explicit argument, the same way as
+top_cpuset_sd_nocpu() does, and use it for all parents? Something like
+the following (not tested):
+
+/*
+* tasks_nocpu_error - Return true if tasks will have no effective_cpus
+* @parent: parent partition, NULL for a remote partition
+* @cs: the partition
+* @xcpus: exclusive CPUs that @cs will hold after the update
+* @del_cpus: exclusive CPUs to be returned to @parent, can be NULL
+*
+* @del_cpus may include CPUs that are also in @xcpus and will stay in
+* @cs. They are skipped by the @xcpus check, so callers can pass the
+* current effective_xcpus of @cs without masking it first.
+*
+* top_cpuset always has tasks, and its sched domain needs an active boot
+* domain housekeeping CPU.
+*/
+static bool tasks_nocpu_error(struct cpuset *parent, struct cpuset *cs,
+							const struct cpumask *xcpus,
+							const struct cpumask *del_cpus)
+{
+	const struct cpumask *mask = cpu_possible_mask;
+	int cpu;
+
+	/* A populated @cs must have an active CPU in @xcpus */
+	if (!cpumask_intersects(xcpus, cpu_active_mask) &&
+		partition_is_populated(cs, NULL))
+			return true;
+
+	/*
+	 * A populated @parent must keep an active CPU in @mask, either from
+	 * its effective_cpus or from @del_cpus, that isn't taken by @cs.
+	 */
+	if (!parent)
+		  parent = &top_cpuset;
+
+	if (parent == &top_cpuset)
+		  mask = housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT);
+	else if (!partition_is_populated(parent, cs))
+		  return false;
+		
+	for_each_cpu_and(cpu, mask, cpu_active_mask) {
+		  if (cpumask_test_cpu(cpu, xcpus))
+				  continue;
+		  if (cpumask_test_cpu(cpu, parent->effective_cpus) ||
+			  (del_cpus && cpumask_test_cpu(cpu, del_cpus)))
+				  return false;
+	}
+	return true;
+}
+
+The callers then become:
+
+/* update_parent_effective_cpumask() */
+nocpu = tasks_nocpu_error(parent, cs, tmp->delmask,
+			is_partition_valid(cs) ? cs->effective_xcpus : NULL);
+						
+/* validate_partition() */
+if (tasks_nocpu_error(is_remote_partition(cs) ? NULL : parent, cs,
+			trialcs->effective_xcpus,
+			is_partition_valid(cs) ? cs->effective_xcpus : NULL))
+					
+/* remote_partition_enable(), instead of top_cpuset_sd_nocpu() */
+tasks_nocpu_error(NULL, cs, tmp->new_cpus, NULL)
+
+/* remote_cpus_update(), instead of top_cpuset_sd_nocpu() */
+tasks_nocpu_error(NULL, cs, excpus, cs->effective_xcpus)
+
+/* cpuset_hotplug_update_tasks(), hotplug returns nothing */
+nocpu = tasks_nocpu_error(is_remote_partition(cs) ? NULL : parent, cs,
+						&new_cpus, NULL);
+							
+In the hotplug path, @del_cpus is NULL as nothing is returned to the
+parent. new_cpus can be used as @xcpus for both checks, as the CPUs of
+the child partitions of cs are not in the parent's effective_cpus
+anyway. The check that cs can return an active boot domain housekeeping
+CPU before invalidating it can stay there.
+
+This also covers the local parent case I mentioned in patch 2, so
+patch 2 won't be needed. Could you give it a try with your test cases
+and that reproducer?
+
 -- 
-2.34.1
+Best regards
+Ridong
 
