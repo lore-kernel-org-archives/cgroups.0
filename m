@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.141
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.253
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794394573;
-	b=n6819b1SskFPOSYk20NPbqsKy6XLMSGKCePe07INtjOQbg99TzBAGBNaoWD67cZhkWIO
-	 C75imm5UmXVOWOquG08jGvbb7nH3nlVdimubnqnQNiY2k0mqjspWM6Hp7WEGWCBHdWZMk
-	 /jB8ZOOiva4uGXogbRLSEAB3UUbfAYwLAEeFS5FXMaTDEj2NIU6Axm3/KCGx3K6juTBnO
-	 XfviA2pGm8zvMmzskvUybXYiIq4JTox9UOvZC9cNG7vHB2xSFM9GrgvY8y0TgY3AhZ7HO
-	 Y/8CWV96TnUTS+r4MERgP0t26f8mFCNOO1x7Z4HX0DUlqx/wWgoaFXhaRnd/OCV7X6w==
+	t=1794399554;
+	b=fM4rgjQDYdwjVNP3FFJAR950RvEEjgAF8nZhlgzvwYlS/Zes0a0rKezNpCf1iwtAseYP
+	 YqtRUAYvR64NZb2RssaIbcULOwLrz6Z9aKEJicittM5ILd0JtLP3rTKXVo+qjYtKIQjjI
+	 NRSyZqoIhji8q8C2xTd0zL8XtD2L3sooZIyncCyvB0AvFBBDBDxNTlQVcZzL7FhAUsMgT
+	 44HFWb8usw0Bb8queojcYy7FLswW3PABzh/r5n7s0deLEWXea9ahWmUXBHfAyp1FgnAVm
+	 sbXAEGpeI5jYzT7MoDG8Ye38rNdZ+sU4NwqljgvvQ7yXumJlpZ+fz8ElnguLL6DsLWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794394573;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794399554;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=TctZsdi6IZ3B5WWF62qIJenu3VSMwd2OUpGdE4DWmgY=;
-	b=HiCagpK1GeLNiwLoz++MfvCFaB9JcQU4eHOa/MniyPlBU2vdE+jbraMHEzaZ+fVoOZQZ
-	 vi5kHxkMX7UlhVh0QNVIkxT7e7G8240F7pG/rgZyTSa6Ejp1XhAdvdxtNUf+pjD5/lN5N
-	 aCI4/U3ItLIVf14FGctG4zwe8GTX5VDoaQFpltjMcI6sS8fLmya0yNtgq82+FK7kxNEA+
-	 M7urc+BsM6NHy5nD0YtAK0qmcsn8g4kIl7bl4tcfzSkko+DmDe6eeEPMrW4S7E8908kBb
-	 f7Efh8rc2gsGPgQurbIlBHF8Uu3H2+lbee4X7ywtUXi3SZmsxPmkPYlfBbeILzjyhGQ==
+	bh=FwlCJIPGZELPwpcaZclguO5jJA9pNZllbqwAgK19VHo=;
+	b=Bs8oRpvaJWqJlTPqM/idXzMv3ILrgiW8IecwCJmihBly+ky2pUAwKutrVgdhrWn9d14Y
+	 5aXOylR0knDxuOV5mbF/XLf/a4mLFGSD3s88GZagWjnngMuVO7t7egDLeYyLV7nC6me1F
+	 MUlgvRKN9bo6UYWy0k3DXIUBvNmyvnabXQNKaLz1BcsTQXnBmACqq6V3SscF2Mz7Hg/U2
+	 zcNn/DSxCOLeCMbVa996E6gygwEI2D9mVW4a61j7P5bkUuIxOMEWEm5WIxi4L28QMuub1
+	 F/kA5t7TSisrrUSclUPgf5tyWN2cST3Fkos0mWQ2VLT101+ssfwfR0DwXUB7V+1tIaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=UcQfdr5h;
-	arc=none smtp.remote-ip=95.215.58.141
-Received: from mta1.migadu.com (out-141.mta1.migadu.com [95.215.58.141])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=GCtZz5FH;
+	arc=none smtp.remote-ip=91.218.175.253
+Received: from mta0.migadu.com (out-253.mta0.migadu.com [91.218.175.253])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9DE3606A321
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 10:56:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E9DE3606A321
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35EE606A32A
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 12:19:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F35EE606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=UcQfdr5h
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=GCtZz5FH
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=hgWvdB0WumYTd0mgal8lwzN+jRf2O9Gqxcv2ULOHjUM=;
+DKIM-Signature: a=rsa-sha256; bh=3m2GMq0RVL0jhsbb+prdqkpSbIXFKr1HjWNZdvr7VHw=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794394570; v=1; x=1794999370;
- b=UcQfdr5hTS/yoX6ha/s0tl19EaRvfwoVesibW9lrwxqZE2DKpqyxIScOifAhf/SMUHiix+pu
- PSGrsumE3cF/nWN1qxYOzqd55a1WJeNqSH/UzgWTIN4asYHax5qUlp624ycV601QdbbL8nrZyF+
- x/JklCMkVHnQbkDVz1HccVn0=
+ t=1794399552; v=1; x=1795004352;
+ b=GCtZz5FHwwdRsqI2CZ8CwhvYkNxeNKxPYqTPvUfGJNyHCDdy7O9CBhW01K05GICMIyNPJEcg
+ vOLUXOrKwgsuspjN/Ukg21uQrOJgKaLsTBomROd2R3J7ipXgNLWLK1+5rC6j2+ftwoHpsaBZYeo
+ ggLoR6vKJr/RsuYjhFYxdjAY=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id a02307a6ac3a751d;
-	Wed, 11 Nov 2026 10:56:09 +0000
-X-Mizu-Trace-ID: a02307a6ac3a751d
+Received: by smtp.migadu.com with ESMTPS id b1624b5b0c979197;
+	Wed, 11 Nov 2026 12:19:12 +0000
+X-Mizu-Trace-ID: b1624b5b0c979197
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <a74dd545-76dd-450a-98a1-9541ce9189d3@linux.dev>
-Date: Wed, 11 Nov 2026 18:56:06 +0800
+Message-ID: <b90235a0-4ac6-49e9-bb2e-fad23c4ab15a@linux.dev>
+Date: Wed, 11 Nov 2026 20:19:06 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -234,6 +234,14 @@ Content-Transfer-Encoding: 8bit
 >                             const struct cpumask *del_cpus)
 > {
 >     const struct cpumask *mask = cpu_possible_mask;
+
+Hi，Ridong
+
+I made a small adjustment to your suggested code. For non-top parents, I used parent->effective_xcpus instead of cpu_possible_mask.
+An ancestor update may have removed some CPUs from the parent's grant. Counting those CPUs as returned could allow the child to remain valid while leaving a populated parent with no effective CPUs.
+
+Thanks，
+Guopeng
 >     int cpu;
 > 
 >     /* A populated @cs must have an active CPU in @xcpus */
@@ -295,9 +303,3 @@ Content-Transfer-Encoding: 8bit
 > and that reproducer?
 > 
 
-Hi Ridong,
-
-Thanks for the detailed review and the alternative approach! I'll follow this approach in v4.
-
-Thanks，
-Guopeng
