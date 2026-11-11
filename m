@@ -1,54 +1,102 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.164
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794410862;
-	b=fX9cTMoECa0+y32f2FoYUfl3z8+yg9R7Jkcr7Eg5nLYzWGuZ4EMMgMxgJodx1BtTmkz3
-	 ZJsSbRRLoDuiXygNIa5JrB5byAh4l3048JMvEjbcIcjnIsjGjta6ik9Zfh1CyWqoSCFyw
-	 K2hgIOfqQPKe3Cyak7nX+hzoqOSsojBNLjk50TOJ7m43pNPoZuW+SQ3ZIx10m7tmk41Yt
-	 erxgAkToSAlCLSVgtUR9TarOl0N3EAkqZLsPYyG66SFmbBGYiGOTyXUEjjrXEndsUnO9G
-	 B3qkoXKgLjdGy5A95LCuzKjCZJLm3jB5j35Y8HE197oWYdWdYCMpq3MdVUgykf6pNdQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794410862;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=YVGRySLWzLbr6G9DwywhuXVVUIc//KTjhc8CQKSeRe4=;
-	b=DSP7h/7PuFjxO08kg6ngGLlTNte3v1LRoPxeOEk1QWXT/T44YOTSKfMoOccdxKkj5PLw
-	 RfExp+ohUVM45i5qW+OK/7qqgAtu0HTZUJDnLaVnFaT/ygUijg+63XWto19hLk1DbsFWp
-	 188QEi2MRqBAQZxe9hpvMMvduC47IkIWBHGvlg1oCH1UyKcoaaN4cz1S0cgm/0JmcKPDo
-	 fixM073pHxmPhWErcurxvBx6M6SukZRuBVy+Qxamk7tciKA/7EXoXVoQ3ekq/zAjHxiVO
-	 orjid6/TzwKXrHhcoj6dNBnfejEZ593ruSHKDWYXYjkb5Gus096ayu8NncYIN1Z91mg==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=r8Xrdv7q;
-	arc=none smtp.remote-ip=91.218.175.164
-Received: from mta0.migadu.com (out-164.mta0.migadu.com [91.218.175.164])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.45
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794411015;
+	b=MmkrbGVgD8XycYjUqgFloT8A4NQQEsBQqKRJ1cCFCNscmX+y+/JBjNjq+1unepjSGe8m
+	 JnbsxQIuhXUIr8P+E81uqKQzu22/Ai0ceGMRr6WooIR6OzbG3C8vtja070DQukKgYBP4z
+	 Oya2UAUyQVYhcXZjK4mFmPiq6VLTFybjuJ4qWZOCWX8Csj/qBz1m1WOEzw5OSa4FZ3UaQ
+	 lyTOk1qwBS3T5jsIoQmQqHQtaml4I+Uz/YeCSVEBAhaHYD31hrMY4UX0sFEkpst6txHp5
+	 8+GmsQCnSeXfSGUv2v4p8MxqGZ6ChgeRY1cx4nwG9pHPTUx1P1G2CVJ+GXnH5nP2V/A==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794411015;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Received:MIME-Version:Received:From:Date:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type;
+	bh=dX6hFmZdS7Gg8cUOEwScRtDpzCl55I9CPUiy1XCzenQ=;
+	b=SuQAt+WQbXVjgAPyz78iL4qnXqM/oz9Y65hC6F4VRinCIOTg+PANhYDyXzg+lTqIO8ND
+	 E+F/t7Ffl/bYS0aqEtVZtTMnm5A2vgktgcvanQnAK5XWdkup3YDXrsF6vJUZTYh2PxW8N
+	 KtjRmG0lUhRtCGNQEmXdhnWo4W+B5ukndxsmRZAOiRS5HRxEXVIfbUxRl50n6A2wu60w1
+	 HXcYU7KVtL1pd3+RbPNz8aLLokGbWD+O4FOwc7ImKQmUlzuKtB98Go1lbOeRomfRL+qtx
+	 zEOOkzLeG+WNXGDovWbZvPKVX8ieVZwm+0BuJjhhnA7DEy5ZXk2ehd/DBibpYchN5/w==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uPvURM2E;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.160.45
+Received: from mail-oa1-f45.google.com (mail-oa1-f45.google.com [209.85.160.45])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B74606A324
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 15:27:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 03B74606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33E3606A324
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 15:30:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C33E3606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=r8Xrdv7q
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Z1VGtGrk7JFgea2wbfV8+qOC1F1Ifp0uYdGtantuafk=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794410859; v=1; x=1795015659;
- b=r8Xrdv7q0Iz4YtaCrzLS4oQ+Jamd8J4K2QIJUa1TZw/OFBjbUmQU9xouPjerP/8qexNH/vpB
- b06fMG+aLCxVxdjKGg67BmXDRwsdNbA/Pyl/RAwqUJZOZH36I8KYZqw1YyvhdW8NCRh2rYre7D7
- 1gnSVWmdcMfzib/2+Lj1eb30=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 53e768523cdcce5d;
-	Wed, 11 Nov 2026 15:27:39 +0000
-X-Mizu-Trace-ID: 53e768523cdcce5d
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <fe7aa630-d323-4981-9f89-0958cb6204a2@linux.dev>
-Date: Wed, 11 Nov 2026 23:27:34 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=uPvURM2E
+Received: by mail-oa1-f45.google.com with SMTP id 586e51a60fabf-4ad5b52f0a7so2073963fac.1
+        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 07:30:13 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794411013; cv=none;
+        d=google.com; s=arc-20260327;
+        b=ZNTzoom3HeyyGoc9EvHoqQ6q3EIhO8Jd0wfSChlbwP0LURuc9rfD/50mOB7HP+PvU5
+         /L8+D+L8FR3DXMHZdpBipt//e+wWOOQ+HvqSNSXjsS0vkwkxOf/hb33pjokppU/waLNi
+         p4Blu+YpZjnliDaIdG1kqu6we9WugMu9gh+l7vvTCBCYCSwppXoy/hNOkWf2kISHx8IX
+         4cvL4rICmjqUdz8evtzv2Div9eUw8spaFGr277NEiDSBVklEuZT11tnj55Dj7PZ7Zdu5
+         a2RufONa4ZElczne0FTBhSWzVqrZYhp+m2MJb/lWLYZ/rn+7l0ILH1l4P/hA5QSlJubJ
+         Lv4w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:mime-version:dkim-signature;
+        bh=dX6hFmZdS7Gg8cUOEwScRtDpzCl55I9CPUiy1XCzenQ=;
+        fh=Lyu4fEww7ZOSS7aVdq3Bf1Shs4NC2RP6W+Rksnf0O14=;
+        b=kE7WK8Kz8LEm3zkj5C5oekLsUuZUTOXtxjoGTlTs3onNhk41RZTmA5fS5n+UZzMRvD
+         Syf11lz5unPJMZGkgFkI7lDCZO77VdiY8tzV9aGeFs2JiCV1Y6PIWd+jIs96G/smFPc0
+         qxoS5qnSXDc5YsEJBsv2aVmpVKdX8IPsSDUzWmtPLe4TWHzB0iXId0YZ4cE5rNIPvqlq
+         Q7vOouMNvE4MqcrO+sQOZRPuytJyKg3MN6wHynPjm9+yo5nVJhCJtjTWCw41kc9Hgubv
+         DFhludvcK5Mrcu/Ap8ACeTXAcV0sBcIRaIltuHKe+LlrQ+TIEyI0koaqIpa/5o4Luhpc
+         6E5g==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794411013; x=1795015813; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dX6hFmZdS7Gg8cUOEwScRtDpzCl55I9CPUiy1XCzenQ=;
+        b=uPvURM2EQFxOyq7hd1v1FGg3JL8ari51ttuca9gK060yWtnx9L3TA4MmDMiMSo3rZL
+         WFD1G4lvnZVNa2HuDBUrZq6ik1T7dI675MvF2kIPB1AjR6o0pwQmedDHWg3g6F9g1Nol
+         dRGdVeA0htRy/F1dI2UaxY15rtGq2ijkVikVT/YdY6PSa4/479UdwKOS7LmkZ4MHega3
+         5aLRD/SwptUczegbPOjkbigMsTrzCLEifDGFYwYEslf48xjKM1dSlqpCziK2HWHO1jGM
+         4Okcd4LKVRA2WaqFtRu9agY3VafW7MFh7Vj4ZW5tUkkucfzNCFpJbG3hrwMAEht90mgO
+         udGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794411013; x=1795015813;
+        h=content-type:cc:to:subject:message-id:date:from:mime-version
+         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=dX6hFmZdS7Gg8cUOEwScRtDpzCl55I9CPUiy1XCzenQ=;
+        b=p9voFxx30V9xgVjtBHxkxnz4Xf3mBIgjSj18+FVRDp+MGrue7kQ8kZQTZBlmTznGvJ
+         nu8YC8W2WdplMaCWp+YO8qONUomVhn0tM3nb662wX4UIRjZGIDG64A8c93/f4Lw+my/n
+         7xVolj/s3pEnv9Wle2Iq/8Ht9XsRcQcmlQFWunm64RijGKXuMhCEZ6xvLYLlw3eRY2eM
+         Y0vGImDm4gJtuiIhCuO4TTCAHl3dRmeHDG62ikYmcO1/qxf2SFhG1QlLtTeHEqvJDpjM
+         5pLoRODLVozKDXHJOv7PZLwLTLcVch1fo1k0BG8sbW02xUPscHgxOKTOgneMzw7Ufg1G
+         i0/Q==
+X-Forwarded-Encrypted: i=1; AL+hErEgYhgJNGyBXXfYC2LdIclIp5zbE+E9VpgK03Wm3oKymm8rUVjIsAnbrWpNCarl4fEl+fWNskPE@vger.kernel.org
+X-Gm-Message-State: APuU4Z+2ZKx2mKY0h5wZi49e51lFlEe46g0ckE53mEy91Hvg9ubuYYBv
+	eyrrx6BH22SAhIe/aWLyWIWP7enVDfP2ssiRFcHhhxAVKd4Faj8itdW1VMfwFsz74YnzxfDEhLw
+	7fajBSdmDWXNvqlR3sna+9Werh08Ei98OIlQn
+X-Gm-Gg: AYBFou3tpYUbaRBtoA1tvfiSDxpT7TIWyGgqjgJ6eDoFlXcm/LhQ4y+72z0XX9h26gR
+	ODQRIMFsJzXkXLeqK/gEIncCV+ipTZpm8vbNqPZg7ZSaM3Yt1UoSU7LSf3crskq4WPchlFy5qGo
+	k1wDWIflYrsG6iS6SBFDpli/XF06HzvoIuLliE7c72J/jLHdBxbjOkjM5eHRd1/TzcSB5BSrtum
+	XS1C3ru4Go8BbygL+tOe3zqHhhWsA6iJ8ZN3b4+roIQeyb/vuHaOvG+Vcjqt3lx0ZCdhi0ZNb5R
+	uVlf06ETQ32onzkrsmuglnAMLCogsI92bWgVdgUA/CRcTXfBRBQa6x3HUcObEIFho4nW3Dpq7Ey
+	H0ytcpKlsbsVDIiy2zKYIIECQzxiojd4v8uI+VYVOQCf6fs/oQGICMB9oyE5ODRuxiEsbpzSper
+	727lurAA0UmwnOfZPMpIXmZN0=
+X-Received: by 2002:a05:6870:c112:b0:483:cb42:3979 with SMTP id
+ 586e51a60fabf-4ae46a42831mr2381441fac.17.1794411012764; Wed, 11 Nov 2026
+ 07:30:12 -0800 (PST)
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Wed, 11 Nov 2026 10:30:12 -0500
+Received: from 77377267392 named unknown by gmailapi.google.com with HTTPREST;
+ Wed, 11 Nov 2026 10:30:03 -0500
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,187 +106,82 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v3 3/3] cgroup/cpuset: Check remote partition
- underneath before making an invalid partition valid
-To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Sashiko <sashiko-bot@kernel.org>
-References: <20261111020204.1660055-1-longman@redhat.com>
- <20261111020204.1660055-4-longman@redhat.com>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20261111020204.1660055-4-longman@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Received: from 77377267392	named unknown	by gmailapi.google.com	with HTTPREST;
+ Wed, 11 Nov 2026 07:29:09 -0800
+From: Kanishk Singh <kanishk2607@gmail.com>
+Date: Wed, 11 Nov 2026 10:30:12 -0500
+X-Gm-Features: AclHuK8RPhVT8h4SoQ-sBKh-mRKS0ugcCHlJN_3RKGREeGlNi0WOGPnSLTYbW0U
+Message-ID: <CAC=pywoHKV1157BrUsew_E4zriGMx3Gh8B2o_rR24c1yfZ1V0w@mail.gmail.com>
+Subject: [PATCH] selftests/cgroup: Decode waitid results correctly in clone_reap
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+
+clone_reap() applies the waitpid() status macros to waitid()'s
+si_status. Unlike waitpid()'s encoded status, si_status already holds
+the exit code or signal number, and si_code identifies the event.
+
+For example, a child exiting with status 128 is reported as successful,
+while a child exiting with status 42 produces -1 rather than 42. Stop
+and continuation events are also rejected. With WNOHANG, a live child
+can be reported as having exited successfully because the zeroed
+si_status passes WIFEXITED().
+
+Check si_code for the requested event and return si_status directly
+for exit and stop events. Accept CLD_TRAPPED along with CLD_STOPPED,
+as both correspond to stopped children.
+
+Fixes: 27eaaaf3b30e ("selftests/cgroup: add tests for cloning into cgroups")
+Signed-off-by: Kanishk Singh <kanishk2607@gmail.com>
+---
+This patch was prepared with ChatGPT/Codex assistance for code inspection,
+implementation, commit-message drafting, and local testing. The task was to
+find and reproduce a cgroup selftest helper bug, make a focused fix, and
+verify the result against the original helper.
+
+Testing: the cgroup selftest programs build successfully. A standalone
+reproducer linked against cgroup_util.c passes all 256 exit codes, SIGSTOP,
+SIGCONT, SIGKILL, WNOHANG, ECHILD, and an interrupted wait after this change.
+The original helper fails 255 of the 256 exit-code comparisons, the stop
+and continuation checks, the WNOHANG check, and the interrupted-wait
+exit-code check. No full cgroup runtime suite was run: the environment has
+no cgroup mount. A ptrace stop check was skipped because PTRACE_TRACEME
+was unavailable.
+
+ tools/testing/selftests/cgroup/lib/cgroup_util.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/lib/cgroup_util.c
+b/tools/testing/selftests/cgroup/lib/cgroup_util.c
+index 823b0312b..4915d80ed 100644
+--- a/tools/testing/selftests/cgroup/lib/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/lib/cgroup_util.c
+@@ -508,17 +508,17 @@ int clone_reap(pid_t pid, int options)
+ 	}
+
+ 	if (options & WEXITED) {
+-		if (WIFEXITED(info.si_status))
+-			return WEXITSTATUS(info.si_status);
++		if (info.si_code == CLD_EXITED)
++			return info.si_status;
+ 	}
+
+ 	if (options & WSTOPPED) {
+-		if (WIFSTOPPED(info.si_status))
+-			return WSTOPSIG(info.si_status);
++		if (info.si_code == CLD_STOPPED || info.si_code == CLD_TRAPPED)
++			return info.si_status;
+ 	}
+
+ 	if (options & WCONTINUED) {
+-		if (WIFCONTINUED(info.si_status))
++		if (info.si_code == CLD_CONTINUED)
+ 			return 0;
+ 	}
 
 
-
-在 2026/11/11 10:02, Waiman Long 写道:
-> When re-evaluating an invalid local partition via partcmd_update,
-> update_parent_effective_cpumask() does not check whether a descendant
-> remote partition is using its exclusive CPUs, promoting the cpuset to a
-> valid partition root over the remote partition. This condition should only
-> be possible if parent is the top_cpuset and exclusive_cpus isn't empty.
-> 
-> This leaves an active remote partition underneath a valid
-> local partition root with overlapping exclusive CPUs, breaking
-> scheduler domain partitioning and triggering warnings in
-> compute_partition_effective_cpumask() and generate_sched_domains().
-> 
-> Fix that by checking the effective_xcpus against subpartitions_cpus
-> when an underneath remote partition is possible to make sure that all
-> the exclusive CPUs are available before allowing the invalid partition
-> to be switched back to valid.
-> 
-> Also make sure that effective_xcpus is non-empty before swtiching an
-> invalid partition back to valid.
-> 
-> Add a test case in test_cpuset_prs.sh to verify that an invalid partition
-> with a remote partition underneath cannot be switched back to valid
-> with a hotplug event.
-> 
-> Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
-> Reported-by: Sashiko <sashiko-bot@kernel.org>
-> Link: https://sashiko.dev/#/bug/linux-47715b89-d5fb-4731-b7c9-070773c6ff75
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  kernel/cgroup/cpuset.c                        | 42 ++++++++++++-------
->  .../selftests/cgroup/test_cpuset_prs.sh       |  4 ++
->  2 files changed, 30 insertions(+), 16 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 8b684361c94e..af5fd543fe88 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2034,11 +2034,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->  		 * tasks_nocpu_error() with this very mask, and a failing
->  		 * write is routed to partcmd_invalidate instead.
->  		 */
-> -		if (is_partition_invalid(cs)) {
-> -			adding = false;
-> -			deleting = cpumask_and(tmp->delmask,
-> -					newmask, parent->effective_xcpus);
-> -		} else {
-> +		if (is_partition_valid(cs)) {
->  			cpumask_andnot(tmp->addmask, cs->effective_xcpus, newmask);
->  			adding = cpumask_and(tmp->addmask, tmp->addmask,
->  					     parent->effective_xcpus);
-> @@ -2046,6 +2042,17 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->  			cpumask_andnot(tmp->delmask, newmask, cs->effective_xcpus);
->  			deleting = cpumask_and(tmp->delmask, tmp->delmask,
->  					       parent->effective_xcpus);
-> +		} else {
-> +			deleting = cpumask_and(tmp->delmask,
-> +					newmask, parent->effective_xcpus);
-> +
-> +			/* Check if a remote partition may be underneath */
-> +			if ((parent == &top_cpuset) &&
-> +			    !cpumask_empty(cs->exclusive_cpus) &&
-> +			    cpumask_intersects(tmp->delmask, subpartitions_cpus)) {
-> +				part_error = PERR_REMOTE;
-> +				deleting = false;
-> +			}
->  		}
->  
->  		/*
-> @@ -2126,34 +2133,37 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->  		} else if (is_partition_invalid(cs)) {
->  			struct cgroup_subsys_state *css;
->  			struct cpuset *child;
-> -			bool exclusive = true;
->  
->  			/*
->  			 * Convert invalid partition to valid has to pass the
-> -			 * cpu exclusivity test when cpuset.cpus.exclusive is
-> -			 * empty as well as the housekeeping check.
-> +			 * following tests:
-> +			 * 1) housekeeping CPU conflict check
-> +			 * 2) cpu exclusivity test when cpuset.cpus.exclusive is
-> +			 *    empty.
-> +			 * 3) if parent is top_cpuset, none of the effective_xcpus
-> +			 *    (tmp->delmask) are in subpartitions_cpus, if not a
-> +			 *    remote partition may be underneath.
->  			 */
->  			if (prstate_housekeeping_conflict(cs->partition_root_state,
->  							  parent_prs, tmp->delmask, NULL)) {
->  				part_error = PERR_HKEEPING;
-> -				goto write_error;
-> -			}
-> -			if (cpumask_empty(cs->exclusive_cpus)) {
-> +			} else if (cpumask_empty(cs->exclusive_cpus)) {
->  				rcu_read_lock();
->  				cpuset_for_each_child(child, css, parent) {
->  					if (child == cs)
->  						continue;
->  					if (!cpusets_are_exclusive(cs, child)) {
-> -						exclusive = false;
-> +						part_error = PERR_NOTEXCL;
->  						break;
->  					}
->  				}
->  				rcu_read_unlock();
-> +			} else if ((parent == &top_cpuset) &&
-> +				   cpumask_intersects(tmp->delmask, subpartitions_cpus)) {
-> +				part_error = PERR_REMOTE;
->  			}
-
-Hi,Longman
-
-I think this check can still miss a remote partition during hotplug.
-When CPU hotplug leaves no active CPU available to the top partition,
-cpuset_handle_hotplug() clears subpartitions_cpus before walking the
-descendants. The remote partitions are still valid at that point.
-
-An invalid parent is visited before its remote descendant. Since the
-mask is empty, this check allows the parent to become valid and add
-its exclusive CPUs back to subpartitions_cpus. When the remote
-descendant is visited later, those CPUs are already back in the mask,
-so it passes the subset check and stays remote. We are then left with
-a valid remote partition below a valid local partition, and
-compute_partition_effective_cpumask() warns about the remote child.
-
-Could we check whether there is still a valid remote partition below cs
-before allowing cs to become valid? subpartitions_cpus may have been
-cleared by hotplug, so the lack of overlap does not tell us that the
-remote partition has actually been disabled.
-
-Thanks,
-Guopeng
-
-> -			if (exclusive)
-> +			if (!part_error)
->  				deleting = !cpumask_empty(tmp->delmask);
-> -			else
-> -				part_error = PERR_NOTEXCL;
->  		}
->  	}
->  
-> @@ -2174,7 +2184,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->  			break;
->  		case PRS_INVALID_ROOT:
->  		case PRS_INVALID_ISOLATED:
-> -			if (!part_error)
-> +			if (!part_error && deleting)
->  				new_prs = -old_prs;
->  			break;
->  		}
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index 1e9e6b4c6f7b..3d873804abc2 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -563,6 +563,10 @@ TEST_MATRIX=(
->  	" C1-6:P1 C3-6:P2 C5-6:P2  .       .    P1      .      .     0 A1:1-2|A2:3-4|A3:5-6 \
->  								       A1:P1|A2:P1|A3:P2 5-6"
->  
-> +	# A hotplug event will not incorrectly activate an invalid partition with
-> +	# a remote partition underneath.
-> +	"  CX1-4  C3-4:P1   .      .      P1   O1=0     .      .     0 A1:2|A2:3-4 A1:P-1|A2:P1"
-> +
->  	#
->  	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
->  	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-
+base-commit: 067c5c24cef23d913b67eaaf71ae67e7169a6620
+-- 
+2.52.0
