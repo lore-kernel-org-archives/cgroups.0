@@ -1,96 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.229
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794404253;
-	b=AIckC/+1tghZYJJzTNtUAnuvSVspi8lovAYamPogwIiu1AIiq81FMHuBH2oqz+u1XYBw
-	 0d5pOPEtToSE4ZTfZ8obomDURCT20uMGUax2ZwgXggn1oueG2LD6F10WwIL7Ed6rCmdj7
-	 j+fP2337k0YJ75Csb3sJV7AHaQtth6ysp2AiZeBvaJdoDc5zp9TPNtZ08ZWebdLA5+t5L
-	 6yZoTlAE9Sfu7mavA3Sy+XF6Zf/Si/PqwOCB4ENxHqDj9lI+e5nBrhJYXaXeZr1pT3Tce
-	 8cxG4cdLFdmyrCkSbSUlPtL44jJ6/W2bpZ4snCMg3iVPHxMJFAjmaWbioAsLpmYbUxg==
+	t=1794404595;
+	b=g+5NM5IUEhko5rBR99HdkaJ8BTnaGsXt74oNo+lmVQoIS/o+NzBn0gN1BikhqWh0w3WW
+	 zyQpJ8pwANhinTGwrb8rHYslWFL0d5XyoLe8V4WkaTLmU+LUvU1vZ+EEe07Zgbsf5TXUL
+	 kTpUR2S4eT0XDWR6h0zI7yg9CbYKN9LuHjMNWSbdtPqwu0hFXb6fI6cJ9XIY87S8L08D9
+	 hwymvJPObswS7C6jogm9HJ8eY47u4ExPlCqpRStYcusoz2HTr0V5PA4hzvSsn0GcssQyn
+	 oOXa+ECDWKWtzOhuWeDSpPlIf8o75MgRdYpQ9VoPM+3amkYsfsuth4vbVXwWSddUAGw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794404253;
-	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=v/XnkVND7TsTxq/odAIiRN0hPdLg6CJMukesjiTzxG0=;
-	b=oBc43BA8CRvcb+zsP2i6P/jcVXZYgkIvcdUI7x03eqpb31mO0TtcXVV31Jmqs8CWf6x6
-	 zf9clETbnOtXMpdgLTVVIrv96nBUFr/CGZdhCzkK7PihS2YdJId9tAFW3CDOhkMIHCvkk
-	 9ym/FbnYbpkzu8c7jNppggdo71dxuDrTNlCsBf4nsQHFGfi2ni/JQ/H34H1Qt9x2cCYj/
-	 Z7N0sMdL/xJNacY2iZJmQL8Um7KvYBWOCFilsK2IPIXSVQdORBgeGY0qchcUqTzgya6Y/
-	 YNHwAlD0J0bHb1d+V7AvXL/D3rATEJlQ5QDH19lJjR6BdoPJoAhoUiJAl28N3IFs/Eg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794404595;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=yPXyR85ZGjl8cLhK0+9qJ60mEpjll9ZfGxDyPNzKK24=;
+	b=ixzp6lW+stpSpwoZ1QQ2Kuj5eMq20hz/sozaonxMlnfgtlUz2QraiIIr8bS7CfSc/vRy
+	 HAbuOC5JikTHOacPNOKluZQxVBB4ZXa/KzxU9TNDjcax6SLK8sbGufSGGw1qzI+YWlqF4
+	 j1tSuCIKV/pXRZq33HGrhXJectBkbLNxk72ekeYe0+IdCLICE2EWTbN0jKqPLddY4YIzm
+	 VwgXCbpeOcWuDATHNySHQr1PstvM3wycv/tXlQleLAC9BrrvFwVlbofX+xlpG1iZJdLm+
+	 kLK1qvwKEhSnpb1mW5aI+y46fKtl0PCD51KfAx5cEnYb2TXgbGvfegqrZhFPOtO4jLQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=VDRY8Wi5;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=nRWpizR8;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fwrtpPIi;
+	arc=none smtp.remote-ip=95.215.58.229
+Received: from mta1.migadu.com (out-229.mta1.migadu.com [95.215.58.229])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30E4606A324;
-	Wed, 11 Nov 2026 13:37:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A30E4606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 622E260A2617
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 13:43:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 622E260A2617
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=VDRY8Wi5;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=nRWpizR8
-Date: Wed, 11 Nov 2026 14:37:28 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1794404249;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v/XnkVND7TsTxq/odAIiRN0hPdLg6CJMukesjiTzxG0=;
-	b=VDRY8Wi5Fq1KdkSK3JL+gYw/U7wHX8s34x4I28496P/84nz5jFPEWovH4HvFRE4K431Yqb
-	WUhJ18r+bUzDm3YgLQCzIqkLflkzv918A7op8hiiE4fJuIW+OcCZP1sEE+bGScVYl9GlIS
-	K8eQoF5O02skIuiGebVG1imDL/awdmxv/Atg/FilfE8Y/63sGQ9MjGrhB2VJHgi3V4n41D
-	D4l/4yLspxcxG6uSA2PT88EOLlCo2HeObO6smMmFzmMgYvr1GNdu2mspt6T3abx8jgszn4
-	WbZUyA9AWCfLlCmTwpsjpS4m/AYArEHVk9Eh5rjmMQxHQcRReoYgVV4jFbRu3Q==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1794404249;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=v/XnkVND7TsTxq/odAIiRN0hPdLg6CJMukesjiTzxG0=;
-	b=nRWpizR8cBGGwsexVShuXZ3RUsYyFkRJXV0Wkw3czjei+tSbqeK4CWUpLZKRgxJfk6c9rk
-	w1G639mgNacYXVDA==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
-	John Ogness <john.ogness@linutronix.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>
-Subject: Re: [PATCH v2 1/7] sched: Mark RT_GROUP_SCHED broken
-Message-ID: <20261111133728.6RfqZWwx@linutronix.de>
-References: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
- <20261110-sched_dl-v2-1-cc9399f7aeb1@linutronix.de>
- <1927ace7-86f4-463e-bdda-b3a5bc300eb2@infradead.org>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=fwrtpPIi
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=PSpT5Sc3wmThmMLvMIuwKVFzFZKXPyJVwlLny2D+v7E=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794404589; v=1; x=1795009389;
+ b=fwrtpPIiEN43HS80PS2mPdIYb61FPeGK7kaQsTS8DBSUWXEOB6p4TYAkSOcWU+4Y5B0zzRq9
+ fy1iym/eYvjLOy7PIUt26A6xTcR1Z7bHsCtr8w+A/6xFS2vDU8xz/KXaUTXiYiwczIejSkEPIDQ
+ ZDfLVQVNk80NSF79nR5934+s=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 0a1a212ccf97d6c5;
+	Wed, 11 Nov 2026 13:43:08 +0000
+X-Mizu-Trace-ID: 0a1a212ccf97d6c5
+X-Migadu-Flow: FLOW_OUT
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+To: longman@redhat.com,
+	ridong.chen@linux.dev
+Cc: cgroups@vger.kernel.org,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org,
+	mathieu.desnoyers@efficios.com,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>
+Subject: [PATCH v4 0/2] cgroup/cpuset: Keep the top scheduling domain populated
+Date: Wed, 11 Nov 2026 21:42:48 +0800
+Message-ID: <20261111134250.16852-1-guopeng.zhang@linux.dev>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -100,35 +71,64 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <1927ace7-86f4-463e-bdda-b3a5bc300eb2@infradead.org>
+Content-Transfer-Encoding: 8bit
 
-On 2026-11-10 09:42:00 [-0800], Randy Dunlap wrote:
-> > --- a/Documentation/scheduler/sched-rt-group.rst
-> > +++ b/Documentation/scheduler/sched-rt-group.rst
-> > @@ -18,6 +18,11 @@ Real-Time group scheduling
-> >  0. WARNING
-> >  ==========
-> >  
-> > + This document applies to RT group scheduling provided by CONFIG_RT_GROUP_SCHED.
-> > + If you don't use, schedule real-time tasks and experience throttling issues
-> 
-> -ENOPARSE.  Is that:
->     If you don't use or schedule real-time tasks and experience throttling issues,
-> 
-> 
-> 
-> > + please look into Documentation/scheduler/sched-deadline.rst and there for the
-> 
->                                                                 for the
-> 
-> > + fair_server.
+From: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-Thank you. I have now:
+Boot-isolated CPUs stay in top_cpuset.effective_cpus, but are excluded
+from its scheduling domain. Allocating all boot domain housekeeping CPUs
+to partitions can therefore leave the top scheduling domain empty,
+leading to warnings and an OOPS in build_perf_domains(). CPU hotplug can
+reach the same state.
 
-  If you don't use RT-group scheduling, schedule real-time tasks and experience
-  throttling issues please look into Documentation/scheduler/sched-deadline.rst
-  for the fair_server.
+Following Ridong's review, use one tasks_nocpu_error() check for all
+parents, with an explicit mask of CPUs returned by the update. This also
+allows CPU replacements under populated local parents. Hotplug passes
+no returned CPUs and preserves partitions unable to restore an active
+boot domain housekeeping CPU.
 
-Sebastian
+Patch 1 contains the complete kernel fix, including all caller updates.
+Patch 2 contains the selftests.
+
+Changes since v3:
+  Unify the CPU availability checks following Ridong's suggestion.
+  Restrict returned CPUs to the parent's current exclusive grant, and
+  retain the active housekeeping CPU guard during hotplug. Collect the
+  kernel changes in patch 1 and selftests in patch 2, adding a regression
+  for CPU replacement under a populated local parent. Update Ridong's
+  email address as requested.
+
+  v3: https://lore.kernel.org/all/20261110050324.173461-1-guopeng.zhang@linux.dev/
+
+Changes since v2:
+  Keep patch 1's kernel changes unchanged. Update its selftests following
+  Longman's and Sashiko's comments and cover recovery with a single
+  top-level HK CPU. Add patch 2 to fix the CPU replacement rejection
+  reported by Sashiko, with its own regression test. Update the hotplug
+  fix, now patch 3, to avoid invalidating unrelated partitions, including
+  partitions whose boot housekeeping CPUs are all offline. Drop v2's
+  isolated CPU cleanup patch in favor of Ridong's fix:
+  https://lore.kernel.org/all/20261107120100.3587595-4-ridong.chen@linux.dev/
+
+  v2: https://lore.kernel.org/all/20261105130344.664336-1-guopeng.zhang@linux.dev/
+
+Changes since v1:
+  Rework the fix following Ridong's suggestion and add test cases.
+  Add patch 2 for CPU hotplug and patch 3 for isolated CPU cleanup
+  when the parent partition becomes invalid.
+
+  v1: https://lore.kernel.org/all/20261104071600.474587-1-guopeng.zhang@linux.dev/
+
+Guopeng Zhang (2):
+  cgroup/cpuset: Keep an active housekeeping CPU in the top sched domain
+  selftests/cgroup: Add tests for top sched domain housekeeping checks
+
+ kernel/cgroup/cpuset.c                        | 85 +++++++++++++++----
+ .../selftests/cgroup/test_cpuset_prs.sh       | 71 ++++++++++++++++
+ 2 files changed, 141 insertions(+), 15 deletions(-)
+
+
+base-commit: 630059a5a632377b9b7b487baccde92b7ae1dd47
+-- 
+2.43.0
+
