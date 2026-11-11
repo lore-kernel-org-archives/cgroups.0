@@ -1,100 +1,45 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794381459;
-	b=M86m2fK5n8LpnqVhcJUlepkdDJmKfMeqAR8Br0VmqNj9yUcC+7jeKvsX0au+sep3iPm1
-	 0BYXiPqpTDZRvHX5q9nZB9fS88o8/S+619N3GEyHCq27FGrTmJA+21s6InhKIfgentC+N
-	 BTYT5FiUZrGAZWhYiuSKETL9eas17mWr0rKUPf+z+srHbvGs55ZJ16paz0n73lZehXFB8
-	 NL4xK5R83EKo0sq1A+uCoKHKlXARWiY6nkBZnjD+99ClrJf1pRS9ZZABp28DzlvFMGb1P
-	 dlOn/AQbQualmilVnWpIPs3Svh+H6gFJEZjXXqu3aeA0/Mpfmdni3ibMHms59BRiTng==
+	t=1794384538;
+	b=bWwDOkqCO8yQKauMgbSozJKt5UDYgznrovM2H5Bj8tFg38fNdkVmXOi1uHl9RTGYe7Dd
+	 iCJBKH/3AjVdGrEiBg4K+V0R6MXp807alBciaL0J0CkgpsuxhYjEMaketzcb1R3m7oLlw
+	 NLpyqAkuDCcx1b9Q6qExwgudeF+7O/9yJ+0Io9s2sjW4N2Zi5qHwdemUb0JdFEyvrYpgA
+	 5MfFKJ3fjShyLBA2E+3C0twC+YHkA7P0KkQlvgar1lMKGoMFfiAJDjWc6TNY5MM8CfWnt
+	 s3DIeaj21xMvtpzxo5gnQX2CTCHaDplEQrvMMp+r2kgSVp0IPsDwBHoSYfnNq3cb/cA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794381459;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=7JuUV+9RepX3x2BjxY1OAwwH8ZUYdafN/RIIq5XC+Dg=;
-	b=v/KoLUzDR/qibdHGO2MxJTNm/GgTdcQwydMHgsE5m2u573CBafmcAzlvLq9QLnNvzJtF
-	 LNd3Z7ruDU6cHYGa4f6e7Tn6L7nHZwwgkXv4DZ5yqDsie4de/DzXTR/htvHRMVnoyJl9q
-	 NUj7NqsaKnVBJGCK4x8TZhbkzHcnzid4Qt6dTggks3O6re/wAgV7asOzZPdcORQxt1i/Q
-	 1JCGgusMMU8g5ZWoa8SmN+asIp1kghekPcGWaTpC5fw6FrSe7MWIw5pC5bdC2/KObmedZ
-	 1k77wxbVw7PsL88yUd96sP1GFTLGAC46bFj8Qj2TYoZyQiqEd2V3V+yQmj8JVKtycIg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794384538;
+	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
+	 In-Reply-To:References:Subject:From:To:Cc:Date;
+	bh=OMx8DURBi1HKQNsNSde4ObBuj2cCKjyxSIgE906Z6wU=;
+	b=kGoVRNrOz9zjp0XyRR/p8sbFK5B3je+jGAsAO09eJ7qGvr9YD0EaeQx0fBZ+r9urdyxk
+	 OJoZm9/5ZfIF4I623HTxZvhzVlT6UHfpOobrkfIhjiDfGebJ8d6NLTQShhNJoKnf4ROHH
+	 MOX7uGokDETWNgHGrYLATrB7/7WbKhjKOQWBvzLdysD0zz3Zumc+nqXMhPXz9ECkGJtX6
+	 TcYn6MAQURAARJC2E+xuBHix2T9qlT37cfiNaS/ybrfFQtfQ21Q1j+y4Wv7dNYuTkLxRx
+	 nw8OOfxwI83iHryIMDDKj4IORz5D+F0RxKLBvE93+0e0AKRqw3jOUmmeXyt+DUq+SQg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=shopee.com;
-	spf=pass smtp.mailfrom=shopee.com;
-	dkim=pass header.d=shopee.com header.i=@shopee.com header.a=rsa-sha256 header.s=shopee.com header.b=NtO6LCzw;
-	arc=none smtp.remote-ip=209.85.215.179
-Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vj5n5e0S;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC2D606A324
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 07:17:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FC2D606A324
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87AE3606A8D3;
+	Wed, 11 Nov 2026 08:08:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=shopee.com header.i=@shopee.com header.a=rsa-sha256 header.s=shopee.com header.b=NtO6LCzw
-Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-cd8ba7c2694so1151795a12.1
-        for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 23:17:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1794381458; x=1794986258; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=7JuUV+9RepX3x2BjxY1OAwwH8ZUYdafN/RIIq5XC+Dg=;
-        b=NtO6LCzwI02Orj/2Yvb9GDZhhVin0DcWcYMk0C31Tghbkl/z57abysVA1EQlx+rmSz
-         H17+kKRE7+J/IJdTM0c85KE3IlObb+sCRYf7U0pBDWvWMVE3YOgheQcr9qg1zdfc3ANm
-         tEyCl5FbMtCqCRnglULlPeYRNlRU4cQ1QEoA+W4xq7iatAchM4ElvsJ3U8dOmKf8x8Qt
-         aDtj3oUiepWhJvE2voP7c5AcrmwKwyPazxV3to6IufSuKTMFtqT1YfRAg7KOlb7+8/rx
-         bhOWk32MFUSI8OGvL3sVPP0rxUjyBF20puWf91y3nVRUlZgSjaZa+/r7+an8V6jFaiD4
-         WHyQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794381458; x=1794986258;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=7JuUV+9RepX3x2BjxY1OAwwH8ZUYdafN/RIIq5XC+Dg=;
-        b=GjSYK0RTXNbUShQas0e/yO6GmMU2+ppfqfBVvKpvsl9Hh1TdZQsAE12DiK0NAnHZ44
-         KHs0gyG+sz1Hk0XJua1T1CmlJ3L+R0vOPwKcbb4I/QDAtaFdgDfFoucVYRtnsRO5kFWk
-         xCf/GMv1iNlG3FnPj3PEt8pUAoKQlHa55f/dSOD7XJzDeCcjGTfUZqDJUdDLrK2fxIp6
-         tZiZ0K8K5+jwePOxCZmkMpdftvGj3uL0YagbGdFSifuWGLUNof/jAeIiVH102lrpamv6
-         v+NLZV8yOkJIpT/TVhRASvVG8A6GHHupett1ZYqzSnl5AKIIbkz8RBZfBpKzx6YvqL9Z
-         QwFQ==
-X-Forwarded-Encrypted: i=1; AL+hErGWFWrccGp1BnLlSHgKPHVnEEwgw6hSTEzGpxt6syz7Qtc+7UF0ixk0wrst5OxTcVgg1OY9BNFx@vger.kernel.org
-X-Gm-Message-State: APuU4Z/wdoI3eebeegePk7BPdUcHORzMwZm7UqeEqjTLoKUCGmK8mnY7
-	6zlNUD7givPAyYbwNtj1OenkgmeUyDJfXvJLfS3dWH1oAdlwzT802bUYFgrd/xm3jw4=
-X-Gm-Gg: AYBFou347EmZDOzYJvH4vV+e2w87YERX+Af2eEEcHBVX32nyhXUiP9MtVAKujiil3bM
-	dKuQwf68qmlFaLeo65ym1dO7TKNFOK+5rH9gEWDhGHU3glSDAOpWZW1VmBctLc9GUWBwze5UPWP
-	2xydm5lT1N4f+ahxSj7N2HKDySmxd14aou+4GVOrX4XqOtlRhfvyuowzuu0H3i0X585niWuNHhc
-	JjPhbmMk0QjcpVOEZjTNF3Z+eFry7T/2cpGvs4CP9Nl9K75IV26mIfu4A1Rv7q+uI6b1g38x1/7
-	8iGqB4C8bBw1d+BN3vegK/CfAhkvriKSQsW3FN8VZydjeveduaugbIvqO1XF70Y0JNvWX1QLAy1
-	lFLu2LV6rME/8uDZoKdT/P41LaVe2sX7HDAuHNgHXOY04Nf5vVuTQGACZhPX7hWTqPbm9Dx5UYb
-	oQfgeZybQDjKsonGH0jdjaSz+86JQh2WBSDCxTFOPgZ+gcTJNJnB9fKoJaFX1ALqLpNQTqTAE4i
-	zqE5kH1de/YXUxERHK+9gQc4YyD/JKjj6ie1Eb7g+IkcjBkQUa+orMF4HMCdRtlClwUZzODhjOQ
-	yg0fHYI26p/RIyyHUTGGDsKP8RsIhnOS8SpqQCCSqUO3AaBQDKEAG8+yeAEAg8XrPSD0j9v6O3M
-	edU+/GWws//Dn5Js=
-X-Received: by 2002:a17:90b:2552:b0:3b0:9deb:d994 with SMTP id 98e67ed59e1d1-3b182f85315mr1524391a91.64.1794381457818;
-        Tue, 10 Nov 2026 23:17:37 -0800 (PST)
-Received: from LPMV6FJ9FM.cn.corp.seagroup.com ([143.92.118.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b17db5cc73sm3189218a91.10.2026.11.10.23.17.32
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Tue, 10 Nov 2026 23:17:36 -0800 (PST)
-From: Runli <mingyu.he@shopee.com>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	linux-mm@kvack.org
-Cc: Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Yosry Ahmed <yosry@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	littleswimmingwhale@gmail.com,
-	Runli <mingyu.he@shopee.com>
-Subject: [PATCH v2] mm/bpf: Always flush memcg stats when explicitly requested
-Date: Wed, 11 Nov 2026 15:14:34 +0800
-Message-Id: <20261111071434.34547-1-mingyu.he@shopee.com>
-X-Mailer: git-send-email 2.39.2 (Apple Git-143)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Vj5n5e0S
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAA231F00A05;
+	Wed, 11 Nov 2026 08:08:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794384538;
+	bh=OMx8DURBi1HKQNsNSde4ObBuj2cCKjyxSIgE906Z6wU=;
+	h=In-Reply-To:References:Subject:From:To:Cc:Date;
+	b=Vj5n5e0SBFA1j4z0Z15SdCzc4M3OrCLsWJXqhvLQqGwHQKanl350MBfbSz8ARxnFD
+	 jOWJ3MA9OMnNp4iJ2t22+M/1LUETLN++x1e4PQAlu084/gezb1EGPHwXX4AkHLZ9Xe
+	 amH9gwOhhyHIrBsWhaeeuFm8XCfe57IygtxfcZNX6YATAJkMKLeLNvpsUuq2Oa7MeQ
+	 QfAyTDiSl0sVpXOH6ghIFl1wmICmjoaLePNWKQw8Q0Vjkc0RW7jhiS4QEeokPdTnbz
+	 M7Y9tkPjkPDpcplzDhf60pYRsJkFGU8yEqUlPEN3t39trYPzNLA7pz1bc5Spos97Dn
+	 XKUhumL8wOfGA==
+Content-Type: multipart/mixed; boundary="===============5888328363070956270=="
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,80 +49,95 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-Id: <ab530d93c7383ec9cd5d9fbedc531e933d4b812ddb367bb85c940b870d34c247@mail.kernel.org>
+In-Reply-To: <a07b9717684d5e20d8ff7a778a5f031d1092f18a.1794303670.git.sieberf@amazon.com>
+References: <a07b9717684d5e20d8ff7a778a5f031d1092f18a.1794303670.git.sieberf@amazon.com>
+Subject: Re: [PATCH v2 3/4] sched_ext: add cgroup_set_runtime ops callback
+From: bot+bpf-ci@kernel.org
+To: sieberf@amazon.com,mingo@redhat.com,peterz@infradead.org,juri.lelli@redhat.com,vincent.guittot@linaro.org,tj@kernel.org
+Cc: bsegall@google.com,dietmar.eggemann@arm.com,rostedt@goodmis.org,mgorman@suse.de,vschneid@redhat.com,kprateek.nayak@amd.com,hannes@cmpxchg.org,mkoutny@suse.com,void@manifault.com,arighi@nvidia.com,changwoo@igalia.com,skhan@linuxfoundation.org,corbet@lwn.net,rdunlap@infradead.org,cgroups@vger.kernel.org,sched-ext@lists.linux.dev,linux-doc@vger.kernel.org,linux-kselftest@vger.kernel.org,bpf@vger.kernel.org,linux-kernel@vger.kernel.org,nh-open-source@amazon.com,hborghor@amazon.de,fmubeen@amazon.de,dwmw@amazon.co.uk,karataev@amazon.com,sieberf@amazon.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
+Date: Wed, 11 Nov 2026 08:08:56 +0000 (UTC)
 
-memcg_rstat_updated() stops walking the ancestors when a memcg exceeds
-the flush threshold. A concurrent flush can leave an ancestor below the
-threshold, so the early exit prevents it from receiving further updates.
+--===============5888328363070956270==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-Consider root and leaf on a 4-CPU system, with a threshold of 256.
-CPU 0 is flushing another CPU's stats after CPU 1's stats have already
-been flushed. The counts below are shared stats_updates counters:
+> sched_ext: add cgroup_set_runtime ops callback
 
-  CPU 0 (root flush)                CPU 1 (leaf updates)
-  ------------------               --------------------
-  clear leaf->stats_updates
-                                   add 64 to leaf and root
-  clear root->stats_updates
-  finish flush
-                                   leaf = 64, root = 0
-                                   4 more batches of 64:
-                                     leaf = 320, root = 256
-                                   next update:
-                                     leaf > threshold
-                                     break; root is not updated
+TL;DR: The documented guarantee that cgroup_set_runtime never exceeds the
+quota the scheduler was last given may not hold for schedulers lacking
+cgroup_init or cgroup_set_bandwidth; comment and commit message may need
+qualifying, or validation tightened.
 
-Root remains at the threshold, which is insufficient to trigger a flush,
-while further leaf updates keep taking the early exit. The periodic
-forced flush restores progress, but until then the root's aggregated
-statistics can fall far behind. For example, page cache grows at rate of
-1 GiB/s, a two-second wait can leave the reported usage about 2 GiB below
-the actual usage.
+> diff --git a/kernel/sched/ext/internal.h b/kernel/sched/ext/internal.h
+> --- a/kernel/sched/ext/internal.h
+> +++ b/kernel/sched/ext/internal.h
 
-Make bpf_mem_cgroup_flush_stats() bypass the update threshold so BPF
-callers can explicitly flush stale statistics without waiting for the
-periodic flush.
+[ ... ]
 
-Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
-Link: https://lore.kernel.org/all/avKy9oMwDRjKjfzm@linux.dev/
-Signed-off-by: Runli <mingyu.he@shopee.com>
+> @@ -863,6 +863,26 @@ struct sched_ext_ops {
+>  	 */
+>  	void (*cgroup_set_idle)(struct cgroup *cgrp, bool idle);
+>  
+> +	/**
+> +	 * @cgroup_set_runtime: A cgroup's runtime is being set
+> +	 * @cgrp: cgroup whose runtime is being set
+> +	 * @runtime_us: runtime in microseconds
+
+[ ... ]
+
+> +	 * @cgrp has a quota, and @runtime_us is at most the quota + burst the
+> +	 * scheduler was last given, by @cgroup_init or @cgroup_set_bandwidth:
+> +	 * cpu.max and cpu.max.runtime writes reach the scheduler in the order
+> +	 * the fair class applied them.
+> +	 *
+> +	 * Delivery follows the same rule as cgroup_set_weight().
+> +	 */
+> +	void (*cgroup_set_runtime)(struct cgroup *cgrp, u64 runtime_us);
+
+Does this guarantee hold for a scheduler that implements
+cgroup_set_runtime but not cgroup_init or cgroup_set_bandwidth?  The
+commit message makes the same claim: "The runtime passed is then at most
+the quota + burst the scheduler was last given".
+
+scx_group_set_bandwidth() still updates tg->scx.bw_* when the op is
+missing:
+
+    if (scx_cgroup_enabled && sch && SCX_HAS_OP(sch, cgroup_set_bandwidth) && ...)
+            SCX_CALL_OP(sch, cgroup_set_bandwidth, ...);
+    tg->scx.bw_period_us = period_us;
+    tg->scx.bw_quota_us = quota_us;
+    tg->scx.bw_burst_us = burst_us;
+
+while scx_group_set_runtime() calls the op whenever
+SCX_HAS_OP(sch, cgroup_set_runtime) is true, and the fair class only
+checks the runtime against its own cfs_b->quota + cfs_b->burst in
+cfs_bandwidth_set_runtime().
+
+For example, take a scheduler with cgroup_init and cgroup_set_runtime but
+no cgroup_set_bandwidth.  Cgroup C has cpu.max "10000 100000" at load, so
+ops.cgroup_init() sees bw_quota_us=10000.  Userspace then writes cpu.max
+"50000 100000", which the fair class applies but the scheduler is never
+told about.  A following write of 40000 to cpu.max.runtime passes
+cfs_bandwidth_set_runtime() since 40000 <= 50000, and
+ops.cgroup_set_runtime(C, 40000) runs, four times the quota the scheduler
+was last given.
+
+Similarly, a scheduler without cgroup_init that loads after C's quota was
+set is never given a quota, yet still receives cgroup_set_runtime for that
+cgroup.
+
+Should the comment (and commit message) make the guarantee conditional on
+the scheduler implementing @cgroup_init and @cgroup_set_bandwidth, or
+should validation reject cgroup_set_runtime without cgroup_set_bandwidth?
+The later commit eb360e17b06e ("sched_ext: charge BPF scheduler tasks to
+cpu.max bandwidth") does not change this text.
+
+
 ---
-Changes since v1:
-- Make the BPF kfunc flush unconditionally, as suggested by Shakeel.
-- Leave memcg_rstat_updated() unchanged.
+AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
+See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
-v1: https://lore.kernel.org/all/20260911032905.63683-1-mingyu.he@shopee.com/
-
- mm/bpf_memcontrol.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
-index d8f579c28560..f8552651b6d6 100644
---- a/mm/bpf_memcontrol.c
-+++ b/mm/bpf_memcontrol.c
-@@ -7,6 +7,7 @@
- 
- #include <linux/memcontrol.h>
- #include <linux/bpf.h>
-+#include <linux/cgroup.h>
- 
- #include "internal.h"
- 
-@@ -154,11 +155,12 @@ __bpf_kfunc unsigned long bpf_mem_cgroup_page_state(struct mem_cgroup *memcg, in
-  * bpf_mem_cgroup_flush_stats - Flush memory cgroup's statistics
-  * @memcg: memory cgroup
-  *
-- * Propagate memory cgroup's statistics up the cgroup tree.
-+ * Flush the memory cgroup subtree and propagate its statistics up the cgroup
-+ * tree, regardless of the number of pending updates.
-  */
- __bpf_kfunc void bpf_mem_cgroup_flush_stats(struct mem_cgroup *memcg)
- {
--	mem_cgroup_flush_stats(memcg);
-+	css_rstat_flush(&memcg->css);
- }
- 
- /**
--- 
-2.39.2 (Apple Git-143)
-
+CI run summary: https://github.com/kernel-patches/bpf/actions/runs/42982707042
+--===============5888328363070956270==--
