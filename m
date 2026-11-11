@@ -1,70 +1,124 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.144
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794404612;
-	b=xw68C7z0vdkLu2UAUmEoM7Sj9co4C6l06gyD5ApEkPenCWTytiYlsa+dlVKs7CU8y0FG
-	 Xk69AjL9VhhttlTeLryAAD7w9ZV0wRGRn9UZODxRlmAMiSzWxPMc8a7Gd9OPF4EOviuKk
-	 gSN9ebRG0DOkV+zw4fH0QpZgpcEvzpTpml8YWJGrGnGWt/qo2DQltbRTcGtReTxjuEZeM
-	 9+o+sPcvRtrTiFIZKxhnYwsIyvs5PrUpkYwH+fwf8l0ibI6hx5Ev0FD0m9P14HhqQ8IeQ
-	 IYSUznCGZLJBRxZOXcrKsbitWHRq9Wy4NAdiJE0qmgI/YDyGDVB5tBOXHxiX7sATiMw==
+	t=1794404985;
+	b=CuZDXupqY3/gxH4TDldGj1aPtkUGQs6rSk9kaPJc8b/BYwADDkk7uPdx4lpPECAgLuhK
+	 G0Jq82yeGHvs6mv+QuR6UsRngSa8688HUfuj2AJGncslL+cJCIpI6LthGpJJ+8upteE1X
+	 /3vG7etJFZQyprj/DWm/5ysqUwpGUj+uavdK0w7Ne1uGHBXPOayXN18v3tkXv87wPqiMA
+	 uPDLKz5Ulb3vU/dwFUjCCJMImv9cGwulhfCFvvbSClVWbKEDhEo7cOVBQZSFDmm1OFVVB
+	 Kn3YxemHrTmUtfA+OyJ/QPmV9Z8Tv06unvPHkGuYM0UMvlwjiUyEo4s6ovUpOrFPbwQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794404612;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=u8UcEUnD4ZkepVPvGFradAdo5whi9SPNtsg7TDqLogw=;
-	b=VfyB8CTLTUukopOf813msFjotojmZpeiWXQj89VXFBf/vtLBrTbBJEBL/KXCkKINugbQ
-	 6H+c+4a6+rmsBlRz51BKwcgO2mfHG8k0qnKtuaXgwcRdEfmWgTXILnT2VEz+KW5CE3Za1
-	 0LXcaF7tsDzvh5yOo6GAAUt5meRZ1nBdVptv1hCaAkO+o6hxGOWoAbefJW+C2/FZulWY4
-	 bmhqAWf9o9G3BVnsP9w1+uUTZBTajTxFa1lITxklor8kSaofnfFh0Pdj4TtSN6VSpnUsL
-	 OUS+Zic+OO/2jHt5yXkzeEf1AfSpSyARC3O84RA3wrX4gOCPbNHoNYRlM45cKyQPx1g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794404985;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=QrqbGrUeaMzxTtNKFPqZn9l9SynA7oL6rbPLiV4WlNk=;
+	b=wmnYisR8OUMd8FOvSijZzvpoVR4RqwZs2NhxVvFAxciakgjV3G5otfVUiKq8YuoDMlAy
+	 ihleEyEsek+DURzmbhZLwsenayQpnS2vx7Eu3B9bHOOB84LazjSUP7k6r2I1otWRkUO7f
+	 m1axFBHHpX2mEav4OXtHjpzJit5VKQRhCAPCDXn4JJnzo+OrLmQBNYUmk99V/Okd1xJG5
+	 PZK+9hWu25EGQRPGLE98PKmq9WIwdxyveNGI6duZM+Qmw4WXvL5djU5Np+KeSVyjmmYjD
+	 BJiTXKUTt2f8vWEwk0TuLQs48x/SB6P9WogMLLiI46gTDSn3NwcSWOPYeV+HaeKuzmQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QH1SX+E8;
-	arc=none smtp.remote-ip=91.218.175.144
-Received: from mta0.migadu.com (out-144.mta0.migadu.com [91.218.175.144])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Dxa+lxRe;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=i7GQQlT9;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE8BA606A884
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 13:43:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE8BA606A884
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2CA3606A335
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 13:49:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A2CA3606A335
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QH1SX+E8
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=aOnuzk5qEpfGzDUci65GekDmwlE0KiH7hOuBjXbDrSA=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794404609; v=1; x=1795009409;
- b=QH1SX+E8lpcG8NfMaLUE8cjcYuUlEd50j13sl8FKAgKTrO2nEDHm5nGXw5/NlUeCEcH6HAEK
- eHknRjBHFhQOAekKbCRAMEGICblelpuBp5GC3jchaV78hGYO6W3aQEtmuj75aSi6u9vjgbtWrIy
- 4oV/IBxOqHXsQ8iRVJvjYnyA=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id f3d5408e5f408ef1;
-	Wed, 11 Nov 2026 13:43:29 +0000
-X-Mizu-Trace-ID: f3d5408e5f408ef1
-X-Migadu-Flow: FLOW_OUT
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-To: longman@redhat.com,
-	ridong.chen@linux.dev
-Cc: cgroups@vger.kernel.org,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	shuah@kernel.org,
-	mathieu.desnoyers@efficios.com,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <zhangguopeng@kylinos.cn>
-Subject: [PATCH v4 2/2] selftests/cgroup: Add tests for top sched domain housekeeping checks
-Date: Wed, 11 Nov 2026 21:42:50 +0800
-Message-ID: <20261111134250.16852-3-guopeng.zhang@linux.dev>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20261111134250.16852-1-guopeng.zhang@linux.dev>
-References: <20261111134250.16852-1-guopeng.zhang@linux.dev>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Dxa+lxRe;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=i7GQQlT9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794404983;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QrqbGrUeaMzxTtNKFPqZn9l9SynA7oL6rbPLiV4WlNk=;
+	b=Dxa+lxReamTY9bp7EcOWVafTkGHpIkIwVWZ4Wk1F/qz2TmtgCHN4s2aeSMcSQG6qw1Yz0f
+	aZ3DwhFUVXkGGeOV3MxruAq91CHHk/Iraqsz6LWJctd2/VJQRKiWatJXLBKMUCDxRn+O/F
+	vevXgaHOA4MwGrM0tYF81AP8HdhYcDw=
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
+ [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-175-dMbU94yzND2_TzWK5tIcKg-1; Wed, 11 Nov 2026 08:49:42 -0500
+X-MC-Unique: dMbU94yzND2_TzWK5tIcKg-1
+X-Mimecast-MFC-AGG-ID: dMbU94yzND2_TzWK5tIcKg_1794404981
+Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4a35db2d6b3so24449765e9.3
+        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 05:49:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1794404981; x=1795009781; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=QrqbGrUeaMzxTtNKFPqZn9l9SynA7oL6rbPLiV4WlNk=;
+        b=i7GQQlT95Sb7l8iWRKyldHDMVoU8dEQ8LiXnZ/hsSPVTmpVPPFHPcB6HPY4EJj9pXU
+         Nyw0+YSthtfLeTFqEMaMCW2lXgBUEMBHGxPVxY3RyRUtE2fccvhNeF+yeloPLamC0ct+
+         1tLlBJjv7LjgleRz4OsNRroLTN/NQHrdCy5Vr73XAYrVVO98+580y6l/t5Xx5YglOKkh
+         8UMvx9Zwo+ctLLVC8glyZtIIlsb34h51iIjhpJvjDrF1gzLRU2XUgZ3fVtFU/hfcBgCI
+         YKvSjo6cy2EUeE5zbOmSB9/OfNnw8+mkIQ/C7gLj+OQw8eK/UY6c9DH7M1WLUopEffRe
+         q30Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794404981; x=1795009781;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=QrqbGrUeaMzxTtNKFPqZn9l9SynA7oL6rbPLiV4WlNk=;
+        b=VzcGnRHeeycaHp2JU6Nlc1gotzf2JDoXAbdCZ2romvPxzrOjmOn5QZ6gyY+aCNKMUf
+         y4RA+/tUskiq5EmWTfdi3QmSF9JXaDLrk5hTTAC1SFyxEUSWCigeWQglazzJeVFYWDQ3
+         tTzLx9jhQnCDBdmt1+005zzloY4AKihuVdoHghjxVpteBgNs3p2//jK4Hdj0TLTpyKM0
+         YHjOpy/uaHMI/ehcBcJGfMVHndPu1VrDJprnunYBNqjumYpBk+TrBEeVmO7kTRquLMsP
+         RWuPBLHKNxMKziHN0fbHKGMSppmdJNnFkBAHM4jdRIaj1vlC7BpudQzzOX7ih9fw+4+w
+         yoEQ==
+X-Forwarded-Encrypted: i=1; AL+hErE/Pt07SRHouynzlHp6iNR6ayJ9GbA0w510TSyKl24JmWDXPeeoMz8Hbj3Tp0noQ/YJqZKC86IE@vger.kernel.org
+X-Gm-Message-State: APuU4Z8cyJPa1i+qMj+uKX1dc+iTEUrdFXwc9D6ic3Uxv8xi5yH7rD3D
+	zQV+LCIqBdmr+RPYQC4THvds4czX6+wCun2RzfXzGL29xmG3D8UoEnXEdAfyjQ/RgGarGPGyh3N
+	Q3pX4rkD4LLwYxs8AL2gNwrb5ltIv3VHc5HgYTUls2AjuvzZIu6HPN0FYrSg=
+X-Gm-Gg: AYBFou2pDkeLRJ9zeWmpwa3J/Ljgp2V0kvYZNlDfQ+icm3iOh0eDctxwJYJ39J4P+XN
+	itSJWZPzlPAxOlHK5aRGAj996MyJql1803OVgPoIhgkq/uYz+UDUxamcj3DK+TvYnzVN9k+HXv7
+	1AhCG8R7TEjQTEpZt9iP2B0DGZbIfeTSd4BiXItAsmpArsGIsyk7XO2usAQg1kanAJ2Kz7jsULY
+	jdFpn+qm/yQHq7VSSY6vyKmhYmCJ0C89JQYKxWSUUssZdmvb8Lq51leBy/QMfVZd+0U9uDA9Bq8
+	18t11tIZ704/aFMlA48iKN5xP+qKobo1ckMYme3GUNKADYUoFtwhJOkumQ5Ur1i3ukhLOWcJEDE
+	d+n01wZF3v3AM4zwNjnHckmexPnNNG4jB5YUlhNuuT3Ji1+heVo5XNYn5hbG4hAzcBqg93XWtzo
+	bgEtU=
+X-Received: by 2002:a05:600c:6308:b0:4a7:b304:253e with SMTP id 5b1f17b1804b1-4ba09381867mr49914115e9.22.1794404981069;
+        Wed, 11 Nov 2026 05:49:41 -0800 (PST)
+X-Received: by 2002:a05:600c:6308:b0:4a7:b304:253e with SMTP id 5b1f17b1804b1-4ba09381867mr49913635e9.22.1794404980722;
+        Wed, 11 Nov 2026 05:49:40 -0800 (PST)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ba01fe2f09sm159753605e9.4.2026.11.11.05.49.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Nov 2026 05:49:40 -0800 (PST)
+Date: Wed, 11 Nov 2026 14:49:37 +0100
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
+	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
+	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org, longman@redhat.com,
+	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
+	clrkwllms@kernel.org, parri.andrea@gmail.com,
+	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v5 14/29] sched/deadline: Fix this_bw when a task is
+ changed during a remote wakeup
+Message-ID: <avRycWTxtUr9gug6@jlelli-thinkpadt14gen4.remote.csb>
+References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
+ <20261108185406.1549770-15-mathieu.desnoyers@efficios.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -74,129 +128,85 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261108185406.1549770-15-mathieu.desnoyers@efficios.com>
 
-From: Guopeng Zhang <zhangguopeng@kylinos.cn>
+Hello,
 
-A partition update or CPU hotplug must leave at least one active boot
-domain housekeeping CPU in the top cpuset scheduling domain.
+On 08/11/26 13:53, Mathieu Desnoyers wrote:
+> The this_bw of a runqueue is the bandwidth of the deadline tasks
+> assigned to it, running or not. GRUB uses it to compute the inactive
+> utilization of the runqueue. When a task wakes up on another CPU,
+> migrate_task_rq_dl() takes its bandwidth off the old runqueue. The
+> enqueue adds it to the new one.
+> 
+> Between these two steps, no runqueue counts the bandwidth.
+> try_to_wake_up() can leave the enqueue to the wake list of the new CPU,
+> and return before it runs. task_cpu() already points at the new CPU. A
+> change of the task in that window gets this_bw wrong.
+> 
+> In this example, T is a deadline task that blocks on CPU 0. A timer
+> wakes it up there, and try_to_wake_up() picks CPU 1. S, on CPU 2,
+> changes the bandwidth of T from "old bw" to "new bw":
+> 
+>   CPU 0                               CPU 1                       CPU 2
+>   T blocks
+>   this_bw of CPU 0 counts T
+>   <timer> try_to_wake_up(T)
+>     set_task_cpu(T, 1)
+>       migrate_task_rq_dl()
+>         sub_rq_bw(): CPU 0 drops T
+>     T on the wake list of CPU 1
+>     return
+>                                                                   S: sched_setattr(T)
+>                                                                     task_rq_lock(T): CPU 1
+>                                                                     T is not queued
+>                                                                     dl_change_utilization()
+>                                                                       this_bw of CPU 1:
+>                                                                       - old bw + new bw
+>                                       sched_ttwu_pending()
+>                                         enqueue_task_dl(T)
+>                                           task_contending()
+>                                             add_rq_bw():
+>                                             this_bw of CPU 1:
+>                                             + new bw
+> 
+> CPU 1 then counts the new bandwidth twice, less the old one. Repeated,
+> this makes this_bw drift until it underflows. If T left the class in
+> that window, switched_from_dl() would take its bandwidth off CPU 1 the
+> same way. A task that enters the class in that window would be counted
+> twice, by switched_to_dl() and by the enqueue.
+> 
+> This needs a wakeup that moves the task, so a root domain of more than
+> one CPU, with busy CPUs. CONFIG_SCHED_PROXY_EXEC=y makes such wakeups
+> more common. In testing, a task sleeps and wakes in a busy two-CPU
+> partition root, and another CPU changes its runtime. The kernel warns
+> within a second in each of 8 VMs:
+> 
+>   WARNING: kernel/sched/deadline.c:352 at dl_rq_change_utilization+0x71/0x2e0, CPU#0: wake_race/109
+>    __sub_rq_bw(): this_bw underflow
+>   WARNING: kernel/sched/deadline.c:316 at task_contending+0x244/0x260, CPU#6: swapper/6/0
+>    __add_running_bw(): running_bw overflow
+> 
+> Fix this with a new bit, dl_bw_oncpu, that tells whether a runqueue
+> counts the bandwidth of the task. add_rq_bw() adds the bandwidth only if
+> no runqueue counts it. sub_rq_bw() takes it off only if one does.
+> dl_change_utilization() does nothing while no runqueue counts the
+> bandwidth. The enqueue adds the new one.
+> 
+> With this patch, none of the 8 VMs warns. deadline_bw_test, added later
+> in this series, tests this in params_waking and random_mix. The Sashiko
+> AI review of the first posting found the double count, and a bit that
+> the first version of this patch left set.
+> 
+> Fixes: 8fd27231c330 ("sched/deadline: Track the "total rq utilization" too")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> ---
 
-Add tests to test_cpuset_prs.sh for local and remote partition updates,
-recovery and CPU hotplug. Run the new matrix when boot domain isolation
-leaves CPUs 0-9 for housekeeping. Include hotplug cases that keep unrelated
-partitions valid.
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 
-Also add CPU replacement tests to TEST_MATRIX for the top cpuset and
-populated local parents.
-
-Signed-off-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
----
- .../selftests/cgroup/test_cpuset_prs.sh       | 71 +++++++++++++++++++
- 1 file changed, 71 insertions(+)
-
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index bdca6c471f87..c35d4fd50eeb 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -168,6 +168,13 @@ TEST_ISOLCPUS=
- 		skip_test "Current isolated CPUs ($CURRENT_ISOLCPUS) don't match boot isolated CPUs!"
- }
- 
-+# These tests require boot domain housekeeping CPUs to be exactly 0-9.
-+# Match the boot mask for isolcpus= with or without explicit domain flags.
-+DOMAIN_ISOLCPUS="10-$LAST_PRESENT_CPU"
-+[[ "$LAST_PRESENT_CPU" == 10 ]] && DOMAIN_ISOLCPUS=10
-+RUN_ISOLCPUS_DOMAIN_TESTS=
-+[[ "$BOOT_ISOLCPUS" == "$DOMAIN_ISOLCPUS" ]] && RUN_ISOLCPUS_DOMAIN_TESTS=1
-+
- #
- # This test assumes that all the relevant CPUs being tested are online.
- # If some of them are offline, some of the tests may fail. So we are going to
-@@ -547,6 +554,12 @@ TEST_MATRIX=(
- 	" C2-6:X2-5:P1 CX3-6:P2 \
- 	                    .      .   T:X4-6    .      .      .     0 A1:4-6|A2:4-6 A1:P1|A2:P-2 ."
- 
-+	# A populated local parent must also count CPUs returned by its child.
-+	" C2-7:P1 C4-7:P2 . . T C2-5 . . 0 A1:6-7|A2:2-5 A1:P1|A2:P2 2-5"
-+
-+	# A CPU replacement must account for CPUs returned to the top cpuset.
-+	" C2-${CPULIST#0-}:P2 . . . C0-4 . . . 0 A1:0-4 A1:P2 0-4"
-+
- 	#
- 	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
- 	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-@@ -602,6 +615,63 @@ ISOLCPUS_TEST_MATRIX=(
- 	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
- )
- 
-+# Test matrix for isolcpus=domain,10-<last> or isolcpus=10-<last> boots.
-+# The top cpuset must retain an active boot domain housekeeping CPU.
-+ISOLCPUS_DOMAIN_TEST_MATRIX=(
-+	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
-+	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-+	# Neither a root nor an isolated partition may take all boot HK CPUs.
-+	" C0-9      .      .      .     P1      .      .      .     0 A1:0-9 A1:P-1 ."
-+	" C0-9      .      .      .     P2      .      .      .     0 A1:0-9 A1:P-2 ."
-+
-+	# Growing cpuset.cpus must not take the last top-level HK CPU.
-+	" C0-8:P1   .      .      .    C0-9     .      .      .     0 A1:0-9 A1:P-1 ."
-+
-+	# CPUs returned by the same update can keep the top sched domain alive.
-+	" C2-9:P2   .      .      .    C0-4     .      .      .     0 A1:0-4 A1:P2 0-4"
-+
-+	# Root and isolated partitions together must leave a top-level HK CPU.
-+	" C0-4:P1   .      .     C5-9    .      .      .     P2    0 A1:0-4|B1:5-9 A1:P1|B1:P-2 ."
-+
-+	# Remote partition creation must enforce the same constraint.
-+	" X0-9    CX0-9    .      .      .     P1      .      .     0 A2:0-9 A2:P-1 ."
-+
-+	# Expanding a remote partition must leave a top-level HK CPU.
-+	" X0-9 C0-9:X0-8:P1 .     .      .    X0-9     .      .     0 A2:0-9 A2:P-1 ."
-+
-+	# Remote CPU replacements must account for the CPUs being returned.
-+	" X0-9 C0-9:X2-9:P2 .     .      .    X0-4     .      .     0 A2:0-4 A2:P2 0-4"
-+
-+	# Local exclusive CPU updates must not consume the last top-level HK CPU.
-+	# Keep the initial partition valid with nohz_full enabled.
-+	" C0-9:X2-9:P2 .   .      .    X0-9     .      .      .     0 A1:0-9 A1:P-2 ."
-+
-+	# Ancestor updates must not grow a remote partition over the last HK CPU.
-+	" X0-8 CX0-9:P1    .      .    X0-9     .      .      .     0 A2:0-9 A2:P-1 ."
-+
-+	# An invalid partition can recover once it leaves a top-level HK CPU.
-+	" C0-9:P1   .      .      .    C0-6,8-9 .      .      .     0 A1:0-6,8-9 A1:P1 7|"
-+
-+	# Offlining the last top-level HK CPU invalidates a local root and its child.
-+	" C0,2-9:P1 C5-9:P1 . . O1=0 . . . 0 A1:0,2-9|A2:5-9 A1:P-1|A2:P-1 1|"
-+
-+	# A remote root must return CPUs when the top domain loses its last HK CPU.
-+	" X0,2-9 CX0,2-9:P1 . . O1=0 . . . 0 A2:0,2-9 A2:P-1 1|"
-+)
-+
-+# Keep an online boot-isolated CPU at the top so hotplug does not
-+# clear subpartitions_cpus before checking the individual partitions.
-+if [[ "$ONLINE_LAST" -gt 10 ]]; then
-+	ISOLCPUS_DOMAIN_TEST_MATRIX+=(
-+		# An offline HK CPU cannot restore the top domain. Keep this local
-+		# partition valid while its sibling returns active HK CPUs.
-+		" O2=0:C2,10:P2 . . C0,3-9:P1 O1=0 . . . 0 A1:10|B1:0,3-9 A1:P2|B1:P-1 1-2|2"
-+
-+		# Check the same active-CPU rule for a remote partition.
-+		" O2=0:X2,10 CX2,10:P2 . C0,3-9:P1 O1=0 . . . 0 A2:10|B1:0,3-9 A2:P2|B1:P-1 1-2|2"
-+	)
-+fi
-+
- # Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
- # This also means that CPU 8 is available and is a nohz_full CPU.
- NOHZ_FULL_TEST_MATRIX=(
-@@ -1472,6 +1542,7 @@ test_inotify()
- run_state_test TEST_MATRIX
- run_remote_state_test REMOTE_TEST_MATRIX
- TEST_ISOLCPUS=1 run_state_test ISOLCPUS_TEST_MATRIX
-+[[ -n "$RUN_ISOLCPUS_DOMAIN_TESTS" ]] && run_state_test ISOLCPUS_DOMAIN_TEST_MATRIX
- [[ -n "$RUN_NOHZ_FULL_TESTS" ]] && run_state_test NOHZ_FULL_TEST_MATRIX
- test_isolated
- test_boot_isolated
--- 
-2.43.0
+Thanks,
+Juri
 
