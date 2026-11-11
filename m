@@ -1,124 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.179
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794380112;
-	b=tMiFYmttIO6ZPzqfDiH1zy2+45hLU3HYcLZQh5Z+lEi2tNwarn/eFTbNsyNIcu9zx8My
-	 7WyvoaHt3fO0RJ+9Br4dZRbSb9QEMR+h+M1WWJil4AQpy+CYtLSqGltniXhOTYJ6KsEgp
-	 8rAqNnSw15JIEsotgCLfu/lG+k23nK8gA47HhjNZ3dt2E+Jcm3MuhlDuESMYlB6GQDVos
-	 C6tcRf34Ro3nFl6hcMbyep+eD6qYuMSaB/JzpxXoqlVFsOg0Pgw0uFBMckZDvYUgPgHCF
-	 S2vBZkVVlqkh3MxULfrvTC4T3GF+j8UW32wH9s1qObwbr3e+GJ9VyzPonUVAWA5SQbg==
+	t=1794381459;
+	b=M86m2fK5n8LpnqVhcJUlepkdDJmKfMeqAR8Br0VmqNj9yUcC+7jeKvsX0au+sep3iPm1
+	 0BYXiPqpTDZRvHX5q9nZB9fS88o8/S+619N3GEyHCq27FGrTmJA+21s6InhKIfgentC+N
+	 BTYT5FiUZrGAZWhYiuSKETL9eas17mWr0rKUPf+z+srHbvGs55ZJ16paz0n73lZehXFB8
+	 NL4xK5R83EKo0sq1A+uCoKHKlXARWiY6nkBZnjD+99ClrJf1pRS9ZZABp28DzlvFMGb1P
+	 dlOn/AQbQualmilVnWpIPs3Svh+H6gFJEZjXXqu3aeA0/Mpfmdni3ibMHms59BRiTng==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794380112;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=yk7uCCWqva6Cz5l1wMiNcrGG28MVu58wttnXuq3Zst4=;
-	b=bmrsXsuN4sVAscIvkmF51sm2eb5hBk7TKNGOZXb+aqZbyEkTHZnTUQglnr3pkLidSfIq
-	 8IVaY0DrkmxYemr52xTI8qbbSnalU2/m5GJQMglwMWqWkOxdtPk+TKR+JXaHlj1jO1Rjg
-	 YwXzScUxLncZqkw1m4GoxG7V3IsQWB0CQnGmuhRL2ilMuqytcN+WZr+/nKjKSu8kvKthT
-	 GNwxN3cMU+D4w1ZI2F0HOVkiiFNntDauzOooc3D91qqmT9xw3PE1KHXuseZz4+H3q0v0a
-	 KRgisuNSFSYtmhA+I45q3DI1tOiCyg5htMtGEMvmIhchgY98IhdVvO4kcVv4wEY/oTg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794381459;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=7JuUV+9RepX3x2BjxY1OAwwH8ZUYdafN/RIIq5XC+Dg=;
+	b=v/KoLUzDR/qibdHGO2MxJTNm/GgTdcQwydMHgsE5m2u573CBafmcAzlvLq9QLnNvzJtF
+	 LNd3Z7ruDU6cHYGa4f6e7Tn6L7nHZwwgkXv4DZ5yqDsie4de/DzXTR/htvHRMVnoyJl9q
+	 NUj7NqsaKnVBJGCK4x8TZhbkzHcnzid4Qt6dTggks3O6re/wAgV7asOzZPdcORQxt1i/Q
+	 1JCGgusMMU8g5ZWoa8SmN+asIp1kghekPcGWaTpC5fw6FrSe7MWIw5pC5bdC2/KObmedZ
+	 1k77wxbVw7PsL88yUd96sP1GFTLGAC46bFj8Qj2TYoZyQiqEd2V3V+yQmj8JVKtycIg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Q8ytxZJl;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b="UyX3yv/Y";
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=shopee.com;
+	spf=pass smtp.mailfrom=shopee.com;
+	dkim=pass header.d=shopee.com header.i=@shopee.com header.a=rsa-sha256 header.s=shopee.com header.b=NtO6LCzw;
+	arc=none smtp.remote-ip=209.85.215.179
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45693606A326
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 06:55:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 45693606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC2D606A324
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 07:17:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FC2D606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Q8ytxZJl;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=UyX3yv/Y
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794380111;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=yk7uCCWqva6Cz5l1wMiNcrGG28MVu58wttnXuq3Zst4=;
-	b=Q8ytxZJliyqx8KAEE2UjXU77OB1fQ2bn4K+A3H/cyLxscxslyCOgRauNIYUZGQUN5nPCcG
-	FQs/uKXQVjt9oa42NFXtbza+DJTi0eRdcMdGJUCoUPtwYgLhAsbx5//Pn/MaaxjhsuuAax
-	b+SW2oVBqMPUuiy3f2dpBxDgyCWjTzU=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-32-BcG_rWXRPxWG1E_BIJjtVQ-1; Wed, 11 Nov 2026 01:55:09 -0500
-X-MC-Unique: BcG_rWXRPxWG1E_BIJjtVQ-1
-X-Mimecast-MFC-AGG-ID: BcG_rWXRPxWG1E_BIJjtVQ_1794380109
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4a027f2e364so20212045e9.3
-        for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 22:55:09 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=shopee.com header.i=@shopee.com header.a=rsa-sha256 header.s=shopee.com header.b=NtO6LCzw
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-cd8ba7c2694so1151795a12.1
+        for <cgroups@vger.kernel.org>; Tue, 10 Nov 2026 23:17:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794380108; x=1794984908; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=yk7uCCWqva6Cz5l1wMiNcrGG28MVu58wttnXuq3Zst4=;
-        b=UyX3yv/YQ2i4wO9frSBnspnz7bdpT+z6pnNbaQpExynrIgYcp9KJZcoGuMDXqchZaZ
-         RDhT2aTINacelsVBg375+O/TDH7rJpXFhJIB4NLq4UY3bkjFgOgzZIcIIRC3dByh0lPX
-         mKXiVyOWazCba43QiTmI/jskbCAF4UW0Zd9ATL2ehHs+CnxAF7uY6xbUnx9BcR8WbPj0
-         fsTuQXEuwZJXhRYFlNe3K3TUO0AP0YhCQKcwXvafUblk0aM4zZmQqnJqDjWQpFHOS1eJ
-         8eoBqQgAsdQMYZjhFt0QAsBwsmvstJ5woGI2ERwiE5j4hlUOwT/+Iwr+m8mTbY5FNJBI
-         cMTQ==
+        d=shopee.com; s=shopee.com; t=1794381458; x=1794986258; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=7JuUV+9RepX3x2BjxY1OAwwH8ZUYdafN/RIIq5XC+Dg=;
+        b=NtO6LCzwI02Orj/2Yvb9GDZhhVin0DcWcYMk0C31Tghbkl/z57abysVA1EQlx+rmSz
+         H17+kKRE7+J/IJdTM0c85KE3IlObb+sCRYf7U0pBDWvWMVE3YOgheQcr9qg1zdfc3ANm
+         tEyCl5FbMtCqCRnglULlPeYRNlRU4cQ1QEoA+W4xq7iatAchM4ElvsJ3U8dOmKf8x8Qt
+         aDtj3oUiepWhJvE2voP7c5AcrmwKwyPazxV3to6IufSuKTMFtqT1YfRAg7KOlb7+8/rx
+         bhOWk32MFUSI8OGvL3sVPP0rxUjyBF20puWf91y3nVRUlZgSjaZa+/r7+an8V6jFaiD4
+         WHyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794380108; x=1794984908;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=yk7uCCWqva6Cz5l1wMiNcrGG28MVu58wttnXuq3Zst4=;
-        b=jKE/fCFtOAQ5wJztz3JnRY1FCQA7tpxutt/dcY4D4WbuA28IP/3cmunBRAVJ0SG0zX
-         ix5wnVgoXMeoaJMHjR11ppL48Yur9dewfpeEOKy+/yXLFnSE9j8ipNwGQ2C9BGWnQwUX
-         eHyikSuU/XhUV2dcFjgwEBWPJ6JHJDLQZLXWEji73dAWsCc13kADiJPtvBzzGcmUVFfY
-         jAmF7ldEnGp6Lh31aToSMACS8GXkIy4Aq1dHFkRP+aYKMF0TSMmE5KmSAsicVqh05BH4
-         ddMGhTmvetNXXqAitehDByOuUAKTWpH4IdLjAtCoqGzWZFzhukIrVWwuJlIyXKyTeXZz
-         9kJQ==
-X-Forwarded-Encrypted: i=1; AL+hErHToZNm3L/RqqGJjLuC+mCtrtXae1y71R/1rs2jN0YpQMde+boGB++hoqbOJeHYiIbVXJHRj5Sm@vger.kernel.org
-X-Gm-Message-State: APuU4Z+Ve2mcyWt+7YI4Sdpc1nZuF+2za40h+bEGxPt+Gid+zOY7bT09
-	/udcfXngAKFzX+rkCet/tFzETR+QcwSJJpqMtvgFcnh114283T34YqrrbqSppqdMKgscC3LSRQW
-	WtF+Cnxn/pcrOy0sTxXJXrK8Oet0Fp8BuuMPCuMa/W8mDvH2xxMlAK7bPAXA=
-X-Gm-Gg: AYBFou2xewGNz/tne0ctowUwcxd5gQkffhR8Riv9RRaWIL5o1P89c4v/J6GeCqvB/PR
-	r16ny2k0VoO6dYW/80zk6gseGreTQw4z5pO5A9Y5X7gpGjwIawfbVh4/FM+pkZOQxw45bCJ1bBG
-	DNZN491JfSdKg+HuieIrJGuTg4SrVPG+PRAneSWwoPEIZR4RAv6MSj/0WMbBrop02sSuqFg3onh
-	lJw8mlmO2johZrtBomyx5a9Py/ot9QGbFwXbRHgtVZxGK6EODk99k1aWH0/mPh+6CI8ixTss6Sy
-	pJbtE1l8RYStHDZ9R2BKOZzQ/3dmWmcvnfqbl5eR7WHCBuH5rgasEcRXicks9EcvNZpG/Z7hXVC
-	wJW/oWMibcHOCtWluYyXxndhugjR/wl3xN5qQ+auJkfZvCJy5FWx1tR8mp1pEGp1XFPp3zTN/wi
-	1rheA=
-X-Received: by 2002:a05:600c:4f55:b0:4a7:8fe8:130c with SMTP id 5b1f17b1804b1-4ba0938197dmr25955165e9.28.1794380108618;
-        Tue, 10 Nov 2026 22:55:08 -0800 (PST)
-X-Received: by 2002:a05:600c:4f55:b0:4a7:8fe8:130c with SMTP id 5b1f17b1804b1-4ba0938197dmr25954715e9.28.1794380108281;
-        Tue, 10 Nov 2026 22:55:08 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ba09517bc7sm24307235e9.3.2026.11.10.22.55.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Nov 2026 22:55:07 -0800 (PST)
-Date: Wed, 11 Nov 2026 07:55:05 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
-	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org, longman@redhat.com,
-	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
-	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v5 12/29] sched/deadline: Reject SCHED_DEADLINE on exited
- tasks
-Message-ID: <avQRSdb-dRzzsmc4@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
- <20261108185406.1549770-13-mathieu.desnoyers@efficios.com>
+        d=1e100.net; s=20260707; t=1794381458; x=1794986258;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=7JuUV+9RepX3x2BjxY1OAwwH8ZUYdafN/RIIq5XC+Dg=;
+        b=GjSYK0RTXNbUShQas0e/yO6GmMU2+ppfqfBVvKpvsl9Hh1TdZQsAE12DiK0NAnHZ44
+         KHs0gyG+sz1Hk0XJua1T1CmlJ3L+R0vOPwKcbb4I/QDAtaFdgDfFoucVYRtnsRO5kFWk
+         xCf/GMv1iNlG3FnPj3PEt8pUAoKQlHa55f/dSOD7XJzDeCcjGTfUZqDJUdDLrK2fxIp6
+         tZiZ0K8K5+jwePOxCZmkMpdftvGj3uL0YagbGdFSifuWGLUNof/jAeIiVH102lrpamv6
+         v+NLZV8yOkJIpT/TVhRASvVG8A6GHHupett1ZYqzSnl5AKIIbkz8RBZfBpKzx6YvqL9Z
+         QwFQ==
+X-Forwarded-Encrypted: i=1; AL+hErGWFWrccGp1BnLlSHgKPHVnEEwgw6hSTEzGpxt6syz7Qtc+7UF0ixk0wrst5OxTcVgg1OY9BNFx@vger.kernel.org
+X-Gm-Message-State: APuU4Z/wdoI3eebeegePk7BPdUcHORzMwZm7UqeEqjTLoKUCGmK8mnY7
+	6zlNUD7givPAyYbwNtj1OenkgmeUyDJfXvJLfS3dWH1oAdlwzT802bUYFgrd/xm3jw4=
+X-Gm-Gg: AYBFou347EmZDOzYJvH4vV+e2w87YERX+Af2eEEcHBVX32nyhXUiP9MtVAKujiil3bM
+	dKuQwf68qmlFaLeo65ym1dO7TKNFOK+5rH9gEWDhGHU3glSDAOpWZW1VmBctLc9GUWBwze5UPWP
+	2xydm5lT1N4f+ahxSj7N2HKDySmxd14aou+4GVOrX4XqOtlRhfvyuowzuu0H3i0X585niWuNHhc
+	JjPhbmMk0QjcpVOEZjTNF3Z+eFry7T/2cpGvs4CP9Nl9K75IV26mIfu4A1Rv7q+uI6b1g38x1/7
+	8iGqB4C8bBw1d+BN3vegK/CfAhkvriKSQsW3FN8VZydjeveduaugbIvqO1XF70Y0JNvWX1QLAy1
+	lFLu2LV6rME/8uDZoKdT/P41LaVe2sX7HDAuHNgHXOY04Nf5vVuTQGACZhPX7hWTqPbm9Dx5UYb
+	oQfgeZybQDjKsonGH0jdjaSz+86JQh2WBSDCxTFOPgZ+gcTJNJnB9fKoJaFX1ALqLpNQTqTAE4i
+	zqE5kH1de/YXUxERHK+9gQc4YyD/JKjj6ie1Eb7g+IkcjBkQUa+orMF4HMCdRtlClwUZzODhjOQ
+	yg0fHYI26p/RIyyHUTGGDsKP8RsIhnOS8SpqQCCSqUO3AaBQDKEAG8+yeAEAg8XrPSD0j9v6O3M
+	edU+/GWws//Dn5Js=
+X-Received: by 2002:a17:90b:2552:b0:3b0:9deb:d994 with SMTP id 98e67ed59e1d1-3b182f85315mr1524391a91.64.1794381457818;
+        Tue, 10 Nov 2026 23:17:37 -0800 (PST)
+Received: from LPMV6FJ9FM.cn.corp.seagroup.com ([143.92.118.19])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b17db5cc73sm3189218a91.10.2026.11.10.23.17.32
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 10 Nov 2026 23:17:36 -0800 (PST)
+From: Runli <mingyu.he@shopee.com>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	linux-mm@kvack.org
+Cc: Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Yosry Ahmed <yosry@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	littleswimmingwhale@gmail.com,
+	Runli <mingyu.he@shopee.com>
+Subject: [PATCH v2] mm/bpf: Always flush memcg stats when explicitly requested
+Date: Wed, 11 Nov 2026 15:14:34 +0800
+Message-Id: <20261111071434.34547-1-mingyu.he@shopee.com>
+X-Mailer: git-send-email 2.39.2 (Apple Git-143)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -128,46 +104,80 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261108185406.1549770-13-mathieu.desnoyers@efficios.com>
+Content-Transfer-Encoding: 8bit
 
-Hello,
+memcg_rstat_updated() stops walking the ancestors when a memcg exceeds
+the flush threshold. A concurrent flush can leave an ancestor below the
+threshold, so the early exit prevents it from receiving further updates.
 
-On 08/11/26 13:53, Mathieu Desnoyers wrote:
-> From: Juri Lelli <juri.lelli@redhat.com>
-> 
-> sched_setattr(SCHED_DEADLINE) on a zombie task succeeds and charges
-> total_bw via sched_dl_overflow(), but the task has already done its
-> final schedule() and will never run again. Nothing releases the reserved
-> bandwidth. Repeating this fills total_bw to the admission cap, after
-> which sched_setattr(SCHED_DEADLINE) and CPU offline fail with -EBUSY.
-> 
-> Reject sched_setattr(SCHED_DEADLINE) on exited tasks with -ESRCH.
-> 
-> A task of the class that exited, switched to another policy, runs
-> switched_from_dl(), which decrements the count of deadline tasks of its
-> cpuset that cgroup_task_dead() decremented already: at 0 with a deadline
-> task left in it, the cpuset is skipped by the next rebuild of the root
-> domains' accounting, and that task's bandwidth with it. Reject that as
-> well. The deadline_bw_test selftest added later in this series has the
-> case, death_zombie_switched: on v7.4-rc1 the switch is accepted, and
-> the one-CPU partition root the zombie ran in admits 9 tasks of 10% after
-> a rebuild, with a task of 30% still in it, where 6 are due.
-> 
-> Fixes: 332ac17ef5bf ("sched/deadline: Add bandwidth management for SCHED_DEADLINE tasks")
-> Reported-by: Weiheng Qiu <weihengqiuu@gmail.com>
-> Closes: https://lore.kernel.org/all/3f6e6c87-645b-45fd-8fc6-8da5bc5b82d8@gmail.com/
-> Link: https://lore.kernel.org/all/20261103-b4-sched-dl-bw-fixes-v1-4-dd761fe005b4@redhat.com/
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
-> [mathieu: reject a task of the class leaving it too, found by the
->  Sashiko AI review of the patch]
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> ---
+Consider root and leaf on a 4-CPU system, with a threshold of 256.
+CPU 0 is flushing another CPU's stats after CPU 1's stats have already
+been flushed. The counts below are shared stats_updates counters:
 
-Looks good to me, thanks!
+  CPU 0 (root flush)                CPU 1 (leaf updates)
+  ------------------               --------------------
+  clear leaf->stats_updates
+                                   add 64 to leaf and root
+  clear root->stats_updates
+  finish flush
+                                   leaf = 64, root = 0
+                                   4 more batches of 64:
+                                     leaf = 320, root = 256
+                                   next update:
+                                     leaf > threshold
+                                     break; root is not updated
 
-Best,
-Juri
+Root remains at the threshold, which is insufficient to trigger a flush,
+while further leaf updates keep taking the early exit. The periodic
+forced flush restores progress, but until then the root's aggregated
+statistics can fall far behind. For example, page cache grows at rate of
+1 GiB/s, a two-second wait can leave the reported usage about 2 GiB below
+the actual usage.
+
+Make bpf_mem_cgroup_flush_stats() bypass the update threshold so BPF
+callers can explicitly flush stale statistics without waiting for the
+periodic flush.
+
+Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
+Link: https://lore.kernel.org/all/avKy9oMwDRjKjfzm@linux.dev/
+Signed-off-by: Runli <mingyu.he@shopee.com>
+---
+Changes since v1:
+- Make the BPF kfunc flush unconditionally, as suggested by Shakeel.
+- Leave memcg_rstat_updated() unchanged.
+
+v1: https://lore.kernel.org/all/20260911032905.63683-1-mingyu.he@shopee.com/
+
+ mm/bpf_memcontrol.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
+index d8f579c28560..f8552651b6d6 100644
+--- a/mm/bpf_memcontrol.c
++++ b/mm/bpf_memcontrol.c
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/memcontrol.h>
+ #include <linux/bpf.h>
++#include <linux/cgroup.h>
+ 
+ #include "internal.h"
+ 
+@@ -154,11 +155,12 @@ __bpf_kfunc unsigned long bpf_mem_cgroup_page_state(struct mem_cgroup *memcg, in
+  * bpf_mem_cgroup_flush_stats - Flush memory cgroup's statistics
+  * @memcg: memory cgroup
+  *
+- * Propagate memory cgroup's statistics up the cgroup tree.
++ * Flush the memory cgroup subtree and propagate its statistics up the cgroup
++ * tree, regardless of the number of pending updates.
+  */
+ __bpf_kfunc void bpf_mem_cgroup_flush_stats(struct mem_cgroup *memcg)
+ {
+-	mem_cgroup_flush_stats(memcg);
++	css_rstat_flush(&memcg->css);
+ }
+ 
+ /**
+-- 
+2.39.2 (Apple Git-143)
 
