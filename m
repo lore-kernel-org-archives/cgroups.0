@@ -1,107 +1,110 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.172
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794419821;
-	b=EZazVY5vwvxnqNjRM4o3FUzwQfQC00IR17URZDhWTlQmC0F0Tplj0gErv00DT1Xd0v7F
-	 fQKpsgsMHiqG4WOzn/2LFgCCB/owTn35MHhquoAHw222Xu9PgGtGq+ridVOr2JScNDUnf
-	 WXb35PAoQUPD1VH/Itm6IZFk7Gj+9OfW7JmdLm5uP50VdPqC0armn6Bs3R5hMpfYwoe1w
-	 KUHDe2c5gVRbHeqG+vIhdmTrmZbeq4AOTbm35MIZmfT6BKoo8PGBqrUq+Kct0gWdGxjJP
-	 YdRP9ENFvhiuoGps4xmGnkylaUzbBYlEIX7bh2jLaEypGFqHhsleBcl6lDO1DuDhBRw==
+	t=1794421037;
+	b=ZKUg07AX6GbH44CEC7sLCnrVaTO3B9uIWYPwm0eYUjkNrLywI3CWcJhP1MDzXqEEa3ns
+	 sBDFK1kCxAiBrnxRM+/mY5HneuVbt82b+X2bUlfFpStWwZFSRUwaozGhAyN1pGRLz+7Nc
+	 39mud5C3phTAlH8pn85UVc+xy3KaCEE9s69F90YscD15H9s//8OrHcsUAyOUx2LZyZSU1
+	 fSaqDINB8jhJT1Un5kDa9y6Xph9/qI61OVTajO6vSwa6U2m8eI3WPp4Zdc5cD+kpVSa9l
+	 6WpileIuFGbZ/QN3Qp7rsj4ICco6MH1fetu3Yc+5Meed228E1PvIqAUwjWoE0RccYWQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794419821;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794421037;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=q6s/xV2lHPq5GEMGWwRYYdRwrT5Ecmz5ksS9o79wQoo=;
-	b=MKyOLf1ASdmHrGpdaVkMbKLYAfAnKe1Lc6bvENFzcIsWcV/Ujojj6FLVtm8zbLwsAEZO
-	 zlHm8oeAWCBNxiF2jp1wkqNAtWqYJMKLwmqo6BmEBdu7Jejw1XpTBqSAqLbcsGiN2AoGe
-	 8jaFBA4rMPuwSaiYZDO4ue1+kwEcgIPCeCzslTfrxhRgAW8UIeN41Mb5/k1uWc7CBPFYx
-	 4ajWUVttzeuwyz00nIHPi00DfZzdMh5a2n3zoQKWKYml7mpaWXporXnvMsZn3qDRaOkCV
-	 JFzCrHkqtnqsfvrfbJs7yhMqESXpyjGnbGJdvd/i8ol35xjUAQyjXuyM3Ld2CcfjYmw==
+	bh=JAFBic9FeqiTcoA9Sc56oOZoN08uUZIC/3Jq0YqoHLY=;
+	b=wyZWaF+Osq0rLkxH998cR65k2GVwPhMiVr3SRg+huR0vmBINs41kzS6bPyalRAYtohuh
+	 G5p0p2Ln4QahNXMuDf7hDC+3c5ruHZa+2akyif9Ay8mVEJpjC3NHBdQv2EFNDIoEJYmUc
+	 iN/3LRsYKaOPbBwGkjNQSuvP5/0kZoAQM+GffpvQHHTwkRmaSne3afZXgHbhrDPRLZ7IT
+	 pycZpJxKV+ZZvnU5ktLj32pvPnkXwgR5fLDkuf5hMYrbMDzXazTjG4TyuoSO51/j17YcZ
+	 p2UzgqM/O4NkofAujP7P5MrG/Ql+od70iqVb8vawOGBbDMg1w2wnALSYsiMtapeLcbA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CK5GSXWO;
-	arc=none smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UhRh2+QK;
+	arc=none smtp.remote-ip=209.85.128.172
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4868606A335
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 17:57:00 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D4868606A335
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 606C9606C175
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 18:17:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 606C9606C175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=CK5GSXWO
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so916535e9.1
-        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 09:57:00 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UhRh2+QK
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-8b0d63f60bcso46216657b3.3
+        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 10:17:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794419819; x=1795024619; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1794421036; x=1795025836; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=q6s/xV2lHPq5GEMGWwRYYdRwrT5Ecmz5ksS9o79wQoo=;
-        b=CK5GSXWOn1oYayqCNqvVbeqP3J4g0n6PDbu7/b+cMsYfwBRIcQdYmArPTVXYfzEwUG
-         QJQtkVr4B3J1HHP1KQAbfqm5jlLenZ5YhhZc4DhiKQ971Fa84gGks7hRysI82OlLepCw
-         0LAfjbJC44/AiTfm6Ex0KGQkvPUT32MFPG5YF2Bx9P//yCa4BYTKBd8Sr4BcDqKNGEly
-         a4j2gE1xNefgrVYZ0pDY54/QC0HLNfo9YEuN1TxZ9r8KeQxb4U7/Yt9bjVnz3GLsv9Rl
-         ipynvkuzMS+FgAuov42upxWQuYWqChJm6iII36nWsnxV1EEWqESj811TMHY76UR+xNXd
-         cMWA==
+        bh=JAFBic9FeqiTcoA9Sc56oOZoN08uUZIC/3Jq0YqoHLY=;
+        b=UhRh2+QKrJuMUqoVkAZwLp8mjesVP5rOdbeqxz4Qd7xPhFQ7cqnpBQcOCKce2Dv+Ys
+         JDUyUFr3MiMLq6MxAJzkSqEfhTzdl76LeLgd+pOsMx2+XeQYBoYuKI7QkF1fp8IymDmk
+         KJX1eeF9+XTsdNrPc8KEwUSLMb7634nwNpC+cTuxn0Z2TIOeFQMk9n/Y0ie3/+B/3X05
+         7xZwGQl7MS/HdOcR4MHHCdM5R+x16qvI2Pj+MyhpUkNOORYFs5pTh9M9jPGXP7mIW18c
+         9Sfu3b+GWiqTy1rQATsAE0TIfLiAlTwki7umXwi8lBrYXDH2KUD6EEKFHHhrwwKziBC0
+         RgiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794419819; x=1795024619;
+        d=1e100.net; s=20260707; t=1794421036; x=1795025836;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=q6s/xV2lHPq5GEMGWwRYYdRwrT5Ecmz5ksS9o79wQoo=;
-        b=FRHLsBel5cXbU75P69SC4mrFahIy65v7LBBW/T2hUCy1dhCbubWQXv8cl6MUeWgydN
-         5aMPjlXq3ntV91ReZsWzVJki3/laWU5cZKik42n/jq71Rly9ZrkjhhVVyXI5e1rJFE2c
-         vHoiYmmnp/o6rR5CQT5OoNM0sK5NU7JVXy1DaA0c939fmpEhmi3nOGlRggm7sP493JnL
-         HqFCyS9l7R6pKmJs0pmW7h0s50s6ZClSLah9f0qvtpVVTPJhLE8Q1h3OHwWKRkImYouN
-         /Y2adQShNYWvZhiPVvv4E+FK3RxcUFgzOK4/0XUwrQTZWroQqcmwR9KHwPPksuBHjn1Q
-         ot9A==
-X-Forwarded-Encrypted: i=1; AL+hErERMZwafF1ofAUK4m0SE97Dbxp3IZZzdYC7+ainjY7mwc2qHcg6Cf/larUVjW3RQyLdN4JyL0rV@vger.kernel.org
-X-Gm-Message-State: APuU4Z9+qYzGEWh9CJIAERDZC2OlYt2wBEno0CnMzAzr9r+WIKrsfQRA
-	SRvPM8gwiSBAvEsNLyIM1fcMJU4vO3kE8GzSfDX+Jfk6eym7O6MNCvbe
-X-Gm-Gg: AYBFou2118/0kEUT3qbZUGr296lQVCye16wOan8yJPLwsPKy5nudXWV21PaqgA6DUCa
-	zf7I1OB36hvdHLkQ1osNFOeyqvODQAS9TlpSOdQx5nlUxE+ttKrqm90G2hFPFyht2xFygHoYSBb
-	cAk0bVEqqDczS00gPtNAhye+KVR2fcwkvTX3MqlVNKsae4VfLkQaL/4D5e3+4GS9srDE7YyETQV
-	Rw657JrAMJiN9Bex0tW1wWnIXDv+Ywfdxeryel5e2sSjFz5JirVmtNVi2dAMmGXBqTN2zYVGY0v
-	PwmCWja7kMXIULIXmrVU6T1iMUXrXbDTygkVdztEs1P3HwdjubUOQMwaG2jjCmkS9cFJOSmHt3E
-	LqCvW6GqaA29JVjtxhfPKzEntYYEdagJNUE39Gvkdns0wtKhEcN1TLJziuX+A9KjkPbivUilBY0
-	mQNUeZXalzMD3lxOYvix/koydOqv0wIa6wzJKSVjFaPjPkRaR+ukrNRbk6WN23hbHH8MCANGvyE
-	p7WjXzZ+V/stA4rmb5QKQL0mVPiKGR4GSrkdksiAeICgRqTSPrNm0MOC4etURaDMGizjleiKme8
-	maiyJzr7K2kTJyYmKPiScu7zfg==
-X-Received: by 2002:a05:600c:4850:b0:4b7:76b8:348f with SMTP id 5b1f17b1804b1-4bb4e3076b4mr2214315e9.19.1794419819018;
-        Wed, 11 Nov 2026 09:56:59 -0800 (PST)
-Received: from victus-lab ([193.205.81.5])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49836c83432sm11271749f8f.58.2026.11.11.09.56.58
+        bh=JAFBic9FeqiTcoA9Sc56oOZoN08uUZIC/3Jq0YqoHLY=;
+        b=x9Ph5rVYewh1F9EEI6yTlnNt1jUZZOhbRGDwAi3z+tF9oVOJNSLJR8BOS/B/Pkuggh
+         bqpNsYyZiOjgXzzppSLC1ZnIVl8RCLNr3L46xW6CdIBx7rZyB4GUmVXAebqvVfZKaZJv
+         eXSVB1ZQzOnI3Vs0g/FclQcx45x6FORkK+Vkel1fwipRgoijwG3ZXsxPQ0eDG0YlDU3S
+         ypWEbJOLd3QjInT2kjSzgAaTRSFfAgj9lPqHiPA7UPUcSFfLT7dr/Uh2OQQhBWaEHN/F
+         mUwyGLLbzGxixHtMm5AfBT5sWDa76msvvDDR6Tkhcl4zzq/FJzX6bjKTl+ivo5A+qnBR
+         Ziqg==
+X-Forwarded-Encrypted: i=1; AL+hErHKqz7GobCUC+AJapGwpyKBN0VQC/sqfJt8egy4Td3jc27slwt4o9jQORnah+PIqxZX6l6/Itnx@vger.kernel.org
+X-Gm-Message-State: APuU4Z88OyUTiN9WCva9QBfJ16ZUbFsyPYtyNtB98pm32WzhkpUVffu9
+	TxhzdZlu+JAd2TUTd70xLJtfUTfUTZYtcY50CGo6eocrLxRIKTBokcxS
+X-Gm-Gg: AYBFou1IkXegM0ox+bfE+tEgjdNuiqMHEWOXNIffbkGFTVp2o7FjRyeWEcIrBc8pz+B
+	kdmj0hl4MxWgcM6USMDSey0AjUgcFNC5otFc14M89Vcg5ScWt5BRfwpwjUFWFJCDFUM1CkWnbRE
+	3VgLv5g0CCMpY///oOWQV2GPICRrft87CMElBoSszdQi2WNqkqJxYXhoyEL+noYLYFgNQtOp3av
+	UMFKuMF/X8DbvdCSFghAJmg7MfphsdF754R7Up6kXuAR689eOKAkn++7DVuF3c31g3dfaEym2kp
+	fHnY04WBs7Ok4k96mIF58y1sH3MHZcJhwETDxgPzKy2uv5d4a19YRgJ33a7zWE7/g5ydmVSTWyW
+	8wt3l3MUFG3qZWkyzy74HaS+/Jlb7u+hWZLbXWjATRkC98l1+ny/lqssL20OFR4lz4xBqMHJ9Pm
+	PjD682C2K7UQWR3RNEM5XStZUdTzoHUAoMJ4L/51F3bVk5QpjtsXNFWxEO3cF54AzRTmx86QFs9
+	th968Yb4HzMT0oa4vLa3T9/Ypj8/neWHtQTlGpBSIfzh7v02IoQhx33wBze3DH9OR8A2Zn1NcjN
+	6NcFWURe21rQUxtREsP69xjGQdbvuRefZwHQpU7P4JhhvJqWLU2jNme7jULDqDJO2duAe/zo8FA
+	bhOwd+g==
+X-Received: by 2002:a05:690c:4f07:b0:8b0:d837:364b with SMTP id 00721157ae682-8b3a7e3b702mr19660887b3.7.1794421036454;
+        Wed, 11 Nov 2026 10:17:16 -0800 (PST)
+Received: from localhost ([2a03:2880:10ff:5b::])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b39324c124sm49936597b3.6.2026.11.11.10.17.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Nov 2026 09:56:58 -0800 (PST)
-From: Yuri Andriaccio <yurand2000@gmail.com>
-To: tj@kernel.org
-Cc: bsegall@google.com,
+        Wed, 11 Nov 2026 10:17:15 -0800 (PST)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: "Li Zhe" <lizhe.67@bytedance.com>
+Cc: akpm@linux-foundation.org,
+	david@kernel.org,
+	gourry@gourry.net,
+	ziy@nvidia.com,
+	joshua.hahnjy@gmail.com,
+	rakie.kim@sk.com,
+	ying.huang@linux.alibaba.com,
+	ljs@kernel.org,
+	mhocko@suse.com,
+	muchun.song@linux.dev,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	weixugc@google.com,
 	cgroups@vger.kernel.org,
-	dietmar.eggemann@arm.com,
-	hannes@cmpxchg.org,
-	juri.lelli@redhat.com,
-	kprateek.nayak@amd.com,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	luca.abeni@santannapisa.it,
-	mgorman@suse.de,
-	mingo@redhat.com,
-	mkoutny@suse.com,
-	peterz@infradead.org,
-	rostedt@goodmis.org,
-	vincent.guittot@linaro.org,
-	vschneid@redhat.com,
-	yuri.andriaccio@santannapisa.it
-Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
-Date: Wed, 11 Nov 2026 18:56:57 +0100
-Message-ID: <20261111175657.250354-1-yurand2000@gmail.com>
-X-Mailer: git-send-email 2.56.0
-In-Reply-To: <212c244d534ee1fdb0538a980789e16c@kernel.org>
-References: <212c244d534ee1fdb0538a980789e16c@kernel.org>
+	linux-mm@kvack.org,
+	Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
+Date: Wed, 11 Nov 2026 10:17:13 -0800
+Message-ID: <20261111181714.1463827-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261019141401.11927-1-lizhe.67@bytedance.com>
+References: 
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -113,143 +116,122 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hello Tejun,
+On Mon, 19 Oct 2026 22:13:59 +0800 "Li Zhe" <lizhe.67@bytedance.com> wrote:
 
-Thanks for taking a look. I'm answering some of your comments first and at the
-end I'm proposing a summary of changes that will appear in the next RFC to
-then "stabilize" the user interface.
+> memory.reclaim is a useful proactive reclaim interface for memcgs, but
+> tiered memory makes "reclaim N bytes from this memcg" underspecified for
+> userspace controllers that manage memory placement across tiers. The
+> kernel's reclaim policy is aging-based, and on tiered systems aging may
+> demote folios before they are eventually evicted. Without a way to
+> declare where reclaim pressure should start, userspace can only reclaim
+> from the memcg as a whole and observe one aggregate progress value.
 
+Hi Zhe,
 
+I hope you have been doing well. I'm circling back to this discussion
+to see if there have been any updates since we last spoke about this.
 
-> The new name still doesn't follow the cgroup2 naming convention.
+I'm wondering how feasible it would be to enforce some kind of placement
+decision from userspace with this new tool. That is, I think I would be
+interested to see if this solution was enough to grant fair placement
+of memroy across tiers within a memcg.
 
-Thanks for pointing this out, it was a mistake on my end. This will be fixed
-in the next RFC.
+Were you able to run tests to demonstrate how effective this was at
+managing placement decisions for memory?
 
-> The file prints a "CPU runtime=R period=P" line for each possible CPU.
+Of course, I think we should answer the ABI questions below. Maybe some
+of the memcg folks could chime in a bit about what kinds of interfaces
+they would like to see.
 
-We will condense the displaying for same runtime/period CPUs and omit zeroed
-ones.
+To start, I'll reiterate what I've said in the previous response, I
+think we should keep this a node extension until we can demonstrate a
+scenario where there needs to be tier-awareness (to be honest, I don't
+think there is one).
 
+Cc-ing Johannes who is a memcg maintainer but was not CCed in the
+original series:
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 
+Thanks, have a great day!
+Joshua
 
-> Switching between "max" and a budget is refused while the cgroup or its
-> "max" descendants have RT tasks. That's okay as a restriction for now.
-> Ideally, the switch wouldn't be restricted as long as the budget is
-> sufficient, but that can be left for the future.
-
-The restriction is in place to simplify the initial implementation: switching
-between "max" and non-"max" requires to migrate all tasks from one cgroup's
-runqueues to another cgroup ones, and could potentially be an expensive
-operation if there are lots of tasks. If you think the restriction is
-acceptable (for now), we will keep this unchanged in hte next RFC, and fix it
-later.
-
-
-
-> Can we separate cpu.rt.max from cpuset?
-
-Maybe we misunderstood, but in some previous discussion it was asked us to
-integrate the `cpuset` and `cpu` controllers somehow. Your proposal of having
-the `cpu` and `cpuset` controllers orthogonal simplifies things, but it is
-similar to the previous (cgroup-v1-based) implementation, or before the
-integration patch itself (i.e. just allow the per-CPU overrides but remove the
-tighter coupling). What is the final verdict on this?
-
-
-
-> On the per-CPU budgets themselves, they don't match cpu.max, and giving
-> a budget per CPU is a bit odd when the consumption isn't per CPU. The
-> threads move around. Maybe it can't be avoided, but I'd like to see a
-> discussion of the rationale behind the design choice and some
-> exploration of alternatives.
-
-I'm not sure if I'm understanding correctly here, but the budget for
-`cpu.rt.max`, differently from `cpu.max`, is meant to be per-CPU and not
-global. Sure the initial patches have a single setting that is the same on all
-CPUs, but it was meant to be a per-CPU limit that is the same across all cores.
-Notice that threads move around, but we prevent migrating them to cores with
-zero runtime (hence, there is some overlap of functionality between cpusets
-and rt-cgroups).
-
-The rationale behind this is that, from a real-time theoretical pov, it is
-necessary to know how much budget and how it is distributed on the CPUs, as
-changing the number of CPUs or the budget distribution radically changes the
-schedulability outputs. The most complete and flexible interface is therefore
-having per-CPU budgets.
-
-This is also necessary to prevent over-provisioning and allowing partitioning
-of the total bandwidth:
-
-- If implementing solution 1, a request of 10% of budget reserves 10% of
-  runtime on all cores, regardless of `cpuset` settings. Of course a `cpuset`
-  mask that is smaller than the total allows limiting the tasks on a subset
-  of CPUs, yet the budget on the unused cores is still allocated, and therefore
-  wasted. This is a case of over-provisioning.
-- On the other hand, allowing per-CPU controls allows to potentially partition
-  the total bandwidth in the CPU hierarchy, for example reserving some 10%
-  runtime on some cores, while still allowing other cgroups to make use of the
-  unused 10% bandwidth on the other cores.
-
-From this limited discussion it appears to us that solution 2, which is
-similar to what we already had but without the "default" case, is the most
-suitable. Solutions 1 and 3 are more or less what already exists before
-the `cpuset` integration patches.
-
-
-
-> AFAICS, disabling the cpuset controller above a budgeted cgroup moves it to
-> the ancestor's cpuset and changes its effective CPUs without going through
-> the lockout at all.
-
-You are right, we tried to prevent changes in the `cpuset` when an active
-rt-cgroup was involved but this was clearly missed out.
-
-The lockout is in place because, in the current integration, it is necessary
-to rerun the bandwdith admission test on every `cpuset` change, which greatly
-complicates the code. Nonetheless, a more permissive integration still needs
-to couple updates in both controllers and run some admission tests.
-
-
-
-> Skipping the boost when the target has no runtime is fine as long
-> as nothing stalls.
-
-For PI and zero-budget cgroups, if this is an acceptable solution, it seems
-the most straightforward one: disallow switching to RT for zeroed cgroups and
-disable zeroing the budget of any parent which has active RT tasks.
-
-- - -
-
-As mentioned at the beginning, here is a summary of what the interface
-would be after the discussed points:
-
-- `cpu.rt.max` and `cpu.rt.max.effective.local` files. When displaying the
-  per-CPU settings, zero runtimes are skipped and same runtime/period cpus
-  are condensed in the same cpuset.
-
-- `cpu.rt.max` only accepts per-CPU settings, so the global "default" is
-  removed. Removing all overrides means the cgroup is a "max" cgroup, while
-  just a single override means that the cgroup has its own budget.
-  + This new interface disallows zero-runtime overrides, as a zero override
-    is equal to an empty override when there is at least one non-zero override.
-    As an example: [<CPU0 10ms 100ms>, <CPU1 0ms 100ms>] is equal to just
-    having [<CPU0 10ms 100ms>]. This seems a bit odd, how to make this better?
-
-- Switching between `max` and non-`max` is still disallowed for active
-  real-time cgroups (to be left for the future).
-
-- `cpu` and `cpuset` controllers are decoupled, as it was before the `cpuset`
-  integration patch. The user/admin is responsible for inconsistencies between
-  the two controllers (i.e. empty intersection between active server in the
-  rt-cgroup and the allowed cpuset just disallows executing RT tasks entirely).
-
-- zero "internal" runtime cgroups will disallow RT tasks and prevent
-  priority boosting. Admission controls will disallow zeroing the "internal"
-  budget of a parent which has active tasks running.
-
-Hopefully we can agree on the ideas posted here. If you have any doubts or
-better suggestions let us know.
-
-Thanks,
-Yuri
+> There is prior history here [1]. The old nodes= proposal tried to let
+> memory.reclaim scan selected NUMA nodes, but the discussion left several
+> ABI questions unresolved:
+> 
+> - nodes= did not clearly say whether the mask was a source selector, a
+>   reclaim domain, or a demotion-target constraint.
+> - The implementation did not apply the mask to the whole reclaim path,
+>   so demotion could allocate outside the mask. If userspace interpreted
+>   the mask as a domain or target constraint, the ABI did not provide
+>   that.
+> - Selecting top-tier nodes could become an implicit way to request
+>   demotion without uncharge. That would make userspace depend on a
+>   particular reclaim policy and could make future policy changes hard.
+> - The separate completion-accounting question remained: demotion can
+>   count as reclaim progress even though memory.current is not reduced.
+> 
+> This series takes a narrower approach. It adds a typed source= key which
+> declares only the source on which the existing memory.reclaim aging
+> pipeline should be applied. It is not a demotion target selector, not a
+> demotion-only goal, not an eviction-only goal, and not a change to the
+> existing completion accounting. Leaving source unspecified preserves the
+> existing memory.reclaim behavior.
+> 
+> In that sense, this series extends node-scoped reclaim pressure to the
+> memcg memory.reclaim interface. The existing node memory_reclaim
+> interface can apply pressure to a node, but it is not scoped to a
+> particular memcg. This series lets userspace apply the same kind of
+> source-scoped pressure to a cgroup's resident memory on selected nodes
+> or tiers, while still using the normal memcg reclaim path.
+> 
+> The main benefit of this series is to give userspace a steering knob
+> for per-node and per-tier memory placement control. A tiering controller
+> can observe the resident memory distribution across nodes or memory
+> tiers, and then apply reclaim pressure to the source that should be
+> relieved. For example, it can apply pressure to top-tier nodes so that,
+> under the existing tiering policy, cold folios can be aged and usually
+> demoted to lower tiers, or reclaim from a terminal tier when it needs
+> actual charge reduction.
+> 
+> The existing memory.reclaim interface cannot express this. It applies
+> pressure to the memcg as a whole, so on a multi-tier system the kernel
+> may make progress in a tier different from the one userspace is trying
+> to control. That makes feedback control of tier ratios ineffective: the
+> controller can observe that a specific tier is over its desired resident
+> footprint, but it cannot direct the next reclaim request to that tier.
+> 
+> Patch 1 adds source=nodes:<nodelist>, which is the basic source
+> selector. Patch 2 adds source=tier:<N>, where N is the memory_tierN id
+> exposed by /sys/devices/virtual/memory_tiering/. The tier selector is
+> only a convenience layer over the same source semantics: it resolves the
+> current tier nodelist at write time and then uses the same source-scoped
+> reclaim path as source=nodes:<nodelist>.
+> 
+> The remaining issues from the old discussion are intentionally left out
+> of this series. If userspace needs to control demotion targets, that
+> should be a separate target/demotion-policy ABI rather than folded into
+> source=. If userspace needs a strict "bytes actually uncharged"
+> completion mode, that should be discussed as a separate accounting or
+> goal extension because it would change the observable meaning of
+> memory.reclaim progress. This series only adds source selection for the
+> existing reclaim policy.
+> 
+> References:
+> [1] https://lore.kernel.org/all/Y5bsmpCyeryu3Zz1@dhcp22.suse.cz/
+> 
+> Li Zhe (2):
+>   mm: add source selector to memory.reclaim
+>   mm: add tier source selector to memory.reclaim
+> 
+>  Documentation/admin-guide/cgroup-v2.rst | 29 +++++++++++
+>  include/linux/memory-tiers.h            |  6 +++
+>  mm/internal.h                           |  3 +-
+>  mm/memcontrol-v1.c                      |  6 ++-
+>  mm/memcontrol.c                         | 11 +++--
+>  mm/memory-tiers.c                       | 24 ++++++++++
+>  mm/vmscan.c                             | 64 +++++++++++++++++++++++--
+>  7 files changed, 133 insertions(+), 10 deletions(-)
+> 
+> -- 
+> 2.20.1
