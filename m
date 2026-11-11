@@ -1,88 +1,126 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=52.34.181.151
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794400242;
-	b=HqxyvUGqaptoPBlXnLCHF1xojCGUn3Iewd2PxOgsWDyUxRl6mOS2LhP+Qjek5Yl+rwCa
-	 KbSdLmrzkwjhhFmz46Epg8Iv8A/YnLAibkYDDJXk2fG6eqgoTWA/bZFr7bG6zdjmPUR1E
-	 cZbQDR3xQwe5pgr8b4yGOHcHvx/b+dzoG9IwmsXUIDTAJmfuWy+/yS7oF7Bsm14yrGZw+
-	 NVJgtpI7bpVV3a+ClbdQzA20LRyadkUl4PdkJQEfmPG0Wmrs5UvZwkp66esdq8FmfuxVy
-	 ddGmhcTfENOX6uSaLhJtDl07JVP+Z9mICBNJqD5r3OC0gVWH3/H9zKw8NQjxS4kSb2Q==
+	t=1794401962;
+	b=VWA/dUKPKqj6/HKXx0kxAwGyJKSr3Wl0jb214PF9i2YUPxhBfdKssWeRchZP/Pv5Giw/
+	 3Vv2nHJnEIKWj0jXH/y6bDWPI3UmfZN6yj8oRMJlPlqnThH1M2JDna3Wtnpvw3Heyp5GN
+	 9GU6+jnxoQwi/7SLYxilKG25C67/oJioJ579gQEIXPwrxuExsH63dbTHDO4fIdHcvks9Y
+	 d1blQ2GpNQnGU2aKAiPE2sgRGCpl/vl08e4WeY0A0ygd6SImE6x1i5WXjewW/hPoDBHKs
+	 N01FzHZonbJTUrGUo3T14Q8wZefvitHIcckhLlAeK+s0rQoVIhS0F8jqAyS7NeXNTzg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794400242;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:Received:Received:X-Farcaster-Flow-ID:Received:Received:
-	 From:To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:X-Originating-IP:X-ClientProxiedBy:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=edbGiyGIu5sLlTnWTnPemPa+9AxsJ4JbSP3661/+iQ8=;
-	b=QsmnkjknsjWdU6dCZvwlHguiWrwy5J5QQJPvDiIh8483WO3bXdKXCjEKHM0/Yu2raTfo
-	 mh4lzCY7L7KTqzrm8H5hig9m/FCT/Wu5WBftxEaouwm70MYWaGG5OTRr6pigEFO2B59WC
-	 5Rb6AOHTh8Ty8lX0bK++2X0Qm848JxkNMXGcABIIHz34FotAaSBaiIwDJdtewNygrCJ2e
-	 fYa/BRf8c9mDcJdO8XoKw/76YzsBr6243Oq6KH317ZgqGUOfCnixnJOTz4wYPoHKbc86R
-	 ykRM7Z1qlzy9Wepn8FIkCNDbk+EB7a67FXjeVa6d+YsxuE0P0uJpj/W7GbZnFWCtYkw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794401962;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:
+	 Content-Transfer-Encoding:In-Reply-To;
+	bh=Sfjm76wcFaYplzSjvgbZRL4nEIoICacZtL8Z7ioFei4=;
+	b=eTrD0PnON/KQ2enKrGR9jPQAi6cOnhqZhmO0rkPZSR6Gj6W/FpaWsYvr69rnSnFxX7+J
+	 1CMUOebu3vLbArmH75o6lfPXT5d4Ub0a7eW0nEZ5bHogx0fzvleYVXRCenVmzywEX+kxu
+	 e0NjkL1fkAdoZr0k6o/4bMqEifVBguRgQw4ImaR+3JsOk1qhpWC4y4JHNzh2YMLSjZjLx
+	 cDuo5vetz/wfQc5YVHQVw9FcMZHTlHsaFhby21CX4HmqBK3WSS7Bn6wZn4ymTQKTthdEQ
+	 jf07rRvppsn9+Dz/RnI5Hse40SVih1brFhkHnB+cTcj3T6n6zB5hpxSTb8Bo98mBDFw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=amazon.com;
-	spf=pass smtp.mailfrom=amazon.com;
-	dkim=pass header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=NyxA6yfR;
-	arc=none smtp.remote-ip=52.34.181.151
-Received: from pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com (pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com [52.34.181.151])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Smiccc5X;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=egZJe0Wi;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE7F606A31C;
-	Wed, 11 Nov 2026 12:30:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CCE7F606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EBF4606A330
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 12:59:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7EBF4606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.a=rsa-sha256 header.s=amazoncorp2 header.b=NyxA6yfR
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Smiccc5X;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=egZJe0Wi
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794401960;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Sfjm76wcFaYplzSjvgbZRL4nEIoICacZtL8Z7ioFei4=;
+	b=Smiccc5XO49PMyUug1kF3pjsPszfftMnVBpgNlav+pQkype24Nk9GhCQZQfZ33DpJguM2D
+	xlq52biitAoXbC+sEieXvnqjVAmE9jOfLRpq7tFCBErIySuHFQy6ZRe5Ojhux9HUPLhO6G
+	CcKh0UEQCF6IU3sJbiqkImdrE57HOT0=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-70-lapfnYUoN-mKqqk_JNq9_g-1; Wed, 11 Nov 2026 07:59:19 -0500
+X-MC-Unique: lapfnYUoN-mKqqk_JNq9_g-1
+X-Mimecast-MFC-AGG-ID: lapfnYUoN-mKqqk_JNq9_g_1794401958
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-48c6a1d4034so2340014f8f.0
+        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 04:59:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1794400236; x=1825936236;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=edbGiyGIu5sLlTnWTnPemPa+9AxsJ4JbSP3661/+iQ8=;
-  b=NyxA6yfR414U12Td7neKUCQo+znfTsde4QWIyKg7JzvaYwTIQ+QwJ4tJ
-   D+/ZiPKoJu7xQrTn6B22vsZMP0nnNsIi4ZavpkS4xabZolr98xTR9S9SX
-   slfc+bgd55iFlz3sHf0Aco/hz4GL8Ini4Xt2yGvTQD8bPxktO7MYfSGQv
-   sj+3eLMWrdQg+NfdCxUmJqW7PFaHpPmvdq1dl/DjVOGWjlL6lYSMxeWUY
-   S1qg6OMLOiUWISnNpzpSpIiaxKUunui6AVR+ZTi9xVg3THmVSrmG8ZiZH
-   fJiECH+pAlJfYv6da0WGaT+shm+9JS3X/t7Z9cZYWfxiLGGyBx7HdCW/d
-   A==;
-X-CSE-ConnectionGUID: ZraDB6+jQs2FKn3qb9Ow/g==
-X-CSE-MsgGUID: M0f2l3YDTLeaz1OxtMVUpg==
-X-IronPort-AV: E=Sophos;i="6.27,207,1787011200"; 
-   d="scan'208";a="33707211"
-Received: from ip-10-5-6-203.us-west-2.compute.internal (HELO smtpout.naws.us-west-2.prod.farcaster.email.amazon.dev) ([10.5.6.203])
-  by internal-pdx-out-007.esa.us-west-2.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2026 12:30:36 +0000
-Received: from EX19MTAUWB002.ant.amazon.com [205.251.233.48:24115]
- by smtpin.naws.us-west-2.prod.farcaster.email.amazon.dev [10.0.34.255:2525] with esmtp (Farcaster)
- id 43de55fc-60cc-47b4-a759-0ce6107898b8; Wed, 11 Nov 2026 12:30:36 +0000 (UTC)
-X-Farcaster-Flow-ID: 43de55fc-60cc-47b4-a759-0ce6107898b8
-Received: from EX19D001UWA001.ant.amazon.com (10.13.138.214) by
- EX19MTAUWB002.ant.amazon.com (10.250.64.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56;
- Wed, 11 Nov 2026 12:30:35 +0000
-Received: from dev-dsk-sieberf-metal-1a-7543e84d.eu-west-1.amazon.com
- (172.19.116.227) by EX19D001UWA001.ant.amazon.com (10.13.138.214) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.56; Wed, 11 Nov 2026
- 12:30:31 +0000
-From: Fernand Sieber <sieberf@amazon.com>
-To: <mingo@redhat.com>, <peterz@infradead.org>, <juri.lelli@redhat.com>,
-	<vincent.guittot@linaro.org>
-CC: <tj@kernel.org>, <bsegall@google.com>, <dietmar.eggemann@arm.com>,
-	<rostedt@goodmis.org>, <mgorman@suse.de>, <vschneid@redhat.com>,
-	<kprateek.nayak@amd.com>, <hannes@cmpxchg.org>, <mkoutny@suse.com>,
-	<skhan@linuxfoundation.org>, <corbet@lwn.net>, <rdunlap@infradead.org>,
-	<cgroups@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-	<linux-kselftest@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<nh-open-source@amazon.com>, <hborghor@amazon.de>, <fmubeen@amazon.de>,
-	<dwmw@amazon.co.uk>, <sieberf@amazon.com>
-Subject: [PATCH v3 2/2] sched/fair: refill bandwidth for the periods the timer slept through
-Date: Wed, 11 Nov 2026 14:29:49 +0200
-Message-ID: <e71eb3a4c38d790114baabc62f9ebe8e2771bb91.1794398404.git.sieberf@amazon.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <cover.1794398404.git.sieberf@amazon.com>
-References: <cover.1794303670.git.sieberf@amazon.com> <cover.1794398404.git.sieberf@amazon.com>
+        d=redhat.com; s=google; t=1794401958; x=1795006758; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=Sfjm76wcFaYplzSjvgbZRL4nEIoICacZtL8Z7ioFei4=;
+        b=egZJe0Wi2sgZjvTjgJJhuoiDyof/Zk202uF3RPLv7m98WY0lrJYAOScdPXsTc5/K6H
+         iWOQD8Q8pfH+bo+CxmkCanycg34E778FPSycBkv9TT0zKvt9ZQos2kBtFwTiEay0ifT6
+         sSYwu/OX3X2UwHWh0WW6Yx1NOEsfd7LJni2XNK2svB60HCMrsPeai6p86u2aOxhQ15iZ
+         uJ1mxwmz1LeTHMj1zCcCEmD3liecbAY3V3qZdZ6mJxbQCkb27aD7Zd21LnW/3QY3kvjE
+         3Eakp+wW7kTWdyz5OQLLcZi4t8I9nQnbeRV0QIejW3m79wGCkWLbU7k3Ux1HXOR9GZPL
+         9bPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794401958; x=1795006758;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=Sfjm76wcFaYplzSjvgbZRL4nEIoICacZtL8Z7ioFei4=;
+        b=TpSIlcx59xTsWw8hBLRBflUaAzUVvEKb6UHh45YFzsMu68Hm5hJqm+TKOIiEm0yT8s
+         s9xTo8THd5N3QDBunkcnL4ELclzj0RdaQX7jl3SRPKzvmMDn0YBhN4s4ZkbU1bSsfEyb
+         5KWI6UuzyAfJE/FLCLbsTwSjK/e1TE7A+/EhpbspXI4Zfxq8TyunxGlJgTVyRtXD3TcZ
+         0kZa2h6HDpbjwYZGSduYLOjsZ3RpuMsX4auwHyUpqO6tKN6DR0UDPmBff7iHSGRhfwOK
+         y1zEy6VwgdLxWKe9cE/ZzW3Omg8rn955cbWdpnGJohkWU3ZFO79q7zbicL/3yUBePwMA
+         wszA==
+X-Forwarded-Encrypted: i=1; AL+hErFTIwnlGVqWso1JqIvTTA+EoH+AbfaTJxl6SXCOzcxv2hMFb3vIBb9vBmrhzPJGnGjte5PlHLYz@vger.kernel.org
+X-Gm-Message-State: APuU4Z/YfbP5/NEZh3smbbPkhoVRDOWaSe3t3zjVSqv+O19iyXuVWgDQ
+	o2r+UMKe7mkHZc4fKK2a6cCGoxumPZOcfP6EVIhN9CO9gcgogPxZ8vr6Dtg2FV50eIsweCJJOr3
+	/PynPNqa5RHudCp8eeIs+RF0hVoFpQo+3F1jySf+3SbXMZZr5MaiEjg5Bqi4=
+X-Gm-Gg: AYBFou3VVmtBzz+fmedR9adREcQNUcoEnJKgOgh91UpMgp1dVcgLBgXtNKQwVf/3w+s
+	ZLW3FEDJd9/goPRKQ7F9Ez4TMI6c+pezIybMjdLRQgnKk6oD1VmPHlINFU0xfIcSEd2EMrLReIV
+	MLHzY0EZx1VN6OKI4PgG2Yod2RWKCyr1+GO1CYVz2L3upPTrIvQoaPQN4PkdtMTzn6evNzaERSj
+	gFME7LZOKukJejtwBf4kwl7jCbplchGNcOZ3lkcU+oeRH10ft3LvjsIueLssAxEVmf1bWM0dqiB
+	/i08Af80snjpeEaDWNMRtGmZ/ulI9Ytw/LVf5TRs5SGpUh8Mtfsenrbg0BdVsVVp6Nughta2Mw3
+	l0jpemHBQIfHQTCl3i72pcxe8JvHRWTyhxRJnt5N/16qwmzoF74Ff3WWoVpWIDgDDH5YTqd7XzD
+	mt+gQ=
+X-Received: by 2002:a05:6000:2502:b0:491:1e11:9ffe with SMTP id ffacd0b85a97d-499c48154f6mr4396771f8f.2.1794401957826;
+        Wed, 11 Nov 2026 04:59:17 -0800 (PST)
+X-Received: by 2002:a05:6000:2502:b0:491:1e11:9ffe with SMTP id ffacd0b85a97d-499c48154f6mr4396705f8f.2.1794401957282;
+        Wed, 11 Nov 2026 04:59:17 -0800 (PST)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49842f2a1f9sm11424324f8f.15.2026.11.11.04.59.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Nov 2026 04:59:15 -0800 (PST)
+Date: Wed, 11 Nov 2026 13:59:12 +0100
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
+	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
+	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org, longman@redhat.com,
+	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
+	clrkwllms@kernel.org, parri.andrea@gmail.com,
+	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v5 13/29] sched/deadline: Keep departing bandwidth across
+ a root domain rebuild
+Message-ID: <avRmoK08LoIeySBL@jlelli-thinkpadt14gen4.remote.csb>
+References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
+ <20261108185406.1549770-14-mathieu.desnoyers@efficios.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -92,545 +130,218 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-ClientProxiedBy: EX19D031UWA002.ant.amazon.com (10.13.139.96) To
- EX19D001UWA001.ant.amazon.com (10.13.138.214)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20261108185406.1549770-14-mathieu.desnoyers@efficios.com>
 
-cpu.max.burst lets a group accumulate unused quota up to quota + burst.
-But the period timer stops after a period in which the group took no
-runtime, and start_cfs_bandwidth() restarts it with hrtimer_forward_now()
-and discards the periods that passed. A group that sits idle stops
-accumulating, and one that wakes after idling for a long time has only
-what it had when the timer stopped.
+Hello,
 
-Count the missed periods instead. While the timer is stopped, its expiry
-is the first period boundary it missed, so the overrun at restart is the
-number of refills owed. Add quota for each, capped at quota + burst as
-__refill_cfs_bandwidth_runtime() caps it.
+On 08/11/26 13:53, Mathieu Desnoyers wrote:
+> A task that leaves SCHED_DEADLINE, or dies, keeps its bandwidth in
+> total_bw until its 0-lag time. This keeps admission control on the safe
+> side. Then inactive_task_timer() removes it from the root domain of the
+> task's CPU. Two things break this:
+> 
+>  - A rebuild of the accounting clears every root domain, then adds back
+>    the deadline tasks of the cpusets. It misses a task out of the
+>    class, or a dead one. Their bandwidth is dropped, and the timer
+>    removes it again.
+>  - A task out of the class can also move to another root domain. The
+>    timer then takes total_bw from that one, which never had it.
+> 
+> Either way, a root domain admits deadline tasks beyond its capacity
+> until the next rebuild.
+> 
+> Fix this with dl_departed_list. A departing task goes on it with the
+> CPU it is on. A rebuild puts its bandwidth back in that CPU's root
+> domain. The timer removes it from there, and so does
+> sched_dl_overflow() for a task back in the class.
+> 
+> A rebuild still drops the bandwidth of a task whose CPU is inactive, or
+> that dies during the rebuild. Each task records a count of the
+> rebuilds, dl_bw_gen, with its bandwidth. The timer removes nothing if a
+> rebuild came since.
+> 
+> Make dl_cookie and dl_bw_visited() static: only deadline.c uses them.
+> 
+> deadline_rebuild_test, added later in this series, fails every time on
+> v7.3 and v7.4-rc1 kernels. A one-CPU partition root admits two tasks of
+> 600ms every second there, where it has room for one. It passes with
+> this patch.
+> 
+> Fixes: 387e31300b57 ("sched/deadline: Fix the update of the total -deadline utilization")
+> Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> ---
 
-Without a burst the cap is quota. The timer stops right after a refill
-that nothing drew from, so the runtime is at quota then, and groups
-without a burst see no change. Groups with a burst do see a change. A
-group that has been idle now has up to quota + burst when it runs again.
-The documentation of cpu.max.burst, cpu.max.runtime and cpu.cfs_burst_us
-says so.
+...
 
-A change of the bandwidth (cpu.max, cpu.max.burst) applies from that
-moment, and the group keeps what it earned before it. The periods owed
-are first refilled at the bandwidth they were earned under, capped at
-its quota + burst, and then the new bandwidth applies, with its own cap.
-A group that had no quota earned nothing, so one given a quota after a
-long time unconstrained does not start full. The next period starts from
-the change too: a stopped timer's expiry is a boundary of the period the
-group had, so leaving it would put the first refill under the new
-bandwidth up to one old period away. A cpu.max.runtime write also
-refills the periods owed first, so that it replaces them, and only the
-periods after the write refill.
+> +/*
+> + * A task that leaves SCHED_DEADLINE, or dies, before its 0-lag time keeps
+> + * its bandwidth in total_bw until that time. Then the inactive timer
+> + * removes it. Meanwhile the task may run anywhere, under another policy.
+> + * The timer holds a reference to it.
+> + *
+> + * A rebuild of the root domains' accounting (dl_clear_root_domains() and
+> + * dl_add_task_root_domain()) does not find such a task among the deadline
+> + * tasks of the cpusets. So dl_departed_list holds these tasks, from their
+> + * departure to their timer. The rebuild puts their bandwidth back in the
+> + * root domain of the CPU each one was on when it left.
+> + *
+> + * dl_bw_gen counts the rebuilds. Each task records its value when its
+> + * bandwidth is counted. If a rebuild dropped the bandwidth since, there
+> + * is nothing to remove. A rebuild drops it when the CPU recorded is no
+> + * longer active. It also drops the bandwidth of a task that dies while
+> + * the rebuild runs. The cpuset walk skips that task, and it was not dead
+> + * yet when the list was put back.
 
-cpu.max.runtime reports the runtime the group has now, owed refills
-included, without starting the timer.
+It took me a bit of staring to (hopefully) understand better how
+dl_bw_gen works, maybe the following can help others?
 
-The idle periods are not added to cpu.stat's nr_periods, which counts the
-periods in which the timer ran. A timer that runs late by several
-periods still refills only once, unlike a stopped one; this patch leaves
-that as it is.
-
-Signed-off-by: Fernand Sieber <sieberf@amazon.com>
----
- Documentation/admin-guide/cgroup-v2.rst   |  17 +-
- Documentation/scheduler/sched-bwc.rst     |   5 +-
- kernel/sched/core.c                       |  12 ++
- kernel/sched/fair.c                       | 100 +++++++++-
- kernel/sched/sched.h                      |   2 +
- tools/testing/selftests/cgroup/test_cpu.c | 231 ++++++++++++++++++++++
- 6 files changed, 355 insertions(+), 12 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index eb802f8ba877f..12d40b55f2dbb 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1232,9 +1232,9 @@ will be referred to. All time durations are in microseconds.
- 	cgroups.  The default is "0".
- 
- 	The burst. The cgroup can accumulate the runtime it does not
--	use, up to $MAX + cpu.max.burst. The burst may exceed $MAX, as
--	long as $MAX + cpu.max.burst is at most 2^44 - 1 (about 203
--	days).
-+	use, up to $MAX + cpu.max.burst, also in the periods in which it
-+	does not run. The burst may exceed $MAX, as long as $MAX +
-+	cpu.max.burst is at most 2^44 - 1 (about 203 days).
- 
- 	This file affects only processes under the fair-class scheduler and a BPF
- 	scheduler with the ``cgroup_set_bandwidth`` callback depending on what
-@@ -1246,11 +1246,12 @@ will be referred to. All time durations are in microseconds.
- 
- 	The runtime the cgroup has accumulated and not used yet, in
- 	microseconds. Each period refills it by $MAX, up to $MAX +
--	cpu.max.burst, and a read returns at most $MAX + cpu.max.burst.
--	A write sets it, up to $MAX + cpu.max.burst, and lets a cgroup
--	that ran out of runtime run again at once. A write fails with
--	EINVAL while $MAX is "max", a read then returns 0, and setting
--	$MAX to "max" drops the runtime the cgroup had.
-+	cpu.max.burst, whether the cgroup runs in it or not. A read
-+	returns at most $MAX + cpu.max.burst. A write sets it, up to
-+	$MAX + cpu.max.burst, and lets a cgroup that ran out of runtime
-+	run again at once. A write fails with EINVAL while $MAX is
-+	"max", a read then returns 0, and setting $MAX to "max" drops
-+	the runtime the cgroup had.
- 
- 	The runtime does not include what the cgroup's CPUs already took
- 	from it, at most a slice each (sched_cfs_bandwidth_slice_us).
-diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
-index c22b3c8c14e29..ccf7434ca73f0 100644
---- a/Documentation/scheduler/sched-bwc.rst
-+++ b/Documentation/scheduler/sched-bwc.rst
-@@ -103,8 +103,9 @@ A value of 0 for cpu.cfs_burst_us indicates that the group can not accumulate
- any unused bandwidth. It makes the traditional bandwidth control behavior for
- CFS unchanged. Writing any (valid) positive value(s) into cpu.cfs_burst_us
- will enact the cap on unused bandwidth accumulation: the group can accumulate
--up to cpu.cfs_quota_us + cpu.cfs_burst_us. The burst may be larger than the
--quota, as long as their sum is at most 2^44 - 1 microseconds (about 203 days).
-+up to cpu.cfs_quota_us + cpu.cfs_burst_us, also over periods in which it does
-+not run. The burst may be larger than the quota, as long as their sum is at
-+most 2^44 - 1 microseconds (about 203 days).
- 
- Any updates to a group's bandwidth specification will result in it becoming
- unthrottled if it is in a constrained state.
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e068d81e1fc5f..265088af6a561 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -9856,10 +9856,22 @@ static int tg_set_cfs_bandwidth(struct task_group *tg,
- 		cfs_bandwidth_usage_inc();
- 
- 	scoped_guard (raw_spinlock_irq, &cfs_b->lock) {
-+		/*
-+		 * The new bandwidth applies from now on. The group keeps what
-+		 * it earned while idle under the old one.
-+		 */
-+		cfs_bandwidth_refill_idle_periods(cfs_b);
-+
- 		cfs_b->period = ns_to_ktime(period);
- 		cfs_b->quota = quota;
- 		cfs_b->burst = burst;
- 
-+		/*
-+		 * The next period starts from here too, rather than at the
-+		 * boundary left over from the old one.
-+		 */
-+		cfs_bandwidth_reanchor_period(cfs_b);
-+
- 		/*
- 		 * A group without a quota accumulates no runtime, so drop what
- 		 * it had rather than report it and add to it once it has a
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 8fee8d27faa5a..0a65a8e232c96 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -7817,6 +7817,92 @@ static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq)
- 	INIT_LIST_HEAD(&cfs_rq->throttled_limbo_list);
- }
- 
-+/*
-+ * Runtime after @periods refills of quota, capped at quota + burst as each
-+ * refill in __refill_cfs_bandwidth_runtime() caps it. The runtime can be above
-+ * the cap (__return_cfs_rq_runtime() does not cap it), and a refill then cuts
-+ * it to the cap.
-+ */
-+static u64 cfs_bandwidth_refilled(struct cfs_bandwidth *cfs_b, u64 periods)
-+{
-+	u64 cap = cfs_b->quota + cfs_b->burst;
-+	u64 runtime = cfs_b->runtime;
-+
-+	if (!periods || cfs_b->quota == RUNTIME_INF)
-+		return runtime;
-+	if (runtime >= cap ||
-+	    periods >= div64_u64(cap - runtime, cfs_b->quota) + 1)
-+		return cap;
-+	return runtime + periods * cfs_b->quota;
-+}
-+
-+/*
-+ * The period timer stops after a period in which the group took no runtime
-+ * (do_sched_cfs_period_timer()), and start_cfs_bandwidth() restarts it on
-+ * the next demand. The periods it slept through refill quota too: unused
-+ * quota accumulates up to quota + burst whether or not the group ran. While
-+ * the timer is stopped its expiry is the first period boundary it missed,
-+ * so the boundaries passed since then are the refills still owed.
-+ *
-+ * Without burst the cap is quota. The timer stops right after a refill that
-+ * nothing drew from, so the runtime is at quota then, and this changes nothing
-+ * for groups without a burst.
-+ *
-+ * This is the overrun that hrtimer_forward_now() returns, without moving the
-+ * expiry: one for the expiry itself, plus one for each full period since.
-+ */
-+static u64 cfs_bandwidth_idle_periods(struct cfs_bandwidth *cfs_b)
-+{
-+	ktime_t now = ktime_get();
-+	s64 delta;
-+
-+	if (cfs_b->period_active)
-+		return 0;
-+
-+	delta = ktime_to_ns(ktime_sub(now, hrtimer_get_expires(&cfs_b->period_timer)));
-+	if (delta < 0)
-+		return 0;
-+	return div64_u64(delta, ktime_to_ns(cfs_b->period)) + 1;
-+}
-+
-+/*
-+ * Refill the periods a stopped timer slept through, at the bandwidth they
-+ * were earned under, and move its expiry past them so that they are not
-+ * counted again. A change of the bandwidth or a cpu.max.runtime write calls
-+ * this first, so that the change applies from then on and the group keeps
-+ * what it earned before. A group without a quota earned nothing.
-+ */
-+void cfs_bandwidth_refill_idle_periods(struct cfs_bandwidth *cfs_b)
-+{
-+	u64 idle_periods;
-+
-+	lockdep_assert_held(&cfs_b->lock);
-+
-+	if (cfs_b->period_active)
-+		return;
-+
-+	idle_periods = hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
-+	cfs_b->runtime = cfs_bandwidth_refilled(cfs_b, idle_periods);
-+	cfs_b->runtime_snap = cfs_b->runtime;
-+}
-+
-+/*
-+ * Start the next period of a stopped timer from now, as a bandwidth change
-+ * does. Its expiry is a boundary of the period the group had; move it one new
-+ * period past now, so that cfs_bandwidth_refill_idle_periods() owes nothing
-+ * for it when the timer restarts.
-+ */
-+void cfs_bandwidth_reanchor_period(struct cfs_bandwidth *cfs_b)
-+{
-+	lockdep_assert_held(&cfs_b->lock);
-+
-+	if (cfs_b->period_active)
-+		return;
-+
-+	hrtimer_set_expires(&cfs_b->period_timer,
-+			    ktime_add(ktime_get(), cfs_b->period));
-+}
-+
  /*
-  * The runtime of @cfs_b, as cpu.max.runtime reads it.
+  * dl_bw_gen numbers the rebuilds of the accounting: how many times the
+  * root domains were wiped and reconstructed (dl_clear_root_domain
+  * increments it). A task records the number of its last definite
+  * state, counted or settled. That number dates the state:
   *
-@@ -7829,12 +7915,16 @@ static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+  *  - Current: the bandwidth is counted, or a release settled it since
+  *    the rebuild began. A release subtracts; the walk of the cpusets
+  *    skips.
+  *  - One behind: the clear that just ran wiped it. The rebuild puts
+  *    it back.
+  *  - Older: an earlier rebuild dropped it. Leave it out; its release
+  *    removes nothing.
+  *
+  * Only equalities are compared, so the wrap of the counter is
+  * harmless.
   */
- u64 cfs_bandwidth_get_runtime(struct cfs_bandwidth *cfs_b)
- {
-+	u64 runtime;
-+
- 	guard(raw_spinlock_irq)(&cfs_b->lock);
- 
- 	if (cfs_b->quota == RUNTIME_INF)
- 		return 0;
- 
--	return min(cfs_b->runtime, cfs_b->quota + cfs_b->burst);
-+	runtime = cfs_bandwidth_refilled(cfs_b, cfs_bandwidth_idle_periods(cfs_b));
-+
-+	return min(runtime, cfs_b->quota + cfs_b->burst);
- }
- 
+
+> + *
+> + * dl_departed_lock protects the list and both counts. Take it with
+> + * interrupts disabled, under the task's rq lock or pi_lock or in the
+> + * rebuild, and before any dl_bw lock.
+> + */
+> +static LIST_HEAD(dl_departed_list);
+> +static DEFINE_RAW_SPINLOCK(dl_departed_lock);
+> +static unsigned int dl_bw_gen;
+
+...
+
+> +/*
+> + * Clear every root domain before a rebuild of their accounting, and count
+> + * the rebuild in dl_bw_gen. Put back the bandwidth of their servers. Put
+> + * back the bandwidth of the tasks on dl_departed_list, which no cpuset
+> + * holds as deadline tasks. Put each in the root domain of the CPU
+> + * recorded for it, or drop it if that CPU is not active.
+> + * dl_add_task_root_domain() then adds the deadline tasks of the cpusets.
+> + */
+> +void dl_clear_root_domains(void)
+>  {
+> -	dl_clear_root_domain(cpu_rq(cpu)->rd);
+> +	struct sched_dl_entity *dl_se;
+> +	u64 cookie = ++dl_cookie;
+> +	struct dl_bw *dl_b;
+> +	int cpu;
+> +
+> +	guard(raw_spinlock_irqsave)(&dl_departed_lock);
+> +	dl_bw_gen++;
+> +	for_each_possible_cpu(cpu) {
+> +		if (!dl_bw_visited(cpu, cookie))
+> +			dl_clear_root_domain(cpu_rq(cpu)->rd);
+> +	}
+> +	list_for_each_entry(dl_se, &dl_departed_list, dl_departed_node) {
+> +		cpu = dl_se->dl_departed_cpu;
+> +		/*
+> +		 * Skip bandwidth that an earlier rebuild dropped. It is not
+> +		 * counted now, and its release removes nothing
+> +		 * (dl_task_release_bw()).
+> +		 */
+> +		if (dl_se->dl_bw_gen != dl_bw_gen - 1)
+> +			continue;
+> +		if (!cpu_active(cpu))
+> +			continue;
+
+Maybe additional info can again help (before the above)?
+
  /*
-@@ -7853,6 +7943,12 @@ int cfs_bandwidth_set_runtime(struct cfs_bandwidth *cfs_b, u64 runtime)
- 		    runtime > cfs_b->quota + cfs_b->burst)
- 			return -EINVAL;
- 
-+		/*
-+		 * Refill the periods that passed before the write, so that the
-+		 * write replaces them and only the periods after it refill.
-+		 */
-+		cfs_bandwidth_refill_idle_periods(cfs_b);
-+
- 		/*
- 		 * The next refill counts runtime_snap - runtime as burst usage.
- 		 * Move runtime_snap by what the write adds or takes away, so
-@@ -7883,8 +7979,8 @@ void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
- 	if (cfs_b->period_active)
- 		return;
- 
-+	cfs_bandwidth_refill_idle_periods(cfs_b);
- 	cfs_b->period_active = 1;
--	hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
- 	hrtimer_start_expires(&cfs_b->period_timer, HRTIMER_MODE_ABS_PINNED);
- }
- 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1f60c84e0dc38..a03ac077a8f49 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -580,6 +580,8 @@ extern void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b);
- extern void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b);
- u64 cfs_bandwidth_get_runtime(struct cfs_bandwidth *cfs_b);
- int cfs_bandwidth_set_runtime(struct cfs_bandwidth *cfs_b, u64 runtime);
-+void cfs_bandwidth_refill_idle_periods(struct cfs_bandwidth *cfs_b);
-+void cfs_bandwidth_reanchor_period(struct cfs_bandwidth *cfs_b);
- extern void unthrottle_cfs_rq(struct cfs_rq *cfs_rq);
- extern bool cfs_task_bw_constrained(struct task_struct *p);
- 
-diff --git a/tools/testing/selftests/cgroup/test_cpu.c b/tools/testing/selftests/cgroup/test_cpu.c
-index b5a9fbcf722f6..2b7c3bf89a1c9 100644
---- a/tools/testing/selftests/cgroup/test_cpu.c
-+++ b/tools/testing/selftests/cgroup/test_cpu.c
-@@ -1160,6 +1160,233 @@ static int test_cpucg_max_runtime_read_capped(const char *root)
- 	return ret;
- }
- 
-+/*
-+ * A group with a burst keeps earning quota while it is idle, up to
-+ * quota + burst, and cpu.max.runtime reads what it has earned. Without a
-+ * burst the runtime stays at quota.
-+ */
-+static int test_cpucg_max_idle_refill(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long quota_usec = 10000;	/* 10ms */
-+	long period_usec = 100000;	/* 100ms */
-+	long burst_usec = 990000;	/* cap 1s */
-+	long runtime_usec;
-+	char *cpucg;
-+	char buf[64];
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_test");
-+	if (!cpucg)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg))
-+		goto cleanup;
-+
-+	snprintf(buf, sizeof(buf), "%ld %ld", quota_usec, period_usec);
-+	if (cg_write(cpucg, "cpu.max", buf))
-+		goto cleanup;
-+
-+	/* No burst: the runtime stays at quota while idle. */
-+	sleep(1);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != quota_usec)
-+		goto cleanup;
-+
-+	/* Burst: the write refills once (20ms), then 1s idle earns 10 more. */
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", burst_usec))
-+		goto cleanup;
-+	sleep(1);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 110000 || runtime_usec > 130000)
-+		goto cleanup;
-+
-+	/* Capped at quota + burst. */
-+	sleep(10);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != quota_usec + burst_usec)
-+		goto cleanup;
-+
-+	/*
-+	 * A write sets the runtime from now on: 500ms later, five refills, or
-+	 * six if the sleep overruns into the next period.
-+	 */
-+	if (cg_write_numeric(cpucg, "cpu.max.runtime", 0))
-+		goto cleanup;
-+	usleep(500000);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 50000 || runtime_usec > 60000)
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	cg_destroy(cpucg);
-+	free(cpucg);
-+	return ret;
-+}
-+
-+/*
-+ * A cpu.max or cpu.max.burst write applies from then on: what a group with
-+ * a quota earned while idle is kept, capped at the new quota + burst, and a
-+ * group that had no quota has earned nothing while it had none.
-+ */
-+static int test_cpucg_max_idle_refill_write(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long quota_usec = 10000;	/* 10ms */
-+	long period_usec = 100000;	/* 100ms */
-+	long runtime_usec;
-+	char *cpucg = NULL, *fresh = NULL;
-+	char buf[64];
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_write_test");
-+	fresh = cg_name(root, "cpucg_idle_refill_fresh_test");
-+	if (!cpucg || !fresh)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg) || cg_create(fresh))
-+		goto cleanup;
-+
-+	snprintf(buf, sizeof(buf), "%ld %ld", quota_usec, period_usec);
-+	if (cg_write(cpucg, "cpu.max", buf))
-+		goto cleanup;
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 190000))
-+		goto cleanup;
-+
-+	/* 3s idle fills the group to quota + burst. */
-+	sleep(3);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 200000)
-+		goto cleanup;
-+
-+	/* Writing the same cpu.max keeps what the group earned. */
-+	if (cg_write(cpucg, "cpu.max", buf))
-+		goto cleanup;
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 200000)
-+		goto cleanup;
-+
-+	/* A lower burst keeps it too, capped at the new quota + burst. */
-+	sleep(2);
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 90000))
-+		goto cleanup;
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 100000)
-+		goto cleanup;
-+
-+	/* A group given a quota after idling without one starts with a refill. */
-+	if (cg_write_numeric(fresh, "cpu.max.burst", 190000))
-+		goto cleanup;
-+	sleep(2);
-+	if (cg_write(fresh, "cpu.max", buf))
-+		goto cleanup;
-+	runtime_usec = cg_read_long(fresh, "cpu.max.runtime");
-+	if (runtime_usec != quota_usec)
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	if (fresh)
-+		cg_destroy(fresh);
-+	if (cpucg)
-+		cg_destroy(cpucg);
-+	free(fresh);
-+	free(cpucg);
-+	return ret;
-+}
-+
-+/*
-+ * A cpu.max.runtime write sets the runtime exactly, and only the periods
-+ * after it refill.
-+ */
-+static int test_cpucg_max_idle_refill_runtime_write(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long runtime_usec;
-+	char *cpucg;
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_runtime_test");
-+	if (!cpucg)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg))
-+		goto cleanup;
-+
-+	if (cg_write(cpucg, "cpu.max", "10000 100000"))
-+		goto cleanup;
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 190000))
-+		goto cleanup;
-+
-+	sleep(3);
-+	if (cg_write_numeric(cpucg, "cpu.max.runtime", 30000))
-+		goto cleanup;
-+	/* One refill if a period boundary passes before the read. */
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec != 30000 && runtime_usec != 40000)
-+		goto cleanup;
-+
-+	/* 250ms after the write: two or three refills, by the boundaries. */
-+	usleep(250000);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 50000 || runtime_usec > 60000)
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	cg_destroy(cpucg);
-+	free(cpucg);
-+	return ret;
-+}
-+
-+/*
-+ * A cpu.max write starts the next period from the write, so the first refill
-+ * under a new period comes one new period later, not up to one old period
-+ * later.
-+ */
-+static int test_cpucg_max_idle_refill_period_change(const char *root)
-+{
-+	int ret = KSFT_FAIL;
-+	long runtime_usec;
-+	char *cpucg;
-+
-+	cpucg = cg_name(root, "cpucg_idle_refill_period_test");
-+	if (!cpucg)
-+		goto cleanup;
-+
-+	if (cg_create(cpucg))
-+		goto cleanup;
-+
-+	/* 10ms of quota every second, the longest period, and a 1s cap. */
-+	if (cg_write(cpucg, "cpu.max", "10000 1000000"))
-+		goto cleanup;
-+	if (cg_write_numeric(cpucg, "cpu.max.burst", 990000))
-+		goto cleanup;
-+
-+	/* Idle until the period timer stops, then start from nothing. */
-+	sleep(2);
-+	if (cg_write_numeric(cpucg, "cpu.max.runtime", 0))
-+		goto cleanup;
-+
-+	/* 1ms of quota every 10ms from the write on. */
-+	if (cg_write(cpucg, "cpu.max", "1000 10000"))
-+		goto cleanup;
-+
-+	/* 200ms is twenty refills of the new quota, plus the write's own. */
-+	usleep(200000);
-+	runtime_usec = cg_read_long(cpucg, "cpu.max.runtime");
-+	if (runtime_usec < 10000)
-+		goto cleanup;
-+
-+	ret = KSFT_PASS;
-+
-+cleanup:
-+	cg_destroy(cpucg);
-+	free(cpucg);
-+	return ret;
-+}
-+
- #define T(x) { x, #x }
- struct cpucg_test {
- 	int (*fn)(const char *root);
-@@ -1179,6 +1406,10 @@ struct cpucg_test {
- 	T(test_cpucg_max_runtime_unthrottle),
- 	T(test_cpucg_max_runtime_burst_kept),
- 	T(test_cpucg_max_runtime_read_capped),
-+	T(test_cpucg_max_idle_refill),
-+	T(test_cpucg_max_idle_refill_write),
-+	T(test_cpucg_max_idle_refill_runtime_write),
-+	T(test_cpucg_max_idle_refill_period_change),
- };
- #undef T
- 
--- 
-2.47.3
+  * Drop the bandwidth of a task whose CPU is inactive.
+  * That CPU no longer identifies the root domain that
+  * counts it: a CPU going offline sits in the default root
+  * domain by then, and the old one cannot be found back
+  * from the recorded number. The release then removes
+  * nothing, and no later rebuild restores it.
+  */
 
+> +		dl_b = dl_bw_of(cpu);
+> +		raw_spin_lock(&dl_b->lock);
+> +		__dl_add(dl_b, dl_se->dl_bw, dl_bw_cpus(cpu));
+> +		raw_spin_unlock(&dl_b->lock);
+> +		dl_se->dl_bw_gen = dl_bw_gen;
+> +	}
+>  }
 
+...
 
+>  static void switched_to_dl(struct rq *rq, struct task_struct *p)
+>  {
+>  	cancel_inactive_timer(&p->dl);
+> +	/*
+> +	 * A task on the departed list gets here when priority inheritance
+> +	 * boosts it back into the class before its 0-lag time. (A policy change
+> +	 * took it off the list in sched_dl_overflow().) The inactive timer no
+> +	 * longer removes its bandwidth: the task does when it leaves the class
+> +	 * again. So take it off the list. If the task moved to another root
+> +	 * domain meanwhile, it then takes the bandwidth from that root domain
+> +	 * instead.
+> +	 */
+> +	if (p->dl.dl_departed_cpu >= 0)
+> +		dl_task_undepart(p);
 
-Amazon Development Centre (South Africa) (Proprietary) Limited
-29 Gogosoa Street, Observatory, Cape Town, Western Cape, 7925, South Africa
-Registration Number: 2004 / 034463 / 07
+Can something like the following happen? And do we actually have a test
+for it?
+
+1. T departs. A SCHED_DEADLINE task with bandwidth X leaves the class
+asleep, 0-lag still ahead. Per the design, X stays counted in rd(A)'s
+total_bw; T goes on dl_departed_list with dl_departed_cpu = A, and the
+inactive timer is armed as the designated releaser. So far so good — the
+record says "rd( A) owes X on T's behalf."
+
+2. T migrates. T is now a fair task; it wakes and gets placed on a CPU
+in a different root domain, rd(B). task_cpu(T) = B.
+
+3. T is PI-boosted back. A deadline waiter blocks on a mutex T holds ->
+rt_mutex_setprio -> class change -> switched_to_dl():
+   - cancel_inactive_timer() — the designated releaser is cancelled;
+   - dl_task_undepart() — T is delisted and dl_departed_cpu is reset to −1.
+
+   X is still sitting in rd(A)'s total_bw, but nothing anywhere
+   remembers that. T runs in rd(B) on its donor's reservation.
+
+4. The boost ends. T is deboosted out of the class -> switched_from_dl()
+-> task_non_contending() -> dl_task_release_bw(p, task_cpu(p)). T is not on
+the departed list, so the passed-in CPU is used: X is subtracted from
+rd(B).
+
+...
+
+Apart from the above, the proposed approach looks alright. I now wonder,
+though, if an overall different scheme might make more sense. The
+half-baked solution we have today for rebuilding bandwidth information
+after domain changes is based on cpusets keeping track of DEADLINE tasks
+(with the indirect cpu <-> rd association complicating things further).
+With dl_departed_list, we now have one half of a per-domain membership
+structure; the accounted current tasks are the other half. Wouldn't it
+be better to move to a single list of accounted tasks (current and
+departed alike), keyed by their recorded home CPU, which turns the
+rebuild from a reconstruction into a re-partition? The dl_bw_gen
+machinery and the cpuset walk would both go away. I understand this
+would require some major restructuring of a number of patches in this
+set, so maybe we can think of doing it after this set lands (or the
+majority of the patches in here). Unless you are open to trying the idea
+(if it makes any sense) and see if it simplifies things?
+
+Thanks,
+Juri
 
