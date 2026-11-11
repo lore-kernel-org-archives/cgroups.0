@@ -1,110 +1,76 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.175.65.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794421037;
-	b=ZKUg07AX6GbH44CEC7sLCnrVaTO3B9uIWYPwm0eYUjkNrLywI3CWcJhP1MDzXqEEa3ns
-	 sBDFK1kCxAiBrnxRM+/mY5HneuVbt82b+X2bUlfFpStWwZFSRUwaozGhAyN1pGRLz+7Nc
-	 39mud5C3phTAlH8pn85UVc+xy3KaCEE9s69F90YscD15H9s//8OrHcsUAyOUx2LZyZSU1
-	 fSaqDINB8jhJT1Un5kDa9y6Xph9/qI61OVTajO6vSwa6U2m8eI3WPp4Zdc5cD+kpVSa9l
-	 6WpileIuFGbZ/QN3Qp7rsj4ICco6MH1fetu3Yc+5Meed228E1PvIqAUwjWoE0RccYWQ==
+	t=1794422801;
+	b=xz6RGv8K98YOKPThvRS2p0JTDGEGRlnJDAgTJOfLf8rR17c2J5ov+jq9KX+wLpyexxhm
+	 TWdG1DaLV34g7g6+ur8u8sFeSCLDlA9PNHIgECq+WWUyOZ9bo/03RYx/hIxniKHhGe0rQ
+	 7skkJ5MOm8m0HsiYjiANNBvWV96wEdHCaS9yorXb/8/wTOTs9KSNr6BK3wl6XGVA6YtVS
+	 0IVcJfTve04CxnuScfi/vAK5COLXx8qcI16yq6xFwqcECQ2h7UK85Q6jrdVLbFmpqLCEY
+	 nB7rcimKlWyEq1vls0v2PhhE8a9Q+3xf4+cLa6Zm6b0XpNxH1XJZcHwuJkh55ACh35g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794421037;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=JAFBic9FeqiTcoA9Sc56oOZoN08uUZIC/3Jq0YqoHLY=;
-	b=wyZWaF+Osq0rLkxH998cR65k2GVwPhMiVr3SRg+huR0vmBINs41kzS6bPyalRAYtohuh
-	 G5p0p2Ln4QahNXMuDf7hDC+3c5ruHZa+2akyif9Ay8mVEJpjC3NHBdQv2EFNDIoEJYmUc
-	 iN/3LRsYKaOPbBwGkjNQSuvP5/0kZoAQM+GffpvQHHTwkRmaSne3afZXgHbhrDPRLZ7IT
-	 pycZpJxKV+ZZvnU5ktLj32pvPnkXwgR5fLDkuf5hMYrbMDzXazTjG4TyuoSO51/j17YcZ
-	 p2UzgqM/O4NkofAujP7P5MrG/Ql+od70iqVb8vawOGBbDMg1w2wnALSYsiMtapeLcbA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794422801;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:User-Agent;
+	bh=x0irH5FpV//u6w+d5wugnB2cP4pReKlOh7DzqRvGtPY=;
+	b=ZqWzavg1caJtO/GsfE2JIkZCq5SuIad4Pn+CbPcpALlr9FHSpiSrh0gdCBRahamAi3CV
+	 kQJXlLnfTwaPGr8OmSy5wmDEYY7Eoi6X/ZiPtubej4PVYz0KFfTIZvugdQrQraq62zeKs
+	 ISIywGOdwsC3bN3Rh+gL5ZDfWNV4LiuOqCHFCZPj8W0gurL2aslJMJgJKtqFecSW6l4Zs
+	 Cgg1rvcJ1t3YzKPfaV1S/gcAvcR0/LwmvGvtUSoj/3CZ3CDmDDCHMgEAsHr33Eby+hVqf
+	 sexehEAJPleidPVmh4E03+YKMT8rLQYKNdgpReUJQVFocw5W1T87FF0OhJZN4GkcW1A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UhRh2+QK;
-	arc=none smtp.remote-ip=209.85.128.172
-Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=B2qf2Cls;
+	arc=none smtp.remote-ip=198.175.65.21
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 606C9606C175
-	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 18:17:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 606C9606C175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D395606A31C
+	for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 18:46:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2D395606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UhRh2+QK
-Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-8b0d63f60bcso46216657b3.3
-        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 10:17:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794421036; x=1795025836; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=JAFBic9FeqiTcoA9Sc56oOZoN08uUZIC/3Jq0YqoHLY=;
-        b=UhRh2+QKrJuMUqoVkAZwLp8mjesVP5rOdbeqxz4Qd7xPhFQ7cqnpBQcOCKce2Dv+Ys
-         JDUyUFr3MiMLq6MxAJzkSqEfhTzdl76LeLgd+pOsMx2+XeQYBoYuKI7QkF1fp8IymDmk
-         KJX1eeF9+XTsdNrPc8KEwUSLMb7634nwNpC+cTuxn0Z2TIOeFQMk9n/Y0ie3/+B/3X05
-         7xZwGQl7MS/HdOcR4MHHCdM5R+x16qvI2Pj+MyhpUkNOORYFs5pTh9M9jPGXP7mIW18c
-         9Sfu3b+GWiqTy1rQATsAE0TIfLiAlTwki7umXwi8lBrYXDH2KUD6EEKFHHhrwwKziBC0
-         RgiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794421036; x=1795025836;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=JAFBic9FeqiTcoA9Sc56oOZoN08uUZIC/3Jq0YqoHLY=;
-        b=x9Ph5rVYewh1F9EEI6yTlnNt1jUZZOhbRGDwAi3z+tF9oVOJNSLJR8BOS/B/Pkuggh
-         bqpNsYyZiOjgXzzppSLC1ZnIVl8RCLNr3L46xW6CdIBx7rZyB4GUmVXAebqvVfZKaZJv
-         eXSVB1ZQzOnI3Vs0g/FclQcx45x6FORkK+Vkel1fwipRgoijwG3ZXsxPQ0eDG0YlDU3S
-         ypWEbJOLd3QjInT2kjSzgAaTRSFfAgj9lPqHiPA7UPUcSFfLT7dr/Uh2OQQhBWaEHN/F
-         mUwyGLLbzGxixHtMm5AfBT5sWDa76msvvDDR6Tkhcl4zzq/FJzX6bjKTl+ivo5A+qnBR
-         Ziqg==
-X-Forwarded-Encrypted: i=1; AL+hErHKqz7GobCUC+AJapGwpyKBN0VQC/sqfJt8egy4Td3jc27slwt4o9jQORnah+PIqxZX6l6/Itnx@vger.kernel.org
-X-Gm-Message-State: APuU4Z88OyUTiN9WCva9QBfJ16ZUbFsyPYtyNtB98pm32WzhkpUVffu9
-	TxhzdZlu+JAd2TUTd70xLJtfUTfUTZYtcY50CGo6eocrLxRIKTBokcxS
-X-Gm-Gg: AYBFou1IkXegM0ox+bfE+tEgjdNuiqMHEWOXNIffbkGFTVp2o7FjRyeWEcIrBc8pz+B
-	kdmj0hl4MxWgcM6USMDSey0AjUgcFNC5otFc14M89Vcg5ScWt5BRfwpwjUFWFJCDFUM1CkWnbRE
-	3VgLv5g0CCMpY///oOWQV2GPICRrft87CMElBoSszdQi2WNqkqJxYXhoyEL+noYLYFgNQtOp3av
-	UMFKuMF/X8DbvdCSFghAJmg7MfphsdF754R7Up6kXuAR689eOKAkn++7DVuF3c31g3dfaEym2kp
-	fHnY04WBs7Ok4k96mIF58y1sH3MHZcJhwETDxgPzKy2uv5d4a19YRgJ33a7zWE7/g5ydmVSTWyW
-	8wt3l3MUFG3qZWkyzy74HaS+/Jlb7u+hWZLbXWjATRkC98l1+ny/lqssL20OFR4lz4xBqMHJ9Pm
-	PjD682C2K7UQWR3RNEM5XStZUdTzoHUAoMJ4L/51F3bVk5QpjtsXNFWxEO3cF54AzRTmx86QFs9
-	th968Yb4HzMT0oa4vLa3T9/Ypj8/neWHtQTlGpBSIfzh7v02IoQhx33wBze3DH9OR8A2Zn1NcjN
-	6NcFWURe21rQUxtREsP69xjGQdbvuRefZwHQpU7P4JhhvJqWLU2jNme7jULDqDJO2duAe/zo8FA
-	bhOwd+g==
-X-Received: by 2002:a05:690c:4f07:b0:8b0:d837:364b with SMTP id 00721157ae682-8b3a7e3b702mr19660887b3.7.1794421036454;
-        Wed, 11 Nov 2026 10:17:16 -0800 (PST)
-Received: from localhost ([2a03:2880:10ff:5b::])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b39324c124sm49936597b3.6.2026.11.11.10.17.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Nov 2026 10:17:15 -0800 (PST)
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: "Li Zhe" <lizhe.67@bytedance.com>
-Cc: akpm@linux-foundation.org,
-	david@kernel.org,
-	gourry@gourry.net,
-	ziy@nvidia.com,
-	joshua.hahnjy@gmail.com,
-	rakie.kim@sk.com,
-	ying.huang@linux.alibaba.com,
-	ljs@kernel.org,
-	mhocko@suse.com,
-	muchun.song@linux.dev,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	weixugc@google.com,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [RFC 0/2] mm: add source selectors to memory.reclaim
-Date: Wed, 11 Nov 2026 10:17:13 -0800
-Message-ID: <20261111181714.1463827-1-joshua.hahnjy@gmail.com>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261019141401.11927-1-lizhe.67@bytedance.com>
-References: 
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=B2qf2Cls
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1794422801; x=1825958801;
+  h=date:from:to:cc:subject:message-id;
+  bh=ABYt6Vuwz9vg+uc67c9YGmaz5P89QhkiGENSo2vjfZk=;
+  b=B2qf2Cls4J4kfuLJsOP/mOZuvEMYomGQjrImpgValFm0ImWn7DB7iM9C
+   AlaEckCIJNaw9FIt0qfnX+96+QPYmd3HQsVGXSR2ydP0zH+WK1+MWbXeI
+   xjMIvxndJ9GhlGVwRoObeD+MPndnJ2WRcNkBkDYhRu+mhoQGnh9zIuVjH
+   v+y13MsBGSLmQABkX3oTHxVtKPM+JPJWS6MhfJu1p0VC1ye2QXrzwrNpI
+   GcAdpzqYbfR+6C7Ha7/H3H4/e2H3MDKo6ftOqJUtgLNG6vCZfZF4fioLD
+   uRqsREf6BiAN77w62LSsCzsqeXNbvql5YbUbgdXze02/Oz3icViKNOQvn
+   A==;
+X-CSE-ConnectionGUID: Th5y/VKaSnGHonCqWIPLBA==
+X-CSE-MsgGUID: nfiDPNO/QcyBDg+H3QvaPw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11963"; a="3284814"
+X-IronPort-AV: E=Sophos;i="6.27,208,1787036400"; 
+   d="scan'208";a="3284814"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2026 10:46:41 -0800
+X-CSE-ConnectionGUID: Eib/QJNpTombfUnhYySFHA==
+X-CSE-MsgGUID: PR7Mx6K5ToW0dZedvqXyDA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,208,1787036400"; 
+   d="scan'208";a="8478956"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by orviesa002.jf.intel.com with ESMTP; 11 Nov 2026 10:46:39 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xRDLB-00000000zVH-1uHm;
+	Wed, 11 Nov 2026 18:46:37 +0000
+Date: Thu, 12 Nov 2026 02:46:13 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-7.4-fixes] BUILD SUCCESS
+ 56681bc448a80bb2473026b41c44c133766bc38d
+Message-ID: <20261112024613.sIWeFrqX-lkp@intel.com>
+User-Agent: s-nail v14.9.25
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -113,125 +79,250 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-On Mon, 19 Oct 2026 22:13:59 +0800 "Li Zhe" <lizhe.67@bytedance.com> wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-7.4-fixes
+branch HEAD: 56681bc448a80bb2473026b41c44c133766bc38d  cgroup/cpuset: Correctly set isolated_cpus when switching partition state
 
-> memory.reclaim is a useful proactive reclaim interface for memcgs, but
-> tiered memory makes "reclaim N bytes from this memcg" underspecified for
-> userspace controllers that manage memory placement across tiers. The
-> kernel's reclaim policy is aging-based, and on tiered systems aging may
-> demote folios before they are eventually evicted. Without a way to
-> declare where reclaim pressure should start, userspace can only reclaim
-> from the memcg as a whole and observe one aggregate progress value.
+elapsed time: 1386m
 
-Hi Zhe,
+configs tested: 230
+configs skipped: 13
 
-I hope you have been doing well. I'm circling back to this discussion
-to see if there have been any updates since we last spoke about this.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-I'm wondering how feasible it would be to enforce some kind of placement
-decision from userspace with this new tool. That is, I think I would be
-interested to see if this solution was enough to grant fair placement
-of memroy across tiers within a memcg.
+tested configs:
+alpha                             alldefconfig    gcc-16.2.0
+alpha                              allnoconfig    gcc-16.2.0
+alpha                             allyesconfig    gcc-16.2.0
+alpha                                defconfig    gcc-16.2.0
+alpha                                defconfig    gcc-16.2.0
+arc                               alldefconfig    gcc-16.2.0
+arc                               allmodconfig    clang-24
+arc                               allmodconfig    gcc-16.2.0
+arc                                allnoconfig    gcc-16.2.0
+arc                               allyesconfig    clang-24
+arc                       axs103_smp_defconfig    gcc-16.2.0
+arc                                  defconfig    gcc-16.2.0
+arc                             hsdk_defconfig    gcc-16.2.0
+arc                         nsimosci_defconfig    gcc-16.2.0
+arc                   randconfig-1000-20261111    gcc-15.3.0
+arc                   randconfig-1001-20261111    gcc-15.3.0
+arc                            tb10x_defconfig    clang-19
+arm                                allnoconfig    gcc-16.2.0
+arm                               allyesconfig    clang-24
+arm                      am200epdkit_defconfig    gcc-16.2.0
+arm                          bcm2835_defconfig    gcc-16.2.0
+arm                      davinci_all_defconfig    clang-24
+arm                                  defconfig    gcc-16.2.0
+arm                             hisi_defconfig    gcc-16.2.0
+arm                          lpc18xx_defconfig    gcc-16.2.0
+arm                         mvebu_v5_defconfig    gcc-16.2.0
+arm                         mvebu_v7_defconfig    clang-24
+arm                        omap2plus_defconfig    gcc-16.2.0
+arm                           pxa910_defconfig    gcc-16.2.0
+arm                   randconfig-1000-20261111    gcc-15.3.0
+arm                   randconfig-1001-20261111    gcc-15.3.0
+arm                   randconfig-1002-20261111    gcc-15.3.0
+arm                   randconfig-1003-20261111    gcc-15.3.0
+arm                         shmobile_defconfig    gcc-16.2.0
+arm                          socfpga_defconfig    gcc-16.2.0
+arm                         spear3xx_defconfig    gcc-16.2.0
+arm                         spear6xx_defconfig    clang-19
+arm                            sunxi_defconfig    clang-19
+arm                        versatile_defconfig    clang-19
+arm                         vexpress_defconfig    clang-19
+arm                          vf610m4_defconfig    gcc-16.2.0
+arm                     vt8500_v6_v7_defconfig    gcc-16.2.0
+arm64                             allmodconfig    clang-24
+arm64                              allnoconfig    gcc-16.2.0
+arm64                                defconfig    gcc-16.2.0
+arm64                 randconfig-1000-20261111    gcc-13.5.0
+arm64                 randconfig-1001-20261111    gcc-13.5.0
+arm64                 randconfig-1002-20261111    gcc-13.5.0
+arm64                 randconfig-1003-20261111    gcc-13.5.0
+csky                              allmodconfig    gcc-16.2.0
+csky                               allnoconfig    gcc-16.2.0
+csky                                 defconfig    gcc-16.2.0
+csky                  randconfig-1000-20261111    gcc-13.5.0
+csky                  randconfig-1001-20261111    gcc-13.5.0
+hexagon                           allmodconfig    gcc-16.2.0
+hexagon                            allnoconfig    gcc-16.2.0
+hexagon                              defconfig    gcc-16.2.0
+hexagon               randconfig-1000-20261111    clang-17
+hexagon               randconfig-1001-20261111    clang-17
+i386                              allmodconfig    clang-22
+i386                               allnoconfig    gcc-16.2.0
+i386                              allyesconfig    clang-22
+i386        buildonly-randconfig-1000-20261111    clang-22
+i386        buildonly-randconfig-1001-20261111    clang-22
+i386        buildonly-randconfig-1002-20261111    clang-22
+i386        buildonly-randconfig-1003-20261111    clang-22
+i386        buildonly-randconfig-1004-20261111    clang-22
+i386        buildonly-randconfig-1005-20261111    clang-22
+i386                                 defconfig    gcc-16.2.0
+i386                  randconfig-1000-20261111    gcc-13
+i386                  randconfig-1001-20261111    gcc-13
+i386                  randconfig-1002-20261111    gcc-13
+i386                  randconfig-1003-20261111    gcc-13
+i386                  randconfig-1004-20261111    gcc-13
+i386                  randconfig-1005-20261111    gcc-13
+i386                  randconfig-1006-20261111    gcc-13
+i386                  randconfig-1007-20261111    clang-22
+i386                  randconfig-1008-20261111    clang-22
+i386                  randconfig-1009-20261111    clang-22
+i386                  randconfig-1010-20261111    clang-22
+i386                  randconfig-1011-20261111    clang-22
+i386                  randconfig-1012-20261111    clang-22
+i386                  randconfig-1013-20261111    clang-22
+loongarch                         allmodconfig    clang-24
+loongarch                          allnoconfig    gcc-16.2.0
+loongarch                            defconfig    clang-24
+loongarch             randconfig-1000-20261111    clang-17
+loongarch             randconfig-1001-20261111    clang-17
+m68k                              allmodconfig    gcc-16.2.0
+m68k                               allnoconfig    gcc-16.2.0
+m68k                              allyesconfig    clang-24
+m68k                              allyesconfig    gcc-16.2.0
+m68k                          amcore_defconfig    gcc-16.2.0
+m68k                           atari_defconfig    gcc-16.2.0
+m68k                                 defconfig    clang-24
+m68k                           multi_defconfig    gcc-16.2.0
+microblaze                         allnoconfig    gcc-16.2.0
+microblaze                        allyesconfig    gcc-16.2.0
+microblaze                           defconfig    clang-24
+mips                              allmodconfig    gcc-16.2.0
+mips                               allnoconfig    gcc-16.2.0
+mips                              allyesconfig    gcc-16.2.0
+mips                           ath79_defconfig    gcc-16.2.0
+mips                        bmips_be_defconfig    gcc-16.2.0
+mips                 econet_en751221_defconfig    gcc-16.2.0
+mips                           eyeq6_defconfig    clang-24
+mips                             gpr_defconfig    clang-24
+mips                        lemote2f_defconfig    clang-24
+mips                       malta_kvm_defconfig    clang-19
+mips                            mtx1_defconfig    clang-24
+mips                         omega2p_defconfig    gcc-16.2.0
+mips                         qi_lb60_defconfig    gcc-16.2.0
+mips                            xway_defconfig    clang-19
+nios2                             allmodconfig    clang-20
+nios2                              allnoconfig    clang-24
+nios2                                defconfig    clang-24
+nios2                 randconfig-1000-20261111    clang-17
+nios2                 randconfig-1001-20261111    clang-17
+openrisc                          alldefconfig    gcc-16.2.0
+openrisc                          allmodconfig    clang-20
+openrisc                           allnoconfig    clang-24
+openrisc                             defconfig    gcc-16.2.0
+openrisc                     or1ksim_defconfig    gcc-16.2.0
+parisc                            allmodconfig    gcc-16.2.0
+parisc                             allnoconfig    clang-24
+parisc                            allyesconfig    clang-17
+parisc                               defconfig    gcc-16.2.0
+parisc                randconfig-1000-20261111    gcc-15.3.0
+parisc                randconfig-1001-20261111    gcc-15.3.0
+parisc64                          alldefconfig    clang-24
+parisc64                             defconfig    clang-24
+powerpc                           allmodconfig    gcc-16.2.0
+powerpc                            allnoconfig    clang-24
+powerpc                        eiger_defconfig    gcc-16.2.0
+powerpc                         icon_defconfig    clang-19
+powerpc                       pcm030_defconfig    gcc-16.2.0
+powerpc               randconfig-1000-20261111    gcc-15.3.0
+powerpc               randconfig-1001-20261111    gcc-15.3.0
+powerpc                      stx_gp3_defconfig    gcc-16.2.0
+powerpc                       tqm8xx_defconfig    gcc-16.2.0
+powerpc                          wii_defconfig    gcc-16.2.0
+powerpc64             randconfig-1000-20261111    gcc-15.3.0
+powerpc64             randconfig-1001-20261111    gcc-15.3.0
+riscv                             allmodconfig    clang-24
+riscv                              allnoconfig    clang-24
+riscv                             allyesconfig    clang-24
+riscv                                defconfig    gcc-16.2.0
+riscv                 randconfig-1000-20261111    clang-17
+riscv                 randconfig-1001-20261111    clang-17
+s390                              allmodconfig    clang-17
+s390                               allnoconfig    clang-24
+s390                              allyesconfig    gcc-16.2.0
+s390                                 defconfig    gcc-16.2.0
+s390                  randconfig-1000-20261111    clang-17
+s390                  randconfig-1001-20261111    clang-17
+s390                        zfcpdump_defconfig    gcc-16.2.0
+sh                                alldefconfig    gcc-16.2.0
+sh                                allmodconfig    gcc-16.2.0
+sh                                 allnoconfig    clang-24
+sh                                allyesconfig    clang-17
+sh                                allyesconfig    gcc-16.2.0
+sh                                   defconfig    gcc-14
+sh                 ecovec24-romimage_defconfig    gcc-16.2.0
+sh                  kfr2r09-romimage_defconfig    gcc-16.2.0
+sh                    randconfig-1000-20261111    clang-17
+sh                    randconfig-1001-20261111    clang-17
+sh                            se7780_defconfig    gcc-16.2.0
+sh                              sh03_defconfig    gcc-16.2.0
+sh                            sh2007_defconfig    gcc-16.2.0
+sh                         sh7763rdp_defconfig    gcc-16.2.0
+sh                         sh7785lcr_defconfig    gcc-16.2.0
+sh                             shmin_defconfig    gcc-16.2.0
+sh                               ul2_defconfig    clang-24
+sparc                              allnoconfig    clang-24
+sparc                                defconfig    gcc-16.2.0
+sparc                 randconfig-1000-20261111    gcc-16.2.0
+sparc                 randconfig-1001-20261111    gcc-16.2.0
+sparc64                           allmodconfig    clang-20
+sparc64                              defconfig    gcc-14
+sparc64               randconfig-1000-20261111    gcc-16.2.0
+sparc64               randconfig-1001-20261111    gcc-16.2.0
+um                                allmodconfig    clang-17
+um                                 allnoconfig    clang-24
+um                                allyesconfig    gcc-16.2.0
+um                                   defconfig    gcc-14
+um                              i386_defconfig    gcc-14
+um                    randconfig-1000-20261111    gcc-16.2.0
+um                    randconfig-1001-20261111    gcc-16.2.0
+um                            x86_64_defconfig    gcc-14
+um                            x86_64_defconfig    gcc-16.2.0
+x86_64                            allmodconfig    clang-22
+x86_64                             allnoconfig    clang-24
+x86_64                            allyesconfig    clang-22
+x86_64      buildonly-randconfig-1000-20261111    gcc-14
+x86_64      buildonly-randconfig-1001-20261111    gcc-14
+x86_64      buildonly-randconfig-1002-20261111    gcc-14
+x86_64      buildonly-randconfig-1003-20261111    gcc-14
+x86_64      buildonly-randconfig-1004-20261111    gcc-14
+x86_64      buildonly-randconfig-1005-20261111    gcc-14
+x86_64                               defconfig    gcc-14
+x86_64                                   kexec    clang-22
+x86_64                randconfig-1000-20261111    clang-22
+x86_64                randconfig-1001-20261111    clang-22
+x86_64                randconfig-1002-20261111    clang-22
+x86_64                randconfig-1003-20261111    clang-22
+x86_64                randconfig-1004-20261111    clang-22
+x86_64                randconfig-1005-20261111    clang-22
+x86_64                randconfig-1006-20261111    clang-22
+x86_64                randconfig-1007-20261111    clang-22
+x86_64                randconfig-1008-20261111    clang-22
+x86_64                randconfig-1009-20261111    clang-22
+x86_64                randconfig-1010-20261111    clang-22
+x86_64                randconfig-1011-20261111    clang-22
+x86_64                randconfig-1012-20261111    gcc-14
+x86_64                randconfig-1013-20261111    gcc-14
+x86_64                randconfig-1014-20261111    gcc-14
+x86_64                randconfig-1015-20261111    gcc-14
+x86_64                randconfig-1016-20261111    gcc-14
+x86_64                randconfig-1017-20261111    gcc-14
+x86_64                                rhel-9.4    clang-22
+x86_64                            rhel-9.4-bpf    gcc-14
+x86_64                           rhel-9.4-func    clang-22
+x86_64                     rhel-9.4-kselftests    clang-22
+x86_64                          rhel-9.4-kunit    gcc-14
+x86_64                            rhel-9.4-ltp    gcc-14
+x86_64                           rhel-9.4-rust    clang-22
+xtensa                             allnoconfig    clang-24
+xtensa                            allyesconfig    clang-20
+xtensa                randconfig-1000-20261111    gcc-16.2.0
+xtensa                randconfig-1001-20261111    gcc-16.2.0
 
-Were you able to run tests to demonstrate how effective this was at
-managing placement decisions for memory?
-
-Of course, I think we should answer the ABI questions below. Maybe some
-of the memcg folks could chime in a bit about what kinds of interfaces
-they would like to see.
-
-To start, I'll reiterate what I've said in the previous response, I
-think we should keep this a node extension until we can demonstrate a
-scenario where there needs to be tier-awareness (to be honest, I don't
-think there is one).
-
-Cc-ing Johannes who is a memcg maintainer but was not CCed in the
-original series:
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-
-Thanks, have a great day!
-Joshua
-
-> There is prior history here [1]. The old nodes= proposal tried to let
-> memory.reclaim scan selected NUMA nodes, but the discussion left several
-> ABI questions unresolved:
-> 
-> - nodes= did not clearly say whether the mask was a source selector, a
->   reclaim domain, or a demotion-target constraint.
-> - The implementation did not apply the mask to the whole reclaim path,
->   so demotion could allocate outside the mask. If userspace interpreted
->   the mask as a domain or target constraint, the ABI did not provide
->   that.
-> - Selecting top-tier nodes could become an implicit way to request
->   demotion without uncharge. That would make userspace depend on a
->   particular reclaim policy and could make future policy changes hard.
-> - The separate completion-accounting question remained: demotion can
->   count as reclaim progress even though memory.current is not reduced.
-> 
-> This series takes a narrower approach. It adds a typed source= key which
-> declares only the source on which the existing memory.reclaim aging
-> pipeline should be applied. It is not a demotion target selector, not a
-> demotion-only goal, not an eviction-only goal, and not a change to the
-> existing completion accounting. Leaving source unspecified preserves the
-> existing memory.reclaim behavior.
-> 
-> In that sense, this series extends node-scoped reclaim pressure to the
-> memcg memory.reclaim interface. The existing node memory_reclaim
-> interface can apply pressure to a node, but it is not scoped to a
-> particular memcg. This series lets userspace apply the same kind of
-> source-scoped pressure to a cgroup's resident memory on selected nodes
-> or tiers, while still using the normal memcg reclaim path.
-> 
-> The main benefit of this series is to give userspace a steering knob
-> for per-node and per-tier memory placement control. A tiering controller
-> can observe the resident memory distribution across nodes or memory
-> tiers, and then apply reclaim pressure to the source that should be
-> relieved. For example, it can apply pressure to top-tier nodes so that,
-> under the existing tiering policy, cold folios can be aged and usually
-> demoted to lower tiers, or reclaim from a terminal tier when it needs
-> actual charge reduction.
-> 
-> The existing memory.reclaim interface cannot express this. It applies
-> pressure to the memcg as a whole, so on a multi-tier system the kernel
-> may make progress in a tier different from the one userspace is trying
-> to control. That makes feedback control of tier ratios ineffective: the
-> controller can observe that a specific tier is over its desired resident
-> footprint, but it cannot direct the next reclaim request to that tier.
-> 
-> Patch 1 adds source=nodes:<nodelist>, which is the basic source
-> selector. Patch 2 adds source=tier:<N>, where N is the memory_tierN id
-> exposed by /sys/devices/virtual/memory_tiering/. The tier selector is
-> only a convenience layer over the same source semantics: it resolves the
-> current tier nodelist at write time and then uses the same source-scoped
-> reclaim path as source=nodes:<nodelist>.
-> 
-> The remaining issues from the old discussion are intentionally left out
-> of this series. If userspace needs to control demotion targets, that
-> should be a separate target/demotion-policy ABI rather than folded into
-> source=. If userspace needs a strict "bytes actually uncharged"
-> completion mode, that should be discussed as a separate accounting or
-> goal extension because it would change the observable meaning of
-> memory.reclaim progress. This series only adds source selection for the
-> existing reclaim policy.
-> 
-> References:
-> [1] https://lore.kernel.org/all/Y5bsmpCyeryu3Zz1@dhcp22.suse.cz/
-> 
-> Li Zhe (2):
->   mm: add source selector to memory.reclaim
->   mm: add tier source selector to memory.reclaim
-> 
->  Documentation/admin-guide/cgroup-v2.rst | 29 +++++++++++
->  include/linux/memory-tiers.h            |  6 +++
->  mm/internal.h                           |  3 +-
->  mm/memcontrol-v1.c                      |  6 ++-
->  mm/memcontrol.c                         | 11 +++--
->  mm/memory-tiers.c                       | 24 ++++++++++
->  mm/vmscan.c                             | 64 +++++++++++++++++++++++--
->  7 files changed, 133 insertions(+), 10 deletions(-)
-> 
-> -- 
-> 2.20.1
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
