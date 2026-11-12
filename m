@@ -1,55 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.182
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794501440;
-	b=fVa/WrkEtezxyMFh1Aa4hoBK6U3ZP9tnnYN3zrwIeCh4XtIrF7O8GZvbVhlEhQ9XC1cs
-	 MFPBeIQkKAXrllnLl1W1a2rnMh8bhP/g85lHE34D2q5jqlJs0mV284kPWItpPcFvnmVnv
-	 JwCoc7oXIXQafYQoVISvvyQpzpYxf+qwbDouqt0/nVQ3NMZiieZ7notRXBJk5ondbfZZS
-	 h4TPGRYh1LMZ1mxm3jNBTn54BR/7ZuDKNk7SugelUmidNY2S3SOppXb+Rva5yy7C7BfYH
-	 IN493gqGq3OoJayY2P6lIlPPgMJTF5WVeCpi2Tvs/OdEyRt3QgqYy0n8a1E8beIeIuQ==
+	t=1794501830;
+	b=fHI1d0rNq230dlYoasEdCWSurSWpV+j4X08lfdt0ZTTZmloniwjIVuRBXEZtYtBoL7sA
+	 sKE8vxykteKKZyKuFu8xCZT52NlRjMj//tlAfGmi9ZQyFugv+gd/FUzInWVaoHjRFAbRH
+	 ooZJEUHH5z11TJzZkRpEYpdwHjVjTVUAN9jVTD1igbbIdfar+5JH4Uvto3O9GTejCLeWM
+	 NttOoyc6Jo7ki/PyywjSm+uj2dUce0PDJ6FBla+335W6b6Af06qPgC31BqtFXTU3xEB1K
+	 OiyjALfUItdogsfSwob9aurOfGJdwIRFlv9325yCWCyCfWgkRmQos872PX32Qm9wZLw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794501440;
-	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
-	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
-	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
-	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=mzpP0vNSGlOAIKMb5RTnXN+svoTiLHllJoO+OViBoJ8=;
-	b=c6bja24K7UposP/K0AHajNocP/hU+A1qW1Mvy0PRm3fNKVwqSJYqSCNnppPShgX3eIkW
-	 XrgcRT2I/K8PCZ0uEVDc01TpJ3p/TYhk6BAm9HHbuCGgfFInNBhsmViY2t8dAF2UIWVip
-	 6zwBHX4I9ZEjjtgYxjwYLycBzUTCJ/Ec4fT/1+aNeRzfiDHNSbLzH35JbilAlzBaovB5I
-	 Am+oIOuCEkVyO4ZQmyRleyuLT56vYsS9Pbojpt4+W+V5at3z6SMKg3NlxBVt3SIw7Fg0u
-	 yM6OoVPNFtunMxA1Q8gBMDvRf1+h3XCwDkw7KN8JTQ/Ezu8ETTbXM/oMiAJn4eIRS4g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794501830;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=OT3KyYwDV0pkmmBWZVaURf9TIcCa5HYu6d3239mcr10=;
+	b=SQ/p04pCOV8dangQD30gsHSvMSg09jB4BYPWUcqT9s8UUzBTarrU1pXB92Fk9wu3DK9e
+	 rIgSSQ1K374fWmuOsftCOv3c8g+qjevYoz9HaWQFJP9hk329/mbs9Zqq4C/jw16see940
+	 f1xTnAxIN1gEwex1KlUVisGkrDI4JrOo5jyK42r5MLPLVoNm/D1uOKSVKKsOuIo16/K4k
+	 quenxrhi5P0DuMYOm5434zuJvHK6DBL3EF6ADnZLXcxGGmk6007xsHKI8k1M4JfpGPsoS
+	 bOuq1ckyeFTVYqIpVouZZBvgRxsyXebqJUWgyt8bcbyo4Q3u+0g2aaYG382zR5mJ6NQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JtbcxyRu;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=cmpxchg.org;
+	spf=pass smtp.mailfrom=cmpxchg.org;
+	dkim=pass header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=ZYKSRf2s;
+	arc=none smtp.remote-ip=209.85.128.182
+Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A910606A32A
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 16:37:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77A4606A31C
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 16:43:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E77A4606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=JtbcxyRu
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1E961F000C5
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 16:37:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794501439;
-	bh=mzpP0vNSGlOAIKMb5RTnXN+svoTiLHllJoO+OViBoJ8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=JtbcxyRuYUdmpqP5H5BD9F2GgZhQ3X4BFDS9tojC7bnKf0d9LGYXO1gcFPdTGRD0J
-	 7c1kBMoBBmA4NJowAK0IDCiDaQTFScXcuVMbLsJoKpB96x6GYiVlvMvwh9ebamLqyI
-	 ut4BixsdRbpqSvI9cobILMYxqYd+Cyr2NARHym1+5aOrpEU0dSHwrSj7gT+v6FhUcg
-	 R9YgfyBRilIHo8gjhloe8FtnSJhLjJWBJo8lrmT+PBfG0ncHMzu8Q0udOadlwjVk4b
-	 5I0oc45+V0hkmrH3Su6AZPTcRcTcOHthAzkzZLY+O96BmlgV3TTMVr3I0GbExcp94C
-	 mPO82T8tXdB0w==
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-c40f29667e6so682343566b.0
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 08:37:19 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErF82wzmy9FVDIp8epGfop7eDS5/vvnafoaTx182pktjdVYEfLMXM/VEWoM6jUW6l7PNxZXouf1S@vger.kernel.org
-X-Gm-Message-State: APuU4Z+li7GlQX2yIQOwSDHYX/Xc/dML4mC8ayQUTrrjQwrem0TH2mHu
-	wyR33DJ/bknLLthMvMOQrVzIM1koMJ/688f58UNbRp0F3GF/KlNLVHY1ltlUNL1lPY7HyNFc5/f
-	OnQuquP4ZOp/RPXQ+9PQthK8CujnBWBY=
-X-Received: by 2002:a17:907:6d18:b0:c41:61b9:6ef6 with SMTP id
- a640c23a62f3a-c5066b44161mr527120066b.27.1794501438515; Thu, 12 Nov 2026
- 08:37:18 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=ZYKSRf2s
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-8b0d126f631so861947b3.2
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 08:43:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1794501829; x=1795106629; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=OT3KyYwDV0pkmmBWZVaURf9TIcCa5HYu6d3239mcr10=;
+        b=ZYKSRf2svXhh7Fs6IxWfASNqCCKN1Fh2T2OQdkQ1P2Asuy9BXkLmFuZ7zz2CO0bARl
+         sgFtUwK74sE/flVX/PlY8hys2NW1vs1tDzf/gVRoK15hgWsyOW/nZxWV62esAymWrThS
+         t1oWBUIXbEimEz5mTxaTMqTYj4j6CbwXGGZoPzw2bI2IYmHQBldi+VlEShgQvfRWlFUw
+         1vprQFGpsHFerd5Kp/ARO614AJjuVYlzc0Mw1U85lFKqJYAUSHJLnaGceai1BzwZFYRi
+         yKr5ZKUI6gOhngS97L+ZJQe16WvKpcvYD25klc11aWfKf47QFgnKpuq6q4d2AD9eZjuB
+         BgBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794501829; x=1795106629;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=OT3KyYwDV0pkmmBWZVaURf9TIcCa5HYu6d3239mcr10=;
+        b=d5A8KdFkcXyZn+/mWM3w5Z7cKyKxA0ojzZMMIjHAVAcHtZP9iTxALw7PSiSCOpeteq
+         8LPPsEAb9r04ljXtpcURsmkGyhYX0w6CRWxvuO8DgyzMCy+BXpF30veBPBzJxRaO39K4
+         OuokKee5ex7kJo34NFvn3/C+36xf5HwFMKPW2LDK8qTfQqIH7PCsJaZkDmFU68sxcZEw
+         Ayh8Mde/zdVmvY5l5JzjBxYvNHXHMCv5CZskoxhi0SjUJLGG7Hv2UmVbhg3+Jh9igvsa
+         1F5EgrxOLK4ZGt8aOFbNaB4yANRGXSN1hmrrvbAill3vCx/FdAlGU1kNfWgL0Pl4bnZi
+         t3Sw==
+X-Forwarded-Encrypted: i=1; AL+hErGOSvJqt8AIaa69o+Ty1GsIhR06zT0Mx2FFry/L4smU8Nf1ETTrXbIrtzEGdNkRSgvhGMR8KJFd@vger.kernel.org
+X-Gm-Message-State: APuU4Z9jJiGYOq3OJ5CbQ4kKtIzG8rO0eNG0//3ZLnL0coaz/MMNcBjR
+	X140+kDn75vYLl1AT2hTNjdiF7SEWR0kW8kN6i+4Qk7nCgbhb5wYKieqJwPmCUraWT4=
+X-Gm-Gg: AYBFou2oOKBAO18EsYb/+gwJLSw+ET+qS651MSIoVXXpz7X3i4AXJiiMdnimgqEMg7j
+	8wvA9XzXuC57YSjHZUaAb0HxeENcqR3NvR7ceuLfEcZAkfPX2vL4Pa3S5IjyrX1ZzvminWp6SVd
+	9DKP4ZJfFAFH2q4Lo5Tkagh1rbifxTdX3tlMb44Sgs3iSfGaTsapm4XfpgODT0zORccHYZIoEQb
+	TVk6a6WQuyChen3EWF5o0ho7QRoPedB/YU0keWIQmCE+pov5p4xKLHXqply5KsC/pWO7bCXPv5D
+	UjIEtcHAptMFaPD5w4e4zalbkbu41Oxr0NMgiuGfV2mEpx05raX/n/s6OCxRfoXgbqjyuB/TIJ+
+	yLqlxuuGmZKneQdCIMRPMktb44iLytUuz8GuZYU9L4pEf5bJbS0EqyhkIkv3kX/rlHpavju70Wj
+	0O1Cxf0C0azmrIhT+bomw4xEf22lsY4QlN1ywGOw0rHsVFX8xOg7gl7+KTBEbKgYQgMtnjV+xdx
+	C2qX1V3r2m6s9+H4J38vAZYhhGtfLkT6YeAqe8XPabo4Pn/S769mZ6q8PnMvnj800s45Gpf9B2i
+	+ccMy/E9nMNzg2zspLxgZutnKsP92bsMSaA/jrFUZNsnDARjBA==
+X-Received: by 2002:a05:690c:e1d3:20b0:8b3:4f53:91c4 with SMTP id 00721157ae682-8b4aa326b49mr620977b3.29.1794501828827;
+        Thu, 12 Nov 2026 08:43:48 -0800 (PST)
+Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b3933fb45fsm73764697b3.25.2026.11.12.08.43.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2026 08:43:48 -0800 (PST)
+Date: Thu, 12 Nov 2026 11:43:47 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Joanne Koong <joannelkoong@gmail.com>
+Cc: akpm@linux-foundation.org, yosry@kernel.org, shakeel.butt@linux.dev,
+	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev,
+	nphamcs@gmail.com, chengming.zhou@linux.dev, sj@kernel.org,
+	david@kernel.org, ljs@kernel.org, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, damon@lists.linux.dev
+Subject: Re: [PATCH v2 1/4] mm: zswap: fix shrinker count for the root memcg
+Message-ID: <avXsw9ZJHOkFG4Ll@cmpxchg.org>
+References: <20261110015321.611093-1-joannelkoong@gmail.com>
+ <20261110015321.611093-2-joannelkoong@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,52 +100,42 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261112-zswap-zero-limit-v1-1-19f33081b09e@perfloop.ai>
- <CAO9r8zP1o+L-akRDJx80bgGj8bf9rdN09t5upPfkduSmNKwpKQ@mail.gmail.com>
- <CAEEBa3VA2vycMaRCe4K-qnO3SGCuvAqhECmjmk6PQC3xxERiLw@mail.gmail.com> <CAKEwX=NVox_NYML-5Gg6W_gDt-j6gquk3sba9hmbvz-U+t=ehA@mail.gmail.com>
-In-Reply-To: <CAKEwX=NVox_NYML-5Gg6W_gDt-j6gquk3sba9hmbvz-U+t=ehA@mail.gmail.com>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Thu, 12 Nov 2026 08:37:06 -0800
-X-Gmail-Original-Message-ID: <CAO9r8zOeR-t6PC2DutwuciVn5S4DYppEEo4Vquqt8gR4SaJ=xg@mail.gmail.com>
-X-Gm-Features: AclHuK-7ezWbMPMvWXar6_n0m9b0WYGTxJBkL5D4Vd_p_gB_7rwyr-GwyhfBg60
-Message-ID: <CAO9r8zOeR-t6PC2DutwuciVn5S4DYppEEo4Vquqt8gR4SaJ=xg@mail.gmail.com>
-Subject: Re: [PATCH] mm: zswap: honor zero cgroup limits after successful reclaim
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: =?UTF-8?Q?Tom=C3=A1s_Senart?= <ts@perfloop.ai>, akpm@linux-foundation.org, 
-	hannes@cmpxchg.org, roman.gushchin@linux.dev, tj@kernel.org, 
-	chengming.zhou@linux.dev, mkoutny@suse.com, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, mhocko@kernel.org, shakeel.butt@linux.dev, 
-	muchun.song@linux.dev, cerasuolodomenico@gmail.com, 
-	linux-kselftest@vger.kernel.org, shuah@kernel.org, cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261110015321.611093-2-joannelkoong@gmail.com>
 
-On Thu, Nov 12, 2026 at 7:45=E2=80=AFAM Nhat Pham <nphamcs@gmail.com> wrote=
-:
->
-> On Wed, Nov 11, 2026 at 5:55=E2=80=AFPM Tom=C3=A1s Senart <ts@perfloop.ai=
-> wrote:
-> >
-> > On Thu, Nov 12, 2026 at 12:28 AM Yosry Ahmed <yosry@kernel.org> wrote:
-> > > Why is that a problem? Setting memory.zswap.max to 0 while the cgroup
-> > > has active swapping processes is naturally racy. The limit can be set
-> > > to 0 right after we check it again anyway?
-> >
-> > Agreed on the race, this doesn't try to fix it.
-> >
-> > The case here is different: with the limit already at 0, every store
-> > writes back an old entry and then stores the new page anyway, until
-> > the pool drains. It's bounded, so if it's not worth a special case,
-> > happy to drop it.
->
-> Yeah I don't think zswap.max =3D 0 is special here. We can violate the
-> limit by changing zswap.max to a value lower than zswap.current. In
-> future zswap_store() attempt, we will let it proceed if it shrinks at
-> least one page.
+On Mon, Nov 09, 2026 at 05:53:18PM -0800, Joanne Koong wrote:
+> zswap_shrinker_count() scales the number of freeable entries on a
+> memcg's zswap LRU by the memcg's compression ratio. That compression
+> ratio is computed from the memcg's MEMCG_ZSWAP_B and MEMCG_ZSWAPPED
+> stats.
+> 
+> However, for the root memcg, the zswap entries owned by the root memcg
+> itself are never accounted for in the stats (obj_cgroup_charge_zswap()
+> skips the root objcg, and before the root memcg had an objcg, its
+> entries weren't charged at all). The stats only reflect the entries
+> owned by the root memcg's descendants. When the root memcg's descendants
+> have no zswap entries (eg when the whole workload runs in the root
+> cgroup), the shrinker reports nothing to reclaim for the root memcg, and
+> its zswap entries are never written back by the shrinker. When its
+> descendants do have entries, the root memcg's entries are scaled by the
+> descendants' compression ratio instead of a ratio that includes them.
+> 
+> Fix this by using the zswap pool-wide counters for the root memcg
+> instead. The zswap pool-wide counters cover every zswap entry, including
+> those owned by the root memcg.
+> 
+> This also gets rid of having to flush the root memcg's stats, which
+> flushes every cgroup in the system.
+> 
+> In a VM running a reclaim-heavy workload in the root cgroup with the
+> zswap shrinker enabled, the shrinker wrote back no pages before this
+> change (zswpwb stayed at 0) and 1016 pages with it.
+> 
+> Fixes: b5ba474f3f51 ("zswap: shrink zswap pool based on memory pressure")
+> Acked-by: Yosry Ahmed <yosry@kernel.org>
+> Reviewed-by: SJ Park <sj@kernel.org>
+> Acked-by: Nhat Pham <nphamcs@gmail.com>
+> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
 
-Yeah if we will handle this, we should check the limits again instead
-of special casing zswap.max =3D 0, but I am not sure if it's worth
-fixing. The simple way would be calling obj_cgroup_may_zswap() again,
-but more efficiently we can have obj_cgroup_may_zswap() output the
-difference between the limit and current usage, or have a "try charge"
-API that handles this internally.
+Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
