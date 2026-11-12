@@ -1,67 +1,90 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794513711;
-	b=IAD0WpewKW7k0DH3FUsKAip5gy+kaO70HI94IgTNnUYls6KsTSDs0dAI2miGTEkQETh2
-	 xBcicrblm/WNGfrrrHcvdJ8VKVzqhUA3ksB6yP4RoG8YhX7CVbirS1/2rLrTjOwFzum8P
-	 cZF6RMsFRk1a+NubxGOzvwqB7IH75/3UxOpWLMdWl/l0S1i3MT6Suy+SDpaiElm/MzhAp
-	 F2dQcybN9jGkHedhCzXnOOq5RnRZhpt0u5cVOrBJbQp05lHazhXpV1Gc2cWqrFETnZVgU
-	 EWZ2sJKm2s9ctUNZoNnj/+c9ZgmReY2I/Ukj22o8x8Dj5rzcUftJZePeSbHcCUJkQzw==
+	t=1794523589;
+	b=aB1+f9BTxhvrNY9QHf99SlX7+bgroac+ozlZXMSE6yStpat+h0soLcVBtz961nTHvhBr
+	 npWOBauFQEr3ltbGOBKSiHBlz33FEBwUQz9nE/Ijhg3fHfPvZnbIWyJNWc0goVUzU5tqP
+	 vr9FXeLv9Bde3lR5FvUNgzlyiZs8WuXDr4VdaPFomCeioC4KslwZHj+vH82b8bgjgyXBE
+	 ovttyUSPkFwol763N50BtJyZXJ37/obM9I+jDqMmkC5pyoZSkpk+I+921z1p7j3HTWxI0
+	 Cn9cg2MO7c6pgfmv2EemEEksLgVWXx3c6MyUzabj7R/BthzitrFyF0mM5UT1hYVAWmQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794513711;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=y2HwTF1YMo0f9rY3awZ8X1TzkkuJLbUU0MmU+IWgVZ4=;
-	b=Q+TcS0lQ//uOCDNrHMpCYRX2VOpQ/6xOe4Wj43Khz/Az69/9GBEGnuj0Q+BEgMu7N78i
-	 2C6XzLdaLZChwsfxw2/BtTNhnJQaS4cu3pivPN0xvb9XstEFl0adxBx63K+R/tg3PCwmn
-	 NeUVVrs2cd/Oo5lMnhcJDIwci6yJQt1vIps80c7qmh3wvojP1V5oA8OwT43KMqK2KpmKY
-	 8WTDgfYtiST39nbD/ZBv/JCG7kYDGEZsTDWzIFY8NYm82fZJxw/lOe12pyhdx2uqAJ8x4
-	 VRUU0ULiKc8yZgYQTY4AFXQXpmC4unidcwNkln0ruSDr8xTCdcFipLHFmlnYW08URvg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794523589;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:In-Reply-To:References:MIME-Version:
+	 Content-Type:Content-Disposition:Message-ID:User-Agent;
+	bh=Qp/CYO9Y9QR0dXHUfw6yCZHzw+ctBhl7YE1TC+1vOS8=;
+	b=zBHGTuBqYJDazl13fTCDHAlN/8OCkElJ5FjjvHDTg4hUzItIE4PLsKhIp41ZArzkPckc
+	 ziQb7GUv/SfNSnknspjoPBHf/QwcbKEGyTHMBL5cNlaELJx5id21pfD/g+7xxdF8RYosV
+	 g8buA85R/k2k8Et545JTDhW2kr5ayfr0D5325/yHU7beiiLVF4kGAkPv8/8Vv8CG3HF26
+	 4dZ+2FlyYGh35Iz44VPicRCORqmGYvUgxLUuEoqR6AlPeRjC6Bgj1PZd2bIbz/7D4CXSo
+	 L1Sy+QtRQBEfu8VM2BgkeF4XcYYbrGiWvZ8XBIwZNnLjxNSSC5HG/geOIRpsNQ4zyjg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=P1ChTVlW;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=chrisdown.name;
+	spf=pass smtp.mailfrom=chrisdown.name;
+	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=ebkrXilb;
+	arc=none smtp.remote-ip=209.85.221.41
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6ABD606A334
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 20:01:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6ABD606A334
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13CF9606A321
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 22:46:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 13CF9606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=P1ChTVlW
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794513710;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=y2HwTF1YMo0f9rY3awZ8X1TzkkuJLbUU0MmU+IWgVZ4=;
-	b=P1ChTVlWkmsj0nYVVCSXGoBBqbp3R9/hUL4vMNRJpOSwcypRNNgSfxPLIxEKS92SYeHQ47
-	R1k+hzkJL329JF1ljj+uZYZ/q0ZCQrKz8cdE9bNFy82uSp5VnVrhJ/J0Ndec8t9xtedxGW
-	tXevfRxqLxC1FX5KS42w+SI7BX6I/Xc=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-90-DC2VcjLZPSy1gaYdteKPtg-1; Thu,
- 12 Nov 2026 15:01:46 -0500
-X-MC-Unique: DC2VcjLZPSy1gaYdteKPtg-1
-X-Mimecast-MFC-AGG-ID: DC2VcjLZPSy1gaYdteKPtg_1794513704
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9888D1800352;
-	Thu, 12 Nov 2026 20:01:44 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 161501800446;
-	Thu, 12 Nov 2026 20:01:42 +0000 (UTC)
-Message-ID: <a13ef6be-fa53-4d80-b768-2d8a16467fa4@redhat.com>
-Date: Thu, 12 Nov 2026 15:01:41 -0500
+	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=ebkrXilb
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-491971ac844so297985f8f.2
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 14:46:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google; t=1794523587; x=1795128387; darn=vger.kernel.org;
+        h=user-agent:message-id:content-disposition:content-type:mime-version
+         :references:in-reply-to:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Qp/CYO9Y9QR0dXHUfw6yCZHzw+ctBhl7YE1TC+1vOS8=;
+        b=ebkrXilbj9spVaHW9PDW3KQNpqmqI4+4NOB68oQOLq+07vtNzaBA8OzPAUS9CcsePT
+         8Kjg8BdAuCo3mV77DJ+j0I94WcjCRoV9fZV+wxCYZ49UIFzTMPcPTgg29Atqgy9WVWs2
+         OlA64TH/oKxQCTcIaOXxFG9ghWOzXAc97hNLU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794523587; x=1795128387;
+        h=user-agent:message-id:content-disposition:content-type:mime-version
+         :references:in-reply-to:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Qp/CYO9Y9QR0dXHUfw6yCZHzw+ctBhl7YE1TC+1vOS8=;
+        b=P+tZy8gNsw8TZN8qJ3onqHyc7OTyGMM/JxTddvczTRq3wlz5m55UH/xyHSERAMxSJD
+         WCK0gZOvj0DQALURJKAM4WNkRAVDhNHj9xwzF64JdfiFiIPXds/58ScRh0OF8AfvpOoi
+         7MWBPLqKx5Ss2ml++GGVsZuGwdYhetOGo9R1qWDCn826cjardF7+z/ZU15olD6R7l3df
+         rkVoDRK9mzbPxKFpR4bRKQ7hxQRTi/lAycZvg/t7NW4QiwMfbpMs+H3vfBKiJQoku2De
+         WyVwrmYTSMJXdIA8hbrfKJEQLiD0PfBKxoMZnNlyx966mlwMb+9W0qWshra8AYSJLxqz
+         bpKQ==
+X-Forwarded-Encrypted: i=1; AL+hErExOjnxYksJvK4TdxxQ+OarSjfCawgtcFzcULTx2ovuIsH9Sh1mN5efAENhTIoUGXP0kE9H6QXL@vger.kernel.org
+X-Gm-Message-State: APuU4Z/XHY+ico9jf5/Y1zxapDM2m5xUYbwqnGeDB+4trHDTlL+8lgiL
+	Lnmwmte2zk79pZXmX0i3HM0mvZBWnZSkEJmN3RYd3ajQ4yFJHpXAd0bBOMwpy90s6ZU=
+X-Gm-Gg: AYBFou1GURIP5rXWYsBFqLtCvxUGaVnAIzxTvlR3skUg0a3nhcbdrQqcbjHJPiY7wTz
+	AhCqmluO+wY2hxWIBvmom8lHg/MXOmB3XvvgEwJXyD6POCNIa6+GGMmRmpgY4Z+IyWsftYh/96H
+	pT39dxfctRGpOsg9he9LbeNFUQiEzzTHUYo2TNf7XeQeULors5nKUYiTMG+Rqhhb18ZlSfkJcl0
+	xzDofvONdMOEFBsPRzmivBeMRl+IH8/Xb/RCIi5bZu3kVh4bFM5A+mK2D87JfzpWsEfdSjrfitW
+	fwMrjzAYcZliPJqcun134NYaITfTKn5SbpZ8+QV/vCuxsdUWJe09vKBfzM1FC4kajqNesHkLOkN
+	gbTab6LNrUmLZQRRGC/Wp6vJUAL2sDa/78E0S8okceHaWh5Hl7xDsorFCRZnZwix9VChKr/ZEfy
+	gNmFClTlYJifFPDe9hVguha+u+5vv7/im6lkrHPkp8AkM9QQo7RFY3mX3/evO325vOrjrHhTpk+
+	pO3Ip17mEABUGKZpHx9ZeCgbsW7JdHED/XYUqaW9VwBcto8Y6EqjmAxzim8PXpf8jHieWd7IFTD
+	sUuVYaazHFxzn9Neys7PSqtJMmZX4IbVnpY/EASNF30McZuz9psbEEbUFlgH8f25WRBLafVWBFn
+	hLSPKhVz1D13NhKM9AEaEDHQ68MhOls7Wt7+Y+pYSOWNhqW+mfS2mJgyByEDzxcQomQlIRuO2yP
+	x9/H3duKEyfdJVL4R7T3iDKEAahAwFtEzdBLlRm9FuQFBLv6pYIuvzUs0nUw==
+X-Received: by 2002:a05:6000:2087:b0:488:57ad:d5c8 with SMTP id ffacd0b85a97d-49c6d453dbbmr2169176f8f.3.1794523587286;
+        Thu, 12 Nov 2026 14:46:27 -0800 (PST)
+Received: from [172.18.0.2] ([199.201.64.8])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49c6020bb0fsm1504046f8f.34.2026.11.12.14.46.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2026 14:46:26 -0800 (PST)
+Date: Thu, 12 Nov 2026 14:46:15 -0800
+From: Chris Down <chris@chrisdown.name>
+To: Aaron Tomlin <atomlin@atomlin.com>
+Cc: tsbogend@alpha.franken.de, paul@paul-moore.com, jmorris@namei.org, serge@hallyn.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, stephen.smalley.work@gmail.com, casey@schaufler-ca.com, longman@redhat.com, tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, chenridong@huaweicloud.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, kprateek.nayak@amd.com, omosnace@redhat.com, kees@kernel.org, neelx@suse.com, sean@ashe.io, chjohnst@gmail.com, steve@abita.co, mproche@gmail.com, nick.lange@gmail.com, cgroups@vger.kernel.org, linux-mips@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-security-module@vger.kernel.org, selinux@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5] security: Expand task_setscheduler LSM hook
+In-Reply-To: <20261105172210.76706-1-atomlin@atomlin.com>
+References: <20261105172210.76706-1-atomlin@atomlin.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,170 +94,97 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v3 3/3] cgroup/cpuset: Check remote partition
- underneath before making an invalid partition valid
-To: Guopeng Zhang <guopeng.zhang@linux.dev>,
- Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20261111020204.1660055-1-longman@redhat.com>
- <20261111020204.1660055-4-longman@redhat.com>
- <fe7aa630-d323-4981-9f89-0958cb6204a2@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <fe7aa630-d323-4981-9f89-0958cb6204a2@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Disposition: inline
+Message-ID: <20261112144615.df72a3bef0a52f3c@chrisdown.name>
+User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
 
-On 11/11/26 10:27 AM, Guopeng Zhang wrote:
->
-> 在 2026/11/11 10:02, Waiman Long 写道:
->> When re-evaluating an invalid local partition via partcmd_update,
->> update_parent_effective_cpumask() does not check whether a descendant
->> remote partition is using its exclusive CPUs, promoting the cpuset to a
->> valid partition root over the remote partition. This condition should only
->> be possible if parent is the top_cpuset and exclusive_cpus isn't empty.
->>
->> This leaves an active remote partition underneath a valid
->> local partition root with overlapping exclusive CPUs, breaking
->> scheduler domain partitioning and triggering warnings in
->> compute_partition_effective_cpumask() and generate_sched_domains().
->>
->> Fix that by checking the effective_xcpus against subpartitions_cpus
->> when an underneath remote partition is possible to make sure that all
->> the exclusive CPUs are available before allowing the invalid partition
->> to be switched back to valid.
->>
->> Also make sure that effective_xcpus is non-empty before swtiching an
->> invalid partition back to valid.
->>
->> Add a test case in test_cpuset_prs.sh to verify that an invalid partition
->> with a remote partition underneath cannot be switched back to valid
->> with a hotplug event.
->>
->> Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
->> Reported-by: Sashiko <sashiko-bot@kernel.org>
->> Link: https://sashiko.dev/#/bug/linux-47715b89-d5fb-4731-b7c9-070773c6ff75
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   kernel/cgroup/cpuset.c                        | 42 ++++++++++++-------
->>   .../selftests/cgroup/test_cpuset_prs.sh       |  4 ++
->>   2 files changed, 30 insertions(+), 16 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 8b684361c94e..af5fd543fe88 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -2034,11 +2034,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->>   		 * tasks_nocpu_error() with this very mask, and a failing
->>   		 * write is routed to partcmd_invalidate instead.
->>   		 */
->> -		if (is_partition_invalid(cs)) {
->> -			adding = false;
->> -			deleting = cpumask_and(tmp->delmask,
->> -					newmask, parent->effective_xcpus);
->> -		} else {
->> +		if (is_partition_valid(cs)) {
->>   			cpumask_andnot(tmp->addmask, cs->effective_xcpus, newmask);
->>   			adding = cpumask_and(tmp->addmask, tmp->addmask,
->>   					     parent->effective_xcpus);
->> @@ -2046,6 +2042,17 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->>   			cpumask_andnot(tmp->delmask, newmask, cs->effective_xcpus);
->>   			deleting = cpumask_and(tmp->delmask, tmp->delmask,
->>   					       parent->effective_xcpus);
->> +		} else {
->> +			deleting = cpumask_and(tmp->delmask,
->> +					newmask, parent->effective_xcpus);
->> +
->> +			/* Check if a remote partition may be underneath */
->> +			if ((parent == &top_cpuset) &&
->> +			    !cpumask_empty(cs->exclusive_cpus) &&
->> +			    cpumask_intersects(tmp->delmask, subpartitions_cpus)) {
->> +				part_error = PERR_REMOTE;
->> +				deleting = false;
->> +			}
->>   		}
->>   
->>   		/*
->> @@ -2126,34 +2133,37 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->>   		} else if (is_partition_invalid(cs)) {
->>   			struct cgroup_subsys_state *css;
->>   			struct cpuset *child;
->> -			bool exclusive = true;
->>   
->>   			/*
->>   			 * Convert invalid partition to valid has to pass the
->> -			 * cpu exclusivity test when cpuset.cpus.exclusive is
->> -			 * empty as well as the housekeeping check.
->> +			 * following tests:
->> +			 * 1) housekeeping CPU conflict check
->> +			 * 2) cpu exclusivity test when cpuset.cpus.exclusive is
->> +			 *    empty.
->> +			 * 3) if parent is top_cpuset, none of the effective_xcpus
->> +			 *    (tmp->delmask) are in subpartitions_cpus, if not a
->> +			 *    remote partition may be underneath.
->>   			 */
->>   			if (prstate_housekeeping_conflict(cs->partition_root_state,
->>   							  parent_prs, tmp->delmask, NULL)) {
->>   				part_error = PERR_HKEEPING;
->> -				goto write_error;
->> -			}
->> -			if (cpumask_empty(cs->exclusive_cpus)) {
->> +			} else if (cpumask_empty(cs->exclusive_cpus)) {
->>   				rcu_read_lock();
->>   				cpuset_for_each_child(child, css, parent) {
->>   					if (child == cs)
->>   						continue;
->>   					if (!cpusets_are_exclusive(cs, child)) {
->> -						exclusive = false;
->> +						part_error = PERR_NOTEXCL;
->>   						break;
->>   					}
->>   				}
->>   				rcu_read_unlock();
->> +			} else if ((parent == &top_cpuset) &&
->> +				   cpumask_intersects(tmp->delmask, subpartitions_cpus)) {
->> +				part_error = PERR_REMOTE;
->>   			}
-> Hi,Longman
->
-> I think this check can still miss a remote partition during hotplug.
-> When CPU hotplug leaves no active CPU available to the top partition,
-> cpuset_handle_hotplug() clears subpartitions_cpus before walking the
-> descendants. The remote partitions are still valid at that point.
->
-> An invalid parent is visited before its remote descendant. Since the
-> mask is empty, this check allows the parent to become valid and add
-> its exclusive CPUs back to subpartitions_cpus. When the remote
-> descendant is visited later, those CPUs are already back in the mask,
-> so it passes the subset check and stays remote. We are then left with
-> a valid remote partition below a valid local partition, and
-> compute_partition_effective_cpumask() warns about the remote child.
->
-> Could we check whether there is still a valid remote partition below cs
-> before allowing cs to become valid? subpartitions_cpus may have been
-> cleared by hotplug, so the lack of overlap does not tell us that the
-> remote partition has actually been disabled.
+Hi Aaron,
 
-Yes, this is a corner case that I am aware of. Thanks for letting me 
-know about that.
+Aaron Tomlin writes:
+>In modern multi-tenant and real-time environments, CPU and scheduling
+>isolation are critical boundaries. The inability to audit or restrict
+>specific scheduling policy changes or CPU pinning requests limits the
+>effectiveness of security policies, particularly when attempting to
+>shield isolated or cryptographic cores from unprivileged or compromised
+>tasks.
 
-Right now, only invalid local partition has the ability to switch back 
-to valid when the condition is right. Remote partition has no such 
-capability at the moment. So a remote partition should always be 
-invalidated when top_cpuset run out of active CPU. One way to handle 
-this situation is to switch back to chain all remote partition in a 
-linked list. We can then work the remote partition linked list when that 
-happens and determined if we can their effective_xcpus back to 
-subparttitions_cpus or has to disable it before going down to do 
-hierarchical cpuset walk. This will avoid the corner you are talking 
-about. It will be a separate patch. I will update the patch description 
-to add this limitation and a todo item.
+Peter objected to this paragraph on v3, and you said there that you would
+drop it. What you told him the patch is really for was auditing the
+affinity mask as userspace asked for it, before cpuset intersects it with
+the allowed CPUs, which seccomp can't do because the mask is behind a user
+pointer. That should be in the changelog in place of this paragraph. (I
+object to it as well. Please avoid such LLM grandiosity.)
 
-Cheers,
-Longman
+>This change updates all in-tree security modules (capabilities, SELinux,
+>and Smack) to accommodate the new parameters mechanically, while
+>providing LSMs with the necessary context to enforce strict scheduling
+>and affinity policies.
 
+An LSM can only enforce an affinity policy through this hook if all possible
+ways of changing a task's affinity go through it, but writes to cpuset.cpus
+don't. With a BPF LSM program on this hook that rejects any mask containing
+CPU 3, sched_setaffinity() to CPU 3 gets EPERM. An unprivileged user with a
+delegated cgroup v2 subtree can still write 3 to the task's cpuset.cpus,
+though, and the task ends up on CPU 3 without the hook being called.
+cpuset_update_tasks_cpumask() just calls set_cpus_allowed_ptr() on every
+task in the cpuset.
+
+So what this gives an LSM is visibility into sched_setaffinity() requests
+and cpuset migrations, not control over where a task runs. That may be
+enough for auditing, but the changelog shouldn't promise enforcement. It
+also looks like the kind of gap Paul meant on v3 when he asked how this
+fits into a more comprehensive approach to resource control in the LSM.
+
+>-LSM_HOOK(int, 0, task_setscheduler, struct task_struct *p)
+>+LSM_HOOK(int, 0, task_setscheduler, struct task_struct *p,
+>+	 const struct sched_attr *attr__nullable,
+>+	 const struct cpumask *in_mask__nullable)
+
+Since the BPF LSM is the only thing that reads these, please Cc
+bpf@vger.kernel.org and the BPF LSM maintainers (KP Singh and Matt
+Bobrowski) on the next version.
+
+While the __nullable annotations do what you say, and a program that
+dereferences either argument without a NULL check is rejected by the
+verifier here, there is still a problem. Existing programs on this hook
+that follow Documentation/bpf/prog_lsm.rst and pass on the previous
+program's ret now get attr in that slot. One declared as
+
+     int BPF_PROG(x, struct task_struct *p, int ret)
+
+that returns ret when it's non-zero loads and runs fine, but with this
+patch the verifier rejects it. LSM hooks aren't stable ABI, so that may
+well be fine, but the BPF folks should get to say so :-)
+
+> 		if (setsched_check) {
+>-			ret = security_task_setscheduler(task);
+>+			ret = security_task_setscheduler(task, NULL, cs->effective_cpus);
+
+The kerneldoc you add in security.c says @in_mask is NULL if affinity
+isn't changing, but that isn't what happens in cpuset_can_attach(). On v1
+setsched_check is always true, so moving a task between two cpusets with
+the same cpus and mems still calls the hook with the destination's
+effective_cpus. With a v1 cpuset mount I see the hook get 0xf for a move
+between two cpusets that both have cpus 0-3, and Cpus_allowed_list stays
+at 0-3. On v2 the same happens for moves where only the mems differ.
+
+The hook also can't tell this from a sched_setaffinity() call, since both
+pass a NULL attr and a mask, but here the mask is the destination cpuset's
+configuration, rather than something anyone asked to pin to. Please say
+in the kerneldoc what @in_mask means for cgroup migration and
+CLONE_INTO_CGROUP, so LSM authors don't treat it as a pinning request.
+
+>+		lsm_attr.sched_policy = policy;
+>+		retval = security_task_setscheduler(p, &lsm_attr, NULL);
+
+For sched_setparam() and SCHED_FLAG_KEEP_POLICY, the reset-on-fork setting
+that gets applied also comes from the task (reset_on_fork is set from
+p->sched_reset_on_fork above), but lsm_attr.sched_flags still belongs to
+the caller. On a task with SCHED_RESET_ON_FORK set, sched_setparam() reaches
+the hook with sched_flags of 0, and sched_getscheduler() still reports
+SCHED_RESET_ON_FORK afterwards. If lsm_attr is meant to show the hook what
+will be applied, SCHED_FLAG_RESET_ON_FORK should follow reset_on_fork as
+well.
+
+Chris
