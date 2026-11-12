@@ -1,100 +1,77 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.144
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794503518;
-	b=HD4y06Nfxd56zqdJ2n57qVlOmOjWWSUJ4bfJQjPUs2f4i9vaCOKqNXuY5x51Q4h555Zn
-	 MVN6JmtNxte5jwHpTP5KGmqV9l4D6Mm5pGozAWIkCCFpsfxHyWS/R7iguUj5o+IMmq0pb
-	 WL5EK9zmr16RF4QkQXoorVIhjphGCv45AUi/SxuMXazLT0PYWgKjb5PqL/WdMgmcu0gB2
-	 4gtT0XXjaTYbi9Dc2DUkJWDx7Dp0oOP4y29RWu18Kac1mopmGsFVCCnupgddOu12A7ZkX
-	 DTiTo/E/bs4qyMk6GkAZ53PsL/5w5dpe/bMcjfnhfVO3c8AyDq5rmubuimQUkzGqFvw==
+	t=1794504472;
+	b=RmEq5X+XqJJaW7g3KQU1eZ9OccffFtFWC9y+fKCxigmRtP5Llu/Q/u+slPWvLSJsGYAl
+	 rAjs6ylq6QKFA2p6Qm2kK33UnXzzYt+QpCGeozjCY9ABEqDlY+J0SPhxv0Mehvvd7dk0u
+	 BZgoLhoSbtbORKV/JxRs2oWehix1P27XvOgq94tqEo0aqSH7+3BOlBtGYeEnU5hx8l8Mt
+	 OqEcaSNj2Bh/sgJKivlKChZrppmIIi4dmR2SDdj9bsv37Rf47U2Pak43LS+LHxzYtcClF
+	 mSNpp6TJtfZIzDWbdd6Pe2Rfa+bU7b/7FoPpMDDlkH6Sbqyn5gv8fuQG2ElwjB0GpMw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794503518;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=3KCRPd7UwqaiMFRIx4N7MG3QRVArn5qzACfVK+4/t80=;
-	b=5kMTzn4dYfJsaA2hT8aMM52FaEUopgCZSBbcsqLFaAuRwoX46+YTkG7jXklcoQJ2biuW
-	 AzxiZZmyj8/HciHdF9KGvRLYS8ZHyygL6EiAFr8AZR9YdpYIfN6zbEbGi94jH9DYxvmyN
-	 CAp7c8l/WudoXBZoMlzf57nJZKvfEVfVf4sDuepCEqZf4AjXx9j0i6RJkgX2MQnM319DC
-	 basFyNKhiStrXuNyz/q4E3AqAiGxEIb8TDogjZn7A7wzA1XsFIZJjoT0ILpTNh2HakMno
-	 bn33P5SsDVrrzwVLKt8FyWinjmTBdsibYIfe8+lB7KfcsyZXoM423CiDCcsKO9fEo9g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794504472;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=vx5w0fm9h8v5n62PQL9iExcxSEIFCRvNTIp+UzuHmzc=;
+	b=un7FHDNOv/zlWn/VMoVcW7fSOtxt9mLbcp5wqQy6CSurPHsUMqYEWj7CRBfFu1XfYSnT
+	 68Xx6/6teC/IX9cEHCHb9vEfD0yy23OEPpYLle7vMI2QndN2NnCzcozQAQ8aUeGqHsxiN
+	 hZNUSsHCJWLugqgfU44O279QGNdSgV2lAcKP0JQ0LvVZAFlSObzF7HpnHJmIrfSe2w14W
+	 IAe6h7RIL+k7OwYo1e9d2KjV5WSf8DokdZaqck3U1ICL/P/hy+o+96O8A8D59RI6mql09
+	 x7+KaDxbIHhya0m+edDqNAeYh07S2+mcbdvYAsuyGm6CsMUI6tmHst2dSL0FnYm3sFQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmpxchg.org;
-	spf=pass smtp.mailfrom=cmpxchg.org;
-	dkim=pass header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b="OsX/Wv9U";
-	arc=none smtp.remote-ip=209.85.128.181
-Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="E66JfS/S";
+	arc=none smtp.remote-ip=91.218.175.144
+Received: from mta0.migadu.com (out-144.mta0.migadu.com [91.218.175.144])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5975D606A321
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 17:11:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5975D606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16F30606A323
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 17:27:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 16F30606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=OsX/Wv9U
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-8b0d63f60bcso1201637b3.3
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 09:11:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1794503516; x=1795108316; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=3KCRPd7UwqaiMFRIx4N7MG3QRVArn5qzACfVK+4/t80=;
-        b=OsX/Wv9UMQobNjPA06ctArQA+nB3PW1FkFuXJ7cxLoUpu2z7Eg5Uzld57YMYDBVMX0
-         XCTCX4jcd9s9D+kpVL94A6UlfWJJ8C8xvA6j+5jyNiOEZqBrNjWhmUcAaCS5syRA3xUn
-         gFpqdGFUqd4oQTk81ZURRnCiP3TPzrMDK3qMohmm53cW8I5Cb6m9lANezSO8GlUVTejt
-         muzY0bTwLmvmJf6bNbc0VO1g8uJHLa2yfYH6MNPKpLguFucSHMb5e11CHiF4CD7AQ1oB
-         M/V2aJRdpraqtlzQeT7TI4gPJgsFH0cV6fsivjWFg/d+q9o+bH8IeqpeU54VEPvWKTTB
-         HmWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794503516; x=1795108316;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=3KCRPd7UwqaiMFRIx4N7MG3QRVArn5qzACfVK+4/t80=;
-        b=nfN1Y+zeg2F77d1n6iwHb7Lkvppl+BhJpUs+jJk0gNllxNA8K8cMtkJaaFiN8BX9Pb
-         RdJvV/QfAFLq76AYZEg17FjsgM5zmbJaY9+XLQDfu2zLmKwQgL3ql6YvaHsos/ft6Zqq
-         KY1HzhrDlfQ9vpriNb/fgIZnc909bLfXIGAblMBSyCzRY3XLZ+/ONiN8OLWRGHrXgq4k
-         PofQsxaFqRFXkdKWb1Q3enm5zjMyBXmmfEo67YS0g0WzrheI+qr9KrWfRYuf4COBtqOB
-         0m4+AYfwDCZa0s3OKHyeCik0MyjrQiVLkTLhGqy6NZYQvUDQJbox3y153EAfnv5PibRv
-         yt1g==
-X-Forwarded-Encrypted: i=1; AL+hErHtkm5v3FZx1UDuU5ho4dzZl8y3+/o1q8T7/hzupMiKeuj38s/WFGzlNcPZwxm7JFayI0oq8qTZ@vger.kernel.org
-X-Gm-Message-State: APuU4Z8gRpQD7lDUUnlMQhEVS5hEnhv4UPV1ECUUQa4EnRGQ1g+sfRP4
-	a5kf64Apewy2DcLFfEgK7hlrq3tSDDoYME7RvEfWnfP+dU+Tr6K+UiLfLKOxHN8rlSQ=
-X-Gm-Gg: AYBFou2q7rcuX+iIvZ0UASHI0t0oQkCE+NGpGLPqMqc9ZrNE9bXu5/mXc1HJO2E72ZI
-	EycZ7bKlf+hbSLEkyy+tb5yLN4UtbEVqsfNKG/FJuPe0MYOBqVzaEjbR5r/m1Jf3pEDYL+1dcsJ
-	MXL0RyoteP4wnytc4iOhVBuYA3Kacy0Szbpt8KJZGdB7+wXG4Iyrx3BMmR45JuasWF7EDHiZigo
-	AwawE5L2xuBUl+uFRLBIPQWpHb4nr/pNdTFYClPBbjXn5YMplP/udUpuN5MzLAFPkQGi6n+XupV
-	fks64M88Mr+gqxoNEbKqMbhZSb0JFWy1+6l5LLcnTMqrlFGzsyWQLUX4LjksyyXONO+2Pd3klfi
-	Q98R9V7rdbp4Y9pdLFh0d5F6qfMLAKBntRbIzuTd6L0MZMab5PCkbWzXnwX2Ycfmkv2bH8OzZDh
-	vNlw59ovu2cfotaNToHcYRS3AGfYfe5V2dVqShhKoZV+LK2VYMpJSj9bWMIWNPpzxUxjKQMbaOc
-	+x+zIPni5e+DWlamBK7K5BlP+lGNw+nr8ZeIN07imtWD/Zss5gMRFcerT8ylDY8oRYcALbnpbXN
-	4kHyksV8KDXxDrddAyov2sxFSHGs
-X-Received: by 2002:a05:690c:e1d2:20b0:882:b4b2:c49 with SMTP id 00721157ae682-8b4aa23f086mr1270387b3.18.1794503516202;
-        Thu, 12 Nov 2026 09:11:56 -0800 (PST)
-Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b4aa9fae24sm252827b3.41.2026.11.12.09.11.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 09:11:50 -0800 (PST)
-Date: Thu, 12 Nov 2026 12:11:47 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Michal Hocko <mhocko@kernel.org>,
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=E66JfS/S
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=PRA9hilCOAvyfJtG+XpLHywnfM53VKvxUll8kJ4luZM=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794504469; v=1; x=1795109269;
+ b=E66JfS/SRrOD0UJf6/ME6wXYS4FtrU3K4Q7CPv5Gw7Xo+2orO1NpP1A8IV8gUm69yPZ8InAj
+ 8HwOmg7pmNvIyf/h3xeHS4yzOqWLtZbs9Er8XrvB7BtPTfdf/oDiR7XVlQVgdw+0qD/Yu2XHa+i
+ UjVMlmYXWvoanjVuf5zsW+kE=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 34b2f950337f546b;
+	Thu, 12 Nov 2026 17:27:48 +0000
+X-Mizu-Trace-ID: 34b2f950337f546b
+X-Migadu-Flow: FLOW_OUT
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: bpf@vger.kernel.org
+Cc: Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	John Fastabend <john.fastabend@gmail.com>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Ihor Solodrai <ihor.solodrai@linux.dev>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Zhan Xusheng <zhanxusheng1024@gmail.com>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH v2] mm: memcontrol: Don't lose track of exiting OOM
- victims
-Message-ID: <avXzU0coRUkBdPWC@cmpxchg.org>
-References: <avA1wXhTMs9eY2NF@chrisdown.name>
+	Amery Hung <ameryhung@gmail.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Meta kernel team <kernel-team@meta.com>,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH bpf-next 0/3] bpf, cgroup: Don't wait for cgroup_mutex to read or free cgroup bpf state
+Date: Thu, 12 Nov 2026 09:27:12 -0800
+Message-ID: <20261112172721.440275-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,52 +81,52 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <avA1wXhTMs9eY2NF@chrisdown.name>
+Content-Transfer-Encoding: 8bit
 
-On Sun, Nov 08, 2026 at 12:41:37AM -0800, Chris Down wrote:
-> When oom_evaluate_task() comes across a victim we've already killed, it
-> backs off until the victim's mm has MMF_OOM_SKIP. This gives the victim
-> a chance to free some memory before we kill anything else. However,
-> since commit a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup"),
-> css_task_iter skips exiting tasks once signal->live reaches zero. That
-> happens before exit_mm(), so a single-threaded victim can disappear
-> from the memcg scan while it still has all its memory.
-> 
-> This can kill another process when the first kill would have been
-> enough to recover, and we've seen it happen in production. If the
-> second victim is in a cgroup with memory.oom.group enabled, the extra
-> kill can take down the whole workload.
-> 
-> In tests I used a 64 MiB memcg with swap disabled. I started a process
-> that faults in 44 MiB of anonymous memory, submits a 4 KiB direct AIO
-> read to null_blk, and goes to sleep. I set null_blk to take 10 seconds
-> to complete the read so the victim would have to wait for it in
-> exit_aio(). Two seconds after starting the first process, I started a
-> second one that tries to fault in 40 MiB.
-> 
-> The 40 MiB allocation hits memory.max partway through and triggers an
-> OOM kill. The OOM killer picks the first process, which has more
-> resident memory. With the read still pending, the victim blocks in
-> exit_aio() before it can tear down its address space.
-> 
-> memory.events showed oom_kill 2 in three runs. In one of them the first
-> process hadn't submitted the read yet when it was killed. The slow read
-> just makes the window easier to hit.
-> 
-> The cgroup iterator hides these tasks so that cgroup.procs doesn't
-> show processes that waitpid() may already have reaped. That's fine for
-> cgroup.procs, but the OOM scan needs to see a victim even after its last
-> thread has started exiting. We already have CSS_TASK_ITER_WITH_DEAD
-> for sched_ext, so use it for mem_cgroup_scan_tasks() as well.
-> 
-> With this applied, OOM selection backs off while the first victim still
-> has memory to free. The 40 MiB allocation completes and memory.events
-> shows oom_kill 1 in three test runs.
-> 
-> Fixes: a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Chris Down <chris@chrisdown.name>
+In the Meta fleet, BPF_PROG_QUERY callers, link-info readers and the
+cgroup bpf release work often wait minutes for cgroup_mutex. The holder is
+almost always a cgroup mkdir or rmdir stuck on kernfs_rwsem. In one day,
+hung-task reports showed this on 1,075 hosts (query), 94 hosts (link info)
+and 458 hosts (release work).
 
-Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+Patch 3 gives the cgroup bpf state its own mutex, so these paths no longer
+take cgroup_mutex. Attach, detach and replace still take cgroup_mutex
+first, because they walk the descendants.
+
+Patches 1 and 2 fix two old races. Attach and query get the cgroup from an
+fd and take the lock later, without checking whether the cgroup's bpf
+state was released in between. An effective query then reads freed memory
+(patch 1). Attach leaks the program, or with cgroup storage writes to a
+freed cgroup later (patch 2). Patch 3 makes the attach race easy to hit,
+so patch 2 must come before it. Both fixes have Fixes tags.
+
+Testing, in an x86-64 VM with lockdep, PROVE_RCU and KASAN:
+
+- The 41 cgroup bpf selftests pass. A 60-second stress of mkdir/rmdir,
+  attach/detach, links, queries, fdinfo, storage map free and sockets in
+  dying cgroups shows no lockdep or KASAN reports.
+- Debug-only delays reproduce both races. Without the fixes, KASAN reports
+  use-after-free in cgroup_bpf_prog_query() and, with patch 3, in
+  cgroup_storage_map_free(), and BPF_PROG_ATTACH leaks the program. With
+  the fixes, attach and query return -ENOENT.
+- While a mkdir holds cgroup_mutex for 5 seconds, query and link info
+  return in under a millisecond instead of 4.6 seconds. Attach and detach
+  still wait.
+- Builds with CGROUP_BPF=n and with BPF_LSM=n.
+
+Shakeel Butt (3):
+  bpf, cgroup: Don't read freed effective arrays in BPF_PROG_QUERY
+  bpf, cgroup: Don't attach to a removed cgroup
+  bpf, cgroup: Protect cgroup_bpf state with its own mutex
+
+ include/linux/bpf-cgroup-defs.h |   1 +
+ include/linux/bpf-cgroup.h      |   3 +
+ kernel/bpf/cgroup.c             | 158 +++++++++++++++++++++++---------
+ kernel/bpf/local_storage.c      |   8 +-
+ 4 files changed, 123 insertions(+), 47 deletions(-)
+
+
+base-commit: 0fb18ce8a2e9de830433923cf65838933d615359
+-- 
+2.53.0-Meta
+
