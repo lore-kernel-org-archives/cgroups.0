@@ -1,47 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794480910;
-	b=Sfbctibf7Bu3KFjq/0xcHRa9t2ytits5tS/98APeIoIFgPbj8siXRCG4NrEmQi+nft2U
-	 Peg6SkApyaX9qSGomFzV07FGBv4JuEAgvYU76T/SMxUjCMpyejpRAVMs0/HwACxUqIs9t
-	 SjdmWKyGEag7Tobk/0y/6rh8SUmlTeXoyqxN13Z2QD3B3OAhNcG/i2S4NJBKilIvyscQq
-	 aUtP+3A27TiPkCdEgpzD0U+YKBFnlmgix1EEY9GK7FVTXn562Z4EzO4+o2F0iGDUI1uxz
-	 d5lbLZFNsHYGPs9janARyJdVl+NbkkDj0TlaggEQ9UZCnVKKbB/pK8KZvNyknfGNxVA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794480910;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.169
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794484556;
+	b=XQOSuBp0Dwy9Bc9A6EOFnALOHfgxIPEvH8/kEIrrZn/1xUfTwYSEJ3h2ZQU3G9nxY8oT
+	 qVovuZ4Y0NStFZFqNjpgDh6A+FL63WrGKif9KbqJkljJE7G2IkeWYxZer7QeZH4+LLBwE
+	 zRRiSR+fBasZlJYqg1RBn+5U0EX4oOoWJCtazce1NqIeQBIDDm+53/SKxmbzAatHhfvpk
+	 Ac6v8LDnY8yzSmWoTx5TON+1KBCKqUQcPdWodpi9g7RQBjvrTMB1Rha2oY2uImlpcG9av
+	 SZly15WIQOl7W+DfT5S5TrlpGX6sVzZxfmlRDhZC9MAa3PhmBWYuNQsoCX7WyuArKbQ==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794484556;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
+	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=hBBRka0fgdENvERIYsPzoLXmI7OdvHBhAV6rADe9TMQ=;
-	b=tdXMhfCbSTjVbWC4IiKGpjczM5bDZftdwYA+lNNZxCQIB8iX+C6BOlR67eMz5Mwmva69
-	 W/1B7HGBFOuxxvnxC2UfmLuFYItxxTmwKGhNfaDckvQsv2tfJ7DhuhYqWzzpVhnEx0MBn
-	 f029wXa/r4sjXwknYUCLx8XRkz4Cv+lkKs+K63oy9hyHMbUNijF874RPEKIp0Y9mxFEat
-	 0txDrCvvBFwBzS4yfnzsb/4LiqOwJNpF1WE40o5ysP2ue57deAvdQMmzyB9PG1uK5nQ0I
-	 1Ya7M4HIRrCfIZ4SA/WI53Rkr4S1GlhGSDXddFBLeeVGkCrn5JlJMZ8TsoAvrfUL/sw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mVR6HgOg;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	bh=H9NIZBLJNCk3VF8bguUf3mZiur03yP583DFsDhIKC8I=;
+	b=lLsyJoex7bjQDqg5QPk8aXI03qFX5/RZVd0Gmf4lrHiZSLgreN6SIWImSMkemqbWrqV6
+	 JpHLYetRHK6GroYmZ8QM8TzeFna/k3XecJFrtD9il64dsuT/7MJrGy/zYOs6BYJJAoNdt
+	 CLG483W3xYE2TsbaoxTrRg9d5r3i/8UVt1ZkWcAZFsEKZaW8kejUnliajmqqM53iCDcQm
+	 RgYWcvcJBvUP+wmmSbBWA7uBNk/xdX1PCAosRqsJ1jCiTVFPMz0bu/oZpinQR+ZlZIMRp
+	 U7QH9v6H7e4piLVVR7FKEo5xrmxZFFH5OR8R5c4GzfZMsu8qbdgNKNGO4G1pAaUPCQQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=IC0NlgPK;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.169
+Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 826B8606A323;
-	Thu, 12 Nov 2026 10:55:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DF97606A323
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 11:55:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4DF97606A323
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mVR6HgOg
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 735FB1F00A05;
-	Thu, 12 Nov 2026 10:55:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794480910;
-	bh=hBBRka0fgdENvERIYsPzoLXmI7OdvHBhAV6rADe9TMQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=mVR6HgOg/ceImyZhmMvUyCD1gCi9KdMcx9kDP6BtyYopaWHif25AK0lFQXIz3PlLm
-	 zvj/wn+r8mOdfmobgmEkg1F5syvIhoNuPdQ0wq/7Bt4XHmUBfShWInqaA3hMM0qgAk
-	 bCf+ouF4iY6V9bVOC1ovlXEnT7k/BLwoWZoFLHA9hnQ8Yln0CfvmEvcWw3Uhd4/CQL
-	 R3wgbLkxrrOeBi8R+QVPPIlQ6OpYmhYd7Z2hIKu7PV5KakhWIHd6htoTsjaYROEZP6
-	 1fsO3oSdzbA9kWGhJD8pLIphaoAQSehJAY1gwsvr18zimH2uEhz1LPhYVDHRsm92/Y
-	 ddIb4UYpAYEUg==
-Message-ID: <9d1fa2c1-7090-417f-adfc-0b128c37622e@kernel.org>
-Date: Thu, 12 Nov 2026 11:55:05 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=IC0NlgPK
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-8b3b31a6290so10725367b3.2
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 03:55:56 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794484555; cv=none;
+        d=google.com; s=arc-20260327;
+        b=AWmHMgKS+ikJU0m1TdvLUrraSNdRkNPiMtr8H6BMcnsiQBHxAjj7c7xrGkObZbmkJB
+         8PRB/POiXqoTgva0ml9dgb0nQLzfTlyhdAe7T6ISFOpKZ7Rg9Tt/gVoEStqrj6MVbW7X
+         enRUHeCR5Y8p0f977ucIau+BW36uT4N1qkJDFgUST6BcfhWbyIcKwTp7hXNRvlqgdBS4
+         B6ZWFa2HCbgAbTxkPL6RzEkAggoGRuemkyBk534QoV6Md75dawAYZ7rFCQmVvTp4C49I
+         G5eZOCtmXr1p5X13TqAO+n0XJQsJgxoUyviyOq8XK62Hf9mQ2uDMoO2axl6rKx/8z/PC
+         EoWw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=H9NIZBLJNCk3VF8bguUf3mZiur03yP583DFsDhIKC8I=;
+        fh=+dqR3vDt9bYs2ZqbwSlLF65l3r+HP5xWRRW4JMAl61w=;
+        b=DzHBDzFwOBV3VmwJp8iGPuzEnHlrt/FkS9XvIX+iqq8Z8LE4Y49kGVjLIbkSSvDalP
+         sijnxg9VcF4gOCAniQAGtQyqoW17/q64dJEbjIlAFJmviCmPUq5uX9QXSFBEEeowKLMK
+         7k/KNPGymfSI34maGuVuSR+iqsIxCYEgjL9xIMSmbo3YZYdxu/AGGLT41scIvqRSRquk
+         ib5ZrmaKSsWk9oxg4RNzxk1lNeNw2se3xUC1oUr7Q03ovinU33w7Fz1t15KK5GKUrACK
+         VzANpySkUYYcbOu1qjA6oFKN4fPAnDMfnNj80Cb9Q3RtTX1cDYD0xrViPy4jx9y3xNVg
+         08Nw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794484555; x=1795089355; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=H9NIZBLJNCk3VF8bguUf3mZiur03yP583DFsDhIKC8I=;
+        b=IC0NlgPKpvkf0lwA4TKjI3IqNZVxUXnlcdFfmdT9eUIEfpssNU4lAby4Z+c12Xu0Wv
+         Ae7DwZl2GoZlqUFR+YDpnTkvnCvU+2v933AKeweNQOsB/bQUQPoZfBgcVjRCMVYyqm1o
+         AbCI4ovbRTHG0zmzRmxvfvvHcLG7GP3hZpqSxWsGDFCQpceE0Gbu4qezSLKeH2IGpMXp
+         nhxY4K44tCHBO4soJCjvAWfYYHOVjAw017OTBceFYu0FV8Rkd8nrHSLB5VIijmCiwDRE
+         hn3/HC9Cg87C79kiqkCOFh0fUVllLsMqEqqPKXPYRGmKzOduTiBTgdchK2WoBiqZhEZA
+         ph0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794484555; x=1795089355;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=H9NIZBLJNCk3VF8bguUf3mZiur03yP583DFsDhIKC8I=;
+        b=v+/+JnZC4XOTKpl00QukF5+IO0CyNMhKVBbQIXS23EL/JlC7uT6uBKU8n4xNPMSJQ+
+         HaclcKGcqf2z5Sz5yqv3dkjbDfUi/B4wh4m+EKzipGG/bwMcfkCloudvsKi4Ed6DudXo
+         5YLrVf4X4+5x8aF+5bY961dsZD3Yr0F5MFFYaI10gj+rEv42k0AuFAqrwJTRRnDlB+NX
+         VHL5ck68lXRLpCgH+4DazxtkBIJvqasoXYzjHbzAfrIAoQSp6tZ+MX39Y/XGO3dEzkE2
+         bGslv7v909SX20s56aPaPLLdwZw+cK6LlYsuuI9LzyeyYjYwxoGobXTDdVKGw8zZkep3
+         2wlQ==
+X-Gm-Message-State: APuU4Z8Z4OApWEGer0YIfSpL8BUy4XlD1sCC+kO7BXphsd3qXnNRyzNW
+	8Jh3NK7wCjHQFOWBm+irV7FEESuKMmDrHKM7RI/gvYQvDJ7rT4Wrt438c5oUYANgt5DUWMi+JWB
+	BTPBBRMc2giQYVyWvhlpik116VVsWEhQ=
+X-Gm-Gg: AYBFou28iy0KnYNipI/Q1fNdsUrSfUrPnsWbpuzq8uvkDqKCHTESwVUVYjyDMDrYo6D
+	gyisWOWhr8Zn443DsuC4hRrU+Fa/mz9YU9ycB6B+fcB1l0/jyG2At89RA+MBOKP9zUTW0pOwaZa
+	pDZwMLqMicSmdoJK5PGBWCGoEMamWjsO5cIj8xrZGoSvja9WznneM+JVrpl+xcd8vSXximdHqEq
+	jnaM0cg56K0naAhW2n7L1kGZ+g5g6mZJG36KX0jfyfe6S2DVxgWBxvD1NeI75/Rj4n1VVfgnRe9
+	IWyIgKqLn7TdySQqt9gaFsCWDWw+rgulxS98GgCu0yJx1ewKDPH1N4zkDFlQIh5zuPvZtFxnUko
+	0C0zg6jqlKtTMHW582l2odbgDQsgw4wjRtqjkoy1pKW6LD7nqxrBSOD7HbN2D3HILrQ==
+X-Received: by 2002:a05:690e:1381:b0:67b:fa48:40c6 with SMTP id
+ 956f58d0204a3-67c680512c2mr3277682d50.89.1794484555468; Thu, 12 Nov 2026
+ 03:55:55 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -51,102 +103,44 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] memcg: flush nr_charged_bytes when the obj stock trylock
- fails
-Content-Language: en-US
-To: Shakeel Butt <shakeel.butt@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, David Hildenbrand
- <david@kernel.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, Meta kernel team
- <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, Chris Mason <mason@kernel.org>,
- stable@vger.kernel.org
-References: <20261112013220.4064478-1-shakeel.butt@linux.dev>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <20261112013220.4064478-1-shakeel.butt@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20260918165601.1014666-1-ekffu200098@gmail.com>
+In-Reply-To: <20260918165601.1014666-1-ekffu200098@gmail.com>
+From: Sang-Heon Jeon <ekffu200098@gmail.com>
+Date: Thu, 12 Nov 2026 20:55:42 +0900
+X-Gm-Features: AclHuK9PmUV8BrYAjnqEoTS4EvgydQ1Uyiy02kEKk-TSeQV6BgCr13vlHCGtulw
+Message-ID: <CABFDxMEW7a1yxZJ5TOdP244gbMebCzHBFsF7w7qJhxfxJUZRyg@mail.gmail.com>
+Subject: Re: [PATCH 0/2] memcg: remove unused page-based helpers
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
+	Muchun Song <muchun.song@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/12/26 02:32, Shakeel Butt wrote:
-> When interrupt code, such as an RCU callback in softirq, runs on top of
-> a task that holds the obj stock lock, its trylock fails and the bytes go
-> to objcg->nr_charged_bytes. Nothing empties that counter while every CPU
-> using the objcg keeps it in its stock, so it can grow without limit.
-> 
-> Users see memory.current and the "kernel" field of memory.stat keep
-> growing while the cgroup's real usage does not. With memory.high or
-> memory.max set, the cgroup is reclaimed, throttled or even OOM-killed
-> for memory it does not use. The counter is 32-bit, so after 4 GiB it
-> wraps, and those 4 GiB stay charged to the cgroup and its ancestors
-> until reboot, even after the cgroup is removed.
-> 
-> Fix it by uncharging the whole pages in nr_charged_bytes whenever the
-> trylock fails.
-> 
-> Fixes: 200577f69f29 ("memcg: objcg stock trylock without irq disabling")
-> Reported-by: Chris Mason <mason@kernel.org>
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Cc: stable@vger.kernel.org
+2026=EB=85=84 9=EC=9B=94 19=EC=9D=BC (=ED=86=A0) =EC=98=A4=EC=A0=84 1:56, S=
+ang-Heon Jeon <ekffu200098@gmail.com>=EB=8B=98=EC=9D=B4 =EC=9E=91=EC=84=B1:
+>
+> Hello,
+>
+> While reading memcontrol.h, I found two page-based helpers that have
+> no callers.
+>
+> No functional change.
+>
+> Sang-Heon Jeon (2):
+>   memcg: remove unused page_memcg_check()
+>   memcg: remove unused mod_memcg_page_state()
+>
+>  include/linux/memcontrol.h | 32 --------------------------------
+>  1 file changed, 32 deletions(-)
+>
+> --
+> 2.43.0
+>
 
-Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+While clean-up my mailbox, It looks like a later series with the same
+change has been applied instead [1].
+Either way, we succeeded in removing unused helpers :)
 
-> ---
->  mm/memcontrol.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index f5f567f7d4a9..091401cecf39 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3553,6 +3553,8 @@ static void __refill_obj_stock(struct obj_cgroup *objcg,
->  	int i, slot = -1, empty_slot = -1;
->  
->  	if (!stock) {
-> +		nr_bytes += atomic_read(&objcg->nr_charged_bytes)
-> +			? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
->  		nr_pages = nr_bytes >> PAGE_SHIFT;
->  		nr_bytes = nr_bytes & (PAGE_SIZE - 1);
->  		atomic_add(nr_bytes, &objcg->nr_charged_bytes);
-
+[1] https://lore.kernel.org/all/20261014-memcg-unused-page-helpers-v1-0-240=
+b37c53831@columbia.edu/
