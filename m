@@ -1,124 +1,87 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794479365;
-	b=rekkX2VhE+UDaGYdFJJ1zzxF5FVcn5tKiO9vEue/cIykvIKqwwOk2LeydGhtTq8I/XNr
-	 4bOTH76BE8S4vb5tvQDWLwvkQlLMxEOcKuCj1I3b4bc0vC6cP13Rp/FeBfYzDRrr1t/OA
-	 QSId1Kq+e7I6NQEwbsvsSoN7pRGLk81VsjUBqD90Gw9tmcIkIFpSiQq5FEr991+ghcpdm
-	 8SnjLnBlGRzvLSq5DExc3IPdZc44e6A3m0Ve8Y6b2cRN5ebWpE9RO0g0Lt0ApMZbHV7UN
-	 d6HNjqKD9JxNlhuQ2Q+Q7XmK/6aFrnL2akk2dTHkdbEChyAVpjq6iGShcbeKIofxPwg==
+	t=1794479717;
+	b=Mo+rd5/yomFifcrVP/mVRYhf6vm/9Dt1AqgSmQYo+NWuoFpYfLxEo21dw36KOO2+QDOp
+	 7y4zXDSS8972dyFX3wRuoTEXyCBiNe/wKYkp+Nbu+Cnw6Im0fwnQskSEe70mYO2YWDnNU
+	 LaSX64di/0FqxH/85sdesvGe/FYpmiTe1ftEAKVq/ue2jjDf0X1lPLNH6jBPOU7lJ5GJe
+	 ZeBE5Wy+Pw9gqdqAI1cgVD7L6u8wiSOiv90twQmSS9zcM3/IerRslMnfDlH5NrXrZLoD6
+	 xDQgbh6h1rEojCUFK8sq0+d3mDYS1yDZ8GMTA6ELyUEmrsU05nSZExgzkxCpzGuI3Zg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794479365;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=6vncnhn6Q/3wKntfoEarDeUgzDpwaWPokLtUTZ7KM7E=;
-	b=Mee8s5BlpxnfwYwzoVkR1Rvsany05FAFcT844qYX9eQ+RMwWw4HhDOlbYbPO8eagazBi
-	 MiF72omdXSE1FQZzpQodw089VFiz4PmibVzHjNml/Y+YXSne1GtsML0yn/2YaWYwXXM+G
-	 c9LUzSQy5YOWwCq0owScNwaVMYpab2E1X+kCabsFyy0TGXg3TwRC4b3pM8Yu/3A5wLgxD
-	 DEjsEPtViQe6hBeg5YZ2unpdmJkcRdQVx+fphUgvPlbkfq6/ITGqRFziuPz+ZfNkYDaee
-	 JkKfg8V8y2a5sq0YAE21suNF2xb9n6j3THvKHKmmz5L7wkOSej3ovnjda5gV0IlqPOQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794479717;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Content-Transfer-Encoding:Message-Id:References:To:X-Mailer;
+	bh=WoymvwdfMBFoMyXW+9QTB+Y4rJogi+4Hn0MI83a+cw0=;
+	b=CLM43V3juMyypnI7bnTwOT0f7Z7+CTltxWvfx7gxC7NKiyEZ/E/kzIp8V1XJQhax5myA
+	 TyA43Sva/QvVn+WVjYL151mcXdc6npWOMhwEL8zz/ZyOVfJ8Fy87ZwH3HGswt5aAUstTC
+	 SOAzKddckhnGiWnBQFv0eH+QmhxGfRULDVUbEe3c+WgB/V+0NB2cEn+egJcdz2uL/rhQD
+	 KXjkCpBmEW8iRzUeMezanaxHYNU87vq7p/vcNPPfofiThnEKxd+1QKREy6kbdmwpP4+pm
+	 niHjx+I1GTaDpCZ6yCDte8iq/OtAEhJD78dST+KJR+TWxnCCMS5gPvGKOOuXfmrktfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=g0cDVKdj;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=qo04X0bM;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Py+GPyII;
+	arc=none smtp.remote-ip=209.85.216.54
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FE96606A31C
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 10:29:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7FE96606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A869606A893
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 10:35:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6A869606A893
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=g0cDVKdj;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=qo04X0bM
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794479363;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=6vncnhn6Q/3wKntfoEarDeUgzDpwaWPokLtUTZ7KM7E=;
-	b=g0cDVKdjm5nVo+7iRxNAHgb8XWsS7fzTJF0kFL3gdUaGH77ToAYZMwF3tpKsKq0rhusUMj
-	H/niFxVT8WVdIACvXTorHeSCMt4Ssg0b2DRYr+TLW+VbWMxItFFd+e7zRLj4inGLLvK00s
-	miZQxuZPvgMDhyvk974ZZ6D3T72MxpQ=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-159-FBbjKbTYMsm5v3cA3StNow-1; Thu, 12 Nov 2026 05:29:21 -0500
-X-MC-Unique: FBbjKbTYMsm5v3cA3StNow-1
-X-Mimecast-MFC-AGG-ID: FBbjKbTYMsm5v3cA3StNow_1794479360
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-49337a224a8so3423855f8f.3
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 02:29:21 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Py+GPyII
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3b16896b8ceso1568861a91.1
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 02:35:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794479360; x=1795084160; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=6vncnhn6Q/3wKntfoEarDeUgzDpwaWPokLtUTZ7KM7E=;
-        b=qo04X0bMaGEPK6glObVT7+IqbCAQsCHaTD7+bZwjfi2gnoOYzt/y0hvLwGGOcQVM0Z
-         dwwUo9dRPm1aqQTmhyBE9xVOxlzvmLL3lRsOVpwPCHkpdQi2zKgRNg7OorNmoJcVYV8d
-         IO6NOxSa0DI0FAsN6BjldJS/9U9CSSV11tZlKEZl13THn0APbUAqwGRJV63XudDFdSPU
-         FtvXgsjNV2FOhBkO+z1nzN0I+REbI5cMlu5A56RC2fkgsIyKRvScu/OpFu/m/du3i9bk
-         8HYBImoLMERKSRqt49K4LG6+WkqPCX+DOhmVGHMo4a6D0T58QT1jVvZ6gDBNm5rMEvUH
-         ec/A==
+        d=gmail.com; s=20260707; t=1794479717; x=1795084517; darn=vger.kernel.org;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:content-type:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=WoymvwdfMBFoMyXW+9QTB+Y4rJogi+4Hn0MI83a+cw0=;
+        b=Py+GPyIIALmRfft6lVLJ+MEqCiRPwksRRsBO/G8oCeiY/WiQH26z95y2Dl+zHZULvI
+         BBtTEPpOeT0CBZsAPsaBeVw4EaOqpmDyPdNYTKJkkSeoX22nKn/VHNCUwqEsCh4X/0hn
+         37TJgDrokGzgm1eO9HbHjaV6NhG4uXiicEBwGt4nTO33IcF8jgFlil2gDTNFF6b9mxhY
+         1SywYV5OvHvY3oLoqQ3Ciyf6Lch3BRoF/vTiaYNjKPWRdmXRNdVg7aPnQhE8DY1Ta27c
+         j/iHTgrduzT2LevDePjXY20iO1embLyQMlm4Gfufu55QA1CVpAtK7Oz2XcoDve+4JMX+
+         QkaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794479360; x=1795084160;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1794479717; x=1795084517;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:content-type:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=6vncnhn6Q/3wKntfoEarDeUgzDpwaWPokLtUTZ7KM7E=;
-        b=fF9VTQu1nqZO8HCwAgO4+mCPd014MLHkZQtDnKcc1xGYqBZW9t3DyrHZAY4nWpymqU
-         cKd4xLWe8DtOE8mUM4UWq4n1jYk64dvgVdqU+S2sKQOASD7Ie+yAdTfAvnwaBrqxaoEM
-         KYJIT8/LDQnk/HxqbdcVsTPXQDtMsAOFGX16KPcLnUzZYqvjus0ykVjcpPSz8uERRBhK
-         4psfYypSFvi7sqUIz3F7BXzb04Q0IMVIdbMSZYXLxCDQ6RxTXQB3+L4OjA+xhHi14bQG
-         J6jWQWg6EA1dMBIpFGSgoYN2oA+6x4xuR7WjBIOuG6lr7c/fjGaZP3SINr9JbmXHHf+O
-         TQdg==
-X-Forwarded-Encrypted: i=1; AL+hErGO2HeA0so2vhd3FCoCAuCouAG/OzIinFVv/dyHYpDLO+ZEHN/zgbJuTP9fpdvG11wq7Q8r7ZEr@vger.kernel.org
-X-Gm-Message-State: APuU4Z+giV2cuieZqWuh4p+urk1+29a9Jnk7vpd6fGfVh0QfmcH5+9rv
-	pUxZElVhj+6V7HEbxGSfSTumWjK+nX1zGB0G3CeLJ8p1pwSSNqN1R6+3TqEGaw1xrbUK3P/DAdZ
-	JnGVdWGs02Z36P7UM3+jpIjpodpAViBX6HqtgyY6uH4Wt4oSG2Xj2p7bWp9Y=
-X-Gm-Gg: AYBFou18eniFO+1IT3Sk4tLLNa7i93ZT+EfNfixq0rs4cfn8/KKZVA+LjOJyfTF7t+8
-	v/ah+BWg5IGx8S+bxfdNrH/OU5HQn2JXFHnad7u1c40y31kuchYfQwkuItCYlXFMvRt233BcS1+
-	Y+aqkhumsU67pGiSai7A8K5rrAZNG34wZzrbGPlGn6OQPpXHpr3K8gx9oZt6H/sThctfK1PQdby
-	9jB2LEcnTGNuAgvABXjZW4jXAcJ5hrHxWrkXTlrwesFp3FNKbr4aiQM2DDmFPPfYg8TKH+Qs1qs
-	OVNE24Ms32aW0gR1T59vBcZ/M0QkQBbBirwnJjgbYb2CdQr3MX9S5O5Q4BebTkQBa+VEQMVOS9Z
-	y80UrSBrSegj380m3+pfcS92jTGodiFsH0VQetDEe8onz5hWnoahf4cLT7tsvv5lu2vriKsRKvN
-	9Aqyw=
-X-Received: by 2002:a05:6000:3107:b0:48b:d9:cb52 with SMTP id ffacd0b85a97d-499c7b1c5b9mr11631317f8f.27.1794479360337;
-        Thu, 12 Nov 2026 02:29:20 -0800 (PST)
-X-Received: by 2002:a05:6000:3107:b0:48b:d9:cb52 with SMTP id ffacd0b85a97d-499c7b1c5b9mr11631254f8f.27.1794479359967;
-        Thu, 12 Nov 2026 02:29:19 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49bad3cd31dsm1615895f8f.56.2026.11.12.02.29.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 02:29:19 -0800 (PST)
-Date: Thu, 12 Nov 2026 11:29:16 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
-	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org, longman@redhat.com,
-	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
-	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v5 25/29] sched/deadline: Count the bandwidth a boosted
- task is given
-Message-ID: <avWU_Gh3cw-8y_9Z@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
- <20261108185406.1549770-26-mathieu.desnoyers@efficios.com>
+        bh=WoymvwdfMBFoMyXW+9QTB+Y4rJogi+4Hn0MI83a+cw0=;
+        b=tYacknwncdKjCaK9/ZEVJ5yn8zO3r7EVgllKqyZcUq+ASHyKHoFzKuiVAPx7RO9oWQ
+         79fQgxTadkBuv7ImCxmFlAzaT306yPZGYdA4yx4Cj+auaVZIcZZGUfQd6aYiya1WxN++
+         CXjJSNQqrHD25N+SsqoczCsXkrXJUmdRAUstsJ0Rd/3pTwP8cTvepOD7NYLmIwcwtBmf
+         igTowpEEuR5tQs6e3ziDwdBMFQKHO5GQpmhf8bPtc4JRp1thxhRjt9Hg9ba6tloGD/mZ
+         UTtZd6GDaQqi4Es83oYtq789e54POuUVWuXRirMqPPB39a7d5JUGapl5hpYHOdSHelT/
+         MdvA==
+X-Forwarded-Encrypted: i=1; AL+hErG3E1f7AOfxoJI9wIfzx+PWSeG5gFM4HCwVyb86c75SK9oYOasV1J8xvtaLiJRMBxKvhiXfWFu9@vger.kernel.org
+X-Gm-Message-State: APuU4Z800ZN6uHCTauuGGYsU+ftxNw0XdEIfAepCldYZ0SGp3R2NdIS0
+	AmQNUA8SrQ4VjLXQ+Qp6e5Ph7g5cVKD7yUaDdKq+VvjT+oiBZ/9wCujq
+X-Gm-Gg: AYBFou1R8RTHO6xMGxQJpq+UIXQai6/x145Pc8TsdObbl1kBtdv9goGyD+4t60rR4HR
+	BKSR7S23IsbEIVBWbdj7FKm2BQfccwS33FJrhbHf0p4qKr5g15Do8FR9R5+2vGZNwDNyobD5E23
+	QOauWHskcZVEoEGuFsnn1+hInWsMxqFRByIPlyl8mPp9Uky43oqHmx/S78UNyAJ5nffjpGER928
+	GiqJ2/zUI71Ojq9JTMiLl6zR8MuQOOvXIu6piTExi/0rmo641lM8n3NiPBTNdxnSHOcZR4RWCQT
+	s7GPl2U9EMp9AalUx5jMz9zRY0PjR1tyD5Yx/+syEg/jXiWjNra/1qaA3VjWNQG4w+18Gf9GF6I
+	mqoKEB2aAepNMDax2yDH//FNlBavxDw21Z0MM9rSH0RhDthrcxwrf8hk0HrTrnnj6joedh0PdZp
+	+aF8+7zwl078vqR/eveug+GHJ+DV2gTqurxruoLvYJ9X9OTJw/K+6MEleefK5krxd7PlhrWM3T8
+	mCEya4Vy1bfbcyHtN4f5q64389qttY/qD0MC5KHfiI9eRw9IFzpYhG/5OJWfFQq6D9+Cbj2oSrT
+	D649Vu/XZc8klgwiLQmpCsP0xRh02wz30d1LG7UeOZ1rbcO0ew2ZfIdWkPuSkR2Og9A5dMFo26j
+	jIv2q5A==
+X-Received: by 2002:a17:90b:4c4c:b0:3b0:e2a9:3466 with SMTP id 98e67ed59e1d1-3b182eebe65mr4740116a91.16.1794479716567;
+        Thu, 12 Nov 2026 02:35:16 -0800 (PST)
+Received: from smtpclient.apple (fs98a57cc9.tkyc008.ap.nuro.jp. [152.165.124.201])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b197ce49d6sm4207584a91.4.2026.11.12.02.35.06
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 12 Nov 2026 02:35:16 -0800 (PST)
+Content-Type: text/plain;
+	charset=utf-8
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -127,54 +90,160 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261108185406.1549770-26-mathieu.desnoyers@efficios.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.700.51.1.1\))
+Subject: Re: [PATCH v2] mm: memcontrol: Don't lose track of exiting OOM
+ victims
+From: elenchist <elenchist.dev@gmail.com>
+In-Reply-To: <avA1wXhTMs9eY2NF@chrisdown.name>
+Date: Thu, 12 Nov 2026 19:34:53 +0900
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>,
+ Tejun Heo <tj@kernel.org>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Zhan Xusheng <zhanxusheng1024@gmail.com>,
+ cgroups@vger.kernel.org,
+ linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org,
+ kernel-team@meta.com,
+ regressions@lists.linux.dev,
+ stable@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <6B8E9261-3FF8-441B-8F47-7D35834A8D35@gmail.com>
+References: <avA1wXhTMs9eY2NF@chrisdown.name>
+To: Chris Down <chris@chrisdown.name>
+X-Mailer: Apple Mail (2.3864.700.51.1.1)
 
-Hello,
+On Sun, Nov 08, 2026 at 12:41:37AM -0800, Chris Down wrote:
+> memory.events showed oom_kill 2 in three runs. In one of them the =
+first
+> process hadn't submitted the read yet when it was killed. The slow =
+read
+> just makes the window easier to hit.
 
-On 08/11/26 13:54, Mathieu Desnoyers wrote:
-> sched_setattr(SCHED_DEADLINE) on a sleeping task that priority
-> inheritance boosted into the class leaves the new bandwidth out of
-> this_bw. switched_to_dl() does not run, since the task is in the class
-> already. sched_dl_overflow() changes this_bw only for a task of the
-> deadline policy. When the task wakes up, __add_running_bw() warns:
-> 
-> 	WARN_ON_ONCE(dl_rq->running_bw > dl_rq->this_bw);
-> 
-> When the task leaves the runqueue, this_bw would stay short by that
-> bandwidth, and skew GRUB reclaiming on that CPU.
-> 
-> Fix this by changing this_bw in __setparam_dl(), which every task that
-> gains deadline parameters goes through. If no runqueue counts the
-> bandwidth of the task, dl_change_utilization() now adds the new one. It
-> now also runs when the bandwidth does not change. It then returns early,
-> so that a sleeping task keeps its running_bw and its inactive timer.
-> 
-> A sugov kthread given a reservation of its own now has its bandwidth
-> counted in this_bw. It reaches dl_change_utilization(), so the
-> WARN_ON_ONCE() for SCHED_FLAG_SUGOV there goes. sched_dl_overflow()
-> returned early for an unchanged bandwidth, even if no root domain counts
-> it. That is the case for such a kthread, and for a task that a rebuild
-> left out. Admit such a bandwidth as new. Without room, that fails with
-> EBUSY. The Sashiko AI review of the third posting found this early
-> return.
-> 
-> A reproducer shows the warning, and this_bw unchanged by the change.
-> With this patch, this_bw takes the new bandwidth, and nothing warns.
-> 
-> Fixes: 8fd27231c330 ("sched/deadline: Track the "total rq utilization" too")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> ---
+It doesn't need AIO at all.  A plain memcg OOM hits it most of the
+time: the victim only spends 10-20ms in exit_mmap(), and if the
+allocating task fails a charge again in that window, a second (and
+sometimes a third) task gets killed.
 
-Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+Reproducer: memory.max=3D400M, no swap.  A holds 150M, B 100M, C 50M, =
+and
+T grows by 10M every 0.3s.  Only A should be killed.
 
-BTW, the whole sugov thing still remains an hack, but at least after
-this it has less chances to break admission control etc. Bah, something
-else to maybe keep in mind for the future.
+---8<--- overkill.c
+/* A holds 150M, B 100M, C 50M; T grows by 10M every 0.3s up to 200M.
+ * Run inside a memcg with memory.max=3D400M. Only A should be killed. =
+*/
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-Thanks,
-Juri
+static char *volatile sink;	/* keep the stores */
+
+static void hold(size_t mb)
+{
+	sink =3D malloc(mb << 20);
+	memset(sink, 1, mb << 20);
+}
+
+int main(void)
+{
+	const char *name[] =3D { "A", "B", "C", "T" };
+	size_t mb[] =3D { 150, 100, 50, 0 };
+	pid_t pid[4];
+
+	for (int i =3D 0; i < 4; i++) {
+		pid[i] =3D fork();
+		if (pid[i])
+			continue;
+		if (mb[i]) {
+			hold(mb[i]);
+		} else {
+			sleep(3);
+			for (int j =3D 0; j < 20; j++, usleep(300000))
+				hold(10);
+		}
+		pause();
+	}
+	sleep(10);
+	for (int i =3D 0; i < 4; i++) {
+		int st, dead =3D waitpid(pid[i], &st, WNOHANG) =3D=3D =
+pid[i];
+
+		printf("%s %s=C2=A5n", name[i],
+		       dead && WIFSIGNALED(st) ? "killed" : "alive");
+		if (!dead) {
+			kill(pid[i], SIGKILL);
+			waitpid(pid[i], NULL, 0);
+		}
+	}
+	return 0;
+}
+---8<--- run.sh
+#!/bin/sh
+# cgroup v2, no swap, as root: gcc -O2 -o overkill overkill.c; ./run.sh
+CG=3D/sys/fs/cgroup/overkill
+mkdir $CG && echo 400M > $CG/memory.max || exit 1
+sh -c "echo =C2=A5$=C2=A5$ > $CG/cgroup.procs && exec ./overkill"
+grep '^oom_kill ' $CG/memory.events
+rmdir $CG
+---8<---
+
+Over-kill (oom_kill >=3D 2) per 20 runs, ThinkPad X1 Carbon Gen3
+(i5-5200U, 8 GB), x86_64.  "4a" is the same layout driven from a
+systemd-run scope with Python tasks; "C" is the program above:
+
+  kernel                                      4a      C
+  6.8.0-149-generic (Ubuntu)                  0/20    -
+  7.0.0-42-generic (Ubuntu)                  19/20   19/20
+  v7.4-rc1                                   20/20    -
+  v7.4-rc1 + this patch                       0/20    0/20 *
+  v7.0 + 60f21a264930 + this patch            2/20    0/20
+
+  * an earlier, longer version of the same program
+
+v2 has the same code as v1, which is what I tested (identical tree
+after git am).  On v7.0 the patch also needs CSS_TASK_ITER_WITH_DEAD
+from 60f21a264930 ("cgroup, sched_ext: Include exiting tasks in cgroup
+iter"); only its cgroup hunks apply there, so that's what I used.  The
+2/20 left on that kernel look like a separate issue that mainline has
+already fixed.  On v7.0, MGLRU's page table walk in T's reclaim can
+hold an mm_users reference on A's mm (get_next_mm() used
+mmget_not_zero() until d14514c66cb9 "mm/vmscan: prevent MGLRU reclaim
+from pinning address space" in v7.1-rc1).  A's own mmput() is then
+not the last one, so A finishes exiting and drops out of the scan
+right away, and exit_mmap() runs later from mmput_async() in a
+kworker.  The next OOM picks B.  I traced 2 such over-kills in 40
+runs; with MGLRU page table walks turned off (lru_gen/enabled =3D
+0x0005) I got 0/40.  So a 7.0.y backport probably wants d14514c66cb9
+as well; it applies to v7.0 and v6.19 as is.  I haven't built v7.0
+with all three.
+
+Zhan's series [1] is a different problem (thread groups migrated after
+their leader exited); v7.4-rc1 with it still gave 20/20 here.  The two
+patches change the same css_task_iter_start() line, so they will
+conflict.
+
+Tested-by: elenchist <elenchist.dev@gmail.com>
+
+Adding the regressions list: a72f73c4dd9b is in v7.0 and was also
+backported to 6.19.9.
+
+#regzbot introduced: a72f73c4dd9b
+#regzbot title: memcg OOM kills more tasks while the first victim exits
+#regzbot fix: mm: memcontrol: Don't lose track of exiting OOM victims
+
+I used an AI coding assistant (Claude Code) to build the kernels, run
+the tests, analyse the traces and draft this mail; I have checked the
+results and the text.
+
+[1] =
+https://lore.kernel.org/linux-mm/20261027144016.2582880-1-zhanxusheng1024@=
+gmail.com/
 
