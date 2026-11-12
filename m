@@ -1,101 +1,124 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794469573;
-	b=RNUlncimWXhw+2R1/aT9Yas9Vai2MrkhGdu68tC++gwWCoTUQUtdmcr8N+ZFhi8UU8S3
-	 uhgjlhX3M63yuA3INvn6bi3IdpHvY4rpcabLIh2tcEQzzMKyCvep0V+zP6kfz5zoWNQGg
-	 IWuHWZZfjWzlMxlXJvE8j8h4x624NyAseY3GH0DDl2VvQMzeL5Wf1/KAuhCqqaYLWfoFV
-	 o+9kOVz0I575VgLxOYa6q5Y7/X0pEIjAxk/uJWFuR3gBMk1AMSyCpmx4UxEOiclFLnJ8b
-	 rKMkDUGhen1rIs62cKSyFQHDlJYP5OuK1qv962MkD8NWul0MkefwXqMWtz+Gb4FTFSg==
+	t=1794469824;
+	b=uNHf6jvoQ6S/gEL5m99aAMwSMJr1cLJt2PjKN/QJ5jo9qglbSCorho/dOH0h768llSx6
+	 xFzwJywKCf24BWJZGP7n/tE/W4Yfm9H9ZQtN9o9Uo2QJbZ+f0Q0Bs785SKDBnmBte76c1
+	 Jt2zTPJygB3G7P6da1FxbjSklhYZI9PayP89J5O0pL3o9VHPWD/V1TZUpWlT1KXVeX86d
+	 I0SykLCAupnzDYPMyRpeSKtne3kUiRJjdA4czJqMy0OfvNrCCcu2Zh5DVIFZXVhVLp55N
+	 q+fhZb5dS2++6al24i6OrIaS6VE+fh7RAOFDv0uOfSTIpJrgnmC+MCNfQTb/OBZbMAw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794469573;
-	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
-	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
-	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Message-ID:Subject:
-	 From:To:Cc:Date:In-Reply-To:References:Organization:Content-Type:
-	 Content-Transfer-Encoding:User-Agent:MIME-Version;
-	bh=U/4tUzC3TLD4FqI4xdC5pvsxvjza6A9soJUP+9C2920=;
-	b=wouxu9ESNGhk6tIqSrPsRDi0Zw2uZq8IrwmxHB4DQyHM9B+BXYrK4fcbGQRIcyAZfBv0
-	 wCtjjPl4+kf5UMT/DXvVuja8mVeJCjo8Mb8dpDmfICzmwTqvFjHrmE82yUbTm0db4OtjI
-	 IzCtKzq29oYNhO9e6H5BRa5x/gsG5wvvb4XnW7uQC9teHi4kKJKYNgD9EjtjNsY8BAwYP
-	 /o4ytzsTDCit6wd9e1AhMr2OQBp0VFRci0YcE3vGjsBGCEqF48+KDV1a3rdgHxULjq+Io
-	 MFbhuxr3RobzS1RTQSdcPCr7c7qWJSIQzmrYGrWi4D2E7Ahyih8yDczYKnEVHzJ7vQQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794469824;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=eAEaXknwutXsE98av80d8xzVhjo04EdbVXbDbQO9bFo=;
+	b=CBeG6NA8H/ev94CCM8MvIYPLq/9nHs5Z3B+UBZDEYSGcUnbZhyaKmBSTxBY8z7pOOy7z
+	 UdcBMptwNy23RaP5IJZi5aSGOsJSo6Y2SoDeiGbVt3jqIbityGmRn42E5iSy/wUJqZdcI
+	 ow/WqdDnlakVi18xUjxtujSMLVsZUDCXb87WuUiR/k/XFhsjXvQHJoif4gPRFweS/udLX
+	 95LNh4Od3f9LCRTKb8A4RSMhtFe0M1KABaQxRJI+pIuxp5x0gErxzZonSC86P5CaIQWEh
+	 /HMCbcaJxQnW7/yTN80B6xNDo6aTttURMtQJmoBmPEuAH+Z05X1Z5H4m80o/hk3XH8w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.intel.com;
-	spf=pass smtp.mailfrom=linux.intel.com;
-	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=fogQ1fr0;
-	arc=none smtp.remote-ip=192.198.163.13
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
-	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=bO7VKf20;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=qDwrBmcq;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20086606A31C;
-	Thu, 12 Nov 2026 07:46:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20086606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F13B7606A330
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 07:50:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F13B7606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=fogQ1fr0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1794469573; x=1826005573;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=B8DZ8ac/lvdCsHwLYiCV00yrDKWFEEEp87wCEsDsqUc=;
-  b=fogQ1fr0O47koKlo7t3/U1PYYgrJGevdWYT7W5BHP26SBsf8M3jT1AdM
-   kh3wwHY092bAE5/I41vfw4uSxMtE1Lq8uQ3fsLf0TkUiqTN9qCK9kwzrJ
-   TuGopMNWhznMo9LUs2YG6qqmopKZ5Qxe4SkmG1M7alCNJD84/lcAKk7iO
-   Mkc+giTk0lphFEfzWhOJourp6SfdW4YuD4cVAa7ExY4uoVaxlcPfplXYE
-   C0WzD5kY0myqVG9iriCsXd/yz+eSP7ob3dXgzO9kGhkKnwfDDbcLciOJ1
-   7Pqugw40Vq+GR/yMSNQ3KaqgXcXTokyM9BMnvGYd5BiddQcekko8b2PzT
-   w==;
-X-CSE-ConnectionGUID: GQJcIa4DSdOk3rx9QCmbQg==
-X-CSE-MsgGUID: nE0oYHMQT+ap/49GEztx4g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11963"; a="3243957"
-X-IronPort-AV: E=Sophos;i="6.27,209,1787036400"; 
-   d="scan'208";a="3243957"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2026 23:46:12 -0800
-X-CSE-ConnectionGUID: Vp69MBqRQdu2Arofn2sCCw==
-X-CSE-MsgGUID: tgWbJ6xUQFC8hBm4R0ZRfQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.27,209,1787036400"; 
-   d="scan'208";a="9027153"
-Received: from carterle-desk.ger.corp.intel.com (HELO [10.245.244.5]) ([10.245.244.5])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2026 23:46:05 -0800
-Message-ID: <b77aecccce2dcf9bc42b1a6fccc62d06ccad4741.camel@linux.intel.com>
-Subject: Re: [Linaro-mm-sig] [PATCH v4 3/8] dma-buf: transfer memcg charges
- via DMA_BUF_IOCTL_XFER_CHARGE
-From: Thomas =?ISO-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>
-To: Albert Esteve <aesteve@redhat.com>, Tejun Heo <tj@kernel.org>, Johannes
- Weiner <hannes@cmpxchg.org>, Michal =?ISO-8859-1?Q?Koutn=FD?=
- <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan
- <skhan@linuxfoundation.org>, Sumit Semwal	 <sumit.semwal@linaro.org>,
- Christian =?ISO-8859-1?Q?K=F6nig?=	 <christian.koenig@amd.com>, Michal
- Hocko <mhocko@kernel.org>, Roman Gushchin	 <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song	
- <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>,
- Benjamin Gaignard <benjamin.gaignard@collabora.com>, Brian Starkey
- <Brian.Starkey@arm.com>, John Stultz	 <jstultz@google.com>, "T.J. Mercier"
- <tjmercier@google.com>, Christian Brauner	 <brauner@kernel.org>, Paul Moore
- <paul@paul-moore.com>, James Morris	 <jmorris@namei.org>, "Serge E. Hallyn"
- <serge@hallyn.com>, Stephen Smalley	 <stephen.smalley.work@gmail.com>,
- Shuah Khan <shuah@kernel.org>, Randy Dunlap	 <rdunlap@infradead.org>,
- Ondrej =?UTF-8?Q?Mosn=C3=A1=C4=8Dek?=	 <omosnacek@gmail.com>, Jens
- Wiklander <jenswi@kernel.org>, Sumit Garg	 <sumit.garg@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, 
-	linux-mm@kvack.org, linux-security-module@vger.kernel.org, 
-	selinux@vger.kernel.org, linux-kselftest@vger.kernel.org, 
-	op-tee@lists.trustedfirmware.org
-Date: Thu, 12 Nov 2026 08:46:02 +0100
-In-Reply-To: <20261104-v2_20230123_tjmercier_google_com-v4-3-1819a017000b@redhat.com>
-References: 
-	<20261104-v2_20230123_tjmercier_google_com-v4-0-1819a017000b@redhat.com>
-	 <20261104-v2_20230123_tjmercier_google_com-v4-3-1819a017000b@redhat.com>
-Organization: Intel Sweden AB, Registration Number: 556189-6027
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.58.3 (3.58.3-2.fc43) 
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=bO7VKf20;
+	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=qDwrBmcq
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794469822;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=eAEaXknwutXsE98av80d8xzVhjo04EdbVXbDbQO9bFo=;
+	b=bO7VKf206GndRdvNIcdsMumUbF0HP3xbPQkOTtL9to5a8h6p89zXJuhvc4EO+mP6CGR9fw
+	a8qj4vRNRW5L5M4jbq6RG9+RfU8g5VKYgJjaJOR2EWmEsaM/eVsG+LWDY9P0LvLbzHPH/7
+	QvWW2+SQ5XrRdKRmyVafpPejKKft0Ao=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-34-u4o0jUNRPrqHFcT4MDB-nA-1; Thu, 12 Nov 2026 02:50:20 -0500
+X-MC-Unique: u4o0jUNRPrqHFcT4MDB-nA-1
+X-Mimecast-MFC-AGG-ID: u4o0jUNRPrqHFcT4MDB-nA_1794469819
+Received: by mail-wm1-f69.google.com with SMTP id 5b1f17b1804b1-4a359c7f47bso34000015e9.2
+        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 23:50:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1794469819; x=1795074619; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=eAEaXknwutXsE98av80d8xzVhjo04EdbVXbDbQO9bFo=;
+        b=qDwrBmcqbdfv6sjXk1rqxfTgCtqUKuKT1+J9Hh/rhnouIzDHTT66xrCcbFw09I5gzH
+         shdWuZZgpiY7326zbMZC217ZWyMWsiJlHJUuwt6QWR9XgsdW032CaJPDjngjN1lHNWNu
+         pdDlSf22mdcd9DHpYvFdT3oWmDnGz0PxNtRtVnWqIicChUtPmY1lzcN+QWv2sBRAUyCr
+         n+7mdMjMeq5ADnfe/XQBPNgfgjwjdTWWikxeP7FFO1nmpQijKjghDM6B78PoLBDKSop5
+         DHjNxtHQtaLc9kYWDgH/EBIy6TA6zxY1msISa4pPKoJt906w9hOvsl0CSD3o/9/jFse+
+         MgqQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794469819; x=1795074619;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=eAEaXknwutXsE98av80d8xzVhjo04EdbVXbDbQO9bFo=;
+        b=d/ULhS5HHMQy6Y4+rWGlMnbYryXG2pGedSOnyFxbWrGaiTm8De0LATU4LbGvXQOoqv
+         zUPhLDNeAsZpGXJn9TonGcpgJiILQ3S1mDN7MXNBFUwMNnij7JqpzShDjTcyK51Z72kQ
+         gTIRD1qxNkO43tTWfRcCKLcLCSR2Usv9fYJupyxR1BKCMuQ68wKZgWfYWsJ1GdVITlKH
+         xnCy7ZPpGT6y84cgfBLNh/XTee6acIaTPK11WGK3FqE+bKlxghZnkwvNFPwGPRaY+Euo
+         fkmoszTW2pNS6k0nY+sPOg2azGPCoWUvxKJGR2qRHCdwB5konml4XF6aLRDZDV4/sZSC
+         Xn1g==
+X-Forwarded-Encrypted: i=1; AL+hErFFz652ITMjaO4ahi8AFwldYwEsCOTWqmYDZle/KvW8HmHTp7jG2skUeW+Evk52sUNWtckgeuBd@vger.kernel.org
+X-Gm-Message-State: APuU4Z+iihDT7THlrlm/ZZA4jMXe/vUtC1bxj0qG3/YApHvJwRRr+khZ
+	uQMxRwVt67KychNC9FRIE8saYpyurietLTGkAJnznUEYQpUFN8lKF0uDTg37cEfd29irVmTgora
+	j91CDybnDQ7gCQ3kBh9WBMQaS67NJeIwrorRRshoKFnZ7yF/YMLrhfW17c+U=
+X-Gm-Gg: AYBFou2eqGoQ5do/j+J5oEbUu7rsbTm779PzLKWkUR8Mdcn/WZeLIBmQ7Uix46YrVPv
+	qDtYcTCBMMBHAvp1eIgmZYDsRtxALlGjoYBsaqXhToWVCCwwfLQ98fZeIm87OLCk0RYRGqv5jAq
+	S9feZpUNb+MCFy62mMSrx+Np9wb/wF87pFDL2EjeJl1E0ZCFyePAqr/doDeEJH4T/b4lVTN7eaX
+	TGkc2WE6FkgI5xKoD+uF6oCGhnfdi9ps+n8qEplRbfvHrw/Ra9WfdwOm/cQPKTk5O1qCOTjeCuh
+	nwEAq/Fo28dUwkGxNbqtDb8UL0gbDEyF45S347sukkHut/0G92nv+wjmv2ir6NaUMj4idSbOmR4
+	CdXPHdfagyOb1SGlGkh2Bzh7VYKMEit0gmfZlmZNfoPjwIzVkBaR9eu8dUvdWs7B6xhB9OH2d9d
+	bnZA8=
+X-Received: by 2002:a05:600c:1986:b0:4a1:f7f4:7cf1 with SMTP id 5b1f17b1804b1-4ba09376d2dmr82685365e9.11.1794469819070;
+        Wed, 11 Nov 2026 23:50:19 -0800 (PST)
+X-Received: by 2002:a05:600c:1986:b0:4a1:f7f4:7cf1 with SMTP id 5b1f17b1804b1-4ba09376d2dmr82684805e9.11.1794469818478;
+        Wed, 11 Nov 2026 23:50:18 -0800 (PST)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb4e28c882sm52359655e9.6.2026.11.11.23.50.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Nov 2026 23:50:17 -0800 (PST)
+Date: Thu, 12 Nov 2026 08:50:15 +0100
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
+	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
+	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org, longman@redhat.com,
+	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
+	clrkwllms@kernel.org, parri.andrea@gmail.com,
+	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v5 19/29] cgroup/cpuset: Wait for an attach before
+ rebuilding the sched domains
+Message-ID: <avVvt8wlKqW4LqTa@jlelli-thinkpadt14gen4.remote.csb>
+References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
+ <20261108185406.1549770-20-mathieu.desnoyers@efficios.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,292 +128,87 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261108185406.1549770-20-mathieu.desnoyers@efficios.com>
 
-On Wed, 2026-11-04 at 12:09 +0100, Albert Esteve wrote:
-> dma-heap already supports charging a specific cgroup at allocation
-> time via charge_fd in DMA_HEAP_IOCTL_ALLOC. However, dma-bufs can
-> originate from any exporter (DRM, V4L2, etc.), and the allocator may
-> not know the final owner at allocation time.
->=20
-> Add DMA_BUF_IOCTL_XFER_CHARGE to transfer a dma-buf's memcg charge
-> to a different cgroup after allocation. The target is identified by
-> charge_fd, which may be a cgroupfd or a pidfd.
->=20
-> The transfer charges the new cgroup before uncharging the old one,
-> preserving the original charge on failure. Concurrent transfers are
-> serialized by the dma-buf reservation lock, so lockdep covers the
-> locking order of the charge path early. The transfer implementation
-> is generic (mem_cgroup_transfer_charge) and not dma-buf specific, so
-> it can be reused by other subsystems.
->=20
-> Not all dma-buf exporters back their buffers with reclaimable system
-> memory. Some represent device registers, VRAM, or carved-out pools
-> where size is not a meaningful memory cost. The xfer ioctl returns
-> -EOPNOTSUPP for buffers whose memcg is not set. Exporters opt in by
-> passing a memcg through dma_buf_export_info at export time. Currently
-> only the system heap sets it, other exporters can opt in as needed.
->=20
-> Usage example:
-> =C2=A0 int cg_fd =3D open("/sys/fs/cgroup/clients/app1", O_RDONLY |
-> O_DIRECTORY);
->=20
-> =C2=A0 struct dma_buf_transfer_charge xfer =3D {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 .charge_fd =3D cg_fd,
-> =C2=A0 };
-> =C2=A0 ioctl(dmabuf_fd, DMA_BUF_IOCTL_XFER_CHARGE, &xfer);
-> =C2=A0 /* charge now on app1's cgroup */
-> =C2=A0 close(cg_fd);
->=20
-> Signed-off-by: Albert Esteve <aesteve@redhat.com>
+Hello,
+
+On 08/11/26 13:53, Mathieu Desnoyers wrote:
+> cpuset_can_attach() reserves the bandwidth of the deadline tasks it
+> moves in the destination root domain. cpuset_attach() moves their
+> bandwidth later, on the strength of that reservation.
+> 
+> Commit 75f7a25ec6bb ("cgroup/cpuset: Prevent race between task attach
+> and cpuset state change") lets cpuset_attach() rely on what
+> cpuset_can_attach() set up. The writes of cpus, mems and cpus.partition
+> wait for an attach in progress, in wait_attach_done_lock(). CPU hotplug
+> cannot run in between either: it takes cpus_write_lock, and the attach
+> holds cpus_read_lock throughout.
+> 
+> But a rebuild of the sched domains does not wait. A write of
+> sched_rt_runtime_us and the energy model rebuild them through
+> rebuild_sched_domains(). The cgroup v1 writes of sched_load_balance and
+> sched_relax_domain_level, and hk_sd_workfn(), use cpuset_full_lock().
+> 
+> In this example, a rebuild drops the reservation. T is a deadline task
+> asleep in root domain R. Thread A moves T to a partition root P, which
+> has a root domain of its own. Thread B writes sched_rt_runtime_us:
+> 
+>   A                                      B
+> 
+>   cpuset_can_attach()
+>     takes cpuset_mutex
+>     cpuset_reserve_dl_bw()
+>       P's total_bw += T's bandwidth
+>     drops cpuset_mutex
+>                                          rebuild_sched_domains()
+>                                            takes cpuset_mutex
+>                                            dl_rebuild_rd_accounting()
+>                                              clears R's and P's total_bw
+>                                              counts T in R (not moved yet)
+>                                            drops cpuset_mutex
+>   cpuset_attach()
+>     takes cpuset_mutex
+>     cpuset_attach_task(T)
+>       set_cpus_allowed_dl(T)
+>         R's total_bw -= T's bandwidth
+>         records a CPU of P
+> 
+> P now lacks the bandwidth of T, and admits deadline tasks beyond its
+> capacity. When T leaves P, P's total_bw underflows. In testing, the
+> race left a destination admitting 3 tasks of 10% too many, or P
+> admitting no task at all.
+> 
+> Fix this by waiting for an attach in progress in
+> rebuild_sched_domains_cpuslocked() and in cpuset_full_lock(). The
+> latter then takes its locks in the order of the writes of cpus and
+> cpus.partition. A rebuild from CPU hotplug finds no attach in progress.
+> The online, offline and kill of a cpuset never wait: they hold
+> cgroup_mutex, which the attach holds throughout.
+> 
+> The move_vs_rebuild case of deadline_bw_test, added later in this
+> series, tests this race. Without this patch, it fails in 5 of 8 VMs with
+> 8 CPUs. With it, the case passes in 8 of 8. The next patch needs this
+> wait too: without it, it would give back a reservation that a rebuild
+> dropped already.
+> 
+> Found by the Sashiko AI reviews of v2 (the race) and v3 (the cgroup v1
+> writes) of this series.
+> 
+> Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 > ---
-> =C2=A0drivers/dma-buf/dma-buf.c=C2=A0=C2=A0=C2=A0 | 42
-> ++++++++++++++++++++++++++++++++++++++++++
-> =C2=A0include/linux/dma-buf.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 3 ++-
-> =C2=A0include/linux/memcontrol.h=C2=A0=C2=A0 | 13 +++++++++++++
-> =C2=A0include/uapi/linux/dma-buf.h | 26 ++++++++++++++++++++++++++
-> =C2=A0mm/memcontrol.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0 | 42
-> ++++++++++++++++++++++++++++++++++++++++++
-> =C2=A05 files changed, 125 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-> index 837666273550..3bd26fbb1109 100644
-> --- a/drivers/dma-buf/dma-buf.c
-> +++ b/drivers/dma-buf/dma-buf.c
-> @@ -540,6 +540,45 @@ static long dma_buf_import_sync_file(struct
-> dma_buf *dmabuf,
-> =C2=A0}
-> =C2=A0#endif
-> =C2=A0
-> +/* Transfer a dma-buf's memcg charge; see struct
-> dma_buf_transfer_charge */
-> +static long dma_buf_xfer_charge(struct dma_buf *dmabuf,
-> +				const void __user *user_data)
-> +{
-> +	struct dma_buf_transfer_charge arg;
-> +	struct mem_cgroup *memcg;
-> +	unsigned int nr_pages =3D PAGE_ALIGN(dmabuf->size) >>
-> PAGE_SHIFT;
-> +	int ret =3D 0;
-> +
-> +	if (copy_from_user(&arg, user_data, sizeof(arg)))
-> +		return -EFAULT;
-> +
-> +	if (!IS_ENABLED(CONFIG_MEMCG))
-> +		return 0;
-> +
-> +	if (arg.flags !=3D 0)
-> +		return -EINVAL;
-> +
-> +	memcg =3D mem_cgroup_get_from_fd(arg.charge_fd);
-> +	if (IS_ERR(memcg))
-> +		return PTR_ERR(memcg);
-> +
-> +	dma_resv_lock(dmabuf->resv, NULL);
-> +
-> +	if (!dmabuf->memcg) {
-> +		ret =3D -EOPNOTSUPP;
-> +		goto out;
-> +	}
-> +
-> +	if (dmabuf->memcg !=3D memcg &&
-> +	=C2=A0=C2=A0=C2=A0 !mem_cgroup_transfer_charge(&dmabuf->memcg, memcg,
-> MEMCG_DMABUF, nr_pages))
-> +		ret =3D -ENOMEM;
-> +
-> +out:
-> +	dma_resv_unlock(dmabuf->resv);
-> +	mem_cgroup_put(memcg);
-> +	return ret;
-> +}
-> +
-> =C2=A0static long dma_buf_ioctl(struct file *file,
-> =C2=A0			=C2=A0 unsigned int cmd, unsigned long arg)
-> =C2=A0{
-> @@ -590,6 +629,9 @@ static long dma_buf_ioctl(struct file *file,
-> =C2=A0		return dma_buf_import_sync_file(dmabuf, (const void
-> __user *)arg);
-> =C2=A0#endif
-> =C2=A0
-> +	case DMA_BUF_IOCTL_XFER_CHARGE:
-> +		return dma_buf_xfer_charge(dmabuf, (const void
-> __user *)arg);
-> +
-> =C2=A0	default:
-> =C2=A0		return -ENOTTY;
-> =C2=A0	}
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> index 85dd747c9b36..b01149d26b44 100644
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-> @@ -507,7 +507,8 @@ struct dma_buf_attachment {
-> =C2=A0 * @priv:	Attach private data of allocator to this buffer
-> =C2=A0 * @memcg:	memcg to charge for this buffer's memory. Set only
-> for
-> =C2=A0 *		buffers backed by system memory where @size reflects
-> the
-> - *		actual allocation in bytes.
-> + *		actual allocation in bytes. Enables charge transfer
-> via
-> + *		DMA_BUF_IOCTL_XFER_CHARGE.
-> =C2=A0 *
-> =C2=A0 * This structure holds the information required to export the
-> buffer. Used
-> =C2=A0 * with dma_buf_export() only.
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index f8ec751b7d7b..af02d9777fe9 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -676,6 +676,11 @@ struct mem_cgroup *mem_cgroup_get_from_fd(int
-> fd);
-> =C2=A0bool mem_cgroup_reserve_dmabuf(struct mem_cgroup *memcg, gfp_t gfp,
-> =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int nr_pages);
-> =C2=A0
-> +bool mem_cgroup_transfer_charge(struct mem_cgroup **ptr_memcg,
-> +				struct mem_cgroup *new_memcg,
-> +				enum memcg_stat_item item,
-> +				unsigned int nr_pages);
-> +
-> =C2=A0void __mem_cgroup_uncharge(struct folio *folio);
-> =C2=A0
-> =C2=A0/**
-> @@ -1197,6 +1202,14 @@ static inline void
-> mem_cgroup_cancel_dmabuf(struct mem_cgroup *memcg,
-> =C2=A0{
-> =C2=A0}
-> =C2=A0
-> +static inline bool mem_cgroup_transfer_charge(struct mem_cgroup
-> **ptr_memcg,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct mem_cgroup
-> *new_memcg,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum memcg_stat_item
-> item,
-> +					=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unsigned int nr_pages)
-> +{
-> +	return true;
-> +}
-> +
-> =C2=A0static inline void mem_cgroup_uncharge(struct folio *folio)
-> =C2=A0{
-> =C2=A0}
-> diff --git a/include/uapi/linux/dma-buf.h b/include/uapi/linux/dma-
-> buf.h
-> index e827c9d20c5d..0aaf2e7d593b 100644
-> --- a/include/uapi/linux/dma-buf.h
-> +++ b/include/uapi/linux/dma-buf.h
-> @@ -168,6 +168,31 @@ struct dma_buf_import_sync_file {
-> =C2=A0	__s32 fd;
-> =C2=A0};
-> =C2=A0
-> +/**
-> + * struct dma_buf_transfer_charge - Transfer a dma-buf's memcg
-> charge
-> + *
-> + * Any holder of a dma-buf file descriptor can perform a
-> + * DMA_BUF_IOCTL_XFER_CHARGE to attribute the buffer's memory
-> + * cost to a specific cgroup, or move it from one cgroup to
-> + * another.=C2=A0 The ioctl charges the new cgroup before uncharging
-> + * the old one atomically.=C2=A0 On failure the original charge is
-> + * preserved.=C2=A0 If the buffer has no existing memcg charge, the
-> + * ioctl returns -EOPNOTSUPP.
-> + */
-> +struct dma_buf_transfer_charge {
-> +	/** @flags: Reserved, must be zero */
-> +	__u32 flags; /* unused for now */
-> +	/**
-> +	 * @charge_fd: File descriptor identifying the target
-> cgroup.
-> +	 *
-> +	 * May be either a pidfd, in which case the charge moves to
-> the
-> +	 * memory cgroup of the referenced process, or a cgroupfd
-> obtained
-> +	 * by opening a cgroup v2 directory, in which case the
-> charge moves
-> +	 * directly to that cgroup's memory controller.
-> +	 */
-> +	__u32 charge_fd;
-> +};
-> +
-> =C2=A0#define DMA_BUF_BASE		'b'
-> =C2=A0#define DMA_BUF_IOCTL_SYNC	_IOW(DMA_BUF_BASE, 0, struct
-> dma_buf_sync)
-> =C2=A0
-> @@ -179,5 +204,6 @@ struct dma_buf_import_sync_file {
-> =C2=A0#define DMA_BUF_SET_NAME_B	_IOW(DMA_BUF_BASE, 1, __u64)
-> =C2=A0#define DMA_BUF_IOCTL_EXPORT_SYNC_FILE	_IOWR(DMA_BUF_BASE, 2,
-> struct dma_buf_export_sync_file)
-> =C2=A0#define DMA_BUF_IOCTL_IMPORT_SYNC_FILE	_IOW(DMA_BUF_BASE, 3, struct
-> dma_buf_import_sync_file)
-> +#define DMA_BUF_IOCTL_XFER_CHARGE	_IOW(DMA_BUF_BASE, 4, struct
-> dma_buf_transfer_charge)
-> =C2=A0
-> =C2=A0#endif
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 17fdefc56b97..3e717b5663c8 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5752,6 +5752,48 @@ void mem_cgroup_cancel_dmabuf(struct
-> mem_cgroup *memcg, unsigned int nr_pages)
-> =C2=A0}
-> =C2=A0EXPORT_SYMBOL_GPL(mem_cgroup_cancel_dmabuf);
-> =C2=A0
-> +/**
-> + * mem_cgroup_transfer_charge - move a charge between memcgs
-> + * @ptr_memcg: pointer to the memcg to transfer from
-> + * @new_memcg: target memcg; caller must hold a reference
-> + * @item: stat counter to adjust
-> + * @nr_pages: number of pages to transfer
-> + *
-> + * Transfers @nr_pages of charge from *@ptr_memcg to @new_memcg and,
-> on
-> + * success, stores @new_memcg in *@ptr_memcg.
-> + *
-> + * Updates to *@ptr_memcg must be serialized by the caller.
-> + * Returns %true on success, %false if the charge against @new_memcg
-> + * failed.
-> + */
-> +bool mem_cgroup_transfer_charge(struct mem_cgroup **ptr_memcg,
-> +				struct mem_cgroup *new_memcg,
-> +				enum memcg_stat_item item,
-> +				unsigned int nr_pages)
-> +{
-> +	struct mem_cgroup *old_memcg =3D *ptr_memcg;
-> +
-> +	if (!new_memcg || mem_cgroup_disabled())
-> +		return true;
-> +
-> +	if (try_charge(new_memcg, GFP_KERNEL, nr_pages))
-> +		return false;
-> +
-> +	mod_memcg_state(new_memcg, item, nr_pages);
-> +	css_get(&new_memcg->css);
-> +	*ptr_memcg =3D new_memcg;
-> +
-> +	if (old_memcg) {
-> +		/* Uncharge old cgroup */
-> +		mod_memcg_state(old_memcg, item, -nr_pages);
-> +		if (!mem_cgroup_is_root(old_memcg))
-> +			refill_stock(old_memcg, nr_pages);
-> +		mem_cgroup_put(old_memcg);
-> +	}
-> +
-> +	return true;
-> +}
 
-=20
-This has the same lifetime issue as patch 1. After a transfer, the
-buffer pins new_memcg until it is released, and with cross-process
-transfers the target may be removed before the
-buffer is. Since this helper is meant to be reused by other subsystems,
-would it be better to have it take and store an obj_cgroup from the
-start?
+This looks good to me.
+
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+
+BTW, this and other patches are actually cgroup/cpuset domain, so we
+will need to ping Tejun, Waiman and others at some point (if they are
+not looking at this already :).
 
 Thanks,
-Thomas
+Juri
 
-
-> +
-> =C2=A0/**
-> =C2=A0 * mem_cgroup_uncharge_dmabuf - uncharge a dma-buf from its memcg
-> =C2=A0 * @dmabuf: buffer to uncharge
