@@ -1,100 +1,124 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794456874;
-	b=FpFolRMwVpvKGNKz05I0ijbJrzzSddn2AZ4DjYxOhPqSHyLGGFCswtH+nGMH8u4pCI1+
-	 VOlPJg4lNF7KHnf1BrsbHl2HTpcpOrhbN76qTd84pyJg0qL5Shs0tn6zZOK8rPs9IAwei
-	 08Sd5uQlxjFOqjGcc/5h1J4wqtKIl/dGLXlhihvEKXVgUfs95w5RvAZ+aUiPbb9H5LUrh
-	 0lvecQ1AShD/Hi8FHp8+544u9XCFCvxQkrhQ1kr/ovZd6D9SNL6h18cVQ1L9wZVTkbQkL
-	 5tGhcbN7CAzRBAGaBAsmNT7NC0JJEJHGNVcysxQKaNLYnIwjEFy9zVL40RrihAzJwHw==
+	t=1794465661;
+	b=5ReMS2uZJLvW3/WcaPx4IGr3Vj1hf0Q03rOhjnu341aXucY5FkjsvvwHUSZnjw1ConNc
+	 jr9CVqReUvtPh45g+qHJ5S84shLdEY7IZf68yz7Yzd8exZY66aczdf/HL0qaqc9nMAwoZ
+	 iCT9INIsjapVVfS08oCHF47L8CL5Gm2nLbHLEo4I1TA3vib4CZoT72L50x/maZfqOB8eZ
+	 bg2Dy7I4sNYiEq7EBaWOuDS3+ZlFk2BtQG5ni/euwIs1T+/6EH6lgxsAmC2F6ob94RTPE
+	 urEWnJ1xXQZBBxddcLZy/E3pa0aIgoAt/NHNvtHahveNChsHN3fWKJBoslYG0TrrLMw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794456874;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=P0qgmrxWcWb/JksWnHKqO69AaEHX+kvzj5Qtlp7QKxg=;
-	b=FB4iZ5guBa+Ib95PpmrH5zBdB6L89VlzN2BYqBxX9Dnqe63hf1I4db6xk7xAXULL6vlP
-	 WeFp/Hiz8Z06+355zafCVRckbeKGbTw3KCru+wh6/boAVvmJN7Bshbkq/u5kdvID8k/R+
-	 MUma62P6J450q+a2pr30yCPoslF/b1yAEVA3wtdv/DSnfRMUmsBnCe9I6GRFnMb0m6QRT
-	 UxyhVh3h867MXHPPb+4YrUTOH6qf8MAbKi5KW24I6Yy0vyEQ/WuI5gl5SqrpxBibisxBY
-	 EhBURJHzdvjDETysi3KtAMGD8alS78S2DOdOnbIj04ToMvJEnKfZ2bhEX1QlUddHzjQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794465661;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
+	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
+	bh=8vDJ3Ou7xzCxze/52XPwkTIU2JyVZ1LI+BGZWXtekYc=;
+	b=ScbJt6kGrZmsqJAtLC2k8a8TiLS7X6sCIvcF+RjMP4g6bXUmOEMCqzrP8FDVd+7dPD3J
+	 sqwZCOmInd6A0oJCPY+RrGSJAKEvQpnF/vw65nJjDpx9RDHXHD/LKpUsdun7H41Oavi7S
+	 joTiZCobAaXlxlDyYH85H5ZiWuuH917t4KVs2s+Gw2ZtMnjhaXQ4GAgVSBfdVBGWpExDr
+	 pQ0c7fMf6z3MAzbRA0mn4LTqSyqYLk7qHXeiI59GaC+5vzxwbf29TaNoXb1EHWMHlYO44
+	 ksdccZtltP7doxDhIn3nc6DnqzBNC/vNzyenztXFveWFbAwZ9rO5uZkZFT/mhdMntYQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=shopee.com;
-	spf=pass smtp.mailfrom=shopee.com;
-	dkim=pass header.d=shopee.com header.i=@shopee.com header.a=rsa-sha256 header.s=shopee.com header.b=BnefFp7f;
-	arc=none smtp.remote-ip=209.85.216.45
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=OyPZjAqe;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=ZtPfFQBc;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EECDB606A321
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 04:14:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EECDB606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=shopee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shopee.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC549606A31C
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 06:40:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AC549606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=shopee.com header.i=@shopee.com header.a=rsa-sha256 header.s=shopee.com header.b=BnefFp7f
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-3b10ca4e3f9so2173968a91.0
-        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 20:14:33 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=OyPZjAqe;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=ZtPfFQBc
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794465658;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8vDJ3Ou7xzCxze/52XPwkTIU2JyVZ1LI+BGZWXtekYc=;
+	b=OyPZjAqeZ4C295wMwuJ91saWYjokVhEHzfEaMFdy3a1GVeo46kGVTjH86hEV3hDoZQvNQS
+	f4MMCSztRPT0yXDBdTZKHOfCj0nEQMiPNuVwRh+LEmhWgmMyC6BH3D13IymFFLXK0tbcVH
+	9xDTCKvMtgvhmRyv+TO9THOEQATIA10=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-359-lgl4Ia8YMCWOb9h_2IG3tg-1; Thu, 12 Nov 2026 01:40:57 -0500
+X-MC-Unique: lgl4Ia8YMCWOb9h_2IG3tg-1
+X-Mimecast-MFC-AGG-ID: lgl4Ia8YMCWOb9h_2IG3tg_1794465656
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-4902ce85f72so3021107f8f.2
+        for <cgroups@vger.kernel.org>; Wed, 11 Nov 2026 22:40:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1794456873; x=1795061673; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=P0qgmrxWcWb/JksWnHKqO69AaEHX+kvzj5Qtlp7QKxg=;
-        b=BnefFp7fEaefuztJEvVHtLXepmApEfi/9by6urloQN6Qu7KZmIj4rvSs5W2n4699PV
-         O0uDtEPA0Qjh8XFv4tzc/HRWgvM9j6kTwqblWzWXTK8QcTGCGtINI+FacZ3QZaUswnFj
-         Ssi8HqC8Mnu9EN8DjgEUSMKFvbYMDdyNG5m60kLa3A/Xvv9x02bBgwtVUhMGvVdvT0po
-         E7GCnGZrF9v86RdOihFm/oE90FWSJ4j+4P+DzuLkm2ba7SxEYkTN0njN0rIBvlMKRiFc
-         KZCRClgfIhGyi1nfp4wm7wCPVkQRKXIHakLY0v6wfjJe3TB1VIXtQqNMt61mYsonKp2o
-         kUKg==
+        d=redhat.com; s=google; t=1794465656; x=1795070456; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=8vDJ3Ou7xzCxze/52XPwkTIU2JyVZ1LI+BGZWXtekYc=;
+        b=ZtPfFQBcpCF6197DbyyHLCxXyaVxz/UY4xcVByKJ74+PW7vqdZZNX1Z1hLEUok9+xZ
+         wnih+IBWhwWc/U1wNZYdnAYhsLDQw78ZsdaFXPNuB+MSXUJN3NhImiCuOBgYXPaIxqFf
+         +LfhmRZW62+yI6InGwr7JNWhZHGgGIuf9DEqZ9doz61ssCiK9+BahMHs8rJn1HNrdcfR
+         CfLuzCANLGo5LiGEW3rE7OitiigUkOAwWpED/2QgA1BAGGs85OqaU6LKhZPjoy2lg8tF
+         XB8cPijK1cS4ZXfcH0iteD8Ccv3CwriOrVvH7sfq6yfW4wTZenmKfQsJ9LMcpTIoZVTV
+         HD8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794456873; x=1795061673;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=P0qgmrxWcWb/JksWnHKqO69AaEHX+kvzj5Qtlp7QKxg=;
-        b=G1P94qFd0XlwHKTUCFWHiVw9xaoW8eBh4peWyx0OrY0AyBaRhiOvzOKk/8kd7XkY9z
-         QUpGiW5q21BLxt8GYh6dFm9TZHL1h+KIkBz4BI9bVWSdlHabtlMCPE3XjE0O6tFNA2f1
-         oleNSJQSwmSoT3qHOUi5pfD10Mqo/zxFWNlr5yZXVHzZzJ/UKyteFDQgSjEx9UxdDSj/
-         bm+qvu32wDhrYlpSvcvM3XYBPaL5BVMDQTjvks1p6WzLfphTiPMveQQ9RLhZnX/xOZMB
-         nzNbVbdu0t1LlwkjgFApPvHjBuNLV8Aqoy3fxcscGy/RpXMvjz3iUd5ki/3arx0Qijy8
-         Trdg==
-X-Forwarded-Encrypted: i=1; AL+hErHZLY6IWVvkNzQ6MHgbefODJKNt53hnv5JGNDqooaFGXxoAkbApR6A1ae6YUeefF1ogvivSMiDk@vger.kernel.org
-X-Gm-Message-State: APuU4Z9H5t+xKuhWx2p5qJywQdSBoNPr+d6a07N1EqIsbYMnSh4rmTX/
-	F4iy1Whg477tYotgMgcmJX6GtK9T5TuXYkP3cq6nHOmVRdKMFkgKtrVDcCJKuB49uh8=
-X-Gm-Gg: AYBFou2jsnfAQJdQOYkbYn57n2jqrSrOMw8xaB9PoDqA8hLO0iUzx0E+jH/QjaalTg0
-	ZxT6wVaM4RANE6VX+I2K8m5sFPKjcrUtJPGJ6mbjZkdWt3Nw22oXxGIbA8yUY9zgoaqHno1BvFy
-	3kTPQYdSb71fFObYHCrCVYfQRlutylO1+42WQy55TtKieNQMPQ9kBbDobsTS/2gn8PeWVMN05YB
-	f8Ld3PyuhUXDqM1XqLNpw00i9iG5MTVoBVeC969jsPfKQHqavDljS3ZYNJE+72z/buVR+YjoXpx
-	9GprKNttzKZgiu2f4VMLCWnM2H6Z4jcRwfs40xITMW8RlS/csZdaYMHDzp3GUvlTcM8JEF466oH
-	aMQwrn8JzBTr8uXAil8vs1M0VbNGbCEssEkYoCPhCFGj/M6/EGm0Waoh0FU3H7qkDV6n2ylM2N+
-	x6T/Q3gCvJc1dJKhQHcNurg06I0cXLaB6mRubCiq1K10mmH2CVMujgj+TnPfJLVIJBxZe+WI1w3
-	KQOSYVS9TL/nsFtLkGY5pp+PRpVbB4XbLuiznan/45GVBTzy/nugOW71iipI4XMImMQHywKs2rh
-	nCJEgNsn6GNgCa75PSAGQudBpyDxzMMllvmhjsQzPf5Z7MXQgpye+0emoIO7N5R2jo1c2YMnjoB
-	QohOUdRJiv7OAJtU=
-X-Received: by 2002:a17:90b:1e47:b0:3ad:818f:3da2 with SMTP id 98e67ed59e1d1-3b182fcd7b0mr3552008a91.63.1794456873292;
-        Wed, 11 Nov 2026 20:14:33 -0800 (PST)
-Received: from LPMV6FJ9FM.cn.corp.seagroup.com ([143.92.118.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b182de1dafsm3451131a91.3.2026.11.11.20.14.29
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 11 Nov 2026 20:14:32 -0800 (PST)
-From: Runli <mingyu.he@shopee.com>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	linux-mm@kvack.org
-Cc: Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Yosry Ahmed <yosry@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	littleswimmingwhale@gmail.com,
-	Runli <mingyu.he@shopee.com>
-Subject: [PATCH v3] mm/bpf: Always flush memcg stats when explicitly requested
-Date: Thu, 12 Nov 2026 12:13:48 +0800
-Message-Id: <20261112041348.66915-1-mingyu.he@shopee.com>
-X-Mailer: git-send-email 2.39.2 (Apple Git-143)
+        d=1e100.net; s=20260707; t=1794465656; x=1795070456;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=8vDJ3Ou7xzCxze/52XPwkTIU2JyVZ1LI+BGZWXtekYc=;
+        b=M0sOmMS0ZnLlhpFcVZ/rffh9bhPYtEG9GIIQSebLVJzffo5NqMRMb4pnM27qy+yLHN
+         +uyPUEom/B9KHLYF1NAi0IxwLGTDZGMfg/GhvuUfcydkIWUQpwo6Xh0K1gXY0UepTRcT
+         W/fVbrD+rYseDhNFTridrtT29XPZtWFXB4GaGeLt/AfJm24c/DX3LjuX8JpsnndX6CY1
+         7Gpbv4Znj+xdc1JXIzl7wb6/ca5yuQZ30RgNbApU/72i3dBn6lBzg3X27hAdvobfrvgr
+         xX6uXCDAJv8aibjqoWaiFt45vCAqiJKkCYvgE52QT943sGgp0v0TS79EXIQiaR6EEna/
+         x2TA==
+X-Forwarded-Encrypted: i=1; AL+hErFdV6sYy8Tj+KZSkhgLYQAXZfgBXcR+DGDk2wTlNYzAj076OUKZrD7cD8IACYHiq3Ao5PlYhAtB@vger.kernel.org
+X-Gm-Message-State: APuU4Z+aYxIyXdHdTe4jW1apT/fskmn5RjKrgA/N1LtCRqlj1WLU6eS/
+	xtaVUzWuPKisKrsgydMjHmi7Xly7MA1X+SykS2TNZPvOimhrBsBGf4aWeneknxs2/TfYLnGat8d
+	ukwcZ9rWBjW4eSTmd3/xKvH04Ep2qbUmmvLHTjfaoKTo8aY1TvAAVCiAq1tU=
+X-Gm-Gg: AYBFou2T5UUrzFxwTUs1MfaXHsdkrX5Thl+fv7Z7IJ4buuzTDZ4o++O+2GvNUtqGHla
+	+y4kc/vowSkV1QpOiFxt+DxtzgA1O+MJFDuaoOFIbLBSczzTfSj7WSjjjVsGUBRXsnqFMeRXPq2
+	YZPFF060W+Xe6RxdmBLLRak++45JhjNeheByvxHSeO/oFIrDr2Sv9gJcZU72ijjeHap6yrypEPv
+	tDDEwf4vqtVEMilulnC2KMwdr00RK6lgWBH1N9N1Ym3D1R9bZ19tMlD8bizldbA8fDOcz6S4hlN
+	yivYnpKF/FgMuwRhUe8ZtDtM/oGApmpCkc2rIQMP/baSFHOd/oefw9/1F/8t1ViDBKgS3MBzOQj
+	5zQOfEZ8s+jJ7LpwxIEQ/YXJw+V2rKanpFNd/agMFKHv29f1HsUU8BHwESOEYs4YQ6bEiSM49tu
+	00DqE=
+X-Received: by 2002:a5d:6f16:0:b0:491:6b1b:7f25 with SMTP id ffacd0b85a97d-499c792ec97mr7218179f8f.45.1794465656004;
+        Wed, 11 Nov 2026 22:40:56 -0800 (PST)
+X-Received: by 2002:a5d:6f16:0:b0:491:6b1b:7f25 with SMTP id ffacd0b85a97d-499c792ec97mr7218131f8f.45.1794465655658;
+        Wed, 11 Nov 2026 22:40:55 -0800 (PST)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49835d2bf91sm15226028f8f.23.2026.11.11.22.40.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Nov 2026 22:40:54 -0800 (PST)
+Date: Thu, 12 Nov 2026 07:40:52 +0100
+From: Juri Lelli <juri.lelli@redhat.com>
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
+	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
+	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org, longman@redhat.com,
+	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
+	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
+	clrkwllms@kernel.org, parri.andrea@gmail.com,
+	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v5 17/29] sched/deadline: Leave a dying task out of a
+ rebuild of the accounting
+Message-ID: <avVfdI8NRaLN0ZHH@jlelli-thinkpadt14gen4.remote.csb>
+References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
+ <20261108185406.1549770-18-mathieu.desnoyers@efficios.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,130 +128,73 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261108185406.1549770-18-mathieu.desnoyers@efficios.com>
 
-memcg_rstat_updated() stops walking the ancestors when a memcg exceeds
-the flush threshold. A concurrent flush can leave an ancestor below the
-threshold, so the early exit prevents it from receiving further updates.
+Hello,
 
-Consider root and leaf on a 4-CPU system, with a threshold of 256.
-CPU 0 is flushing another CPU's stats after CPU 1's stats have already
-been flushed. The counts below are shared stats_updates counters:
+On 08/11/26 13:53, Mathieu Desnoyers wrote:
+> A rebuild of the root domains' accounting takes the pi_lock of each
+> deadline task, not its rq lock. A dying task past its 0-lag time
+> releases its bandwidth at its last schedule. It holds its rq lock there,
+> not its pi_lock. Then it clears dl_bw. The rebuild can find the task
+> between the two steps.
+> 
+> In this diagram, T is a deadline task that exits on CPU 0 past its 0-lag
+> time. bw is its dl_bw. CPU 1 rebuilds the accounting:
+> 
+>   CPU 0 (T)                                  CPU 1 (rebuild)
+> 
+>   do_task_dead(): TASK_DEAD, under pi_lock
+>   __schedule(): T's rq lock taken
+>     task_non_contending(T)
+>       dl_task_release_bw(T)
+>         total_bw -= bw
+>         dl_bw_gen recorded
+>         record cleared
+>                                              dl_rebuild_rd_accounting()
+>                                                dl_clear_root_domains()
+>                                                  dl_bw_gen++
+>                                                  total_bw reset
+>                                                dl_add_task_root_domain(T)
+>                                                  T's pi_lock taken
+>                                                  dl_bw != 0, dl_bw_gen old
+>                                                  total_bw += bw
+>       __dl_clear_params(T): dl_bw = 0
+> 
+> dl_bw_gen does not help, since the release came before the rebuild. The
+> rebuild would count a bandwidth that nothing releases again. The root
+> domain would then refuse deadline tasks it has room for, until the next
+> rebuild.
+> 
+> Fix this with the record of the bandwidth, dl_bw_cpu. The release
+> clears it under dl_departed_lock, which the walk holds. So leave out a
+> dead task with no record. A dead task with a record has not reached its
+> last schedule. The walk counts it as a live task. That schedule then
+> releases the bandwidth, or puts the task on the departed list. A dead
+> task on the departed list keeps its bandwidth until its timer, and the
+> rebuild counts it as before.
+> 
+> The Sashiko AI review of v2 of this series found this window. Its review
+> of v4 found a gap in the first version of this fix. That version also
+> left out a task between TASK_DEAD and its last schedule, with its 0-lag
+> time ahead.
+> 
+> Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
 
-  CPU 0 (root flush)                CPU 1 (leaf updates)
-  ------------------               --------------------
-  clear leaf->stats_updates
-                                   add 64 to leaf and root
-  clear root->stats_updates
-  finish flush
-                                   leaf = 64, root = 0
-                                   4 more batches of 64:
-                                     leaf = 320, root = 256
-                                   next update:
-                                     leaf > threshold
-                                     break; root is not updated
+It's kind of minor, but I'm not sure the above Fixes is right. This
+patch alone can't be applied to fix the referenced commit, it needs the
+(at least 2?) preceeding patches.
 
-Root remains at the threshold, which is insufficient to trigger a flush,
-while further leaf updates keep taking the early exit. The periodic
-forced flush restores progress, but until then the root's aggregated
-statistics can fall far behind. For example, page cache grows at rate of
-1 GiB/s, a two-second wait can leave the reported usage about 2 GiB below
-the actual usage.
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> ---
 
-Make bpf_mem_cgroup_flush_stats() force a flush without waiting for the
-periodic flusher, while preserving the memcg flush bookkeeping.
+Other than that,
 
-Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
-Link: https://lore.kernel.org/all/avKy9oMwDRjKjfzm@linux.dev/
-Signed-off-by: Runli <mingyu.he@shopee.com>
----
-Changes since v2:
-- Add mem_cgroup_flush_stats_force() and use it in the BPF kfunc to
-  preserve the memcg flush bookkeeping.
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 
-v2: https://lore.kernel.org/all/20261111071434.34547-1-mingyu.he@shopee.com/
-
-Changes since v1:
-- Make the BPF kfunc flush unconditionally, as suggested by Shakeel.
-- Leave memcg_rstat_updated() unchanged.
-
-v1: https://lore.kernel.org/all/20260911032905.63683-1-mingyu.he@shopee.com/
-
- include/linux/memcontrol.h |  5 +++++
- mm/bpf_memcontrol.c        |  5 +++--
- mm/memcontrol.c            | 17 +++++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 69e1bcc67c58..e4131a368d8c 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -988,6 +988,7 @@ void mod_memcg_lruvec_state(struct lruvec *lruvec,
- 			    enum node_stat_item idx, int val);
- 
- void mem_cgroup_flush_stats(struct mem_cgroup *memcg);
-+void mem_cgroup_flush_stats_force(struct mem_cgroup *memcg);
- void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg);
- 
- void mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val);
-@@ -1464,6 +1465,10 @@ static inline void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
- {
- }
- 
-+static inline void mem_cgroup_flush_stats_force(struct mem_cgroup *memcg)
-+{
-+}
-+
- static inline void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg)
- {
- }
-diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
-index d8f579c28560..f04be9479e38 100644
---- a/mm/bpf_memcontrol.c
-+++ b/mm/bpf_memcontrol.c
-@@ -154,11 +154,12 @@ __bpf_kfunc unsigned long bpf_mem_cgroup_page_state(struct mem_cgroup *memcg, in
-  * bpf_mem_cgroup_flush_stats - Flush memory cgroup's statistics
-  * @memcg: memory cgroup
-  *
-- * Propagate memory cgroup's statistics up the cgroup tree.
-+ * Flush the memory cgroup subtree and propagate its statistics up the cgroup
-+ * tree, regardless of the number of pending updates.
-  */
- __bpf_kfunc void bpf_mem_cgroup_flush_stats(struct mem_cgroup *memcg)
- {
--	mem_cgroup_flush_stats(memcg);
-+	mem_cgroup_flush_stats_force(memcg);
- }
- 
- /**
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 84f4a8fd4d16..0057e0ab5a45 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -824,6 +824,23 @@ void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
- 	__mem_cgroup_flush_stats(memcg, false);
- }
- 
-+/**
-+ * mem_cgroup_flush_stats_force - unconditionally flush memory cgroup statistics
-+ * @memcg: root of the subtree to flush, or NULL for the root memory cgroup
-+ *
-+ * Flush the statistics regardless of the number of pending updates.
-+ */
-+void mem_cgroup_flush_stats_force(struct mem_cgroup *memcg)
-+{
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	if (!memcg)
-+		memcg = root_mem_cgroup;
-+
-+	__mem_cgroup_flush_stats(memcg, true);
-+}
-+
- void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg)
- {
- 	/* Only flush if the periodic flusher is one full cycle late */
--- 
-2.39.2 (Apple Git-143)
+Thanks,
+Juri
 
