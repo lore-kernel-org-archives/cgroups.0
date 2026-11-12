@@ -1,100 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.179
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794496865;
-	b=PO2o9I9wk8EJMcgj87B29+yjaUat07qDnUfdF0sIZ3q8PzbKK4IJEHh2BbsAC9KH03Tl
-	 gmxbmZ86ofnt5RI68/PEdLbpQRQKrvODRQvigZFpeslvuXUSwXnvTZ1FNFV6bGr2+OFRL
-	 xLH7kC6vyh260BOmDAZQuZTEWgaHSOn0YgBor2tiIPsFcSCyr3vQDl8uMy4KC9ome7okZ
-	 XbeVQ14SRVyaRCI278JZCp/q1NBp/NrGryAG+A/hKsw94DjjcaYnHCbtdEKpYzvSxL2ux
-	 bcxAUWhL8lM8eWlscyce43yOTUtQ/K5eTcL0kkIhtco8o8l1vuZ8VwZOW212rUyxZ+g==
+	t=1794497092;
+	b=wbSqDihNvO06KZt2gqOQWrQsldsO2sIxu5JpcKsRUlwubQbP0qN8wuJo3GZG9eztFnLk
+	 7cEXxGSYc1nOgGvufpOhSfdm6ouQV5bT0b3+Zti0cmwl7zz+pWEP2C9XKI5Xv9fBm8Mhg
+	 GgyyoQcgWnteSMpOFOXkE5JL2JsGm1qcyqAzebFEP03Ksyfy0VxnzzPbEWLMrnH0Xh0zg
+	 HixJiZ5E0OgBDUXKHQRmtD1aCRapxFXyDr5LJYr1SeiWb8mFV0ojs5wE7TzZXRYriMJSm
+	 EKs9K61lSINpAjHAZGrGuJq1Sq3XvSIUy6sKuRCVk8buXhOnk2Kwq+9zBslLDQmpw0A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794496865;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=GrQWj8i0KMpWLvGJmSZCRH/S1lTxVViz3a0mVq2HUbU=;
-	b=Kn6saQwbqDU28UqaakdC7WqQFPb/ROTem6BhNdYitra67Jw5VHOSTB5bFe3wDHtC6cjS
-	 2FJIPyw0zKrm59alCPcxrtz2nlxJF3DanYxwL+Ow60mqNo567JOVY/wBjtNz+LDF1lbtP
-	 b/7zKqfrN1MEYXHhES9kAJ/CaDyBBjZHQZpLhPIy9qbrNjHarZPdfQFuy6gagSFY1kq0X
-	 Hqxa0mi2SiBERW4+hkGT2gtDO8Ppip96zeE27zOTE1LwkQLTFS+KsibrYbXe/L4BSwO/q
-	 3GY1y2c01Id287LHUGfSWhUR1z3QXIcYjmfNIsW/dI+xy2qrkYCCp2brNpVURjARJEg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794497092;
+	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=juYtRRHMjWPIclkbiXs3Tnl2bycAjKMpFCBpuknhHPI=;
+	b=ORpBhs+VNFPwTAQhVoETIOsy+/r/1bcd3dK2zldBlZs4UbHRuTx6kgzAXXRlg1DDDhP/
+	 ueTrnxkgnrgAS2Zt97z/V7fByF9Y1ktSJWaMIR99Y1kcDybZ6bT49imyC9rtwMpE1deok
+	 yY1D32P34LOuyijrK+ni7wXUdQJJLGaxwLeL41/stk8NFyE8FMjj328jr2jkkaSMCIY/d
+	 CrdqWEMTTzJK9CiQhSNRN8Ig56bi/UbP8lykoYVMCfs6u3cXdg0oxeNxycYiFTwsk/We0
+	 ERPyB/U8Ze6wWOgJ9s/JsYzEeX+9YA3kQOVijJFGFqb4w+0EbrmBafnthKcU44oTNcA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=cmpxchg.org;
-	spf=pass smtp.mailfrom=cmpxchg.org;
-	dkim=pass header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=ggQnnAzW;
-	arc=none smtp.remote-ip=209.85.128.179
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linutronix.de;
+	spf=pass smtp.mailfrom=linutronix.de;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b="Qi/grySZ";
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=SH5FMWEk;
+	arc=none smtp.remote-ip=193.142.43.55
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BF5260A2607
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 15:21:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2BF5260A2607
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF94D60A2607;
+	Thu, 12 Nov 2026 15:24:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF94D60A2607
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=ggQnnAzW
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-8b32bbd39d5so36223507b3.3
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 07:21:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1794496864; x=1795101664; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=GrQWj8i0KMpWLvGJmSZCRH/S1lTxVViz3a0mVq2HUbU=;
-        b=ggQnnAzW2tUrxbYZukvFoa7FkGVSd83TsnR33Ct8XFJkRpgtyATThxwMCXzgWaKWZS
-         HmRCgD8kzAtgX1W6cJMMs8MR90/vUe65QcJtX+qH/LH76cLleMocQfmYch+ouc7RR3Ir
-         dVbMMW03JOMSXfjL4VmbLNN7t6+fKrpaoTnxJwND0GtPqGvj7KU5xWgUyeRH4pP5+1Yu
-         X+uGZEeUfEnqHOGeJEro3ajanho9vv3hMijzffpOEMrnkr9ECw7DAlsDKrPSy2y4yg1/
-         vWPwjJ8wID0yWPJIclgjKldW8bd/XmmAbnoOoYIFfX3/YWW5dyB2POUQZvs9Zl1zgKBM
-         DgqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794496864; x=1795101664;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=GrQWj8i0KMpWLvGJmSZCRH/S1lTxVViz3a0mVq2HUbU=;
-        b=a2oj6FYg4joh/8mdWt4PaOSB2DUyvG255mg5p+OS9sH4mzQ8nyivuRBzAXgnx9welw
-         wL3g1AOHkudda3O9dXVOqqVZZZaPaOSgt+n/zbFLyjgtMmpGuOCqmTlsUMZ0RROToEj/
-         8wOJRo+QHz7fKABFB6Dcz+6GkM6MEjV7BglfE8VOk4l2BnksQPICnMj6pr46+gIfAPn1
-         nIupySa70nQFXQstLjh69gQn3myVio734t11/e8bHiMECewW3tF1eXOwL6YKnmMrwGyl
-         UzYpjX6/ns/9dRDxmvxL5/VHiUVeRbLJNaozgdPq162bHTjwcfm9KdvJDc80KOPOh7WC
-         B2ww==
-X-Forwarded-Encrypted: i=1; AL+hErHu1Oeb4rRMDEhxDGFudk+sWVfe+gnpXYfYLMdR9yqzO8hBARhrah/EJg04iiDgva8VAZZjWygl@vger.kernel.org
-X-Gm-Message-State: APuU4Z90e9IPBlD/sqW8syDkr3OH8IhE2vPhRCehrBUOkKM2mIh1eQkx
-	HQgs9qm36eOknFUxgHgBmvFqPmeahVLutkUtkw+T4kmSyy4FcSzqFohJzUBromuD8rg=
-X-Gm-Gg: AYBFou3Kc27idKFFpNDIHtVfoeJKl/FkeQGJ+D0Wk5WZ0qieunGM3OYTo1aP3TUfqWH
-	Vaz1Hvwirvvg1Wzt0V7hR1Qthc2nDSyJ0Tdp4lriQdIRtlMnE/l8D5yQsz7tmkx29L5puYcKbT+
-	yThoJYE7ZtHmVcAgwzW3OjjXCokTx2udwDifv9QOJdhrGQ5M5fXVMF+3ByIDakelWAnSvrQI7CL
-	Kfi0nUXtPn7p+mX791FrYG9XcSJ8phC0yZDHhmAcDsj1rF6kCNB9iVmLTFcD8U8ZEHoPy5Anc2f
-	45MfA8s35bTFWEmB0bTgeGceZwxaLjLLYM1Vr6mJkrFteHKYnGGcNYxssnAhU07lOPGmiiEJIGC
-	WE+B27k9Ybg9Owv7e8S1Slm5/vOuB9g3iVzmpd+0IjClOFuBIE2L+SfD6rPWRVMVvG1bONS27a4
-	0AHizg2mkEDgSNhXog8Z3z+5wyazqIMHHKMK7reca+2eLZYrle6O4+g/Ruggz9fljrutxzwl0/+
-	l/RWpwJdyu5rG1VUlQztUEn5sGVFU6MwcgFT0IG7x+vsVZzfJx6tGJsx0f9uoSp8GUFH1ZIodaL
-	AVIChuLBhuyo/mtTmslB0Xkdrh5X
-X-Received: by 2002:a05:690e:1519:b0:67c:23f2:41e4 with SMTP id 956f58d0204a3-67c67ee5aecmr3870192d50.27.1794496862680;
-        Thu, 12 Nov 2026 07:21:02 -0800 (PST)
-Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67c58a0f312sm7504466d50.19.2026.11.12.07.21.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 07:21:00 -0800 (PST)
-Date: Thu, 12 Nov 2026 10:21:00 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	Chris Mason <mason@kernel.org>, stable@vger.kernel.org
-Subject: Re: [PATCH] memcg: flush nr_charged_bytes when the obj stock trylock
- fails
-Message-ID: <avXZXMp_r5VVXS-W@cmpxchg.org>
-References: <20261112013220.4064478-1-shakeel.butt@linux.dev>
+	dkim=pass (2048-bit key, unprotected) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=Qi/grySZ;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=SH5FMWEk
+Date: Thu, 12 Nov 2026 16:24:46 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1794497089;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=juYtRRHMjWPIclkbiXs3Tnl2bycAjKMpFCBpuknhHPI=;
+	b=Qi/grySZIrRaJ93RA5uI25BI6KfrQnUqAtF6Rf7+aMLx4D00SHjpJbLmo+BctsMkzDKGgL
+	hDMTia9tb7LorDmWBS4gloetNGV4wW7/uDabrX4VEPJnKzynlAYptW/7ZxvA/ygwiFmdDz
+	cSyvas609NCTBG4GZz3i8gafGomgy1iRG87rsG2GeTNwqC6H5zQqCc7XurQ5MUeM8pc8xE
+	NtD6HCFPbdmnqWKXPf9YciRRZAW/1ap1CgsUjkeEe67YhAv6F7tADD3NUhvKf5nNUr3/5V
+	IkRTw1aZxjFvN37fpJrqLxZWHqogT+IuG6DFgT9C1BY1LWTw3mylQ5IjSzfLig==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1794497089;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=juYtRRHMjWPIclkbiXs3Tnl2bycAjKMpFCBpuknhHPI=;
+	b=SH5FMWEkY6wITOgzqZep0yejRfNPKqDYkaqq1NL0VbdxIhYTQWxNJRVzf7bmTACRuyINwU
+	Y1YAjO4K7KsRRxCw==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: "Paul E. McKenney" <paulmck@kernel.org>, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, rcu@vger.kernel.org,
+	linux-doc@vger.kernel.org, John Ogness <john.ogness@linutronix.de>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	luca abeni <luca.abeni@santannapisa.it>,
+	Yuri Andriaccio <yurand2000@gmail.com>,
+	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
+	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
+	Qais Yousef <qyousef@layalina.io>
+Subject: Re: [PATCH v2 0/7] sched: RT throttling cleanup and a bit of
+ documentation
+Message-ID: <20261112152446.r1FzXVCR@linutronix.de>
+References: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
+ <c2bf89ce-b9de-43cf-839b-395d28b2275c@paulmck-laptop>
+ <avXUstjABxdTZaxM@jlelli-thinkpadt14gen4.remote.csb>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,29 +100,29 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20261112013220.4064478-1-shakeel.butt@linux.dev>
+In-Reply-To: <avXUstjABxdTZaxM@jlelli-thinkpadt14gen4.remote.csb>
 
-On Wed, Nov 11, 2026 at 05:32:20PM -0800, Shakeel Butt wrote:
-> When interrupt code, such as an RCU callback in softirq, runs on top of
-> a task that holds the obj stock lock, its trylock fails and the bytes go
-> to objcg->nr_charged_bytes. Nothing empties that counter while every CPU
-> using the objcg keeps it in its stock, so it can grow without limit.
-> 
-> Users see memory.current and the "kernel" field of memory.stat keep
-> growing while the cgroup's real usage does not. With memory.high or
-> memory.max set, the cgroup is reclaimed, throttled or even OOM-killed
-> for memory it does not use. The counter is 32-bit, so after 4 GiB it
-> wraps, and those 4 GiB stay charged to the cgroup and its ancestors
-> until reboot, even after the cgroup is removed.
-> 
-> Fix it by uncharging the whole pages in nr_charged_bytes whenever the
-> trylock fails.
-> 
-> Fixes: 200577f69f29 ("memcg: objcg stock trylock without irq disabling")
-> Reported-by: Chris Mason <mason@kernel.org>
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Cc: stable@vger.kernel.org
+On 2026-11-12 16:01:06 [+0100], Juri Lelli wrote:
+> Hello,
+Hi,
 
-Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
+> I wonder if this fixes is
+> 
+> https://lore.kernel.org/lkml/20261108185406.1549770-6-mathieu.desnoyers@efficios.com/
+
+Looks like it.
+I delayed the update to the thread which runs on the CPU and replaced
+the cpu_online() check with cpu_active(). It still aborts if it is not
+up. The other alternative is to skip sched_init_dl_servers() with
+RCU_TORTURE built-in.
+
+Side note: If you boot a 4 CPU system with maxcpus=2 then CPU 2+3 is
+offline. You can online them manually. sched_init_dl_servers() will not
+initialise them.
+
+> Thanks,
+> Juri
+
+Sebastian
