@@ -1,80 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.184
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794504484;
-	b=sAA3hkkA/mHra/geWXIw+/IpVOT03e8lInyMkDNd7Ur4PGGwaYMsy/BNpH6Fv5hDPFW7
-	 xBGZfUQnRb9o9CGrNBVM78ItaXJjJ68iv5QSVDjsPEAziEeYPSpMlMBrdasZFMcurzYKx
-	 XKPYSLQpOooA6g30EylDcg3H9ddOv+Dt+3IrQLnkZ9AB5AiK2S69eazGuG8CCZ4gA5SSf
-	 DW6ymiX66+KqeWADnyUGS0MfHHN5AdNa3zLa52UJh9GhO3OQfaOC5U1A2sXOerW3nFd8T
-	 TmPjAFQSxdxPAl8zVb5s6rmPILrep22MEO1CvuOGPNCf8tSv+bxr+ioABzw5586cQXg==
+	t=1794510906;
+	b=uQ4i4hDcBAsqmFYZ6C+gqpZLoYxS7Qs4rYkrHhd31XVpmDXWEXED006mg71iA79k75fq
+	 gXMFYHUzl0SRh2FZlRCYHKXVWKXrBtX3bs7X3nSIkEpoPDFav+f19T0y1dj4mhCaqoAMF
+	 YVOq8HUFsGrv/2bIiqLJbvmux4FooJ1PAYIpEUtSqDAQZXu9wkcxIoi3h/2urSv68p7Gx
+	 dUckbL3vi/ytsDU7uhB40qCNnyg5JzfiT/sznRSQzVk0zHtnVtfT1HQcnfn2FBkljfM00
+	 jWe+XfWkT+JyROQiyRa4c/6+CJXa7uVNLy9WMkXQZ/XiYyPLRfiXRhAsRPhHVWVHOAA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794504484;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=FclGLhWBTBuoPY0ZcoiAtTfjT5JxlUe1eeWPx4ix/ww=;
-	b=OIjLV1GfltFM8A6mqJ0+8rI0mjDnRIXqJJPYJhSmr2VMfYd7IWIsPhSLNW2ACoSK+M2Z
-	 7kVOvlbcC0j42XUVjZfRz1tfS6GPvgcWmgPQ7ARJ61p27y+gULMs4AnfQFoOMgkGtfn/h
-	 En3SVgwTlpAWPR63ZK/ugsPxR59EkgCwI67zRa4HVNaKe8X56I+Wd1u1UlvHdkOhxe+PJ
-	 FpAgxnJuLTquK6U4Izq/XkF6Yjortb+N0PVB2fkHtAxHD5fZWUO3Aqe1taKkWAWN+sw33
-	 Ah6kYNFszBCBGT1UO6iM9R4BIosQiHb15SQOCEbgN62zMUsFH/ZR+luG4v8UnocRuPA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794510906;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
+	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
+	bh=AuWvJV0EsxvzRXPJHEpd6FhQCGPsTzgWcoVXOl1hzJY=;
+	b=PsFtdqM1djOgy1mCUFwkK+KGNZmCJXwyvTJXhP8i7qVDmh111IBQHpX9klF9NE02CTx6
+	 AKClxi9y2KmOh//aTuwmPO7d8EbKeypVm19xsQmZeNC5K8hQ7QmCw8QG1ojA/PNdemvN3
+	 yS8GHrfvJxGr77JxYh0mO1MAY0iUFNB/8rZX19dsLOQIIOapX0Q3RRX/U0fECTDszI72f
+	 deHP6HDfe6dZeK8gNzHO5wGa+0OxjhfcETEt26FVHYS1xSCBGI6dHZF1ipjrVmVIM+DYN
+	 6/mKlwZ1AqsTLmCRQAjtwBf9SJ2qvve5Z/ahnBa0LrVMKUN3f4tX/bd9a/50N7CfHwQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="Xzu/3aCs";
-	arc=none smtp.remote-ip=95.215.58.184
-Received: from mta1.migadu.com (out-184.mta1.migadu.com [95.215.58.184])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=HNQzUMKV;
+	arc=none smtp.remote-ip=170.10.129.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB00760A5BCA
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 17:28:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB00760A5BCA
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE0E5606A333
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 19:15:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BE0E5606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Xzu/3aCs
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=reZCo5E7Rk3bQbCaPizi+yCP2wpim2UFM4B+RH4gf6Y=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794504481; v=1; x=1795109281;
- b=Xzu/3aCs3sevUpeF7wTtDkEt1VK5v5ISGrzmb/i7xG1a6TrTkLRt2434KJUCocoS53BBSOaJ
- kln9TDL4txGUVul2tNZEryDFX5kvibWaZyZOZ37NEpJ5w7J2o3PK42pZff/BN7kGvGLIhK4/ZD1
- RWxcBN4XYguqkQvMIJWXMyoY=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id e7680352f479124f;
-	Thu, 12 Nov 2026 17:28:00 +0000
-X-Mizu-Trace-ID: e7680352f479124f
-X-Migadu-Flow: FLOW_OUT
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: bpf@vger.kernel.org
-Cc: Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Martin KaFai Lau <martin.lau@linux.dev>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	John Fastabend <john.fastabend@gmail.com>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Ihor Solodrai <ihor.solodrai@linux.dev>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Amery Hung <ameryhung@gmail.com>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Meta kernel team <kernel-team@meta.com>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH bpf-next 3/3] bpf, cgroup: Protect cgroup_bpf state with its own mutex
-Date: Thu, 12 Nov 2026 09:27:15 -0800
-Message-ID: <20261112172721.440275-4-shakeel.butt@linux.dev>
-X-Mailer: git-send-email 2.53.0
-In-Reply-To: <20261112172721.440275-1-shakeel.butt@linux.dev>
-References: <20261112172721.440275-1-shakeel.butt@linux.dev>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=HNQzUMKV
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1794510905;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AuWvJV0EsxvzRXPJHEpd6FhQCGPsTzgWcoVXOl1hzJY=;
+	b=HNQzUMKV4NcC/mtqJqYE4ev1MCYMDwrEa1Cj/zTXD8BQEa75vcHkGaqbVPekQ1LL6D05F6
+	l2rBxcE9+pSSWFVeI8wVXP1VEDSXNTC4dfNhVqXT/tSZ5FNYUpdSQlOmZZwezJhrnHXIo9
+	fXNV4kabqpeKJBM8ZoFQEmnMIoPd+iY=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-433-a-p1hkAtPsutLLgGfAr03Q-1; Thu,
+ 12 Nov 2026 14:14:58 -0500
+X-MC-Unique: a-p1hkAtPsutLLgGfAr03Q-1
+X-Mimecast-MFC-AGG-ID: a-p1hkAtPsutLLgGfAr03Q_1794510897
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 341CE18004F6;
+	Thu, 12 Nov 2026 19:14:56 +0000 (UTC)
+Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2E5491800545;
+	Thu, 12 Nov 2026 19:14:53 +0000 (UTC)
+Message-ID: <bb0377ee-5726-454a-b057-73c89dd45dcb@redhat.com>
+Date: Thu, 12 Nov 2026 14:14:53 -0500
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,524 +71,274 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH for-7.4-fixes v4 1/2] cpuset: settle isolation state when
+ CPUs are given back to parent
+To: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <20261112031931.2815548-1-ridong.chen@linux.dev>
+ <20261112031931.2815548-2-ridong.chen@linux.dev>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <20261112031931.2815548-2-ridong.chen@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-In the Meta fleet, tasks that only read or free cgroup bpf state often
-wait minutes for cgroup_mutex:
+On 11/11/26 10:19 PM, Ridong Chen wrote:
+> From: Ridong Chen <chenridong@xiaomi.com>
+>
+> partition_xcpus_del() only updates isolated_cpus when the partition that
+> gives back the CPUs has a different state than its parent. CPUs that were
+> further distributed to descendant isolated partitions are not taken into
+> account, so isolated_cpus_release() has to be called afterwards in
+> several places to walk up the ancestors and fix isolated_cpus.
+>
+> This misses some cases and leaks isolated CPUs, as reported by Guopeng.
+> An isolated partition can be invalidated after its parent has already
+> become invalid, and its CPUs are left in isolated_cpus. For example, on a
+> 32-CPU system with all CPUs online and without isolcpus= or nohz_full=
+> boot parameters:
+>
+>    cd /sys/fs/cgroup
+>    echo +cpuset > cgroup.subtree_control
+>    mkdir A
+>    echo 0,2-31 > A/cpuset.cpus
+>    echo root > A/cpuset.cpus.partition
+>    echo +cpuset > A/cgroup.subtree_control
+>    mkdir A/B
+>    echo 2-3 > A/B/cpuset.cpus
+>    echo isolated > A/B/cpuset.cpus.partition
+>    cat cpuset.cpus.isolated
+>    2-3
+>    echo 0 > /sys/devices/system/cpu/cpu1/online
+>    cat A/B/cpuset.cpus.partition
+>    isolated invalid
+>    cat cpuset.cpus.isolated
+>    2-3
+>
+> When A is invalidated, partition_xcpus_del() gives CPUs 0,2-31 back to
+> top cpuset. Both A and top cpuset are root partitions, so isolated_cpus
+> is left untouched although CPUs 2-3 were distributed to the isolated B.
+> B is then invalidated with an invalid parent, and nothing releases CPUs
+> 2-3 either.
+>
+> Make partition_xcpus_del() always set the isolation state of the given
+> back CPUs to the state of the parent that receives them. As the
+> effective_xcpus of a partition covers the CPUs distributed to its
+> descendants, the isolation state of those CPUs is settled at the same
+> time. Boot-time isolated CPUs are still preserved by isolated_cpu_update().
+>
+> compute_partition_effective_cpumask() invalidates a child partition
+> without going through partition_xcpus_del(), so do the same there: the
+> CPUs of the invalidated child take the isolation state of its parent.
+>
+> As the parent may be shrunk and its effective_xcpus not updated yet,
+> only do so for the CPUs the parent still owns. This is to keep the
+> isolation state correct for now, the in-place invalidation here will be
+> removed later in the partition rework.
+>
+> isolated_cpus_update() assumes the old and new states are different,
+> which no longer holds now that partition_xcpus_del() proceeds regardless
+> of the states. Drop its @old_prs argument and the WARN_ON_ONCE() so that
+> it simply sets the isolation state of the given CPUs, and use it
+> everywhere. The state check in partition_xcpus_add() is dropped as well,
+> as setting the state is a no-op when the states are the same.
+>
+> isolated_cpus_release() is no longer needed and is removed.
+>
+> Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
+> Reported-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+> Closes: https://lore.kernel.org/all/20261105130344.664336-4-guopeng.zhang@linux.dev/
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
+>   kernel/cgroup/cpuset.c | 98 ++++++++----------------------------------
+>   1 file changed, 19 insertions(+), 79 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 06ceeb0ac8c0..c7d4cfb615b7 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1244,17 +1244,17 @@ static bool isolated_cpu_update(int new_prs, int cpu)
+>   }
+>   
+>   /*
+> - * isolated_cpus_update - Update the isolated_cpus mask
+> - * @old_prs: old partition_root_state
+> - * @new_prs: new partition_root_state
+> - * @xcpus: exclusive CPUs with state change
+> + * isolated_cpus_update - Set the isolation state of @xcpus
+> + * @new_prs: partition root state that @xcpus will belong to
+> + * @xcpus: exclusive CPUs whose isolation state may change
+> + *
+> + * CPUs isolated at boot time are kept isolated.
+>    */
+> -static void isolated_cpus_update(int old_prs, int new_prs, struct cpumask *xcpus)
+> +static void isolated_cpus_update(int new_prs, struct cpumask *xcpus)
+>   {
+>   	bool updated = false;
+>   	int cpu;
+>   
+> -	WARN_ON_ONCE(old_prs == new_prs);
+>   	lockdep_assert_held(&callback_lock);
+>   	lockdep_assert_held(&cpuset_mutex);
+>   	for_each_cpu(cpu, xcpus)
+> @@ -1263,45 +1263,6 @@ static void isolated_cpus_update(int old_prs, int new_prs, struct cpumask *xcpus
+>   		update_housekeeping = true;
+>   }
+>   
+> -/*
+> - * isolated_cpus_release - Remove the relevant CPUs in @xcpus from isolated_cpus
+> - * @cs: the current cpuset
+> - * @xcpus: the set of effective xcpus to be considered for removal
+> - *
+> - * This function is called when an isolated partition is invalidated or when
+> - * some of its effective xcpus are to be removed from isolated_cpus due to
+> - * changes in parent cpuset. The given @xcpus must be modifiable as the function
+> - * will update its value to determine the right set of CPUs to be removed.
+> - */
+> -static void isolated_cpus_release(struct cpuset *cs, struct cpumask *xcpus)
+> -{
+> -	struct cpuset *ancestor = parent_cs(cs);
+> -	struct cpuset *iancestor = NULL;
+> -
+> -	/*
+> -	 * Search the furthest isolated partition root ancestor available
+> -	 * until top_cpuset or a remote partition root is hit.
+> -	 */
+> -	for (; ancestor; ancestor = parent_cs(ancestor)) {
+> -		if (ancestor->partition_root_state == PRS_ISOLATED)
+> -			iancestor = ancestor;
+> -		if (is_remote_partition(ancestor))
+> -			break;
+> -	}
+> -
+> -	/*
+> -	 * If a furthest isolated partition acnestor is found, use it to
+> -	 * determine which of the CPUs in @xcpus should be removed from
+> -	 * isolated_cpus. Otherwise, all of them will be removed.
+> -	 */
+> -	if (iancestor && !cpumask_andnot(xcpus, xcpus, iancestor->effective_xcpus))
+> -		return; /* No CPU should be removed from isolated_cpus */
+> -
+> -	spin_lock_irq(&callback_lock);
+> -	isolated_cpus_update(PRS_ISOLATED, PRS_ROOT, xcpus);
+> -	spin_unlock_irq(&callback_lock);
+> -}
+> -
+>   /*
+>    * partition_xcpus_add - Add new exclusive CPUs to partition
+>    * @new_prs: new partition_root_state
+> @@ -1325,9 +1286,7 @@ static void partition_xcpus_add(int new_prs, struct cpuset *parent,
+>   	if (parent == &top_cpuset)
+>   		cpumask_or(subpartitions_cpus, subpartitions_cpus, xcpus);
+>   
+> -	if (new_prs != parent->partition_root_state)
+> -		isolated_cpus_update(parent->partition_root_state, new_prs,
+> -				     xcpus);
+> +	isolated_cpus_update(new_prs, xcpus);
+>   
+>   	cpumask_andnot(parent->effective_cpus, parent->effective_cpus, xcpus);
+>   }
+> @@ -1355,9 +1314,8 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
+>   	if (parent == &top_cpuset)
+>   		cpumask_andnot(subpartitions_cpus, subpartitions_cpus, xcpus);
+>   
+> -	if (old_prs != parent->partition_root_state)
+> -		isolated_cpus_update(old_prs, parent->partition_root_state,
+> -				     xcpus);
+> +	/* CPUs given back, including those of descendants, take parent's state */
+> +	isolated_cpus_update(parent->partition_root_state, xcpus);
+>   
+>   	cpumask_or(parent->effective_cpus, parent->effective_cpus, xcpus);
+>   	cpumask_and(parent->effective_cpus, parent->effective_cpus, cpu_active_mask);
+> @@ -1612,6 +1570,7 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>   	struct cgroup_subsys_state *css;
+>   	struct cpuset *child;
+>   	bool populated = partition_is_populated(cs, NULL);
+> +	static cpumask_t xcpus;		/* Protected by cpuset_mutex */
+>   
+>   	/*
+>   	 * Check child partition roots to see if they should be invalidated
+> @@ -1640,14 +1599,15 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
+>   			int parent_prs = cs->partition_root_state;
+>   
+>   			/*
+> -			 * Invalidate child partition and update isolated_cpus
+> -			 * if necessary.
+> +			 * Invalidate child partition. Its CPUs still owned by
+> +			 * cs take the isolation state of cs. effective_xcpus
+> +			 * of cs may not be updated yet, so recompute it.
+>   			 */
+>   			spin_lock_irq(&callback_lock);
+>   			WRITE_ONCE(child->prs_err, PERR_NOCPUS);
+> -			if ((old_prs == PRS_ISOLATED) && (parent_prs == PRS_ROOT))
+> -				isolated_cpus_update(PRS_ISOLATED, PRS_ROOT,
+> -						     child->effective_xcpus);
+> +			compute_excpus(cs, &xcpus);
+> +			cpumask_and(&xcpus, &xcpus, child->effective_xcpus);
+> +			isolated_cpus_update(parent_prs, &xcpus);
+>   			child->partition_root_state = -old_prs;
+>   			spin_unlock_irq(&callback_lock);
+>   			notify_partition_change(child, old_prs);
+> @@ -2090,22 +2050,8 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>   		 *
+>   		 * A partition error happens when parent has tasks and all
+>   		 * its effective CPUs will have to be distributed out.
+> -		 *
+> -		 * For an isolated partition with a shrunk root partition parent
+> -		 * we may need to return some or all of its isolated CPUs.
+>   		 */
+>   		nocpu |= cpumask_empty(tmp->delmask);
+> -		if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED)) {
+> -			cpumask_clear(tmp->addmask);
+> -			if (nocpu)
+> -				cpumask_copy(tmp->addmask, cs->effective_xcpus);
+> -			else if (!cpumask_subset(cs->effective_xcpus, parent->effective_xcpus))
+> -				cpumask_andnot(tmp->addmask, cs->effective_xcpus,
+> -							     parent->effective_xcpus);
+> -			if (!cpumask_empty(tmp->addmask))
+> -				isolated_cpus_release(cs, tmp->addmask);
+> -			/* Expansion of parent's effective_xcpus is handled below */
+> -		}
+>   		if (nocpu) {
+>   			part_error = PERR_NOCPUS;
+>   			if (is_partition_valid(cs))
+> @@ -2345,18 +2291,12 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+>   				/*
+>   				 * When parent is not a valid partition root,
+>   				 * child partition roots become invalid too.
+> -				 *
+> -				 * For a to be invalidated isolated partition,
+> -				 * call return_isolated_cpus() to remove the
+> -				 * relevant CPUs from isolated_cpus.
+> +				 * The isolation state of their CPUs has been
+> +				 * settled when the parent gave them back.
+>   				 */
+>   				if (is_partition_valid(cp))
+>   					new_prs = -old_prs;
+>   
+> -				if (old_prs == PRS_ISOLATED) {
+> -					cpumask_copy(tmp->delmask, cp->effective_xcpus);
+> -					isolated_cpus_release(cp, tmp->delmask);
+> -				}
+>   				WRITE_ONCE(cp->prs_err,
+>   					   is_partition_invalid(parent)
+>   					   ? PERR_INVPARENT : PERR_NOTPART);
+> @@ -3132,7 +3072,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>   	if (!is_partition_valid(cs))
+>   		reset_partition_data(cs);
+>   	else if (isolcpus_updated)
+> -		isolated_cpus_update(old_prs, new_prs, tmpmask.new_cpus);
+> +		isolated_cpus_update(new_prs, tmpmask.new_cpus);
+>   	spin_unlock_irq(&callback_lock);
+>   
+>   	/* Force update if partition is disabled & update effective_xcpus */
 
-- In one day, hung-task reports (blocked over 120 seconds) showed this
-  for BPF_PROG_QUERY on 1,075 hosts, the cgroup bpf release work on 458
-  hosts and link info on 94 hosts.
-- The query callers are a container manager's health checks.  Over 30
-  days, 6,700 hosts reported one hung.  The typical wait is 11 minutes,
-  the longest 75 minutes.
-- The cgroup_mutex holder is almost always a cgroup mkdir or rmdir that
-  is waiting for kernfs_rwsem.
-
-Only attach, detach and replace need cgroup_mutex.  They update the
-effective arrays of all descendants, so the hierarchy must not change.
-
-Add cgroup_bpf_mutex for the bpf state.  Attach, detach and replace take
-cgroup_mutex and then cgroup_bpf_mutex.  Everything else (query, link
-info, the release work, dropping an LSM attach type, freeing a cgroup
-storage map) takes only cgroup_bpf_mutex.
-
-cgroup_bpf_inherit() still runs at mkdir with only cgroup_mutex, so mkdir
-never waits for cgroup_bpf_mutex.  It writes the new cgroup, which no one
-else can see yet.  What it reads from the ancestors changes only under
-cgroup_mutex, and the release work can't run for them because they are
-online.
-
-The release work no longer waits for cgroup_mutex, so attach must check
-that the cgroup is still alive.  The previous patch does that.
-
-With a test delay that makes a mkdir hold cgroup_mutex for 5 seconds,
-BPF_PROG_QUERY and link info now return in under a millisecond instead
-of 4.6 seconds.  Attach and detach still wait.
-
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
----
- include/linux/bpf-cgroup-defs.h |   1 +
- include/linux/bpf-cgroup.h      |   3 +
- kernel/bpf/cgroup.c             | 137 +++++++++++++++++++++-----------
- kernel/bpf/local_storage.c      |   8 +-
- 4 files changed, 102 insertions(+), 47 deletions(-)
-
-diff --git a/include/linux/bpf-cgroup-defs.h b/include/linux/bpf-cgroup-defs.h
-index 0147b8bec973..671f27ba6a62 100644
---- a/include/linux/bpf-cgroup-defs.h
-+++ b/include/linux/bpf-cgroup-defs.h
-@@ -53,6 +53,7 @@ enum cgroup_bpf_attach_type {
- 	MAX_CGROUP_BPF_ATTACH_TYPE
- };
- 
-+/* Locking: see cgroup_bpf_mutex in kernel/bpf/cgroup.c */
- struct cgroup_bpf {
- 	/* array of effective progs in this cgroup */
- 	struct bpf_prog_array __rcu *effective[MAX_CGROUP_BPF_ATTACH_TYPE];
-diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-index 02ef7f899b3d..dfa7a75507c9 100644
---- a/include/linux/bpf-cgroup.h
-+++ b/include/linux/bpf-cgroup.h
-@@ -421,6 +421,9 @@ static inline bool cgroup_bpf_sock_enabled(struct sock *sk,
- 	__ret;								       \
- })
- 
-+/* Take cgroup_mutex first if you need both.  See kernel/bpf/cgroup.c. */
-+void cgroup_bpf_lock(void);
-+void cgroup_bpf_unlock(void);
- int cgroup_bpf_prog_attach(const union bpf_attr *attr,
- 			   enum bpf_prog_type ptype, struct bpf_prog *prog);
- int cgroup_bpf_prog_detach(const union bpf_attr *attr,
-diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
-index 334237096759..ae082ac86130 100644
---- a/kernel/bpf/cgroup.c
-+++ b/kernel/bpf/cgroup.c
-@@ -206,13 +206,53 @@ unsigned int __cgroup_bpf_run_lsm_current(const void *ctx,
- 	return ret;
- }
- 
-+/*
-+ * cgroup_bpf_mutex protects the bpf state of all cgroups: prog lists,
-+ * effective arrays, flags, revisions, storage lists, link->cgroup,
-+ * link->map of struct_ops links and cgroup_lsm_atype[].
-+ *
-+ * Take cgroup_mutex first if you need both.  This mutex doesn't keep a
-+ * cgroup alive or the hierarchy stable.  Attach, detach and replace walk
-+ * the descendants, so they take both.  Everything else takes only this one.
-+ *
-+ * cgroup_bpf_inherit() runs at mkdir with only cgroup_mutex.  That's safe:
-+ * it writes the new cgroup, which no one else can see yet, and what it
-+ * reads from the ancestors changes only under cgroup_mutex.  The ancestors
-+ * are online, and only rmdir, which needs cgroup_mutex, starts a release.
-+ */
-+static DEFINE_MUTEX(cgroup_bpf_mutex);
-+
-+#define cgroup_bpf_held()	lockdep_is_held(&cgroup_bpf_mutex)
-+
-+void cgroup_bpf_lock(void)
-+{
-+	mutex_lock(&cgroup_bpf_mutex);
-+}
-+
-+void cgroup_bpf_unlock(void)
-+{
-+	mutex_unlock(&cgroup_bpf_mutex);
-+}
-+
-+static void cgroup_bpf_lock_hierarchy(void)
-+{
-+	cgroup_lock();
-+	mutex_lock(&cgroup_bpf_mutex);
-+}
-+
-+static void cgroup_bpf_unlock_hierarchy(void)
-+{
-+	mutex_unlock(&cgroup_bpf_mutex);
-+	cgroup_unlock();
-+}
-+
- #ifdef CONFIG_BPF_LSM
- static enum cgroup_bpf_attach_type
- bpf_cgroup_atype_find(enum bpf_attach_type attach_type, u32 attach_btf_id)
- {
- 	int i;
- 
--	lockdep_assert_held(&cgroup_mutex);
-+	lockdep_assert_held(&cgroup_bpf_mutex);
- 
- 	if (attach_type != BPF_LSM_CGROUP)
- 		return to_cgroup_bpf_attach_type(attach_type);
-@@ -233,7 +273,7 @@ void bpf_cgroup_atype_get(u32 attach_btf_id, int cgroup_atype)
- {
- 	int i = cgroup_atype - CGROUP_LSM_START;
- 
--	lockdep_assert_held(&cgroup_mutex);
-+	lockdep_assert_held(&cgroup_bpf_mutex);
- 
- 	if (!cgroup_lsm_atype[i].attach_btf_id) {
- 		cgroup_lsm_atype[i].attach_btf_id = attach_btf_id;
-@@ -249,13 +289,13 @@ void bpf_cgroup_atype_put(int cgroup_atype)
- {
- 	int i = cgroup_atype - CGROUP_LSM_START;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 	if (--cgroup_lsm_atype[i].refcnt <= 0) {
- 		WRITE_ONCE(cgroup_lsm_atype[i].returns_errno, true);
- 		cgroup_lsm_atype[i].attach_btf_id = 0;
- 	}
- 	WARN_ON_ONCE(cgroup_lsm_atype[i].refcnt < 0);
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- }
- #else
- static enum cgroup_bpf_attach_type
-@@ -459,7 +499,7 @@ static void cgroup_bpf_release(struct work_struct *work)
- 
- 	unsigned int atype;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 
- 	for (atype = 0; atype < ARRAY_SIZE(cgrp->bpf.progs); atype++) {
- 		struct hlist_head *progs = &cgrp->bpf.progs[atype];
-@@ -480,7 +520,7 @@ static void cgroup_bpf_release(struct work_struct *work)
- 		}
- 		old_array = rcu_dereference_protected(
- 				cgrp->bpf.effective[atype],
--				lockdep_is_held(&cgroup_mutex));
-+				cgroup_bpf_held());
- 		bpf_cgroup_array_free(old_array, atype);
- 	}
- 
-@@ -489,7 +529,7 @@ static void cgroup_bpf_release(struct work_struct *work)
- 		bpf_cgroup_storage_free(storage);
- 	}
- 
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- 
- 	for (p = cgroup_parent(cgrp); p; p = cgroup_parent(p))
- 		cgroup_bpf_put(p);
-@@ -665,7 +705,9 @@ static void activate_effective_progs(struct cgroup *cgrp,
- 				     enum cgroup_bpf_attach_type atype,
- 				     struct bpf_prog_array *old_array)
- {
-+	/* cgroup_bpf_inherit() holds only cgroup_mutex, see cgroup_bpf_mutex */
- 	old_array = rcu_replace_pointer(cgrp->bpf.effective[atype], old_array,
-+					lockdep_is_held(&cgroup_bpf_mutex) ||
- 					lockdep_is_held(&cgroup_mutex));
- 	/* free prog array after grace period, since __cgroup_bpf_run_*()
- 	 * might be still walking the array
-@@ -687,6 +729,9 @@ static int cgroup_bpf_inherit(struct cgroup *cgrp)
- 	struct cgroup *p;
- 	int ret, i;
- 
-+	/* See the comment above cgroup_bpf_mutex */
-+	lockdep_assert_held(&cgroup_mutex);
-+
- 	ret = percpu_ref_init(&cgrp->bpf.refcnt, cgroup_bpf_release_fn, 0,
- 			      GFP_KERNEL);
- 	if (ret)
-@@ -747,6 +792,8 @@ static int update_effective_progs(struct cgroup *cgrp,
- 	struct cgroup_subsys_state *css;
- 	int err;
- 
-+	lockdep_assert_held(&cgroup_bpf_mutex);
-+
- 	/* allocate and recompute effective prog arrays */
- 	css_for_each_descendant_pre(css, &cgrp->self) {
- 		struct cgroup *desc = container_of(css, struct cgroup, self);
-@@ -954,7 +1001,7 @@ static int insert_pl_to_hlist(struct bpf_prog_list *pl, struct hlist_head *progs
-  * @revision: bpf_prog_list revision
-  *
-  * Exactly one of @prog or @link can be non-null.
-- * Must be called with cgroup_mutex held.
-+ * Must be called with cgroup_mutex and cgroup_bpf_mutex held.
-  */
- static int __cgroup_bpf_attach(struct cgroup *cgrp,
- 			       struct bpf_prog *prog, struct bpf_prog *replace_prog,
-@@ -1100,10 +1147,10 @@ static int cgroup_bpf_attach(struct cgroup *cgrp,
- {
- 	int ret;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 	ret = __cgroup_bpf_attach(cgrp, prog, replace_prog, link, type, flags,
- 				  id_or_fd, revision);
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 	return ret;
- }
- 
-@@ -1181,7 +1228,7 @@ static void replace_effective_prog(struct cgroup *cgrp,
- 
- 		progs = rcu_dereference_protected(
- 				desc->bpf.effective[atype],
--				lockdep_is_held(&cgroup_mutex));
-+				cgroup_bpf_held());
- 		item = &progs->items[pos];
- 		prog_list_replace_item(pl, item);
- 	}
-@@ -1209,7 +1256,7 @@ static bool cgroup_bpf_storages_compatible(struct bpf_prog *old_prog,
-  * @new_prog: &struct bpf_prog for the target BPF program with its refcnt
-  *            incremented
-  *
-- * Must be called with cgroup_mutex held.
-+ * Must be called with cgroup_mutex and cgroup_bpf_mutex held.
-  */
- static int __cgroup_bpf_replace(struct cgroup *cgrp,
- 				struct bpf_cgroup_link *link,
-@@ -1257,7 +1304,7 @@ static int cgroup_bpf_replace(struct bpf_link *link, struct bpf_prog *new_prog,
- 
- 	cg_link = container_of(link, struct bpf_cgroup_link, link);
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 	/* link might have been auto-released by dying cgroup, so fail */
- 	if (!cg_link->cgroup) {
- 		ret = -ENOLINK;
-@@ -1269,7 +1316,7 @@ static int cgroup_bpf_replace(struct bpf_link *link, struct bpf_prog *new_prog,
- 	}
- 	ret = __cgroup_bpf_replace(cg_link->cgroup, cg_link, new_prog);
- out_unlock:
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 	return ret;
- }
- 
-@@ -1340,7 +1387,7 @@ static void purge_effective_progs(struct cgroup *cgrp, struct bpf_prog_list *pl,
- 
- 		progs = rcu_dereference_protected(
- 				desc->bpf.effective[atype],
--				lockdep_is_held(&cgroup_mutex));
-+				cgroup_bpf_held());
- 
- 		/* Remove the program from the array */
- 		WARN_ONCE(bpf_cgroup_array_delete_safe_at(progs, pos, atype),
-@@ -1358,7 +1405,7 @@ static void purge_effective_progs(struct cgroup *cgrp, struct bpf_prog_list *pl,
-  * @revision: bpf_prog_list revision
-  *
-  * At most one of @prog or @link can be non-NULL.
-- * Must be called with cgroup_mutex held.
-+ * Must be called with cgroup_mutex and cgroup_bpf_mutex held.
-  */
- static int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
- 			       struct bpf_cgroup_link *link, enum bpf_attach_type type,
-@@ -1428,13 +1475,13 @@ static int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
- {
- 	int ret;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 	ret = __cgroup_bpf_detach(cgrp, prog, NULL, type, revision);
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 	return ret;
- }
- 
--/* Must be called with cgroup_mutex held to avoid races. */
-+/* Must be called with cgroup_bpf_mutex held. */
- static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
- 			      union bpf_attr __user *uattr, u32 uattr_size)
- {
-@@ -1488,7 +1535,7 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
- 	for (atype = from_atype; atype <= to_atype; atype++) {
- 		if (effective_query) {
- 			effective = rcu_dereference_protected(cgrp->bpf.effective[atype],
--							      lockdep_is_held(&cgroup_mutex));
-+							      cgroup_bpf_held());
- 			total_cnt += bpf_cgroup_array_length(effective, atype);
- 		} else {
- 			total_cnt += prog_list_length(&cgrp->bpf.progs[atype], NULL);
-@@ -1518,7 +1565,7 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
- 	for (atype = from_atype; atype <= to_atype && total_cnt; atype++) {
- 		if (effective_query) {
- 			effective = rcu_dereference_protected(cgrp->bpf.effective[atype],
--							      lockdep_is_held(&cgroup_mutex));
-+							      cgroup_bpf_held());
- 			cnt = min_t(int, bpf_cgroup_array_length(effective, atype), total_cnt);
- 			ret = bpf_cgroup_array_copy_to_user(effective, prog_ids, cnt, atype);
- 		} else {
-@@ -1559,9 +1606,9 @@ static int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
- {
- 	int ret;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 	ret = __cgroup_bpf_query(cgrp, attr, uattr, uattr_size);
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- 	return ret;
- }
- 
-@@ -1629,11 +1676,11 @@ static void bpf_cgroup_link_release(struct bpf_link *link)
- 	if (!cg_link->cgroup)
- 		return;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 
- 	/* re-check cgroup under lock again */
- 	if (!cg_link->cgroup) {
--		cgroup_unlock();
-+		cgroup_bpf_unlock_hierarchy();
- 		return;
- 	}
- 
-@@ -1645,7 +1692,7 @@ static void bpf_cgroup_link_release(struct bpf_link *link)
- 	cg = cg_link->cgroup;
- 	cg_link->cgroup = NULL;
- 
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 
- 	cgroup_put(cg);
- }
-@@ -1672,10 +1719,10 @@ static void bpf_cgroup_link_show_fdinfo(const struct bpf_link *link,
- 		container_of(link, struct bpf_cgroup_link, link);
- 	u64 cg_id = 0;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 	if (cg_link->cgroup)
- 		cg_id = cgroup_id(cg_link->cgroup);
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- 
- 	seq_printf(seq,
- 		   "cgroup_id:\t%llu\n"
-@@ -1691,10 +1738,10 @@ static int bpf_cgroup_link_fill_link_info(const struct bpf_link *link,
- 		container_of(link, struct bpf_cgroup_link, link);
- 	u64 cg_id = 0;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 	if (cg_link->cgroup)
- 		cg_id = cgroup_id(cg_link->cgroup);
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- 
- 	info->cgroup.cgroup_id = cg_id;
- 	info->cgroup.attach_type = link->attach_type;
-@@ -2971,11 +3018,11 @@ static int __cgroup_struct_ops_link_detach(struct bpf_link *link, bool wake_poll
- 	struct bpf_map *map;
- 	struct cgroup *cgrp;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 
- 	cgrp = cg_link->cgroup;
- 	if (!cgrp) {
--		cgroup_unlock();
-+		cgroup_bpf_unlock_hierarchy();
- 		return 0;
- 	}
- 
-@@ -2987,7 +3034,7 @@ static int __cgroup_struct_ops_link_detach(struct bpf_link *link, bool wake_poll
- 			break;
- 	}
- 	if (WARN_ON_ONCE(!pl)) {
--		cgroup_unlock();
-+		cgroup_bpf_unlock_hierarchy();
- 		return -ENOENT;
- 	}
- 
-@@ -3005,7 +3052,7 @@ static int __cgroup_struct_ops_link_detach(struct bpf_link *link, bool wake_poll
- 	kfree(pl);
- 	static_branch_dec(&cgroup_bpf_enabled_key[atype]);
- 
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 
- 	return 0;
- }
-@@ -3028,15 +3075,15 @@ static void cgroup_struct_ops_link_show_fdinfo(const struct bpf_link *link, stru
- 	struct bpf_cgroup_link *cg_link =
- 		container_of(link, struct bpf_cgroup_link, link);
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 	if (!cg_link->cgroup) {
--		cgroup_unlock();
-+		cgroup_bpf_unlock();
- 		return;
- 	}
- 
- 	seq_printf(seq, "map_id:\t%u\n", cg_link->map->id);
- 	seq_printf(seq, "cgroup_id:\t%llu\n", cgroup_id(cg_link->cgroup));
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- }
- 
- static int cgroup_struct_ops_link_fill_link_info(const struct bpf_link *link,
-@@ -3044,15 +3091,15 @@ static int cgroup_struct_ops_link_fill_link_info(const struct bpf_link *link,
- {
- 	struct bpf_cgroup_link *cg_link = container_of(link, struct bpf_cgroup_link, link);
- 
--	cgroup_lock();
-+	cgroup_bpf_lock();
- 	if (!cg_link->cgroup) {
--		cgroup_unlock();
-+		cgroup_bpf_unlock();
- 		return 0;
- 	}
- 
- 	info->struct_ops.map_id = cg_link->map->id;
- 	info->struct_ops.cgroup_id = cgroup_id(cg_link->cgroup);
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- 	return 0;
- }
- 
-@@ -3070,7 +3117,7 @@ static int cgroup_struct_ops_link_update(struct bpf_link *link, struct bpf_map *
- 	if (!bpf_struct_ops_valid_to_reg(new_map))
- 		return -EINVAL;
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 
- 	cgrp = cg_link->cgroup;
- 	if (!cgrp) {
-@@ -3103,7 +3150,7 @@ static int cgroup_struct_ops_link_update(struct bpf_link *link, struct bpf_map *
- 	cgrp->bpf.revisions[atype]++;
- 
- out:
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 	return err;
- }
- 
-@@ -3175,7 +3222,7 @@ int cgroup_bpf_struct_ops_attach(struct bpf_map *map, const union bpf_attr *attr
- 	atype = bpf_struct_ops_map_cgroup_atype(map);
- 	progs = &cgrp->bpf.progs[atype];
- 
--	cgroup_lock();
-+	cgroup_bpf_lock_hierarchy();
- 
- 	/* See the cgroup_is_dead() check in __cgroup_bpf_attach() */
- 	if (cgroup_is_dead(cgrp)) {
-@@ -3218,12 +3265,12 @@ int cgroup_bpf_struct_ops_attach(struct bpf_map *map, const union bpf_attr *attr
- 	cgrp->bpf.revisions[atype]++;
- 	static_branch_inc(&cgroup_bpf_enabled_key[atype]);
- 
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 
- 	return bpf_link_settle(&link_primer);
- 
- unlock:
--	cgroup_unlock();
-+	cgroup_bpf_unlock_hierarchy();
- 
- cleanup:
- 	kfree(pl);
-diff --git a/kernel/bpf/local_storage.c b/kernel/bpf/local_storage.c
-index 83cd527a2542..2cfbddeb1c7e 100644
---- a/kernel/bpf/local_storage.c
-+++ b/kernel/bpf/local_storage.c
-@@ -345,14 +345,18 @@ static void cgroup_storage_map_free(struct bpf_map *_map)
- 	struct list_head *storages = &map->list;
- 	struct bpf_cgroup_storage *storage, *stmp;
- 
--	cgroup_lock();
-+	/*
-+	 * Attach and cgroup_bpf_release() change the same cgroup storage
-+	 * lists under other maps' locks, so take cgroup_bpf_mutex.
-+	 */
-+	cgroup_bpf_lock();
- 
- 	list_for_each_entry_safe(storage, stmp, storages, list_map) {
- 		bpf_cgroup_storage_unlink(storage);
- 		bpf_cgroup_storage_free(storage);
- 	}
- 
--	cgroup_unlock();
-+	cgroup_bpf_unlock();
- 
- 	WARN_ON(!RB_EMPTY_ROOT(&map->root));
- 	WARN_ON(!list_empty(&map->list));
--- 
-2.53.0-Meta
+LGTM
+Reviewed-by: Waiman Long <longman@redhat.com>
 
