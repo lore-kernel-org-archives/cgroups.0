@@ -1,96 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794501830;
-	b=fHI1d0rNq230dlYoasEdCWSurSWpV+j4X08lfdt0ZTTZmloniwjIVuRBXEZtYtBoL7sA
-	 sKE8vxykteKKZyKuFu8xCZT52NlRjMj//tlAfGmi9ZQyFugv+gd/FUzInWVaoHjRFAbRH
-	 ooZJEUHH5z11TJzZkRpEYpdwHjVjTVUAN9jVTD1igbbIdfar+5JH4Uvto3O9GTejCLeWM
-	 NttOoyc6Jo7ki/PyywjSm+uj2dUce0PDJ6FBla+335W6b6Af06qPgC31BqtFXTU3xEB1K
-	 OiyjALfUItdogsfSwob9aurOfGJdwIRFlv9325yCWCyCfWgkRmQos872PX32Qm9wZLw==
+	t=1794503518;
+	b=HD4y06Nfxd56zqdJ2n57qVlOmOjWWSUJ4bfJQjPUs2f4i9vaCOKqNXuY5x51Q4h555Zn
+	 MVN6JmtNxte5jwHpTP5KGmqV9l4D6Mm5pGozAWIkCCFpsfxHyWS/R7iguUj5o+IMmq0pb
+	 WL5EK9zmr16RF4QkQXoorVIhjphGCv45AUi/SxuMXazLT0PYWgKjb5PqL/WdMgmcu0gB2
+	 4gtT0XXjaTYbi9Dc2DUkJWDx7Dp0oOP4y29RWu18Kac1mopmGsFVCCnupgddOu12A7ZkX
+	 DTiTo/E/bs4qyMk6GkAZ53PsL/5w5dpe/bMcjfnhfVO3c8AyDq5rmubuimQUkzGqFvw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794501830;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794503518;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=OT3KyYwDV0pkmmBWZVaURf9TIcCa5HYu6d3239mcr10=;
-	b=SQ/p04pCOV8dangQD30gsHSvMSg09jB4BYPWUcqT9s8UUzBTarrU1pXB92Fk9wu3DK9e
-	 rIgSSQ1K374fWmuOsftCOv3c8g+qjevYoz9HaWQFJP9hk329/mbs9Zqq4C/jw16see940
-	 f1xTnAxIN1gEwex1KlUVisGkrDI4JrOo5jyK42r5MLPLVoNm/D1uOKSVKKsOuIo16/K4k
-	 quenxrhi5P0DuMYOm5434zuJvHK6DBL3EF6ADnZLXcxGGmk6007xsHKI8k1M4JfpGPsoS
-	 bOuq1ckyeFTVYqIpVouZZBvgRxsyXebqJUWgyt8bcbyo4Q3u+0g2aaYG382zR5mJ6NQ==
+	bh=3KCRPd7UwqaiMFRIx4N7MG3QRVArn5qzACfVK+4/t80=;
+	b=5kMTzn4dYfJsaA2hT8aMM52FaEUopgCZSBbcsqLFaAuRwoX46+YTkG7jXklcoQJ2biuW
+	 AzxiZZmyj8/HciHdF9KGvRLYS8ZHyygL6EiAFr8AZR9YdpYIfN6zbEbGi94jH9DYxvmyN
+	 CAp7c8l/WudoXBZoMlzf57nJZKvfEVfVf4sDuepCEqZf4AjXx9j0i6RJkgX2MQnM319DC
+	 basFyNKhiStrXuNyz/q4E3AqAiGxEIb8TDogjZn7A7wzA1XsFIZJjoT0ILpTNh2HakMno
+	 bn33P5SsDVrrzwVLKt8FyWinjmTBdsibYIfe8+lB7KfcsyZXoM423CiDCcsKO9fEo9g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=cmpxchg.org;
 	spf=pass smtp.mailfrom=cmpxchg.org;
-	dkim=pass header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=ZYKSRf2s;
-	arc=none smtp.remote-ip=209.85.128.182
-Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
+	dkim=pass header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b="OsX/Wv9U";
+	arc=none smtp.remote-ip=209.85.128.181
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77A4606A31C
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 16:43:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E77A4606A31C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5975D606A321
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 17:11:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5975D606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=ZYKSRf2s
-Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-8b0d126f631so861947b3.2
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 08:43:49 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=cmpxchg.org header.i=@cmpxchg.org header.a=rsa-sha256 header.s=google header.b=OsX/Wv9U
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-8b0d63f60bcso1201637b3.3
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 09:11:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1794501829; x=1795106629; darn=vger.kernel.org;
+        d=cmpxchg.org; s=google; t=1794503516; x=1795108316; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=OT3KyYwDV0pkmmBWZVaURf9TIcCa5HYu6d3239mcr10=;
-        b=ZYKSRf2svXhh7Fs6IxWfASNqCCKN1Fh2T2OQdkQ1P2Asuy9BXkLmFuZ7zz2CO0bARl
-         sgFtUwK74sE/flVX/PlY8hys2NW1vs1tDzf/gVRoK15hgWsyOW/nZxWV62esAymWrThS
-         t1oWBUIXbEimEz5mTxaTMqTYj4j6CbwXGGZoPzw2bI2IYmHQBldi+VlEShgQvfRWlFUw
-         1vprQFGpsHFerd5Kp/ARO614AJjuVYlzc0Mw1U85lFKqJYAUSHJLnaGceai1BzwZFYRi
-         yKr5ZKUI6gOhngS97L+ZJQe16WvKpcvYD25klc11aWfKf47QFgnKpuq6q4d2AD9eZjuB
-         BgBQ==
+        bh=3KCRPd7UwqaiMFRIx4N7MG3QRVArn5qzACfVK+4/t80=;
+        b=OsX/Wv9UMQobNjPA06ctArQA+nB3PW1FkFuXJ7cxLoUpu2z7Eg5Uzld57YMYDBVMX0
+         XCTCX4jcd9s9D+kpVL94A6UlfWJJ8C8xvA6j+5jyNiOEZqBrNjWhmUcAaCS5syRA3xUn
+         gFpqdGFUqd4oQTk81ZURRnCiP3TPzrMDK3qMohmm53cW8I5Cb6m9lANezSO8GlUVTejt
+         muzY0bTwLmvmJf6bNbc0VO1g8uJHLa2yfYH6MNPKpLguFucSHMb5e11CHiF4CD7AQ1oB
+         M/V2aJRdpraqtlzQeT7TI4gPJgsFH0cV6fsivjWFg/d+q9o+bH8IeqpeU54VEPvWKTTB
+         HmWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794501829; x=1795106629;
+        d=1e100.net; s=20260707; t=1794503516; x=1795108316;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=OT3KyYwDV0pkmmBWZVaURf9TIcCa5HYu6d3239mcr10=;
-        b=d5A8KdFkcXyZn+/mWM3w5Z7cKyKxA0ojzZMMIjHAVAcHtZP9iTxALw7PSiSCOpeteq
-         8LPPsEAb9r04ljXtpcURsmkGyhYX0w6CRWxvuO8DgyzMCy+BXpF30veBPBzJxRaO39K4
-         OuokKee5ex7kJo34NFvn3/C+36xf5HwFMKPW2LDK8qTfQqIH7PCsJaZkDmFU68sxcZEw
-         Ayh8Mde/zdVmvY5l5JzjBxYvNHXHMCv5CZskoxhi0SjUJLGG7Hv2UmVbhg3+Jh9igvsa
-         1F5EgrxOLK4ZGt8aOFbNaB4yANRGXSN1hmrrvbAill3vCx/FdAlGU1kNfWgL0Pl4bnZi
-         t3Sw==
-X-Forwarded-Encrypted: i=1; AL+hErGOSvJqt8AIaa69o+Ty1GsIhR06zT0Mx2FFry/L4smU8Nf1ETTrXbIrtzEGdNkRSgvhGMR8KJFd@vger.kernel.org
-X-Gm-Message-State: APuU4Z9jJiGYOq3OJ5CbQ4kKtIzG8rO0eNG0//3ZLnL0coaz/MMNcBjR
-	X140+kDn75vYLl1AT2hTNjdiF7SEWR0kW8kN6i+4Qk7nCgbhb5wYKieqJwPmCUraWT4=
-X-Gm-Gg: AYBFou2oOKBAO18EsYb/+gwJLSw+ET+qS651MSIoVXXpz7X3i4AXJiiMdnimgqEMg7j
-	8wvA9XzXuC57YSjHZUaAb0HxeENcqR3NvR7ceuLfEcZAkfPX2vL4Pa3S5IjyrX1ZzvminWp6SVd
-	9DKP4ZJfFAFH2q4Lo5Tkagh1rbifxTdX3tlMb44Sgs3iSfGaTsapm4XfpgODT0zORccHYZIoEQb
-	TVk6a6WQuyChen3EWF5o0ho7QRoPedB/YU0keWIQmCE+pov5p4xKLHXqply5KsC/pWO7bCXPv5D
-	UjIEtcHAptMFaPD5w4e4zalbkbu41Oxr0NMgiuGfV2mEpx05raX/n/s6OCxRfoXgbqjyuB/TIJ+
-	yLqlxuuGmZKneQdCIMRPMktb44iLytUuz8GuZYU9L4pEf5bJbS0EqyhkIkv3kX/rlHpavju70Wj
-	0O1Cxf0C0azmrIhT+bomw4xEf22lsY4QlN1ywGOw0rHsVFX8xOg7gl7+KTBEbKgYQgMtnjV+xdx
-	C2qX1V3r2m6s9+H4J38vAZYhhGtfLkT6YeAqe8XPabo4Pn/S769mZ6q8PnMvnj800s45Gpf9B2i
-	+ccMy/E9nMNzg2zspLxgZutnKsP92bsMSaA/jrFUZNsnDARjBA==
-X-Received: by 2002:a05:690c:e1d3:20b0:8b3:4f53:91c4 with SMTP id 00721157ae682-8b4aa326b49mr620977b3.29.1794501828827;
-        Thu, 12 Nov 2026 08:43:48 -0800 (PST)
+        bh=3KCRPd7UwqaiMFRIx4N7MG3QRVArn5qzACfVK+4/t80=;
+        b=nfN1Y+zeg2F77d1n6iwHb7Lkvppl+BhJpUs+jJk0gNllxNA8K8cMtkJaaFiN8BX9Pb
+         RdJvV/QfAFLq76AYZEg17FjsgM5zmbJaY9+XLQDfu2zLmKwQgL3ql6YvaHsos/ft6Zqq
+         KY1HzhrDlfQ9vpriNb/fgIZnc909bLfXIGAblMBSyCzRY3XLZ+/ONiN8OLWRGHrXgq4k
+         PofQsxaFqRFXkdKWb1Q3enm5zjMyBXmmfEo67YS0g0WzrheI+qr9KrWfRYuf4COBtqOB
+         0m4+AYfwDCZa0s3OKHyeCik0MyjrQiVLkTLhGqy6NZYQvUDQJbox3y153EAfnv5PibRv
+         yt1g==
+X-Forwarded-Encrypted: i=1; AL+hErHtkm5v3FZx1UDuU5ho4dzZl8y3+/o1q8T7/hzupMiKeuj38s/WFGzlNcPZwxm7JFayI0oq8qTZ@vger.kernel.org
+X-Gm-Message-State: APuU4Z8gRpQD7lDUUnlMQhEVS5hEnhv4UPV1ECUUQa4EnRGQ1g+sfRP4
+	a5kf64Apewy2DcLFfEgK7hlrq3tSDDoYME7RvEfWnfP+dU+Tr6K+UiLfLKOxHN8rlSQ=
+X-Gm-Gg: AYBFou2q7rcuX+iIvZ0UASHI0t0oQkCE+NGpGLPqMqc9ZrNE9bXu5/mXc1HJO2E72ZI
+	EycZ7bKlf+hbSLEkyy+tb5yLN4UtbEVqsfNKG/FJuPe0MYOBqVzaEjbR5r/m1Jf3pEDYL+1dcsJ
+	MXL0RyoteP4wnytc4iOhVBuYA3Kacy0Szbpt8KJZGdB7+wXG4Iyrx3BMmR45JuasWF7EDHiZigo
+	AwawE5L2xuBUl+uFRLBIPQWpHb4nr/pNdTFYClPBbjXn5YMplP/udUpuN5MzLAFPkQGi6n+XupV
+	fks64M88Mr+gqxoNEbKqMbhZSb0JFWy1+6l5LLcnTMqrlFGzsyWQLUX4LjksyyXONO+2Pd3klfi
+	Q98R9V7rdbp4Y9pdLFh0d5F6qfMLAKBntRbIzuTd6L0MZMab5PCkbWzXnwX2Ycfmkv2bH8OzZDh
+	vNlw59ovu2cfotaNToHcYRS3AGfYfe5V2dVqShhKoZV+LK2VYMpJSj9bWMIWNPpzxUxjKQMbaOc
+	+x+zIPni5e+DWlamBK7K5BlP+lGNw+nr8ZeIN07imtWD/Zss5gMRFcerT8ylDY8oRYcALbnpbXN
+	4kHyksV8KDXxDrddAyov2sxFSHGs
+X-Received: by 2002:a05:690c:e1d2:20b0:882:b4b2:c49 with SMTP id 00721157ae682-8b4aa23f086mr1270387b3.18.1794503516202;
+        Thu, 12 Nov 2026 09:11:56 -0800 (PST)
 Received: from localhost ([2605:8600:200:14e3:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b3933fb45fsm73764697b3.25.2026.11.12.08.43.47
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-8b4aa9fae24sm252827b3.41.2026.11.12.09.11.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 08:43:48 -0800 (PST)
-Date: Thu, 12 Nov 2026 11:43:47 -0500
+        Thu, 12 Nov 2026 09:11:50 -0800 (PST)
+Date: Thu, 12 Nov 2026 12:11:47 -0500
 From: Johannes Weiner <hannes@cmpxchg.org>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: akpm@linux-foundation.org, yosry@kernel.org, shakeel.butt@linux.dev,
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev,
-	nphamcs@gmail.com, chengming.zhou@linux.dev, sj@kernel.org,
-	david@kernel.org, ljs@kernel.org, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, damon@lists.linux.dev
-Subject: Re: [PATCH v2 1/4] mm: zswap: fix shrinker count for the root memcg
-Message-ID: <avXsw9ZJHOkFG4Ll@cmpxchg.org>
-References: <20261110015321.611093-1-joannelkoong@gmail.com>
- <20261110015321.611093-2-joannelkoong@gmail.com>
+To: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Zhan Xusheng <zhanxusheng1024@gmail.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [PATCH v2] mm: memcontrol: Don't lose track of exiting OOM
+ victims
+Message-ID: <avXzU0coRUkBdPWC@cmpxchg.org>
+References: <avA1wXhTMs9eY2NF@chrisdown.name>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -102,40 +106,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261110015321.611093-2-joannelkoong@gmail.com>
+In-Reply-To: <avA1wXhTMs9eY2NF@chrisdown.name>
 
-On Mon, Nov 09, 2026 at 05:53:18PM -0800, Joanne Koong wrote:
-> zswap_shrinker_count() scales the number of freeable entries on a
-> memcg's zswap LRU by the memcg's compression ratio. That compression
-> ratio is computed from the memcg's MEMCG_ZSWAP_B and MEMCG_ZSWAPPED
-> stats.
+On Sun, Nov 08, 2026 at 12:41:37AM -0800, Chris Down wrote:
+> When oom_evaluate_task() comes across a victim we've already killed, it
+> backs off until the victim's mm has MMF_OOM_SKIP. This gives the victim
+> a chance to free some memory before we kill anything else. However,
+> since commit a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup"),
+> css_task_iter skips exiting tasks once signal->live reaches zero. That
+> happens before exit_mm(), so a single-threaded victim can disappear
+> from the memcg scan while it still has all its memory.
 > 
-> However, for the root memcg, the zswap entries owned by the root memcg
-> itself are never accounted for in the stats (obj_cgroup_charge_zswap()
-> skips the root objcg, and before the root memcg had an objcg, its
-> entries weren't charged at all). The stats only reflect the entries
-> owned by the root memcg's descendants. When the root memcg's descendants
-> have no zswap entries (eg when the whole workload runs in the root
-> cgroup), the shrinker reports nothing to reclaim for the root memcg, and
-> its zswap entries are never written back by the shrinker. When its
-> descendants do have entries, the root memcg's entries are scaled by the
-> descendants' compression ratio instead of a ratio that includes them.
+> This can kill another process when the first kill would have been
+> enough to recover, and we've seen it happen in production. If the
+> second victim is in a cgroup with memory.oom.group enabled, the extra
+> kill can take down the whole workload.
 > 
-> Fix this by using the zswap pool-wide counters for the root memcg
-> instead. The zswap pool-wide counters cover every zswap entry, including
-> those owned by the root memcg.
+> In tests I used a 64 MiB memcg with swap disabled. I started a process
+> that faults in 44 MiB of anonymous memory, submits a 4 KiB direct AIO
+> read to null_blk, and goes to sleep. I set null_blk to take 10 seconds
+> to complete the read so the victim would have to wait for it in
+> exit_aio(). Two seconds after starting the first process, I started a
+> second one that tries to fault in 40 MiB.
 > 
-> This also gets rid of having to flush the root memcg's stats, which
-> flushes every cgroup in the system.
+> The 40 MiB allocation hits memory.max partway through and triggers an
+> OOM kill. The OOM killer picks the first process, which has more
+> resident memory. With the read still pending, the victim blocks in
+> exit_aio() before it can tear down its address space.
 > 
-> In a VM running a reclaim-heavy workload in the root cgroup with the
-> zswap shrinker enabled, the shrinker wrote back no pages before this
-> change (zswpwb stayed at 0) and 1016 pages with it.
+> memory.events showed oom_kill 2 in three runs. In one of them the first
+> process hadn't submitted the read yet when it was killed. The slow read
+> just makes the window easier to hit.
 > 
-> Fixes: b5ba474f3f51 ("zswap: shrink zswap pool based on memory pressure")
-> Acked-by: Yosry Ahmed <yosry@kernel.org>
-> Reviewed-by: SJ Park <sj@kernel.org>
-> Acked-by: Nhat Pham <nphamcs@gmail.com>
-> Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
+> The cgroup iterator hides these tasks so that cgroup.procs doesn't
+> show processes that waitpid() may already have reaped. That's fine for
+> cgroup.procs, but the OOM scan needs to see a victim even after its last
+> thread has started exiting. We already have CSS_TASK_ITER_WITH_DEAD
+> for sched_ext, so use it for mem_cgroup_scan_tasks() as well.
+> 
+> With this applied, OOM selection backs off while the first victim still
+> has memory to free. The 40 MiB allocation completes and memory.events
+> shows oom_kill 1 in three test runs.
+> 
+> Fixes: a72f73c4dd9b ("cgroup: Don't expose dead tasks in cgroup")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Chris Down <chris@chrisdown.name>
 
 Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
