@@ -1,140 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.222
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794495678;
-	b=y70HcVxaOCQheKXZUEi6wRxUqaL22Or0eZrO0OddKtOokIL+r8EjKnjbesWcZ75hZ0A6
-	 yR5VO4Z7VhS9QSO70QA3qRuLrI3upgUnLrrJj+rOMBPl4H20gFnxBGUEDR882tenfH1dU
-	 s7S6DVWUd53TJvL4ONrbPeHJnC/itnIfwVegmPls21rfo6Csa1fpdgDC//fhA5V5qUENR
-	 JJWySbOZ7sgcFlDfqZ4JlRMb+B/9Jw6Ag7+MKLO1Sf2FsLHsyPhvRJqNBkSDaMTVoiDOs
-	 gAAT9B1AZ15dvaFxs8C6fH/vOXWF29HXxPieP8B0PqAvTAQraBxlmK/S79tpIMJlr1Q==
+	t=1794496552;
+	b=bKczjv1ZC5imeR7SuvFBQrFCuhMe86lf/liEVE6/NqbaBsrGRObQCmH/BhFrL4GwAi8N
+	 nFA5t2E8W0DA0rCgpzeftstUbzd4y4chEBGSX6nvPXWM1E4XdmMf453xmnP0IdOiLCIk7
+	 m6/R6x+LqVIXyGFK7x1qY/Tmb9nmpsDAD3pBM9TfqUhwR8JhBNBAdvjM1ecBlGm5Y4UTZ
+	 9ULqqTD36cOsHeSCu/EM+PvwSQ2CpKOJkSLSm1B7fLqzg37M+fSdSDggkZ3NnjgEg5AEG
+	 9hx6eV/a+TQrrzv7Xwnw6mVuTKKPi3U7JptI2bEPKTR9udSDT40x24S17qFbysNf3/g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794495678;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=M/6u10agl+rdRWY13WawdsYLlQi9SJfLtYTamWTVA+8=;
-	b=BtcFiNTsM2TN4ihm0a+UjLGhX8Ra+eT77OEhbsyYaICExFgW3qnPqwLzbBBWZ+tlXIx0
-	 aaPVZ05/8pcX6IYb9DYfMIKV3qz5KjX4qEbq1Hhm1ir6vRjSddk0RnSAMl/F2iaFwp8Sx
-	 iRj5wW8S/J+VQYi4q+f9MUhoSRuPaBUMObimL+6z5KrowrFcDgBNIvWCDlLXCzJV6A3uo
-	 ze0RIUooqaTwooFc9QdKKIrZ/aTVqYJ2vqmuae0OzX3F1yhMtaS2gEzXvYlx8hj2W5K9h
-	 umtpH4Vc7sFy37lNDA9HT4Q0abXV+p85RbyMNabPXL6yQsHOiUvdBEFXWeDqHAE3S+A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794496552;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:CC:Subject:User-Agent:
+	 In-Reply-To:References:Message-ID:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=3iXofka/ijAZ8YI184eortXle/aCUVIrItu1XLah2E4=;
+	b=chfT8lvudC1gRM4hmyYguaWYJaMYEJAdF/Y8rMShpFKjtuZmZpZwnL2I4gkbxBhgrdPE
+	 lVkKcvIWXUMWyEwh8kWfoLBaTKwXpPikIRcxXoZgD34YN4vFLx5FSzHPASBDd27GssDuF
+	 LjI8nuwI56/gwLajMSvr0sGxma1Xu5a6evuHei6uVcoRpdUrI6ODbkiVh/kGTMUr1ftrI
+	 Cq+V/JclB/TTBYbnyfjwC4D2owC84G/DtLN9IW+kwnE0FfjKLezrkpYhjoI5CZnjabe82
+	 0GBtFvThYzF22Vx0lb7sm8+I4qg5VVfGAs9253ljfgHpGyq9n8VxwO3mRmSyU3tCUGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=KTCH6UYL;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=RTr+R4Yb;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=sGdM+++x;
+	arc=none smtp.remote-ip=91.218.175.222
+Received: from mta0.migadu.com (out-222.mta0.migadu.com [91.218.175.222])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA4B3606A327
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 15:01:17 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DA4B3606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1065606A33E
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 15:15:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F1065606A33E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=KTCH6UYL;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=RTr+R4Yb
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794495677;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=M/6u10agl+rdRWY13WawdsYLlQi9SJfLtYTamWTVA+8=;
-	b=KTCH6UYL3ikuyNlL9CF8WDrfFc7GiWisbsTNpxsRRj8RrclayEO+KvpeU2IvvWfQeq49jC
-	pYHvD+iQ6Ur0vMlqXmSdQ5zsvDJt3f8wF2VgTE0HAViB1/5tE7Pi9p/ZP2GZY0ej6RhEOo
-	K8i2TQ8+9Qh8AD+hxnsi6NHIdo72fk4=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-377-R0seed47MDmmpvzBmGlICA-1; Thu, 12 Nov 2026 10:01:12 -0500
-X-MC-Unique: R0seed47MDmmpvzBmGlICA-1
-X-Mimecast-MFC-AGG-ID: R0seed47MDmmpvzBmGlICA_1794495671
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-4a1fdde384cso30033055e9.3
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 07:01:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794495671; x=1795100471; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=M/6u10agl+rdRWY13WawdsYLlQi9SJfLtYTamWTVA+8=;
-        b=RTr+R4YbUtPb0bJdv9nKHbt5s927vcuRHj8Qc+OgK1pDd+OkXz/XRTdRh+Lp+nae6T
-         l8lJ53T4GUVn9XOVe0bCKpyjw3CnwmmmXHp08IWNvpnkN1WmIOQnOrXGswdpYoBnfqCQ
-         y9gE7rnEsVVfnKIv64XUWDMmG6izvPpfn4bFNPpiC+7qjOELvlLNSzLS3gpb9Lq/um6S
-         O9f8JkDe7Wxx0Wh+ahSYpy3z8bupNQZI4JCTSBKci4+I5ulr0MP7RAQiXvnYM2O3UolY
-         85zasF1WCLyu6xoC8IR+3v+DI32L7sVan4s8dZ2r1WSI33icXbBNVYFWTfbbmw6GYvmh
-         pkQg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794495671; x=1795100471;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=M/6u10agl+rdRWY13WawdsYLlQi9SJfLtYTamWTVA+8=;
-        b=TgXykQeNGRLYZ0mgxl8YNs1QlU5FR92oyGHmzKZTBTofFpSJjCW2U4GT6onB3OIF5x
-         8Hn+VCqltHYuwNjn2LK7M++zSlUyVLPOJgkzAJCDmMpO9/t6rFDKrEevFS1gcXRejrN3
-         PQBj044C/BFElRSppkbRT+62L3/KfHNZPnN7981/83ZwFAKqcnTFZmiNu4+Aa4nIEm6r
-         Yeyh1azuaiAtoHmOf0DSfA60BHvoKkax6Sxo8es05w1qEOU5VWAaae0h7GC0oPAopy7O
-         zHzLuMQT5247P13qsYSt4UAjeAefdLXvA2i+RavXQ2D29AXg97Cyf3UuyjwLeVdCT7I5
-         aBmQ==
-X-Forwarded-Encrypted: i=1; AL+hErFs1Ccqg8MnsR6uZaVOgrqXdo8XtsMInA2sGiKT07yD0OdBhQHkEu1o8u6qKtVWG8EzNHylJAiw@vger.kernel.org
-X-Gm-Message-State: APuU4Z+sQcwZ6x1hG40asQIVBXwpQeexrF99f5BGbeShS3OJHMlrMO+8
-	+9x0RDAPvUV27HnOFHh37J2zTvSh1qg1hVK1a0Izso01zNBJHAPdPfU9LwhwqlCfjAKQ+vcOa22
-	14/j0xkGyNDEl1hXCGjJnh9lfZYIPbnt35bt4yGWOk8mBH/Ou8YAGrykYABo=
-X-Gm-Gg: AYBFou1s/KrOupiNViikYsh6XSH+EmXgZjM7CicQA3ecoAeUFadWR9bx0FzJHV3RIFZ
-	LLDn8EAOzIN86Ca6huIQkTPgGcuagr105Pz6rRg5K+7u2plvBD6+dV9/UQjhsPq3oAFm6F18N1M
-	OfVdxQUJ1Bgo8wmdt8uPin/2ZHhSpdDYchJIfHvjkxq6sdx4Tj755xYJn5YwwjKyMU/IBuZxNw/
-	cPy2c9wKx31udSJSpFkUCpLMUqRU1qZ6vurRkDQvoSVCRMS1gaqjnk4KOBAT+cgX7Xn1G9+nTjO
-	fU6zOo+gPW5PA9op/2X13WtG4SM3gRZW72xpUwyGk4zw+Pj9Cf2dZ2UNpSFc5ZPayM3VBCV2gZZ
-	5jwcYDAAdGHN4RxNQWcSidKrpeRtNESiqjgTXvyPGn2EDEck9p4QN4ELfXgcGeF9jif5TvTkplN
-	MFOAw=
-X-Received: by 2002:a05:600c:6819:b0:4a2:167a:c946 with SMTP id 5b1f17b1804b1-4ba0935f880mr100717885e9.13.1794495670976;
-        Thu, 12 Nov 2026 07:01:10 -0800 (PST)
-X-Received: by 2002:a05:600c:6819:b0:4a2:167a:c946 with SMTP id 5b1f17b1804b1-4ba0935f880mr100717275e9.13.1794495670509;
-        Thu, 12 Nov 2026 07:01:10 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4ba08ddd467sm110908625e9.0.2026.11.12.07.01.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 07:01:09 -0800 (PST)
-Date: Thu, 12 Nov 2026 16:01:06 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: "Paul E. McKenney" <paulmck@kernel.org>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
-	John Ogness <john.ogness@linutronix.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>
-Subject: Re: [PATCH v2 0/7] sched: RT throttling cleanup and a bit of
- documentation
-Message-ID: <avXUstjABxdTZaxM@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261110-sched_dl-v2-0-cc9399f7aeb1@linutronix.de>
- <c2bf89ce-b9de-43cf-839b-395d28b2275c@paulmck-laptop>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=sGdM+++x
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=w3akmbf0AFdJvzUPfaISDxeZcbJmAzfupNJkIFkNAFo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794496549; v=1; x=1795101349;
+ b=sGdM+++xxm1S7BWDjSbeG93Bfze4vRikOOD+/UcCuhXB0Rr4BUBIaHet7FQLp0nKYg96aUYh
+ wOadRMQOjoQJQII5JSL+a3bmbdvDxHNPfuxwDJkj/26RnviJQnzdTChzOQNJv3gJVfal7pRWiYi
+ cjW8jbz3M33SUTO4NUwxHPxo=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id e0e3d63694f38fef;
+	Thu, 12 Nov 2026 15:14:48 +0000
+X-Mizu-Trace-ID: e0e3d63694f38fef
+X-Migadu-Flow: FLOW_OUT
+Date: Thu, 12 Nov 2026 23:14:45 +0800
+From: Tao Cui <cui.tao@linux.dev>
+To: Tejun Heo <tj@kernel.org>
+CC: axboe@kernel.dk, josef@toxicpanda.com, oliver.sang@intel.com,
+ nilay@linux.ibm.com, hch@lst.de, yukuai@fygo.io, linux-block@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, cuitao@kylinos.cn,
+ sashiko-bot@kernel.org, cui.tao@linux.dev
+Subject: Re: [PATCH] blk-iocost: fix the lock order in ioc_cost_model_write()
+User-Agent: Thunderbird for Android
+In-Reply-To: <bfe5007b2758bb06504b6966abaf1f7e@kernel.org>
+References: <20261111162137.295523-1-cui.tao@linux.dev> <bfe5007b2758bb06504b6966abaf1f7e@kernel.org>
+Message-ID: <55824DEC-A6E9-4607-B1DF-C61A24D59FFA@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -144,39 +68,88 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c2bf89ce-b9de-43cf-839b-395d28b2275c@paulmck-laptop>
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Hello,
+Hello, Tejun, Christoph,
 
-On 10/11/26 11:56, Paul E. McKenney wrote:
-> On Tue, Nov 10, 2026 at 06:34:42PM +0100, Sebastian Andrzej Siewior wrote:
-> > People used to disable the RT throttling mechanism by writing -1 to
-> > /proc/sys/kernel/sched_rt_runtime_us. Since v6.12 they can still do this
-> > but they don't disable RT throttling anymore. Instead this throttling
-> > mechanism has been taken over by the fair_server which can be configured
-> > via debugfs.
-> > This is not really documented by a hint appeared a few cycles later in
-> > Documentation/scheduler/sched-rt-group.rst. This can be found once you
-> > know what you are looking for because this document describes the RT
-> > group scheduling (CONFIG_RT_GROUP_SCHED). The fair_server is used even
-> > without it.
-> > The then there is global DL resource control which also shares this
-> > file proc file (which is stuck if CONFIG_RT_GROUP_SCHED is enabled).
-> 
-> Nice, thank you!
-> 
-> Unfortunately but unsurprisingly, this gets the same divide-by-zero
-> issue reported (belatedly) on the earlier series:
-> 
-> https://lore.kernel.org/all/e58e48c3-ac62-40cd-b5d3-2de87db12496@paulmck-laptop/
-> 
+Thanks for the reviews=2E
 
-I wonder if this fixes is
 
-https://lore.kernel.org/lkml/20261108185406.1549770-6-mathieu.desnoyers@efficios.com/
+=E4=BA=8E 2026=E5=B9=B411=E6=9C=8812=E6=97=A5 GMT+08:00 01:31:38=EF=BC=8CT=
+ejun Heo <tj@kernel=2Eorg> =E5=86=99=E9=81=93=EF=BC=9A
+>Hello, Tao=2E
+>
+>On Thu, Nov 12, 2026 at 12:21:37AM +0800, Tao Cui wrote:
+>> The inversion cannot currently deadlock because blk_mq_freeze_queue()
+>> is in a noio scope since 1e1a9cecfa ("block: force noio scope in
+>> blk_mq_freeze_queue"), so a caller freezing a queue cannot recurse
+>> into the frozen queue through reclaim=2E Holding the mutex across
+>> the freeze needlessly serializes config writers behind it and
+>> leaves two different orderings in the same file=2E
+>
+>There is no deadlock here to begin with, and the noio scope isn't why=2E
+>Freezing is counted and doesn't exclude other freezers, and a freeze only
+>waits for in-flight IOs to drain, none of which takes rq_qos_mutex=2E The
+
+I got this wrong=2E I treated the freeze as something that could deadlock
+against the mutex, but it is a counted wait for in-flight I/O to drain,
+and the drain paths don't take rq_qos_mutex, so there was never a
+deadlock here to fix=2E The noio scope of blk_mq_freeze_queue() addresses
+a different concern: preventing reclaim from recursing into the frozen
+queue=2E I conflated the two=2E
+
+>patch doesn't make the ordering consistent either=2E blk_iocost_init() st=
+ill
+>freezes under the mutex through rq_qos_add() and blkcg_activate_policy(),
+>and so do blk_throtl_init() and blk_iolatency_init()=2E
+>
+I also missed that holding rq_qos_mutex across a freeze is the normal
+pattern in these paths, so the "two different orderings in the same
+file" premise of the commit message was wrong to begin with=2E
+
+>> +	mutex_unlock(&q->rq_qos_mutex);
+>>  	memflags =3D blk_mq_freeze_queue(q);
+>> +	mutex_lock(&q->rq_qos_mutex);
+>
+>This lets the disk be deleted in the middle=2E @ioc was looked up before =
+the
+>unlock and rq_qos_exit() can tear it down before the mutex is retaken=2E
+>With a delay added after the unlock and a null_blk device deleted during
+>it, the write goes on to use the ioc after ioc_rqos_exit() and KASAN
+>reports use-after-free in blk_mq_quiesce_queue() called from
+>ioc_cost_model_write()=2E
+>
+>So, this fixes nothing and adds a bug=2E
+>
+>Separately, ioc_qos_write() already has the same window=2E It retakes the
+>mutex without rechecking disk_live(), so with the disk deleted in between=
+,
+>it initializes iocost on the dead disk and hits the same use-after-free=
+=2E
+>That's the part which needs fixing=2E
+>
+Thanks for the reproducer=2E This is what I missed: the mutex also
+protects the lifetime of @ioc against rq_qos_exit(), and releasing it
+around the freeze drops that protection=2E
+
+On Wed, Nov 11, 2026 at 05:33:06PM +0100, Christoph Hellwig wrote:
+> blkg_conf_open_bdev takes rq_qos_mutex aronud the disk_live call=2E  So
+> you'll have to redo it here=2E
+
+You're right, releasing the mutex voids the disk_live() check made under
+it in blkg_conf_open_bdev()=2E  I'll withdraw this version=2E
+
+Sorry for the noise, and thank you both for the explanations=2E I'll
+take a closer look at these locking and lifetime semantics and come
+back with a new version once it's properly tested=2E
 
 Thanks,
-Juri
+Tao
 
+
+>Thanks=2E
+>
+>--
+>tejun
