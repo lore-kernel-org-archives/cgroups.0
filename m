@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.2
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794472395;
-	b=2jJflbEXxyElREP6RPpdiBSZtwpeaI2p8E4enlDSEtX+UAjwRdIGjVTiyU8y7AoNM4QB
-	 Z8qG3FAZf7aUD4HjMcZhzLGwHj3SifTDXBANhKp5pP9Gbrs10Ltz+STayB5Eq2eGSqHlo
-	 La5xExJdE6+fY0RmXCX8Kb/1owoQjUWYSxfblPPbj+V5JsIWMtWh11aTuUriiFCHxGUSK
-	 xynGr/MATGjcQS79BnZW1lGXosCpa5Fh5yQ5TNWhkvK4OElRh050eisuTnRGpp/kbYvXK
-	 N3Y7rDEsu9fMl4M/2sMGMjw1PJ+4ET1qZAZcVsvJ4ZkbupnfvSUGLK5wp49tCMkrGrQ==
+	t=1794473511;
+	b=lVOZhdq/UUElAOrpO873HBW+ltLBaiPyJicqaccLrviJXTKgItqH7C+xk7o4AkguQuzo
+	 H9Q7GGOgo4M1zvTxk8K0XTpxSUcMxd7qlTPw54DpQaf49UMLuxJuitbF9gtAKBTZrxWB5
+	 E7Fz9L0oPiwWad9yg4NCFyFDLD7rOtiX+TJZBFQCQtuWYqCA8u2WRQCmGN2ieqzNsovwd
+	 uxRhDtruyycWHmA7TIsl2Eoq+yEJWUJOJiNg7SIVuw3eO8ezOqXr72nufXNojaWOenBGd
+	 Wtg38kDZifVxXuf6T/L9X0ovRXeLdmo6PW9XAWfjOzhdcRWHGiWOrxyQwKlR02lx0Gw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794472395;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794473511;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=BbkEZu3uXq3ZEOCedg5XL+zj8rkKjj0G+Sun0B2rI2o=;
-	b=FH/KBjweCg6CnytP/xAfWVBEynl8uyg5+piTwAr+CZXDx95Y+oMbfPrROu5c0ZkQNFZ5
-	 rOs/jr6yQvoM4k1ihOCepYR3o0+tQtXx9i/ZlIiTZeXTDB+7F3MPN/C8qWfduwfTqAuIL
-	 4zkRphZllNQdFXbs+kEEK8WRIEV97fx4dR/4AS4ePZfMHHPfGhK7HVDNdHyZqcHC8JIVo
-	 W9oVJtUjvf6zYCtSWquFKcTk2Oxq2U0mjoDvklZozXgzIako7ARCZ+bT3aGPzx1tyHqs/
-	 8OKrhcqTfLOy9zqlhBA/v64J7Wi15knE2VjDUJCSAZEULJC0u6fy+vpHaJrNckau3wg==
+	bh=ifd3Ny9pO2imzHx3tZY9omeBo1tLc+ksznp/hcOFanc=;
+	b=vGds77m4UY23ZT1Tg9TtgLnU87yfTNvFi2FzUZvXwy9G/VVrl3XjI7a4X1IqYuQ/3V8P
+	 Ill/N9fcmM1qfpksdnST1Cj6cTQbx9JukFPL8x5ZYsbw5snoCaUtkZ6xE8hVJSQtxLOaK
+	 OHHeh7GVR677R/Iz8UG3ACfjeyvh1Dn0WOkORI2Q5bcH5aWxue4+ozqAq3pUN8ZhIyYIt
+	 SKo1Wit4r/TsIzjl8jo3XqpAPMkHc6bqVwG62UCG3b8EnuEWzR6GIskKBevScLhkEHIZc
+	 TUraVQZONVeHEVdjHf8PUzibnrSpFn+I+ZsogYErsYRTtnaMz+SL5W6EO4j5/H49hQg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XVraa+HI;
-	arc=none smtp.remote-ip=95.215.58.198
-Received: from mta1.migadu.com (out-198.mta1.migadu.com [95.215.58.198])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="Z5w/hPHN";
+	arc=none smtp.remote-ip=95.215.58.2
+Received: from mta1.migadu.com (out-2.mta1.migadu.com [95.215.58.2])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33B6F606F8DB
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 08:33:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33B6F606F8DB
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DC72606B24F
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 08:51:48 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DC72606B24F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XVraa+HI
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=Z5w/hPHN
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=4cQtmWfIawgJXEwIIOtancagFgjyN67TaIbiwxnru+g=;
+DKIM-Signature: a=rsa-sha256; bh=mx9E1e/I3LCYVSIIJ+glyO3DlhIEku7AJQTeqmgZKic=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794472393; v=1; x=1795077193;
- b=XVraa+HIcg+vIMRegwfvN4afEr9fesaF/mAnuWOVrZy/CAGMVChkv/DOr8etS1NEBRReaV8V
- wTQjWCQD5jAkbqXIr7oRSBZkITkmbt40Hj1uvloyaktJhCVeZHGUkm/ykMPQU1ZTMrRZ3qASA2A
- PcYtSLhjEX3HHQI0N9rsrGfU=
+ t=1794473507; v=1; x=1795078307;
+ b=Z5w/hPHNqBkIdfcdI3VGvQtN1Gu/r/DrsPHjjpJ/gO5yiMtl4HeYhe78kGfsRDc+85K9eHOk
+ d4uxXVUl03LQCXgK7nL+bqgh1TgSm3v7gJhhT0t03G3HqQ3dGoXI8bAjhuVeOkYJh3JAeOpF3lB
+ BuLxORa9tK8nRtk3+YQlQSpc=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 85ec1a19c94b6343;
-	Thu, 12 Nov 2026 08:33:13 +0000
-X-Mizu-Trace-ID: 85ec1a19c94b6343
+Received: by smtp.migadu.com with ESMTPS id fdb8d4e8cc49206d;
+	Thu, 12 Nov 2026 08:51:47 +0000
+X-Mizu-Trace-ID: fdb8d4e8cc49206d
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <8aec8812-55bb-4c45-89e8-e6ff94d5cf62@linux.dev>
-Date: Thu, 12 Nov 2026 16:33:02 +0800
+Message-ID: <5edbb6e7-589a-441a-b82d-99b64d5ecdbe@linux.dev>
+Date: Thu, 12 Nov 2026 16:51:32 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,8 +59,8 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-7.4-fixes v4 1/2] cpuset: settle isolation state when
- CPUs are given back to parent
+Subject: Re: [PATCH for-7.4-fixes v4 2/2] cpuset: generalize the
+ validate_partition() interface
 To: Ridong Chen <ridong.chen@linux.dev>, Waiman Long <longman@redhat.com>,
  Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
  =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
@@ -69,10 +69,10 @@ Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>,
  Ridong Chen <chenridong@xiaomi.com>
 References: <20261112031931.2815548-1-ridong.chen@linux.dev>
- <20261112031931.2815548-2-ridong.chen@linux.dev>
+ <20261112031931.2815548-3-ridong.chen@linux.dev>
 Content-Language: en-US
 From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20261112031931.2815548-2-ridong.chen@linux.dev>
+In-Reply-To: <20261112031931.2815548-3-ridong.chen@linux.dev>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
@@ -81,252 +81,231 @@ Content-Transfer-Encoding: 8bit
 在 2026/11/12 11:19, Ridong Chen 写道:
 > From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> partition_xcpus_del() only updates isolated_cpus when the partition that
-> gives back the CPUs has a different state than its parent. CPUs that were
-> further distributed to descendant isolated partitions are not taken into
-> account, so isolated_cpus_release() has to be called afterwards in
-> several places to walk up the ancestors and fix isolated_cpus.
+> Refactor validate_partition() to take the parent partition, the new
+> partition root state, the new effective exclusive CPUs and the CPUs to
+> be deleted, instead of a trial cpuset. A NULL parent stands for a
+> remote partition, whose CPUs come from top_cpuset. This makes the
+> interface flexible enough to handle both local and remote partition
+> validation.
 > 
-> This misses some cases and leaks isolated CPUs, as reported by Guopeng.
-> An isolated partition can be invalidated after its parent has already
-> become invalid, and its CPUs are left in isolated_cpus. For example, on a
-> 32-CPU system with all CPUs online and without isolcpus= or nohz_full=
-> boot parameters:
+> This also fixes a false PERR_NOCPUS error when expanding a remote
+> partition. The no CPU left for tasks check in partition_cpus_change()
+> is done against the cgroup parent, but the CPUs of a remote partition
+> come from top_cpuset, not from its parent. For example, on a 4-CPU
+> system:
 > 
->   cd /sys/fs/cgroup
->   echo +cpuset > cgroup.subtree_control
->   mkdir A
->   echo 0,2-31 > A/cpuset.cpus
->   echo root > A/cpuset.cpus.partition
->   echo +cpuset > A/cgroup.subtree_control
->   mkdir A/B
->   echo 2-3 > A/B/cpuset.cpus
->   echo isolated > A/B/cpuset.cpus.partition
->   cat cpuset.cpus.isolated
->   2-3
->   echo 0 > /sys/devices/system/cpu/cpu1/online
->   cat A/B/cpuset.cpus.partition
->   isolated invalid
->   cat cpuset.cpus.isolated
->   2-3
+>   echo 2-3 > P/cpuset.cpus
+>   echo 2-3 > P/cpuset.cpus.exclusive
+>   echo 2-3 > P/C/cpuset.cpus
+>   echo 2 > P/C/cpuset.cpus.exclusive
+>   echo root > P/C/cpuset.cpus.partition
+>   (a task in P)
+>   echo 2-3 > P/C/cpuset.cpus.exclusive
+>   cat P/C/cpuset.cpus.partition
+>   root invalid (Parent is not a partition root)
 > 
-> When A is invalidated, partition_xcpus_del() gives CPUs 0,2-31 back to
-> top cpuset. Both A and top cpuset are root partitions, so isolated_cpus
-> is left untouched although CPUs 2-3 were distributed to the isolated B.
-> B is then invalidated with an invalid parent, and nothing releases CPUs
-> 2-3 either.
+> The effective_cpus of P is 3, a subset of the new exclusive CPUs 2-3 of
+> C, and P has a task, so the expansion is rejected. However, P is not a
+> partition root and does not give any CPU to C, and top_cpuset still has
+> CPUs 0-1 for the task. Enabling C directly with exclusive CPUs 2-3
+> succeeds, as remote_partition_enable() checks top_cpuset instead.
 > 
-> Make partition_xcpus_del() always set the isolation state of the given
-> back CPUs to the state of the parent that receives them. As the
-> effective_xcpus of a partition covers the CPUs distributed to its
-> descendants, the isolation state of those CPUs is settled at the same
-> time. Boot-time isolated CPUs are still preserved by isolated_cpu_update().
+> The no CPU left for tasks check now uses the given parent instead of
+> parent_cs(cs), and top_cpuset for a remote partition, as that is where
+> its CPUs are taken from.
 > 
-> compute_partition_effective_cpumask() invalidates a child partition
-> without going through partition_xcpus_del(), so do the same there: the
-> CPUs of the invalidated child take the isolation state of its parent.
+> The housekeeping conflict check is folded into validate_partition(). It
+> is skipped when the parent is not a valid partition root, as @cs can't
+> be a valid local partition in that case.
 > 
-> As the parent may be shrunk and its effective_xcpus not updated yet,
-> only do so for the CPUs the parent still owns. This is to keep the
-> isolation state correct for now, the in-place invalidation here will be
-> removed later in the partition rework.
+> Use the new interface for local partition enablement in
+> update_parent_effective_cpumask() and in partition_cpus_change(),
+> replacing the open-coded checks there. The order of the checks is now
+> the same for both paths: empty CPUs, housekeeping conflict, then no CPU
+> left for tasks.
 > 
-> isolated_cpus_update() assumes the old and new states are different,
-> which no longer holds now that partition_xcpus_del() proceeds regardless
-> of the states. Drop its @old_prs argument and the WARN_ON_ONCE() so that
-> it simply sets the isolation state of the given CPUs, and use it
-> everywhere. The state check in partition_xcpus_add() is dropped as well,
-> as setting the state is a no-op when the states are the same.
+> Add a test case to test_cpuset_prs.sh for the remote partition
+> expansion above.
 > 
-> isolated_cpus_release() is no longer needed and is removed.
-> 
-> Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
-> Reported-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
-> Closes: https://lore.kernel.org/all/20261105130344.664336-4-guopeng.zhang@linux.dev/
+> Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
 > Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 > ---
->  kernel/cgroup/cpuset.c | 98 ++++++++----------------------------------
->  1 file changed, 19 insertions(+), 79 deletions(-)
+>  kernel/cgroup/cpuset.c                        | 119 +++++++++---------
+>  .../selftests/cgroup/test_cpuset_prs.sh       |   5 +
+>  2 files changed, 64 insertions(+), 60 deletions(-)
 > 
 > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 06ceeb0ac8c0..c7d4cfb615b7 100644
+> index c7d4cfb615b7..7e374210c123 100644
 > --- a/kernel/cgroup/cpuset.c
 > +++ b/kernel/cgroup/cpuset.c
-> @@ -1244,17 +1244,17 @@ static bool isolated_cpu_update(int new_prs, int cpu)
+> @@ -1414,6 +1414,48 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+>  	return res;
 >  }
 >  
->  /*
-> - * isolated_cpus_update - Update the isolated_cpus mask
-> - * @old_prs: old partition_root_state
-> - * @new_prs: new partition_root_state
-> - * @xcpus: exclusive CPUs with state change
-> + * isolated_cpus_update - Set the isolation state of @xcpus
-> + * @new_prs: partition root state that @xcpus will belong to
-> + * @xcpus: exclusive CPUs whose isolation state may change
+> +/**
+> + * validate_partition - Validate a cpuset partition configuration
+> + * @cs: The cpuset to validate
+> + * @parent: Parent partition of @cs, NULL for remote partition
+> + * @new_prs: The proposed new partition root state
+> + * @new_excpus: The new effective exclusive CPUs mask to validate
+> + * @del: exclusive CPUs to be deleted from @cs, can be NULL
 > + *
-> + * CPUs isolated at boot time are kept isolated.
->   */
-> -static void isolated_cpus_update(int old_prs, int new_prs, struct cpumask *xcpus)
-> +static void isolated_cpus_update(int new_prs, struct cpumask *xcpus)
->  {
->  	bool updated = false;
->  	int cpu;
+> + * A remote partition gets its CPUs from top_cpuset, so top_cpuset is used
+> + * as the parent when @parent is NULL.
+> + *
+> + * The housekeeping check is skipped if @parent is not a valid partition
+> + * root as @cs can't be a valid local partition in that case.
+> + *
+> + * Return: PRS error code (0 if valid, non-zero error code if invalid)
+> + */
+> +static enum prs_errcode validate_partition(struct cpuset *cs,
+> +					   struct cpuset *parent, int new_prs,
+> +					   struct cpumask *new_excpus,
+> +					   struct cpumask *del)
+> +{
+> +	int parent_prs;
+> +
+> +	if (new_prs == PRS_MEMBER)
+> +		return PERR_NONE;
+> +
+> +	if (cpumask_empty(new_excpus))
+> +		return PERR_INVCPUS;
+> +
+> +	if (!parent)
+> +		parent = &top_cpuset;
+> +	parent_prs = parent->partition_root_state;
+> +	if (parent_prs > 0 &&
+> +	    prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
+> +		return PERR_HKEEPING;
+> +
+> +	if (tasks_nocpu_error(parent, cs, new_excpus))
+> +		return PERR_NOCPUS;
+> +
+> +	return PERR_NONE;
+> +}
+> +
+>  /*
+>   * cpuset_update_sd_hk_unlock - Rebuild sched domains, update HK & unlock
+>   *
+> @@ -1934,18 +1976,10 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>  	if ((cmd == partcmd_enable) || (cmd == partcmd_enablei)) {
+>  		new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
 >  
-> -	WARN_ON_ONCE(old_prs == new_prs);
->  	lockdep_assert_held(&callback_lock);
->  	lockdep_assert_held(&cpuset_mutex);
->  	for_each_cpu(cpu, xcpus)
-> @@ -1263,45 +1263,6 @@ static void isolated_cpus_update(int old_prs, int new_prs, struct cpumask *xcpus
->  		update_housekeeping = true;
+> -		/*
+> -		 * Enabling partition root is not allowed if its
+> -		 * effective_xcpus is empty.
+> -		 */
+> -		if (cpumask_empty(tmp->delmask))
+> -			return PERR_INVCPUS;
+> -
+> -		if (prstate_housekeeping_conflict(new_prs, parent_prs, tmp->delmask, NULL))
+> -			return PERR_HKEEPING;
+> -
+> -		if (nocpu)
+> -			return PERR_NOCPUS;
+> +		part_error = validate_partition(cs, parent, new_prs,
+> +						tmp->delmask, NULL);
+> +		if (part_error)
+> +			return part_error;
+>  
+>  		/*
+>  		 * This function will only be called when all the preliminary
+> @@ -2428,32 +2462,6 @@ static int parse_cpuset_cpulist(const char *buf, struct cpumask *out_mask)
+>  	return 0;
 >  }
 >  
-> -/*
-> - * isolated_cpus_release - Remove the relevant CPUs in @xcpus from isolated_cpus
-> - * @cs: the current cpuset
-> - * @xcpus: the set of effective xcpus to be considered for removal
+> -/**
+> - * validate_partition - Validate a cpuset partition configuration
+> - * @cs: The cpuset to validate
+> - * @trialcs: The trial cpuset containing proposed configuration changes
 > - *
-> - * This function is called when an isolated partition is invalidated or when
-> - * some of its effective xcpus are to be removed from isolated_cpus due to
-> - * changes in parent cpuset. The given @xcpus must be modifiable as the function
-> - * will update its value to determine the right set of CPUs to be removed.
+> - * If any validation check fails, the appropriate error code is set in the
+> - * cpuset's prs_err field.
+> - *
+> - * Return: PRS error code (0 if valid, non-zero error code if invalid)
 > - */
-> -static void isolated_cpus_release(struct cpuset *cs, struct cpumask *xcpus)
+> -static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *trialcs)
 > -{
-> -	struct cpuset *ancestor = parent_cs(cs);
-> -	struct cpuset *iancestor = NULL;
+> -	struct cpuset *parent = parent_cs(cs);
 > -
-> -	/*
-> -	 * Search the furthest isolated partition root ancestor available
-> -	 * until top_cpuset or a remote partition root is hit.
-> -	 */
-> -	for (; ancestor; ancestor = parent_cs(ancestor)) {
-> -		if (ancestor->partition_root_state == PRS_ISOLATED)
-> -			iancestor = ancestor;
-> -		if (is_remote_partition(ancestor))
-> -			break;
-> -	}
+> -	if (cs_is_member(trialcs))
+> -		return PERR_NONE;
 > -
-> -	/*
-> -	 * If a furthest isolated partition acnestor is found, use it to
-> -	 * determine which of the CPUs in @xcpus should be removed from
-> -	 * isolated_cpus. Otherwise, all of them will be removed.
-> -	 */
-> -	if (iancestor && !cpumask_andnot(xcpus, xcpus, iancestor->effective_xcpus))
-> -		return; /* No CPU should be removed from isolated_cpus */
+> -	if (cpumask_empty(trialcs->effective_xcpus))
+> -		return PERR_INVCPUS;
 > -
-> -	spin_lock_irq(&callback_lock);
-> -	isolated_cpus_update(PRS_ISOLATED, PRS_ROOT, xcpus);
-> -	spin_unlock_irq(&callback_lock);
+> -	if (tasks_nocpu_error(parent, cs, trialcs->effective_xcpus))
+> -		return PERR_NOCPUS;
+> -
+> -	return PERR_NONE;
 > -}
 > -
->  /*
->   * partition_xcpus_add - Add new exclusive CPUs to partition
->   * @new_prs: new partition_root_state
-> @@ -1325,9 +1286,7 @@ static void partition_xcpus_add(int new_prs, struct cpuset *parent,
->  	if (parent == &top_cpuset)
->  		cpumask_or(subpartitions_cpus, subpartitions_cpus, xcpus);
+>  /**
+>   * partition_cpus_change - Handle partition state changes due to CPU mask updates
+>   * @cs: The target cpuset being modified
+> @@ -2467,33 +2475,24 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
+>  				  struct tmpmasks *tmp)
+>  {
+>  	enum prs_errcode prs_err;
+> -	int parent_prs = is_remote_partition(cs)
+> -		       ? PRS_ROOT : parent_cs(cs)->partition_root_state;
+> +	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
 >  
-> -	if (new_prs != parent->partition_root_state)
-> -		isolated_cpus_update(parent->partition_root_state, new_prs,
-> -				     xcpus);
-> +	isolated_cpus_update(new_prs, xcpus);
+>  	if (cs_is_member(cs))
+>  		return;
 >  
->  	cpumask_andnot(parent->effective_cpus, parent->effective_cpus, xcpus);
->  }
-> @@ -1355,9 +1314,8 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
->  	if (parent == &top_cpuset)
->  		cpumask_andnot(subpartitions_cpus, subpartitions_cpus, xcpus);
+> -	prs_err = validate_partition(cs, trialcs);
+> -	if (!prs_err && (parent_prs > 0) &&
+> -	    !cpumask_empty(trialcs->effective_xcpus)) {
+> -		int prs = cs->partition_root_state;
+> -
+> -		/*
+> -		 * Check for housekeeping conflict by passing the whole
+> -		 * effective_xcpus as well as those CPUs that are to be
+> -		 * removed from cs as delmask.
+> -		 */
+> -		if (prs > 0)
+> -			cpumask_andnot(tmp->delmask, cs->effective_xcpus,
+> -				       trialcs->effective_xcpus);
+> -		else
+> -			cpumask_clear(tmp->delmask);
+> -
+> -		if (prstate_housekeeping_conflict(prs, parent_prs,
+> -						  trialcs->effective_xcpus, tmp->delmask))
+> -			prs_err = PERR_HKEEPING;
+> -	}
+> +	/*
+> +	 * Check for housekeeping conflict by passing the whole
+> +	 * effective_xcpus as well as those CPUs that are to be
+> +	 * removed from cs as delmask.
+> +	 */
+> +	if (is_partition_valid(cs))
+> +		cpumask_andnot(tmp->delmask, cs->effective_xcpus,
+> +			       trialcs->effective_xcpus);
+> +	else
+> +		cpumask_clear(tmp->delmask);
 >  
-> -	if (old_prs != parent->partition_root_state)
-> -		isolated_cpus_update(old_prs, parent->partition_root_state,
-> -				     xcpus);
-> +	/* CPUs given back, including those of descendants, take parent's state */
-> +	isolated_cpus_update(parent->partition_root_state, xcpus);
+> +	prs_err = validate_partition(cs, parent, trialcs->partition_root_state,
+> +				     trialcs->effective_xcpus, tmp->delmask);
+>  	if (prs_err) {
+>  		WRITE_ONCE(cs->prs_err, prs_err);
+>  		trialcs->prs_err = prs_err;
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index 1e9e6b4c6f7b..1397ec428c46 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -707,6 +707,11 @@ REMOTE_TEST_MATRIX=(
+>  	"  C1-4:P1 C5-6   C1-2     .       C5      .  \
+>  	      .      P1    P1      .      O5=0     .     p1:3-4|p2:6|c11:1-2|c12:3-4|c21:6|c22:6 \
+>  							 p1:P1|p2:P1|c11:P1"
+> +	# Expanding a remote partition should check top cpuset, not its member
+> +	# parent, for the no CPU left for tasks error.
+> +	"  CX2-3:T  .   C2-3:X2:P1  .       .       .  \
+> +	      .      .     X2-3    .       .       .     p1:1,4-7|c11:2-3 \
+> +							 p1:P0|c11:P1"
+>  )
 >  
->  	cpumask_or(parent->effective_cpus, parent->effective_cpus, xcpus);
->  	cpumask_and(parent->effective_cpus, parent->effective_cpus, cpu_active_mask);
-> @@ -1612,6 +1570,7 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
->  	struct cgroup_subsys_state *css;
->  	struct cpuset *child;
->  	bool populated = partition_is_populated(cs, NULL);
-> +	static cpumask_t xcpus;		/* Protected by cpuset_mutex */
->  
->  	/*
->  	 * Check child partition roots to see if they should be invalidated
-> @@ -1640,14 +1599,15 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
->  			int parent_prs = cs->partition_root_state;
->  
->  			/*
-> -			 * Invalidate child partition and update isolated_cpus
-> -			 * if necessary.
-> +			 * Invalidate child partition. Its CPUs still owned by
-> +			 * cs take the isolation state of cs. effective_xcpus
-> +			 * of cs may not be updated yet, so recompute it.
->  			 */
->  			spin_lock_irq(&callback_lock);
->  			WRITE_ONCE(child->prs_err, PERR_NOCPUS);
-> -			if ((old_prs == PRS_ISOLATED) && (parent_prs == PRS_ROOT))
-> -				isolated_cpus_update(PRS_ISOLATED, PRS_ROOT,
-> -						     child->effective_xcpus);
-> +			compute_excpus(cs, &xcpus);
-> +			cpumask_and(&xcpus, &xcpus, child->effective_xcpus);
-> +			isolated_cpus_update(parent_prs, &xcpus);
->  			child->partition_root_state = -old_prs;
->  			spin_unlock_irq(&callback_lock);
->  			notify_partition_change(child, old_prs);
-> @@ -2090,22 +2050,8 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->  		 *
->  		 * A partition error happens when parent has tasks and all
->  		 * its effective CPUs will have to be distributed out.
-> -		 *
-> -		 * For an isolated partition with a shrunk root partition parent
-> -		 * we may need to return some or all of its isolated CPUs.
->  		 */
->  		nocpu |= cpumask_empty(tmp->delmask);
-> -		if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED)) {
-> -			cpumask_clear(tmp->addmask);
-> -			if (nocpu)
-> -				cpumask_copy(tmp->addmask, cs->effective_xcpus);
-> -			else if (!cpumask_subset(cs->effective_xcpus, parent->effective_xcpus))
-> -				cpumask_andnot(tmp->addmask, cs->effective_xcpus,
-> -							     parent->effective_xcpus);
-> -			if (!cpumask_empty(tmp->addmask))
-> -				isolated_cpus_release(cs, tmp->addmask);
-> -			/* Expansion of parent's effective_xcpus is handled below */
-> -		}
->  		if (nocpu) {
->  			part_error = PERR_NOCPUS;
->  			if (is_partition_valid(cs))
-> @@ -2345,18 +2291,12 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
->  				/*
->  				 * When parent is not a valid partition root,
->  				 * child partition roots become invalid too.
-> -				 *
-> -				 * For a to be invalidated isolated partition,
-> -				 * call return_isolated_cpus() to remove the
-> -				 * relevant CPUs from isolated_cpus.
-> +				 * The isolation state of their CPUs has been
-> +				 * settled when the parent gave them back.
->  				 */
->  				if (is_partition_valid(cp))
->  					new_prs = -old_prs;
->  
-> -				if (old_prs == PRS_ISOLATED) {
-> -					cpumask_copy(tmp->delmask, cp->effective_xcpus);
-> -					isolated_cpus_release(cp, tmp->delmask);
-> -				}
->  				WRITE_ONCE(cp->prs_err,
->  					   is_partition_invalid(parent)
->  					   ? PERR_INVPARENT : PERR_NOTPART);
-> @@ -3132,7 +3072,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  	if (!is_partition_valid(cs))
->  		reset_partition_data(cs);
->  	else if (isolcpus_updated)
-> -		isolated_cpus_update(old_prs, new_prs, tmpmask.new_cpus);
-> +		isolated_cpus_update(new_prs, tmpmask.new_cpus);
->  	spin_unlock_irq(&callback_lock);
->  
->  	/* Force update if partition is disabled & update effective_xcpus */
+>  #
 
 Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
