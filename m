@@ -1,123 +1,99 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794479773;
-	b=fRKWqsiaPzEA0LVVln/nrM1gD/eIwimnHyfi0YmQmtSZsrSPlsA4y5HIk28wXluu5PDC
-	 Hp6Sw19WDdp6RZjbprLWQ2lcz5YlaodpuYGQjnyD7u2Y986qCKM5FZnTdLAIGyAlKvtDj
-	 KBeqcfTY+Y9vn8YJ2MWG1f7wGpb3syOaA8WwYtA99BIAyo8uBR0HsqT36xfdRBm9WL6fs
-	 1v8MyRi9y9HAF2BCkLGM9/5SHgp15AwLdUn0+1iBeWClXbIUX8WSX1RZrGHOJuqblmsW4
-	 MqejPbA1e5HOeXuTmldIrQxZtsDzrDWaVFgp7ZJEkkaM+Ldp1pwqDiuqblRLWZXejwg==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794479773;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.161.44
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794480348;
+	b=0MAY3BPbNy34tJV5RgTKWVkV+UsctkKwaszG3b3NKfIBVkV5+O9wzF6LPFw3ueWnRa7n
+	 EVWw75yCC9SLsZG93kvxmWPrR93ErpZ+LX5jrN63LDx5ZnBl1GAug0UxDSM7qRioyrJDz
+	 lsr7DC/ZitBZhqVLEaarHT8RIDMlRDoNfV6lOj5cjhc4gKzftJ7BrbZ5OOOCjiqhT2+jW
+	 EZqlG6xHAWJqQ235pfQ+ZbEPQnbRDWHqevv/rICJNOrcMJgOtZEymma9TNZysRYCIo8/E
+	 L8bc1+M2oU4FPXshjocsG0AoVeE3V4nygbs/2eBB4yar0MwWQXGSeq5aigjUkMJVvlg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794480348;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Ogwz7ul59oD/hj3UG/Yij9D+/c4RWMPymBINXQ6+9Bk=;
-	b=SMnBLlCtcWALD+eYcxbOVZhVY+CsuMz+ZXoAzKCvAeWm8Y4lpj9eBrvhBqgq1u7FjeD+
-	 /9I36V1zUjRT3oQay+lWX6kH5aM5aJl1uVSjVK9GnZUjGzLd9BJfGwgS3fvjx9K1Aafxp
-	 D0CNSV2DTFfgrenwbIcmxN6zYzpyyPiRmBLFP08yl1xBzcNfugfECBNzdSftMK4AHAiZT
-	 iqm4bNlFpl4+NYK9njExfFcZ4cOx1gVjYz2zSKZWI9vZpZ6tWzYAa0ucwGUBrPHalp/Hp
-	 j4AdX9zacwfmSPMBCu88bjfFp8rglPUvWX+ASRFiJAYhiWpWcPNJST36LWFCgb6Fw7Q==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=U6OaBErl;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=lPkq+kCJ;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type;
+	bh=ddYVXCpBhwQ+2ajmiZG9m0k4vsq/lXRN7BsHqaZoQkw=;
+	b=g9RNFJuEE+twlp+IhDWEnVA5W9/urNombAxrwJcLiSerumhd/A9fb9bv+7X/Hgt+MBRs
+	 ag9uymV7WyQCQoND3zmJ9gygBEj7Qb3r8D2WRsrEPqCXE8UzY7UXKfjsPWPiaRcnvDdTU
+	 9o3t5h/AxVuj6hYJPNrAjv+hsTx5zU0S1X3XsjOcvGXI3YeY8v8BfVW4DM5nN/eSDc5Ap
+	 7X7eD1OUSSqjZaUjmYPY0m7lvr5eTm7qdfBirs+ganmqGtqRDQ9jZXty/hetzxqKrpF8E
+	 eups/akT87ohZUmKfz94jNLXTJUvSblOVOB7WfdEyji9Se9oLEISqXB7VIrkjp6rCJA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xcPiMBtA;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.161.44
+Received: from mail-oo1-f44.google.com (mail-oo1-f44.google.com [209.85.161.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8540A606A886
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 10:36:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8540A606A886
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F100A606A8A9
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 10:45:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org F100A606A8A9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=U6OaBErl;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=lPkq+kCJ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794479771;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Ogwz7ul59oD/hj3UG/Yij9D+/c4RWMPymBINXQ6+9Bk=;
-	b=U6OaBErlYMSHobbPrJAoJTPY3fslh246DBRqobmFAs8roRgp/0Fx6LTp0i9vQ+u0hwCsFa
-	gPJzRGAI+QvuLXpM4wBPJILFXz9dI41hN1RCwuzCNf6fkRdxvlkoDzuTDI0jYVR377TB6j
-	WYdrqMuFfCWqHWmOSmTqeZHgqz07OEM=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-549-ABY4Qf_aMU6rf2jYgjejHA-1; Thu, 12 Nov 2026 05:36:10 -0500
-X-MC-Unique: ABY4Qf_aMU6rf2jYgjejHA-1
-X-Mimecast-MFC-AGG-ID: ABY4Qf_aMU6rf2jYgjejHA_1794479769
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-48df02b91f9so378682f8f.1
-        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 02:36:09 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xcPiMBtA
+Received: by mail-oo1-f44.google.com with SMTP id 006d021491bc7-6fe4372c5f3so2393247eaf.3
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 02:45:47 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794480347; cv=none;
+        d=google.com; s=arc-20260327;
+        b=F0KQn/hY3Jbfe2CZ2XdGEzhyHQTboYNSxW4XqBYKBvL0b3wHJTigtYgmfEQZBtvkpx
+         vfJpcMIwbqUFD2R9HsDioaGGhKmi6IKlFM5Vxd3p+BcFCjaWB5hZ+HdKeXxR+YOMP868
+         aDWfZow9pCCd6kETB63Uj9s65RfXdRr2cYzkoGqMrCWGsEKM9RZjZrKtg+C4YvOyrflp
+         x7MMcIe8T0hLlIhhxYuqfaTtSnN8q8f7sF+dMs2vQabqAqwGayDd1T50PmtUze/qv+M1
+         Cqzugj1X/W0CyGkr7a7qwiEVlWRQdqpL3XIfeA0dmPtj7TKueH+471vdDtzNYmg1bGSP
+         Desw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=ddYVXCpBhwQ+2ajmiZG9m0k4vsq/lXRN7BsHqaZoQkw=;
+        fh=KngaClA8n+nKRIk4gtwFksIJDpddif5HXg6uJrJ040c=;
+        b=O10k0/bYUOO9pPwfTT5ZMYIE4+fhVVjRWBJXMdmXYBl5GAGvTPz+C6SqFP2PyGBNYK
+         XdaxxGEZ313twGMKm4KRQWIN4FSGKnxSsJzKAJiXRWQBfz+rMBWKO9hqG9ag5IUjY9oX
+         DhkEZooiEEREXvwVxFSsI8qByj0AREEFalRcaEM2EPMPdMV4ZznAYlo7f69dSHfAMmji
+         cbY0UaAfSfYZCoJmrP8KL6zins8HMQypdG7xQVoisxfVPIidLu5nfOF6eF+svYe1G4U/
+         2VThD5e0Nrcbp0bFZt5V3ERUzjQnd0f+xVUWFpndqGrVBPJcDnj+ri4PF9ppJq8aAE0f
+         EAJg==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1794479769; x=1795084569; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Ogwz7ul59oD/hj3UG/Yij9D+/c4RWMPymBINXQ6+9Bk=;
-        b=lPkq+kCJM2Ukg4Zws6fskES5U7k09H78lXinl0DlX74ddFDmHzPoI2tle74/yBu5QT
-         KmdGpfCaUUduZ611q1IBDRvn0whTReefWjNQ+JejQMGX5ys0WOCZEtaImQLznHxcc88n
-         c9keFcTrhU6XgoCsOZaXXSXu1STQ7smK8H3Tb3SDJMjH86TB8W4EKLpqEpAlECxslsGb
-         nPCDrkBZjKceLlOg3gSjJe/VsievNDtwa8UhUKjklSuRpcTFhvoVCmvka8/7GmPNqQ9B
-         HFGO2yw2BTSnRmACKW9KQLE6ibOMdmhZqf0zZETh2o9YABo16mPyySOsTXPDOTW5G5zb
-         vLnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794479769; x=1795084569;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+        d=gmail.com; s=20260707; t=1794480347; x=1795085147; darn=vger.kernel.org;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=Ogwz7ul59oD/hj3UG/Yij9D+/c4RWMPymBINXQ6+9Bk=;
-        b=W/z0LwS8w4UqzPjxGYfa2IVZrZHlYXWMGe7KJiU7p7YdbAuMgcd656L1dWtSw6w/r0
-         +xdwNq4OLoKEIyYcdBYx6eE+IcdwdzPjr/MWOBTPlchRA2IlHz711bzV8uD0+lSLSSiv
-         WpkLxZNnZ+TTioKAupMqVtta5/Pyfztl6UKTE5kibi/angmC2OrC//1yVlLXfqz6i0xT
-         0q3Kfyq236aFyBf3UBLoj7aZkQv4YZ7KZLO7jvajzW17aB2wQm6++H0rQ800wUFGO6X3
-         JwWe9weDvzNWyMX7+sEfNXapDSnfBhXa7I4pcz82ymz327fZSN981OIYSr+KT0y8wzrX
-         j57Q==
-X-Forwarded-Encrypted: i=1; AL+hErFUDPdMDnOvVrhnAq83AVAt6PNI2FIxdIE/kRA5NLYsADWNZL1RgK7nlh2RGM3ZorHqarhLn3e3@vger.kernel.org
-X-Gm-Message-State: APuU4Z+cnc0XKQ9h0Sp23dJQEmJ8cHI7993Gl7pENmn9OHIICPm067TX
-	q3qt0oEdomLDyxBwOpqebNQ0C2oyHHYMvToMQ3HVOLTMgsId+ZHoF/LnZH/lF2MACQ3F6bnSjjW
-	IJijgnpvd3t+XYgiNIuJpkoYb20HamZEikAwmGiMeuZ+rrLHHlKB+LW79hK8=
-X-Gm-Gg: AYBFou2zy9tfMqQjGSGnUT/eR1FDbrMri6M1C6TjmgLPAKFq9UkCb1L3ASHx+c6zObM
-	zfe+X7apqsdRG/lmjvJEv1kiJHGmdHgNQO4QYFysl62HvbuUQihX4rpqFEN02XZO5XvknVwLNv7
-	QDeXDW1MnyuzRDRgBrSTPXLuLZQffcFZok7dzCTfIFn/I2+Eh8Ni2z0QRcAkRGjaAhSmI9kxIL4
-	cruiyUNB2Ba9UfQopPMhFAd5c3DHthvNEPttZvA14AGwToInZz0DiPm4Stwc+72EKtfRTl46fpv
-	u0hq8pIRtyGHQrLRxrqonJH83akBdPY7m4r95O6sjwYGiCN0LgmvVeIr9kD+UyKz3IEoN646zzK
-	jXRe7MZFy72jGJLquxypUmpqvYkZr5X33WW0di+s79Hc2pLmrq7Jen2rJ6vSzfLG/HVYX2mkqci
-	FFIVU=
-X-Received: by 2002:a05:600c:8b57:b0:4ba:4395:560f with SMTP id 5b1f17b1804b1-4bb4e283efamr44875045e9.8.1794479768795;
-        Thu, 12 Nov 2026 02:36:08 -0800 (PST)
-X-Received: by 2002:a05:600c:8b57:b0:4ba:4395:560f with SMTP id 5b1f17b1804b1-4bb4e283efamr44874665e9.8.1794479768472;
-        Thu, 12 Nov 2026 02:36:08 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb4e27a8b0sm60917155e9.15.2026.11.12.02.36.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2026 02:36:06 -0800 (PST)
-Date: Thu, 12 Nov 2026 11:36:04 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
-	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org, longman@redhat.com,
-	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
-	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH v5 26/29] sched/debug: Show the deadline bandwidth of
- each runqueue
-Message-ID: <avWWlEGGqVPYkuZw@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
- <20261108185406.1549770-27-mathieu.desnoyers@efficios.com>
+        bh=ddYVXCpBhwQ+2ajmiZG9m0k4vsq/lXRN7BsHqaZoQkw=;
+        b=xcPiMBtAELHn3sgyKErFDHKe52oZIdZV/+UcUTJI51MVq34g1dR2eDj2nxtlt6O8gN
+         ujxl9Kp9NnxitTdfcTiU7WqI0qa/lANz4ihDJAVj0BDAMGEHP7tr+TCelsKdxbzp18G3
+         76DyE+oRDfmbDAilSh4EmN3LaR10QHrrnzWL9YKFcGqWSCIHGZYuP1NjuC1z+BZN3dFM
+         8snWKAclZQnbkdGtLr68y3k5r2aQuv9o4eFn/9v/7VnPHBWCpEpPHp7/LGS5cDcJrUgg
+         2dKjCloKWuJEZjPp+YRKZgkOxYf+LYmZJAACS2/6j4uCcShl9ONNzfmKBhuj3OeIQYKM
+         8Chw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794480347; x=1795085147;
+        h=content-type:cc:to:subject:message-id:date:from:in-reply-to
+         :references:mime-version:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=ddYVXCpBhwQ+2ajmiZG9m0k4vsq/lXRN7BsHqaZoQkw=;
+        b=mfuJXpGFg2t3IOGzti7XNDioB4rWq67uRgGuJ9sy9Of6hCm0ESwNJbzk+47wB/0fLC
+         KvTucf6Bu7zlwgPqpX/5i09LTQYhIcl+b3272plGdIoQHosC3e+XtXney2rCrYCeXOhn
+         dz685CEJIjZjQtvCcg213ZS0StEtvv4DkV9i43qFO/tbYfBBz+wCqICuoOTl8IcTJmvv
+         eg2DbNQ7VqaWj3zPBvxvnuT0bvaNcXYKgZByIEQRHPJYJhigdR9g3lnU+eP62B0GNxTd
+         twC8ol47KJClg4U83eQzOW3Q4/l07dkP0CAB7GWk40l7js6t99O831GPLBpjimci94uk
+         QBvg==
+X-Forwarded-Encrypted: i=1; AL+hErHiypwZBc9rVi/JE3+499gkOVYrlAfnrRHefdwcwzqn1M81oh4ZHJtUi7i5Jr4Co2EYxEl0zytU@vger.kernel.org
+X-Gm-Message-State: APuU4Z+JXRyvp5tJuw0e8A/obLlabXZBF0zSOa9vsepb5EM2ONfvT4ZE
+	hW6DyBIioMIkBMY6tB9csE4/hxwF58ePpTCTxlsGrw+q6xPw7MlaGynMQdocpOfusZKOApgqP8O
+	+kCWoHk2JuWFwKNAh4sMz2N/56D2Pckw=
+X-Gm-Gg: AYBFou06YHitTdPpq4UW0ImA2423dhB/QnT47PkU3AZwhT9QFwvYzpvqe+sRUA2x5Fe
+	y7rrnzXHyj2TxeZ/LMH66ywvFiYBnpbdf5TCxArzTchd2fiuPTrSfenjIFkcbAXw7lzhST9ug3b
+	vkrVpyXADHDQk+uxHLfZX6jdF8AedmEjEkpARRKQmmiG4LSyf/YvQzf5y9qRsXsQGjUlk3BIpbB
+	2GLtppRPLnnVOolXv4Xo4bbHU0v/BpVsttRpwsiDuIa/TGB6GZ6Y44ND9TFL6v6CeKUm0JACByK
+	X9k3wG5+J2o/GQxfHxmu28pGRovEwAqcsOWxo4mA7Ncy1ScQ2nXqN2FjjFKiYbXJ1rKBC1LxQR8
+	CI/m1Uk+3tQcDrwf0WiH7tXUAKDWdOLmvTs53c4o=
+X-Received: by 2002:a05:6820:1621:b0:70d:77b7:6879 with SMTP id
+ 006d021491bc7-7191788d816mr3318135eaf.36.1794480346869; Thu, 12 Nov 2026
+ 02:45:46 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -127,51 +103,24 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261108185406.1549770-27-mathieu.desnoyers@efficios.com>
+References: <avA1wXhTMs9eY2NF@chrisdown.name> <6B8E9261-3FF8-441B-8F47-7D35834A8D35@gmail.com>
+In-Reply-To: <6B8E9261-3FF8-441B-8F47-7D35834A8D35@gmail.com>
+From: elenchist <elenchist.dev@gmail.com>
+Date: Thu, 12 Nov 2026 19:45:34 +0900
+X-Gm-Features: AclHuK8UhlNcIj8rZxl-jPAQ-TNb4Ro929pQ1QbaMvl25O9AF4j0sdfra1fF6R8
+Message-ID: <CANYAW49zq97w7ptUO6xkXZ3e+CNMzWH7qxQ1bQu4an1L6_kXuw@mail.gmail.com>
+Subject: Re: [PATCH v2] mm: memcontrol: Don't lose track of exiting OOM victims
+To: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Tejun Heo <tj@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Zhan Xusheng <zhanxusheng1024@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, kernel-team@meta.com, 
+	regressions@lists.linux.dev, stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hello,
-
-On 08/11/26 13:54, Mathieu Desnoyers wrote:
-> For each CPU, sched_debug prints the deadline bandwidth of its root
-> domain. It does not print the two sums of its runqueue. this_bw is the
-> bandwidth of the deadline tasks assigned to the CPU. running_bw is the
-> part of it that belongs to active tasks.
-> 
-> GRUB reclaiming depends on both sums. grub_reclaim() takes this_bw -
-> running_bw as the inactive bandwidth of the CPU. The more inactive
-> bandwidth, the slower a reclaiming task uses up its runtime.
-> 
-> The kernel warns when a sum wraps around, and when running_bw exceeds
-> this_bw. Bandwidth left behind in this_bw triggers no warning.
-> 
-> Print both sums. The deadline_bw_test selftest added later in this
-> series reads this_bw in its params_waking and random_mix cases. It
-> checks that this_bw is back to its first value once their tasks are
-> gone.
-> 
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> ---
->  kernel/sched/debug.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-> index e0d6cd3bd607..3dbe1d7d2d77 100644
-> --- a/kernel/sched/debug.c
-> +++ b/kernel/sched/debug.c
-> @@ -1174,6 +1174,8 @@ void print_dl_rq(struct seq_file *m, int cpu, struct dl_rq *dl_rq)
->  	SEQ_printf(m, "  .%-30s: %lu\n", #x, (unsigned long)(dl_rq->x))
->  
->  	PU(dl_nr_running);
-> +	PU(running_bw);
-> +	PU(this_bw);
-
-OK, but we will still not printing additional useful information like
-extra_bw, etc. Not sure if you are aware of tools/sched/dl_bw_dump.py
-drgn script; maybe that is already useful for the needed additional
-debugging information?
-
-Thanks,
-Juri
-
+My mail client turned the backslashes in the reproducer into yen
+signs, sorry.  Every yen sign there should be a backslash: the printf
+format in overkill.c ends in backslash-n, and in run.sh each of the
+two "$" right after "echo" has a backslash in front of it.
