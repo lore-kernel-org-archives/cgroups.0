@@ -1,50 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.144
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.173
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794504472;
-	b=RmEq5X+XqJJaW7g3KQU1eZ9OccffFtFWC9y+fKCxigmRtP5Llu/Q/u+slPWvLSJsGYAl
-	 rAjs6ylq6QKFA2p6Qm2kK33UnXzzYt+QpCGeozjCY9ABEqDlY+J0SPhxv0Mehvvd7dk0u
-	 BZgoLhoSbtbORKV/JxRs2oWehix1P27XvOgq94tqEo0aqSH7+3BOlBtGYeEnU5hx8l8Mt
-	 OqEcaSNj2Bh/sgJKivlKChZrppmIIi4dmR2SDdj9bsv37Rf47U2Pak43LS+LHxzYtcClF
-	 mSNpp6TJtfZIzDWbdd6Pe2Rfa+bU7b/7FoPpMDDlkH6Sbqyn5gv8fuQG2ElwjB0GpMw==
+	t=1794504479;
+	b=lUpKqONt+LgUbP6BnmT7Ob5u2Wr7usQ9RjnVAbRY9E1RMr1NznzLDDSgP+nydbymuqm3
+	 biRETlBFIfbf3zmbm/AdlO6OSugkOyA3HXFru5sSjBt/UOY2v8NlQeYGYsR+jOUDz52EV
+	 S9LdwOBndfStw1zPpsDow7hEgSE6aI7XsakPiappIIKi6kj9B04Nv/PG1ctOX4iI44ozR
+	 WP5VM74LJtJejHlXInBW6tBk3xk5SuQfVu/qscs+HdWNImIPcXTHx8pfpDTJT/Vk1Cdct
+	 X23NDucgd8cVwY6FbDUSryLV/A0nV/FNIat4H5zQhX4XEIituZ8LHxYXwWda97u2pSQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794504472;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794504479;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
-	bh=vx5w0fm9h8v5n62PQL9iExcxSEIFCRvNTIp+UzuHmzc=;
-	b=un7FHDNOv/zlWn/VMoVcW7fSOtxt9mLbcp5wqQy6CSurPHsUMqYEWj7CRBfFu1XfYSnT
-	 68Xx6/6teC/IX9cEHCHb9vEfD0yy23OEPpYLle7vMI2QndN2NnCzcozQAQ8aUeGqHsxiN
-	 hZNUSsHCJWLugqgfU44O279QGNdSgV2lAcKP0JQ0LvVZAFlSObzF7HpnHJmIrfSe2w14W
-	 IAe6h7RIL+k7OwYo1e9d2KjV5WSf8DokdZaqck3U1ICL/P/hy+o+96O8A8D59RI6mql09
-	 x7+KaDxbIHhya0m+edDqNAeYh07S2+mcbdvYAsuyGm6CsMUI6tmHst2dSL0FnYm3sFQ==
+	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=msn9KDZfrO0QD3fBAuONrovFFP9yIYwzBUbwG0cCJrM=;
+	b=mzPBw2Gl+6AgiMJxNEcktvUPb+KPtPnY4JMFlifo9fNvd9FphflbGFE40ByNFN8dmIYK
+	 UF+cD2ae0dm0nzDqpUunvpDvj9l/+kCGfPg74oynGHDfGZ0/PVy5fKDxwK2VciBb9jYYQ
+	 FYYGvrIdgBmX75tgFa2WSo4p10hMRm43p2+KLPuaiaKgJGawnLelben2795sCZW/kY5CN
+	 UU/rQqeX/SACm6T3FzhLNCtghFzuMy1Z02/a2stDRhfVfbVb1iaI0Kq6hb96HJHRJplZ3
+	 8ZnprEd0BdXtDFewAAI6xQ4rBeD1N7U48mo180VjUAn8F4fIYUCfVc2dq/0oqrmmlWg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="E66JfS/S";
-	arc=none smtp.remote-ip=91.218.175.144
-Received: from mta0.migadu.com (out-144.mta0.migadu.com [91.218.175.144])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=dhQ9O0UA;
+	arc=none smtp.remote-ip=95.215.58.173
+Received: from mta1.migadu.com (out-173.mta1.migadu.com [95.215.58.173])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16F30606A323
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 17:27:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 16F30606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E2D60A3803
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 17:27:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 40E2D60A3803
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=E66JfS/S
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=dhQ9O0UA
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=PRA9hilCOAvyfJtG+XpLHywnfM53VKvxUll8kJ4luZM=;
+DKIM-Signature: a=rsa-sha256; bh=TST9E/y57Nvizr+gsVIQqWA7f/dSY+xcgKykPeBhINA=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794504469; v=1; x=1795109269;
- b=E66JfS/SRrOD0UJf6/ME6wXYS4FtrU3K4Q7CPv5Gw7Xo+2orO1NpP1A8IV8gUm69yPZ8InAj
- 8HwOmg7pmNvIyf/h3xeHS4yzOqWLtZbs9Er8XrvB7BtPTfdf/oDiR7XVlQVgdw+0qD/Yu2XHa+i
- UjVMlmYXWvoanjVuf5zsW+kE=
+ t=1794504477; v=1; x=1795109277;
+ b=dhQ9O0UA/LoXKwaZ7sg5/cB7iMo78P8TY2vVOGJRIuobKH2i9ruTJ348pos8X4Pw/3NyYE7S
+ PGcbfakAsJDa+zRl7zIGyZkfBPoAfdfrHa4uNwdjASDz5wq6xt8reb2bU8p6m3R2h+pv4MGcT7u
+ vs54oxgsVRhHPPhJ/fJDFXtY=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 34b2f950337f546b;
-	Thu, 12 Nov 2026 17:27:48 +0000
-X-Mizu-Trace-ID: 34b2f950337f546b
+Received: by smtp.migadu.com with ESMTPS id 3ebabef697ff486c;
+	Thu, 12 Nov 2026 17:27:57 +0000
+X-Mizu-Trace-ID: 3ebabef697ff486c
 X-Migadu-Flow: FLOW_OUT
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: bpf@vger.kernel.org
@@ -68,10 +69,12 @@ Cc: Alexei Starovoitov <ast@kernel.org>,
 	Meta kernel team <kernel-team@meta.com>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH bpf-next 0/3] bpf, cgroup: Don't wait for cgroup_mutex to read or free cgroup bpf state
-Date: Thu, 12 Nov 2026 09:27:12 -0800
-Message-ID: <20261112172721.440275-1-shakeel.butt@linux.dev>
+Subject: [PATCH bpf-next 1/3] bpf, cgroup: Don't read freed effective arrays in BPF_PROG_QUERY
+Date: Thu, 12 Nov 2026 09:27:13 -0800
+Message-ID: <20261112172721.440275-2-shakeel.butt@linux.dev>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20261112172721.440275-1-shakeel.butt@linux.dev>
+References: <20261112172721.440275-1-shakeel.butt@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -83,50 +86,48 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In the Meta fleet, BPF_PROG_QUERY callers, link-info readers and the
-cgroup bpf release work often wait minutes for cgroup_mutex. The holder is
-almost always a cgroup mkdir or rmdir stuck on kernfs_rwsem. In one day,
-hung-task reports showed this on 1,075 hosts (query), 94 hosts (link info)
-and 458 hosts (release work).
+BPF_PROG_QUERY gets the cgroup from an fd before it takes cgroup_mutex.
+If the cgroup is removed in between and its bpf refcount drops to zero,
+cgroup_bpf_release() can run first.  It frees the effective arrays but
+leaves the pointers, so a BPF_F_QUERY_EFFECTIVE query then reads freed
+memory.
 
-Patch 3 gives the cgroup bpf state its own mutex, so these paths no longer
-take cgroup_mutex. Attach, detach and replace still take cgroup_mutex
-first, because they walk the descendants.
+The window is small because the release work also takes cgroup_mutex.
 
-Patches 1 and 2 fix two old races. Attach and query get the cgroup from an
-fd and take the lock later, without checking whether the cgroup's bpf
-state was released in between. An effective query then reads freed memory
-(patch 1). Attach leaks the program, or with cgroup storage writes to a
-freed cgroup later (patch 2). Patch 3 makes the attach race easy to hit,
-so patch 2 must come before it. Both fixes have Fixes tags.
+Check under the lock that the bpf refcount isn't zero, and return
+-ENOENT if it is, the error the fd lookup gives for a removed cgroup.
+The release work only runs after the count hits zero, and it takes the
+same lock.
 
-Testing, in an x86-64 VM with lockdep, PROVE_RCU and KASAN:
+Reproduced in a VM with a debug-only delay between the fd lookup and the
+lock: KASAN reports a use-after-free in cgroup_bpf_prog_query().  With
+this patch, the query returns -ENOENT.
 
-- The 41 cgroup bpf selftests pass. A 60-second stress of mkdir/rmdir,
-  attach/detach, links, queries, fdinfo, storage map free and sockets in
-  dying cgroups shows no lockdep or KASAN reports.
-- Debug-only delays reproduce both races. Without the fixes, KASAN reports
-  use-after-free in cgroup_bpf_prog_query() and, with patch 3, in
-  cgroup_storage_map_free(), and BPF_PROG_ATTACH leaks the program. With
-  the fixes, attach and query return -ENOENT.
-- While a mkdir holds cgroup_mutex for 5 seconds, query and link info
-  return in under a millisecond instead of 4.6 seconds. Attach and detach
-  still wait.
-- Builds with CGROUP_BPF=n and with BPF_LSM=n.
+Fixes: 4bfc0bb2c60e ("bpf: decouple the lifetime of cgroup_bpf from cgroup itself")
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+ kernel/bpf/cgroup.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Shakeel Butt (3):
-  bpf, cgroup: Don't read freed effective arrays in BPF_PROG_QUERY
-  bpf, cgroup: Don't attach to a removed cgroup
-  bpf, cgroup: Protect cgroup_bpf state with its own mutex
-
- include/linux/bpf-cgroup-defs.h |   1 +
- include/linux/bpf-cgroup.h      |   3 +
- kernel/bpf/cgroup.c             | 158 +++++++++++++++++++++++---------
- kernel/bpf/local_storage.c      |   8 +-
- 4 files changed, 123 insertions(+), 47 deletions(-)
-
-
-base-commit: 0fb18ce8a2e9de830433923cf65838933d615359
+diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
+index 57a785241d42..9258c2669fa8 100644
+--- a/kernel/bpf/cgroup.c
++++ b/kernel/bpf/cgroup.c
+@@ -1446,6 +1446,14 @@ static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+ 	if (effective_query && prog_attach_flags)
+ 		return -EINVAL;
+ 
++	/*
++	 * cgroup_bpf_release() frees the effective arrays once the bpf
++	 * refcount is zero.  It takes this lock too, so a nonzero count means
++	 * the arrays are still valid.
++	 */
++	if (percpu_ref_is_zero(&cgrp->bpf.refcnt))
++		return -ENOENT;
++
+ 	if (type == BPF_STRUCT_OPS) {
+ 		u32 type_id = attr->query.type_id;
+ 
 -- 
 2.53.0-Meta
 
