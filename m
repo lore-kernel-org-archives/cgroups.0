@@ -1,67 +1,67 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794510957;
-	b=ufuTSV+u8GNLjP5ggI2F9jp0hN+hRpBwPXyV8Ui3ckGvh7939MwpKQVm41CFq9tUD0bt
-	 hwVdwIPcdkbo1olA9uNp0MEJMBamMbHnLSQSTB/i+xPIC3qn5BcFpbJ6zcS5qUR9GgVvH
-	 aEozH3u0miVdwhxUitW8ZqJgl5zE4VHwqdoOPeRfW7jx9t6x4wb6F4Y8E2vyXWyR3zS1l
-	 xbRD9yc8CrgXUUrN3n2bdP4TieGpWRGtCBYMU5x/I++TL7TMiGWn6B6N9xr6q/c2NvEgD
-	 Q2lC3Yf9YVxAHgVMOjeVDUU3SG4n+JQm9KRLeVNGlQqbvF12gHE6ocVdaXSXXlaRv5A==
+	t=1794513711;
+	b=IAD0WpewKW7k0DH3FUsKAip5gy+kaO70HI94IgTNnUYls6KsTSDs0dAI2miGTEkQETh2
+	 xBcicrblm/WNGfrrrHcvdJ8VKVzqhUA3ksB6yP4RoG8YhX7CVbirS1/2rLrTjOwFzum8P
+	 cZF6RMsFRk1a+NubxGOzvwqB7IH75/3UxOpWLMdWl/l0S1i3MT6Suy+SDpaiElm/MzhAp
+	 F2dQcybN9jGkHedhCzXnOOq5RnRZhpt0u5cVOrBJbQp05lHazhXpV1Gc2cWqrFETnZVgU
+	 EWZ2sJKm2s9ctUNZoNnj/+c9ZgmReY2I/Ukj22o8x8Dj5rzcUftJZePeSbHcCUJkQzw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794510957;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794513711;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
 	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=NW7THZlaf80mvmTuYOTfhqswF2bQb3V1m7VgmwQbFyU=;
-	b=g+sINTtbN3FDw1yUeFpdZfnfTECaRosjGnVjUBaAUZubyuoJAC+RZNqx/2MKKXVUamYS
-	 YB0dXisQtPQNL3r9NPh2SvkO/jRZdJZVh2VWWbpsbnB5itKsHJuglgcWB8Y2C7/zuUnP7
-	 ka7Z/aNg9985hJmXO7Q33pMwr47HIpJh7GcG6Ds7upGH/uK8SarIlTxRI3rchvJb7RxV3
-	 kHsRA7X0ue12+sac8+yF+9CRWfz4kgAUWNpDdgtueiSH3nIVgvX2H324L+OvX94NRlTDE
-	 t5YlY1nPLw9vVKEl8eUrRudAOPOlxWUPXt0+itJvkv8JZvF3YITSOB4hFUVetpRhVCA==
+	bh=y2HwTF1YMo0f9rY3awZ8X1TzkkuJLbUU0MmU+IWgVZ4=;
+	b=Q+TcS0lQ//uOCDNrHMpCYRX2VOpQ/6xOe4Wj43Khz/Az69/9GBEGnuj0Q+BEgMu7N78i
+	 2C6XzLdaLZChwsfxw2/BtTNhnJQaS4cu3pivPN0xvb9XstEFl0adxBx63K+R/tg3PCwmn
+	 NeUVVrs2cd/Oo5lMnhcJDIwci6yJQt1vIps80c7qmh3wvojP1V5oA8OwT43KMqK2KpmKY
+	 8WTDgfYtiST39nbD/ZBv/JCG7kYDGEZsTDWzIFY8NYm82fZJxw/lOe12pyhdx2uqAJ8x4
+	 VRUU0ULiKc8yZgYQTY4AFXQXpmC4unidcwNkln0ruSDr8xTCdcFipLHFmlnYW08URvg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YrS6JFmD;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=P1ChTVlW;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64E93606A336
-	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 19:15:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 64E93606A336
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6ABD606A334
+	for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 20:01:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C6ABD606A334
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=YrS6JFmD
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=P1ChTVlW
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794510956;
+	s=mimecast20190719; t=1794513710;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=NW7THZlaf80mvmTuYOTfhqswF2bQb3V1m7VgmwQbFyU=;
-	b=YrS6JFmDP2STEpXouimq82/c1aCgmU9hSdnvD5EwZKhVUVG9cr9LvrytdhZVLGUqKoWSV8
-	OorMg/t8xRFsyVlYFJGXnr6DOSL1A2x2KJCCIqgiTG0Xh6d7ThMKdnIkvktHMY7IlSFaZQ
-	EXnyxLT0l89fcWPn58Jd/sHw+VP/SE0=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+	bh=y2HwTF1YMo0f9rY3awZ8X1TzkkuJLbUU0MmU+IWgVZ4=;
+	b=P1ChTVlWkmsj0nYVVCSXGoBBqbp3R9/hUL4vMNRJpOSwcypRNNgSfxPLIxEKS92SYeHQ47
+	R1k+hzkJL329JF1ljj+uZYZ/q0ZCQrKz8cdE9bNFy82uSp5VnVrhJ/J0Ndec8t9xtedxGW
+	tXevfRxqLxC1FX5KS42w+SI7BX6I/Xc=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-277-L3EwCWwaMWGAFs1PctNVOg-1; Thu,
- 12 Nov 2026 14:15:50 -0500
-X-MC-Unique: L3EwCWwaMWGAFs1PctNVOg-1
-X-Mimecast-MFC-AGG-ID: L3EwCWwaMWGAFs1PctNVOg_1794510948
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-90-DC2VcjLZPSy1gaYdteKPtg-1; Thu,
+ 12 Nov 2026 15:01:46 -0500
+X-MC-Unique: DC2VcjLZPSy1gaYdteKPtg-1
+X-Mimecast-MFC-AGG-ID: DC2VcjLZPSy1gaYdteKPtg_1794513704
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A159518004DA;
-	Thu, 12 Nov 2026 19:15:47 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9888D1800352;
+	Thu, 12 Nov 2026 20:01:44 +0000 (UTC)
 Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7E590410;
-	Thu, 12 Nov 2026 19:15:45 +0000 (UTC)
-Message-ID: <5402d139-37bf-408a-b956-6c76b8832710@redhat.com>
-Date: Thu, 12 Nov 2026 14:15:44 -0500
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 161501800446;
+	Thu, 12 Nov 2026 20:01:42 +0000 (UTC)
+Message-ID: <a13ef6be-fa53-4d80-b768-2d8a16467fa4@redhat.com>
+Date: Thu, 12 Nov 2026 15:01:41 -0500
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -72,252 +72,169 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-7.4-fixes v4 2/2] cpuset: generalize the
- validate_partition() interface
-To: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+Subject: Re: [PATCH-next v3 3/3] cgroup/cpuset: Check remote partition
+ underneath before making an invalid partition valid
+To: Guopeng Zhang <guopeng.zhang@linux.dev>,
+ Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
  Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
  <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <zhangguopeng@kylinos.cn>,
- Ridong Chen <chenridong@xiaomi.com>
-References: <20261112031931.2815548-1-ridong.chen@linux.dev>
- <20261112031931.2815548-3-ridong.chen@linux.dev>
+ linux-kselftest@vger.kernel.org
+References: <20261111020204.1660055-1-longman@redhat.com>
+ <20261111020204.1660055-4-longman@redhat.com>
+ <fe7aa630-d323-4981-9f89-0958cb6204a2@linux.dev>
 Content-Language: en-US
 From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20261112031931.2815548-3-ridong.chen@linux.dev>
+In-Reply-To: <fe7aa630-d323-4981-9f89-0958cb6204a2@linux.dev>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
+On 11/11/26 10:27 AM, Guopeng Zhang wrote:
+>
+> 在 2026/11/11 10:02, Waiman Long 写道:
+>> When re-evaluating an invalid local partition via partcmd_update,
+>> update_parent_effective_cpumask() does not check whether a descendant
+>> remote partition is using its exclusive CPUs, promoting the cpuset to a
+>> valid partition root over the remote partition. This condition should only
+>> be possible if parent is the top_cpuset and exclusive_cpus isn't empty.
+>>
+>> This leaves an active remote partition underneath a valid
+>> local partition root with overlapping exclusive CPUs, breaking
+>> scheduler domain partitioning and triggering warnings in
+>> compute_partition_effective_cpumask() and generate_sched_domains().
+>>
+>> Fix that by checking the effective_xcpus against subpartitions_cpus
+>> when an underneath remote partition is possible to make sure that all
+>> the exclusive CPUs are available before allowing the invalid partition
+>> to be switched back to valid.
+>>
+>> Also make sure that effective_xcpus is non-empty before swtiching an
+>> invalid partition back to valid.
+>>
+>> Add a test case in test_cpuset_prs.sh to verify that an invalid partition
+>> with a remote partition underneath cannot be switched back to valid
+>> with a hotplug event.
+>>
+>> Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
+>> Reported-by: Sashiko <sashiko-bot@kernel.org>
+>> Link: https://sashiko.dev/#/bug/linux-47715b89-d5fb-4731-b7c9-070773c6ff75
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   kernel/cgroup/cpuset.c                        | 42 ++++++++++++-------
+>>   .../selftests/cgroup/test_cpuset_prs.sh       |  4 ++
+>>   2 files changed, 30 insertions(+), 16 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 8b684361c94e..af5fd543fe88 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -2034,11 +2034,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>   		 * tasks_nocpu_error() with this very mask, and a failing
+>>   		 * write is routed to partcmd_invalidate instead.
+>>   		 */
+>> -		if (is_partition_invalid(cs)) {
+>> -			adding = false;
+>> -			deleting = cpumask_and(tmp->delmask,
+>> -					newmask, parent->effective_xcpus);
+>> -		} else {
+>> +		if (is_partition_valid(cs)) {
+>>   			cpumask_andnot(tmp->addmask, cs->effective_xcpus, newmask);
+>>   			adding = cpumask_and(tmp->addmask, tmp->addmask,
+>>   					     parent->effective_xcpus);
+>> @@ -2046,6 +2042,17 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>   			cpumask_andnot(tmp->delmask, newmask, cs->effective_xcpus);
+>>   			deleting = cpumask_and(tmp->delmask, tmp->delmask,
+>>   					       parent->effective_xcpus);
+>> +		} else {
+>> +			deleting = cpumask_and(tmp->delmask,
+>> +					newmask, parent->effective_xcpus);
+>> +
+>> +			/* Check if a remote partition may be underneath */
+>> +			if ((parent == &top_cpuset) &&
+>> +			    !cpumask_empty(cs->exclusive_cpus) &&
+>> +			    cpumask_intersects(tmp->delmask, subpartitions_cpus)) {
+>> +				part_error = PERR_REMOTE;
+>> +				deleting = false;
+>> +			}
+>>   		}
+>>   
+>>   		/*
+>> @@ -2126,34 +2133,37 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>   		} else if (is_partition_invalid(cs)) {
+>>   			struct cgroup_subsys_state *css;
+>>   			struct cpuset *child;
+>> -			bool exclusive = true;
+>>   
+>>   			/*
+>>   			 * Convert invalid partition to valid has to pass the
+>> -			 * cpu exclusivity test when cpuset.cpus.exclusive is
+>> -			 * empty as well as the housekeeping check.
+>> +			 * following tests:
+>> +			 * 1) housekeeping CPU conflict check
+>> +			 * 2) cpu exclusivity test when cpuset.cpus.exclusive is
+>> +			 *    empty.
+>> +			 * 3) if parent is top_cpuset, none of the effective_xcpus
+>> +			 *    (tmp->delmask) are in subpartitions_cpus, if not a
+>> +			 *    remote partition may be underneath.
+>>   			 */
+>>   			if (prstate_housekeeping_conflict(cs->partition_root_state,
+>>   							  parent_prs, tmp->delmask, NULL)) {
+>>   				part_error = PERR_HKEEPING;
+>> -				goto write_error;
+>> -			}
+>> -			if (cpumask_empty(cs->exclusive_cpus)) {
+>> +			} else if (cpumask_empty(cs->exclusive_cpus)) {
+>>   				rcu_read_lock();
+>>   				cpuset_for_each_child(child, css, parent) {
+>>   					if (child == cs)
+>>   						continue;
+>>   					if (!cpusets_are_exclusive(cs, child)) {
+>> -						exclusive = false;
+>> +						part_error = PERR_NOTEXCL;
+>>   						break;
+>>   					}
+>>   				}
+>>   				rcu_read_unlock();
+>> +			} else if ((parent == &top_cpuset) &&
+>> +				   cpumask_intersects(tmp->delmask, subpartitions_cpus)) {
+>> +				part_error = PERR_REMOTE;
+>>   			}
+> Hi,Longman
+>
+> I think this check can still miss a remote partition during hotplug.
+> When CPU hotplug leaves no active CPU available to the top partition,
+> cpuset_handle_hotplug() clears subpartitions_cpus before walking the
+> descendants. The remote partitions are still valid at that point.
+>
+> An invalid parent is visited before its remote descendant. Since the
+> mask is empty, this check allows the parent to become valid and add
+> its exclusive CPUs back to subpartitions_cpus. When the remote
+> descendant is visited later, those CPUs are already back in the mask,
+> so it passes the subset check and stays remote. We are then left with
+> a valid remote partition below a valid local partition, and
+> compute_partition_effective_cpumask() warns about the remote child.
+>
+> Could we check whether there is still a valid remote partition below cs
+> before allowing cs to become valid? subpartitions_cpus may have been
+> cleared by hotplug, so the lack of overlap does not tell us that the
+> remote partition has actually been disabled.
 
-On 11/11/26 10:19 PM, Ridong Chen wrote:
-> From: Ridong Chen <chenridong@xiaomi.com>
->
-> Refactor validate_partition() to take the parent partition, the new
-> partition root state, the new effective exclusive CPUs and the CPUs to
-> be deleted, instead of a trial cpuset. A NULL parent stands for a
-> remote partition, whose CPUs come from top_cpuset. This makes the
-> interface flexible enough to handle both local and remote partition
-> validation.
->
-> This also fixes a false PERR_NOCPUS error when expanding a remote
-> partition. The no CPU left for tasks check in partition_cpus_change()
-> is done against the cgroup parent, but the CPUs of a remote partition
-> come from top_cpuset, not from its parent. For example, on a 4-CPU
-> system:
->
->    echo 2-3 > P/cpuset.cpus
->    echo 2-3 > P/cpuset.cpus.exclusive
->    echo 2-3 > P/C/cpuset.cpus
->    echo 2 > P/C/cpuset.cpus.exclusive
->    echo root > P/C/cpuset.cpus.partition
->    (a task in P)
->    echo 2-3 > P/C/cpuset.cpus.exclusive
->    cat P/C/cpuset.cpus.partition
->    root invalid (Parent is not a partition root)
->
-> The effective_cpus of P is 3, a subset of the new exclusive CPUs 2-3 of
-> C, and P has a task, so the expansion is rejected. However, P is not a
-> partition root and does not give any CPU to C, and top_cpuset still has
-> CPUs 0-1 for the task. Enabling C directly with exclusive CPUs 2-3
-> succeeds, as remote_partition_enable() checks top_cpuset instead.
->
-> The no CPU left for tasks check now uses the given parent instead of
-> parent_cs(cs), and top_cpuset for a remote partition, as that is where
-> its CPUs are taken from.
->
-> The housekeeping conflict check is folded into validate_partition(). It
-> is skipped when the parent is not a valid partition root, as @cs can't
-> be a valid local partition in that case.
->
-> Use the new interface for local partition enablement in
-> update_parent_effective_cpumask() and in partition_cpus_change(),
-> replacing the open-coded checks there. The order of the checks is now
-> the same for both paths: empty CPUs, housekeeping conflict, then no CPU
-> left for tasks.
->
-> Add a test case to test_cpuset_prs.sh for the remote partition
-> expansion above.
->
-> Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> ---
->   kernel/cgroup/cpuset.c                        | 119 +++++++++---------
->   .../selftests/cgroup/test_cpuset_prs.sh       |   5 +
->   2 files changed, 64 insertions(+), 60 deletions(-)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index c7d4cfb615b7..7e374210c123 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1414,6 +1414,48 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
->   	return res;
->   }
->   
-> +/**
-> + * validate_partition - Validate a cpuset partition configuration
-> + * @cs: The cpuset to validate
-> + * @parent: Parent partition of @cs, NULL for remote partition
-> + * @new_prs: The proposed new partition root state
-> + * @new_excpus: The new effective exclusive CPUs mask to validate
-> + * @del: exclusive CPUs to be deleted from @cs, can be NULL
-> + *
-> + * A remote partition gets its CPUs from top_cpuset, so top_cpuset is used
-> + * as the parent when @parent is NULL.
-> + *
-> + * The housekeeping check is skipped if @parent is not a valid partition
-> + * root as @cs can't be a valid local partition in that case.
-> + *
-> + * Return: PRS error code (0 if valid, non-zero error code if invalid)
-> + */
-> +static enum prs_errcode validate_partition(struct cpuset *cs,
-> +					   struct cpuset *parent, int new_prs,
-> +					   struct cpumask *new_excpus,
-> +					   struct cpumask *del)
-> +{
-> +	int parent_prs;
-> +
-> +	if (new_prs == PRS_MEMBER)
-> +		return PERR_NONE;
-> +
-> +	if (cpumask_empty(new_excpus))
-> +		return PERR_INVCPUS;
-> +
-> +	if (!parent)
-> +		parent = &top_cpuset;
-> +	parent_prs = parent->partition_root_state;
-> +	if (parent_prs > 0 &&
-> +	    prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
-> +		return PERR_HKEEPING;
-> +
-> +	if (tasks_nocpu_error(parent, cs, new_excpus))
-> +		return PERR_NOCPUS;
-> +
-> +	return PERR_NONE;
-> +}
-> +
->   /*
->    * cpuset_update_sd_hk_unlock - Rebuild sched domains, update HK & unlock
->    *
-> @@ -1934,18 +1976,10 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
->   	if ((cmd == partcmd_enable) || (cmd == partcmd_enablei)) {
->   		new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
->   
-> -		/*
-> -		 * Enabling partition root is not allowed if its
-> -		 * effective_xcpus is empty.
-> -		 */
-> -		if (cpumask_empty(tmp->delmask))
-> -			return PERR_INVCPUS;
-> -
-> -		if (prstate_housekeeping_conflict(new_prs, parent_prs, tmp->delmask, NULL))
-> -			return PERR_HKEEPING;
-> -
-> -		if (nocpu)
-> -			return PERR_NOCPUS;
-> +		part_error = validate_partition(cs, parent, new_prs,
-> +						tmp->delmask, NULL);
-> +		if (part_error)
-> +			return part_error;
->   
->   		/*
->   		 * This function will only be called when all the preliminary
-> @@ -2428,32 +2462,6 @@ static int parse_cpuset_cpulist(const char *buf, struct cpumask *out_mask)
->   	return 0;
->   }
->   
-> -/**
-> - * validate_partition - Validate a cpuset partition configuration
-> - * @cs: The cpuset to validate
-> - * @trialcs: The trial cpuset containing proposed configuration changes
-> - *
-> - * If any validation check fails, the appropriate error code is set in the
-> - * cpuset's prs_err field.
-> - *
-> - * Return: PRS error code (0 if valid, non-zero error code if invalid)
-> - */
-> -static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *trialcs)
-> -{
-> -	struct cpuset *parent = parent_cs(cs);
-> -
-> -	if (cs_is_member(trialcs))
-> -		return PERR_NONE;
-> -
-> -	if (cpumask_empty(trialcs->effective_xcpus))
-> -		return PERR_INVCPUS;
-> -
-> -	if (tasks_nocpu_error(parent, cs, trialcs->effective_xcpus))
-> -		return PERR_NOCPUS;
-> -
-> -	return PERR_NONE;
-> -}
-> -
->   /**
->    * partition_cpus_change - Handle partition state changes due to CPU mask updates
->    * @cs: The target cpuset being modified
-> @@ -2467,33 +2475,24 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
->   				  struct tmpmasks *tmp)
->   {
->   	enum prs_errcode prs_err;
-> -	int parent_prs = is_remote_partition(cs)
-> -		       ? PRS_ROOT : parent_cs(cs)->partition_root_state;
-> +	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
->   
->   	if (cs_is_member(cs))
->   		return;
->   
-> -	prs_err = validate_partition(cs, trialcs);
-> -	if (!prs_err && (parent_prs > 0) &&
-> -	    !cpumask_empty(trialcs->effective_xcpus)) {
-> -		int prs = cs->partition_root_state;
-> -
-> -		/*
-> -		 * Check for housekeeping conflict by passing the whole
-> -		 * effective_xcpus as well as those CPUs that are to be
-> -		 * removed from cs as delmask.
-> -		 */
-> -		if (prs > 0)
-> -			cpumask_andnot(tmp->delmask, cs->effective_xcpus,
-> -				       trialcs->effective_xcpus);
-> -		else
-> -			cpumask_clear(tmp->delmask);
-> -
-> -		if (prstate_housekeeping_conflict(prs, parent_prs,
-> -						  trialcs->effective_xcpus, tmp->delmask))
-> -			prs_err = PERR_HKEEPING;
-> -	}
-> +	/*
-> +	 * Check for housekeeping conflict by passing the whole
-> +	 * effective_xcpus as well as those CPUs that are to be
-> +	 * removed from cs as delmask.
-> +	 */
-> +	if (is_partition_valid(cs))
-> +		cpumask_andnot(tmp->delmask, cs->effective_xcpus,
-> +			       trialcs->effective_xcpus);
-> +	else
-> +		cpumask_clear(tmp->delmask);
->   
-> +	prs_err = validate_partition(cs, parent, trialcs->partition_root_state,
-> +				     trialcs->effective_xcpus, tmp->delmask);
->   	if (prs_err) {
->   		WRITE_ONCE(cs->prs_err, prs_err);
->   		trialcs->prs_err = prs_err;
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index 1e9e6b4c6f7b..1397ec428c46 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -707,6 +707,11 @@ REMOTE_TEST_MATRIX=(
->   	"  C1-4:P1 C5-6   C1-2     .       C5      .  \
->   	      .      P1    P1      .      O5=0     .     p1:3-4|p2:6|c11:1-2|c12:3-4|c21:6|c22:6 \
->   							 p1:P1|p2:P1|c11:P1"
-> +	# Expanding a remote partition should check top cpuset, not its member
-> +	# parent, for the no CPU left for tasks error.
-> +	"  CX2-3:T  .   C2-3:X2:P1  .       .       .  \
-> +	      .      .     X2-3    .       .       .     p1:1,4-7|c11:2-3 \
-> +							 p1:P0|c11:P1"
->   )
->   
->   #
-LGTM
-Reviewed-by: Waiman Long <longman@redhat.com>
+Yes, this is a corner case that I am aware of. Thanks for letting me 
+know about that.
+
+Right now, only invalid local partition has the ability to switch back 
+to valid when the condition is right. Remote partition has no such 
+capability at the moment. So a remote partition should always be 
+invalidated when top_cpuset run out of active CPU. One way to handle 
+this situation is to switch back to chain all remote partition in a 
+linked list. We can then work the remote partition linked list when that 
+happens and determined if we can their effective_xcpus back to 
+subparttitions_cpus or has to disable it before going down to do 
+hierarchical cpuset walk. This will avoid the corner you are talking 
+about. It will be a separate patch. I will update the patch description 
+to add this limitation and a todo item.
+
+Cheers,
+Longman
 
