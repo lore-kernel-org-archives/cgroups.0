@@ -1,67 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.219.41
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794544665;
-	b=YhIa6nqa87eBk8Etz5bDE5+kcNXlvJAX9AJ1rQqH4/RaP77jT+DJ1+xeipHzBDzJcNmb
-	 +xyWY+kUFJ3oqOSBaJsEIxU0cy/YjIM3eA6GYFd01tKBlvTgHQK+ll+2cWMb/sIhcbNDs
-	 ulntvmieXqcqQGPygNU8YiI1iUdRDvQC5rhwcxLKrhQEO0+b0gup5yoF8gXzZaXH+9/O1
-	 mnIvOyBCvRzNzdBLHSzY/6NIWKf46JtVwmKwzb3+yB9o7MA4p9r8litcBQc6ssw6JWxii
-	 /jI6ApzzRqnuaYfPsyK9NEctoa+mv4wuOHRsJc6IkNTknG9bz0sOH5Br6qhx/b8wVnw==
+	t=1794554423;
+	b=B1xKSnTipA1/RhzF/84e7kw/Rj2uhqWcWIFz8VT6fJG9TQqPP2lpAhJVReRv7I8BHGfb
+	 1i6rMyS6DBEPBzCgh/Z+UR1jpqXzF/f/aTi2PC6R2Kpl9F7sL350XSbJZtJ94eAXuNm4c
+	 1nxy8VG6ow7X5JqQvPmzBWlHI20W8rQe5LhXpwqG/lqdlvFm5hIotmZ9UeJOrotRsmkRL
+	 RpTfJ2l/KxIM75xtsVWPUyn1fichT3DSgpoaweIcHnHfeY3Y7f4eiStVsnnKpKV9c5WbA
+	 DYFshutnwL9Fr3cvc0Creuq3ldc+kogstVUi25BwHp4OdEI8XgiMgFnHLGW/oBrfllA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794544665;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=MzPZHAwZUR6XQNi+lr4SvNO3O8lOE7xor3LFCCcEfZw=;
-	b=l8tuQ/1kv5/RODNOH90t8K9wKR801UxokffeUcfpoa4WRPNt4yn4NxykzrJIM2zwr0dF
-	 3gB6hgfg6NRJPGpYH6WPm6jefsgO1f42BVIxqlHpOqWxwejughWg4Tn7++E2Vq4UvoLYN
-	 9hJcm+StmREOzrnghnNjAdvgWKGhfanNtHzZ3dFn2n7ShIhlvbztIzm5JzOf2bjetXd+2
-	 3Yw7yBYWyXRou9QLAtOmP9nomksp72ZqPVJir4+2GbO86amco4kDMN9vW9JHeJwneoklr
-	 9Oe5TfqIJKt5dcJfToNuena5imBF8kspg4hEA7buWi46T3pSPhM5BTxITr/AR0vvH1Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794554423;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:From:To:
+	 Cc:In-Reply-To:References:Date:Message-Id:X-Mailer;
+	bh=4ukC9+RmyKpMCoo2Ej2X50ZCe3RffRo8JS7sjMrz5b4=;
+	b=npCuBgqNWEAbz7LvGo5gZJ2YM8IUKFGx2SCfLR+JNiE8V4TXgXmY7pDrzgrxLm6ydkCU
+	 HYGLkg5wVAc3oeNL0ULr5lBGudda2I6R3N1y7FFrwS3EEMACw+N3udNDarsipMdxSXmob
+	 lnIFvYDbRr+4RzTWtU4clIGWRwHRO9uH4AGikGyBU6xdCuUzuL8VNQNjcMlMz7LM3R+oq
+	 uZ0roeiIRlroRyBE6s4nIqalgH1DODpxojxi4ElYfwDPhlqfaLDA5lT96oQLVtRAVST1y
+	 rX9D0IRvVNAKDbqHKN3uQo7ttcCAv41vOcAUY2E/UgPVdIEg9+pJLfQZOm6xaop6fBg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dK0yLTn9;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=UI+4bgJh;
+	arc=none smtp.remote-ip=209.85.219.41
+Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE195606A323
-	for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 04:37:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DE195606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE39F606A32A
+	for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 07:20:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AE39F606A32A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dK0yLTn9
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794544663;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MzPZHAwZUR6XQNi+lr4SvNO3O8lOE7xor3LFCCcEfZw=;
-	b=dK0yLTn9MUQnY9GmcCMOW0G85zN8nRgyLe8ZfOJjlWOd+G+96vZ/6qlSls11ZBF52aEnbI
-	hQBGeMe28r37nq4OGcSAHWM3cieQ1r24lAd6DKowDHR9TUMCjQ78lKjFdD96LDHiilD1Yg
-	JNbdyZBDH3ck+yehSAtXB0Frr5o8z68=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-219-Em2cxYDQMlSJlLId5uNroA-1; Thu,
- 12 Nov 2026 23:37:37 -0500
-X-MC-Unique: Em2cxYDQMlSJlLId5uNroA-1
-X-Mimecast-MFC-AGG-ID: Em2cxYDQMlSJlLId5uNroA_1794544654
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3014C180024D;
-	Fri, 13 Nov 2026 04:37:33 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 87F8E18004F7;
-	Fri, 13 Nov 2026 04:37:27 +0000 (UTC)
-Message-ID: <bcb60245-abfb-4e3a-aa4e-f134ed310381@redhat.com>
-Date: Thu, 12 Nov 2026 23:37:26 -0500
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=UI+4bgJh
+Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-91c1f548f87so14498866d6.2
+        for <cgroups@vger.kernel.org>; Thu, 12 Nov 2026 23:20:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1794554421; x=1795159221; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=4ukC9+RmyKpMCoo2Ej2X50ZCe3RffRo8JS7sjMrz5b4=;
+        b=UI+4bgJhJNbQhv7pU4fivQjQTQX/aGehNq+O6Ule9LAPUv/kSn+3YzDkzwyt4xo/KE
+         FpX9HfqzRh+tmlh2VTaVA3asUfXtHtlE0JM9aPwNIMPqxB8GcjZm7uyxxGGajyQ6+1jW
+         Q7ie2diUq1P+2uyPtd41hNiWtCIgs9VWfCpBZyoQm/Y75/mhzlg5SEz4NbRTLVZNYMA8
+         ZVN8drMKsYzx5jyJv6iYsc5aw/JIYvGPg1xCesOhxeSz87YUpVgMXl9dAYzqwbX0Jp7w
+         R8E1X5RG+MSEQaNiTQDkjzrQeoswpV3AO66T2E+dCiN1dcN8HlW+CaFQJoMvaGU7fxYT
+         PVzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794554421; x=1795159221;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=4ukC9+RmyKpMCoo2Ej2X50ZCe3RffRo8JS7sjMrz5b4=;
+        b=gSF7splas450jK/QfLdKjWTBQfNnrO1VDz3LGMs9QhW8NQApC7Y5uSGZKkuMdLJaSi
+         eCcWRRjvkeRgHPHN1Q6sTY2qi3Y/Eo5tTbTWfxEe8+XmpV7qIW8wqtgmfWzqHUldxuTw
+         YeEXwKkfdYQ35ScQOw/u0dl8XIsX9IOrmjmjdqy3FMFCStEr4li97GcbgJjg85wr6zmW
+         Rfh1X9xGwYZr6BIIFIZvDa7ggxAtZ8Q9XC+3IpXEBesycdP5pRXOa28QS4rrk6LEuVLX
+         FuuODOLJw7kr92P9betVXkHJ2ZO5NQLFAjc5hmL2oaABQsFWwCFJMibFbKUzRDqLsqNW
+         P8VQ==
+X-Forwarded-Encrypted: i=1; AL+hErGxuM/tPz4gVpdIDRoQb8gCcL4ceWsoE1xQBqVgjslUDbD5JfYOHolVujxfwgLRYHL8LXMRcVXn@vger.kernel.org
+X-Gm-Message-State: APuU4Z9rQwBfc1HnFzsz4M4s017D6OSC3J8Ysq0a/dmZLfxO1X/D/HgY
+	DBEY4EG3Z4d+Xs2w/r+aOwW5dX/R9o8mTZdM7IkVq8yfcXBav47bmeMkZybOWIoCU/A=
+X-Gm-Gg: AYBFou3E+DKZUmP3jE0vI/au7rqV61hNQFqvj52sqPVEukz8vWcAhU2iHNWwSxD/q2Q
+	ExmO38InEQNv8ONehz39aZm2jUDoJ19dDHuqWl9AFim4bgUz2APmpB0Za6OEgL/lhw1/V4oocHL
+	yEwYAUmC+yYMYyBbMcd1ttHWzWqxAe8mW7VP598oWxkrsQm1zLI82tlGjXx14crju5oDpmM0Plp
+	6QKtJDmUCrhglJ0vulGQUPLAd3LY+wlKlDwIv9M9LyE/um7bf/jDtH0CIOusZpzEU2EZuVZfy1Q
+	kH7csYKalmhplnT32cMCD7hgSFgd835tgyaRRMR+O/L427RZz8442y3Fn0yTr+v1Hli/58T5B2N
+	QZW79Vpv8uyCXm7WXeXUttZlka5CKLDWkYiirD8bGytOHTtrKyl6eFSYHp1wqa8xLGyXrUjReSo
+	MaPrGtcuT55r6Q8wD4JCDs8PcJgcnhFvURkmQrbXwMlXdE9uhcUBlDrtuLcQJg5n568Kpv5kJOt
+	2U1/K4I4KI84Y/YnZPsyJPNAbH1uoHTZX0EmOxF5B7I7P+/mCuzvv33DaL401b45RcSrhNJtjYJ
+	KwvAiaH/NGvFcQHXx3z0mgaTATOIj2NNys7o0Ys3q2P+KJgKx/zsIwpOBCbX8fcDrRGdzUcXfQs
+	dnfjYz1k3JrF0ZYwBfc8QZsXkjFYgUQ==
+X-Received: by 2002:a05:6214:c46:b0:917:a1a7:6369 with SMTP id 6a1803df08f44-91f24198eaemr24969396d6.22.1794554421464;
+        Thu, 12 Nov 2026 23:20:21 -0800 (PST)
+Received: from [192.168.50.231] (pool-71-191-145-202.washdc.fios.verizon.net. [71.191.145.202])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-91f23d614b4sm14297636d6.18.2026.11.12.23.20.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2026 23:20:20 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,48 +89,97 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 18/29] sched/deadline: Move a task's bandwidth only
- where room was made
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- juri.lelli@redhat.com, peterz@infradead.org, mingo@redhat.com,
- vincent.guittot@linaro.org
-Cc: linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
- boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
- bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
- kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
- mathieu.poirier@linaro.org, ridong.chen@linux.dev, tj@kernel.org,
- hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
- bigeasy@linutronix.de, clrkwllms@kernel.org, parri.andrea@gmail.com,
- m.szyprowski@samsung.com, kayracizmeci@gmail.com, weihengqiuu@gmail.com,
- cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-rt-devel@lists.linux.dev, stable@vger.kernel.org
-References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com>
- <20261108185406.1549770-19-mathieu.desnoyers@efficios.com>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <20261108185406.1549770-19-mathieu.desnoyers@efficios.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Subject: Re: [RFC v2 1/1] mm: add source selector to memory.reclaim
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: Li Zhe <lizhe.67@bytedance.com>
+Cc: akpm@linux-foundation.org, david@kernel.org, gourry@gourry.net, 
+ joshua.hahnjy@gmail.com, ljs@kernel.org, mhocko@suse.com, 
+ muchun.song@linux.dev, rakie.kim@sk.com, roman.gushchin@linux.dev, 
+ shakeel.butt@linux.dev, weixugc@google.com, ying.huang@linux.alibaba.com, 
+ ziy@nvidia.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org
+In-Reply-To: <20261102070440.16262-2-lizhe.67@bytedance.com>
+References: <20261102070440.16262-1-lizhe.67@bytedance.com>
+ <20261102070440.16262-2-lizhe.67@bytedance.com>
+Date: Fri, 13 Nov 2026 02:20:20 -0500
+Message-Id: <179455442014.482102.4069329165987986914.b4-reply@b4>
+X-Mailer: b4 0.17-dev
 
-On 11/8/26 1:53 PM, Mathieu Desnoyers wrote:
-> Commit 7f51412a415d ("sched/deadline: Fix bandwidth check/update when
-> migrating tasks between exclusive cpusets") moves a deadline task's
-> bandwidth in two halves. cpuset_can_attach() reserves it in the
-> destination root domain. set_cpus_allowed_dl() then frees it in the
-> source, when the task's affinity changes. Its comment relies on the
-> first half: "We already made space for us in the destination domain".
->
-> But set_cpus_allowed_dl() runs on every change of affinity. It frees
-> the bandwidth whenever the new mask leaves the task's root domain, with
-> or without a reservation. sched_setaffinity() gets there too, if the
-> task's cpuset spans two root domains. With admission control on,
+On 2026-11-02 15:04 +0800, Li Zhe wrote:
+> +	Specifying a source value constrains where proactive reclaim applies
+> +	pressure. Currently only source=nodes:<nodelist> is supported. For
+> +	example::
+> +
+> +	  echo "1G source=nodes:0-1" > memory.reclaim
+> +
+> +	This reclaims memory of the target cgroup resident on nodes 0-1.
 
-For cpuset v2, it is not possible for a cpuset to span two root domains. 
-I believe it is not possible for v1 too, though I am not 100% sure. 
-Please let me know if you are aware of a way to do that.
+you buried the fact that you want to allow source=zswap in your cover
+letter. I was confused by nodes: was needed here until i re-read.
 
-Cheers,
-Longman
+As Joshua mentioned, i don't think you need the separate cover letter,
+and I agree this is far too long for the proposed change.
+
+---
+
+When I asked for testing, I wasn't concerned with the functionality,
+I was asking what problem this actually solves. performance? fairness?
+
+Shaping the distribution of memory is neat and clearly works, but why
+does userspace want this?
+
+The interface "lacking flexibility" is not a problem in and of itself.
+
+I CAN see why you might want to proactively shape what data is swapped.
+Let me give you an example:
+
+---
+The global node reclaim interfaces allow us to put pressure on distinct
+nodes - which lets us shape which node is swapped from first.
+
+Example: node0-1=DRAM, node2-3:CXL
+
+  echo 1G > node2/reclaim   # swap from CXL
+  echo 1G > node3/reclaim   # swap from CXL
+  echo 1G > node0/reclaim   # demote to CXL
+  echo 1G > node1/reclaim   # demote to CXL
+
+But the memcg.reclaim interface only allows us to pressure the complete
+set of cpuset.mems nodes for that memcg
+
+  cat cpuset.mems           # 0-3
+  echo 1G > memory.reclaim  # makes progress from any of 0-3
+
+Presently, proactive reclaim iterates nodes in node or fallback order,
+meaning it attempts to make progress from the fastest node possible
+first - which attempts to demote by default.  If the lower nodes are
+full, this demotion will fail and we'll swap directly from the top tier,
+which is (presumably) warmer than the bottom tiers.
+
+Enable source-bound reclaim in the memory.reclaim interface so that user
+space can have the same control over memcg memory tiers that global
+proactive reclaim has.
+
+  echo 2G source=nodes:2-3 > memory.reclaim  # [z]swap from CXL
+  echo 2G source=nodes:0-1 > memory.reclaim  # demote to CXL
+
+This lets user proactive reclaim to target the coldest memory first
+rather than preferring to reclaim from node0 first and potentially
+swap out memory warmer than what is present on a CXL tier.
+---
+
+With this, you might be able to demonstrate fewer refaults and less
+DRAM (node0) memory consumed by zswap. These are clear benefits.
+
+I would argue that memory.reclaim should operate this way anyway,
+and that would could make proactive reclaim do this by default, but
+I could see the policy bits in userland being useful as well
+
+Performance may not be the only reason you want this, but you need to
+help me understand what you're trying to accomplish.
+
+-- 
+~Gregory
 
