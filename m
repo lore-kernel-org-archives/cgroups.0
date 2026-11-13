@@ -1,104 +1,71 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=51.250.56.165
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794567038;
-	b=dbrNYQMMSbD5vBlirnLfG92XIA8i4YnO9adnzX9yDKeb4RazUsVqAnMdJG7wetSHG3pX
-	 4cZSBzbO6ICjQ65oocbjuZiWTVAZXaNGk9ISmMwM26Eon1SYVhJdfcramKEBjVJdceXT9
-	 Ts+TErmg648vyh8yjk+boF5INpnn1Lgw9lMRblNeO1dH2PZKiPQ4CkGlZ6ibXQpKlGkuE
-	 qridvA0PVGa4mRk5KHU+7LXPlvZyMTKF3jktWQp6K4dFV7RYES0/890Rpew3h4A+sb+3a
-	 W9lPDFNFmYzkpfFop5iDDN0dImc8efKmbe4zS7OhdtJ1g2bziD4deNtPYroSHR+Tsiw==
+	t=1794568135;
+	b=VhwmCfCCx4KW5FoiFvqvR/UeVNku1oKTTo4ExbUcbsciqGHqDbRiWUdTrGRr1VxZG8Tr
+	 ePn8tdplGIACDeOKNCEqAaeBzPiKoFEGxHIDsDkw96NCXfc8nnsPse0PFn8kjt/grWa5+
+	 dUqfaclcYwwFMm9Z+oR7o37gpvgxU7i5awWXcU03Gwnb69M/QbjJxmQk3DmQhMEovs/np
+	 swQ8tkB4lGj7Zr7tBzHEUuoo8fZ4akYgdCM49qzD+extqk69lkOLvFnTyP5c6SL4G1Bqe
+	 STzZEsgvw8yrYZPg7WsxoRt+4cyMvdU327goj0AKWh/8yRFdOe7LUJFqPf9qfbXPfqA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794567038;
-	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
+	a=rsa-sha256; c=relaxed/relaxed; t=1794568135;
+	h=DMARC-Filter:Received:Received:DKIM-Filter:DKIM-Signature:From:To:Cc:
+	 Subject:Date:Message-ID:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=15wtnSkdKQvbPfkLyNOi0tT6njNQ/nSioq6SltVvP+Q=;
-	b=ViLsrO6F3bOoOffv8mftcu3DVcBKuGQwOx+hKhaxPO9jcHLTaXVyobJ/rzBrg2/l5ucB
-	 PYBEId0k6oSQDjFlOsUpszv2fQFJ43sWexOTsH27QAjnrIdJ1V5mKi3fvxRacJ+ymqlJ0
-	 1QxJktRVfU+ADhv52RAccWxvE5GnIg2xZiTTJaz9WhKBSrl5iaxH2wo0RvSXcJjDGrryl
-	 4AYl5Yskyp8cWyd0M5RKk/yDLuQBKcWQAwoly1QyHa8a4P4+GvX1pGZuO+7FZbuidtNl9
-	 rpd/qeK2fJ5ZJ4pUVBMliB4WIBoe5I4I9nSrUyp2JhAKCg1Wl8G0iKob+rdmypp44HA==
+	bh=H42X3hyJK2xtTQxkZsujMjWKQGvRn9KWtqkTmAVsHHE=;
+	b=yXBske4cI8tmJZWWWz+xLOZoBdS5kpSENz94bnPcRt5IJURp2vnwFn5tbnR/luEGA1eI
+	 A/TNXSF7dEqj3jkRb11qomSgE2jqXRS56obD3Ls0MY5rM2Kc88RrgnLZMUV7fobvMzcJR
+	 /KFo65quXZ/hfOfUfUrjNoPXaoiXAYjnkmqHtJhTcjB9eWfapb1caFE98j14PA8vEKx+3
+	 va1Y1ZOT7/cPhhJ9tc/8pEY+hZwFlRQH9vkSap8BygcSielwo6n1jJd/qhXpZryQ9kReu
+	 uNttOwT7mU9X2FeeWtXJvqjmhRn4ZcUkpQhhGo14G2JSFWVG+N4/uga5msM37E9qpmA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=MSy5lv1c;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=chyKSOyd;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	dmarc=pass header.from=ideco.ru;
+	spf=pass smtp.mailfrom=ideco.ru;
+	dkim=pass header.d=ideco.ru header.i=@ideco.ru header.a=rsa-sha256 header.s=ics header.b=IzHPYv7r;
+	arc=none smtp.remote-ip=51.250.56.165
+Received: from smtp.ideco.ru (smtp.ideco.ru [51.250.56.165])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D976B606A893;
-	Fri, 13 Nov 2026 10:50:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D976B606A893
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA342606A331;
+	Fri, 13 Nov 2026 11:08:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA342606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ideco.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideco.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=MSy5lv1c;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=chyKSOyd
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1794567036;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=15wtnSkdKQvbPfkLyNOi0tT6njNQ/nSioq6SltVvP+Q=;
-	b=MSy5lv1cvnFILTXSQ9v1lo4GcHN434ID5jN11A+geXb0H9qK7aiw94egvSNfagR+A6d9PZ
-	O+To9FfVsNVJ7MyiD+qvRxvBcVCk4WADYCiMfec+aFScULSfCT5oyKTX1Msddtvd1KOpt1
-	CZ+ehxATdonMna5CCSl29Dz0SYbDRTBmqaldNTSuNkGRAroCGCvYcm6Ky/Z7ufX7VfxCtO
-	IKon32QiKSzhDgd0FbIpMSTvHXrt61htGn4FMx9lYgBafyraj+3XCxRUL9ZSDz06lUfD5Z
-	v232IMdPTu3dfe8AfxRuHe0gjLXw8pVjP5edp0lYm97qpT2yKFriSb89xSZjPg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1794567036;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=15wtnSkdKQvbPfkLyNOi0tT6njNQ/nSioq6SltVvP+Q=;
-	b=chyKSOydmNTCkQbvoesPWAVuTu340N7N9Rto4sT2IXCoHGT2ctu46lmhkHRtiFaR6M92pH
-	sdiw9OnUjZVJyuDQ==
-To: linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.a=rsa-sha256 header.s=ics header.b=IzHPYv7r
+Received: from [169.254.254.254] (localhost [127.0.0.1])
+	by smtp.ideco.ru (Postfix) with ESMTP id 4BB1C26BC3;
+	Fri, 13 Nov 2026 16:08:53 +0500 (+05)
+Received: from fedora (5cfcd9fa.dynamic.mv.ru [92.252.217.250])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.ideco.ru (Postfix) with ESMTPSA id 789E026BC0;
+	Fri, 13 Nov 2026 16:08:51 +0500 (+05)
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru 789E026BC0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ideco.ru; s=ics;
+	t=1794568132; bh=H42X3hyJK2xtTQxkZsujMjWKQGvRn9KWtqkTmAVsHHE=;
+	h=From:To:Cc:Subject:Date;
+	b=IzHPYv7rdTJpdRP/zNj0uJTMW1HSGPWPg4kaTGJf6HuV1ont6JHrXdcBRFEZ36SAY
+	 6TTnBf7Tw0D4t79t+Jju+USyTvR+OubCRPm9MokLORCBXCX8Z5sA8qYgMHZQXluCR0
+	 k6eQQ9Uy13k8+Y3PfRgdkpv3kQXDHVyeO8x2dpdhp8tj8RtZoxhi+EDLt1aPS/4tQe
+	 hH2NQmXJS/X7X7kWoERvYupW97p6pCJE+hz0Nj4YTQVxMOUZAKf5r0KEFDPhBU1Ib4
+	 49NDJpKf17fSZwKcN/IXmS9abXgZU9FeEO4IkdcPHwF03hovGXcsuTI/pDUUOZ9/cM
+	 /ux2XFH5AtwcA==
+From: Alex Kazinsky <a.kazinsky@ideco.ru>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alex Kazinsky <a.kazinsky@ideco.ru>,
+	Josef Bacik <josef@toxicpanda.com>,
+	Jens Axboe <axboe@kernel.dk>,
 	cgroups@vger.kernel.org,
-	rcu@vger.kernel.org,
-	linux-doc@vger.kernel.org
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>,
-	Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>,
-	John Ogness <john.ogness@linutronix.de>
-Subject: [PATCH v3 4/8] sched: rcutorture: Allow to disable DL fair_server
-Date: Fri, 13 Nov 2026 11:50:25 +0100
-Message-ID: <20261113-sched_dl-v3-4-a76ffa1cdeee@linutronix.de>
-In-Reply-To: <20261113-sched_dl-v3-0-a76ffa1cdeee@linutronix.de>
-References: <20261113-sched_dl-v3-0-a76ffa1cdeee@linutronix.de>
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org,
+	stable@vger.kernel.org
+Subject: [PATCH] blk-iocost: Fix overflow in donation weight calculation
+Date: Fri, 13 Nov 2026 15:08:40 +0400
+Message-ID: <20261113110842.4189035-1-a.kazinsky@ideco.ru>
+X-Mailer: git-send-email 2.56.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -108,96 +75,44 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-The rcutorture test used to disable RT throttling only in the built-in
-mode and this functionality got lost while RT throttling was moved to
-the fair_server.
-Enabling this option (built-in) slows down the system considerably.
-Therefore it makes little sense to enable the fair_server once the test
-is done since a reboot comes next.
+hweight_after_donation() receives usage as u32, clamped to the range
+[1, WEIGHT_ONE]. Since WEIGHT_ONE is 1 << 16, multiplying it by usage
+equal to WEIGHT_ONE wraps the 32-bit unsigned result to zero before
+it is passed to div64_s64().
 
-The fair server can not be disabled from the hotplug notifier because
-the CPU must be marked active. Instead of this off-switch an alternative
-would be to skip sched_init_dl_servers().
+This makes new_hwi zero, which is then clamped to 1, incorrectly
+reducing the cgroup's in-use weight to the minimum.
 
-Add dl_server_fair_disable() do disable the fair_server which can only
-be used by rcutorture. Use dl_server_fair_disable() in
-rcu_torture_boost() which is invoked on the CPU which should have the
-fair_server disabled.
+Cast WEIGHT_ONE to s64 before multiplication to preserve the full
+product.
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Found by Linux Verification Center (linuxtesting.org) with SVACE static
+analysis tool.
+
+Fixes: f1de2439ec43 ("blk-iocost: revamp donation amount determination")
+Cc: stable@vger.kernel.org
+Signed-off-by: Alex Kazinsky <a.kazinsky@ideco.ru>
 ---
- kernel/rcu/rcutorture.c |  4 ++++
- kernel/sched/deadline.c | 28 ++++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+)
+ block/blk-iocost.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/rcu/rcutorture.c b/kernel/rcu/rcutorture.c
-index aecc4da7161bb..5c434cb3ef732 100644
---- a/kernel/rcu/rcutorture.c
-+++ b/kernel/rcu/rcutorture.c
-@@ -1333,6 +1333,8 @@ static unsigned long rcutorture_seq_diff(unsigned lon=
-g new, unsigned long old)
- 	return cur_ops->gp_diff(new, old);
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 1c1025157d8e..0ffe34bd95b7 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -1853,7 +1853,8 @@ static u32 hweight_after_donation(struct ioc_gq *iocg, u32 old_hwi, u32 hwm,
+ 	delta = div64_s64(WEIGHT_ONE * (now->vnow - vtime),
+ 			  now->vnow - ioc->period_at_vtime);
+ 	target = WEIGHT_ONE * MARGIN_TARGET_PCT / 100;
+-	new_hwi = div64_s64(WEIGHT_ONE * usage, WEIGHT_ONE - target + delta);
++	new_hwi = div64_s64((s64)WEIGHT_ONE * usage,
++			    WEIGHT_ONE - target + delta);
+ 
+ 	return clamp_t(s64, new_hwi, 1, hwm);
  }
-=20
-+void dl_server_fair_disable(unsigned int cpu);
-+
- static bool rcu_torture_boost_failed(unsigned long gp_state, unsigned long=
- *start)
- {
- 	int cpu;
-@@ -1402,6 +1404,8 @@ static int rcu_torture_boost(void *arg)
- 		}
- 		VERBOSE_TOROUT_STRING("rcu_torture_boost finished holdoff period");
- 	}
-+	if (IS_BUILTIN(CONFIG_RCU_TORTURE_TEST))
-+		dl_server_fair_disable(smp_processor_id());
-=20
- 	/* Set real-time priority. */
- 	sched_set_fifo_low(current);
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 10beb54281881..a713ad9dd6208 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -1950,6 +1950,34 @@ int dl_server_apply_params(struct sched_dl_entity *d=
-l_se, u64 runtime, u64 perio
- 	return 0;
- }
-=20
-+#ifdef CONFIG_RCU_TORTURE_TEST
-+/*
-+ * The RCU-TORTURE built-in test will disable fair-server to avoid any
-+ * throttling while testing RCU-boosting.
-+ * If compiled as module then the user needs to disable it manually before
-+ * loading the module.
-+ */
-+void dl_server_fair_disable(unsigned int cpu);
-+
-+void dl_server_fair_disable(unsigned int cpu)
-+{
-+	struct rq *rq =3D cpu_rq(cpu);
-+	int retval;
-+
-+	scoped_guard (rq_lock_irqsave, rq) {
-+		struct sched_dl_entity *dl_se =3D &rq->fair_server;
-+
-+		if (dl_se->dl_runtime =3D=3D 0)
-+			return;
-+
-+		update_rq_clock(rq);
-+		dl_server_stop(dl_se);
-+		retval =3D dl_server_apply_params(dl_se, 0, dl_se->dl_period, 0);
-+	}
-+	WARN_ON_ONCE(retval);
-+}
-+#endif
-+
- /*
-  * Add @dl_se's bw to the root-domain accounting.
-  *
+-- 
+2.56.0
 
---=20
-2.55.0
 
