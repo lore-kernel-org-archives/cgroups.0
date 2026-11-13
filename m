@@ -1,98 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.127.230.112
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794558004;
-	b=tPlkKmy7hD4DjxFUAGv61ABkZccotsHInQ4Ev8IRO+EWopTEj4ZZHYwdaM8ZKjyprKAZ
-	 pbUZ7XQ1CtkUrY9tMYP+w1Iv97kXeCKuTiQXZ5BaAnAROeAQqpTLh9nxB5VOMqLkpAs68
-	 ormaNZdCVZ+YE9c0Cx7kFzn5vOcYZP5f1ocy1y9nrdisrG+mYLjavCRb+zSm+Uj1e0cyO
-	 MAlGK9rH3OWGjJ8Q8fR3JSBTJYB2F8MY6GlXYkDo6DAxvJig/Ah1+UdPtrChKF58Fw5R2
-	 JH8YDGO2MbtaK950XpaUe/5IUyYYOdPeaYluI5907eoglcGPQs3Xx8TAr1Ei9NBFecw==
+	t=1794559824;
+	b=pNIwiaNIqUPgDXykc0HV0jkjktSJfX3psM0YXZbyU1wUwURGZhLwd/OBoLRs09SJ2x5M
+	 5rCjrhkZweMjANNWjXZQ3O5iWppFHymTBbRAMZH36fUjNKRrcUh9rNDNEKfUvPBVi6jSG
+	 W8PkJ5HnqkZRBSKqWyVT2OlHsgWuXW2P7kniD/lNt6o5uHALO9sQOf1ddw8zlAdSdxCHH
+	 WjM0QJwDx8JB8sE74PBQM9OJqzh0nvw+njzDvdsVIXqwTJ9QsFphjs7Mxu2PPJ2PARXOR
+	 ld50IxwwGir3j2cF+THdEkU2d57jWJoLp4Vr4KSffaZ0MbupWDtd7bkbquGN3592Cqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794558004;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=u6ODy5SnsRQugFSPY6vBQTFSWdeeo67enpuBFMw2vTA=;
-	b=u4blzPmGDy7I25PqQ3WNUnuqKxKQOQJo717wp0L63ED8R34VPNrFuRxmwnwXGGX7SjWW
-	 RneJtVXtm16PRZ4vDSFcxTHzVdjFk48uQ2JmQa5eb7uDK+l7JaxZXs902MZkWM8Sw00Qq
-	 pSGviFJqrbwURv44vBCfDOB1AT42W6Yry2ylibFxxL9ZJlTSsJ5NdB54iidv46+/wuKpN
-	 lzkoz3HxNB+q5sYP5rZaH3rXLg5Tx1k47DLTDF0zzwCYTUWB+T6RhVzNXXyJXzyM3rtRY
-	 5M2XnpEa45ByR6Q3la2aEn5kknP3rJqo0Blg+3OJHfyYwD5cAWm82RHPdyxTAbT5Zag==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794559824;
+	h=DMARC-Filter:DKIM-Signature:Date:Mime-Version:In-Reply-To:X-Mailer:
+	 To:Message-Id:Content-Transfer-Encoding:References:X-Original-From:
+	 Content-Type:Cc:Subject:X-Lms-Return-Path:From;
+	bh=BRtBrIkCJ4EaL32K9DlOPnqwkNfnHFCSjQCoKgoeAeI=;
+	b=q4M0rWokOUW92KMYlF31BSgsRcix5BFAci4ip3CET4SaZTVnt5+MlI201XAW79khzv5x
+	 kTEoUugWD+NdEfL+Mw9PILI4rJ0VrEKcE8QBW3HBnukLNphJy2kfsL+wju0tWhD6Pb5Bt
+	 yn6aorqRkUP3tB4fVLEl6yKa+neFRJltGfT1NaYUQqqp4NhjXDFonM4oJS6t36KAYQnrf
+	 R/FfnjSMkjI8m6NHmJ8thyqtfa3laavFW4BicBKVbwuxMwSpPKH0wFl27PekKRxx5eq8n
+	 kcWzGo/Vtz+7orQQMqQr3UeJr5k0PQszsP5oLeZjq9vCS4nDOpOM1moMKTaYQ17xPbQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=suse.com;
-	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=OGJEvOtU;
-	arc=none smtp.remote-ip=209.85.221.47
-Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	dmarc=pass header.from=bytedance.com;
+	spf=pass smtp.mailfrom=bytedance.com;
+	dkim=pass header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=ZY2stnAD;
+	arc=none smtp.remote-ip=209.127.230.112
+Received: from va-1-112.ptr.blmpb.com (va-1-112.ptr.blmpb.com [209.127.230.112])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A722D606A890
-	for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 08:20:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A722D606A890
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B281606B366
+	for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 08:50:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8B281606B366
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=OGJEvOtU
-Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-490585eddfcso614898f8f.0
-        for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 00:20:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1794558002; x=1795162802; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=u6ODy5SnsRQugFSPY6vBQTFSWdeeo67enpuBFMw2vTA=;
-        b=OGJEvOtUEBShLexZaoNIEU0Kv8IFFc6MSOKErs9nl6AT7R1oYdts6gSObwQu4spiUg
-         PuagTz6s+qgS6+pEfJDcBUMrEB+UeARXCPje500BpFu8z+SnfHkrdQY32QSPeimCrmIK
-         fBfyenwoh3fJtWsIrVT+kDdKV2r8W9RBtqTq2mwmiI9x4dXCZ2xC9ZQVvFuNQXwjs2Mc
-         dMMrYCaybPmLrMqxK3OOBmq9ZiN0q/NxNUz4Lw+et1VWbWIP1NTBbD1fohcIk+XdNpYR
-         NXcP2JhODHgUbxvu55f6+W4qbduZASDMaMUrYHPw7Ykr5syj6G54Gmf1Gof1Pmwzphuc
-         7lPg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794558002; x=1795162802;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=u6ODy5SnsRQugFSPY6vBQTFSWdeeo67enpuBFMw2vTA=;
-        b=Hvur6/0oL/C8K+7xkpNtWVV7oc2nP7A5ax7WwQo8MoabsaEf+dW0K6Vmh5dqN3NDEN
-         Eq4/w2ckoY1QvStWz+v9kncgHYf30yabsBgYMF7Y5pgv1HFLIBjwtF0Gk4qrZh/ONEqg
-         e7nTrDVouuQ95nCySuXnMh3Oi2NoA2FhtjJDodS7OOjegXdAOKiV2hictoqxXFGdzfz9
-         vPUwafzo2y/PCYvjg8w+z7OS6gTMjHq0Mn+3LsEHSMBUR2qBrfhNuWWuExeLzG5GGJ9+
-         zSzJJJN/jfViJXQzXbi2Iq3kTkiLKPJWQmz8mV8lJTxDobJqjhe14SEgSPB0l5GKIEOt
-         6riQ==
-X-Forwarded-Encrypted: i=1; AL+hErFrYPrB9rrBewX/PfZYJs9T358F+f/xxTjJKkal72xIMmwMl90ao1ZZ9+n+uMmfGOTqcDRdFkK1@vger.kernel.org
-X-Gm-Message-State: APuU4Z8PFx1G3rLLQj4Up6A60pfkClw/xAQBvBWY5r4feA8m9KyQsU4J
-	4p8mL3PNpAD/J2RVbNnnSXPGUUGoj+Z5ZNB4k0zU6/T2cwx6VsTyRuYbqexYXZaDFYI=
-X-Gm-Gg: AYBFou2mNI6u91aoVv6i8j86gsBm98JzU7Zkos4IXEq6z6rGxSiHZYEa/jHeqkPqKsS
-	GzT8tz9uODqRsmYLuG9Rw3KNasz2eY+PpV+VQ+/suWOD1M62Qbw2vtk3yz4UxoHHcnDU/ODEKbh
-	LC0CIy8iSRcji2IdjSKgyre3m9mTPYOwGGoQxnaV89jnvAWjE9wLknMNZVj4JiG6jvmjp0yskW/
-	N6SsNi2SaN7JfsHDvSJY+HiLN87P/DeA2CrWShEJxn66dndgc7yse8RcIlA0tXmg5okgt8BX8eb
-	GVy/Lw1d4LOze6SAl77/z9imDkKMPvmoeryY2r4rOVk+uwbgK4DrHRRw49zl4TqY1NyJknf1jER
-	gCrB5k2vD0SfmEPKr0DQrAq6hmfCWJenydR74S6+j8aqbS5gGmR81kyzjs4C06+GhfdzRO6ZmE6
-	Kt6zNybTfLDb4mDAVAgbBF5UkffTqrjz1NsIc5bteqBHM0F9S6EOGT8KnIetLbVGz44wQMf1MiJ
-	L1noFoHXFv+3MQzWSGmXRuowDhAqc6fvmB34lXlO1BLQVtQq7sHjVetJ2ad/cBZAeZja8RoNaZ3
-	xblw4tV55hJiDIBTEGnoNHrmwGwXooawtR5kyCPkPZk=
-X-Received: by 2002:a5d:5d86:0:b0:48e:43a:1d84 with SMTP id ffacd0b85a97d-49c712ac267mr3929586f8f.23.1794558002001;
-        Fri, 13 Nov 2026 00:20:02 -0800 (PST)
-Received: from localhost (109-81-94-245.rct.o2.cz. [109.81.94.245])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-49c609c602dsm3640220f8f.46.2026.11.13.00.20.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 00:20:00 -0800 (PST)
-Date: Fri, 13 Nov 2026 09:19:59 +0100
-From: Michal Hocko <mhocko@suse.com>
-To: Zhan Xusheng <zhanxusheng1024@gmail.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	penguin-kernel@i-love.sakura.ne.jp, tj@kernel.org, mkoutny@suse.com,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	zhanxusheng@xiaomi.com
-Subject: Re: [PATCH] mm: memcontrol: don't miss processes whose leader has
- exited in OOM scans
-Message-ID: <avbIL86R61Lu2YVF@tiehlicka>
-References: <auhiGqKJeukk7t3P@tiehlicka>
- <20261102114029.1259655-1-zhanxusheng1024@gmail.com>
+	dkim=pass (2048-bit key, unprotected) header.d=bytedance.com header.i=@bytedance.com header.a=rsa-sha256 header.s=2212171451 header.b=ZY2stnAD
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=2212171451; d=bytedance.com; t=1794559817; h=from:subject:
+ mime-version:from:date:message-id:subject:to:cc:reply-to:content-type:
+ mime-version:in-reply-to:message-id;
+ bh=BRtBrIkCJ4EaL32K9DlOPnqwkNfnHFCSjQCoKgoeAeI=;
+ b=ZY2stnADnBSZLTMueZuBwBnVrnWvuCAPBP083b5OepDDuwjhTxIbTnD9WN4S5S2+Pa7jag
+ IU5M2Vbwy3zUK5iA9m4XWHeWpc++Rd7ENZmwA9+dtD6VCShjhjWLUdyXnXCxjNJwdLgymE
+ xZCbBzDgEFp4NiLZDM9NGrghe9Qx/cBwpP4U1PF9vy76w062zD/cJUNoRNJo82PXaPSkNL
+ +dG4gyG9HTfb/6bWpt+dxt2YTAhAjrbyJj0rJI1wd1C8KC1k8xD16ovob2UX8nsnyD4iU1
+ rgCvknXCu/pd75VLatZW+RCzPglfhLjxug6scq+nF49BM9jcso8w+NBnzSBa3A==
+Date: Fri, 13 Nov 2026 16:49:48 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -101,44 +52,126 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261102114029.1259655-1-zhanxusheng1024@gmail.com>
+Mime-Version: 1.0
+In-Reply-To: <179455442014.482102.4069329165987986914.b4-reply@b4>
+X-Mailer: git-send-email 2.45.2
+To: <gourry@gourry.net>
+Message-Id: <20261113084948.78661-1-lizhe.67@bytedance.com>
+Content-Transfer-Encoding: 7bit
+References: <179455442014.482102.4069329165987986914.b4-reply@b4>
+X-Original-From: Li Zhe <lizhe.67@bytedance.com>
+Content-Type: text/plain; charset=UTF-8
+Cc: <akpm@linux-foundation.org>, <cgroups@vger.kernel.org>, 
+	<david@kernel.org>, <joshua.hahnjy@gmail.com>, 
+	<linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
+	<linux-mm@kvack.org>, <lizhe.67@bytedance.com>, <ljs@kernel.org>, 
+	<mhocko@suse.com>, <muchun.song@linux.dev>, <rakie.kim@sk.com>, 
+	<roman.gushchin@linux.dev>, <shakeel.butt@linux.dev>, 
+	<weixugc@google.com>, <ying.huang@linux.alibaba.com>, <ziy@nvidia.com>
+Subject: Re: [RFC v2 1/1] mm: add source selector to memory.reclaim
+X-Lms-Return-Path: <lba+26af6cf45+407931+vger.kernel.org+lizhe.67@bytedance.com>
+From: "Li Zhe" <lizhe.67@bytedance.com>
 
-On Mon 02-11-26 19:40:29, Zhan Xusheng wrote:
-> Hi Michal,
-> 
-> This is v1. v2 [1] reworked the check, but your questions apply to
-> both.
-> 
-> On Mon, Nov 02, 2026 at 11:12:42AM +0100, Michal Hocko wrote:
-> > Is this a desirable/intended behavior? Shouldn't we move the dead leader
-> > along with the rest?
-> 
-> Userspace sees it too. After writing the PID of such a process to
-> dst/cgroup.procs:
-> 
->   src: cgroup.procs = 85       cgroup.threads = (empty)
->   dst: cgroup.procs = (empty)  cgroup.threads = 86 87
-> 
-> Moving the leader would fix that, and memcg would then need no change,
-> as the PROCS walk already returns a dying leader with live threads.
-> The catch is that the leader has already gone through
-> cgroup_task_dead() and is still accounted by controllers: pids, for
-> one, uncharges it through task_css() when it is reaped, so the move
-> would also have to transfer its pids charge. Tejun, would that be
-> acceptable in the core?
+On Fri, 13 Nov 2026 02:20:20 -0500, gourry@gourry.net wrote:
 
-Do we have any conclusion on this?
-
-[...]
-
-> [1] https://lore.kernel.org/all/20261027144016.2582880-1-zhanxusheng1024@gmail.com/
+> > On 2026-11-02 15:04 +0800, Li Zhe wrote:
+> > +	Specifying a source value constrains where proactive reclaim applies
+> > +	pressure. Currently only source=nodes:<nodelist> is supported. For
+> > +	example::
+> > +
+> > +	  echo "1G source=nodes:0-1" > memory.reclaim
+> > +
+> > +	This reclaims memory of the target cgroup resident on nodes 0-1.
 > 
-> Thanks,
-> Zhan Xusheng
+> you buried the fact that you want to allow source=zswap in your cover
+> letter. I was confused by nodes: was needed here until i re-read.
+> 
+> As Joshua mentioned, i don't think you need the separate cover letter,
+> and I agree this is far too long for the proposed change.
 
--- 
-Michal Hocko
-SUSE Labs
+Agreed. The nodes: prefix was meant to keep source= a typed selector,
+but I made the motivation and possible future extensions too long and
+distracting. I will make v3 much clearer and shorter, and keep the focus
+on source=nodes.
+
+> ---
+> 
+> When I asked for testing, I wasn't concerned with the functionality,
+> I was asking what problem this actually solves. performance? fairness?
+> 
+> Shaping the distribution of memory is neat and clearly works, but why
+> does userspace want this?
+> 
+> The interface "lacking flexibility" is not a problem in and of itself.
+
+Thanks, this is a fair point. Sorry, I also made that earlier
+explanation too long, so let me summarize the intended use cases here:
+
+https://lore.kernel.org/all/67fcd8db-269d-43f1-aea2-8c41165747d0@bytedance.com/
+
+In short, performance, fairness and cost are all part of the goal. One
+target is mixed DRAM/CXL systems where user space keeps each memcg near
+its own DRAM/CXL resident ratio target, based on the workload's
+latency/throughput and cost requirements. Another target is the case you
+described below, where user space wants memcg-scoped reclaim to apply
+pressure to the desired tier first, rather than reclaiming from warmer
+memory on the top tier. This is especially useful when a memcg is close
+to its memory limit and user space wants charge-reducing reclaim to
+start from colder/lower-tier memory first.
+
+> I CAN see why you might want to proactively shape what data is swapped.
+> Let me give you an example:
+> 
+> ---
+> The global node reclaim interfaces allow us to put pressure on distinct
+> nodes - which lets us shape which node is swapped from first.
+> 
+> Example: node0-1=DRAM, node2-3:CXL
+> 
+>   echo 1G > node2/reclaim   # swap from CXL
+>   echo 1G > node3/reclaim   # swap from CXL
+>   echo 1G > node0/reclaim   # demote to CXL
+>   echo 1G > node1/reclaim   # demote to CXL
+> 
+> But the memcg.reclaim interface only allows us to pressure the complete
+> set of cpuset.mems nodes for that memcg
+> 
+>   cat cpuset.mems           # 0-3
+>   echo 1G > memory.reclaim  # makes progress from any of 0-3
+> 
+> Presently, proactive reclaim iterates nodes in node or fallback order,
+> meaning it attempts to make progress from the fastest node possible
+> first - which attempts to demote by default.  If the lower nodes are
+> full, this demotion will fail and we'll swap directly from the top tier,
+> which is (presumably) warmer than the bottom tiers.
+> 
+> Enable source-bound reclaim in the memory.reclaim interface so that user
+> space can have the same control over memcg memory tiers that global
+> proactive reclaim has.
+> 
+>   echo 2G source=nodes:2-3 > memory.reclaim  # [z]swap from CXL
+>   echo 2G source=nodes:0-1 > memory.reclaim  # demote to CXL
+> 
+> This lets user proactive reclaim to target the coldest memory first
+> rather than preferring to reclaim from node0 first and potentially
+> swap out memory warmer than what is present on a CXL tier.
+> ---
+> 
+> With this, you might be able to demonstrate fewer refaults and less
+> DRAM (node0) memory consumed by zswap. These are clear benefits.
+
+Thanks for the example. It makes the problem much easier to discuss. I
+will refer to it when reworking the v3 motivation, and will avoid
+framing the issue as a generic flexibility problem.
+
+> I would argue that memory.reclaim should operate this way anyway,
+> and that would could make proactive reclaim do this by default, but
+> I could see the policy bits in userland being useful as well
+> 
+> Performance may not be the only reason you want this, but you need to
+> help me understand what you're trying to accomplish.
+
+Thanks again for the review and suggestions.
+
+Thanks,
+Zhe
