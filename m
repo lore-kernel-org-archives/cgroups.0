@@ -1,75 +1,89 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.71
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794577657;
-	b=2mkATrE9idRqRuWcF/lgvBupfIrxhcrPbLyQ43Wi251kZpxlNfaSMTzhLZk8+TRqMMvl
-	 9F9NFTo1caulMIZ/1t1G7JXoOXonRDfjAH7mopDHzxc8O4OS3GV6e0j3VdC6VDhzS5Ryg
-	 tb8MmBmQlrKWEH6tkstrh7LzCS5rS098lfx/rqSpJtkp4ytcSAa/eVs9uPB+nh1cwwIA9
-	 XQTZkGdXfN88Yvk5wkv7CgETTzimYuULzFJMg9txYW0c39vsYczRM1u8X3Y3mtyuKJTY2
-	 0aUKeLrGDmmjUDDuQV5DgRzrqqiBYqNJn1lK8crT30ux8If0152DuisTJeh1JSxQKkA==
+	t=1794577875;
+	b=yC9xa5xvAwHDzwowwFfSL9SIZDi+dslzKdqomLIITj2bvtTSlLvDBZw/k9W9bWnv3SXE
+	 crAoD3905zerdXU435KrLC8rXUHaYskFDmBeeI8JdUz/glqIetfCB1TuZPypv037TWTfk
+	 CvTa8qHgs/54CBtq6jTH7/9KpKd092qVWvOl9lFv7Cb7i9vRtdecamsF/LUp/vczDAvrE
+	 Mgku4zfXhLwUOZ5tHCOaK73d/KuC+euEpC0TXMtAR6xcr7OHYyvODnyH8Nt9Jzz6TyglV
+	 RdJPyCWkhOPox0MTAd/Hu1hR0fUWu+Cz04jaO0kCTQ0FFqnbKz6GdZwu8G4/y9TCZMw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794577657;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Received:Date:In-Reply-To:
-	 Mime-Version:References:X-Mailer:Message-ID:Subject:From:To:Cc:
-	 Content-Type;
-	bh=Uh3RNZiwQ8OEliQwz60GaSWCgjS92PjWqF45e5QPMWE=;
-	b=zgy05g6YWojF30zTbIigP8d/pbmSvTAlTmJtW7i7m9PcS20W0auY+a/l2F/1hXU8eot2
-	 jsf/kjkIfQC6rUXTWmo1Mj/tF1UjHl8dzMNsqv5fJbHI809bV8/BRsHnzcbIzmio0rG5J
-	 0wiaZ/tUUzUIPy/R+hmAfoL6Ri0Yt6YSjrBiEfCArZkniwm3fS1WWqHKEe9LyPxw55PuC
-	 F0DxzLD0LUiYPc1RI1OaRsqbbxPNgvMl70R/WfM4JIp+s3S/GXPOsCQGwKab8ztjru5Gg
-	 /wMLUFkXJg0OW1HuhpM7KzmwQfR6ELFvNYkrnM4j2Q6dU6U2CZV4J6fDXTPPMTGBcnA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794577875;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=0uudVa8z72PwtwfzxLux5kJ3sUVKvJn/6ULtjmYSFoQ=;
+	b=3HlgZ9i/BdVtIokgcb/wuPl9uJ1r2BXdFDGK9E4UD9hYOpy+vNZ9eQ4zYHkScgEeGc6q
+	 kjsR+ROKkrsJQRpwUW1t3BMPWtnWNfcTcGwbB86aBESWcMLiJNgmYcIhrc1O2GSHxtVHB
+	 CuuUPYH1wSf+1KXqXjOOaZgOmkAWpkkepUqunpYHYGiYz2zaULg42bY2pyRUfA//tb8Wb
+	 GvDRS891l6z46Mv3nOkfpH0P593H5UNCeWT2mwKAP3lC7gJ9omDmNQDhkJ4ghZ9k58Y2y
+	 LrE3uAJooAaBbTuIDQKF0oPcpzk0uMFywhQUVB2WMUe+VEhdh1oZnIz2PvcUS2kgb7Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=google.com;
-	spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com;
-	dkim=pass header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=mChKw73R;
-	arc=none smtp.remote-ip=209.85.216.71
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=efficios.com;
+	spf=pass smtp.mailfrom=efficios.com;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=sZSubH3t;
+	arc=none smtp.remote-ip=158.69.130.18
+Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 166D5606A336
-	for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 13:47:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 166D5606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01EDF606B1A5;
+	Fri, 13 Nov 2026 13:51:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01EDF606B1A5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.a=rsa-sha256 header.s=20260707 header.b=mChKw73R
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-3ae1d132d52so771605a91.0
-        for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 05:47:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20260707; t=1794577656; x=1795182456; darn=vger.kernel.org;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Uh3RNZiwQ8OEliQwz60GaSWCgjS92PjWqF45e5QPMWE=;
-        b=mChKw73RMvMekalbwIWe8vJQeNvBuAqoFw9E6LWWYbcMqUuXDvVGlHTLU8n/PqxdKL
-         j5K9gDqwD+/0CTMTFAtxDuqyu7cxgmBzY8Ju5hwgNLshJS4w/4lSN3SaYU3JEWz0+Xak
-         da8uSjJJ10NkQfa73Hi//PBJluj78+H3S/po8W7LsqqH4uMBbF3g/iYIskDP2aKIdts9
-         o7GQQLrvh2y8kGnXVLqcYJMCXCC9Jt9b8+0V65HBdYxpZFkn/ERRJ6MMZIMcrPOgV09m
-         7eWINQ8gZ7gPfty3HBdvHYTcxr1IQD88TJYFrwZjM1pbJOzGg17meejlsNBHlIcEqiLo
-         XdMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794577656; x=1795182456;
-        h=content-type:cc:to:from:subject:message-id:references:mime-version
-         :in-reply-to:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=Uh3RNZiwQ8OEliQwz60GaSWCgjS92PjWqF45e5QPMWE=;
-        b=TVhETrbYRrfikyf5fYFvvH/FvIZEmjI4uYEcQtBY76j3CcVk1nIxsJdJ0/D4PlKLT0
-         JuNZHCNvXnfcAFphZIw4a7RkVlQaGHZZGpj/cZ9FgvS/6kjpMAgJqYgwjV+9M4K3cchg
-         W/ezFlIvDT+yP1gbag/gytt2SXBsAX25MyDtfgKMc/Nntt2uhdL1uH9m4aDiiqmEz14g
-         BZvuf49F4P0Yt/oAgaEAZNhEE1rjT7URASPOS7/uqs32UM+aLRw2rV3vnvJ0lm16/CUy
-         IzKOxmVWcVMY0LnJrycYSkKn1ZOvPmzxUbNXbEc3aaeGKSnxUNpySU3rTzudwikOl9gs
-         KrqQ==
-X-Forwarded-Encrypted: i=1; AL+hErEbaZCRsgnoCPzY9FZUZVGJjtAFtbDdSq+qeAdh1bLPu2W4/9An/O0MB4s9XKttLFiVIlG5HdkD@vger.kernel.org
-X-Gm-Message-State: APuU4Z+rsrH6Vzg/xrArVQUIM+CLQyDnqam1dEobk8clrQn4QuJt8UvT
-	XyeiPKMd3Md/hxF5mLss+PSZIXA+5Oe93ueNAsByrLnieZeqL4ur+5YE+As90923bEI4mZOA79F
-	8c2LMYA==
-X-Received: from pjbgc19.prod.google.com ([2002:a17:90b:3113:b0:3b0:a379:b383])
- (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:4a50:b0:3a8:c0cd:57f9
- with SMTP id 98e67ed59e1d1-3b1b0a0db23mr2345964a91.25.1794577656089; Fri, 13
- Nov 2026 05:47:36 -0800 (PST)
-Date: Fri, 13 Nov 2026 05:46:14 -0800
-In-Reply-To: <20260922071945.693714-1-fuad.tabba@linux.dev>
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=sZSubH3t
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+	s=smtpout1; t=1794577873;
+	bh=0uudVa8z72PwtwfzxLux5kJ3sUVKvJn/6ULtjmYSFoQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=sZSubH3tjT/GPjjeCdOxx/4cAgGsCuWEr6VACo4J2PTl8cRs5IpBTlKtUeO8AylmD
+	 HxCjGdd7QZ5smjr12rihK+BJyiAzlixZDSllUgXVr4MHyyLW7PcQ9Wnpi7XkFIslFE
+	 rcuy+edXu9wYLvwf5/dIzqnXRt2MfU7UGg9/grL4Ak3diKTNTIOZDHXbfWohcyo5w7
+	 qztzm/74PzPKzqfD/FXvvQDUrATZGQ/+1ucflwQcEvss6bM5+lRWCP/0YO5Y3yZ2S0
+	 nH+p6zs7xK1urRLQWxFQ5Dfym4sSzAwDiXFnovryLmzb4K5dQpokPnGVIeCT4c+dlx
+	 dxtfHsmfgGuvA==
+Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jQzDx5zJWzPQg;
+	Fri, 13 Nov 2026 08:51:13 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: longman@redhat.com
+Cc: juri.lelli@redhat.com,
+	peterz@infradead.org,
+	mingo@redhat.com,
+	vincent.guittot@linaro.org,
+	linux-kernel@vger.kernel.org,
+	tglx@kernel.org,
+	will@kernel.org,
+	boqun@kernel.org,
+	dietmar.eggemann@arm.com,
+	rostedt@goodmis.org,
+	bsegall@google.com,
+	mgorman@suse.de,
+	vschneid@redhat.com,
+	kprateek.nayak@amd.com,
+	luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org,
+	ridong.chen@linux.dev,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org,
+	bigeasy@linutronix.de,
+	clrkwllms@kernel.org,
+	parri.andrea@gmail.com,
+	m.szyprowski@samsung.com,
+	kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com,
+	cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-rt-devel@lists.linux.dev
+Subject: Re: [PATCH v5 18/29] sched/deadline: Move a task's bandwidth only where room was made
+Date: Fri, 13 Nov 2026 08:51:10 -0500
+Message-Id: <20261113135110.160083-1-mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <bcb60245-abfb-4e3a-aa4e-f134ed310381@redhat.com>
+References: <20261108185406.1549770-1-mathieu.desnoyers@efficios.com> <20261108185406.1549770-19-mathieu.desnoyers@efficios.com> <bcb60245-abfb-4e3a-aa4e-f134ed310381@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -78,40 +92,71 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0
-References: <20260922071945.693714-1-fuad.tabba@linux.dev>
-X-Mailer: git-send-email 2.56.1.703.gf848ed807c-goog
-Message-ID: <179441838666.82439.8379969006436543719.b4-ty@b4>
-Subject: Re: [PATCH v2 0/2] KVM: selftests: Fix incremental build dependencies
-From: Sean Christopherson <seanjc@google.com>
-To: Sean Christopherson <seanjc@google.com>, Paolo Bonzini <pbonzini@redhat.com>, 
-	Shuah Khan <shuah@kernel.org>, Oliver Upton <oupton@kernel.org>, Fuad Tabba <fuad.tabba@linux.dev>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	"=?UTF-8?q?Michal=20Koutn=C3=BD?=" <mkoutny@suse.com>, James Houghton <jthoughton@google.com>, Will Deacon <will@kernel.org>, 
-	kvm@vger.kernel.org, kvmarm@lists.linux.dev, cgroups@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-On Tue, 22 Sep 2026 08:19:43 +0100, Fuad Tabba wrote:
-> Changes since v1 [1]:
->   - Use FORCE for the sysreg header rule instead of duplicating the
->     generator's inputs. (Oliver)
->   - Added patch 2, the same class of bug in libcgroup.mk, found while
->     testing patch 1.
-> 
-> Two fixes for Makefile rules that name a directory where a file's mtime
-> is what matters. The first is arm64-only: the sysreg header isn't
-> regenerated on an incremental build when the sysreg table changes. The
-> second is arch-independent: cgroup_util.o recompiles, and every test
-> relinks, on the run after any rebuild in lib/. The two patches are
-> independent.
-> 
-> [...]
+Hi Waiman,
 
-Applied patch 1 to kvm-x86 fixes, thanks!
+On 2026-11-12 23:37, Waiman Long wrote:
+> For cpuset v2, it is not possible for a cpuset to span two root domains.
+> I believe it is not possible for v1 too, though I am not 100% sure.
+> Please let me know if you are aware of a way to do that.
 
-[1/2] KVM: selftests: Fix arm64 sysreg header dependencies
-      https://github.com/kvm-x86/linux/commit/b2ddd6af0646
+It happens with isolcpus="domain". The CPUs it isolates stay in the
+effective CPUs of the top cpuset, and of any cpuset that is not a
+partition root. They are in the default root domain. The other CPUs
+are in another root domain.
 
---
-https://github.com/kvm-x86/linux/tree/next
+The message should have named isolcpus. The planned next version does.
+
+This is on tip sched/urgent (v7.4-rc1 based), in a 5-CPU guest booted
+with isolcpus=domain,1,2. A is a plain cgroup v2 cpuset:
+
+  # cat /sys/devices/system/cpu/isolated
+  1-2
+  # echo 0-4 > A/cpuset.cpus
+  # cat A/cpuset.cpus.effective
+  0-4
+  # cat A/cpuset.cpus.partition
+  member
+
+Two tasks in A call sched_setattr(SCHED_DEADLINE). Task 95 is pinned to
+CPUs 0,3,4 and asks for 10%. Task 98 is pinned to CPUs 1,2 and asks for
+20%. Both are admitted. /sys/kernel/debug/sched/debug gives total_bw of
+the root domain of each CPU. "Before" is the fair servers alone:
+
+  CPU     before    with the two tasks
+  0,3,4   157284    262141   (+10%)
+  1,2     104856    314571   (+20%)
+
+So the two tasks are in the same cpuset and are counted in two root
+domains. Then task 95 is given CPU 1 alone:
+
+  # taskset -p 2 95
+  taskset: can't set pid 95's affinity: Device or resource busy
+  # echo -1 > /proc/sys/kernel/sched_rt_runtime_us
+  # taskset -p 2 95
+  pid 95's new affinity mask: 2
+
+After that, total_bw is 157284 for CPUs 0,3,4 and still 314571 for
+CPUs 1,2. The 10% of task 95 is counted nowhere. That is the case the
+patch fixes.
+
+I did not test cgroup v1.
+
+The planned next version has a new cpuset patch for the same
+configuration. A deadline task in such a cpuset can also change root
+domain when its cpuset loses CPUs. The patch refuses that:
+- a write to cpuset.cpus fails with EBUSY if it leaves a deadline task
+  no CPU in the root domain that counts it;
+- cpuset makes a partition root invalid if it would do the same.
+
+My reply to Juri on patch 20 describes it with two related patches:
+https://lore.kernel.org/all/e21aaf40-b929-444c-b707-3200e21d7301@efficios.com/
+
+I would like your opinion on these two refusals before I post the
+patch.
+
+Thanks,
+
+Mathieu
