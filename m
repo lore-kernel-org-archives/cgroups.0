@@ -1,62 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794567037;
-	b=0hraPO6yRC1a7WrWnoLiB8Ll+yH+TIdkUMr2Eabplznk7fyA4Efg0svuXUDO9N2rVQpB
-	 CHXNQAW/YuORWAP5SWiSwOwuG5Q2SxvOkgajh/jf8fr2ZqGFyXq7LMfrLW0rAlQhR25qB
-	 g96vmEQu8pAmdWRfOW2M+cmjYizz5asN4o0kJd9QCySqMp2LJ22SICuQO5HwM8Yoh2UR0
-	 ch/BOSSAVZ/tsfMg02aIIQCV84IAmotL0DecnOAKPS/0whw5Oa/ftqp5yBw4q1sYPqcMy
-	 dMOHm6vdesmlnVAEo5G7cQeGno1kjjeivYV4s8s42b8MvM5b09WiGts+D+4ThJTl+3g==
+	t=1794567042;
+	b=DSbRxA8yiGUh8kWF0tsxBVNQHHc7Eu0akgjKeh46uAH3Z4LbT9riOrJolAWYpZZ4yrRP
+	 dodn5UEMioY4WkKUdLgGja3vwyw7XzxGFt6TG7BmEzpWa/5OyhARmz2JwHsQPnoNUMXK7
+	 xYYO7xNbajvan0cREoh0kToN8hPWNgI3aGqThmw/xptspeIaygorNoTWIbjYvJYUj+Hls
+	 yw2pht35Dshsjfs4rQ9kc7rzOcj+tqw3ImsURZYqi59z+IKAodLRVAatsHkArtf5kq2BR
+	 MYWdKGBig5/aqpHi333OoQ0QFH1pDSlCIsAPQiIcwbkXoRKaO27pqpBJUqXTG1z/aBw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794567037;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794567042;
 	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
-	b=nw6Z1/c0nlNqIL1S7Q7aJ5PBJGYUQnor/Pkhwhj0HCretcYuID4CnQJlQxK5/JjrKsQT
-	 dUHMamWj0quBhbbhsR/fth9ze8HrE+DhLRTD6YCO7hsBoq4aN/lH4S3RC8uLtNY0gDG8D
-	 2gXrptiQQzSOfyEwQltdgzo9tP6tDT1txH0rIwJbVLt6SmefN44o8bVXD50Pjt7XP4M5f
-	 7PmGD7HzoR49okyqplBvZ9OgWt9PRwM1mps3gh1XSh8GYPhdrXtAMGjfQ+/c3w+x8XYSK
-	 E2FYa+YVKnXL3iC/niUGoVNcKqaddqbhC4Co10Mk2/kYFgzt6ZY3A6iPLNne+RlqK6Q==
+	bh=qKATZfaP7j93mPzPK2LI85ABT996WxYe1HUN7LIOWWs=;
+	b=HZwBG73bK5MXcgQPQkvj7RvIWo92iEYRoigAteFKAbdkOny7Wlv+07umEIHpFGZasiRR
+	 Mi18XOflO/AZncYg6/gB7OQ3PFfEU5oJj3iFTY1Duokk5Q7adWxaXnh6niE6COH6rhniv
+	 0FqfV3yLbyhoohYB3GBpEL4igi0vJpd23w2ljnRzyWoooSls57j5HCEkLmpFNS69zvrha
+	 WtOPYNYHfg7MAKMGHZ8wHplI8iG9hhUYeV7JaLwczm+khUyucAsKneXjiG44pncZtQwGv
+	 Fg7xuroxWCL6NZ7atCsH7um8I6i1zMfaC+s9ISmg+68SWX7Qc3o/hnz8x0/xj2OyJ/A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linutronix.de;
 	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=cmbolfGH;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=ayEQ6qxP;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=zXlIeLQm;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=LmL4VpeG;
 	arc=none smtp.remote-ip=193.142.43.55
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48658606A883;
-	Fri, 13 Nov 2026 10:50:37 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 48658606A883
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5849A60A2621;
+	Fri, 13 Nov 2026 10:50:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5849A60A2621
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=cmbolfGH;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=ayEQ6qxP
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=zXlIeLQm;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=LmL4VpeG
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1794567035;
+	s=2020; t=1794567040;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
-	b=cmbolfGHurBcnIAEFsAwFf1VTiMy1XiKKTNd0E28WosFFe2+XByY3pdSwLPGsZgc3o4Lt3
-	xSHLwpYmEQSjJDPpMtGWWt+8y+HVLo5Ks3sdzYVjXa7EA21HKBezJHYb/ROqMvI3wxoTAf
-	PRH81dh+t/zCcjR0rxRAs+XyYcDoNMkHvirScPpfiJ0WfegfXFi/bna9t6MeGiKqSlQDo1
-	dXVoQ77KIQYvQf+MN06+6h32a9JjVZhJaoGnXhZbms8QcwrgfjExmXKoB3oJCNMKUDkCKG
-	aXPpLw7e8FMre4U+WGD7EQ+A0YQDZfAVUgPutDJuElcrRU5poq5z/dCKTi0vqw==
+	bh=qKATZfaP7j93mPzPK2LI85ABT996WxYe1HUN7LIOWWs=;
+	b=zXlIeLQmBG1ux3nUFjTlGOJDrBaxToMN0OdlYlHrKRf2zEunqnLosDGNZ/GeqQw0HqFjAm
+	fV6prU9gxlIeq4IjzwsJWpNg2MkqIMP05K8xme6aTNrsaHkqXa2ZkDnpRxoLiSkPACRTvV
+	hw61bSjZycWlz5xRU55zOm+glOiZ8Sndord7CvN0TEorW5aMtSjfAJpjnddiiXi5TfVx3w
+	BE8lkh8Q8KOwpyBU+D3F31EnNnyhvZXaO88Zhr3dfiTI0/+NLwWZcCzvXjyiIyfaAcq8hP
+	qB/H09dniPahJ2jMIM3q1D6Qt0oh8DG3ic3j2HPRnmFZgwmwvA0Nmf0VK7jtNg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1794567035;
+	s=2020e; t=1794567040;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pY0XB2Amvb6YQszTSQKoVgy7OfnT7ScdY0OEf4Q2BEM=;
-	b=ayEQ6qxPVrffEkyHRPmN4M5rxureGwkMvnzxfVvlWljaQcbLfVScPcg+YLbYG1g7fifJ1t
-	N8t92+HiqvqxeoBQ==
+	bh=qKATZfaP7j93mPzPK2LI85ABT996WxYe1HUN7LIOWWs=;
+	b=LmL4VpeGvKLQSQpcS9ht5HCIVeiq9actrPPxXHcawHQCvlCGhctfcJh36PcuBUhW+FNYrX
+	n7b2TgA9kuc8+dBQ==
 To: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	rcu@vger.kernel.org,
@@ -94,9 +94,9 @@ Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
 	Qais Yousef <qyousef@layalina.io>,
 	John Ogness <john.ogness@linutronix.de>
-Subject: [PATCH v3 3/8] rcutorture: Don't try to disable to RT throttling.
-Date: Fri, 13 Nov 2026 11:50:24 +0100
-Message-ID: <20261113-sched_dl-v3-3-a76ffa1cdeee@linutronix.de>
+Subject: [PATCH v3 8/8] Documentation/sched: Add fairserver to sched-deadline
+Date: Fri, 13 Nov 2026 11:50:29 +0100
+Message-ID: <20261113-sched_dl-v3-8-a76ffa1cdeee@linutronix.de>
 In-Reply-To: <20261113-sched_dl-v3-0-a76ffa1cdeee@linutronix.de>
 References: <20261113-sched_dl-v3-0-a76ffa1cdeee@linutronix.de>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -111,102 +111,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-Commit 450efca7182a5 ("rcutorture: Disable RT throttling for boost
-tests") added the ability to disable RT throttling while rcutorture was
-run.
+The fair_server ensures the fair-class gets CPU run-time and throttles
+even the rt-class if needed. Add this bit of wisdom and the recently
+added sysfs knobs for configutiation.
 
-Since v6.12 the DL fair_server takes control of throttling and this
-interface no longer serves this purpose. That sysctl control still
-exists but serves a different cause.
-
-There is no in-kernel interface to provide this feature, one needs to
-echo 0 to each /sys/kernel/debug/sched/fair_server/cpu*/runtime file.
-
-Since sysctl_sched_rt_runtime does not do what it once did, remove it
-from rcutorture.
-
+Assisted-by: LLM
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- kernel/rcu/rcu.h        |  2 --
- kernel/rcu/rcutorture.c | 35 -----------------------------------
- 2 files changed, 37 deletions(-)
+ Documentation/scheduler/sched-deadline.rst | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/rcu/rcu.h b/kernel/rcu/rcu.h
-index d60444bf3a02d..6d1034e49d411 100644
---- a/kernel/rcu/rcu.h
-+++ b/kernel/rcu/rcu.h
-@@ -69,8 +69,6 @@
- /* A complete grace period count */
- #define RCU_SEQ_GP (RCU_SEQ_STATE_MASK + 1)
+diff --git a/Documentation/scheduler/sched-deadline.rst b/Documentation/sch=
+eduler/sched-deadline.rst
+index 23ea88b2ed7dc..f0d667e09d10c 100644
+--- a/Documentation/scheduler/sched-deadline.rst
++++ b/Documentation/scheduler/sched-deadline.rst
+@@ -577,7 +577,8 @@ Deadline Task Scheduling
+  level.
 =20
--extern int sysctl_sched_rt_runtime;
--
- /*
-  * Return the counter portion of a sequence number previously returned
-  * by rcu_seq_snap() or rcu_seq_current().
-diff --git a/kernel/rcu/rcutorture.c b/kernel/rcu/rcutorture.c
-index 93ca7f06371e4..aecc4da7161bb 100644
---- a/kernel/rcu/rcutorture.c
-+++ b/kernel/rcu/rcutorture.c
-@@ -1333,39 +1333,6 @@ static unsigned long rcutorture_seq_diff(unsigned lo=
-ng new, unsigned long old)
- 	return cur_ops->gp_diff(new, old);
- }
+  A main difference between deadline bandwidth management and RT-throttling
+- is that -deadline tasks have bandwidth on their own (while -rt ones don't=
+!),
++ is that -deadline tasks have bandwidth on their own (while -rt have only
++ throttling via the fair_server),
+  and thus we don't need a higher level throttling mechanism to enforce the
+  desired bandwidth. In other words, this means that interface parameters a=
+re
+  only used at admission control time (i.e., when the user calls
+@@ -604,6 +605,24 @@ Deadline Task Scheduling
+  be thus free of oversubscribing the system up to any arbitrary level.
+  This is done by writing -1 in /sys/kernel/sched/dl_runtime_us.
 =20
--/*
-- * RCU torture priority-boost testing.  Runs one real-time thread per
-- * CPU for moderate bursts, repeatedly starting grace periods and waiting
-- * for them to complete.  If a given grace period takes too long, we assume
-- * that priority inversion has occurred.
-- */
--
--static int old_rt_runtime =3D -1;
--
--static void rcu_torture_disable_rt_throttle(void)
--{
--	/*
--	 * Disable RT throttling so that rcutorture's boost threads don't get
--	 * throttled. Only possible if rcutorture is built-in otherwise the
--	 * user should manually do this by setting the sched_rt_period_us and
--	 * sched_rt_runtime sysctls.
--	 */
--	if (!IS_BUILTIN(CONFIG_RCU_TORTURE_TEST) || old_rt_runtime !=3D -1)
--		return;
--
--	old_rt_runtime =3D sysctl_sched_rt_runtime;
--	sysctl_sched_rt_runtime =3D -1;
--}
--
--static void rcu_torture_enable_rt_throttle(void)
--{
--	if (!IS_BUILTIN(CONFIG_RCU_TORTURE_TEST) || old_rt_runtime =3D=3D -1)
--		return;
--
--	sysctl_sched_rt_runtime =3D old_rt_runtime;
--	old_rt_runtime =3D -1;
--}
--
- static bool rcu_torture_boost_failed(unsigned long gp_state, unsigned long=
- *start)
- {
- 	int cpu;
-@@ -3390,7 +3357,6 @@ static int rcutorture_booster_cleanup(unsigned int cp=
-u)
- 	mutex_lock(&boost_mutex);
- 	t =3D boost_tasks[cpu];
- 	boost_tasks[cpu] =3D NULL;
--	rcu_torture_enable_rt_throttle();
- 	mutex_unlock(&boost_mutex);
++4.1.1 Fair server settings
++--------------------------
++
++ The fair server ensures that fair-class tasks (SCHED_OTHER) are not starv=
+ed
++ and can be scheduled even when tasks in the RT scheduling class
++ (SCHED_FIFO and SCHED_RR) are consuming all CPU time. It replaces the
++ legacy RT throttling mechanism, which was configured through the procfs
++ interface.
++
++ The fair server executes fair-class tasks through a deadline-scheduling
++ server with a runtime budget. It guarantees that the runtime configured by
++ fair_server_runtime is provided within the interval defined by
++ fair_server_period.
++
++ Both values are specified in nanoseconds and can be configured on a
++ per-CPU basis through /sys/kernel/sched/cpuX. Setting
++ fair_server_runtime to 0 disables the fair server on the corresponding
++ CPU.
 =20
- 	/* This must be outside of the mutex, otherwise deadlock! */
-@@ -3428,7 +3394,6 @@ static int rcutorture_booster_init(unsigned int cpu)
-=20
- 	/* Don't allow time recalculation while creating a new task. */
- 	mutex_lock(&boost_mutex);
--	rcu_torture_disable_rt_throttle();
- 	VERBOSE_TOROUT_STRING("Creating rcu_torture_boost task");
- 	boost_tasks[cpu] =3D kthread_run_on_cpu(rcu_torture_boost, NULL,
- 					      cpu, "rcu_torture_boost_%u");
+ 4.2 Task interface
+ ------------------
 
 --=20
 2.55.0
