@@ -1,53 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794596889;
-	b=m2JXDVolYLYZsAweDBWE/X6iW02ce+0cq8nKfL0cuD/ZpR0XBD/TRRR7G9u4PRC/2ENj
-	 uEGNgvuUp7zMNWXMGxbh/8yJRZBbRqSOfj930L48PL/jyK1fsN4lZjBw21lPpc5L6m0Wi
-	 nuX++wJNLyktJoEBdciHBfLxsSVx4sY/3qX6MKqqcCAFL1zx+rdxRMzLM+S8xFsbluEb+
-	 c4HSnCc8bHHWAkmgels5jtHV5xYBawoTcIA1V8on4+C0YRxU0JByGrZhicMwUj2AJhSF0
-	 r1FWjirkRNCyPAKKyTGbrpC/evqUQgpqcQi3MOaI9dmHjWyaP7JDZB4pbwL/jJbB6+g==
+	t=1794597019;
+	b=pOXC8yDrf67QUue1S2HevdnBT+PMrcUkUnNAsUaBcKfQysQlE6jIinJRgn4CwSVvJtRu
+	 sX7LdNHX2p9vIiWG8XyquEq47bdWg38x3OvQuzyhuIDdnoBpSiiEnoAbVC7VpXIQIDjic
+	 lUATsDQuwRcq+ddKCX4fqBGLYnJ7PYxztbYOOE/RDYtVs9PQr/JV9Wqe8dZg/cxgoLjrz
+	 cRdW46JINKsjZdRPc2AYngPZ1lJrNWkltaAv6zRuNx1WhxGvE6ZFV2j1t1c/wqwloN0Qp
+	 SGqsbYFucW4cUyBb8PYvnsHdxNaJQTZvK6w5W7xADNKumHI+L5KY0uN3q75seHbgHKg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794596889;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=KqmAifuY47FhdIMeVG0SytAsRKNpaqSkIEqTblMNWCI=;
-	b=AEA6sbTBKIG4LVQuFzgC52OlTcGE5m7wtvlEep69UD7/arl3btKTiWdp3C9W33C+UYcM
-	 EIP5hgOj0bY4YyUDsmwn56bBmubH24oj3s0kTwRFNKrh9V9PBkBBcsyBvIjZ9U9B4nGth
-	 NPjPCqQTZKRHowdM3a/HwW9Wn+q5DGoo+vWzyYtjCTeG/4VffVtISd/oXF6tYlq4okfHi
-	 Y7sVYOjiHmGu0kKXD4AgG0kDk1HH60AjJ6YE07iyOwwv0lf4G3bXhws2Vwn5FpTjy40ON
-	 82Xa6dg467j1X3GrYvgS9XIgmrBOHCvsj6jidFnTrL3vWNPGvS4+N8c52L34az1SaVg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794597019;
+	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
+	bh=/s5V4amWthoJVGjE0ildwj4nyghlFIlJY1SX4aQrQH4=;
+	b=vR3F/br/2IfwO4ZOI4OdTarMrDUmLuL7H2NmfpaBDUgb1Mcg2ZWa4Cdx3l83ZSefZpKx
+	 /g+9mhuej8DDCp3NdLB2MnYSS1InhLviHyQWGbg4h4FOJ0yei39NdtMjQJ3xwm3FDwpcj
+	 xvC8zKMVoJYghHzOB0fS2PqSWvwjQTE3ZDfmT0v1dnOCBhDiMEL2R1EjJRgsVnKrH0YRY
+	 pkekeED1EJlQTB8teFX9pWVrsqoUTY9X3F0tVQlC1/CDWQgHgfQu5bctdJlReUSvdOIK/
+	 ZARcNy36l9zAR7tCRR43BtlCb5RewWxvR/Fhjo1mkfW6pMVwAuTCn8l/wvad903JbLQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NW6ta6Qx;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ba4bwLQV;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5102B606A33D;
-	Fri, 13 Nov 2026 19:08:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9451D606A330;
+	Fri, 13 Nov 2026 19:10:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NW6ta6Qx
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C04B21F000CF;
-	Fri, 13 Nov 2026 19:08:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Ba4bwLQV
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3E8A1F000CD;
+	Fri, 13 Nov 2026 19:10:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794596889;
-	bh=KqmAifuY47FhdIMeVG0SytAsRKNpaqSkIEqTblMNWCI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=NW6ta6Qx1nAOdA+jZ5l7HCb0T94PZ3wn3s9Y38WnpdPQtPedUR0/juC2s19ko8/2g
-	 ttlUvFw5q6kO2jGHeJT4SS/Fc2Tm6nzD+rP+qH63sr79mOzzy+pEICDOND7ZWvSKNy
-	 i7RVXYk7HvZA86suFX8/Jgmi9v0sDBaVHTXoMSI5ux7AcbgfXkg+cngLJN88IDwI+f
-	 7SjV6uI/eoyVzrNVlbuWJlPtvWo+AbazPx9g1fsONhd+/6gRWJBEyHdnA6PVtTCsxB
-	 RW+Fci2z1bMbObJEvrKfrqIu8YXE5qDfHLEPu54COL3Q0Plr7ZZIFc/4ZtBi8Gc0C8
-	 mfnGQPvTMcXLw==
-Date: Fri, 13 Nov 2026 09:08:07 -1000
-Message-ID: <0076998cf3693ad6d92b4bda775e5956@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Alex Kazinsky <a.kazinsky@ideco.ru>
-Cc: Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org, stable@vger.kernel.org
-Subject: Re: [PATCH] blk-iocost: Fix overflow in donation weight calculation
-In-Reply-To: <20261113110842.4189035-1-a.kazinsky@ideco.ru>
-References: <20261113110842.4189035-1-a.kazinsky@ideco.ru>
+	s=k20260515; t=1794597019;
+	bh=/s5V4amWthoJVGjE0ildwj4nyghlFIlJY1SX4aQrQH4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=Ba4bwLQVr+aVewsv3DQofPpLkWH4tJ9Au9R1WC4oJlCENuLgdck3uelZyv+Wsro29
+	 NU3jsD1sNfMowMCNLgBLE8ITpaPDZsAaSoX6+P3tR4Krk58GbfY32Ypp8tB2tyJ14i
+	 9TkvChgwNjmTUiElUs65VYIiaMxXfX4Bujf9sCW+BQEGSu/pxkzwa0hLn9SPh21IzT
+	 5OVQSFSu3cB1ZQviZFsx+CyTQpP57B8UUAJ9noEPfb3ZdDPWXePNjF1C2hwkzwO0iU
+	 ujpc+835REY9KFQe4pwfyYHFkZkniKaCtxt+UaotRgROaghI+LA8uNd9BFemARn31O
+	 wzfuF8fBUVEAQ==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Sasha Levin <sashal@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Tejun Heo <tj@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	reinette.chatre@intel.com,
+	tglx@linutronix.de,
+	mingo@redhat.com,
+	bp@alien8.de,
+	dave.hansen@linux.intel.com,
+	x86@kernel.org,
+	rafael@kernel.org,
+	dakr@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	ast@kernel.org,
+	daniel@iogearbox.net,
+	andrii@kernel.org,
+	eddyz87@gmail.com,
+	shuah@kernel.org,
+	jolsa@kernel.org,
+	alan.maguire@oracle.com,
+	cgroups@vger.kernel.org,
+	bpf@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Christian Loehle <christian.loehle@arm.com>
+Subject: Re: [PATCH AUTOSEL 6.12 486/486] kernfs: Use RCU to access kernfs_node::parent.
+Date: Fri, 13 Nov 2026 14:10:01 -0500
+Message-ID: <draft-0011-reloehlekernfs612@kernel.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <e274493b-0774-423e-a7e0-bd2c59333d93@arm.com>
+References: <20250505223922.2682012-1-sashal@kernel.org> <20250505223922.2682012-486-sashal@kernel.org> <e274493b-0774-423e-a7e0-bd2c59333d93@arm.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,31 +83,24 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 13, 2026 at 03:08:40PM +0400, Alex Kazinsky wrote:
-> hweight_after_donation() receives usage as u32, clamped to the range
-> [1, WEIGHT_ONE]. Since WEIGHT_ONE is 1 << 16, multiplying it by usage
-> equal to WEIGHT_ONE wraps the 32-bit unsigned result to zero before
-> it is passed to div64_s64().
->
-> This makes new_hwi zero, which is then clamped to 1, incorrectly
-> reducing the cgroup's in-use weight to the minimum.
->
-> Cast WEIGHT_ONE to s64 before multiplication to preserve the full
-> product.
->
-> Found by Linux Verification Center (linuxtesting.org) with SVACE static
-> analysis tool.
->
-> Fixes: f1de2439ec43 ("blk-iocost: revamp donation amount determination")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Alex Kazinsky <a.kazinsky@ideco.ru>
+On 5/5/25 23:39, Sasha Levin wrote:
+> Subject: [PATCH AUTOSEL 6.12 486/486] kernfs: Use RCU to access kernfs_node::parent.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Fri, Nov 13, 2026, Christian Loehle wrote:
+> I just stumbled over this issue on a 6.12 stable kernel,
+> any reason this patch wasn't applied back then?
+> Can we apply the backport now?
 
-Thanks.
+633488947ef6 ("kernfs: Use RCU to access kernfs_node::parent.") is a
+preparatory refactor with no Fixes: or Cc: stable. It is part of a series whose
+other patches are not in 6.12 either, and it has fixups upstream, so it is not
+a clean backport.
 
---
-tejun
+What failure are you seeing on 6.12 (oops, lockdep splat, trace)? If you can
+send it, we can look for the fix that addresses it directly.
+
+-- 
+Thanks,
+Sasha
