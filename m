@@ -1,107 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.44
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.29
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794616205;
-	b=wy3S8zqvWFt+puxZWV7ld9KH4qAavvCwe2ZlEml2wG5k2/dVr89II9pIvjAr5p7mb5F0
-	 h8tBLQP3wGvUyrRg5BLDJ/twSqsgIEYKQABrYGGP87GpDxKq/2LB7AicjO1nilOAu9I2V
-	 xSIOuSj4zFasuzlKkD94jrcQbZVSvq/+16BSiGd8VGPfM3oIvsk4ixDw332hp0RUCu18z
-	 K7I1voMo+mbbWzIr5u/9xlJm6F/A2fSFnj1jpluGbGFKGKPcm/mMIZf8rVluxtbEacTWp
-	 nkDANf8e3bBj4F0keeC8Ps1SHjVEJBAbKWPoGCQ8vQmwXN9WW2XWeSYtC7AnJb1N71g==
+	t=1794645102;
+	b=qI+WngSqKoQgi30nXyNNycHX60/87xPUZcfyogyGxf0pfLp/J8DE3QFphmP7/mjx3K1M
+	 Vn0gB4G2cP5NeVPyDOxien3kpy8L7xbXrV2/8bEEPRBcrLHSxcp8wVlamU3TOSt53Oor0
+	 2WeFs8MPxigR/5v/93cdM7kX2SlwW7t2Y5Pm2VTlxC4LBxFBugDsbbvtFeL99KmbWSmE0
+	 y2To90AacMCYC0bGoXlyr3UN5oLkYlgmz6hhU1wT2X4V8w7nbxwEJmZWejrEq2T+fGipR
+	 mULUddBu2W1ag3psZ+n3eMMJOGAvrHX/j/dmxahpUGDfOjO5+27+xabfPMXXF8UcxyQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794616205;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
-	 MIME-Version:Content-Transfer-Encoding;
-	bh=AolziNO7wrlcNMetD7JvJr3jJHx3WRU9EZSr3HZdTJ8=;
-	b=xZlmr2TrQ6lQxerULUvZdKLiySU2VyvdnSLvRsjXx3riKTxF6UB0P6iFdvFc2yo4xdZB
-	 2yqz+EvKwFS+DF/xPBYrcsOC/3XwkLNdKzz9/+5ewmQLFW7ZKHIx20lmJ29kIzdSi9jZ+
-	 so83mddXz2bJ/dblvDvElVcR8UW/KpC4XX9wUNOOG6GhBEFVU7nVobOz43mgzuLfyl/sl
-	 ynjd5ztVGLhgRMSjQZwlMldYvEIoPxZK4SzGsmH+uIsFg4TiY7uuy0bSnwE8aT3ytCFMr
-	 X6hXCnzWH21E97DJGXIX/I56wlDg+d2kSvbKRCrZOnC+Ezek3WDcz3qNfDxqgdBFfzA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794645102;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=Oe4/qGiMsLsv9nQ1xn1Q3MzANcuptDA717u9qBPcii0=;
+	b=ZnQWdwV1g3AyjCw6h92xNaSyICmhH5O81APMVxccG4XV07F8UCNbQ14F8q3TDOC19YRX
+	 9WIDHwqpF80N5Y4OFSx0SFvf8FvIJkWrXEM93Jrtj6d2wsh/NoRRSdc+zd2zGh7MUR+Hi
+	 ixETg/XzoTu9dF1SEqe47JI4QyEaSTrKP6iuxL5u14ZTrCB110zOKfUfCjFiMosiOAnae
+	 w1KhBifJIWqvcVEnVwVI9KHD05Q/rneuJlXj4P4jaP82zDYvXORWBiHIunHs36D5MsvXe
+	 qfWUp/tDApPJyzgEgLnjxmvwuvGLDVPg/gCeB73ojETmSN64kuQ0fW/dLPwAPPHPTGw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=K6oDv0kR;
-	arc=none smtp.remote-ip=74.125.224.44
-Received: from mail-yx1-f44.google.com (mail-yx1-f44.google.com [74.125.224.44])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cD1+xyrs;
+	arc=none smtp.remote-ip=95.215.58.29
+Received: from mta1.migadu.com (out-29.mta1.migadu.com [95.215.58.29])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AF0C606A32E
-	for <cgroups@vger.kernel.org>; Sat, 14 Nov 2026 00:30:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6AF0C606A32E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A928E606A327
+	for <cgroups@vger.kernel.org>; Sat, 14 Nov 2026 08:31:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A928E606A327
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=K6oDv0kR
-Received: by mail-yx1-f44.google.com with SMTP id 956f58d0204a3-67bec5dc8d4so1046752d50.0
-        for <cgroups@vger.kernel.org>; Fri, 13 Nov 2026 16:30:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794616203; x=1795221003; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=AolziNO7wrlcNMetD7JvJr3jJHx3WRU9EZSr3HZdTJ8=;
-        b=K6oDv0kRAbUHNXnNHYXfSocr/aH1yru4KtdgSDGpd4G25ChwQPLaBip6EEkUK3PG1d
-         TwklkYOLr83QBuPsODnvfr9lSCB9jSjZcGMb9TEhiW7f3S6p62WUYwpsaU62Rb06dA7Z
-         efn8hUXvuLFDhde/3ve6lbQNbN/GkU+WzxyTKISWlL8Lo2iSTczNXrtfByxGBICMKj9E
-         HtDz/coempXbDvXf4Ectl88ll5iyA2NlCgoRH2yTbpiCQ2zx4R+FT26aymuIy5TU9+Kw
-         4eOI+hiT6M5/OxGuxsEaeoO6SboEkKT3uqhMjmGc/YvA8DkGDm2m8ExwmRJ7flDF1JX/
-         sEiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794616203; x=1795221003;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=AolziNO7wrlcNMetD7JvJr3jJHx3WRU9EZSr3HZdTJ8=;
-        b=aFBmxySGamHbyMzC2OK3/cjrMWBCQf8ydlcSdKYyt2/8U1kk3mhn1OZ/oWmEy1LwtO
-         MAI54bMMx7KB+QeblFgd7KOEL/o/NzoMgzvKDvNWVBTbMdi1IWzrhMV+5NEtkvTRZyWi
-         aOv2VTVbF4ge3nVuZbQ7K2BIL/AltcYlKHBNy/biiA352sembCtZU7uOumkk88K7MmdW
-         F/+RcSnkMor9w7TJVONhwhC3tDrfmAqG7bint7/ln6B6Cf3plXSOotgnAW+swxIL2tCI
-         dC0RgMD8nAfom/quml7VGHdllAMFCFReqj97er9E8kZqlHdyOtH44N7eLAgkKKfI+QgM
-         WRxQ==
-X-Forwarded-Encrypted: i=1; AL+hErFvsJ2Hu1c7BBy6cH8fyEG/xWfkknGCO/lIumV9Ote4C1FL/98uw+APtTLSyrD9sblgbGvlSAZf@vger.kernel.org
-X-Gm-Message-State: APuU4Z9g/PQpPf0M3CFKPWSi9Omm2bTva++11vUBTzKSILHV7UVfdttV
-	KjK96U2EeEWmKoQMsCWAKv69U7yuaW/rVtIcwwovnzrINEbNvWKe+TEP
-X-Gm-Gg: AYBFou0raEv8oyiZMU62Saf2BHST7nNHV+SE74MFIrcvuDYx8TXE9drht3Fz1Ip+cE+
-	5JOkEYUsMPxEOgjzQF2WY32I51pW0GBwFqd8Emor0UbJTwg+WVXGx7/Ori6N9sRcdbiZoUeH14y
-	KL2wuM1QLvass8l86EMUUHM5+FEsJdJcjD2N9+3NGZfqsGhODrTHKvnAkQ2Sk5ewxFXPi/5Dqcs
-	ZmgUFikA1Wk4wxpxZpgJtnPEFGbA2wKK0CD8Z/64R5S6eJjS9uSr0UkE5stVkM0YbzMssvAGZjD
-	Dv99flZ5Wd43oO1DRnoxoeM9a6Phl3OFS+4oucWMmbmMeehOXwN/P5vdisyuBMQQEW/a196b3J6
-	lImKYjsQ4x+RVA52Rhr/rcHz0yt97nfYSswVBbYNAOA7FZiRVZZcEm0RM09u0CEQ2DbomSOfWJo
-	0j5p9OY/lZsUFkJo27acM+J5H3JO7uciKKVd2uYaG1o+YNy7/lzQAgo0oPNJM2wy9bQLWxXXLcP
-	5hlQRnVklg2JQaxurbIQTrPJy4Dsy0w4GajGI7n8jyupGN9F/PuUYVoD3nA566sLXr9QiQ1PhOU
-	yzIqbxQ6G0UueGopOTQb+kt+bEEmeu/stvTPyXBWJzBvU9kNGQb2MAzlpiyxX2B3OqR8X8Rebh+
-	ve4IS5g==
-X-Received: by 2002:a05:690e:130e:b0:675:1102:ffa5 with SMTP id 956f58d0204a3-67d8933e768mr2424694d50.3.1794616203430;
-        Fri, 13 Nov 2026 16:30:03 -0800 (PST)
-Received: from localhost ([2a03:2880:ff:50::])
-        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67d8a55b09esm3473161d50.6.2026.11.13.16.30.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2026 16:30:02 -0800 (PST)
-From: Joanne Koong <joannelkoong@gmail.com>
-To: akpm@linux-foundation.org,
-	david@kernel.org
-Cc: yosry@kernel.org,
-	mkoutny@suse.com,
-	shakeel.butt@linux.dev,
-	hannes@cmpxchg.org,
-	mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	muchun.song@linux.dev,
-	nphamcs@gmail.com,
-	chengming.zhou@linux.dev,
-	sj@kernel.org,
-	ljs@kernel.org,
-	linux-mm@kvack.org,
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=cD1+xyrs
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=25ezJeqzSn7sjDofipXff3cs0lVUpMn+gJglKFCHdmY=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794645098; v=1; x=1795249898;
+ b=cD1+xyrsStuPxUoF98GjaYNAnDeCZ+HVbgLGUY84qEGna0Xi+ZymWAYq9Jbyxm3q26nVSb9j
+ lDFs++kE/zpfao3m378bMUqlaTBjRLUtD2BY55dDeUXHlHqkim6tEb5PgP2+134tPPlH0h4PQxg
+ lwOxoQJ1YKNzkoP0s/TwFwsc=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id b812feb1c755cbd6;
+	Sat, 14 Nov 2026 08:31:38 +0000
+X-Mizu-Trace-ID: b812feb1c755cbd6
+X-Migadu-Flow: FLOW_OUT
+From: Ridong Chen <ridong.chen@linux.dev>
+To: Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Ridong Chen <ridong.chen@linux.dev>,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>,
 	cgroups@vger.kernel.org,
-	damon@lists.linux.dev
-Subject: [PATCH v3 4/4] mm/damon/core: use node counters instead of flushing the root memcg
-Date: Fri, 13 Nov 2026 16:28:22 -0800
-Message-ID: <20261114002822.1043378-5-joannelkoong@gmail.com>
-X-Mailer: git-send-email 2.52.1
-In-Reply-To: <20261114002822.1043378-1-joannelkoong@gmail.com>
-References: <20261114002822.1043378-1-joannelkoong@gmail.com>
+	linux-kernel@vger.kernel.org,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH v5 00/12] cpuset: rework local partition logic
+Date: Sat, 14 Nov 2026 16:31:12 +0800
+Message-Id: <20261114083124.1340140-1-ridong.chen@linux.dev>
+X-Mailer: git-send-email 2.34.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -113,39 +71,128 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-damos_get_node_memcg_used_bp() flushes the memcg stats before reading
-the LRU sizes of the goal's memcg on the goal's node. For the root
-memcg, that flushes every cgroup in the system. The flush is not
-ratelimited, which means it happens every time the goal is evaluated.
+From: Ridong Chen <chenridong@xiaomi.com>
 
-lruvec_page_state() now reads the LRU sizes of the root memcg from the
-node counters, which are always up to date, so skip the flush for the
-root memcg.
+This is v5 of the cpuset local partition rework [1], which I started
+while at Huawei and am now continuing at Xiaomi. Since v4, the fixes and
+preparatory changes at the start of the series have been posted
+separately, last as [2], and merged into cgroup/for-7.4-fixes. This
+version is based on it and only has the part that consolidates the
+partition state changes into common helpers, the remaining parts will
+follow.
 
-Reviewed-by: SJ Park <sj@kernel.org>
-Signed-off-by: Joanne Koong <joannelkoong@gmail.com>
----
- mm/damon/core.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+The partition state of a cpuset is currently changed in many places, and
+local and remote partitions are handled by different code.
+update_parent_effective_cpumask() alone handles five partcmd_* commands
+for local partitions, while the remote partition helpers open code the
+same updates of partition_root_state, prs_err, effective_xcpus,
+subpartitions_cpus and isolated_cpus.
 
-diff --git a/mm/damon/core.c b/mm/damon/core.c
-index 0a056949604f..14f2a36c1025 100644
---- a/mm/damon/core.c
-+++ b/mm/damon/core.c
-@@ -3057,7 +3057,12 @@ static unsigned long damos_get_node_memcg_used_bp(
- 			return 10000;
- 	}
- 
--	mem_cgroup_flush_stats(memcg);
-+	/*
-+	 * The root memcg's LRU sizes are read directly from the node counters
-+	 * (see lruvec_page_state()).
-+	 */
-+	if (!mem_cgroup_is_root(memcg))
-+		mem_cgroup_flush_stats(memcg);
- 	lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(goal->nid));
- 	used_pages = lruvec_page_state(lruvec, NR_ACTIVE_ANON);
- 	used_pages += lruvec_page_state(lruvec, NR_INACTIVE_ANON);
+The idea is to have one set of common helpers to enable, disable and
+update a partition. Local and remote partitions only do their own
+validation and then call these helpers, and all partition related
+state is set or changed only inside them. After this series:
+
+     update_prstate()        update_cpumask()
+     update_cpumasks_hier()  cpuset_hotplug_update_tasks()
+                          |
+          +---------------+---------------+
+          |                               |
+          v                               v
+  +-------------------+         +--------------------+
+  |  local partition  |         |  remote partition  |
+  |                   |         |                    |
+  | validate_local_   |         | remote_partition_  |
+  |     partition()   |         |     enable()       |
+  | local_partition_  |         | remote_cpus_       |
+  |     enable()      |         |     update()       |
+  |     update()      |         |                    |
+  +-------------------+         +--------------------+
+          |                               |
+          +---------------+---------------+
+                          |
+                          v
+  +------------------------------------------------+
+  |  partition_enable()                            |
+  |  partition_disable()                           |
+  |  partition_update()                            |
+  +------------------------------------------------+
+                          |
+                          |  partition state, only changed here
+                          v
+  +------------------------------------------------+
+  |  cpuset:  partition_root_state, prs_err,       |
+  |           remote_partition, effective_xcpus,   |
+  |           exclusive_cpus                       |
+  |  global:  subpartitions_cpus, isolated_cpus    |
+  +------------------------------------------------+
+
+  partition_enable()  - make a cpuset a valid partition root, or switch
+                        a valid partition between root and isolated
+  partition_disable() - make a partition a member or invalid, give its
+                        CPUs back to the parent and propagate the change
+  partition_update()  - update the exclusive CPUs of a valid partition
+
+A partition is disabled with partition_disable() directly, for both
+local and remote partitions, as giving the CPUs back to the parent needs
+no partition specific handling.
+
+With this, every caller follows the same pattern (validate, then
+enable/disable/update), and it is much easier to see where and why a
+partition state changes.
+
+Patches 1-3 introduce the common helpers and patches 4-6 use them for
+remote partitions. Patches 7-11 add validate_local_partition(),
+local_partition_enable() and local_partition_update() and convert the
+local partition paths, including the hotplug path, to them. Patch 12
+removes update_parent_effective_cpumask() and the partition_cmd enum.
+
+The series is meant to be functionally equivalent, except that the
+failure reason of an invalid partition is kept more accurately. For
+example, PERR_CPUSEMPTY of a partition with empty cpuset.cpus and
+cpuset.cpus.exclusive is no longer overwritten by PERR_INVCPUS when its
+parent changes.
+
+The remaining parts of the rework, e.g. validate_remote_partition(),
+removing the partition field updates left outside the helpers and
+simplifying update_prstate(), will be posted as a follow-up series.
+
+test_cpuset_prs.sh passes with this series applied, with no boot option,
+with isolcpus=10-11 and with nohz_full=8-11. Patches 10-12, which change
+the hotplug path in between, are also tested individually.
+
+Changes in v5:
+  - Drop the RFC tag and rebase onto cgroup/for-7.4-fixes, which has
+    patches 1-3 of v4 merged [2]. Only post patches 4-14 of v4.
+  - Call partition_disable() directly, instead of local_ and
+    remote_partition_disable().
+  - Add validate_local_partition() in a separate patch.
+  - Keep PERR_CPUSEMPTY for empty cpumasks (Sashiko).
+  - Add __maybe_unused to unused helpers (Guopeng).
+  - Link to v4: https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+
+[1] https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+[2] https://lore.kernel.org/all/20261112031931.2815548-1-ridong.chen@linux.dev/
+
+Ridong Chen (12):
+  cpuset: introduce partition_enable()
+  cpuset: introduce partition_disable()
+  cpuset: introduce partition_update()
+  cpuset: use partition_enable() for remote partition enablement
+  cpuset: use partition_disable() for remote partition disablement
+  cpuset: use partition_update() for remote partition update
+  cpuset: introduce validate_local_partition()
+  cpuset: introduce local_partition_enable()
+  cpuset: use partition_disable() for local partition disablement
+  cpuset: use partition_disable() to invalidate local partition
+  cpuset: introduce local_partition_update()
+  cpuset: remove update_parent_effective_cpumask
+
+ kernel/cgroup/cpuset.c | 856 +++++++++++++++++++----------------------
+ 1 file changed, 398 insertions(+), 458 deletions(-)
+
+
+base-commit: e234ed1bb82c96a5643fd70784f16cf3d72eeed3
 -- 
-2.52.1
+2.34.1
 
