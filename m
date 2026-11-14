@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.1
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794645113;
-	b=IhXT5PpnsvEmqBkXAK3kt3LZJUyr+3f0x3hmEihBx2XL81IUv9V862FjEKCtji/20S5V
-	 f6ctTUAiCTqLRGSSZV4+20gsUMIfQJlht5d/OCZXplITCLMfaVfQhe221sIeBBjIGOVD2
-	 pmsAVkpVeHR8YJkc8ZyASgQ51jmY5GZfbgByGtKTaKLoSFXxVhCr+rSyvhZyONgWUEnnl
-	 v4F0+hpQSpzjyXDVodQhYmO/qmT3KUMySSeuNRlEbZYF8U/w8pI6yb4aENN9pxeCWbdfH
-	 t8r0egDvCKHbx0l4piTjwmX2dF1+X/qA4pqLNEW1QnWQJ/saWYd0k3oiCaQRYsFWt+g==
+	t=1794645116;
+	b=MRua5oc8Da7BrThpmcxeikkSGDIc7tjmDOukLtHVrWiJ2Ug9nACHQqTDfesm4aREJ6gr
+	 MX3l0uumZNWmd+w7XWCW2DSW/aSLuzYd9oT1F2WErL45IUIPOl6moxfoK4Hbe0OMUrqWt
+	 nc+leuaN5X9L0X/tkDTwFQe+bTk5G2dY0n8tKb8pH5jCT+nqGXDPDKp5bIlMMqkq60xvr
+	 GYkgaBq6fn7GM0dAskie9BLY4t0AiladZRjgwG2vG3/5v3ev31B/isSQSKUlnz3MZ6Q0a
+	 2Ch89+3WD3c1MJsug68QUpRb6iUY6VTFUqEXqEshn4P4IlwmsmQuBYH8BGYH+b+u6Hg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794645113;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794645116;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=6jHu8MSPTx1jnIvnQsZM+1cdDg60LkNbSscYEqgqwmc=;
-	b=eZrTG5SF/6ueWv48Uh36uzYeFnpNTcEK4+l+BTagt5SHO5XmxSmVe8SzGllJxhUe6HGO
-	 NprYA+psSNXv3zV5s3jgRRsrA19vCAjh36jrB0QibKwjoZtTU2hwyKhg6e1DOqJx1d1Oy
-	 c2AMAgXzk+J0rSPfwZ3/lgMd6anZlXZ2H+ndIDXQfVZTWNB+8XD1TKX+VikjMruYDq6Ui
-	 wviNtpaYYQcd1shNcwtr6z+1dqTtaska3dv58IBobWB8btLqPKv5bMElcPTQ3ntSQuPyy
-	 JF59yxSupnTqWsrSx6bGUq5PalKxW8mkT3kIIYYH1z4g3mPJRIKIKmXY++9PESmhMRw==
+	bh=YFOdMd/J01XlqZYSe8xeaay8k9R5byGJcqsRWQ6eqv4=;
+	b=QWfWsS4Qag4sO1JnpzePpWGPuyhxAJKiB0fncON3opkk3ANruHn/mI27K3roQc+QXBDm
+	 iUgwvEDOLKyTgvE4t1eiejbbPAddPt91gih6xuq5Pe9yFbPFJ9OvFstjHX3WFlQ+D9oPj
+	 m7rGy9BpVx10J9xQoREZt7UvaCdiaDhasWZJdphe9SZLog9xWff/cGKefxeamoze8WrjE
+	 bgJGiEDa9JK8U0i7f4fG+v7gAj2CmruR5DHaI0mQvNOh2Zec9XaE5X1z6x+eFEHzd2Ziw
+	 yk4qqzbQDSDRc81ayUTfO7PBoiHaThWZ3/Xuc0LX/3HYG51JxSQ7hr8Jb00jtyREzBQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wvf99S6W;
-	arc=none smtp.remote-ip=91.218.175.1
-Received: from mta0.migadu.com (out-1.mta0.migadu.com [91.218.175.1])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LDvtEWRT;
+	arc=none smtp.remote-ip=95.215.58.44
+Received: from mta1.migadu.com (out-44.mta1.migadu.com [95.215.58.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF32F606A32E
-	for <cgroups@vger.kernel.org>; Sat, 14 Nov 2026 08:31:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF32F606A32E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB761606A880
+	for <cgroups@vger.kernel.org>; Sat, 14 Nov 2026 08:31:55 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CB761606A880
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wvf99S6W
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LDvtEWRT
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=btZU4WnrDgjnYlK4jJf6U3d+M+E9lQkyrXoyzHbzoM0=;
+DKIM-Signature: a=rsa-sha256; bh=U7dNpqjKPhZeLSgiBAToEG4igpaj3/eBtsAQDcqWHA4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794645109; v=1; x=1795249909;
- b=wvf99S6W7CzbYOJ2nj3Ugk6LPBKW5jAlpwfth5foGFuooDjc5KLxELSoRuiDVgGwoNHoC3eK
- 47mOx/gN70cki4WD88aKGWq6mhr0n3SN0nfpdDF43uOrzidFVdCVH1XGj12KsEYiFnm06UGz/Ef
- b393/BneqxsOlXlqY2hzENB4=
+ t=1794645113; v=1; x=1795249913;
+ b=LDvtEWRT2ohg5SXGbbd2/9E4DuUxG/oggDpuaqjpjru3J3VejZxyrZjMoIou3guGGRCWcfI1
+ fQ/jPrz7Y38CP3aUIU16atXgldvJAQ1aM9MwHPD72/RuDgQ00FYeQVT9qTfbFvfMSZ0SuKch3bT
+ i5hqPfPbye2QjnPjIQcLFI0Q=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id c847cde1edbcd669;
-	Sat, 14 Nov 2026 08:31:49 +0000
-X-Mizu-Trace-ID: c847cde1edbcd669
+Received: by smtp.migadu.com with ESMTPS id 0e026ad38468d293;
+	Sat, 14 Nov 2026 08:31:53 +0000
+X-Mizu-Trace-ID: 0e026ad38468d293
 X-Migadu-Flow: FLOW_OUT
 From: Ridong Chen <ridong.chen@linux.dev>
 To: Waiman Long <longman@redhat.com>,
@@ -57,9 +57,9 @@ Cc: Ridong Chen <ridong.chen@linux.dev>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Ridong Chen <chenridong@xiaomi.com>
-Subject: [PATCH v5 02/12] cpuset: introduce partition_disable()
-Date: Sat, 14 Nov 2026 16:31:14 +0800
-Message-Id: <20261114083124.1340140-3-ridong.chen@linux.dev>
+Subject: [PATCH v5 03/12] cpuset: introduce partition_update()
+Date: Sat, 14 Nov 2026 16:31:15 +0800
+Message-Id: <20261114083124.1340140-4-ridong.chen@linux.dev>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20261114083124.1340140-1-ridong.chen@linux.dev>
 References: <20261114083124.1340140-1-ridong.chen@linux.dev>
@@ -76,112 +76,87 @@ Content-Transfer-Encoding: 8bit
 
 From: Ridong Chen <chenridong@xiaomi.com>
 
-Add partition_disable() to consolidate updates to key cpuset structures
-during partition disablement, including:
-1. remote_partition
-2. effective_xcpus
-3. partition_root_state
-4. prs_err
+Introduce partition_update() to centralize updates to key cpuset structures
+during a partition update, including:
+1. effective_xcpus
+2. exclusive_cpus
 
 Key operations performed:
-1. Cleaning up remote_partition
-2. Removing exclusive CPUs via partition_xcpus_del()
-3. Recomputing effective exclusive CPUs mask
-4. Updating partition state and error status
-5. Triggering required scheduler domain rebuilds
-6. Sending partition change notifications
-7. Propagating the change of the parent's effective_cpus
+1. Adding and removing exclusive CPUs via partition_xcpus_add()/del()
+2. Synchronizing the effective exclusive CPUs mask
+3. Updating the exclusive CPUs mask when modification is required
+4. Triggering scheduler domain rebuilds
 
-Only the CPUs actually granted by the parent are given back, as the
-parent may have shrunk. An invalid partition, or a partition under an
-invalid parent, has already given back its exclusive CPUs, so there is
-nothing to delete. A remote partition gets its CPUs from top_cpuset,
-which owns all the CPUs.
+For a local partition, the CPUs to be added or deleted are restricted to
+those in the parent's effective_xcpus, as the parent may have shrunk.
+The function returns early if nothing is to be changed.
 
-The parent is derived from @cs, top_cpuset for a remote partition.
-When a valid partition gives back its CPUs, the change of the parent's
-effective_cpus is propagated to the tasks of the parent and to its
-other children. A member or an invalid partition only has its state
-updated, so that all the callers can call partition_disable()
-directly.
+The partition root state is unchanged by this function, so no partition
+change notification is sent.
 
 Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 ---
- kernel/cgroup/cpuset.c | 66 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 66 insertions(+)
+ kernel/cgroup/cpuset.c | 52 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 860cb7ea3efb..12bdcaeb8ae5 100644
+index 12bdcaeb8ae5..c66864faab32 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1758,6 +1758,72 @@ static void __maybe_unused partition_enable(struct cpuset *cs, struct cpuset *pa
- 	notify_partition_change(cs, old_prs);
+@@ -1824,6 +1824,58 @@ static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
+ 	update_sibling_cpumasks(parent, cs, tmp);
  }
  
 +/**
-+ * partition_disable - Disable partition root state for a cpuset
-+ * @cs: The cpuset to disable partition for
-+ * @new_prs: New partition root state (should be non-positive)
-+ * @prs_err: Error code to set if disabling due to validation failure
++ * partition_update - Update an existing partition configuration
++ * @cs: The cpuset to update
++ * @prs: Partition root state (must be positive)
++ * @xcpus: New exclusive CPUs mask for the partition (NULL to keep current)
++ * @excpus: New effective exclusive CPUs mask
 + * @tmp: Temporary masks
 + *
-+ * A valid partition gives its CPUs back to its parent, or to top_cpuset
-+ * for a remote partition, and the change is propagated to the tasks and
-+ * the other children of the parent. A member or an invalid partition only
-+ * has its state updated. A valid partition under an invalid parent has
-+ * already given back its CPUs, so only the propagation is done.
++ * Updates partition-related fields. The tmp->addmask is the CPU mask that
++ * will be added to the subpartitions_cpus and removed from parent's
++ * effective_cpus, and the tmp->delmask vice versa.
 + */
-+static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
-+					     enum prs_errcode prs_err,
-+					     struct tmpmasks *tmp)
++static void __maybe_unused partition_update(struct cpuset *cs, int prs, struct cpumask *xcpus,
++					    struct cpumask *excpus, struct tmpmasks *tmp)
 +{
-+	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
-+	int old_prs = cs->partition_root_state;
++	struct cpuset *parent;
 +
 +	lockdep_assert_cpuset_lock_held();
-+	WARN_ON_ONCE(new_prs > 0);
 +	WARN_ON_ONCE(!cpuset_v2());
-+	/*
-+	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
-+	 * which should clear subpartitions_cpus. We should not emit a warning for this
-+	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
-+	 * may already be cleared when disabling a remote partition.
-+	 */
-+	if (!parent)
-+		WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
-+			     !cpumask_empty(subpartitions_cpus));
++	WARN_ON_ONCE(prs <= 0);
 +
-+	spin_lock_irq(&callback_lock);
-+	cs->remote_partition = false;
++	parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
++
 +	/*
-+	 * Disabling a partition should only delete exclusive CPUs, and only
-+	 * those actually granted by the parent as the parent may have shrunk.
-+	 * An invalid partition or an invalid parent has already given back
-+	 * its exclusive CPUs, there is nothing to delete. A remote partition
-+	 * gets its CPUs from top_cpuset which owns all the CPUs.
++	 * Only CPUs owned by the parent can be taken from or given back to
++	 * it, the parent may have shrunk. A remote partition gets its CPUs
++	 * from top_cpuset which owns all the CPUs.
 +	 */
-+	if (is_partition_valid(cs) && (!parent || is_partition_valid(parent))) {
-+		if (parent)
-+			cpumask_and(cs->effective_xcpus, cs->effective_xcpus,
-+				    parent->effective_xcpus);
-+		partition_xcpus_del(old_prs, parent, cs->effective_xcpus);
++	if (parent) {
++		cpumask_and(tmp->addmask, tmp->addmask, parent->effective_xcpus);
++		cpumask_and(tmp->delmask, tmp->delmask, parent->effective_xcpus);
 +	}
-+	/* effective_xcpus may need to be changed */
-+	compute_excpus(cs, cs->effective_xcpus);
-+	partition_state_update(cs, new_prs, prs_err);
-+	spin_unlock_irq(&callback_lock);
-+	cpuset_force_rebuild();
-+	notify_partition_change(cs, old_prs);
-+
-+	/* A member or an invalid partition owns no CPU, nothing to propagate */
-+	if (old_prs <= 0)
++	if (cpumask_empty(tmp->addmask) &&
++	    cpumask_empty(tmp->delmask) &&
++	    cpumask_equal(cs->effective_xcpus, excpus))
 +		return;
 +
-+	/* Propagate changes in the parent's effective_cpus down the hierarchy */
-+	if (!parent)
-+		parent = &top_cpuset;
-+	cpuset_update_tasks_cpumask(parent, tmp->new_cpus);
-+	update_sibling_cpumasks(parent, cs, tmp);
++	spin_lock_irq(&callback_lock);
++	partition_xcpus_add(prs, parent, tmp->addmask);
++	partition_xcpus_del(prs, parent, tmp->delmask);
++	/*
++	 * Need to update effective_xcpus and exclusive_cpus now as
++	 * update_sibling_cpumasks() called by the callers afterwards may
++	 * iterate back to the same cs.
++	 */
++	cpumask_copy(cs->effective_xcpus, excpus);
++	if (xcpus)
++		cpumask_copy(cs->exclusive_cpus, xcpus);
++	spin_unlock_irq(&callback_lock);
++	cpuset_force_rebuild();
 +}
 +
  /*
