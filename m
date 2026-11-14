@@ -1,53 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794673152;
-	b=HXkr7A2kYfH2ILNP8HsGrtcMHeloJVZkcNEuDax0GavJNfG1aUZsyNiBAHxiDoP5Fh6B
-	 29cQbpqnN3+zHIdXFuTXk8mizuDnQD+KLlWQGdFVSS4vIbaOz05UiYG8pvPJAk1qXkb32
-	 bnS+5Dx1Qv8P8yX43/DpmtHLzgrKTzZAMWT30RqVtGZjoP8FE/8Uo6R0wq2NvxjO0Erb2
-	 atCIySy89rFmb71zOr7oV2hVq+KE7btb81x9HyGp1TYch0VtyFqbWtZ/+SPiSFhHCiy1A
-	 7y3mWrIMMVx8fPY85/tERNXe48D8vvozkZNTCgnPK61MCBgLtI1Yz0uZVlLm27dJA6w==
+	t=1794683407;
+	b=VddxYQ168anXAXv0M7xrjUsXaxEMwFxeUa6aq47OoFr4HXfKrjgu5VXRMM6znISewDxw
+	 bwa8SzmT8pcTCQtIRgs2klXDVZOjVWc3In34SMo+8dlYAd+nuVex9Gwfg7FVUWMCBaHny
+	 LR+RHRqn1J4BJ7s8VZXayJk9ODrqUf+7ta1I7x5elzm/AxC+nMIAGX9GCVfPugxyKUq74
+	 iCMJPrjLvURU2F8nxBDN8GCl4dSK13DhljUJkXgDH8g3MlOLU9YJ7fRz4FcO2WZjBMF/c
+	 7drqNWgqXqw5UlPSROU0vba78XHZ22nCCUv1Zf+jCUuxtL5gbjoKvBs8h3fHAAhh4ZA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794673152;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=szGS1CeGbYGPkWuMoRnLaZZO05Fgspcv4JaKgVqioX8=;
-	b=hXaVfH+LzSf4Uf0kKo5CVADBt5lOLGOGM+rYPBImTFhFvHa5AHm9INZpKYCyw68F4OZ9
-	 MNO6osBoJ4T+ymKhOMfUOR8pSTYVLVAd+57GnHi6WqByhAudma9YZ2EJfqPAlBpTS/JgS
-	 81n3wsr4xX0TU9szZJb3CGUYgfRzDEe1CO/iIoN81iIB+MKeT+VStR6POpAjeIS9ogDq2
-	 k0fhO8ef6ZZ7l5Qys1F9gK73ZMcxHbNmaEuDqb+u2FkNDTpwttPfLdvBUGuKYt//9pG5f
-	 umQrYNp7eCFjzd/w1zCWNIAB+8J94+tZA4BKS3dxEJ6M2JZajoxBVFTSVoaoa1YDVuQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794683407;
+	h=Received:DKIM-Signature:Received:Content-Type:MIME-Version:
+	 Content-Transfer-Encoding:Subject:From:Message-Id:Date:References:
+	 In-Reply-To:To:Cc;
+	bh=tKT6x4msThxj0gozIVJttaxZay8pW0TdepjyA9p1YpA=;
+	b=UaP7iy9XnpZeAf3COZ8u5iwQ0siAaA15/pWBrF7kQpV4fncccTjCc7NRnHxE5ifk9m4B
+	 NTbtVG+orKCpIuAsDt0OQdKJBZBYWqKBFWKvtbpZ01DMX4T2pz6xnBhzD7QUOKVQvG5ME
+	 5p3DBOOQ+VbGZrbZP6KQaFSIC0fjKVMZ5dP8YeZuzEfOcqSOQ26SIEheYTRj9MWGCohew
+	 sqcaDjuge1kBhc+5gDh5NZgIK8lRgqJ3WuqP/0mlSUuyfa1g/jdirm5RWK+K/7KSig5Ln
+	 s/D4N4Wkk3nLox2Wpvgl2ySUcwm3eVf/hCwl6zOthUYbWPQstjTx6kUdiPjJCA1qLww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Jd12V7r+;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bsZzNwuY;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35350606A334;
-	Sat, 14 Nov 2026 16:19:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4AED606A327;
+	Sat, 14 Nov 2026 19:10:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Jd12V7r+
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E1D811F000C4;
-	Sat, 14 Nov 2026 16:19:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=bsZzNwuY
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43AD51F000C4;
+	Sat, 14 Nov 2026 19:10:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794673152;
-	bh=szGS1CeGbYGPkWuMoRnLaZZO05Fgspcv4JaKgVqioX8=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=Jd12V7r+vrzapn2IZRbFJR/sbCR5TzTLJWCErWJDigzmgTMNu/l29Jb66myp5H/v2
-	 ecp1DUFbBgvzJ2mLE7g1ouBu/4glAz4No0HFxfDRU3SyGw4QIBmk2T8YDeySpKS88x
-	 x35rMQ+HBMJRIi0l1EqP4twHkC5ttwo+wvRQOt07pLF4KR3//EEBdeubxiKyxdn+SG
-	 /nUMhMkBNRBDaIsGkgSTTjS3iK76rU/NYIZHpvYnhtQRc8sZf+ZXHKJ2N6NxX9g0jj
-	 kpGNoP9GT0dETMfuBbiIiLE8AKg0xAmTjBHD+QV2bfm8Ng07fF6r4FYz4SrvTy1QXS
-	 ZnvGBHME4+Xvw==
-Date: Sat, 14 Nov 2026 06:19:10 -1000
-Message-ID: <ec53c6d48e537677b488f5d82b3f3f0f@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: bpf@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Eduard Zingerman <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, John Fastabend <john.fastabend@gmail.com>, Jiri Olsa <jolsa@kernel.org>, Emil Tsalapatis <emil@etsalapatis.com>, Ihor Solodrai <ihor.solodrai@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, Amery Hung <ameryhung@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH bpf-next 0/3] bpf, cgroup: Don't wait for cgroup_mutex to read or free cgroup bpf state
-In-Reply-To: <20261112172721.440275-1-shakeel.butt@linux.dev>
-References: <20261112172721.440275-1-shakeel.butt@linux.dev>
+	s=k20260515; t=1794683407;
+	bh=tKT6x4msThxj0gozIVJttaxZay8pW0TdepjyA9p1YpA=;
+	h=Subject:From:Date:References:In-Reply-To:To:Cc;
+	b=bsZzNwuYRG6dqootzkmC0PXDAZfKQigfM6YLQIYBhwwlnmjQr+JryGxNEZDe0eK8r
+	 bCgbPFcxHgCBhnpKmRSId1jpUo28sEi6NhUMpy7UPbenmYxbl0MHdgpUh4kff/vWwn
+	 +8BiGQ/zpdJ7JtOf2iU/v6IoqDXk6RKBux5GxR9N91NXnBo5TObhzObDF9HTWwn5Fj
+	 VYgEgrD95eujp8gnb8SKR7Rc7sR5syIupCDiN/hVDqpZV/vca3qJDDNbidiDVVRiiv
+	 TZMgUFZjGjd4zQlmiBH5cyD5L409ZXH/pDoLT5iLdTNtgrXh1kQvQudACMWuH/kJ5D
+	 1zFyhO6Bpv0Iw==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 3A409380821F;
+	Sat, 14 Nov 2026 19:10:07 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,21 +53,53 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH bpf-next 0/3] bpf,
+ cgroup: Don't wait for cgroup_mutex to read or free cgroup bpf state
+From: patchwork-bot+netdevbpf@kernel.org
+Message-Id: 
+ <179468340603.2344194.2562831381781655798.git-patchwork-notify@kernel.org>
+Date: Sat, 14 Nov 2026 19:10:06 +0000
+References: <20261112172721.440275-1-shakeel.butt@linux.dev>
+In-Reply-To: <20261112172721.440275-1-shakeel.butt@linux.dev>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: bpf@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net,
+ andrii@kernel.org, martin.lau@linux.dev, eddyz87@gmail.com, memxor@gmail.com,
+ song@kernel.org, yonghong.song@linux.dev, john.fastabend@gmail.com,
+ jolsa@kernel.org, emil@etsalapatis.com, ihor.solodrai@linux.dev,
+ roman.gushchin@linux.dev, ameryhung@gmail.com, tj@kernel.org,
+ hannes@cmpxchg.org, mkoutny@suse.com, kernel-team@meta.com,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Nov 12, 2026 at 09:27:12AM -0800, Shakeel Butt wrote:
+Hello:
+
+This series was applied to bpf/bpf.git (master)
+by Alexei Starovoitov <ast@kernel.org>:
+
+On Thu, 12 Nov 2026 09:27:12 -0800 you wrote:
 > In the Meta fleet, BPF_PROG_QUERY callers, link-info readers and the
 > cgroup bpf release work often wait minutes for cgroup_mutex. The holder is
 > almost always a cgroup mkdir or rmdir stuck on kernfs_rwsem. In one day,
 > hung-task reports showed this on 1,075 hosts (query), 94 hosts (link info)
 > and 458 hosts (release work).
+> 
+> Patch 3 gives the cgroup bpf state its own mutex, so these paths no longer
+> take cgroup_mutex. Attach, detach and replace still take cgroup_mutex
+> first, because they walk the descendants.
+> 
+> [...]
 
-For the series,
+Here is the summary with links:
+  - [bpf-next,1/3] bpf, cgroup: Don't read freed effective arrays in BPF_PROG_QUERY
+    https://git.kernel.org/bpf/bpf/c/90f4e698f9c1
+  - [bpf-next,2/3] bpf, cgroup: Don't attach to a removed cgroup
+    https://git.kernel.org/bpf/bpf/c/b2e007371909
+  - [bpf-next,3/3] bpf, cgroup: Protect cgroup_bpf state with its own mutex
+    https://git.kernel.org/bpf/bpf/c/40aec6bab02e
 
-Acked-by: Tejun Heo <tj@kernel.org>
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-Thanks.
 
---
-tejun
