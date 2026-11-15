@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794755414;
-	b=E9TClRPADR7ALa8SF6MucgkMIuAkjPndVn1bxeH4alSN9QbAaumPk5Mgj/7iq9CgNYVG
-	 yT89LlpIwN/qdt01HgI80ucyscztDxSYP5YHsz93XY4Ek0puXFdZxd1Pbm213D1TMIS+A
-	 dz8Ze0g7iQX9krXxKCf5U9G0P3n4nZrVZVoGLkiD+lEYL8Po+Bv7bBUCU75lqlyGtmH6Y
-	 IRPigYRSVHQ+BnEM4JyzZ37IEO3Zr5UFu9QOHRQAE/LIjQxjZxF3YQ1ftkAbzCCdEI4O1
-	 x6tDJKTyYWNfoYl9MhMtbvhM/U2dLuN8t0v9Ij3Un4QLczq7MZbJTX0BDX2DoyL177w==
+	t=1794755419;
+	b=GvmPsVzUEG/hyGXvXuJBSXFEvrvNrrlAi/5sBWy5CJ96hbzT053ROeownAzX2uvoHaNg
+	 Eoccgj6QS0NU1YicAoyRS8qH+hUEAyaNksmx452c0P4x8hLmI11fK3l6fHovp58T3z+hQ
+	 YlLqaN/fpLvV3ef5b1EAkU3e32UfSUsdwzDQ84ZXARLEP6LqI6jM+z1RLOG6s81xrc/9u
+	 FxZeCSbA9M/6uIK3BPOxWKWNbaB41Crvc1nI98RwRUSx0VVeLv396rbBxGdU84juD2PLs
+	 z/gktUXtZOYMfJR1CrEJD381t9ziiv3F0Rk8yUJAoTW5+lkce4HVOefufM9cCi2xnEg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794755414;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794755419;
 	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
 	 X-Mailer;
-	bh=eGGUUoDWezoH61vuB7bjTkJkeuRE15lGC86Qhoj1cWA=;
-	b=w8HtCIrtsmKMgCcEHzL5+W5CwwKA9AxV0y0is6ca8ejaJi0fw49V1qj4uk27u2/0DU9K
-	 nCPNw1SiBygX9oPiyaxQmqQFU0h4b1ca+Z1RnrAPS1dnjHWfMRc2Rq/yd/YdcvcwjGF2m
-	 bNYNsTZEtp6lCXEGMPrrykHDUYowCVf/QaZN/GuaEktkeO3NEgNsArCSh+FxAJwp8qT06
-	 0hc6sZ62ggmXIJj99SczGQUlyp/jpXDvEei5baZpASeDy0+JD0yB314nF59Npjh3+prG2
-	 CaRqMB1EWuu3YIdMgM6+gckLVyBE6rnkx7HajWtX5b1PJAkLMWDSO791fXCv/GXhuMQ==
+	bh=LEpvJjswIVVnFhWoxB5UG1ML2CnsBWwLFbFU6DcBCqQ=;
+	b=C/FHj4jRbxwl+w4bSaWI+lTyh0P4zb8vlRHddK+qBhq72q+zCGf9beuoTS1SpBvouVXM
+	 HaqNvZgmy4PRMNuaVeIXwUnJYvZ8h6P3K2Eux0MXyuUoWvI2I1Dp2OHpFYtQ0ZWpWoN4F
+	 XlM+X7Fe9uYCG57mZEFCLUpQzO+UgQvSc/UCGZvLzreSVqaveDOmIKuospHPXNi9xEyjU
+	 IqG3tI6XzZGASz96R8r052mdtxaNbj8QezOP2AsE8ByhPTN88kZ3+35Q0qsb1qsBQSwlI
+	 LNcbEvCsdThJ5cFE0MJ91qJgZ1NBWMrXvkh/VBrW9E6kxzTSHFG0L8YzL3vSYGba9hA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GUV2UKX5;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oISKXA5E;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCE3D606A31E;
-	Sun, 15 Nov 2026 15:10:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BB36606A31A;
+	Sun, 15 Nov 2026 15:10:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GUV2UKX5
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 661A31F000C4;
-	Sun, 15 Nov 2026 15:10:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oISKXA5E
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3D4C1F000C4;
+	Sun, 15 Nov 2026 15:10:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794755414;
-	bh=eGGUUoDWezoH61vuB7bjTkJkeuRE15lGC86Qhoj1cWA=;
+	s=k20260515; t=1794755419;
+	bh=LEpvJjswIVVnFhWoxB5UG1ML2CnsBWwLFbFU6DcBCqQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=GUV2UKX52jTlvG4MAjLtGvc7d7oXopyJfi8DACbmtAXhwW1udGofbt5NBnG3SDEFG
-	 5XZInAURePG9W6g0tk5IiMWhdLevavLPV9cNOsSwSdB+0IORQnZHqjRandZ48z47qt
-	 cXcBfLzjo7U1IANXJ2gVCgMHZhTPR5ZlHIk7TsG2NwH/iAg9mgrSuYFSi8fRxAlp1T
-	 FYUMoUTm6qYbgqG0fCwedVXp7wbnYceBjfTGFXsfHS7juNS0MfJWW5P13/IiBeTWHo
-	 Ym2J6iZusW6c1Z3uCPC0Pog4/aA/Scp42cUA+HtwuPq6AxGAenVyWgdmSoZ0hcMAbf
-	 dKcTr99T/EW0w==
+	b=oISKXA5E2zGjU7JwWeZoNC5HOL9bMy/MNsoDXDI0q4Qa7509anBWcQy2sRuTOcKiz
+	 QNKBCfG+ZHJEp/EjpaUQVdn8kaXnGax69xIJoVw9ZsPtmLypIJ4oLkhHh/paop12XR
+	 h+Fmp5QJQS8Jybk0yaEVVcmXg3105bAOqyKoc93lczQaSBqUYqHJJPDHWI1d7WJzgG
+	 0PQjEj8wZr5xfMBGKqoH14iLkiK/O5B5exn6l9gWC2dRfS+lBuqH5luUUaTVnxiBxe
+	 4MGN2bq8r2BkNr27QIAtQrcpe87N6m43xl0o3P0+sxAullm34CtsWo2/tOaCDin4c0
+	 pJ0AwTWrdR1/w==
 From: "Harry Yoo (Meta)" <harry@kernel.org>
-Date: Sun, 15 Nov 2026 15:09:35 +0000
-Subject: [PATCH for-next v3 1/7] mm/memcontrol: defer obj_cgroup_release()
- to irq_work
+Date: Sun, 15 Nov 2026 15:09:36 +0000
+Subject: [PATCH for-next v3 2/7] mm/slab: pass free_flags to
+ slab_free_hook()
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -55,7 +55,7 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20261115-kmalloc-nolock-fixes-v3-1-9034dd4ecaab@kernel.org>
+Message-Id: <20261115-kmalloc-nolock-fixes-v3-2-9034dd4ecaab@kernel.org>
 References: <20261115-kmalloc-nolock-fixes-v3-0-9034dd4ecaab@kernel.org>
 In-Reply-To: <20261115-kmalloc-nolock-fixes-v3-0-9034dd4ecaab@kernel.org>
 To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
@@ -71,94 +71,189 @@ Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
 X-Mailer: b4 0.16.0
 
-obj_cgroup_put() can be called from any context.
-__memcg_slab_free_hook() puts a per-object reference on
-every accounted free, and draining a per-cpu objcg stock slot puts
-the cached reference. When it drops the last reference,
-obj_cgroup_release() takes objcg_lock, frees percpu memory
-(pcpu_lock, via percpu_ref_exit()) and calls kfree_rcu(). Each of
-these can deadlock when the current context interrupted a holder of
-the respective lock.
+slab_free_hook() takes two bools, init and after_rcu_delay, and a later
+patch needs to tell it whether spinning is allowed.
 
-Defer the release to irq_work. llist_add() and irq_work_queue() are
-NMI-safe, and the irq_work runs in a context where acquiring a
-spinlock is allowed.
+Instead of adding a third bool, make it take free_flags. Add
+SLAB_FREE_INIT and SLAB_FREE_AFTER_RCU_DELAY, and convert the callers.
 
-Add a separate llist_node instead of reusing the list/rcu union
-because the list stays linked until the deferred release. struct
-obj_cgroup grows from 56 to 64 bytes, but both are served from
-kmalloc-64, so no memory is additionally consumed.
+No functional change intended.
 
-Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
-Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Suggested-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Link: https://lore.kernel.org/f31885cd-57c2-428d-9760-a76a0137f989@kernel.org
 Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
 ---
- include/linux/memcontrol.h |  2 ++
- mm/memcontrol.c            | 27 ++++++++++++++++++++++++---
- 2 files changed, 26 insertions(+), 3 deletions(-)
+ mm/slab.h |  6 ++++--
+ mm/slub.c | 47 ++++++++++++++++++++++++++++++++++-------------
+ 2 files changed, 38 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 69e1bcc67c58..4d5c634daef8 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -185,6 +185,8 @@ struct obj_cgroup {
- 		struct list_head list; /* protected by objcg_lock */
- 		struct rcu_head rcu;
- 	};
-+	/* Used to defer obj_cgroup_release() to irq_work */
-+	struct llist_node release_node;
- 	bool is_root;
- };
+diff --git a/mm/slab.h b/mm/slab.h
+index e94ac63d10dc..15b0d98ae1d4 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -24,8 +24,10 @@
+ #define SLAB_ALLOC_NO_RECURSE	0x04 /* prevent kmalloc() recursion */
+ #define SLAB_ALLOC_NO_OBJ_EXT	0x08 /* prevent obj_exts array allocation */
  
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a05d9a8baa1b..c53147a88580 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -147,9 +147,8 @@ static void memcg_uncharge_kmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- 		memcg_uncharge(memcg, nr_pages);
- }
+-#define SLAB_FREE_DEFAULT	0x00 /* no flags */
+-#define SLAB_FREE_NOLOCK	0x01 /* spinning not allowed */
++#define SLAB_FREE_DEFAULT		0x00 /* no flags */
++#define SLAB_FREE_NOLOCK		0x01 /* spinning not allowed */
++#define SLAB_FREE_INIT			0x02 /* zero the object on free */
++#define SLAB_FREE_AFTER_RCU_DELAY	0x04 /* RCU grace period has elapsed */
  
--static void obj_cgroup_release(struct percpu_ref *ref)
-+static void __obj_cgroup_release(struct obj_cgroup *objcg)
+ static inline unsigned int to_alloc_flags(unsigned int free_flags)
  {
--	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
- 	unsigned int nr_bytes;
- 	unsigned int nr_pages;
- 	unsigned long flags;
-@@ -190,10 +189,32 @@ static void obj_cgroup_release(struct percpu_ref *ref)
- 	list_del(&objcg->list);
- 	spin_unlock_irqrestore(&objcg_lock, flags);
- 
--	percpu_ref_exit(ref);
-+	percpu_ref_exit(&objcg->refcnt);
- 	kfree_rcu(objcg, rcu);
- }
- 
-+static LLIST_HEAD(objcg_release_llist);
-+
-+static void objcg_release_workfn(struct irq_work *work)
-+{
-+	struct llist_node *head = llist_del_all(&objcg_release_llist);
-+	struct obj_cgroup *objcg, *tmp;
-+
-+	llist_for_each_entry_safe(objcg, tmp, head, release_node)
-+		__obj_cgroup_release(objcg);
-+}
-+
-+static DEFINE_IRQ_WORK(objcg_release_work, objcg_release_workfn);
-+
-+static void obj_cgroup_release(struct percpu_ref *ref)
-+{
-+	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
-+
-+	/* The last put may come from a context that cannot take spinlocks */
-+	if (llist_add(&objcg->release_node, &objcg_release_llist))
-+		irq_work_queue(&objcg_release_work);
-+}
-+
- static struct obj_cgroup *obj_cgroup_alloc(void)
+diff --git a/mm/slub.c b/mm/slub.c
+index 86259c32cf59..761dc2affea2 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -2694,9 +2694,10 @@ struct rcu_delayed_free {
+  * - __kcsan_check_access()
+  */
+ static __always_inline
+-bool slab_free_hook(struct kmem_cache *s, void *x, bool init,
+-		    bool after_rcu_delay)
++bool slab_free_hook(struct kmem_cache *s, void *x, unsigned int free_flags)
  {
- 	struct obj_cgroup *objcg;
++	bool init = free_flags & SLAB_FREE_INIT;
++	bool after_rcu_delay = free_flags & SLAB_FREE_AFTER_RCU_DELAY;
+ 	/* Are the object contents still accessible? */
+ 	bool still_accessible = (s->flags & SLAB_TYPESAFE_BY_RCU) && !after_rcu_delay;
+ 
+@@ -2786,10 +2787,10 @@ bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
+ 	void *object;
+ 	void *next = *head;
+ 	void *old_tail = *tail;
+-	bool init;
++	unsigned int free_flags = SLAB_FREE_DEFAULT;
+ 
+ 	if (is_kfence_address(next)) {
+-		slab_free_hook(s, next, false, false);
++		slab_free_hook(s, next, free_flags);
+ 		return false;
+ 	}
+ 
+@@ -2797,14 +2798,15 @@ bool slab_free_freelist_hook(struct kmem_cache *s, void **head, void **tail,
+ 	*head = NULL;
+ 	*tail = NULL;
+ 
+-	init = slab_want_init_on_free(s);
++	if (slab_want_init_on_free(s))
++		free_flags |= SLAB_FREE_INIT;
+ 
+ 	do {
+ 		object = next;
+ 		next = get_freepointer(s, object);
+ 
+ 		/* If object's reuse doesn't have to be delayed */
+-		if (likely(slab_free_hook(s, object, init, false))) {
++		if (likely(slab_free_hook(s, object, free_flags))) {
+ 			/* Move object to the new freelist */
+ 			set_freepointer(s, object, *head);
+ 			*head = object;
+@@ -3025,18 +3027,21 @@ static void sheaf_flush_unused(struct kmem_cache *s, struct slab_sheaf *sheaf)
+ static bool __rcu_free_sheaf_prepare(struct kmem_cache *s,
+ 				     struct slab_sheaf *sheaf)
+ {
+-	bool init = slab_want_init_on_free(s);
++	unsigned int free_flags = SLAB_FREE_AFTER_RCU_DELAY;
+ 	void **p = &sheaf->objects[0];
+ 	unsigned int i = 0;
+ 	bool pfmemalloc = false;
+ 
++	if (slab_want_init_on_free(s))
++		free_flags |= SLAB_FREE_INIT;
++
+ 	while (i < sheaf->size) {
+ 		struct slab *slab = virt_to_slab(p[i]);
+ 
+ 		memcg_slab_free_hook(s, slab, p + i, 1);
+ 		alloc_tagging_slab_free_hook(s, slab, p + i, 1);
+ 
+-		if (unlikely(!slab_free_hook(s, p[i], init, true))) {
++		if (unlikely(!slab_free_hook(s, p[i], free_flags))) {
+ 			p[i] = p[--sheaf->size];
+ 			continue;
+ 		}
+@@ -6458,10 +6463,13 @@ static unsigned int __free_to_pcs_batch(struct kmem_cache *s, size_t size, void
+  */
+ static void free_to_pcs_bulk(struct kmem_cache *s, size_t size, void **p)
+ {
+-	bool init = slab_want_init_on_free(s);
++	unsigned int free_flags = SLAB_FREE_DEFAULT;
+ 	void **remote_objects = p;
+ 	unsigned int remote_nr = 0;
+ 
++	if (slab_want_init_on_free(s))
++		free_flags |= SLAB_FREE_INIT;
++
+ 	/*
+ 	 * Process the free hooks and separate out remote objects by
+ 	 * partitioning the 'p' array in place:
+@@ -6476,7 +6484,7 @@ static void free_to_pcs_bulk(struct kmem_cache *s, size_t size, void **p)
+ 		memcg_slab_free_hook(s, slab, p + i, 1);
+ 		alloc_tagging_slab_free_hook(s, slab, p + i, 1);
+ 
+-		if (unlikely(!slab_free_hook(s, p[i], init, false))) {
++		if (unlikely(!slab_free_hook(s, p[i], free_flags))) {
+ 			p[i] = p[--size];
+ 			continue;
+ 		}
+@@ -6600,10 +6608,15 @@ static __fastpath_inline
+ void slab_free(struct kmem_cache *s, struct slab *slab, void *object,
+ 	       unsigned long addr)
+ {
++	unsigned int free_flags = SLAB_FREE_DEFAULT;
++
++	if (slab_want_init_on_free(s))
++		free_flags |= SLAB_FREE_INIT;
++
+ 	memcg_slab_free_hook(s, slab, &object, 1);
+ 	alloc_tagging_slab_free_hook(s, slab, &object, 1);
+ 
+-	if (unlikely(!slab_free_hook(s, object, slab_want_init_on_free(s), false)))
++	if (unlikely(!slab_free_hook(s, object, free_flags)))
+ 		return;
+ 
+ 	if (likely(can_free_to_pcs(slab)) && likely(free_to_pcs(s, object, true)))
+@@ -6619,10 +6632,14 @@ static noinline
+ void memcg_alloc_abort_single(struct kmem_cache *s, void *object)
+ {
+ 	struct slab *slab = virt_to_slab(object);
++	unsigned int free_flags = SLAB_FREE_DEFAULT;
++
++	if (slab_want_init_on_free(s))
++		free_flags |= SLAB_FREE_INIT;
+ 
+ 	alloc_tagging_slab_free_hook(s, slab, &object, 1);
+ 
+-	if (likely(slab_free_hook(s, object, slab_want_init_on_free(s), false)))
++	if (likely(slab_free_hook(s, object, free_flags)))
+ 		__slab_free(s, slab, object, object, 1, _RET_IP_);
+ }
+ #endif
+@@ -6651,6 +6668,7 @@ static void slab_free_after_rcu_debug(struct rcu_head *rcu_head)
+ 	void *object = delayed_free->object;
+ 	struct slab *slab = virt_to_slab(object);
+ 	struct kmem_cache *s;
++	unsigned int free_flags = SLAB_FREE_AFTER_RCU_DELAY;
+ 
+ 	kfree(delayed_free);
+ 
+@@ -6664,8 +6682,11 @@ static void slab_free_after_rcu_debug(struct rcu_head *rcu_head)
+ 	if (WARN_ON(!(s->flags & SLAB_TYPESAFE_BY_RCU)))
+ 		return;
+ 
++	if (slab_want_init_on_free(s))
++		free_flags |= SLAB_FREE_INIT;
++
+ 	/* resume freeing */
+-	if (slab_free_hook(s, object, slab_want_init_on_free(s), true)) {
++	if (slab_free_hook(s, object, free_flags)) {
+ 		__slab_free(s, slab, object, object, 1, _THIS_IP_);
+ 		stat(s, FREE_SLOWPATH);
+ 	}
 
 -- 
 2.54.0
