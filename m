@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1794782085;
-	b=cUO1WZiYiY6lrWyMKeBraldzpocKX80BCY1MY+cbHJ5d4Xh/jXMn7QhlcPAR8FOFZFaH
-	 PjTT+hj/LsZTN606nk8O3xvKF7WzOrLRHb25tdtKf5a7Dbs1fWVCqIVTyaukF6s7nTcOS
-	 GxAoXeKlj4LLhkA9njTK1XbRBUAlOTEiN4Y6oZbThnvhY4gqwLIgM3Hmc1fzh6gcj/YST
-	 ZxpdEesXKOq8FJS41d4nqrKdd/EPnm1WSEplRI5mE0i/EqmFoJEn1ISlhwGF6h80b8HbB
-	 JVhlsspKOIXi+whKgWzscukMfUzXXuGX7ewNs48THX6utYku1xq2W3FZ/YOmVzjt4wg==
+	t=1794782087;
+	b=UVmw8AFqYnE9uTVv6aICZrh3VCkVbgqu+MbD7KjeLvI6HUiqtfQtumSTr2RV1e0QgIO0
+	 yJUb5s7OgmGsmDCgnP0iEZG701KqVqt6sQV9yoHxLe1Jh1/Lj29OPaHQk3GQ8HjubjLqy
+	 7fPnJbunahrIXUZ4FcyU+ZMuz6mKLdwVMZt/tOx5NgOgssQ9Vez09ZSBsYfprUcbUdu4h
+	 Z2lM3ifko4o69N+OG+mY9tMuPfz5WNqMRVBA/w17tW+J/gjpgOwXZ2rm7exh5O8o70sz7
+	 s0Ydz7apQWHrgMpTGCWyIajjTW4KlOj38BTPmkDTPTNY5TBcxNECqrrRFjMLOogSKDA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794782085;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794782087;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=hud+RIfTS9CpkWiwaPEwnFeGlAZ3JFT2QGoyFQEOPuE=;
-	b=NkdZ1Gy9kONLkGW4uIqb/3K75id0LHwGNTDtr1ewYIEIX9yaheGqi+HjQJvXRRk04oje
-	 kxykXN4y+QepY3s1Gp4tCIy2qlnEydTjmWMjXIvfmuIGKREzwjFufeEj29BtrkpHScd47
-	 aI4n58z7U0FuZbMLIiVyeKXMrJiQfdxLfAK/astA+eHT/ulKPy12zgDtZWckUUBzJhNEk
-	 1ziwBLUavNKi3ePyUEwrzHvf1IJvRgUzHAB7FkhNgLHLZ0iWre2fBDNw4SjvtaRYQl9fz
-	 THjPJiEbGMC1sQVbqq65AsKWKv398GouRadrdknM2M3OQtNtUIjnxLkaldvPa4DrmIQ==
+	bh=ZSpfrCqbgriyXEzgXJoD6H2OVVy3JXiv2OfJsz1wNQg=;
+	b=kK1pKZwr1iprQDyrLivT7XHtiMX0JGWG8eHHZyQ8kcmsYlBJyNaBjIp++hssqNW2cyba
+	 LzUHOJguCMx0jze3bELtNjYWQGs2M57Qdev7Azk0eXbqqhkb5aaIrijINZKcC+5D2EuYM
+	 CaN+QFJM4hhILscZpxHExnN/ksOt7TfOiceIzbLGPOJ6toyVn3YeD/EkulNDXLeXHeplE
+	 692uup+U9kiM+ew827e1tQNjn0tNuQGfq9okWIYVOXw2F4/dw7UnPGjP/C0cJwclOzbqA
+	 I19b41EEyNE1P5MNh9ZWhGjtFau6t88vw7UynuwU23Pwfm95f5+85RWmW9dw+5M6iEA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OMj0f5j6;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GAyl2SW1;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6C18606A33F;
-	Sun, 15 Nov 2026 22:34:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A23FD606A891;
+	Sun, 15 Nov 2026 22:34:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OMj0f5j6
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GAyl2SW1
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1794782085;
-	b=G7EP00s5imND4pnQ8Nf+jzO6iAm3wuhWwFMCG1C9UveXUtQt1mHxw9C5LLy0+Mr9U7RZ
-	 xdwDzDotL8LFY37Ant7sjJZ04+671hgKZW+/7MH627EJ9GI8zeub3XFOSWrdJu+N4ES/y
-	 3GaIhr1pCwwgag/CJ7bmIM76PkwJ2Li0nme+0aYt9Y6giXdB8HQ0a5TQ3e2Ufx7w0xBij
-	 XFJAOQedptCNGqMQtkkjlte3MarH66xjUpUtJiHZlHYpG7CGSNVX5ahGOIbUE1wMG2ScQ
-	 t0WgOTh1y/a5VEIFL3iOMoK5YGYxJAqh+/fTEtdxiScmgKqOyWyYqbp9oEeeyd4QznA==
+	t=1794782087;
+	b=sIomUzOHz3mR2G1JsuaLH/Oz2BLdL/CG3Jm8xa7nhB6cDqsJP6QKUWLJruhrzpbQ2t6r
+	 +/O8Yn/pJbDIcHmZNsPutR1qjkJAKQzLxSSAvnJ2DbbqOLUZegOtpsqN1GHTK7ZIdJEUv
+	 JrBlgyvwYZE15uLpLYkcndGNWG6R/8QJwb9Cf42VX//IbRIAUTyHsOVrM+A7eSOzshv1p
+	 0zULopI1726cFWTuZaHtJgAo+5DoOeWZ3FsQRIMtMruH7ICZn+dvPPKgNg+rN0FE0briD
+	 E/MouOU+fzhK8SlvnYtH5Crf+zR+JSPb5EFlsA6Npt44xM4dxWXZR33zXO19JYvo9yA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1794782085;
+	c=relaxed/relaxed; t=1794782087;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=hud+RIfTS9CpkWiwaPEwnFeGlAZ3JFT2QGoyFQEOPuE=;
-	b=pbd+N0uPqGoTosVv896AUj2OUiU7QJ5k0gwvQulg1sHCIufsqMQMuPpTdUctvYvPGGDC
-	 ZTrW8uD1Soo9GQ3oRSCQPP9CYrNN/6tGtgl+u4Dr73ZlTedaCi6aJ6uLX4gUpHw0zcC9I
-	 MasNDry49sV9+omWPnB3+jKOHlRVsu4PRvQcJ6MOk9pWJVzNC8U5Y0+497aFtb5oGegNP
-	 EpUt9sZeh2oAQ+VuVLAGogpCOJoFrIyCJMD14RTMeARFqIFWdSS5SnkPMzlvWQ9JUu5Cs
-	 XQCv53fPcTKZPF9tIEVPlHQGMb6T2M75w5kXrLm4AYtmMhhhp2BopW3/DFLvocaOCeA==
+	bh=ZSpfrCqbgriyXEzgXJoD6H2OVVy3JXiv2OfJsz1wNQg=;
+	b=jSDHNyN0AbA6y40NychHucesGYfmma8bBxSfnzlmgKN4H24AzqmtKh1UHcYGQ1/jRx1C
+	 iPDUlmpwf5HVzA5ke/tMt8YlCByPDgDY/q496sjMtWCX2gDALcXiiCoOkGfvzfGm96FaY
+	 tfyiMZsdiQglkwyBJWNF4ZmnD93f+79MIwURIvAn52Bgh/xQZw9YplEOITYhdZc4Y/R51
+	 hEOKqpNONCyysppj7w/171b+kdmoIVlJmPHEl3pH8NdcAeWztqjb6xoMPOxCujQv32Rbw
+	 1bxt/UR3COQTYVx9cMFLLelwQziUczfJVVAzNCjxfre/IH7nh+5rsLtJwmVyQkIk0CA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 102C21F000C8;
-	Sun, 15 Nov 2026 22:34:44 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id E7EDB1F000C7;
+	Sun, 15 Nov 2026 22:34:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794782085;
-	bh=hud+RIfTS9CpkWiwaPEwnFeGlAZ3JFT2QGoyFQEOPuE=;
+	s=k20260515; t=1794782087;
+	bh=ZSpfrCqbgriyXEzgXJoD6H2OVVy3JXiv2OfJsz1wNQg=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=OMj0f5j6moJEglet3V/a6Yjpd+AFj5UoWpsRNHaUDM6BqSQkoV4yqTmDdCOrSA8/y
-	 NVMBo26rjhrgqYB+uT+M7qRdqbMyFiSBDQ5rkm5bqx0Cuv51Sws6/9grBO4cpnbBOg
-	 VTcWRlqC5fL52CEA1WoYLiwv1uvqU65XCtlpjUbwpSnwJhCJgETLGFHsYjTagkWkjp
-	 OfNlGTkkAgWB3/Is0i3zewFjrunQ6zfln5An+2jw8cyqGdwRXDZXyW+FR+q24nT/S2
-	 716AufO/jlIuNok5scOmfhXI9xcK3hLt4Ai9ZPAzqW08uj3DFohzED9+jRrw+uUOAx
-	 5IhaNh2O5Dpqg==
+	b=GAyl2SW1Re6WT6oTsQZs0IA+HXgRy+YUAsv3U+kK4Hh3TLBII1nPw22eCLer1SRCm
+	 gwQhplkA8jPbUGOd3i5mLAxV+zKktnbCVhi1uJUfKxMV14TDUCXBVx5/1tPF45kOv1
+	 Y8RFNaBO+crvRXwwDrFZik2FbUOjf0tUkgKbJsOnadZIuYc9ZVmdxlpsnXx5ZqTfqF
+	 XLQNgv43mVcatvGRExOY7YhOuCsXH77GlIePxome/dzte7mV6Gy1lBEiPuO/LFgMhs
+	 qXQKVi1YOit/3mlJ4Z0eG9SeekHZ7bqIlRyr6ldtB1c2/PcSLge0m7+QZs2+CXet5g
+	 pK5KIHBSO3LsQ==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 8F9AF4A24D;
-	Sun, 15 Nov 2026 22:34:43 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 11E5F4A261;
+	Sun, 15 Nov 2026 22:34:44 +0000 (UTC)
 From: Alireza Asgari via B4 Relay <devnull+alireza.asgari.net@kernel.org>
-Date: Sun, 15 Nov 2026 22:34:44 +0000
-Subject: [PATCH RFC nf-next 4/9] memcg: add an owner-bound capacity
- reservation interface
+Date: Sun, 15 Nov 2026 22:34:49 +0000
+Subject: [PATCH RFC nf-next 9/9] selftests: netfilter: exercise nfqueue
+ memory accounting
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261115-b4-nfqueue-memory-accounting-v1-4-b9cc30819997@asgari.net>
+Message-Id: <20261115-b4-nfqueue-memory-accounting-v1-9-b9cc30819997@asgari.net>
 References: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
 In-Reply-To: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
 To: netfilter-devel@vger.kernel.org, linux-mm@kvack.org
@@ -101,11 +101,11 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
  cgroups@vger.kernel.org, netdev@vger.kernel.org, 
  linux-kselftest@vger.kernel.org, Alireza Asgari <alireza@asgari.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794782082; l=8813;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794782082; l=22469;
  i=alireza@asgari.net; s=alireza-kernel; h=from:subject:message-id;
- bh=OjXsitYCWUxf4IwkzECeKMGMptD9gN0LJJoCyFoRNDQ=;
- b=r5MEYESz730o0FSe8B903OqNKPvShnAbK/J8l27OnJ9FgvqTtZJiUPTAdv1q73mK5aj/nuPYF
- eKEMrgniRjxB7w7fHMNW3L9WLb2htm2L730Uzmr7XCjL+aUnSCKjT/Q
+ bh=80QwPQxuavyWtfMrm4ApasxlTbljCSwj9/58LkECDdE=;
+ b=jebOzQrZwtcagfmQTokCdN2ywSPh/pRV5ZpqaJKFX79QvHyBGdiiMnDHoa4SMoTegqhQrBdOc
+ HulmUVPAIOiBB1QlIhJ9AFJjcN/6SUVTwU2/aaszzjUikgOSybI6a8f
 X-Developer-Key: i=alireza@asgari.net; a=ed25519;
  pk=wuQ0/M69FqoVnrCMUJ13EQCwrCwVjCrtz75k15vW8tw=
 X-Endpoint-Received: by B4 Relay for alireza@asgari.net/alireza-kernel with
@@ -116,258 +116,504 @@ Content-Transfer-Encoding: 7bit
 
 From: Alireza Asgari <alireza@asgari.net>
 
-NFQUEUE capacity accounting needs to charge budget in configuration
-context while preserving the owner selected when the queue was bound.
-Add a proposed bulk page-reservation interface backed by a referenced
-objcg. This reserves accounting budget; it does not allocate physical
-pages or replace the charges for real allocations.
+Add a raw-Netlink NFQUEUE selftest using isolated network namespaces and
+loopback traffic. Cover individual and batch verdicts, resizing occupied
+queues, oversized packets and FAIL_OPEN, payload replacement, and software
+segmentation.
 
-Track logical reserved pages separately from pages actually charged.
-The distinction permits uncharged growth after reparenting to root while
-still refunding inherited charges. Apply actual recorded refunds to the
-page counters even when the current owner is root.
+With cgroup v2 available, exercise reservation failure and rollback,
+aggregate limits, saved ownership after task migration, reparenting, and
+inactive sizing before first activation. The payload case checks the
+modified UDP payload delivered after an ACCEPT verdict and reuses the
+queue afterward.
 
-Use bounded GFP_NOWAIT charge batches. Failed growth rolls back its new
-charges and leaves the old reservation intact. Reject PF_MEMALLOC growth
-rather than allowing forced charges. Callers serialize operations in
-sleepable context; ordinary memory.high handling can remain deferred.
-On this base, deferred handling can target the current task's cgroup
-instead of a saved owner after task migration.
-
-Positive growth with a captured owner requires a 64-bit kernel. Virtual
-reservations can otherwise bring shared 32-bit page counters near their
-signed range without allocating matching physical memory. No-owner
-reservations, shrinking, and destruction remain supported on 32-bit.
-
-The API, use of ordinary memcg usage for empty capacity, and architecture
-restriction are RFC policy choices requiring MM review.
+The script reports unsupported environment requirements explicitly and
+cleans up its namespaces, queue sockets, and cgroups.
 
 Signed-off-by: Alireza Asgari <alireza@asgari.net>
 ---
- include/linux/memcontrol.h |  35 ++++++++++
- mm/memcontrol.c            | 163 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 198 insertions(+)
+ tools/testing/selftests/net/netfilter/Makefile     |   1 +
+ .../selftests/net/netfilter/nft_queue_memory.py    | 460 +++++++++++++++++++++
+ 2 files changed, 461 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 69e1bcc67c58..d25ff10976ec 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -32,6 +32,41 @@ struct mm_struct;
- struct kmem_cache;
- struct swap_cluster_info;
- 
-+/* Capacity accounting without allocating the reserved pages. */
-+struct mem_cgroup_reservation {
-+	struct obj_cgroup *objcg;
-+	u64 pages;
-+	u64 charged_pages; /* excludes growth after reparenting to root */
-+};
+diff --git a/tools/testing/selftests/net/netfilter/Makefile b/tools/testing/selftests/net/netfilter/Makefile
+index 1bc7f7a75f1e..21b58d2cfe86 100644
+--- a/tools/testing/selftests/net/netfilter/Makefile
++++ b/tools/testing/selftests/net/netfilter/Makefile
+@@ -37,6 +37,7 @@ TEST_PROGS := \
+ 	nft_nat_zones.sh \
+ 	nft_offload.sh \
+ 	nft_queue.sh \
++	nft_queue_memory.py \
+ 	nft_synproxy.sh \
+ 	nft_tproxy_tcp.sh \
+ 	nft_tproxy_udp.sh \
+diff --git a/tools/testing/selftests/net/netfilter/nft_queue_memory.py b/tools/testing/selftests/net/netfilter/nft_queue_memory.py
+new file mode 100755
+index 000000000000..35ae4db09a48
+--- /dev/null
++++ b/tools/testing/selftests/net/netfilter/nft_queue_memory.py
+@@ -0,0 +1,460 @@
++#!/usr/bin/env python3
++# SPDX-License-Identifier: GPL-2.0
++"""Bounded NFQUEUE retention tests; run in a disposable guest with the patch.
 +
-+#ifdef CONFIG_MEMCG
-+void mem_cgroup_reservation_init(struct mem_cgroup_reservation *res);
-+int mem_cgroup_reservation_resize(struct mem_cgroup_reservation *res,
-+				  u64 pages);
-+void mem_cgroup_reservation_destroy(struct mem_cgroup_reservation *res);
-+#else
-+static inline void
-+mem_cgroup_reservation_init(struct mem_cgroup_reservation *res)
-+{
-+	res->objcg = NULL;
-+	res->pages = 0;
-+	res->charged_pages = 0;
-+}
++The test creates its own network namespace and consumes notifications while
++withholding verdicts. --cgroup accepts a writable, delegated cgroup v2 parent
++for the optional capacity-reservation test. No public network is used.
++"""
 +
-+static inline int
-+mem_cgroup_reservation_resize(struct mem_cgroup_reservation *res, u64 pages)
-+{
-+	res->pages = pages;
-+	return 0;
-+}
++import argparse
++import contextlib
++import errno
++import os
++from pathlib import Path
++import select
++import shutil
++import socket
++import struct
++import subprocess
++import sys
++import time
 +
-+static inline void
-+mem_cgroup_reservation_destroy(struct mem_cgroup_reservation *res)
-+{
-+	mem_cgroup_reservation_init(res);
-+}
-+#endif
 +
- /* Cgroup-specific page state, on top of universal node page state */
- enum memcg_stat_item {
- 	MEMCG_SWAP = NR_VM_NODE_STAT_ITEMS,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 446b60ca6aef..0227d9b411f5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3255,6 +3255,169 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
- 	return ret;
- }
- 
-+/* Keep both the page count and the signed kmem statistics deltas in range. */
-+#define MEMCG_RESERVATION_BATCH (SZ_1G >> PAGE_SHIFT)
++NFQ_SUBSYS = 3 << 8
++NFQ_PACKET, NFQ_VERDICT, NFQ_CONFIG, NFQ_BATCH = range(4)
++CFG_CMD, CFG_PARAMS, CFG_MAXLEN, CFG_MASK, CFG_FLAGS = range(1, 6)
++F_FAIL_OPEN, F_GSO = 1, 4
++SKB_GSO = 2
++MAX_HELD = 64
 +
-+static int mem_cgroup_reservation_charge(struct obj_cgroup *objcg,
-+					 unsigned int pages, bool *charged)
-+{
-+	struct mem_cgroup *memcg;
-+	int ret = 0;
 +
-+	memcg = get_mem_cgroup_from_objcg(objcg);
-+	*charged = false;
-+	/* Reparenting to root removes the limit, not previously held charges. */
-+	if (!mem_cgroup_is_root(memcg)) {
-+		/* Do not reclaim repeatedly while the caller serializes configuration. */
-+		ret = try_charge(memcg, GFP_NOWAIT, pages);
-+		if (!ret) {
-+			account_kmem_nmi_safe(memcg, pages);
-+			memcg1_account_kmem(memcg, pages);
-+			*charged = true;
-+		}
-+	}
-+	css_put(&memcg->css);
-+	return ret;
-+}
++def attr(kind, data):
++    result = struct.pack("=HH", 4 + len(data), kind) + data
++    return result + bytes((-len(result)) % 4)
 +
-+static void mem_cgroup_reservation_uncharge_batch(struct mem_cgroup *memcg,
-+						  unsigned int pages)
-+{
-+	account_kmem_nmi_safe(memcg, -pages);
-+	memcg1_account_kmem(memcg, -pages);
-+	/* These pages were charged, even if their owner is now root. */
-+	memcg_uncharge(memcg, pages);
-+}
 +
-+static void mem_cgroup_reservation_uncharge(struct obj_cgroup *objcg, u64 pages)
-+{
-+	while (pages) {
-+		unsigned int batch = min_t(u64, pages, MEMCG_RESERVATION_BATCH);
-+		struct mem_cgroup *memcg;
++def u32(kind, value):
++    return attr(kind, struct.pack("!I", value))
 +
-+		memcg = get_mem_cgroup_from_objcg(objcg);
-+		mem_cgroup_reservation_uncharge_batch(memcg, batch);
-+		css_put(&memcg->css);
-+		pages -= batch;
-+		cond_resched();
-+	}
-+}
 +
-+/**
-+ * mem_cgroup_reservation_init - capture the current kernel memory owner
-+ * @res: uninitialized reservation
-+ *
-+ * The owner is referenced until destruction and follows objcg reparenting.
-+ * Root ownership or disabled kmem accounting leaves an uncharged reservation.
-+ * The caller must serialize operations and use sleepable task context.
-+ */
-+void mem_cgroup_reservation_init(struct mem_cgroup_reservation *res)
-+{
-+	*res = (struct mem_cgroup_reservation){};
-+	if (!mem_cgroup_disabled() && !mem_cgroup_kmem_disabled()) {
-+		res->objcg = get_obj_cgroup_from_current();
-+		if (res->objcg && obj_cgroup_is_root(res->objcg)) {
-+			obj_cgroup_put(res->objcg);
-+			res->objcg = NULL;
-+		}
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mem_cgroup_reservation_init);
++def check(condition, message):
++    if not condition:
++        raise AssertionError(message)
 +
-+/**
-+ * mem_cgroup_reservation_resize - change a capacity charge in pages
-+ * @res: initialized, externally serialized reservation
-+ * @pages: new total reservation, in pages
-+ *
-+ * Growth does not reclaim, invoke the memcg OOM killer, or force-charge a
-+ * failing reservation. It may therefore fail despite reclaimable memory.
-+ * A failed growth leaves the old charge intact. This reserves budget, not
-+ * physical pages, and does not replace charges for actual allocations.
-+ * Growth with a captured owner requires a 64-bit kernel: virtual reservations
-+ * must not bring 32-bit page counters close to their signed arithmetic limit.
-+ * Unsupported growth returns -EOPNOTSUPP without changing the reservation.
-+ * Reservations initialized without an owner, shrinking, and destruction
-+ * remain supported.
-+ *
-+ * Successful growth may schedule deferred memory.high handling for current.
-+ * That handler uses current's mm owner, which can differ from the reservation
-+ * owner after task migration or cgroup reparenting. It does not guarantee
-+ * reclaim or throttling for the charged owner. memory.max checks still use
-+ * the reservation owner and its ancestors.
-+ *
-+ * Return: zero on success, or a negative error code.
-+ */
-+int mem_cgroup_reservation_resize(struct mem_cgroup_reservation *res, u64 pages)
-+{
-+	u64 charged = 0, remaining;
-+	int ret;
 +
-+	BUILD_BUG_ON(!MEMCG_RESERVATION_BATCH);
-+	BUILD_BUG_ON(MEMCG_RESERVATION_BATCH > INT_MAX);
++class Queue:
++    def __init__(self, number=1):
++        self.number = number
++        self.sock = socket.socket(socket.AF_NETLINK, socket.SOCK_RAW, 12)
++        self.sock.bind((0, 0))
++        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1 << 20)
++        self.seq = 0
++        self.held = []
 +
-+	if (!res->objcg)
-+		goto commit;
-+	if (pages > PAGE_COUNTER_MAX)
-+		return -E2BIG;
-+	if (pages <= res->pages) {
-+		u64 retained = min(pages, res->charged_pages);
++    def close(self):
++        self.sock.close()
 +
-+		mem_cgroup_reservation_uncharge(res->objcg,
-+						res->charged_pages - retained);
-+		res->charged_pages = retained;
-+		goto commit;
-+	}
-+	if (!IS_ENABLED(CONFIG_64BIT))
-+		return -EOPNOTSUPP;
-+	/* try_charge_memcg() otherwise allows reclaim contexts to overcharge. */
-+	if (current->flags & PF_MEMALLOC)
-+		return -ENOMEM;
++    def receive(self, timeout):
++        if not select.select([self.sock], [], [], timeout)[0]:
++            return []
++        data, _, flags, _ = self.sock.recvmsg(65536)
++        check(not flags & socket.MSG_TRUNC, "truncated netlink message")
++        replies = []
++        while data:
++            check(len(data) >= 16, "short netlink header")
++            length, kind, _, seq, _ = struct.unpack_from("=IHHII", data)
++            check(16 <= length <= len(data), "invalid netlink length")
++            body = data[16:length]
++            if kind == 2:  # NLMSG_ERROR, including successful ACKs
++                replies.append((seq, struct.unpack_from("=i", body)[0]))
++            elif kind == NFQ_SUBSYS | NFQ_PACKET:
++                attrs = {}
++                offset = 4  # nfgenmsg
++                while offset < len(body):
++                    size, atype = struct.unpack_from("=HH", body, offset)
++                    check(size >= 4 and offset + size <= len(body),
++                          "invalid packet attribute")
++                    attrs[atype & 0x3fff] = body[offset + 4:offset + size]
++                    offset += (size + 3) & ~3
++                packet_id = struct.unpack_from("!I", attrs[1])[0]
++                skb_info = struct.unpack("!I", attrs.get(14, bytes(4)))[0]
++                check(len(self.held) < MAX_HELD, "bounded hold list exhausted")
++                self.held.append((packet_id, skb_info))
++            data = data[(length + 3) & ~3:]
++        return replies
 +
-+	remaining = pages - res->pages;
-+	while (remaining) {
-+		unsigned int batch =
-+			min_t(u64, remaining, MEMCG_RESERVATION_BATCH);
-+		bool accounted;
++    def request(self, kind, attrs):
++        self.seq += 1
++        body = struct.pack("!BBH", 0, 0, self.number) + attrs
++        header = struct.pack("=IHHII", 16 + len(body), NFQ_SUBSYS | kind,
++                             1 | 4, self.seq, 0)  # REQUEST | ACK
++        self.sock.sendto(header + body, (0, 0))
++        deadline = time.monotonic() + 3
++        while time.monotonic() < deadline:
++            for seq, error in self.receive(max(0, deadline - time.monotonic())):
++                if seq == self.seq:
++                    if error:
++                        raise OSError(-error, os.strerror(-error))
++                    return
++        raise TimeoutError("NFQUEUE ACK timed out")
 +
-+		if (fatal_signal_pending(current)) {
-+			ret = -EINTR;
-+			goto rollback;
-+		}
-+		ret = mem_cgroup_reservation_charge(res->objcg, batch,
-+						    &accounted);
-+		if (ret)
-+			goto rollback;
-+		if (accounted)
-+			charged += batch;
-+		remaining -= batch;
-+		cond_resched();
-+	}
-+	res->charged_pages += charged;
-+commit:
-+	res->pages = pages;
-+	return 0;
-+rollback:
-+	mem_cgroup_reservation_uncharge(res->objcg, charged);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(mem_cgroup_reservation_resize);
++    def configure(self, maximum, *, bind=False, flags=F_GSO, mode=1):
++        attrs = u32(CFG_MAXLEN, maximum)
++        attrs += attr(CFG_PARAMS, struct.pack("!IB", 0, mode))  # COPY_META by default
++        attrs += u32(CFG_MASK, F_GSO | F_FAIL_OPEN) + u32(CFG_FLAGS, flags)
++        if bind:
++            attrs += attr(CFG_CMD, struct.pack("!BBH", 1, 0, socket.AF_INET))
++        self.request(NFQ_CONFIG, attrs)
 +
-+/**
-+ * mem_cgroup_reservation_destroy - release capacity and its owner reference
-+ * @res: reservation with no remaining concurrent users
-+ */
-+void mem_cgroup_reservation_destroy(struct mem_cgroup_reservation *res)
-+{
-+	if (res->objcg) {
-+		mem_cgroup_reservation_uncharge(res->objcg, res->charged_pages);
-+		obj_cgroup_put(res->objcg);
-+	}
-+	res->objcg = NULL;
-+	res->pages = 0;
-+	res->charged_pages = 0;
-+}
-+EXPORT_SYMBOL_GPL(mem_cgroup_reservation_destroy);
++    def collect(self):
++        while select.select([self.sock], [], [], 0.1)[0]:
++            replies = self.receive(0)
++            check(not replies, "unexpected asynchronous netlink error")
 +
- static struct obj_cgroup *page_objcg(const struct page *page)
- {
- 	unsigned long memcg_data = page->memcg_data;
++    def release(self, batch=False):
++        self.collect()
++        ids = [packet_id for packet_id, _ in self.held]
++        self.held.clear()
++        if batch:
++            ids = ids[-1:]
++        for packet_id in ids:
++            self.request(NFQ_BATCH if batch else NFQ_VERDICT,
++                         attr(2, struct.pack("!II", 0, packet_id)))  # DROP
++
++    def stats(self):
++        path = Path("/proc/self/net/netfilter/nfnetlink_queue")
++        for line in path.read_text().splitlines():
++            values = [int(value) for value in line.split()]
++            if values[0] == self.number:
++                return values
++        raise AssertionError("bound queue missing from procfs")
++
++
++class Traffic:
++    def __init__(self):
++        self.rx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
++        self.rx.bind(("127.0.0.1", 0))
++        self.destination = self.rx.getsockname()
++        rules = f"""table ip nfq_memory {{
++ chain output {{
++  type filter hook output priority 0; policy accept;
++  udp dport {self.destination[1]} queue num 1
++ }}
++}}
++"""
++        subprocess.run(["nft", "-f", "-"], input=rules, text=True, check=True)
++
++    def close(self):
++        self.rx.close()
++
++    def send(self, size=16384, segment=0):
++        cmsgs = [(socket.IPPROTO_UDP, 103, struct.pack("=H", segment))] if segment else []
++        # Retained output skbs can exhaust one sender's socket memory first.
++        # A fresh, bounded sender isolates the NFQUEUE retention limit.
++        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sender:
++            sender.settimeout(1)
++            sender.sendmsg([bytes(size)], cmsgs, 0, self.destination)
++
++
++def retention(traffic, batch):
++    with contextlib.closing(Queue()) as queue:
++        queue.configure(32, bind=True)
++        for _ in range(40):
++            traffic.send()
++            queue.collect()
++        count = len(queue.held)
++        check(0 < count < 32, f"expected byte rejection below count limit, held {count}")
++        stats = queue.stats()
++        check(stats[2] == count and stats[5] > 0, "wrong queue/drop accounting")
++        check(stats[6] == 0, "netlink backpressure invalidated the test")
++        queue.release(batch=batch)
++        check(queue.stats()[2] == 0, "verdict did not drain queue")
++        traffic.send()
++        queue.collect()
++        check(len(queue.held) == 1, "verdict did not restore capacity")
++
++
++def resize(traffic):
++    with contextlib.closing(Queue()) as queue:
++        queue.configure(32, bind=True)
++        traffic.send()
++        queue.collect()
++        check(len(queue.held) == 1, "initial packet not queued")
++        queue.configure(0)
++        check(queue.stats()[2] == 1, "shrink discarded existing entry")
++        traffic.send()
++        queue.collect()
++        check(len(queue.held) == 1, "zero limit admitted a packet")
++        queue.release(batch=True)
++        queue.configure(32)
++        traffic.send()
++        queue.collect()
++        check(len(queue.held) == 1, "growth did not restore admission")
++
++
++def oversized(traffic):
++    with contextlib.closing(Queue()) as queue:
++        queue.configure(1, bind=True)
++        traffic.send(60000)
++        queue.collect()
++        check(not queue.held and queue.stats()[5] == 1,
++              "single skb above byte allowance was not rejected")
++        queue.configure(1, flags=F_GSO | F_FAIL_OPEN)
++        traffic.send(60000)
++        queue.collect()
++        check(not queue.held, "FAIL_OPEN packet was queued")
++        check(select.select([traffic.rx], [], [], 1)[0], "FAIL_OPEN did not deliver")
++        check(len(traffic.rx.recv(65536)) == 60000, "incorrect FAIL_OPEN payload")
++
++
++def ipv4_checksum(header):
++    total = sum(struct.unpack("!10H", header))
++    while total >> 16:
++        total = (total & 0xffff) + (total >> 16)
++    return (~total) & 0xffff
++
++
++def payload_accept(traffic):
++    with contextlib.closing(Queue()) as queue:
++        queue.configure(1, bind=True)
++        traffic.send(64)
++        queue.collect()
++        check(len(queue.held) == 1, "initial small packet was not queued")
++        packet_id = queue.held.pop()[0]
++        data = b"\xa5" * (60000 - 28)
++        address = socket.inet_aton("127.0.0.1")
++        header = struct.pack("!BBHHHBBH4s4s", 0x45, 0, 60000, 0, 0,
++                             64, socket.IPPROTO_UDP, 0, address, address)
++        checksum = ipv4_checksum(header)
++        header = header[:10] + struct.pack("!H", checksum) + header[12:]
++        udp = struct.pack("!HHHH", 12345, traffic.destination[1],
++                          len(data) + 8, 0)
++        # Delivery proves replacement succeeded; DROP could hide a failed edit.
++        queue.request(NFQ_VERDICT,
++                      attr(2, struct.pack("!II", 1, packet_id)) +  # ACCEPT
++                      attr(10, header + udp + data))  # NFQA_PAYLOAD
++        check(select.select([traffic.rx], [], [], 3)[0],
++              "expanded ACCEPT packet was not delivered")
++        check(traffic.rx.recv(65536) == data,
++              "expanded payload differs from supplied data")
++        check(queue.stats()[2] == 0, "ACCEPT verdict did not drain queue")
++        traffic.send(64)
++        queue.collect()
++        check(len(queue.held) == 1,
++              "successful payload expansion did not restore saved-charge capacity")
++        queue.release()
++        check(queue.stats()[2] == 0, "subsequent packet did not drain")
++
++
++def segmentation(traffic):
++    for flags, expected in [(F_GSO, 1), (0, 8)]:
++        with contextlib.closing(Queue()) as queue:
++            queue.configure(64, bind=True, flags=flags)
++            try:
++                traffic.send(8 * 1200, segment=1200)
++            except OSError as error:
++                if error.errno in (errno.EINVAL, errno.ENOPROTOOPT, errno.EOPNOTSUPP):
++                    return "UDP_SEGMENT is unavailable"
++                raise
++            queue.collect()
++            check(len(queue.held) == expected,
++                  f"GSO flags {flags}: expected {expected} entries, got {len(queue.held)}")
++            if flags:
++                check(queue.held[0][1] & SKB_GSO, "aggregate did not reach NFQUEUE")
++            queue.release()
++            check(queue.stats()[2] == 0, "segmented entries did not drain")
++
++
++def reservation(traffic, parent):
++    if not parent:
++        return "supply --cgroup with a delegated cgroup v2 parent in a test guest"
++    parent = Path(parent).resolve()
++    check("memory" in (parent / "cgroup.subtree_control").read_text().split(),
++          "parent must already delegate the memory controller")
++    membership = next(line[3:] for line in Path("/proc/self/cgroup").read_text().splitlines()
++                      if line.startswith("0::"))
++    original = Path("/sys/fs/cgroup") / membership.lstrip("/")
++    group = parent / f"nfq-memory-{os.getpid()}"
++    group.mkdir()
++    try:
++        (group / "memory.max").write_text(str(64 << 20))
++        (group / "cgroup.procs").write_text(str(os.getpid()))
++        with contextlib.closing(Queue()) as queue:
++            try:
++                queue.configure(1 << 20, bind=True)
++            except OSError as error:
++                check(error.errno == errno.ENOMEM, f"unexpected BIND refusal: {error}")
++            else:
++                raise AssertionError("oversized capacity reservation succeeded")
++            # A refused BIND must leave no published queue behind.
++            queue.configure(32, bind=True)
++            # Later changes must continue charging the original owner.
++            (original / "cgroup.procs").write_text(str(os.getpid()))
++            try:
++                queue.configure(1 << 20, mode=0, flags=0)
++            except OSError as error:
++                check(error.errno == errno.ENOMEM, f"unexpected growth refusal: {error}")
++            else:
++                raise AssertionError("growth escaped its original owner")
++            traffic.send()
++            queue.collect()
++            check(len(queue.held) == 1, "failed growth changed the usable queue")
++            queue.release()
++            queue.configure(0)
++        # Individually bounded queues must still share their owner's budget.
++        (group / "cgroup.procs").write_text(str(os.getpid()))
++        with contextlib.ExitStack() as stack:
++            queues = []
++            refused = None
++            for number in range(10, 26):
++                candidate = stack.enter_context(contextlib.closing(Queue(number)))
++                try:
++                    candidate.configure(4096, bind=True)
++                except OSError as error:
++                    check(error.errno == errno.ENOMEM,
++                          f"unexpected aggregate refusal: {error}")
++                    refused = candidate
++                    break
++                queues.append(candidate)
++            check(queues and refused is not None,
++                  "expected successful queues followed by aggregate refusal")
++            queues[0].configure(0)
++            refused.configure(4096, bind=True)
++        # Reparent an occupied reservation, then grow and refund it in its parent.
++        (group / "cgroup.procs").write_text(str(os.getpid()))
++        with contextlib.closing(Queue()) as queue:
++            queue.configure(32, bind=True)
++            (original / "cgroup.procs").write_text(str(os.getpid()))
++            group.rmdir()
++            queue.configure(64)
++            queue.configure(0)
++    finally:
++        (original / "cgroup.procs").write_text(str(os.getpid()))
++        if group.exists():
++            group.rmdir()
++
++
++def reservation_startup(traffic, parent):
++    if not parent:
++        return "supply --cgroup with a delegated cgroup v2 parent in a test guest"
++    parent = Path(parent).resolve()
++    check("memory" in (parent / "cgroup.subtree_control").read_text().split(),
++          "parent must already delegate the memory controller")
++    membership = next(line[3:] for line in Path("/proc/self/cgroup").read_text().splitlines()
++                      if line.startswith("0::"))
++    original = Path("/sys/fs/cgroup") / membership.lstrip("/")
++    group = parent / f"nfq-startup-{os.getpid()}"
++    group.mkdir()
++    bind = attr(CFG_CMD, struct.pack("!BBH", 1, 0, socket.AF_INET))
++    activate = attr(CFG_PARAMS, struct.pack("!IB", 0, 1))  # COPY_META
++    try:
++        # Enough for a small queue, but less than the default 1024-slot allowance.
++        (group / "memory.max").write_text(str(1 << 20))
++        (group / "cgroup.procs").write_text(str(os.getpid()))
++        with contextlib.closing(Queue()) as queue:
++            queue.request(NFQ_CONFIG, bind)
++            check(queue.stats()[3] == 0, "BIND enabled packet admission")
++            # Inactive sizing must not reserve capacity either.
++            queue.request(NFQ_CONFIG, u32(CFG_MAXLEN, 1 << 20))
++            queue.request(NFQ_CONFIG, u32(CFG_MAXLEN, 1))
++            (original / "cgroup.procs").write_text(str(os.getpid()))
++            try:
++                queue.configure(1 << 20, flags=F_GSO | F_FAIL_OPEN)
++            except OSError as error:
++                check(error.errno == errno.ENOMEM,
++                      f"unexpected activation refusal: {error}")
++            else:
++                raise AssertionError("activation escaped its BIND-time owner")
++            check(queue.stats()[3] == 0, "failed activation changed copy mode")
++            # A mode-only retry also verifies that failed activation kept MAXLEN.
++            queue.request(NFQ_CONFIG, activate)
++            traffic.send(64)
++            queue.collect()
++            check(len(queue.held) == 1, "small queue did not become usable")
++            queue.request(NFQ_CONFIG, attr(CFG_PARAMS, struct.pack("!IB", 0, 0)))
++            stats = queue.stats()
++            check(stats[3] == 0 and stats[2] == 1,
++                  "COPY_NONE discarded a retained packet")
++            try:
++                queue.request(NFQ_CONFIG, u32(CFG_MAXLEN, 1 << 20))
++            except OSError as error:
++                check(error.errno == errno.ENOMEM,
++                      f"unexpected COPY_NONE growth refusal: {error}")
++            else:
++                raise AssertionError("COPY_NONE disabled established accounting")
++            stats = queue.stats()
++            check(stats[3] == 0 and stats[2] == 1 and len(queue.held) == 1,
++                  "failed COPY_NONE growth changed mode or retained packet")
++            queue.request(NFQ_CONFIG, activate)
++            queue.release()
++            traffic.send(60000)
++            queue.collect()
++            check(not queue.held and queue.stats()[5] > 0,
++                  "failed activation changed the small queue limit")
++            check(not select.select([traffic.rx], [], [], 0.1)[0],
++                  "failed activation enabled FAIL_OPEN")
++
++        # BIND, final size, and mode may also arrive in one configuration message.
++        (group / "cgroup.procs").write_text(str(os.getpid()))
++        with contextlib.closing(Queue()) as queue:
++            queue.configure(1, bind=True)
++            (original / "cgroup.procs").write_text(str(os.getpid()))
++            traffic.send(64)
++            queue.collect()
++            check(len(queue.held) == 1, "bundled small-queue activation failed")
++            queue.release()
++
++        # Closing before activation must release the captured owner reference.
++        (group / "cgroup.procs").write_text(str(os.getpid()))
++        with contextlib.closing(Queue()) as queue:
++            queue.request(NFQ_CONFIG, bind)
++            (original / "cgroup.procs").write_text(str(os.getpid()))
++    finally:
++        (original / "cgroup.procs").write_text(str(os.getpid()))
++        group.rmdir()
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--cgroup")
++    parser.add_argument("--inside-netns", action="store_true", help=argparse.SUPPRESS)
++    args = parser.parse_args()
++    if not all(shutil.which(tool) for tool in ("nft", "ip", "unshare")):
++        print("1..0 # SKIP nft, ip and unshare are required")
++        return 4
++    if not args.inside_netns:
++        probe = subprocess.run(["unshare", "-n", "true"], capture_output=True)
++        if probe.returncode:
++            print("1..0 # SKIP cannot create a network namespace")
++            return 4
++        return subprocess.call(["unshare", "-n", sys.executable,
++                                str(Path(__file__).resolve()), "--inside-netns",
++                                *(["--cgroup", args.cgroup] if args.cgroup else [])])
++    subprocess.run(["ip", "link", "set", "lo", "up"], check=True)
++    with contextlib.closing(Traffic()) as traffic:
++        tests = [
++            ("byte admission and individual release", lambda: retention(traffic, False)),
++            ("byte admission and batch release", lambda: retention(traffic, True)),
++            ("occupied shrink and growth", lambda: resize(traffic)),
++            ("oversized skb and FAIL_OPEN", lambda: oversized(traffic)),
++            ("payload replacement and saved-charge release", lambda: payload_accept(traffic)),
++            ("GSO and software segmentation", lambda: segmentation(traffic)),
++            ("reservation rollback and ownership", lambda: reservation(traffic, args.cgroup)),
++            ("reservation startup and activation", lambda: reservation_startup(traffic, args.cgroup)),
++        ]
++        print(f"TAP version 13\n1..{len(tests)}", flush=True)
++        failed = False
++        for number, (name, run) in enumerate(tests, 1):
++            try:
++                skip = run()
++                suffix = f" # SKIP {skip}" if skip else ""
++                print(f"ok {number} - {name}{suffix}", flush=True)
++            except (AssertionError, OSError, TimeoutError) as error:
++                print(f"not ok {number} - {name}\n# {error}", flush=True)
++                failed = True
++        return int(failed)
++
++
++if __name__ == "__main__":
++    sys.exit(main())
 
 -- 
 2.34.1
