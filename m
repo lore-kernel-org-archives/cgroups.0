@@ -1,53 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794774460;
-	b=05HI3dkhHOo77O7CH82WAn3AR9nXZ55t5MiKdu1JvpuYuwrbY6sJ8KIxc7mSuvZaoGbd
-	 Zqfp8SCL74m0G/UFL/DsNQuWG5ELSUQeYXymQ9CHyrlMgoFb7fNDLzSXSrcm5tF+usRjN
-	 RpuTVKnZu2F2sPO6plxL2U+5qhX06coShwzMQhQlyqrDTXWqK43vnseQBXcu5WvF03R9l
-	 8BVazk0jotywDo3t00FXv0tq6LQ8wo9hy/o3XQWUu0KCt7Uyg6BpF5C8H0inkzvAPlHhV
-	 WIit47IID7ilQPeWqY6dp/mEeWkP7ogKWcCGvHN6aZxe/yIMvXklUOyzs0fqsqHr2vg==
+	t=1794775723;
+	b=W5VoyJZI8b3epZPNUAs0kbfP3ZYwjOf7hCNr9UF3JUUG334RFfHXZP7vREU9ALpTTsum
+	 SAF67a0wSTnFscndlOAMcZYf7n8fppLF5NTce6je6biv6ORsOo9eIcNmE27hioGD3aF7j
+	 k95CvvvbSN8lZkp6E3diWQ73pfw7iKAF1aMrkP5zxaI1rsg5ODS5YjdOS08q42oshgqjk
+	 bsAvX7ROJ1PywwGz/YDSO5Pm8EEtw6eB+mSAymunapItL+0lI6XTDnqKsU/EN86QkRhFL
+	 +tXeKSBlg7LW65Uy0H2IGgOTIpPk6yJafWPkuarov+kGYNXb2w+EIWwoDPvH3+W1yaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794774460;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=JsFlswogcKfgyenmiPVzu5L52ArpaL4gVErUM8f9G6Y=;
-	b=ANpkX/+8PKVO0/FdBbjPeUkUKqrn/ImRtF1OeJkXBoER0IZAB1XHURX2LiCOj8zJ059r
-	 pBAVPUWNcDCX0zdPwnNMiSbnNhKU3gpv5HHtJctagm9yUj2Upo87tgnzHpSAnvR0h7fvt
-	 tL3QZYeUTHfU87+AgrGl/F7xVv6ECV2U50YAH6wIQkRbO14pCs2WBUz3c6K2vTkoEejl6
-	 Wbm3sOfRsfE14Uj1whD9GS2pj9+erqUKJ6UhMBwImKV6gilkdpy/ruc5oQW9A/Dr3CD2K
-	 qVpTcnBV4esDWUCo3haMh4q5H3BtcqCjmCXk/3ydgtJjBZyoCMqV9BL87cJ43iwjU0w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794775723;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject;
+	bh=YXZFSoyqHDpxDPbL85Hd+JvHtAklYY9AhdF+mYJH6M4=;
+	b=xT6A3qcJBhOIb+xJ7z+oK0bMFzl7k43TgleNKWCSFGqAT8RgeDPlwNTcmA/4y0u+b4lE
+	 V80w90Y/java2aLaH/a0R/ZtzQBWN+Xyz6iz/AeSAQ7R955byn/byqKQUbrJKtXTOpI6c
+	 zZT+3uzkv2IwmoPrZ6BFejrjUFvyWBQBJaTJ2WMX/HUdp/LVfNkKZVkjuf824UJdwwcsJ
+	 MDXU07Ri13pvsld1yO06EUHVhmjSO4Po0psw6H6WVC/Z5Mp9puSjMaCEzLTwchspZfp+N
+	 lQ8V/5w9ysFqQb72au2XDHlz191PX3Wy+9VMzqBGrMzsmoLeRKL4wbnOx87V+P9OjSQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mNJdyyVD;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CL3+OQ3K;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C9EA606A886;
-	Sun, 15 Nov 2026 20:27:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BAF8606A323;
+	Sun, 15 Nov 2026 20:48:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mNJdyyVD
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 309511F000C6;
-	Sun, 15 Nov 2026 20:27:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CL3+OQ3K
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A39DA1F000C4;
+	Sun, 15 Nov 2026 20:48:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794774460;
-	bh=JsFlswogcKfgyenmiPVzu5L52ArpaL4gVErUM8f9G6Y=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=mNJdyyVDZypG5ZCbK05B9ZlLnZ+xWd+8Zo0MfEC7rv48rJSgKvm6aM3qo0qEeEK4j
-	 DyZrBDVGLnWA5iVVok+Upmvi/ZFFlNWUMcRrVkk5ADmKOdsGW59hU+xaX2iGautDQ2
-	 7tBCe2GjMzzOPqgbpfWTjdeAsCAAZe2CN3KiXBpF2r4oL1xaqq7IHywZKXmqVTElR6
-	 Rom18d4/QwbRGhQ6/C6UONIswsjydun9CJRo6vxj3pA/jnFc8j2K+unj36h0cpUepN
-	 kcCF+yywxB2AQREwusVdJAsvWxOS+RW+VvZKjEvZDfn8aN/CK/IY0tRNlWyPtmBGOa
-	 Y+o2s4Ssa6+Ug==
-Date: Sun, 15 Nov 2026 10:27:39 -1000
-Message-ID: <de0bd71d18693daf580485f859b03e85@kernel.org>
+	s=k20260515; t=1794775722;
+	bh=YXZFSoyqHDpxDPbL85Hd+JvHtAklYY9AhdF+mYJH6M4=;
+	h=Date:From:To:Cc:Subject;
+	b=CL3+OQ3Kg1EMfhonk48DtoCk4qu0AVNYDJxGCbKtLtAGloK7rDD+Or0Fh1HofXf7t
+	 I/Q3V0IbNaBqF8gG5jQhTutrZSsucOx6IemfHnEFaVqV9V+0QC2EUnvNJfoNLBJtIp
+	 zv4HUuY/M7M3HOit9QGea8+HQCzinOX3Q1VN95nRexRCva/yZqNWdHd0Cc0OXpFVjy
+	 L5q30ZnOJJdXh1UhFw0/yqcpPDOmPP0Pt3SO3250fGycYLBr9ivvZ1/V7MvZQb/fKf
+	 ov+7e9mKiSB3SEzWUPmg+ewc5bC9WTKXd/S7sgOj0s0RAY9OxdPZGY7Tm39Q6BJNS8
+	 o9RN2AZETuSlA==
+Date: Sun, 15 Nov 2026 10:48:42 -1000
+Message-ID: <7a3f079589dddf1444f015b874f1b9ed@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Ridong Chen <ridong.chen@linux.dev>
-Cc: Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Sashiko <sashiko-bot@kernel.org>, Ridong Chen <chenridong@xiaomi.com>
-Subject: Re: [PATCH for-7.4-fixes] cgroup/cpuset: Don't revive invalid partition without active CPU on hotplug
-In-Reply-To: <20261114120532.1438512-1-ridong.chen@linux.dev>
-References: <20261114120532.1438512-1-ridong.chen@linux.dev>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
+ Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [GIT PULL] cgroup: Fixes for v7.4-rc2
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -56,16 +54,76 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 
-Applied to cgroup/for-7.4-fixes with the following tags added:
+Hello,
 
-  Cc: stable@vger.kernel.org # v6.7+
-  Reviewed-by: Waiman Long <longman@redhat.com>
+The following changes since commit 518cec2def9992192291f5028edc077fb2e475e9:
 
-Thanks.
+  cgroup/cpuset: Integrate compute_partition_effective_cpumask() into compute_effective_cpumask() (2026-10-26 07:44:43 -1000)
 
---
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.4-rc2-fixes
+
+for you to fetch changes up to acec9637e03ca54bd3c3a0c1a6ad5c6dfa07c0df:
+
+  cgroup/cpuset: Don't revive invalid partition without active CPU on hotplug (2026-11-15 10:15:12 -1000)
+
+----------------------------------------------------------------
+cgroup: Fixes for v7.4-rc2
+
+- A file notification racing the file's removal could re-arm the
+  notification timer after it was shut down, corrupting the timer wheel or
+  firing on freed memory.
+
+- The v1 freezer could leave an exiting task frozen forever after its cgroup
+  was thawed or removed.
+
+- With memcg built without the block cgroup controller, memcg reclaim waited
+  on writeback and could deadlock against a filesystem freeze. memcg now
+  selects the controller.
+
+- cpuset partition state could go wrong when CPUs move between nested
+  partitions or go offline: isolated CPUs leaked or went missing, invalid
+  partitions kept exclusive CPUs or came back with no usable CPU, and
+  expanding a remote partition could fail. Separately, a forked child could
+  inherit a corrupted memory node mask.
+
+----------------------------------------------------------------
+Chen Ridong (1):
+      cpuset: add early empty cpumask check in partition_xcpus_add/del
+
+Christian Brauner (1):
+      memcg: make MEMCG select BLK_CGROUP
+
+Mani Tofigh (2):
+      cgroup: arm the notify timer only while the file exists
+      cgroup/freezer: walk exiting tasks in the v1 freezer
+
+Ridong Chen (5):
+      cgroup/cpuset: Reset partition data when an invalid partition stays invalid
+      cpuset: settle isolation state when CPUs are given back to parent
+      cpuset: generalize the validate_partition() interface
+      cgroup/cpuset: Remove redundant WARN_ON_ONCE() in remote_cpus_update()
+      cgroup/cpuset: Don't revive invalid partition without active CPU on hotplug
+
+Tejun Heo (1):
+      cgroup/freezer: Fix exiting tasks left frozen forever after rmdir
+
+Waiman Long (6):
+      cgroup/cpuset: Fix incorrect CPU accounting with parent's effective_xcpus expansion
+      cgroup/cpuset: Recompute effective cpumask in update_cpumasks_hier() after calling update_parent_effective_cpumask()
+      cgroup/cpuset: Do housekeeping check when isolated child with root parent may get more xcpus
+      selftests/cgroup: Fix "test_cpuset_prs.sh -v" failures
+      cgroup/cpuset: Protect current->mems_allowed read in cpuset_fork()
+      cgroup/cpuset: Correctly set isolated_cpus when switching partition state
+
+ init/Kconfig                                      |   1 +
+ kernel/cgroup/cgroup.c                            |  22 +-
+ kernel/cgroup/cpuset.c                            | 316 +++++++++++-----------
+ kernel/cgroup/legacy_freezer.c                    |  40 ++-
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh |  46 +++-
+ 5 files changed, 251 insertions(+), 174 deletions(-)
+
+-- 
 tejun
