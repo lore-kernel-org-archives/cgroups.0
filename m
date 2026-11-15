@@ -1,80 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
 	t=1794782085;
-	b=BMkz3ZC2IDWnmcU/DcEAZxTg7eoPlRfpeiF/qD+WA7cMJBoSHyqf8bDeu4TnXk+YzTDT
-	 0Gzo0mFcZCox3VImBrl1R4LOtn+270N0m2q2VYyAGnFyCjx3MATHuWfUrarcMg4N8UeKP
-	 katMriqE/afBKLSrb1v6vJ70/Jt3QVMt+1IliI/3/mS3EvTQestvJxi2N8k81kSrl5m21
-	 8gaYuKRTOmAZ9y0uHaHJLT+7yhAi4w8uaZnbAsPMvf91GJ5NurlTC3DB7omVVzpCvOgN6
-	 g0I2l3CHsiZfZdxgcGEl+x1lGl+yYq24XNaVO+EeBSFejYdEKVZhIpKesI5FSP05aOQ==
+	b=UGSX2NrmfZWnsgiM/9WXXkyTUij9PLC7dBuQHqWjJKI5S39rat/uuPANEQNQDrztGlcR
+	 sLpHUAP8pQCbDznDmsbUixm7XNGM9f1j4ZHouziErUHpeptKnIJelcd4GzsuH5Eg0RS7c
+	 0b7H9MHn9VNPZW/uri3sZmd29hXiH2eBEzsbvpV5dsJ0lPZX/XyZnqrk8bIqDCQS/Jhl0
+	 cS0zySAnhq472k8cVoBFoy7Gx0wYdhWsfOp9BQ/OMnGduUorK9kD03bAGRuvytU7N9+qg
+	 WVWb4gKV/NEv+wEvXcO4UAXHYqPiFAzI4wdF/7v22ttDuGUIXZEj8T8SDPGbfrIIQ8g==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794782085;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=qX++kshPMnxpII2vM9lO98uyzZIcUFVVXMNeaZycXHY=;
-	b=f+tocq61+g+qyHfoNrLRYxla9jGg6QZ2rOF6lC5nbIGK+NbzVPE4e5nGbeeuCBGKXYjL
-	 z/8b2bPQShkQXXV18uTtQ2hvJKO3W47lkdbXirYW5FuOnd/EO9OeSoBxfXO7lz648wzUe
-	 AintFNTH6wG53kBUNK7vOh8oWvl82+hEp3BOvZO7O/HnPWg6e8Vt7px09hKWPZ/e3cd/o
-	 qVZp9xBK7f/bM+QKvha95tvSejFzEw8xMZ6C+MK0lTo5eBmkb9E5rFgVpazsN0qYiHA4m
-	 wHa4orJH/cHyxKZ9DTU/NdFY5vstv9NUgBcreUy6MbotLZCOD17pJgeLPLZzrVsUsVg==
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=inUC0SkyqCWXT74KU7Ifm0uEpFiY4HdTsNKZBYvwNYA=;
+	b=3oSQ91ugakDZe5ZzD0aPNO6vbNdf/FdHKQciOWeGrourb5ur6nh0soEBV4tpIMkGU5Uv
+	 D7ZeYYVqrNbSBV0kUDOtjXiLpkuQB7QlovvnwfcHwLs4uKTEIoVx+QGrblwc5XKSlQwRm
+	 v4gMTj4xfFLIxvcCYox4CQKMnulL/s+JIOPlsIgFfynRCtLWKlBTpuorW/rfN/Ce0MHCv
+	 bH5aUpwuR6Zfa832mccHqpq6Cwc07O5LvClNsLLL6aI74QO8AVrI1lceMuWbM2tU9Lo8O
+	 YVc7P4lHkUxwcvR+yurvJQv+OU2p9KBCmF8a7wCVWWpBM7EtRakSplwVHG3bIXydHOw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NMaFn8mI;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Kd6C8JiL;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49325606A333;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA952606A33E;
 	Sun, 15 Nov 2026 22:34:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NMaFn8mI
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=Kd6C8JiL
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
 	t=1794782085;
-	b=15zDAePWuwYtU+UkKsl8WM6SljIqVDzTlxPeasB6uavCXSGZ356WZL+uB+sa92zs4mB3
-	 oivn8GvUKn4ueSDXH/a/c5Od+9c/IYKo+N/tQaBzJo74A1lTRMMwqnJ2COyJSVCSsdVIU
-	 T9xb+iVMIITEcAu0cWVRVvQBCiTGkX4QcFicRe+LJjrLvQfc44ZQ2KxavU+aOUpzSnfOH
-	 7sLuVssom+dNyMnyXVoDNuqMWGo01kWH8Rvn3tl98z6LzsV/yame5zEkr/JfUb++iLDOm
-	 vlNTD6lB7RLtL55q6Tn3UtAr7+3+c2hpyP5NXOui2o84/XbsyVqXKwU6X0Od3JyKHEw==
+	b=ZTaNg5ObAEkXF1v2+25qroM6TeDPPsxgdb9CTnNPbNWdXvnGui2mboTNoRD51w69whQS
+	 4fJU6BmW7fqdcGAyiM7VUFWgMDclY+vaoB7NDvCb2VzHUSmoWzgpQtJTCV1TGSMSC9HHI
+	 PpUrf8H7KUi8C/G9EsCTXqyzj5Y2ypXQt7Gk2vtZuWNX8upin2yMQw4kWC1kE9GEI3wyL
+	 Kv0nkHmQW9c8l3xPDJ0yq4XjxBvuADwcos3D9xOy0o9J37HTpcV61c7KDw3+8MtBnx8oi
+	 GYj6lGhGxMKYN2SXnXUwDEVfEqrEbnqYLwrUkyjwLpH4B4fJSqTgOsyAgLOIQ1EGoFA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
 	c=relaxed/relaxed; t=1794782085;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=qX++kshPMnxpII2vM9lO98uyzZIcUFVVXMNeaZycXHY=;
-	b=sWBp+J8b3P27PnN9sdQ7otF/2AMsLAVCuOlCdgXUACLjK0amsFJGn0Xmt7/6lvHBn+0Q
-	 Oh5UrJrg/OpZz8Yg1Yu7LTh1GX+kpyTD1FM9PvqPUQ2gfFztYHTJh9+JQSoNUIisTzM+4
-	 CpkK+55l63MifCQSmbgTWhqfGcNQd0XjrRyQlxwBlYMpsvK69NMU5FDfCRi4fcd7GlfeU
-	 4Sf0bixZcvNAQJu/LGEZgqu+pLmD+pjauFty0WLwLLbd75wo+iPmkKytNsGIOFz8bXyrD
-	 eL4U2A7kP7uS7OsCSPtyG0olc+jX2m3KMLEvvdxLWZ7LEXb2yBra0w+tbxWc/6FM6gw==
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=inUC0SkyqCWXT74KU7Ifm0uEpFiY4HdTsNKZBYvwNYA=;
+	b=T+WVf8CUc8eIU507U8O1yfZn+MUCg2AHDzz2mAe/GAAHlQX18c8bMv6q4v+er4XzP0sN
+	 TL+oVQ2DbmIrnW/R3mAQlvtx5RYUrighQjv6lrdAdqzqidOiZrm8u7oMu/u8U6MeuZnCx
+	 09of/28g1TJvibUlQ6zABMFRSUxWJ/aBKA7ahjUWK1rzNpCPBT9P3+DwXtmp6nqN0cUWP
+	 +XFf82d0tnX8S40xqnj2afNkcwV6m61T0qZtBSUQFjgi4p4hr+83HGzo07xe4AmNRO4cR
+	 JQnQG60Ricp6yVPmmpkzrov6+g7G2z+P1+a39T+rhrDitWeoA6POAy3XqBjhQjNpMXA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id A22901F000C4;
+	by smtp.kernel.org (Postfix) with ESMTPS id F0F151F000C7;
 	Sun, 15 Nov 2026 22:34:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1794782085;
-	bh=qX++kshPMnxpII2vM9lO98uyzZIcUFVVXMNeaZycXHY=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=NMaFn8mI3FE7cbZBbnPbLxgm5GGg2E/sZm/pb2BVO5qT0rgKMwQoLFKJMh2b7yH3M
-	 vCGh5xLW2xN838qX28AuP4USXwPy1NqT4v94B6bzFPFLVyVt26uH8uIQQhl1MFtEOn
-	 1OD2Mxjx3qpA/w881XzX/rUfUBlWna7STXf1NtoZLhQ3dVWH2VuxuhIzL8gQffZU2A
-	 FigwMH9PmM0XZ3MJjIk9XVCtNsB/aS7jqr2N4M94vFdclYYGGSHht1toTECK3Wtl15
-	 ghzibfOtcZQAltWU1pMsCjFN+oaSAzRY2ISmkSAwP+x49WOui8TPpeNBZp3Kc+XQoG
-	 hkShF3tUYoFhg==
+	bh=inUC0SkyqCWXT74KU7Ifm0uEpFiY4HdTsNKZBYvwNYA=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=Kd6C8JiLlQa/rOQOCE5bgkxio+pFPagJ/70dwKul6SA6cU+wCFKVUfH1kxVF8QSW5
+	 tTZy1HbfY2TUCf9ok76oT4XW4B9uS+0Z/cjPquVyxVHSc8WP0k8qrwnG4HtoQHCPMF
+	 tT/MBI5gvohWzfmV7ApSIHmxJIesW/Eg97nhp1CU4Sfq9cYtbwxxtqvOb13RzT50yN
+	 LXHy14isE9J1/CpjNOdH9O6am42Tnzsl64wlyTGwuzTvd/OIqWMYcMxifwfYoGoXd0
+	 jzafC73OOa2IoVtEpOebQTZ37xgpGR/G80E3C5UJaU4w7JWr6EhQbvYCDWxh6ociQK
+	 MCjYGb40qz2xA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 3109E4A21F;
+	by lkml.kernel.org (Postfix) with ESMTP id 78EEE4A249;
 	Sun, 15 Nov 2026 22:34:43 +0000 (UTC)
 From: Alireza Asgari via B4 Relay <devnull+alireza.asgari.net@kernel.org>
-Subject: [PATCH RFC nf-next 0/9] netfilter: nfqueue: account queued memory
- and reserve capacity
-Date: Sun, 15 Nov 2026 22:34:40 +0000
-Message-Id: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
+Date: Sun, 15 Nov 2026 22:34:43 +0000
+Subject: [PATCH RFC nf-next 3/9] memcg: add KUnit coverage for memory.high
+ accounting
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -85,12 +84,9 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAIAz+moC/zWNywrCMBBFf6XM2oGm1aJuBT/ArbhI0kkboRPNQ
- yql/26iuDz3wD0LBPKWAhyrBTy9bLCOM4hNBXqUPBDaPjM0ddMJIXaotsjmmSgRTjQ5/0aptUs
- cLQ/YdC3Ve2Gobw+QLx6ejJ2/91e4nE9lY4NMc4Tbz4ek7qRjaRSrZCBUXrIey/RPeaOxKFjXD
- xaR2OyzAAAA
-X-Change-ID: 20261115-b4-nfqueue-memory-accounting-263e081fed39
+Message-Id: <20261115-b4-nfqueue-memory-accounting-v1-3-b9cc30819997@asgari.net>
+References: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
+In-Reply-To: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
 To: netfilter-devel@vger.kernel.org, linux-mm@kvack.org
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
  Roman Gushchin <roman.gushchin@linux.dev>, 
@@ -105,258 +101,244 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
  cgroups@vger.kernel.org, netdev@vger.kernel.org, 
  linux-kselftest@vger.kernel.org, Alireza Asgari <alireza@asgari.net>
 X-Mailer: b4 0.15.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1794782082; l=13967;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1794782082; l=7275;
  i=alireza@asgari.net; s=alireza-kernel; h=from:subject:message-id;
- bh=sVOSxPCzcEKroZLT1ZB9+sb2ybkatBgpO2arBKaZ8+4=;
- b=3uQlX/uMIet9NBQ6XX0JnEs3Zgeg5QXNzvkTvykx/9+hCP5948PgDFqlXEVntuBqz6pJYPlEP
- acswL1OybwABc3DPr1ipaoEEyU/NyteoCbzVeFpocgu7jl7TcF+3TGA
+ bh=Z6QbxMTafWb669wa4rTvonBSA708LhbpJBhhLrjki24=;
+ b=CTVYi/Mx/6tdBxGj1tMEaVxZ4E6RcSaznHu6ApJh54WF1KH1hRJxcddFgzH1qWKDbzNfOcV30
+ v0PQd775resDas0IBE0A8BwvOYL7y6bK7g1wh1mSmjVRgTtqEV3pkrZ
 X-Developer-Key: i=alireza@asgari.net; a=ed25519;
  pk=wuQ0/M69FqoVnrCMUJ13EQCwrCwVjCrtz75k15vW8tw=
 X-Endpoint-Received: by B4 Relay for alireza@asgari.net/alireza-kernel with
  auth_id=1055
 X-Original-From: Alireza Asgari <alireza@asgari.net>
 Reply-To: alireza@asgari.net
+Content-Transfer-Encoding: 7bit
 
-Hi,
+From: Alireza Asgari <alireza@asgari.net>
 
-NFQUEUE limits pending packets by count, although packet buffers can have
-substantially different memory costs. Large skbs and GSO aggregates can
-therefore consume much more memory than the packet-count limit suggests.
-Independent queue limits also allow userspace to multiply the available
-capacity by creating many queues.
+Exercise deferred page-debt saturation and the bounded delay arithmetic
+without requiring very large memory allocations.
 
-This series implements the approach suggested by Florian Westphal in the
-NFQUEUE memory-exhaustion discussion [1]: add a per-queue byte allowance
-and reserve queue capacity against a memory cgroup. His message proposed
-the overall approach; the ownership, reservation interface, and failure
-policies below are implementation choices proposed for discussion in this
-RFC.
+The debt test calls the real charge path using an isolated page-counter
+fixture, small GFP_NOWAIT charges, and seeded debt values. It restores
+task state and fixture counters before checking results. The arithmetic
+cases call the internal helpers directly, including one-page debt and
+large numerators whose scaled product would overflow u64.
 
-The byte allowance is derived from the existing maximum queue length:
+Keep this coverage independent of the capacity-reservation interface so
+the generic MM fixes can be reviewed and tested separately. The tests
+require built-in KUnit and memcg support on either word size.
 
-    (u64)queue_maxlen * (SKB_DATA_ALIGN(sizeof(struct sk_buff)) + 2048)
-
-The 2048-byte contribution represents a nominal complete skb head,
-including its shared-info area. The shell contribution follows skb
-accounting alignment. The allowance is pooled across the queue, and the
-existing packet-count limit remains enforced. Large skbs can exhaust the
-byte allowance before the packet limit is reached. Existing drop and
-FAIL_OPEN dispositions are preserved. No new userspace configuration
-attribute is introduced.
-
-The nominal head size is a policy choice, not a bound on ordinary receive
-buffers. For example, mvneta can build a small packet's skb around a whole
-page. On a 4 KiB-page system its initial cost is the aligned shell plus
-4096 bytes, so it cannot enter an empty length-one queue under this policy.
-With FAIL_OPEN disabled it is dropped; with FAIL_OPEN enabled it bypasses
-that queue daemon's inspection and continues through reinjection. Later
-Netfilter processing can still drop it. An independently configurable byte
-limit could accommodate such buffers without increasing packet depth, but
-the default for applications that omit it would also need agreement.
-
-Each admitted entry saves its skb's admission-time truesize. That charge
-remains through detachment from the pending list, including batch verdicts,
-and is released when NFQUEUE reinjection processing begins. Failed
-notification delivery rolls back admission and its charge. This ledger
-measures saved accounting costs, rather than every allocation associated
-with a packet; transient allocations and later payload expansion are
-outside that measure.
-
-The local byte limit applies in every network namespace. Outside the
-initial network namespace, BIND captures an accounting owner from the
-configuring task. The queue initially uses COPY_NONE and reserves no
-capacity. Userspace can set its packet limit before enabling COPY_META or
-COPY_PACKET; that first activation obtains the complete reservation before
-enabling admission. A failed activation leaves the queue's prior limits,
-mode, and flags intact. This allows a separate BIND, smaller-limit, and
-enable sequence without first paying for the default queue size.
-
-A BIND that includes configuration prepares the new instance privately,
-including any activation reservation, and publishes it only on success.
-Failed creation releases the private instance without exposing an inactive
-queue to packet readers. In particular, a rule that bypasses an absent
-queue cannot encounter a temporarily visible COPY_NONE queue while its
-bundled creation is obtaining capacity. Standalone BIND still publishes an
-inactive queue with its accounting owner captured.
-
-Once activated, the queue retains its reservation policy even if userspace
-later selects COPY_NONE. Resizing retains the BIND-time owner even if the
-configuring task moves cgroups, subject to normal cgroup reparenting. The
-charge makes queues owned within a constrained cgroup compete for its
-budget. Reservations consume budget even for empty activated queues; they
-do not preallocate packet storage or replace ordinary allocation charges.
-Reservations captured with root ownership or disabled kmem accounting are
-uncharged. A finite aggregate ceiling requires a constraining memory-cgroup
-limit.
-
-Charged capacity growth requires a 64-bit kernel. On 32-bit kernels,
-in-range positive growth with a captured accounting owner fails with
--EOPNOTSUPP before charging or publishing a new configuration. Inactive
-BIND and limit configuration remain possible; activating an affected queue
-or increasing its existing reservation fails. Bundling activation into BIND
-can therefore fail as well. The feature does not silently omit the charge.
-Initial-network-namespace queues and reservations captured without a
-chargeable owner remain supported. This restriction avoids making the
-shared 32-bit page counters' arithmetic limits reachable with large virtual
-charges; a per-queue maximum would not bound the aggregate hierarchy.
-
-Using ordinary memcg charges means unused capacity contributes to
-memory.current, kernel-memory statistics, and peak accounting. It can
-affect configured memory.min/memory.low protection, memory.high pressure,
-and the budget available to other allocations. Precharging makes capacity
-refusal visible during configuration and avoids a new memcg charge
-operation at packet admission. Charging retained bytes on admission instead
-would avoid paying for unused capacity, but would move charging work and
-possible refusal into the packet path. Neither approach reserves physical
-memory or guarantees that later allocations succeed.
-
-Increasing capacity obtains the additional reservation before publishing
-the new limit. Failure leaves the existing configuration intact. Shrinking
-preserves queued packets and retains page-rounded backing for the greater
-of the configured allowance and outstanding saved charges. Excess capacity
-is refunded as entries drain, with refund work serialized against resizing
-and coordinated with queue destruction. Refunds settle the actual memory
-counters as well as statistics, including charges inherited by root after
-an owner's removal. On supported kernels, later growth under root ownership
-remains uncharged and is excluded from those refunds.
-
-The series also saturates the task's deferred memory.high page counter
-instead of letting repeated nonblocking charges wrap it to zero. Large
-virtual reservations can accumulate that debt before returning to userspace
-without allocating corresponding physical pages. Saturation preserves
-pending pressure handling; it does not change the owner-selection policy.
-
-A separate MM prerequisite makes the memory.high delay calculation safe
-across its scaling and multiplication steps, including consumption of the
-deferred page debt. It corrects overflow and premature 32-bit truncation
-while preserving the intended fixed-point rounding and previous
-non-overflowing final delay results on 64-bit kernels. Large results remain
-bounded at the existing maximum delay. This correction applies on both
-32-bit and 64-bit kernels; it does not remove the reservation interface's
-separate 64-bit restriction.
-
-The arithmetic prerequisite overlaps Zhang Jiao's October submission [2]
-and the earlier report from Song Hu [3]. Its description links the
-associated MM review. The implementation here also covers the scaled
-numerator and debt multiplication, and preserves sub-batch delay results.
-The two generic MM fixes and their tests are separated from the reservation
-interface for independent review; the arithmetic patch is an alternative
-for discussion, not a revision of Zhang's submission.
-
-The series introduces a bulk page-reservation interface in the memory
-controller, with a referenced owner, transactional resizing, and module
-support. Reservation growth uses GFP_NOWAIT and rejects PF_MEMALLOC growth,
-avoiding direct reclaim, memcg OOM invocation, and forced overcharging.
-This avoids repeated reclaim while queue configuration is serialized, but
-permits refusal despite reclaimable memory. Deferred memory.high handling
-remains possible, with an existing ownership limitation: the charge path
-records deferred work on the current task, and the later handler selects
-the cgroup from that task's memory context. If a queue bound in cgroup A is
-enlarged after the task moves to sibling B, A is charged but deferred
-handling can target B. A's memory.max remains enforced; handling A's
-memory.high excess is not guaranteed by this path. The interface documents
-this best-effort behavior rather than providing owner-aware pressure
-handling on the stated base.
-
-Shakeel Butt's queued memory.high enforcement series [4] changes this
-behavior: remote charges schedule reclaim against the charged hierarchy
-through high_work. It does not guarantee throttling of the configuring
-task, and a fast charger can outrun that worker. That work is not included
-in this nf-next base or attributed to this series. Its interaction with
-reservations is assessed separately from the base tests.
-
-I am posting this as RFC particularly for feedback on:
-
-1. Whether packet depth and byte allowance should be independently
-   configurable, and what default should apply to existing applications
-   that only set NFQA_CFG_QUEUE_MAXLEN. Is the proposed 2 KiB head policy
-   acceptable given its full-page-buffer and FAIL_OPEN consequences?
-
-2. Whether configured capacity should consume ordinary memcg usage, or
-   whether retained bytes should be charged at admission instead. Are the
-   BIND-time owner and initial-network-namespace exception appropriate?
-
-3. Whether the proposed bulk reservation interface is an appropriate MM
-   interface for this use, including the explicit restriction of charged
-   growth to 64-bit kernels. Is this compatibility tradeoff acceptable for
-   the initial interface?
-
-4. Whether non-reclaiming reservation growth is the desired failure policy.
-
-5. Whether the queued MM work's best-effort background reclaim is
-   sufficient for saved-owner capacity reservations, or stronger pressure
-   semantics are needed. On the stated base, the existing owner mismatch
-   described above remains.
-
-The patched kernel passed three KUnit suites and the cgroup-enabled network
-selftest in an x86-64 guest with two CPUs online, KASAN, and lockdep.
-Coverage includes deferred-high saturation and delay arithmetic, creation
-publication ordering, separate and bundled activation, refused activation,
-retained accounting after COPY_NONE, actual root-counter refunds,
-page-backed skbs, payload replacement, and bounded concurrent resizing,
-verdicts, teardown, refunds, and queue reuse. The applicable KUnit cases
-also passed on x86-32, with two charged-growth cases skipped as expected.
-The delay tests exercise the production helpers; they do not reproduce the
-complete reclaim-and-throttle path.
-
-A separate probe requiring owner-aware memory.high handling failed: after
-the task moved from the owner to its original/root cgroup, growth still
-charged the owner but produced no new owner high events. This reproduces
-the limitation described above, without establishing a bypass of
-memory.max.
-
-In a separate compatibility checkout with Shakeel's queued changes, that
-probe observed an owner high event after migration. The growth operation
-still returned promptly, consistent with background reclaim rather than
-configuring-task throttling. That checkout also incorporates Pablo Neira
-Ayuso's pending NFQUEUE reinjection series, with saved-charge releases
-adapted to its terminal paths. Its KUnit and network tests passed. These
-results concern the dependency integration, not the stated nf-next base.
-
-Receive-driver/GRO behavior and throughput effects have not been evaluated.
-Feedback is particularly requested on the allowance policy and reservation
-interface, including the full-page-buffer, architecture-support, and
-saved-owner memory.high behavior described above.
-
-AI coding tools assisted with investigation, implementation, test
-development, review, and drafting this RFC. I take responsibility for the
-submitted changes and their technical justification.
-
-[1] https://lists.openwall.net/netdev/2026/11/06/366
-[2] https://lore.kernel.org/20261029073857.974-1-zhangjiao2@cmss.chinamobile.com/
-[3] https://lore.kernel.org/20260818012115.65838-1-husong@kylinos.cn/
-[4] https://lore.kernel.org/20261030205418.341214-1-shakeel.butt@linux.dev/
-
+Signed-off-by: Alireza Asgari <alireza@asgari.net>
 ---
-Alireza Asgari (9):
-      memcg: saturate deferred memory.high page debt
-      memcg: bound memory.high delay arithmetic
-      memcg: add KUnit coverage for memory.high accounting
-      memcg: add an owner-bound capacity reservation interface
-      memcg: test capacity reservation rollback and refunds
-      netfilter: nfqueue: account saved skb bytes per queue
-      netfilter: nfqueue: reserve capacity against the bound owner
-      netfilter: nfqueue: add KUnit memory accounting coverage
-      selftests: netfilter: exercise nfqueue memory accounting
+ mm/Kconfig                |  10 +++
+ mm/memcontrol.c           |   4 ++
+ mm/memcontrol_high_test.c | 162 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 176 insertions(+)
 
- include/linux/memcontrol.h                         |  35 ++
- include/net/netfilter/nf_queue.h                   |   1 +
- mm/Kconfig                                         |  21 +
- mm/memcontrol.c                                    | 216 +++++++++-
- mm/memcontrol_high_test.c                          | 162 ++++++++
- mm/memcontrol_reservation_test.c                   | 232 +++++++++++
- net/netfilter/Kconfig                              |  10 +
- net/netfilter/nfnetlink_queue.c                    | 281 +++++++++----
- net/netfilter/nfnetlink_queue_test.c               | 338 +++++++++++++++
- tools/testing/selftests/net/netfilter/Makefile     |   1 +
- .../selftests/net/netfilter/nft_queue_memory.py    | 460 +++++++++++++++++++++
- 11 files changed, 1677 insertions(+), 80 deletions(-)
----
-base-commit: 4810f60b9f0e9111cd0dcbfd2ca7a7c591a57464
-change-id: 20261115-b4-nfqueue-memory-accounting-263e081fed39
+diff --git a/mm/Kconfig b/mm/Kconfig
+index afff1b25b543..dd763d3d0e36 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -1531,6 +1531,16 @@ config PTDUMP
+ 	bool
+ 
+ 
++config MEMCG_HIGH_KUNIT_TEST
++	bool "Memory cgroup high limit tests" if !KUNIT_ALL_TESTS
++	depends on MEMCG && KUNIT=y
++	default KUNIT_ALL_TESTS
++	help
++	  Test deferred memory.high debt saturation through the real charging
++	  path with isolated counters and small charges. Delay tests cover
++	  fixed-point rounding and arithmetic bounds on 32-bit and 64-bit
++	  kernels. Say N unless developing memory cgroup high limit handling.
++
+ source "mm/damon/Kconfig"
+ 
+ endmenu
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 665ce8dfb9ec..446b60ca6aef 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6532,3 +6532,7 @@ void mem_cgroup_show_protected_memory(struct mem_cgroup *memcg)
+ 		K(atomic_long_read(&memcg->memory.children_min_usage)),
+ 		K(atomic_long_read(&memcg->memory.children_low_usage)));
+ }
++
++#if IS_ENABLED(CONFIG_MEMCG_HIGH_KUNIT_TEST)
++#include "memcontrol_high_test.c"
++#endif
+diff --git a/mm/memcontrol_high_test.c b/mm/memcontrol_high_test.c
+new file mode 100644
+index 000000000000..bf792d398021
+--- /dev/null
++++ b/mm/memcontrol_high_test.c
+@@ -0,0 +1,162 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++
++#include <kunit/test.h>
++
++static void memcg_high_test_restore_counter(struct page_counter *counter,
++					    unsigned long before)
++{
++	unsigned long after = page_counter_read(counter);
++
++	if (after > before)
++		page_counter_uncharge(counter, after - before);
++	else if (after < before)
++		page_counter_charge(counter, before - after);
++}
++
++static void memcg_high_test_debt(struct kunit *test)
++{
++	const unsigned int nr_pages = MEMCG_CHARGE_BATCH + 1;
++	const struct {
++		unsigned int before;
++		unsigned int expected;
++	} cases[] = {
++		{ 0, nr_pages },
++		{ UINT_MAX - nr_pages, UINT_MAX },
++		{ UINT_MAX - nr_pages + 1, UINT_MAX },
++		{ UINT_MAX, UINT_MAX },
++	};
++	struct mem_cgroup *memcg;
++	unsigned int i;
++
++	memcg = kunit_kzalloc(test, sizeof(*memcg), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, memcg);
++	page_counter_init(&memcg->memory, NULL, false);
++	page_counter_init(&memcg->memsw, NULL, false);
++	page_counter_init(&memcg->swap, NULL, false);
++	page_counter_set_high(&memcg->memory, 0);
++	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
++
++	for (i = 0; i < ARRAY_SIZE(cases); i++) {
++		unsigned int saved = current->memcg_nr_pages_over_high;
++		bool notify = test_thread_flag(TIF_NOTIFY_RESUME);
++		unsigned int debt;
++		bool notified;
++		int ret;
++
++		/*
++		 * Exceed the stock batch to use the real counter charge path
++		 * without leaving a reference to this isolated fixture in stock.
++		 * GFP_NOWAIT defers reclaim until return to userspace.
++		 */
++		current->memcg_nr_pages_over_high = cases[i].before;
++		ret = try_charge_memcg(memcg, GFP_NOWAIT, nr_pages);
++		debt = current->memcg_nr_pages_over_high;
++		notified = test_thread_flag(TIF_NOTIFY_RESUME);
++
++		/* Restore the test task before any assertion can abort the case. */
++		current->memcg_nr_pages_over_high = saved;
++		if (!notify)
++			clear_thread_flag(TIF_NOTIFY_RESUME);
++		memcg_high_test_restore_counter(&memcg->memory, 0);
++		if (do_memsw_account())
++			memcg_high_test_restore_counter(&memcg->memsw, 0);
++
++		KUNIT_EXPECT_EQ_MSG(test, ret, 0, "case %u", i);
++		KUNIT_EXPECT_EQ_MSG(test, debt, cases[i].expected, "case %u",
++				    i);
++		KUNIT_EXPECT_TRUE_MSG(test, notified, "case %u", i);
++	}
++}
++
++static void memcg_high_test_overage(struct kunit *test)
++{
++	const unsigned long large_high = 1UL << (BITS_PER_LONG - 3);
++	const struct {
++		unsigned long usage;
++		unsigned long high;
++		u64 expected;
++	} cases[] = {
++		{ 0, 0, 0 },
++		{ 1, 0, 0 },
++		{ 2, 0, 1ULL << 20 },
++		{ 99, 100, 0 },
++		{ 100, 100, 0 },
++		{ 110, 100, 104857 },
++		{ 150, 100, 524288 },
++		{ 299, 100, 2086666 },
++		{ 300, 100, 2ULL << 20 },
++		{ 301, 100, 2ULL << 20 },
++		{ ULONG_MAX, 1, 2ULL << 20 },
++		{ ULONG_MAX, ULONG_MAX - 1, 0 },
++		/* A modest ratio whose scaled numerator exceeds u64 on 64-bit. */
++		{ large_high + large_high / 16, large_high, 1ULL << 16 },
++	};
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(cases); i++)
++		KUNIT_EXPECT_EQ_MSG(
++			test, calculate_overage(cases[i].usage, cases[i].high),
++			cases[i].expected, "case %u", i);
++}
++
++static void memcg_high_test_delay(struct kunit *test)
++{
++	const unsigned long cap = MEMCG_MAX_HIGH_DELAY_JIFFIES;
++	const struct {
++		unsigned int pages;
++		u64 overage;
++		unsigned long expected;
++	} cases[] = {
++		{ 0, 0, 0 },
++		{ 0, U64_MAX, 0 },
++		{ UINT_MAX, 0, 0 },
++		{ 1, 1ULL << 16, (HZ / 4) / 64 },
++		{ 63, 1ULL << 16, (HZ / 4) * 63 / 64 },
++		{ 64, 1ULL << 16, HZ / 4 },
++		{ 65, 1ULL << 16, (HZ / 4) * 65 / 64 },
++		{ UINT_MAX, 1ULL << 16, cap },
++		{ 64, 1ULL << 17, HZ },
++		/* Apply debt scaling before the cap, including sub-batch debt. */
++		{ 1, 1ULL << 18, HZ / 16 },
++		{ 1, 1ULL << 20, HZ },
++		{ 2, 1ULL << 20, cap },
++		{ 1, 2ULL << 20, cap },
++		{ 64, 1ULL << 32, cap },
++		{ UINT_MAX, 1ULL << 32, cap },
++		{ 1, U64_MAX, cap },
++		{ UINT_MAX, U64_MAX, cap },
++	};
++	unsigned long delay;
++	unsigned int i;
++
++	for (i = 0; i < ARRAY_SIZE(cases); i++)
++		KUNIT_EXPECT_EQ_MSG(test,
++				    calculate_high_delay(cases[i].pages,
++							 cases[i].overage),
++				    cases[i].expected, "case %u", i);
++
++	/* 32 GiB over an 8 MiB high limit, expressed in 4 KiB pages. */
++	KUNIT_EXPECT_EQ(
++		test,
++		calculate_high_delay(64, calculate_overage((1UL << 23) + 2048,
++							   2048)),
++		cap);
++	/* Both memory and swap contributions are bounded before addition. */
++	delay = calculate_high_delay(UINT_MAX, U64_MAX);
++	delay += calculate_high_delay(UINT_MAX, U64_MAX);
++	KUNIT_EXPECT_EQ(test, delay, 2 * cap);
++}
++
++static struct kunit_case memcg_high_test_cases[] = {
++	KUNIT_CASE(memcg_high_test_debt),
++	KUNIT_CASE(memcg_high_test_overage),
++	KUNIT_CASE(memcg_high_test_delay),
++	{}
++};
++
++static struct kunit_suite memcg_high_test_suite = {
++	.name = "memcg_high",
++	.test_cases = memcg_high_test_cases,
++};
++
++kunit_test_suite(memcg_high_test_suite);
 
-Best regards,
---  
-Alireza Asgari <alireza@asgari.net>
+-- 
+2.34.1
 
 
