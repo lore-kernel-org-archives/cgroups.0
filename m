@@ -1,51 +1,63 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794775723;
-	b=W5VoyJZI8b3epZPNUAs0kbfP3ZYwjOf7hCNr9UF3JUUG334RFfHXZP7vREU9ALpTTsum
-	 SAF67a0wSTnFscndlOAMcZYf7n8fppLF5NTce6je6biv6ORsOo9eIcNmE27hioGD3aF7j
-	 k95CvvvbSN8lZkp6E3diWQ73pfw7iKAF1aMrkP5zxaI1rsg5ODS5YjdOS08q42oshgqjk
-	 bsAvX7ROJ1PywwGz/YDSO5Pm8EEtw6eB+mSAymunapItL+0lI6XTDnqKsU/EN86QkRhFL
-	 +tXeKSBlg7LW65Uy0H2IGgOTIpPk6yJafWPkuarov+kGYNXb2w+EIWwoDPvH3+W1yaQ==
+	t=1794780728;
+	b=ArPRbO/AG9k9TUZWjdhpSX9Uv9b/3NRQ5SpT0zzAQz/DVThUhL2eFgxsGUiZfoc4HuhW
+	 siDO039QPcbvLjCZQqRRmofo2fZ/VVKpJRsamJXe2jILVL2L+CWlRDXeGJOVupWfVYgrF
+	 417VWPspxnKldGh4/o3TG1ndSKURu2/KPcrBEdpbsWrbP+FCXE7MkexQQilQU0LGXpsyi
+	 mmRfxjJCYe8EB6Zhe4djwoLNtHk8DONO6h5zeyEDEInoD+SCWGG3A3L7R4jOb73Tu4ytO
+	 t2eePRqjGf0sAfI/k+7JgsTVJf5Rc4PoagIDvgphHuc0VBVn3kUyHzwzrOVMDB9kwiQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794775723;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject;
-	bh=YXZFSoyqHDpxDPbL85Hd+JvHtAklYY9AhdF+mYJH6M4=;
-	b=xT6A3qcJBhOIb+xJ7z+oK0bMFzl7k43TgleNKWCSFGqAT8RgeDPlwNTcmA/4y0u+b4lE
-	 V80w90Y/java2aLaH/a0R/ZtzQBWN+Xyz6iz/AeSAQ7R955byn/byqKQUbrJKtXTOpI6c
-	 zZT+3uzkv2IwmoPrZ6BFejrjUFvyWBQBJaTJ2WMX/HUdp/LVfNkKZVkjuf824UJdwwcsJ
-	 MDXU07Ri13pvsld1yO06EUHVhmjSO4Po0psw6H6WVC/Z5Mp9puSjMaCEzLTwchspZfp+N
-	 lQ8V/5w9ysFqQb72au2XDHlz191PX3Wy+9VMzqBGrMzsmoLeRKL4wbnOx87V+P9OjSQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794780728;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
+	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=q9s42YVPhc56VTV+G1TekC9EyggoNH/5JmNGm6Xx0OY=;
+	b=G3NlcQpPNgauL0GS5F2pFxEtsGmPB+LqiVlzu7kYfwpExO1OtVu9M4O+XKW3+lcWOqST
+	 5mbbOHpG+Lnl0l77pFK/ZBlcbpFbPvjwL0HVwwZ0MUKreobC6vHi3k3AOkgbp6tdbXvYw
+	 zc36R7UT1gCrpgYUJjv8s/JXUgZikIXwIrsqj0di9ApGALpr6QJHGzp2ZIndN4n1Y78qI
+	 l+fEveVqsON2uO8mqdHWdfll8glmTVPJVPKRluOypNG5Ce3KswQF6goDqiaSHBr5Ndp6d
+	 9CFLmVIdSnQQPOC2cLXVuqavXMUqS96v4I1YGeG2ceJuZhFHK7Gk/dCIPDOFG8qn4Yg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CL3+OQ3K;
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=2dU+DbgF;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BAF8606A323;
-	Sun, 15 Nov 2026 20:48:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B646606A31F;
+	Sun, 15 Nov 2026 22:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CL3+OQ3K
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A39DA1F000C4;
-	Sun, 15 Nov 2026 20:48:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794775722;
-	bh=YXZFSoyqHDpxDPbL85Hd+JvHtAklYY9AhdF+mYJH6M4=;
-	h=Date:From:To:Cc:Subject;
-	b=CL3+OQ3Kg1EMfhonk48DtoCk4qu0AVNYDJxGCbKtLtAGloK7rDD+Or0Fh1HofXf7t
-	 I/Q3V0IbNaBqF8gG5jQhTutrZSsucOx6IemfHnEFaVqV9V+0QC2EUnvNJfoNLBJtIp
-	 zv4HUuY/M7M3HOit9QGea8+HQCzinOX3Q1VN95nRexRCva/yZqNWdHd0Cc0OXpFVjy
-	 L5q30ZnOJJdXh1UhFw0/yqcpPDOmPP0Pt3SO3250fGycYLBr9ivvZ1/V7MvZQb/fKf
-	 ov+7e9mKiSB3SEzWUPmg+ewc5bC9WTKXd/S7sgOj0s0RAY9OxdPZGY7Tm39Q6BJNS8
-	 o9RN2AZETuSlA==
-Date: Sun, 15 Nov 2026 10:48:42 -1000
-Message-ID: <7a3f079589dddf1444f015b874f1b9ed@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
- Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: [GIT PULL] cgroup: Fixes for v7.4-rc2
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=2dU+DbgF
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D80C81F000C4;
+	Sun, 15 Nov 2026 22:12:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1794780727;
+	bh=q9s42YVPhc56VTV+G1TekC9EyggoNH/5JmNGm6Xx0OY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=2dU+DbgFDrqSj3PWmmULOFhMRJrMipQby1pDwXNQGxLi46AXNwWZX7utTYV4vHXMw
+	 OuPTqGy1iRd0KdBcAa+7e2q56eUOyyVc+qL8yfUS0ZDGXQiZX1nqa8ER3jfu0eQFvY
+	 gnkUjz6mfockveWho3dsBBhBNdBl3oqMsZUPEw20=
+Date: Sun, 15 Nov 2026 14:12:06 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Yingjie Wang <x-professor@outlook.com>
+Cc: Manfred Spraul <manfred@colorfullife.com>, Alexey Gladkov
+ <legion@kernel.org>, "Eric W . Biederman" <ebiederm@xmission.com>, Vasily
+ Averin <vasily.averin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Michal =?ISO-8859-1?Q?Koutn=FD?=
+ <mkoutny@suse.com>, Michal Hocko <mhocko@suse.com>, Alejandro Colomar
+ <alx@kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+ "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
+ "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>,
+ "linux-man@vger.kernel.org" <linux-man@vger.kernel.org>,
+ "linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>,
+ Davidlohr Bueso <dave@stgolabs.net>
+Subject: Re: [PATCH v5 0/3] ipc/sem: account dynamic sops arrays and
+ validate SEMOPM
+Message-Id: <20261115141206.920bdc8c5a84073712bb5c3b@linux-foundation.org>
+In-Reply-To: <cover.1793250194.git.x-professor@outlook.com>
+References: <cover.1793250194.git.x-professor@outlook.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -54,76 +66,112 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hello,
+On Thu, 29 Oct 2026 05:03:24 +0000 Yingjie Wang <x-professor@outlook.com> wrote:
 
-The following changes since commit 518cec2def9992192291f5028edc077fb2e475e9:
+> Shakeel, thanks for the suggestion.
 
-  cgroup/cpuset: Integrate compute_partition_effective_cpumask() into compute_effective_cpumask() (2026-10-26 07:44:43 -1000)
+Thanks.  Shakeel, please review [1/3]?
 
-are available in the Git repository at:
+> Patch 1 now uses GFP_KERNEL_ACCOUNT for every dynamically allocated sops
+> array. The first 64 operations still use the existing stack buffer. The
+> fixed 1000-operation exemption and its conditional allocation flags have
+> been removed.
+> 
+> I compared this version with v4 in a 4-vCPU KVM guest. The benchmark process
+> was pinned to one vCPU. Each number is the median of 21 samples from three
+> fresh boots of each kernel. In a leaf memory cgroup, the changes were:
+> 
+>                                       65       500      1000
+>   successful semop()                   +3.2%     +3.2%     +2.3%
+>   allocation-focused invalid semid     +5.6%     +9.1%    +11.9%
+> 
+> The invalid-sem-id case allocates and copies the operation array before
+> returning EINVAL, so it emphasizes allocation overhead. The 64-operation
+> stack controls changed by 0.9% and 0.5%, respectively. The already-accounted
+> 1001-operation controls changed by 1.0% and -0.2%. Successful calls in the
+> root cgroup changed by at most 2.3%, including the controls.
+> 
+> The sysctl handler parses writes into a temporary array while holding a
+> per-IPC-namespace mutex. The mutex covers the snapshot, validation, and
+> publication, so a failed write leaves the live settings unchanged and a
+> partial write cannot restore fields from an older snapshot. The snapshot and
+> publication use READ_ONCE() and WRITE_ONCE(), and reads continue through
+> proc_dointvec(). The unused sem_check_semmni() helper is also removed.
+> 
+> The UAPI warning about physical fragmentation is obsolete now that the
+> operation array uses kvmalloc(). The header describes SEMOPM as the
+> compiled-in default and retains the uniform <= INT_MAX range comment.
+> 
+> Patches 2 and 3 are unchanged from v4 and retain Manfred's Reviewed-by tags.
+> The series is based on 7be4bc52fd9e ("Merge tag 'driver-core-7.4-rc1' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core").
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.4-rc2-fixes
+Thing is, the above is largely about what-changed-since-last-time. 
+It's useful info, but it's short-term development-time stuff.  Most of
+this is inappropriate for the long-term kernel record.
 
-for you to fetch changes up to acec9637e03ca54bd3c3a0c1a6ad5c6dfa07c0df:
+I had LLM suggest a replacement [0/N].  wdyt?
 
-  cgroup/cpuset: Don't revive invalid partition without active CPU on hotplug (2026-11-15 10:15:12 -1000)
+: An IPC namespace owner can raise SEMOPM and make semop() allocate a large
+: operation array.  A blocked call retains the array.  These allocations are
+: currently uncharged to the caller's memory cgroup, so repeated calls can
+: consume host memory beyond a container's limit.  In one test, a call
+: retained 60,936,448 bytes while a 32 MiB cgroup recorded less than 1 MiB. 
+: Sixteen concurrent calls retained 100,860,416 bytes while the cgroup
+: recorded about 1.3 MiB.
+: 
+: The SEMOPM sysctl also accepts negative values.  Because the operation
+: count is unsigned, SEMOPM=-1 becomes an effective limit of UINT_MAX. 
+: Separately, a rejected kernel.sem write can leave earlier fields changed:
+: an invalid SEMMNI can return ERANGE after setting SEMOPM to zero, causing
+: subsequent nonempty semop() calls in that IPC namespace to fail with
+: E2BIG.
+: 
+: Patch 1 charges dynamically allocated operation arrays in the regular
+: semop() path to the caller's memory cgroup.  Patch 2 parses and validates
+: kernel.sem writes before publishing them and serializes writers within
+: each IPC namespace.  Patch 3 removes the obsolete warning that SEMOPM
+: above 1000 risks physical memory fragmentation; the operation array uses
+: kvmalloc().
+: 
+: Accounting contains the large-array case when the caller's memory cgroup
+: has an effective limit.  The series does not impose a maximum on positive
+: SEMOPM values, so a root or unlimited cgroup can still request large
+: allocations.
+: 
+: Validation included x86-64 and i386 builds, initial and user-owned IPC
+: namespace checks, concurrent sysctl writes, operation-count boundaries,
+: and allocation cleanup on success and error paths.  In a limited memory
+: cgroup, accounting increased median successful-call time by 2.3% to 3.2%
+: for 65, 500 and 1000 operations; the allocation-focused invalid semaphore
+: ID case increased by 5.6% to 11.9%.
 
-----------------------------------------------------------------
-cgroup: Fixes for v7.4-rc2
+Also, [1/3] and [2/3] are cc:stable but include no clear description of
+why we're recommending backports.  Backportable patches should clearly
+state the userspace-visible runtime effects of the bug which is being
+fixed.  Our downstream people (-stable maintainers and further
+downstream) are swamped with bugfixes, so let's help them out!
 
-- A file notification racing the file's removal could re-arm the
-  notification timer after it was shut down, corrupting the timer wheel or
-  firing on freed memory.
+So for [1/3] I inserted this statement:
 
-- The v1 freezer could leave an exiting task frozen forever after its cgroup
-  was thawed or removed.
+: A caller can raise SEMOPM and keep large, uncharged operation arrays alive
+: in blocked semop() calls.  Repeating this from a memory-limited cgroup can
+: exhaust host memory outside that cgroup, causing reclaim, stalls, or OOM
+: kills of unrelated processes.  Charging the arrays lets an effective memcg
+: limit contain that memory use.
 
-- With memcg built without the block cgroup controller, memcg reclaim waited
-  on writeback and could deadlock against a filesystem freeze. memcg now
-  selects the controller.
+and for [2/3] I inserted
 
-- cpuset partition state could go wrong when CPUs move between nested
-  partitions or go offline: isolated CPUs leaked or went missing, invalid
-  partitions kept exclusive CPUs or came back with no usable CPU, and
-  expanding a remote partition could fail. Separately, a forked child could
-  inherit a corrupted memory node mask.
+: A negative SEMOPM becomes a large unsigned limit in semop(), allowing
+: operation counts that the configured limit should reject.  Separately, a
+: kernel.sem write can return ERANGE for an invalid SEMMNI while leaving
+: earlier fields changed; if it leaves SEMOPM at zero, subsequent nonempty
+: semop() calls in that IPC namespace fail with E2BIG.  Validate the whole
+: write before changing the live settings.
 
-----------------------------------------------------------------
-Chen Ridong (1):
-      cpuset: add early empty cpumask check in partition_xcpus_add/del
+Please check these also.
 
-Christian Brauner (1):
-      memcg: make MEMCG select BLK_CGROUP
-
-Mani Tofigh (2):
-      cgroup: arm the notify timer only while the file exists
-      cgroup/freezer: walk exiting tasks in the v1 freezer
-
-Ridong Chen (5):
-      cgroup/cpuset: Reset partition data when an invalid partition stays invalid
-      cpuset: settle isolation state when CPUs are given back to parent
-      cpuset: generalize the validate_partition() interface
-      cgroup/cpuset: Remove redundant WARN_ON_ONCE() in remote_cpus_update()
-      cgroup/cpuset: Don't revive invalid partition without active CPU on hotplug
-
-Tejun Heo (1):
-      cgroup/freezer: Fix exiting tasks left frozen forever after rmdir
-
-Waiman Long (6):
-      cgroup/cpuset: Fix incorrect CPU accounting with parent's effective_xcpus expansion
-      cgroup/cpuset: Recompute effective cpumask in update_cpumasks_hier() after calling update_parent_effective_cpumask()
-      cgroup/cpuset: Do housekeeping check when isolated child with root parent may get more xcpus
-      selftests/cgroup: Fix "test_cpuset_prs.sh -v" failures
-      cgroup/cpuset: Protect current->mems_allowed read in cpuset_fork()
-      cgroup/cpuset: Correctly set isolated_cpus when switching partition state
-
- init/Kconfig                                      |   1 +
- kernel/cgroup/cgroup.c                            |  22 +-
- kernel/cgroup/cpuset.c                            | 316 +++++++++++-----------
- kernel/cgroup/legacy_freezer.c                    |  40 ++-
- tools/testing/selftests/cgroup/test_cpuset_prs.sh |  46 +++-
- 5 files changed, 251 insertions(+), 174 deletions(-)
-
--- 
-tejun
