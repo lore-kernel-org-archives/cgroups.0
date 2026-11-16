@@ -1,54 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.147
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794833060;
-	b=2IBh/FjYqeiiCqEWS08c1ZCgoaGN1BQh3upgnjfzn1ihhrg72KDe147KSX1qQ321niHc
-	 pOkLjjn1JA3kVygi7z2juueHtzA0t8U/EIloD3/KUWTQ72WYsj6Vj4bv9nYibQFT56nsP
-	 Yq3+pI6dyh3NIHugJMzqdOOSrJHVeCls/LL9/fAseb2m+HMTNJIk4kq6xU2e2IMehVeTc
-	 h51yjV8KCvFU69mXBfAGtmHYeiOiPW5gsg5pwv61/SYJbleuunxRVTR0GcGI++JKQt95y
-	 jYTssCRRhc0ZzWgyoAyGFtkJs1L9BWWbNh98FhJmHkiglJe1KPu1vDi+ISO3hql+4eA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794833060;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=HdBYWB42Ov1f7t5UzOhOjOd4BKScNXzBpb3W6636xpA=;
-	b=MjU+AykLvA6KqMUwAtEEBxLp6N4+ikVcxPUp6+qf0ValTBn18eqNAtDo5nH4Tai4pi+6
-	 NovYRtFzpZq6u2w3zKIQguWrqceNWezftaUwY4KJhhbqnWt72EcopeT7zD3eCUrorsin9
-	 q8LHE54OMA+5PudGM2+UGJ7OJ2TDedvSteDfiki5B0jZgbmx/DjeGxORqOrNv82TBg7nF
-	 gOyqWc8XQPUhCn2YMIlLuewy6ugLN8RYmq8kXmCSXeqzBzGlcpPRT21dBuPiAH7yhm4Ab
-	 Sx3SB/zWAuLPf0Fqem0irL9Lm9TOwBbd0sCbtD6t2A7p6UToWNjAt8qowlXeJw3qrlQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SBi8nsIQ;
-	arc=none smtp.remote-ip=91.218.175.147
-Received: from mta0.migadu.com (out-147.mta0.migadu.com [91.218.175.147])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.48
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1794838440;
+	b=lMP6XcFaVLIwkgAQxHLm46H/DfTeN12Xj+T1gc/B2fbQ15y3LrhP5bo/7amsEayoS//u
+	 V7cP1kEawwO+hKgjZqNE/ugTA32s28kYr9Lq/jPkBqMgpXYH1JpxFUV9NE2J6Cdn0sd0+
+	 vpOCtOJnyfywmj3GhYZiw90n+yyx8zbHEShwcIzMZt2srirX5qBzmZ/Qp9Cbi/x40Fq4k
+	 /bWM2Vodpi623A5KHqVC+3eTpkvreRQ7hKoVkKlo3QEavQR8ryjQ7NmlJHSRU6qzXyuTX
+	 gA/E1ytMffUkLzfrDw3UuEV3LuLI3A949Ge90aA1Fsdm+YljIaROPPIlBRTYhORisPA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794838440;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=mE4PFLCBDD7N+5kMo0525pvsFFzxkaRFBGntpezo6s0=;
+	b=a2EFH+t02jImMLk3sp+dQWJasQTD0ugIjCup1McnAmdCT6OmGRUevYMF2FuamJfYEHwE
+	 cbYWufNckcbtC+JTPPskkXlEMk5Djejq1CwhAwz7F8O6FLpzFaFU/HJlvxYTY+5MaCJ7p
+	 r1iUIfIlyvCN2Vf7v8Z2jcYxGTwfd0i8PJEHGKVmfu2MI9pzia58/nugFMW2bIdytxL6w
+	 B6Mkhr3VfkJzmxa/3B7Q5QTJsTDpf5b4ZKm3dfjpEr8iNdCFnj5A5tfTqzjaCCDUnPVXc
+	 Y1A23E5xf9IPMY0faU+QU8MKhQ9Xc+4a18vwECV58/+X139PwOIzNx38EaAYoDTkDJQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NNbLYEE7;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.48
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5063F606A32A
-	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 12:44:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5063F606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C75E2606A329
+	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 14:13:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C75E2606A329
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=SBi8nsIQ
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=t5dJVaGKrDmbOPD5DFRf/whdm1YuXTQu5zTjuKwHh4A=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794833057; v=1; x=1795437857;
- b=SBi8nsIQOJA45gIFRMHH2Ml12AHpKafEV6fzehZjssQob1eD04E8DSiHGJNRwbZzHOnxpAdU
- 38ehjlTif7N09vwGwPXrZ3vrKTQL7/E+cIEJHT/WOuGeARKOwPLiiXPs7PAeqezV40PLL8SV0qX
- zvBsGB2ZdjU4OWBfA1Gn94eQ=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 10d7ca4d1171aa70;
-	Mon, 16 Nov 2026 12:44:17 +0000
-X-Mizu-Trace-ID: 10d7ca4d1171aa70
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <01f0b173-dbd2-484e-8e53-f4a001af9acb@linux.dev>
-Date: Mon, 16 Nov 2026 20:44:06 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=NNbLYEE7
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-491aaed7565so1638396f8f.2
+        for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 06:13:59 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1794838438; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Xnr6GeuEYsBv5v2UZYWGYfxtoHblPqkfckL1VAiGN4dlLlBbYCaC9Co9JeJ3JP4b/G
+         FYwxVPak0YU4Ksu5h7/pnK92qWR9GpLdFGv7GlwmUIOQYN6Tz8pvHpkcmf7RpKiU0BH1
+         MHOGnGhdyP0SdyBWRgjsJKXy2u7kEsA+BJeCxRwYHolXu1QMSDPl2bWKg6gLWXuqG0ez
+         nk0vjifTlm2IwenNbm5v1+w9C2Vqu8PFwyrMO2U6R2cbIvIta87CQC6iCSPSbx4UAtSY
+         NeAAcfGNyeeF9uW234T7gdIBtJjH8I+Aq/qksuHUCAX0EoLV9TzgK9dV02X9WA0l2xBF
+         Dk2g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=mE4PFLCBDD7N+5kMo0525pvsFFzxkaRFBGntpezo6s0=;
+        fh=fWmWfa6MJo6q/mvkJCyTU/3pNVzCRDVriem5DjggHgM=;
+        b=FU+zkXDzJuSC0Rud8KoyrkrKRFk/aluDA+T9kWTvGIwUb9rNdcY3NpCm08bS02sHAR
+         FLaQuGzaVH4nBL/Vgmm+OwG5OCahojFT7oA8hKxrDYFOqjzUZbmXw6aHEsQv9Hr2nfDZ
+         bwXsJfPSGl7f7XAtwCiYT3pl8pkKJYwvVbj1TpOo3Zh921nk3En5W7dOlMdmf/o+frlN
+         xD/GFgKOfMqsJV2/yCxZnN9xx3gnIuKpyhMLVpagvcGE+BQyIw6Edka4aciTw6pWqlQs
+         Mk/ETWjz4hw75445Fb2BjNFcJJrCiSSjmEuxRuW1wgp+jkjh8L03N7gL2nPJV4WGO194
+         n5yw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1794838438; x=1795443238; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=mE4PFLCBDD7N+5kMo0525pvsFFzxkaRFBGntpezo6s0=;
+        b=NNbLYEE7oDLii472gysZjYrI4ucISl9mt96P2z/OGqu/ZsjrYEr3uHaHVzcWUzTo0A
+         14D7T4RowjUPGjFvGQ7alC4pgUtLTkMqIs3x8bhCHzouXVTdYjWp+lXePnr08spveTYO
+         JtKuDMpxbF3Q13fLACjnvLTxZS/gqxteZtAaViITZFrq67ZMUG0ZrIeq+z8gS0NnL3du
+         GXuMgo8XKyFkQvOaB1GgAmfPB9N6X3a+pcmZsZStl+7q8wuD8PFaFKao1MoC2NuLyWcV
+         EnulOQYHtZhbPhaWBV3WVbccHCKL4yShukgIgYxPV41D204POa7FzhWg3RgnqK+rYsST
+         VscQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1794838438; x=1795443238;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=mE4PFLCBDD7N+5kMo0525pvsFFzxkaRFBGntpezo6s0=;
+        b=qTfT5vQkCIdj0g2rhurTUdo5R56upi7wzzTyilPcje388KfvwE8b3iX4vDpIumdOjC
+         SCwkNro0Ov5ibFavcc8pXuZuqr1wD3XdlcYB0IbSWlHMd/MpVw25krpQ17CUt4tn2G3+
+         GZG8f8BVIT+rZMzOLtmkNy84u9/ZvsKeSgPHHXBSWh3WBonn1jrBTc8PyDePQ8w2FtNw
+         mvSK+3yn1aH42TVizaUWaV72vBAK0Lywsy43b6iObTusQrj/WFDNmhIXa7FVqtkLQvBq
+         JvrDOilZgQK9FwfszGM0UEc1F4+XWEV0kjrcF+EIdPGLNusYc7Tu+q6dTyYGz4Bs/mtQ
+         cs3A==
+X-Forwarded-Encrypted: i=1; AL+hErGzDlfvwPnaRldOe8XQ5GSWTLgCOYe6EEGNvlq82GbpRBBcJJmCtNe84lfCHUloCemLysouoyai@vger.kernel.org
+X-Gm-Message-State: APuU4Z+QPcB7tbuqbSRTb3YSLkvG17eM+NbZCq+JyBq0NgEHMk5LOx4q
+	w6VIS/PmWGBGOsbTgDedO5Q2EWc2uqhYMikJ28cVM2RDYDzeui0NbihzV5EI0WkerEQqA0AI9cF
+	5ex3Ea3EjR2w9raRAHgJCU4MCn4xx9Hw=
+X-Gm-Gg: AZFdTZe8pwh2wdgP1ljG53uSnXL3xapMuCF+NvHGel/uX8iRCtir7Jzh460sDvbVJs7
+	Wpmi4dV/r/UUwIBZh0eXYLHGR7G41Woh66dE4Ivl5Lhoptu0Xc3iuuvqbFkoOkGx/WLu+JOy93h
+	ZmvUs2w0083nRIUA+jK6ONLlhJr23kyaCQzfC0cq6x/a3mu1rKbHWokcK7eFQW3EM8GRl98CVpZ
+	FB/4iKhthYV5AHxgbNRCmG8sUgi76GjBkXx0TDwFzN+2KkH5hoGxma5R+8QJMTl3qybmmFUnc5H
+	+t3Ehb4u8/ElhsFn/r38QGY70fkh5WSf3O4kXcrajRjb3D2ixqpFNx0ok1hU+VSpgbHfUaUSUJq
+	Ad+TN4ZHcQirRnqSkvPRHqE4VeFtk68kSf5cqFy+CWRA73YyfEaGTjQn5XTnesz23SkC7g9Iq0b
+	T1ltEC8wzRcETX0o/zhYjoFH1OWTX4xUvsbzLLgLBkxGL25SI4jiYvqnU=
+X-Received: by 2002:a05:6000:29d6:b0:48e:d7c:4bc8 with SMTP id
+ ffacd0b85a97d-49dad032b01mr11487696f8f.7.1794838437977; Mon, 16 Nov 2026
+ 06:13:57 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,91 +105,54 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, cgroups@vger.kernel.org, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, llvm@lists.linux.dev, stable@vger.kernel.org
-Subject: Re: [PATCH v2] blk-throttle: Avoid unsequenced accesses to jiffies in
- throtl_schedule_pending_timer()
-To: Nathan Chancellor <nathan@kernel.org>, Tejun Heo <tj@kernel.org>,
- Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>
-References: <20261115-blk-throttle-wunsequenced-v2-1-1d297c891b82@kernel.org>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <20261115-blk-throttle-wunsequenced-v2-1-1d297c891b82@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20261116110122.309748-1-nakixii@gmail.com>
+In-Reply-To: <20261116110122.309748-1-nakixii@gmail.com>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Mon, 16 Nov 2026 06:13:46 -0800
+X-Gm-Features: Aa3M54omNEMN1jWto9qZ-fJE2BPU-EGOtdYeDpXDgUWMj8prRt7WmPFciW1q0iM
+Message-ID: <CAKEwX=M64ZmMLBRiAQ6FiiP8f=jkA4m=HM8rgQo-cir2SENPnw@mail.gmail.com>
+Subject: Re: [RFC PATCH 00/16] mm: add in-memory compression of reclaimed pages
+To: nakixii <nakixii@gmail.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Yosry Ahmed <yosry@kernel.org>, Minchan Kim <minchan@kernel.org>, 
+	Sergey Senozhatsky <senozhatsky@chromium.org>, Barry Song <baohua@kernel.org>, 
+	Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Mike Rapoport <rppt@kernel.org>, Peter Xu <peterx@redhat.com>, 
+	Suren Baghdasaryan <surenb@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Mon, Nov 16, 2026 at 3:03=E2=80=AFAM nakixii <nakixii@gmail.com> wrote:
+>
+> This is a proof of concept, posted to ask whether the approach is worth
+> pursuing. It is not meant for merging. The series is based on Linux
+> 6.12.23, not on mm-unstable, and has not been ported to the swap-table
+> and zpool changes that have landed since. If there is interest, the
+> next version will be rebased onto mm-unstable.
+>
+> memcomp stores reclaimed anonymous and shmem pages in compressed form
+> in memory, using the kernel's compressors and zsmalloc unchanged.
+> Reclaim replaces the PTE, or the shmem page-cache entry, with a
+> swap-like token that names a 16-byte slot. A fault on the token
+> decompresses the page and maps it again. No block device is needed. If
+> swap is configured, cold entries can be written back to it. The sysfs
+> interface is under /sys/kernel/mm/memcomp.
+>
+> The implementation uses 16-byte slots, a separate owner domain for zero
+> pages, per-key storage and bounded metadata aging. Memory-cgroup
+> accounting, cold-page writeback, asynchronous compression, precise
+> residency reporting and mincore support are separate patches.
+>
+> Refaults follow stock workingset accounting. The first reader claims
+> and clears the shadow under the slot lock. Feedback runs after
+> charging, outside the PTL and slot locks, before the page is read and
+> installed. Consumed feedback is not restored if the read or the
+> installation fails. An mTHP uses the shadow of its first base page and
+> clears the shadows of all its pages. Swapoff returns payloads to the
+> pool without building user pages.
+>
 
-
-在 2026/11/16 11:37, Nathan Chancellor 写道:
-> After a recent improvement in clang to warn on unsequenced accesses to
-> volatile variables [1], two instances appear in
-> throtl_schedule_pending_timer(), which can break the build with
-> CONFIG_WERROR=y / W=e:
-> 
->   block/blk-throttle.c:469:25: error: unsequenced accesses to volatile qualified 'jiffies' [-Werror,-Wunsequenced]
->     469 |                    expires - jiffies, jiffies);
->         |                              ~~~~~~~  ^
->   block/blk-throttle.c:469:25: error: unsequenced accesses to volatile qualified 'jiffies' [-Werror,-Wunsequenced]
->     469 |                    expires - jiffies, jiffies);
->         |                              ~~~~~~~  ^
-> 
-> Per C11 5.1.2.3.2, accessing a volatile object is a side effect. Per C11
-> 6.5.2, unsequenced side effects on the same scalar object are undefined
-> behavior. Per C11 6.5.2.2.10/12, the evaluation of arguments in a
-> function call is indeterminately sequenced, meaning any side effects in
-> the arguments are unsequenced.
-> 
-> Add a local variable to hold the value of jiffies before the function
-> call so that there are no unsequenced side effects, clearing up the
-> warning.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 69df0ab030c9 ("blk-throttle: separate out throtl_service_queue->pending_timer from throtl_data->dispatch_work")
-> Closes: https://github.com/ClangBuiltLinux/linux/issues/2191
-> Link: https://github.com/llvm/llvm-project/commit/955715460eaf9188c241c74750637fc82dfcc423 [1]
-> Signed-off-by: Nathan Chancellor <nathan@kernel.org>
-
-Reviewed-by: Tao Cui <cuitao@kylinos.cn>
-> ---
-> Changes in v2:
-> - Reuse value of jiffies in max_expire to avoid
->   -Wunused-but-set-variable for j when CONFIG_BLK_DEV_IO_TRACE is
->   disabled (Sashiko)
-> - Link to v1: https://patch.msgid.link/20261114-blk-throttle-wunsequenced-v1-1-d28ed5553ff3@kernel.org
-> ---
->  block/blk-throttle.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index c5e26551956a..8e58e50bce4d 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -453,7 +453,8 @@ static void throtl_dequeue_tg(struct throtl_grp *tg)
->  static void throtl_schedule_pending_timer(struct throtl_service_queue *sq,
->  					  unsigned long expires)
->  {
-> -	unsigned long max_expire = jiffies + 8 * DFL_THROTL_SLICE;
-> +	unsigned long j = jiffies;
-> +	unsigned long max_expire = j + 8 * DFL_THROTL_SLICE;
->  
->  	/*
->  	 * Since we are adjusting the throttle limit dynamically, the sleep
-> @@ -466,7 +467,7 @@ static void throtl_schedule_pending_timer(struct throtl_service_queue *sq,
->  		expires = max_expire;
->  	mod_timer(&sq->pending_timer, expires);
->  	throtl_log(sq, "schedule timer. delay=%lu jiffies=%lu",
-> -		   expires - jiffies, jiffies);
-> +		   expires - j, j);
->  }
->  
->  /**
-> 
-> ---
-> base-commit: ab43ec385580b8f8abf72d70fa3acbf4e4f098a5
-> change-id: 20261114-blk-throttle-wunsequenced-ccf308a23c1b
-> 
-> Best regards,
-> --  
-> Cheers,
-> Nathan
-
+What's the motivation of this line of work?
