@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794855972;
-	b=fStWnrQdaMkhC0nxeHCb1AJljVIh2nIvSyID1k686hg/XZlzLl+24aJYx33kTEzo+c5E
-	 iQspH/w8AChRR48Fr792uWyfAU9QpiGOs1+sqWkqsxAufcYLbjOX6CuP/c1wHDuktr1Mm
-	 FL40O5UnoE+PStKJngt9axlaBmCY1KBhKQNtaRkVDMn43KNljhewqGWLqp1CGpDznMPy8
-	 g42ZmTQze0QQTdomcQ+CjeiWUYsdfEOWNR4ihnmDUwYakep7sw1blfFfSYAbhqy1el8ht
-	 uRsyIyG08wesepeGaQgqVXKkfNqyiv64b3KpCYYxAsgJ+JoDxyarctdzGMyNYmJ/+FA==
+	b=qyh9KfHDMIPkTczNGLBo/Nk2zn6h/3aqMiZRbOqZJCzu8RjcDhFSAZ82Cw2Nb7FjUjKY
+	 sepZVOKQXuTXAKSg8p/wQx1u6Suog1JDSDmPy4KT/YXhn3UmP30I483CIu34xOW8SKaSA
+	 sr/V6IKOlpfvR42J55AHm5YWFaSDpmIXChOevynTqdvDKNj4Lgb2YKmP+0tA5bNe/PqSj
+	 TVhkR7L+aMAy4Cx1C++lzRLnE447QzW+fBMQTf1znB5LrD3mwymvH1mdsHDiOTLDvaPXt
+	 oS6W/s606M7iRwd+7BHxaovrkpZ6MiAjxhdM77nKOt5B4FInbGSaaMHUzeloL3sCqNA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794855972;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=mnHO+xtfaZcB+lD2+hyHD0yoeABWGYf14HrT4BtCVQ0=;
-	b=Xjccu8qX9AUnD3Wt47W7yRwzabJ3NKEoaEczAmmVLEF9EkrDJfhGhoQb+J103xo8ombc
-	 iCKeBeHx5decEzzbpXTo1e535rd3Ldt3O4vliTGIXKHME3/qvOogGhIEgikeXz9PpB9ku
-	 pITeNCGPw6zb2hOndwfk29EnhhkTwPADAYDsQWwqKRoTHhTY6cSIMTo4pkKJPBea5BIrk
-	 DSZt7ZT4PYEk+GaXfTt95t62hReTlL3v25uLLNFT13OhNRbv/GlabOorJUcn4oFS/mIzU
-	 x8KtRMbp4cCsyFPK1MuggbZ1e9xWaKkSG3IViPWUqDqBFGRpHPkKIQlNYMk87i1IjYg==
+	bh=mk3gHQMJQoSnhLDdT1mLGtizsJBxsKRG9IKCMC90cEU=;
+	b=ocsDIHJfxDEDbsdJ8eTt1ilQp+q7fZyCsdWEhxS9G2ONon6SBkizsiwN7Yef0NLySc/q
+	 fLucXwR2Td/Zmc0O5JAYDHEHCoDnaiokQ2h+uGbDSAN8BH7sT4hk+icvdSf69JZ7HWQeL
+	 puztWS2qMzLFljnJVZrILvRrUBqUILp4pATlBbwCIcORMq4P5g7CCx2Q4Cz+iQdSBwnXE
+	 ObtmUeCHsIbYiYMKnX8GKOjZWr6UfJW2APmNNSufPrvtAHBUWIgj5IdfY1yiWsocU5fPJ
+	 bDgxEg8tVjTcZQFxtVFnjRlszkMKBAtS3e2Z8R/5xS2CRVTkbhV2+7hD49h8pMz9amA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=INlJIgLx;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=amwIArDK;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D80D606BA03;
-	Mon, 16 Nov 2026 19:06:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2D80D606BA03
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B2CF606B048;
+	Mon, 16 Nov 2026 19:06:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7B2CF606B048
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=INlJIgLx
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=amwIArDK
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
 	s=smtpout1; t=1794855960;
-	bh=mnHO+xtfaZcB+lD2+hyHD0yoeABWGYf14HrT4BtCVQ0=;
+	bh=mk3gHQMJQoSnhLDdT1mLGtizsJBxsKRG9IKCMC90cEU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=INlJIgLxT1C4sde0S3JJKI08/zYf1omWenawWftleXI8rPQEWKLJY6WHENkzCzm1A
-	 IGzuEIK7VppldrWiXW+uG20QBSqz4OrYGFkZDeZQ3DdxUAYctGTrfXxha2NPQ+FytS
-	 d1k7w1NueX9Kjr42BvklnbunubXDYmWP7lct9FRtG43dHgzHOIDisimdXcGi9FotCX
-	 mI2aB4jm9uTRONOPzvjBJEoEr/bZTJvOuaEw3PAxwfwVAKlSVcD/ylByK8kx2XmQJ1
-	 IDdAb8BhSX0ZX8ndupQGsJ61ZGRQxRyy/IrGYJQ0pnXZdE+XXVHgjsxL8OvaJQV5sJ
-	 3NNYqHKyHje9Q==
+	b=amwIArDKbCgV8KZCeC/jbzfcYbdDo4YvSKz+j+y21oQ4EI+wQLwzlJTGUiy/zFVVY
+	 7ryp7Y13IQZcM6iJ4eW0nKwd8b7kca5CnWcc6ZxhOLTPr39UwHRtTDFIg1/1h3TD68
+	 RJYuvQSNkkUecaHD8Op68H5vRcNvMU4AZopK+O7rJq6z7FQYaj29MX9kgm81eaDRwn
+	 Drgu5XYGVQD+8IIgbJ+ipFE/O8lNcLQyuwTNotcQMPRT6Hhd+IfKoG02yUS6/4IHkC
+	 3CEwOXEelWLMncS5kBvcJn+8tcIpADtALr0VJ0Yuqc8mGN/w5dEGxC7ztSjQLBmTnf
+	 KyMwW+SZxg6+g==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jSy4m2fJbzR7N;
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jSy4m1SqQzQMg;
 	Mon, 16 Nov 2026 14:06:00 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
@@ -79,9 +79,9 @@ Cc: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v6 36/37] selftests/sched: Test SCHED_DEADLINE bandwidth across a root domain rebuild
-Date: Mon, 16 Nov 2026 14:05:48 -0500
-Message-Id: <20261116190549.230119-37-mathieu.desnoyers@efficios.com>
+Subject: [PATCH v6 35/37] selftests/sched: Add a test of SCHED_DEADLINE policy round trips
+Date: Mon, 16 Nov 2026 14:05:47 -0500
+Message-Id: <20261116190549.230119-36-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20261116190549.230119-1-mathieu.desnoyers@efficios.com>
 References: <20261116190549.230119-1-mathieu.desnoyers@efficios.com>
@@ -96,115 +96,145 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A task that leaves SCHED_DEADLINE, or dies, keeps its bandwidth until
-its 0-lag time. No selftest checks what happens to this bandwidth
-meanwhile.
+No selftest runs a SCHED_DEADLINE task.
 
-Add deadline_rebuild_test, with three cases. In each case, a task of
-400ms every second runs 380ms, then leaves SCHED_DEADLINE. Its 0-lag
-time is then about 570ms ahead. P is a partition root of one CPU.
-Before the 0-lag time:
-- dies_before_rebuild: the task exits in P. Then a second partition
-  root is made, which rebuilds the accounting of every root domain.
-- switched_out_before_rebuild: the same, but the task switches to
-  SCHED_OTHER and sleeps in P.
-- moved_after_switch_out: the task switches to SCHED_OTHER outside P.
-  Then it moves into P and dies there.
+Add deadline_switch_test, with four cases:
+- throttled_round_trip: a task of 10ms every 2s spins, so it is
+  throttled in every period. Right after a throttle, the test switches
+  it to SCHED_OTHER. The test switches it back 200us after its
+  deadline, between its replenishment timer and its 0-lag time. It must
+  then run again.
+- asleep_round_trip: a task of 9ms every 10ms runs 0.2ms, then sleeps
+  50ms. While it sleeps past its 0-lag time, the test switches it to
+  SCHED_OTHER and back. A leak at each round trip fills the root
+  domain, and the switch back fails with EBUSY.
+- sysrq_normalize: sysrq-n takes a deadline task out of the class.
+  Another task must then still enter SCHED_DEADLINE.
+- sysrq_boosted_owner: sysrq-n takes a SCHED_OTHER task out of the
+  deadline class while a deadline waiter boosts it. After the unlock,
+  the task enters SCHED_DEADLINE at 10ms every 100ms. It must not run
+  more than its runtime in its first period.
 
-After the 0-lag time, P must admit one task of 600ms every second, and
-refuse a second one with EBUSY. A kernel with the bug removes the
-bandwidth from P's root domain at the 0-lag time. But the rebuild
-dropped it already, or P never had it. total_bw then wraps around, and
-P admits both tasks.
+The cases need CAP_SYS_NICE, and skip without it. asleep_round_trip
+also skips without admission control, when sched_rt_runtime_us is -1.
+sysrq-n changes the policy of every real-time user task. So the two
+sysrq cases run only with DEADLINE_TEST_SYSRQ set. They also need root
+and CONFIG_MAGIC_SYSRQ. sysrq_boosted_owner runs only if
+sysrq_normalize passed.
 
-The test skips without root, 3 CPUs, the cgroup v2 cpuset controller or
-deadline admission control. Admission control is off when
-sched_rt_runtime_us is -1.
+On a kernel with the bugs, asleep_round_trip and sysrq_normalize keep
+new tasks out of SCHED_DEADLINE. So they run last, followed only by
+sysrq_boosted_owner.
 
-On v7.4-rc1, in 8-CPU VMs, the three cases fail. "sched/deadline: Keep
-departing bandwidth across a root domain rebuild" fixes them. With the
-whole series, the three cases pass, with and without PREEMPT_RT.
+On v7.4-rc1, in 8-CPU VMs, three of the four cases fail:
+- throttled_round_trip. "sched/deadline: Do not lose a throttled task
+  switched out and back" fixes it.
+- asleep_round_trip. "sched/deadline: Release the bandwidth of a task
+  that leaves the class asleep" fixes it.
+- sysrq_normalize. "sched: Take cpuset_mutex for a deadline policy
+  change only with pi" fixes it.
+
+sysrq_boosted_owner tests "sched: Let a task boosted by a deadline
+waiter change its policy". Without the sysrq-n part of that fix, the
+owner ran 99-100ms of its first period, in 4 runs of 4. With it, it ran
+10-11ms.
+
+With the whole series, the four cases pass, with and without
+PREEMPT_RT.
+
+The test goes in a new selftest target, sched/deadline.
 
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 ---
+ tools/testing/selftests/Makefile              |   1 +
  .../selftests/sched/deadline/.gitignore       |   1 +
- .../testing/selftests/sched/deadline/Makefile |   2 +-
- tools/testing/selftests/sched/deadline/config |   2 +
- .../sched/deadline/deadline_rebuild_test.c    | 497 ++++++++++++++++++
- 4 files changed, 501 insertions(+), 1 deletion(-)
- create mode 100644 tools/testing/selftests/sched/deadline/deadline_rebuild_test.c
+ .../testing/selftests/sched/deadline/Makefile |   8 +
+ tools/testing/selftests/sched/deadline/config |   1 +
+ .../sched/deadline/deadline_switch_test.c     | 808 ++++++++++++++++++
+ 5 files changed, 819 insertions(+)
+ create mode 100644 tools/testing/selftests/sched/deadline/.gitignore
+ create mode 100644 tools/testing/selftests/sched/deadline/Makefile
+ create mode 100644 tools/testing/selftests/sched/deadline/config
+ create mode 100644 tools/testing/selftests/sched/deadline/deadline_switch_test.c
 
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index 07c3719f8b04..35b0c5e86ba7 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -120,6 +120,7 @@ TARGETS += rlimits
+ TARGETS += rseq
+ TARGETS += rtc
+ TARGETS += rust
++TARGETS += sched/deadline
+ TARGETS += sched_ext
+ TARGETS += seccomp
+ TARGETS += sgx
 diff --git a/tools/testing/selftests/sched/deadline/.gitignore b/tools/testing/selftests/sched/deadline/.gitignore
-index 9f203c455b91..bf7dd0da81a9 100644
---- a/tools/testing/selftests/sched/deadline/.gitignore
-+++ b/tools/testing/selftests/sched/deadline/.gitignore
-@@ -1 +1,2 @@
- deadline_switch_test
-+deadline_rebuild_test
-diff --git a/tools/testing/selftests/sched/deadline/Makefile b/tools/testing/selftests/sched/deadline/Makefile
-index 3f4dc1ec6119..f3a1d1746d22 100644
---- a/tools/testing/selftests/sched/deadline/Makefile
-+++ b/tools/testing/selftests/sched/deadline/Makefile
-@@ -3,6 +3,6 @@
- CFLAGS += -O2 -Wall -g -I./ $(KHDR_INCLUDES)
- LDLIBS += -lpthread
- 
--TEST_GEN_PROGS := deadline_switch_test
-+TEST_GEN_PROGS := deadline_switch_test deadline_rebuild_test
- 
- include ../../lib.mk
-diff --git a/tools/testing/selftests/sched/deadline/config b/tools/testing/selftests/sched/deadline/config
-index 3a3a7285a708..a711e8af46bf 100644
---- a/tools/testing/selftests/sched/deadline/config
-+++ b/tools/testing/selftests/sched/deadline/config
-@@ -1 +1,3 @@
-+CONFIG_CGROUPS=y
-+CONFIG_CPUSETS=y
- CONFIG_MAGIC_SYSRQ=y
-diff --git a/tools/testing/selftests/sched/deadline/deadline_rebuild_test.c b/tools/testing/selftests/sched/deadline/deadline_rebuild_test.c
 new file mode 100644
-index 000000000000..714a0ff03f1b
+index 000000000000..9f203c455b91
 --- /dev/null
-+++ b/tools/testing/selftests/sched/deadline/deadline_rebuild_test.c
-@@ -0,0 +1,497 @@
++++ b/tools/testing/selftests/sched/deadline/.gitignore
+@@ -0,0 +1 @@
++deadline_switch_test
+diff --git a/tools/testing/selftests/sched/deadline/Makefile b/tools/testing/selftests/sched/deadline/Makefile
+new file mode 100644
+index 000000000000..3f4dc1ec6119
+--- /dev/null
++++ b/tools/testing/selftests/sched/deadline/Makefile
+@@ -0,0 +1,8 @@
++# SPDX-License-Identifier: GPL-2.0+
++
++CFLAGS += -O2 -Wall -g -I./ $(KHDR_INCLUDES)
++LDLIBS += -lpthread
++
++TEST_GEN_PROGS := deadline_switch_test
++
++include ../../lib.mk
+diff --git a/tools/testing/selftests/sched/deadline/config b/tools/testing/selftests/sched/deadline/config
+new file mode 100644
+index 000000000000..3a3a7285a708
+--- /dev/null
++++ b/tools/testing/selftests/sched/deadline/config
+@@ -0,0 +1 @@
++CONFIG_MAGIC_SYSRQ=y
+diff --git a/tools/testing/selftests/sched/deadline/deadline_switch_test.c b/tools/testing/selftests/sched/deadline/deadline_switch_test.c
+new file mode 100644
+index 000000000000..f20839433609
+--- /dev/null
++++ b/tools/testing/selftests/sched/deadline/deadline_switch_test.c
+@@ -0,0 +1,808 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Test the bandwidth of a SCHED_DEADLINE task that leaves the policy, or
-+ * dies, before its 0-lag time. The bandwidth stays in the task's root
-+ * domain until the inactive timer removes it. It must be removed once,
-+ * from the root domain that holds it.
++ * Test SCHED_DEADLINE tasks that switch to SCHED_OTHER and back:
 + *
-+ * P is a partition root of one CPU. In each case the task is a deadline
-+ * task of 400ms every second, which first runs 380ms. The cases are:
-+ * - dies_before_rebuild: the task is in P and exits. Before its 0-lag
-+ *   time, the test makes a second partition root, Q. This rebuilds the
-+ *   accounting of every root domain.
-+ * - switched_out_before_rebuild: the same, but the task switches to
-+ *   SCHED_OTHER and sleeps instead of exiting.
-+ * - moved_after_switch_out: the task is outside P. It switches to
-+ *   SCHED_OTHER and sleeps. Before its 0-lag time, the test moves it into
-+ *   P and kills it there.
-+ *
-+ * Once the inactive timer has fired, P must admit one task of 600ms
-+ * every second, and refuse a second one with EBUSY. A kernel with the
-+ * bug removes the bandwidth from P's root domain after the rebuild
-+ * dropped it, or when P never had it. total_bw of that root domain then
-+ * wraps around, and P admits both tasks.
-+ *
-+ * The test needs root, 3 CPUs, the cgroup v2 cpuset controller and
-+ * deadline admission control.
++ * - throttled_round_trip: the test switches a throttled task to
++ *   SCHED_OTHER. The task's replenishment timer fires while it is out of
++ *   SCHED_DEADLINE. The test switches it back after its deadline, before
++ *   its 0-lag time. The task must run again.
++ * - asleep_round_trip: a task is switched out and back while it sleeps
++ *   past its 0-lag time. Its bandwidth must leave the root domain when it
++ *   leaves SCHED_DEADLINE. Otherwise each switch back adds it again, and
++ *   sched_setattr() soon fails with EBUSY.
++ * - sysrq_normalize: sysrq-n takes a deadline task out of the class.
++ *   Another task must then still enter SCHED_DEADLINE.
++ * - sysrq_boosted_owner: a deadline waiter boosts a sleeping SCHED_OTHER
++ *   owner into the deadline class. sysrq-n must end the boost. When the
++ *   owner later calls sched_setattr() to enter SCHED_DEADLINE, it must be
++ *   throttled at its own runtime.
 + */
 +#define _GNU_SOURCE
 +#include <errno.h>
 +#include <fcntl.h>
-+#include <limits.h>
++#include <pthread.h>
 +#include <sched.h>
++#include <semaphore.h>
 +#include <signal.h>
 +#include <stdint.h>
 +#include <stdio.h>
 +#include <stdlib.h>
 +#include <string.h>
-+#include <sys/stat.h>
++#include <sys/mman.h>
++#include <sys/prctl.h>
 +#include <sys/syscall.h>
 +#include <sys/sysinfo.h>
 +#include <sys/wait.h>
@@ -217,6 +247,7 @@ index 000000000000..714a0ff03f1b
 +#define SCHED_DEADLINE	6
 +#endif
 +
++#define NSEC_PER_USEC	1000ULL
 +#define NSEC_PER_MSEC	1000000ULL
 +#define NSEC_PER_SEC	1000000000ULL
 +
@@ -231,33 +262,14 @@ index 000000000000..714a0ff03f1b
 +	uint64_t sched_period;
 +};
 +
-+static char root[PATH_MAX], cg_p[PATH_MAX], cg_q[PATH_MAX];
-+static int ncpus;
++/* Written by the child, read by the parent. */
++struct shared {
++	uint64_t stamp;		/* last time the child ran */
++	uint64_t run_start;	/* when it last resumed after a throttle */
++	uint64_t runs;		/* resumptions after a throttle */
++	uint64_t sleeps;	/* sleeps begun */
++};
 +
-+static int set_deadline(pid_t pid, uint64_t runtime)
-+{
-+	struct dl_attr attr = {
-+		.size = sizeof(attr),
-+		.sched_policy = SCHED_DEADLINE,
-+		.sched_runtime = runtime,
-+		.sched_deadline = NSEC_PER_SEC,
-+		.sched_period = NSEC_PER_SEC,
-+	};
-+
-+	return syscall(__NR_sched_setattr, pid, &attr, 0) ? -errno : 0;
-+}
-+
-+static int set_other(pid_t pid)
-+{
-+	struct sched_param sp = { .sched_priority = 0 };
-+
-+	return sched_setscheduler(pid, SCHED_OTHER, &sp) ? -errno : 0;
-+}
-+
-+/*
-+ * Return the CLOCK_MONOTONIC time in ns. clock_gettime() cannot fail: the
-+ * clock is always supported, and the pointer is valid.
-+ */
 +static uint64_t now_ns(void)
 +{
 +	struct timespec ts;
@@ -274,6 +286,50 @@ index 000000000000..714a0ff03f1b
 +		;
 +}
 +
++static void sleep_until(uint64_t t)
++{
++	struct timespec ts = { .tv_sec = t / NSEC_PER_SEC, .tv_nsec = t % NSEC_PER_SEC };
++
++	while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL) == EINTR)
++		;
++}
++
++static int set_deadline(pid_t pid, uint64_t runtime, uint64_t period)
++{
++	struct dl_attr attr = {
++		.size = sizeof(attr),
++		.sched_policy = SCHED_DEADLINE,
++		.sched_runtime = runtime,
++		.sched_deadline = period,
++		.sched_period = period,
++	};
++
++	return syscall(__NR_sched_setattr, pid, &attr, 0) ? -errno : 0;
++}
++
++static int set_other(pid_t pid)
++{
++	struct sched_param sp = { .sched_priority = 0 };
++
++	return sched_setscheduler(pid, SCHED_OTHER, &sp) ? -errno : 0;
++}
++
++static struct shared *sh;
++
++/*
++ * Fork a child that is killed when the test dies, so that it cannot keep
++ * its bandwidth. Return what fork() returns.
++ */
++static pid_t fork_child(void)
++{
++	pid_t parent = getpid();
++	pid_t pid = fork();
++
++	if (!pid && (prctl(PR_SET_PDEATHSIG, SIGKILL) || getppid() != parent))
++		_exit(KSFT_FAIL);
++	return pid;
++}
++
 +static void reap(pid_t pid)
 +{
 +	int status;
@@ -282,7 +338,11 @@ index 000000000000..714a0ff03f1b
 +		return;
 +	if (kill(pid, SIGKILL) && errno != ESRCH)
 +		ksft_print_msg("kill %d: %s\n", pid, strerror(errno));
-+	/* Ignore the result: the task may be dead already. */
++	/*
++	 * A deadline task left throttled for good never runs, even to die.
++	 * Switched to SCHED_OTHER, it runs and dies. Ignore the result: the
++	 * task may be dead already.
++	 */
 +	set_other(pid);
 +	while (waitpid(pid, &status, 0) != pid) {
 +		if (errno == EINTR)
@@ -292,93 +352,373 @@ index 000000000000..714a0ff03f1b
 +	}
 +}
 +
-+static int write_file(const char *dir, const char *name, const char *val)
++/*
++ * Report a child that died before the end of its case. Return KSFT_SKIP
++ * if it could not enter SCHED_DEADLINE, and KSFT_FAIL otherwise.
++ */
++static int gone(int status)
 +{
-+	char path[PATH_MAX];
-+	int fd, err = 0;
-+	ssize_t n;
-+
-+	if (snprintf(path, sizeof(path), "%s/%s", dir, name) >= (int)sizeof(path))
-+		return -ENAMETOOLONG;
-+	fd = open(path, O_WRONLY);
-+	if (fd < 0)
-+		return -errno;
-+	n = write(fd, val, strlen(val));
-+	if (n < 0)
-+		err = -errno;
-+	else if (n != (ssize_t)strlen(val))
-+		err = -EIO;
-+	if (close(fd) && !err)
-+		err = -errno;
-+	return err;
++	if (WIFEXITED(status) && WEXITSTATUS(status) == KSFT_SKIP) {
++		ksft_print_msg("SCHED_DEADLINE refused\n");
++		return KSFT_SKIP;
++	}
++	if (WIFSIGNALED(status))
++		ksft_print_msg("the task died of signal %d\n", WTERMSIG(status));
++	else
++		ksft_print_msg("the task exited with %d\n", WEXITSTATUS(status));
++	return KSFT_FAIL;
 +}
 +
-+static int read_file(const char *path, char *buf, size_t len)
++/*
++ * Spin, so that the task uses up its runtime and is throttled in every
++ * period. Record in sh when it runs, and when it resumes after a
++ * throttle. A throttle stops the task for most of its 2s period. A gap
++ * of 1s or less, such as a preemption, is not a throttle.
++ */
++static void spinner(void)
 +{
-+	int fd = open(path, O_RDONLY);
-+	ssize_t n;
++	uint64_t last = now_ns();
 +
-+	if (fd < 0)
-+		return -1;
-+	do {
-+		n = read(fd, buf, len - 1);
-+	} while (n < 0 && errno == EINTR);
-+	close(fd);
-+	if (n < 0)
-+		return -1;
-+	buf[n] = 0;
-+	return 0;
-+}
++	for (;;) {
++		uint64_t t = now_ns();
 +
-+static int enter(const char *cg, pid_t pid)
-+{
-+	char buf[16];
-+
-+	snprintf(buf, sizeof(buf), "%d", pid);
-+	return write_file(cg, "cgroup.procs", buf);
-+}
-+
-+/* Make @cg a partition root of CPU @cpu alone. Return 0, or -1 on error. */
-+static int make_partition(const char *cg, int cpu)
-+{
-+	char path[PATH_MAX], buf[32];
-+
-+	if (mkdir(cg, 0755) && errno != EEXIST)
-+		return -1;
-+	snprintf(buf, sizeof(buf), "%d", cpu);
-+	if (write_file(cg, "cpuset.cpus", buf) || write_file(cg, "cpuset.cpus.partition", "root"))
-+		return -1;
-+	snprintf(path, sizeof(path), "%s/cpuset.cpus.partition", cg);
-+	if (read_file(path, buf, sizeof(buf)) || strcmp(buf, "root\n"))
-+		return -1;
-+	return 0;
-+}
-+
-+static void remove_partition(const char *cg)
-+{
-+	int err = write_file(cg, "cpuset.cpus.partition", "member");
-+	uint64_t end;
-+
-+	if (err && err != -ENOENT)
-+		ksft_print_msg("%s back to a member: %s\n", cg, strerror(-err));
-+	/* A cgroup whose last task just died takes a moment to empty. */
-+	end = now_ns() + NSEC_PER_SEC;
-+	while (rmdir(cg)) {
-+		if (errno == ENOENT)
-+			return;
-+		if (errno != EBUSY || now_ns() > end) {
-+			ksft_print_msg("rmdir %s: %s\n", cg, strerror(errno));
-+			return;
++		if (t - last > NSEC_PER_SEC) {
++			__atomic_store_n(&sh->run_start, t, __ATOMIC_RELAXED);
++			__atomic_fetch_add(&sh->runs, 1, __ATOMIC_RELEASE);
 +		}
-+		sleep_ns(10 * NSEC_PER_MSEC);
++		__atomic_store_n(&sh->stamp, t, __ATOMIC_RELEASE);
++		last = t;
 +	}
 +}
 +
 +/*
-+ * Return the CPU time of the calling thread in ns. clock_gettime() cannot
-+ * fail: the clock is always supported, and the pointer is valid.
++ * Return the runtime @pid has left, from dl.runtime in /proc/<pid>/sched.
++ * It is below zero for a throttled task: the task overran by that much.
++ * Return 1 if it cannot be read.
 + */
-+static uint64_t cpu_time_ns(void)
++static long long dl_runtime_left(pid_t pid)
++{
++	char path[64], line[256];
++	long long left = 1;
++	FILE *f;
++
++	snprintf(path, sizeof(path), "/proc/%d/sched", pid);
++	f = fopen(path, "r");
++	if (!f)
++		return 1;
++	while (fgets(line, sizeof(line), f)) {
++		char *val = strchr(line, ':');
++
++		if (!strncmp(line, "dl.runtime", 10) && val) {
++			left = atoll(val + 1);
++			break;
++		}
++	}
++	fclose(f);
++	return left;
++}
++
++#define LOST_RUNTIME	(10 * NSEC_PER_MSEC)
++#define LOST_PERIOD	(2 * NSEC_PER_SEC)
++#define LOST_MARGIN	(200 * NSEC_PER_USEC)
++
++/*
++ * The child is a deadline task of 10ms every 2s, and spins. Three times,
++ * the parent does this:
++ * - Wait until the child resumes at a replenishment, at time r, and is
++ *   throttled again.
++ * - Switch it to SCHED_OTHER.
++ * - Sleep until r + LOST_PERIOD + LOST_MARGIN. r + LOST_PERIOD is the
++ *   child's deadline. Its replenishment timer fires there, on a task out
++ *   of SCHED_DEADLINE.
++ * - Switch it back to SCHED_DEADLINE.
++ * - Check that it runs again within 1.5 periods.
++ *
++ * The switch back must come before the 0-lag time. The 0-lag time is after
++ * the deadline by the overrun times period/runtime, which is 200 here.
++ * The overrun is how far the task ran past its runtime before the kernel
++ * throttled it. The parent reads it from /proc. A round whose switch back
++ * comes after the 0-lag time tests nothing, and does not count. The check
++ * keeps half of LOST_MARGIN as a margin. The case is skipped if no round
++ * counts. If the overrun cannot be read, every round counts.
++ */
++static int test_throttled_round_trip(void)
++{
++	int attempt, ret = KSFT_PASS, err, counted = 0;
++	pid_t pid;
++
++	memset(sh, 0, sizeof(*sh));
++	pid = fork_child();
++	if (pid < 0) {
++		ksft_print_msg("fork: %s\n", strerror(errno));
++		return KSFT_FAIL;
++	}
++	if (!pid) {
++		if (set_deadline(0, LOST_RUNTIME, LOST_PERIOD))
++			_exit(KSFT_SKIP);
++		spinner();
++	}
++	for (attempt = 0; attempt < 3 && ret == KSFT_PASS; attempt++) {
++		uint64_t runs, r, s, t;
++		long long left;
++
++		/*
++		 * Wait until the task resumes at a replenishment, at time r.
++		 * Then wait until it stops running: it is throttled.
++		 */
++		runs = __atomic_load_n(&sh->runs, __ATOMIC_ACQUIRE);
++		t = now_ns();
++		while (__atomic_load_n(&sh->runs, __ATOMIC_ACQUIRE) == runs) {
++			if (now_ns() - t > 3 * LOST_PERIOD) {
++				int status;
++
++				if (waitpid(pid, &status, WNOHANG) == pid)
++					return gone(status);
++				ksft_print_msg("the task did not resume within 3 periods\n");
++				reap(pid);
++				return KSFT_FAIL;
++			}
++			sleep_ns(NSEC_PER_MSEC);
++		}
++		r = __atomic_load_n(&sh->run_start, __ATOMIC_RELAXED);
++		do {
++			s = __atomic_load_n(&sh->stamp, __ATOMIC_ACQUIRE);
++			sleep_ns(2 * NSEC_PER_MSEC);
++		} while (__atomic_load_n(&sh->stamp, __ATOMIC_ACQUIRE) != s);
++		/*
++		 * The task is throttled until r + LOST_PERIOD. Switch it out
++		 * now, and back LOST_MARGIN after that.
++		 */
++		left = dl_runtime_left(pid);
++		err = set_other(pid);
++		if (!err) {
++			sleep_until(r + LOST_PERIOD + LOST_MARGIN);
++			err = set_deadline(pid, LOST_RUNTIME, LOST_PERIOD);
++			t = now_ns();
++		}
++		if (err) {
++			ksft_print_msg("policy switch: %s\n", strerror(-err));
++			ret = KSFT_FAIL;
++			break;
++		}
++		/* The deadline is at most r + LOST_PERIOD: r is read after it. */
++		if (left > 0 ||
++		    t + LOST_MARGIN / 2 <
++		    r + LOST_PERIOD + (uint64_t)-left * (LOST_PERIOD / LOST_RUNTIME))
++			counted++;
++		else
++			ksft_print_msg("an overrun of %lld ns: switched back after the 0-lag time\n",
++				       -left);
++		sleep_ns(10 * NSEC_PER_MSEC);
++		s = __atomic_load_n(&sh->stamp, __ATOMIC_ACQUIRE);
++		t = now_ns();
++		while (__atomic_load_n(&sh->stamp, __ATOMIC_ACQUIRE) == s &&
++		       now_ns() - t < LOST_PERIOD + LOST_PERIOD / 2)
++			sleep_ns(NSEC_PER_MSEC);
++		if (__atomic_load_n(&sh->stamp, __ATOMIC_ACQUIRE) == s) {
++			ksft_print_msg("throttled, switched out and back: never ran again\n");
++			ret = KSFT_FAIL;
++		}
++	}
++	reap(pid);
++	if (ret == KSFT_PASS && !counted)
++		ret = KSFT_SKIP;
++	return ret;
++}
++
++#define LEAK_RUNTIME	(9 * NSEC_PER_MSEC)
++#define LEAK_PERIOD	(10 * NSEC_PER_MSEC)
++
++/* Run 0.2ms, then sleep 50ms, forever. Count the sleeps in sh. */
++static void sleeper(void)
++{
++	for (;;) {
++		uint64_t end = now_ns() + 200 * NSEC_PER_USEC;
++
++		while (now_ns() < end)
++			;
++		__atomic_fetch_add(&sh->sleeps, 1, __ATOMIC_RELEASE);
++		sleep_ns(50 * NSEC_PER_MSEC);
++	}
++}
++
++/*
++ * Switch a sleeping task out of SCHED_DEADLINE and back, over and over.
++ * The task has 90% of a CPU. If each round trip leaks it, the root domain
++ * is full after about as many round trips as it has CPUs.
++ */
++static int test_asleep_round_trip(void)
++{
++	int i, trips = get_nprocs() * 10 / 9 + 3, ret = KSFT_PASS, err;
++	pid_t pid;
++	FILE *f;
++
++	f = fopen("/proc/sys/kernel/sched_rt_runtime_us", "r");
++	if (f) {
++		long rt = 0;
++
++		if (fscanf(f, "%ld", &rt) == 1 && rt < 0) {
++			fclose(f);
++			ksft_print_msg("no admission control: a leak cannot be seen\n");
++			return KSFT_SKIP;
++		}
++		fclose(f);
++	}
++	memset(sh, 0, sizeof(*sh));
++	pid = fork_child();
++	if (pid < 0) {
++		ksft_print_msg("fork: %s\n", strerror(errno));
++		return KSFT_FAIL;
++	}
++	if (!pid) {
++		if (set_deadline(0, LEAK_RUNTIME, LEAK_PERIOD))
++			_exit(KSFT_SKIP);
++		sleeper();
++	}
++	for (i = 0; i < trips; i++) {
++		uint64_t sleeps = __atomic_load_n(&sh->sleeps, __ATOMIC_ACQUIRE);
++		uint64_t t = now_ns();
++
++		while (__atomic_load_n(&sh->sleeps, __ATOMIC_ACQUIRE) == sleeps) {
++			if (now_ns() - t > NSEC_PER_SEC) {
++				int status;
++
++				if (waitpid(pid, &status, WNOHANG) == pid)
++					return gone(status);
++				ksft_print_msg("the task did not run within 1s\n");
++				reap(pid);
++				return KSFT_FAIL;
++			}
++			sleep_ns(NSEC_PER_MSEC);
++		}
++		/*
++		 * Wait 5ms. The task is still asleep, and past its 0-lag
++		 * time.
++		 */
++		sleep_ns(5 * NSEC_PER_MSEC);
++		err = set_other(pid);
++		if (!err)
++			err = set_deadline(pid, LEAK_RUNTIME, LEAK_PERIOD);
++		if (err) {
++			ksft_print_msg("switch back refused after %d of %d round trips: %s\n",
++				       i, trips, strerror(-err));
++			ret = KSFT_FAIL;
++			break;
++		}
++	}
++	reap(pid);
++	return ret;
++}
++
++/*
++ * Take a deadline task out of the class with sysrq-n. Then check that
++ * another task can still enter SCHED_DEADLINE.
++ *
++ * sysrq-n calls __sched_setscheduler() on every real-time and deadline
++ * user task, under tasklist_lock, to make it SCHED_OTHER. On a kernel
++ * with the bug, that call takes cpuset_mutex for a deadline task and
++ * never releases it. No task can enter SCHED_DEADLINE after that.
++ *
++ * sysrq-n changes the whole system. So the sysrq cases run last, and only
++ * with DEADLINE_TEST_SYSRQ set.
++ */
++static int test_sysrq_normalize(void)
++{
++	int fd, status, ret = KSFT_PASS;
++	pid_t pid, prober, w;
++	uint64_t t;
++
++	if (!getenv("DEADLINE_TEST_SYSRQ")) {
++		ksft_print_msg("sysrq-n renices every real-time task: set DEADLINE_TEST_SYSRQ=1\n");
++		return KSFT_SKIP;
++	}
++	fd = open("/proc/sysrq-trigger", O_WRONLY);
++	if (fd < 0) {
++		ksft_print_msg("/proc/sysrq-trigger: %s\n", strerror(errno));
++		return KSFT_SKIP;
++	}
++	pid = fork_child();
++	if (pid < 0) {
++		ksft_print_msg("fork: %s\n", strerror(errno));
++		close(fd);
++		return KSFT_FAIL;
++	}
++	if (!pid) {
++		if (set_deadline(0, LOST_RUNTIME, LOST_PERIOD))
++			_exit(KSFT_SKIP);
++		for (;;)
++			pause();
++	}
++	t = now_ns();
++	while (sched_getscheduler(pid) != SCHED_DEADLINE) {
++		if (waitpid(pid, &status, WNOHANG) == pid) {
++			close(fd);
++			return gone(status);
++		}
++		if (now_ns() - t > NSEC_PER_SEC) {
++			ksft_print_msg("the task did not enter SCHED_DEADLINE within 1s\n");
++			close(fd);
++			reap(pid);
++			return KSFT_FAIL;
++		}
++		sleep_ns(NSEC_PER_MSEC);
++	}
++	if (write(fd, "n", 1) != 1) {
++		ksft_print_msg("sysrq-n: %s\n", strerror(errno));
++		close(fd);
++		reap(pid);
++		return KSFT_SKIP;
++	}
++	close(fd);
++	t = now_ns();
++	while (sched_getscheduler(pid) != SCHED_OTHER && now_ns() - t < NSEC_PER_SEC)
++		sleep_ns(NSEC_PER_MSEC);
++	if (sched_getscheduler(pid) != SCHED_OTHER) {
++		ksft_print_msg("still SCHED_DEADLINE after sysrq-n\n");
++		ret = KSFT_FAIL;
++	}
++	/* A new task must still enter SCHED_DEADLINE within 5s. */
++	prober = fork_child();
++	if (prober < 0) {
++		ksft_print_msg("fork: %s\n", strerror(errno));
++		reap(pid);
++		return KSFT_FAIL;
++	}
++	if (!prober)
++		_exit(set_deadline(0, LOST_RUNTIME, LOST_PERIOD) ? 1 : 0);
++	t = now_ns();
++	while ((w = waitpid(prober, &status, WNOHANG)) == 0) {
++		if (now_ns() - t > 5 * NSEC_PER_SEC) {
++			ksft_print_msg("SCHED_DEADLINE admission blocked after sysrq-n\n");
++			reap(pid);
++			/*
++			 * The prober is blocked on a mutex. Do not wait for
++			 * it.
++			 */
++			return KSFT_FAIL;
++		}
++		sleep_ns(NSEC_PER_MSEC);
++	}
++	if (w != prober) {
++		ksft_print_msg("waitpid %d: %s\n", prober, strerror(errno));
++		ret = KSFT_FAIL;
++	} else if (!WIFEXITED(status) || WEXITSTATUS(status)) {
++		ksft_print_msg("SCHED_DEADLINE refused after sysrq-n\n");
++		ret = KSFT_FAIL;
++	}
++	reap(pid);
++	return ret;
++}
++
++/* The priority /proc shows for a deadline task, or a task boosted by one. */
++#define DL_TASK_PRIO	(-101)
++
++static pthread_mutex_t pi_lock;
++static sem_t owner_locked, owner_go;
++static pid_t owner_tid;
++static int owner_ms;		/* the owner's CPU time in its first period */
++
++static uint64_t thread_time_ns(void)
 +{
 +	struct timespec ts;
 +
@@ -386,235 +726,258 @@ index 000000000000..714a0ff03f1b
 +	return ts.tv_sec * NSEC_PER_SEC + ts.tv_nsec;
 +}
 +
-+enum depart { DIES, SWITCHED_OUT };
-+
 +/*
-+ * Fork a child that enters @cg, if given, then SCHED_DEADLINE at 400ms
-+ * every second. The child runs 380ms of its runtime. Then it dies if @how
-+ * is DIES. Otherwise it switches to SCHED_OTHER, writes a byte to @fd and
-+ * sleeps. Its 0-lag time is then about 570ms ahead. Return the pid of the
-+ * child, or -1. Only the read end of @fd stays open in the caller.
++ * Wait on @s for at most @ms, retrying on signals. Return 0, or -1 on a
++ * timeout or an error.
 + */
-+static pid_t departing(const char *cg, enum depart how, int fd[2])
++static int sem_wait_for(sem_t *s, int ms)
 +{
-+	pid_t pid = fork();
++	struct timespec ts;
 +
-+	if (pid < 0)
-+		ksft_print_msg("fork: %s\n", strerror(errno));
-+	if (!pid) {
-+		uint64_t t0;
-+
-+		close(fd[0]);
-+		if (cg && enter(cg, getpid()))
-+			_exit(2);
-+		if (set_deadline(0, 400 * NSEC_PER_MSEC))
-+			_exit(3);
-+		t0 = cpu_time_ns();
-+		while (cpu_time_ns() - t0 < 380 * NSEC_PER_MSEC)
-+			;
-+		if (how == DIES)
-+			_exit(0);
-+		if (set_other(0) || write(fd[1], "x", 1) != 1)
-+			_exit(4);
-+		for (;;)
-+			pause();
++	clock_gettime(CLOCK_REALTIME, &ts);
++	ts.tv_nsec += (long)(ms % 1000) * 1000000L;
++	ts.tv_sec += ms / 1000 + ts.tv_nsec / 1000000000L;
++	ts.tv_nsec %= 1000000000L;
++	while (sem_timedwait(s, &ts)) {
++		if (errno != EINTR)
++			return -1;
 +	}
-+	close(fd[1]);
-+	fd[1] = -1;
-+	return pid;
++	return 0;
++}
++
++/* Return the priority @tid runs at, from /proc, or 0. */
++static int prio_of(pid_t tid)
++{
++	char path[64], buf[1024], *p;
++	ssize_t n;
++	int fd, i;
++
++	snprintf(path, sizeof(path), "/proc/%d/stat", tid);
++	fd = open(path, O_RDONLY);
++	if (fd < 0)
++		return 0;
++	n = read(fd, buf, sizeof(buf) - 1);
++	close(fd);
++	if (n <= 0)
++		return 0;
++	buf[n] = 0;
++	/* The priority is field 18, the 16th after the command name. */
++	p = strrchr(buf, ')');
++	for (i = 0; p && i < 16; i++)
++		p = strchr(p + 1, ' ');
++	return p ? atoi(p + 1) : 0;
++}
++
++/* Join @t. Return -1 if the join fails or @t returned an error. */
++static int join(pthread_t t)
++{
++	void *res;
++	int err = pthread_join(t, &res);
++
++	if (err)
++		ksft_print_msg("pthread_join: %s\n", strerror(err));
++	return err || res ? -1 : 0;
 +}
 +
 +/*
-+ * Wait until the child is out of SCHED_DEADLINE: dead or switched out.
-+ * Return 0 on success. If the child failed, return its exit status, or
-+ * -1. Set *@pid to -1 once the child is reaped.
++ * Run as the owner thread. Take pi_lock, post owner_locked, and sleep on
++ * owner_go while holding the lock. A deadline waiter boosts the owner
++ * during that sleep. Then drop the lock, become a deadline task of 10ms
++ * every 100ms, and spin for 100ms. Store the CPU time used, in ms, in
++ * owner_ms. Return NULL, or 1 on an error.
 + */
-+static int departed(pid_t *pid, enum depart how, int fd)
++static void *sleeping_owner(void *arg)
 +{
-+	int status;
-+	char c;
++	uint64_t t0, cpu0;
++	int err;
 +
-+	if (*pid < 0)
-+		return -1;
-+	/*
-+	 * A child that switches out sends a byte. Without the byte, the
-+	 * child died or failed, and its exit status tells which.
-+	 */
-+	if (how == SWITCHED_OUT) {
-+		ssize_t n;
-+
-+		do {
-+			n = read(fd, &c, 1);
-+		} while (n < 0 && errno == EINTR);
-+		if (n == 1)
-+			return 0;
-+	}
-+	if (waitpid(*pid, &status, 0) != *pid)
-+		return -1;
-+	*pid = -1;
-+	return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
-+}
-+
-+/*
-+ * Fork a child that enters @cg and sleeps there. The child moves itself,
-+ * so that it last ran on a CPU of @cg. Wait until it is there. Return its
-+ * pid, or -1.
-+ */
-+static pid_t sleeper(const char *cg)
-+{
-+	int fd[2];
-+	pid_t pid;
-+	char c;
-+
-+	if (pipe(fd))
-+		return -1;
-+	pid = fork();
-+	if (pid < 0)
-+		ksft_print_msg("fork: %s\n", strerror(errno));
-+	if (!pid) {
-+		close(fd[0]);
-+		if (enter(cg, getpid()) || write(fd[1], "x", 1) != 1)
-+			_exit(1);
-+		for (;;)
-+			pause();
-+	}
-+	close(fd[1]);
-+	if (pid > 0 && read(fd[0], &c, 1) != 1) {
-+		reap(pid);
-+		pid = -1;
-+	}
-+	close(fd[0]);
-+	return pid;
-+}
-+
-+/*
-+ * Check that P admits one task of 600ms every second, but not two. The
-+ * caller must wait until every inactive timer has fired.
-+ */
-+static int check_p(void)
-+{
-+	pid_t a = sleeper(cg_p), b = sleeper(cg_p);
-+	int ret = KSFT_FAIL, e1, e2;
-+
-+	if (a < 0 || b < 0) {
-+		ksft_print_msg("no task could enter P\n");
-+		goto out;
-+	}
-+	e1 = set_deadline(a, 600 * NSEC_PER_MSEC);
-+	e2 = set_deadline(b, 600 * NSEC_PER_MSEC);
-+	if (e1)
-+		ksft_print_msg("a first task refused in P: %s\n", strerror(-e1));
-+	else if (!e2)
-+		ksft_print_msg("1.2 CPUs of deadline tasks admitted in a partition of one CPU\n");
-+	else if (e2 != -EBUSY)
-+		ksft_print_msg("the second task refused with %s, not EBUSY\n", strerror(-e2));
-+	else
-+		ret = KSFT_PASS;
-+out:
-+	reap(a);
-+	reap(b);
-+	return ret;
-+}
-+
-+/*
-+ * Have a task of P die or switch out, as @how says. Make Q before its
-+ * 0-lag time, then check P.
-+ */
-+static int test_rebuild(enum depart how)
-+{
-+	int ret = KSFT_FAIL, fd[2], err;
-+	pid_t pid = -1;
-+
-+	if (pipe(fd))
-+		return KSFT_FAIL;
-+	if (make_partition(cg_p, ncpus - 1)) {
-+		ksft_print_msg("no partition root on CPU %d\n", ncpus - 1);
-+		ret = KSFT_SKIP;
-+		goto out;
-+	}
-+	pid = departing(cg_p, how, fd);
-+	err = departed(&pid, how, fd[0]);
++	owner_tid = syscall(SYS_gettid);
++	err = pthread_mutex_lock(&pi_lock);
 +	if (err) {
-+		ksft_print_msg("the deadline task failed (%d)\n", err);
-+		goto out;
++		ksft_print_msg("the owner cannot take the lock: %s\n", strerror(err));
++		return (void *)1;
 +	}
-+	if (make_partition(cg_q, ncpus - 2)) {
-+		ksft_print_msg("no partition root on CPU %d\n", ncpus - 2);
-+		ret = KSFT_SKIP;
-+		goto out;
++	sem_post(&owner_locked);
++	while (sem_wait(&owner_go) && errno == EINTR)
++		;
++	err = pthread_mutex_unlock(&pi_lock);
++	if (err) {
++		ksft_print_msg("the owner cannot unlock: %s\n", strerror(err));
++		return (void *)1;
 +	}
-+	/*
-+	 * Wait past the 0-lag time. In the SWITCHED_OUT case the task is still
-+	 * alive then: it sleeps in P as a SCHED_OTHER task.
-+	 */
-+	sleep_ns(1500 * NSEC_PER_MSEC);
-+	ret = check_p();
-+out:
-+	reap(pid);
-+	remove_partition(cg_q);
-+	remove_partition(cg_p);
-+	close(fd[0]);
-+	if (fd[1] >= 0)
-+		close(fd[1]);
-+	return ret;
++	err = set_deadline(0, 10 * NSEC_PER_MSEC, 100 * NSEC_PER_MSEC);
++	if (err) {
++		ksft_print_msg("the owner refused as a deadline task: %s\n", strerror(-err));
++		return (void *)1;
++	}
++	t0 = now_ns();
++	cpu0 = thread_time_ns();
++	while (now_ns() - t0 < 100 * NSEC_PER_MSEC)
++		;
++	owner_ms = (thread_time_ns() - cpu0) / NSEC_PER_MSEC;
++	set_other(0);
++	return NULL;
 +}
 +
 +/*
-+ * Have a task outside P switch to SCHED_OTHER and sleep. Before its 0-lag
-+ * time, move it into P and kill it. Then check P.
++ * The waiter thread: become a deadline task of 5ms every 50ms, and wait
++ * up to 300ms for pi_lock. The owner holds the lock all along. Return
++ * NULL if the wait timed out, or 1.
 + */
-+static int test_move(void)
++static void *boosting_waiter(void *arg)
 +{
-+	int ret = KSFT_FAIL, fd[2], err;
-+	pid_t pid = -1;
++	struct timespec ts;
++	int err;
 +
-+	if (pipe(fd))
-+		return KSFT_FAIL;
-+	if (make_partition(cg_p, ncpus - 1)) {
-+		ksft_print_msg("no partition root on CPU %d\n", ncpus - 1);
-+		ret = KSFT_SKIP;
-+		goto out;
-+	}
-+	pid = departing(NULL, SWITCHED_OUT, fd);
-+	err = departed(&pid, SWITCHED_OUT, fd[0]);
++	err = set_deadline(0, 5 * NSEC_PER_MSEC, 50 * NSEC_PER_MSEC);
 +	if (err) {
-+		ksft_print_msg("the deadline task failed (%d)\n", err);
-+		goto out;
++		ksft_print_msg("the waiter refused as a deadline task: %s\n", strerror(-err));
++		return (void *)1;
 +	}
-+	if (enter(cg_p, pid)) {
-+		ksft_print_msg("the task cannot move into P\n");
-+		goto out;
++	clock_gettime(CLOCK_REALTIME, &ts);
++	ts.tv_nsec += 300 * 1000000L;
++	ts.tv_sec += ts.tv_nsec / 1000000000L;
++	ts.tv_nsec %= 1000000000L;
++	err = pthread_mutex_timedlock(&pi_lock, &ts);
++	if (!err)
++		pthread_mutex_unlock(&pi_lock);
++	set_other(0);			/* sysrq-n may have done it */
++	if (err != ETIMEDOUT) {
++		ksft_print_msg("the waiter of the lock: %s, not a timeout\n",
++			       err ? strerror(err) : "got it");
++		return (void *)1;
 +	}
-+	/* The task wakes up and dies on P's CPU, before its 0-lag time. */
-+	reap(pid);
-+	pid = -1;
-+	sleep_ns(1500 * NSEC_PER_MSEC);
-+	ret = check_p();
-+out:
-+	reap(pid);
-+	remove_partition(cg_p);
-+	close(fd[0]);
-+	if (fd[1] >= 0)
-+		close(fd[1]);
-+	return ret;
++	return NULL;
 +}
 +
-+static int find_cgroup2(void)
++/*
++ * Check that sysrq-n ends the boost of a SCHED_OTHER lock owner.
++ *
++ * M is the main thread, O the owner, W the waiter. All three start as
++ * SCHED_OTHER. pi_lock is a priority inheritance mutex.
++ *
++ *   M                           O                          W
++ *   start O
++ *                               lock pi_lock
++ *                               post owner_locked
++ *                               sleep on owner_go
++ *   start W
++ *                                                          sched_setattr():
++ *                                                            deadline,
++ *                                                            5ms every 50ms
++ *                                                          timedlock pi_lock,
++ *                                                            300ms: boosts O
++ *   see O at deadline priority
++ *   write "n" to sysrq-trigger:
++ *     O and W leave the class
++ *                                                          timedlock times out:
++ *                                                            deboosts O
++ *   join W
++ *   post owner_go
++ *                               unlock pi_lock
++ *                               sched_setattr(): deadline,
++ *                                 10ms every 100ms
++ *                               spin 100ms, measure
++ *                                 CPU time
++ *   join O
++ *
++ * sysrq-n takes O out of the deadline class without a chain walk. The
++ * boost must end there. On a kernel with the bug it does not, and the
++ * deboost at W's timeout sees no change of priority, so it leaves the
++ * boost too. O would then enter SCHED_DEADLINE as a boosted task, and
++ * never be throttled. O must get about 10ms of CPU time in its 100ms. The
++ * case fails above 20ms.
++ *
++ * O sleeps while it is boosted, on purpose. A boosted task runs on its
++ * waiter's parameters. sysrq-n takes W out of the class too, and W's
++ * parameters can then be cleared. On a kernel that refills the runtime
++ * from cleared parameters, a running O would loop in
++ * replenish_dl_entity().
++ *
++ * Run the case only if sysrq_normalize passed. @normalized is its result.
++ * Otherwise sysrq-n may leave cpuset_mutex held, and O would block in
++ * sched_setattr().
++ */
++static int test_sysrq_boosted_owner(int normalized)
 +{
-+	char line[PATH_MAX + 64], dev[64], dir[PATH_MAX], type[64];
-+	FILE *f = fopen("/proc/self/mounts", "r");
-+	int found = 0;
++	int fd, err, ret = KSFT_PASS;
++	pthread_mutexattr_t a;
++	pthread_t o, w;
++	uint64_t t;
 +
-+	while (f && !found && fgets(line, sizeof(line), f)) {
-+		if (sscanf(line, "%63s %4095s %63s", dev, dir, type) == 3 &&
-+		    !strcmp(type, "cgroup2")) {
-+			snprintf(root, sizeof(root), "%s", dir);
-+			found = 1;
-+		}
++	if (!getenv("DEADLINE_TEST_SYSRQ")) {
++		ksft_print_msg("sysrq-n renices every real-time task: set DEADLINE_TEST_SYSRQ=1\n");
++		return KSFT_SKIP;
 +	}
-+	if (f)
-+		fclose(f);
-+	return found ? 0 : -1;
++	if (normalized != KSFT_PASS) {
++		ksft_print_msg("sysrq_normalize did not pass: sched_setattr() may block\n");
++		return KSFT_SKIP;
++	}
++	fd = open("/proc/sysrq-trigger", O_WRONLY);
++	if (fd < 0) {
++		ksft_print_msg("/proc/sysrq-trigger: %s\n", strerror(errno));
++		return KSFT_SKIP;
++	}
++	err = pthread_mutexattr_init(&a);
++	if (!err) {
++		err = pthread_mutexattr_setprotocol(&a, PTHREAD_PRIO_INHERIT);
++		if (!err)
++			err = pthread_mutex_init(&pi_lock, &a);
++		pthread_mutexattr_destroy(&a);
++	}
++	if (err) {
++		ksft_print_msg("no priority inheritance mutex: %s\n", strerror(err));
++		close(fd);
++		return KSFT_SKIP;
++	}
++	if (sem_init(&owner_locked, 0, 0) || sem_init(&owner_go, 0, 0)) {
++		ksft_print_msg("sem_init: %s\n", strerror(errno));
++		ret = KSFT_FAIL;
++		goto out;
++	}
++	owner_ms = -1;
++	if (pthread_create(&o, NULL, sleeping_owner, NULL)) {
++		ksft_print_msg("the owner thread could not start\n");
++		ret = KSFT_FAIL;
++		goto out;
++	}
++	if (sem_wait_for(&owner_locked, 5000)) {
++		ksft_print_msg("the owner never took the lock\n");
++		sem_post(&owner_go);	/* in case it gets there late */
++		join(o);
++		ret = KSFT_FAIL;
++		goto out;
++	}
++	if (pthread_create(&w, NULL, boosting_waiter, NULL)) {
++		ksft_print_msg("the waiter thread could not start\n");
++		ret = KSFT_FAIL;
++		goto unlock;
++	}
++	t = now_ns();
++	while (prio_of(owner_tid) != DL_TASK_PRIO && now_ns() - t < 200 * NSEC_PER_MSEC)
++		sleep_ns(NSEC_PER_MSEC);
++	if (prio_of(owner_tid) != DL_TASK_PRIO) {
++		ksft_print_msg("the waiter never boosted the owner\n");
++		ret = KSFT_FAIL;
++	} else if (write(fd, "n", 1) != 1) {
++		ksft_print_msg("sysrq-n: %s\n", strerror(errno));
++		ret = KSFT_SKIP;
++	}
++	if (join(w))
++		ret = KSFT_FAIL;	/* the waiter said why */
++unlock:
++	sem_post(&owner_go);
++	if (join(o)) {
++		ret = KSFT_FAIL;	/* the owner said why */
++	} else if (ret == KSFT_PASS && owner_ms > 20) {
++		ksft_print_msg("the owner ran %d ms of its first 100: the boost outlived sysrq-n\n",
++			       owner_ms);
++		ret = KSFT_FAIL;
++	}
++out:
++	close(fd);
++	pthread_mutex_destroy(&pi_lock);
++	return ret;
 +}
 +
 +static void report(const char *name, int ret)
@@ -629,39 +992,23 @@ index 000000000000..714a0ff03f1b
 +
 +int main(void)
 +{
-+	char buf[256], path[PATH_MAX + 32];
-+	int added;
++	int ret;
 +
++	sh = mmap(NULL, sizeof(*sh), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
++	if (sh == MAP_FAILED)
++		ksft_exit_fail_msg("mmap: %s\n", strerror(errno));
 +	ksft_print_header();
-+	if (geteuid())
-+		ksft_exit_skip("needs root\n");
-+	ncpus = get_nprocs();
-+	if (ncpus < 3)
-+		ksft_exit_skip("needs 3 CPUs\n");
-+	if (read_file("/proc/sys/kernel/sched_rt_runtime_us", buf, sizeof(buf)) || atol(buf) < 0)
-+		ksft_exit_skip("no deadline admission control\n");
-+	if (find_cgroup2())
-+		ksft_exit_skip("cgroup v2 is not mounted\n");
++	ksft_set_plan(4);
 +	/*
-+	 * Enable the cpuset controller for the root's children, if it is
-+	 * off. It is turned off again at the end.
++	 * Keep this order. On a kernel with the bugs, asleep_round_trip fills
++	 * the root domain, and sysrq_normalize blocks every later admission.
++	 * So sysrq_boosted_owner runs only if sysrq_normalize passed.
 +	 */
-+	snprintf(path, sizeof(path), "%s/cgroup.subtree_control", root);
-+	if (read_file(path, buf, sizeof(buf)))
-+		ksft_exit_skip("no cgroup.subtree_control\n");
-+	added = !strstr(buf, "cpuset");
-+	if (added && write_file(root, "cgroup.subtree_control", "+cpuset"))
-+		ksft_exit_skip("no cpuset controller\n");
-+	if (snprintf(cg_p, sizeof(cg_p), "%s/deadline_rebuild_p", root) >= (int)sizeof(cg_p) ||
-+	    snprintf(cg_q, sizeof(cg_q), "%s/deadline_rebuild_q", root) >= (int)sizeof(cg_q))
-+		ksft_exit_skip("cgroup v2 mount path too long\n");
-+
-+	ksft_set_plan(3);
-+	report("dies_before_rebuild", test_rebuild(DIES));
-+	report("switched_out_before_rebuild", test_rebuild(SWITCHED_OUT));
-+	report("moved_after_switch_out", test_move());
-+	if (added && write_file(root, "cgroup.subtree_control", "-cpuset"))
-+		ksft_print_msg("the cpuset controller stays enabled\n");
++	report("throttled_round_trip", test_throttled_round_trip());
++	report("asleep_round_trip", test_asleep_round_trip());
++	ret = test_sysrq_normalize();
++	report("sysrq_normalize", ret);
++	report("sysrq_boosted_owner", test_sysrq_boosted_owner(ret));
 +	ksft_finished();
 +}
 -- 
