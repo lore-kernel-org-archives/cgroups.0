@@ -1,66 +1,55 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794856073;
-	b=rGehtd8mOKHnwbxgRWQE6AoBCxvcxQ2qmDQeF7lZKoCIS3zQIy+XpTv0eqfGlcmkwFUQ
-	 2iLGqsszaR0kb6+Y1WSWbgPhIfuOv2JoKqgYomOZN1yvgNuLh5eSsenchyMMCOKaJic/3
-	 rdnD11RO8dmKEtpZ2ZKdXK98GWO58EXAZfjLMCXUbOJhXGg6eOVlA7dUolOjxmcvfoweu
-	 wlrE1DASiNp+wh3SOqA/1DGXs5/4ZBa5W+7qWibl3FnHifTybWsFetZVUG2oRf1P14sZf
-	 sXi6QWeHPO/gJYCwU/zKEmY0fDZ1EasKnWW6qUkTTl1pyPpzjDX61S6rZnOriqd4FEQ==
+	t=1794859489;
+	b=tw8Jmm1GM9xOwwdNYgQYFpDlMxzBXSTOkP9pYtCTiqZ6sdlrjUdbRTBQVKkwSgw4SaKt
+	 dj75z/N/P3nPvy4BH9eaBTgWfGS+dnBa7HYq1/5PcXkiQjK0E7wPy3UCVoteutnDhuD5G
+	 A2UaXOSH2Wv5p/CyvJgePo3UNm0UxX71wc9FTWEI6jv9+P5AjgxrH8lD4h+ajqWBpiGGQ
+	 tAv77VtF5MEN9NUjy/xkmDgxRMUDeI/+SXd/kLeBmDIX+5gNMzRnwmQS4kWOMclXUcgzk
+	 pLuGWwHOTllEvkiGUKa2sdMsHif+HqWzAAXnpGzQ9U/v3qnELiLq/feBsiGLQwJB59Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794856073;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Virus-Scanned:Received:
-	 Received:Message-ID:Date:MIME-Version:User-Agent:Subject:To:Cc:
-	 References:Content-Language:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=K0ICR6mn2TBoTZleMBYMaxw6/OnkaccZWNuPWZGU84M=;
-	b=3TGNxHu/OZoZ3JC3IWPBwWvL345V29ovwLj8WMt63ixPrLC87UFVauZPAQvtpa8uG2Ug
-	 WcCTL4Pyc5Te2xKrHN9VP3tPgUlHRaUSEwb/6asBMl8gJ0jivdFuTWoSBX7f0Itr82ndh
-	 4xflOg6V5NaB/zzFaZqp20BZjUDiIe3dPrqrgE+sIQcgo10j+NV+kqYDRLxEkjYT5zRgH
-	 S+wHyFtpb6ITjF9je/RKblWFCT/MEOWyjU3prCLvGxyYF4rIjlRxD2u+L0olLv/EwbGrE
-	 dMc5tZyRxfBEDrMbcTqI9X1NvjYA6D7aGjdeVhGBo7kbECpTIyXKp1d7LyXSah/A35w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794859489;
+	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
+	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
+	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
+	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=l1O1HZxpH9G+QLlqP5hHi+3OIw9Mj+HNTrQPUqx/Be4=;
+	b=rbSXh123mlqTS884byPjDDsSIZBCucHSxzgXD2QXle/aWjGkgqUcZLOaLIW92hg7w3ai
+	 9tLKXuP/wnNykWeIyBXKPfztBGTTKU7JSNzxx0MpqUN5N69/DNaJ2XCkNoitEYU1Q1ySD
+	 xhGE38011HEYHuaI/lSbI/zTaLLnI7efK00vTYgpSl5wwYYgB+PGTUPgpZxsfhjj/TgHu
+	 KAlUSgy1zS2M/frjJ9P1YobrKdC3mC8axVBoT+ao0Gwy2KWfppSt/3BCNVc1WAGn6+MbD
+	 qwM+LlYRw7HbYa+iS2FaJWhXJLLWUHgS97BNLrSFGGXM3MzZ8E5jNi6ovk+f/yFR1Jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=acm.org;
-	spf=pass smtp.mailfrom=acm.org;
-	dkim=pass header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=R1aHqpFa;
-	arc=none smtp.remote-ip=199.89.1.14
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BkckWrFr;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74A40606A8A2;
-	Mon, 16 Nov 2026 19:07:52 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74A40606A8A2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ECC8606A31C
+	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 20:04:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=acm.org header.i=@acm.org header.a=rsa-sha256 header.s=mr01 header.b=R1aHqpFa
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4jSy6w14BFz1XM311;
-	Mon, 16 Nov 2026 19:07:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1794856069; x=1797448070; bh=K0ICR6mn2TBoTZleMBYMaxw6
-	/OnkaccZWNuPWZGU84M=; b=R1aHqpFaO9V6ZBz4/BphWBYK2hWIUNhgm1Dx9Eg4
-	z8XqW0IZTKrFIaLyJz7FCoAPo97sZ+i2WvxoLbnhn8zPkZ6EbMUDV4NcOLRen/lQ
-	KYKS/1wkbtgBraiSi+jiq8YS7rJ476guH7RY/OezLiTu4wgt3iWAAReS8/k4Dca1
-	f83o+OLlC+CZZ7PRNJojgb+G8H+Yh5uhzajHFKxm910X+Uvog3hE1sLy4K1J+ySI
-	jZyt+rTKi/2ZX5c4E44OmH7o9Ve0IdJkqNQRL8wpKTlJqA71SyxvEy6EGw43bYjb
-	dQa00xEBVjCqZquwd+NUMx5fg1ALsA2mo+wEjZLUBGxZYw==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id npABjiIrvioi; Mon, 16 Nov 2026 19:07:49 +0000 (UTC)
-Received: from [100.80.227.185] (unknown [104.135.182.41])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4jSy6s2zvnz1XM6J6;
-	Mon, 16 Nov 2026 19:07:49 +0000 (UTC)
-Message-ID: <1acc1b37-fba3-44b1-a53f-f33977576604@acm.org>
-Date: Mon, 16 Nov 2026 11:07:48 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BkckWrFr
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C3A01F00925
+	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 20:04:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794859489;
+	bh=l1O1HZxpH9G+QLlqP5hHi+3OIw9Mj+HNTrQPUqx/Be4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc;
+	b=BkckWrFr9tlTlp2/HgpPCsgRrHm6mXU8p99lK6aelhAkoxLvDvNuiWQziNMeGdXAj
+	 +ORximax4Kex8zGBcBcLWA7p7CKV9BRI0/E6mJzfI5pYFuVb+PwdtAO/JsyonyJsW2
+	 H9m1Fi9w/PsSeALr7xQ6r4VNCuGhDwQctkoUf+hQ2LeN2Non0dX2OGoMlAUF+sfoFj
+	 kpV4XCB/24G1JAgcwXOpFi2PSO6i0vfEAYSHF4Y4E+aXIzKeh+z2RtfEq34pCDaTDX
+	 Ono/Fq8vnf1NZz9yx+v+8za/umYNM19GASNZEwWrouJqhd9Gv94SNGqlCiEdVQHum5
+	 XP0GuPlE40L1A==
+Received: by mail-vs1-f43.google.com with SMTP id ada2fe7eead31-77bf892b496so1173828137.0
+        for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 12:04:49 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErErK+iI+u494RmnK5te5ip/dIW0ABoi9N/MeMqWbegOsgRSlgP4Ibf6fAD3QM6KBo3Tr108A8Uq@vger.kernel.org
+X-Gm-Message-State: APuU4Z97kMyu9lZ07jGUevn6IaeFj6gIpWabI6ZDHXqE90IKEGNjePul
+	yiSAS8kdSb53DBRhbZpBdVR7qg6hU9YQ+mPJDN7WhI8SBWgHCLmk9UbzMHWGN/94lY0Qwqw4297
+	sQxp/uWrpq2OXL5IjLNa3s7cscsJUIZQ=
+X-Received: by 2002:a05:6102:3ec5:b0:7ce:645a:13a4 with SMTP id
+ ada2fe7eead31-7d64d6f7957mr3166761137.20.1794859488504; Mon, 16 Nov 2026
+ 12:04:48 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -70,54 +59,83 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] blk-ioprio: check capabilities before promoting a cgroup
- to RT
-To: Hungyu Lin <dennylin0707@gmail.com>, axboe@kernel.dk
-Cc: tj@kernel.org, josef@toxicpanda.com, cgroups@vger.kernel.org,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20261116090529.69650-1-dennylin0707@gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20261116090529.69650-1-dennylin0707@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20261106235904.1092712-1-tjmercier@google.com> <CABdmKX1gdOH8R6qyjw6XN5VdpAZKVR8NZ=R7Y9Db-BEhUrX-1Q@mail.gmail.com>
+In-Reply-To: <CABdmKX1gdOH8R6qyjw6XN5VdpAZKVR8NZ=R7Y9Db-BEhUrX-1Q@mail.gmail.com>
+From: Barry Song <baohua@kernel.org>
+Date: Tue, 17 Nov 2026 04:04:36 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4w4rNzvaOK9f4D56opW7TtUWL_6srxJoyWXWDzhfgm4ug@mail.gmail.com>
+X-Gm-Features: Aa3M54q72RthsGLTye2AqvS3UPHJXHKdMiJkUDrG0cZhY05KIR-RudBK2Cdn7-Q
+Message-ID: <CAGsJ_4w4rNzvaOK9f4D56opW7TtUWL_6srxJoyWXWDzhfgm4ug@mail.gmail.com>
+Subject: Re: [PATCH] mm: workingset: compare shadow nodes node-wide without
+ kmem accounting
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <qi.zheng@linux.dev>, Dave Chinner <david@fromorbit.com>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <ljs@kernel.org>, Kairui Song <kasong@tencent.com>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Jaewon Kim <jaewon31.kim@samsung.com>, 
+	Jaeseon Sim <jason.sim@samsung.com>, Youngchan Kim <ycshark.kim@samsung.com>, 
+	Dmitry Skiba <dskiba@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/16/26 1:05 AM, Hungyu Lin wrote:
- > Require CAP_SYS_ADMIN or CAP_SYS_NICE for the two policies that raise
- > the priority class, like ioprio_check_cap() does. The other policies are
- > left alone.
+On Tue, Nov 17, 2026 at 1:40=E2=80=AFAM T.J. Mercier <tjmercier@google.com>=
+ wrote:
+>
+> On Fri, Nov 6, 2026 at 3:59=E2=80=AFPM T.J. Mercier <tjmercier@google.com=
+> wrote:
+> >
+> > count_shadow_nodes() limits the number of xarray nodes holding shadow
+> > entries to 1/8th of the pages that could be using them. For a memcg, it
+> > counts the LRU and slab pages local to that memcg.
+> >
+> > With kmem accounting disabled (cgroup.memory=3Dnokmem), shadow nodes ar=
+e
+> > not charged to any memcg and __list_lru_init() makes the shadow_nodes
+> > list_lru non-memcg-aware, so all shadow nodes of a NUMA node are on a
+> > single list. shrinker_alloc() falls back to a non-memcg-aware shadow
+> > node shrinker, which shrink_slab() only invokes for the root memcg.
+> > count_shadow_nodes() therefore compares every shadow node on the NUMA
+> > node against the pages local to the root memcg.
+> >
+> > When most tasks run in child memcgs, the root memcg only holds a small
+> > fraction of all pages, so the shadow node limit derived from the root
+> > memcg page count is far below the number of shadow nodes on the NUMA
+> > node. Since the shrinker has seeks =3D=3D 0, every root shrink_slab() c=
+all
+> > trims about half of the "excess" shadow nodes. Most refault information
+> > is thrown away, so refaults of recently evicted file folios are not
+> > detected. Refaulted folios lose PG_workingset and the workingset_refaul=
+t
+> > and workingset_restore stats drop.
+> >
+> > In testing on devices with kmem accounting disabled, moving tasks from
+> > the root memcg into per-application memcgs dropped workingset_nodes fro=
+m
+> > ~37,000 to ~900 and raised workingset_nodereclaim 4.6x while
+> > pgsteal_file rose by ~12%.
+> >
+> > When kmem accounting is disabled, compare the shadow nodes against the
+> > whole NUMA node, as is done without memcg. Behavior with kmem
+> > accounting enabled is unchanged.
+> >
+> > Cc: Jaewon Kim <jaewon31.kim@samsung.com>
+> > Tested-by: Jaeseon Sim <jason.sim@samsung.com> # Galaxy A18 LTE
+> > Tested-by: Youngchan Kim <ycshark.kim@samsung.com> # Galaxy S27
+> > Tested-by: Dmitry Skiba <dskiba@google.com> # Pixel 10
+> > Signed-off-by: T.J. Mercier <tjmercier@google.com>
+>
+> I'm guessing there aren't many other nokmem users?
+>
 
-Restricting RT promotion to privileged users makes sense to me. A few
-comments below.
+Out of curiosity, is `cgroup.memory=3Dnokmem` commonly used
+on Android devices? If so, what's the rationale behind it?
 
- > @@ -91,6 +92,9 @@ static ssize_t ioprio_set_prio_policy(struct 
-kernfs_open_file *of, char *buf,
- >  	ret = sysfs_match_string(policy_name, buf);
- >  	if (ret < 0)
- >  		return ret;
- > +	if ((ret == POLICY_PROMOTE_TO_RT || ret == POLICY_NONE_TO_RT) &&
- > +	    !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_NICE))
- > +		return -EPERM;
+As for the patch itself, it makes sense to me.
 
-capable() checks the credentials of the task that calls write() rather
-than the credentials of the task that opened the file. Checking the
-credentials of the caller from inside a .write() callback is discouraged
-because it enables confused-deputy attacks, e.g. an unprivileged user
-opens io.prio.class and passes the file descriptor as stdout or stderr
-to a setuid program. cgroup_release_agent_write() uses the file
-credentials for this reason. Please use something like this instead:
-
-	if ((ret == POLICY_PROMOTE_TO_RT || ret == POLICY_NONE_TO_RT) &&
-	    !file_ns_capable(of->file, &init_user_ns, CAP_SYS_ADMIN) &&
-	    !file_ns_capable(of->file, &init_user_ns, CAP_SYS_NICE))
-		return -EPERM;
-
-Additionally, please update the io.prio.class documentation in
-Documentation/admin-guide/cgroup-v2.rst such that it mentions that
-CAP_SYS_ADMIN or CAP_SYS_NICE is required to select the promote-to-rt
-and none-to-rt policies.
-
-Thanks,
-
-Bart.
+Reviewed-by: Barry Song <baohua@kernel.org>
