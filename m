@@ -1,67 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794800096;
-	b=me0D8re+J+LyxxkucXRUnqxaygE7tGxPv03IkpsMMn4ehyTbS+mai434bdvCjPMW/LlG
-	 kmU+K47ZDSr4XVfPFmqytGwxr29y3BLWwr9GwEibRgI6YHZC3MfXDCJbkeX/ff8xdTkZj
-	 7mjhAC3WbVMblT4iWVbntTNIFNtl0PTBLRge8OlkXtnd3DC+BX31fl+nbZBaxBbRPFPkD
-	 iUOE91vTfgxMr49Oq+TwzYhmgWubQqAl0BqTJBA9zN6VBLhrczD4hu6asQ1Nm/O82lKn3
-	 kXYaP6waTenE0AYviHCcObq4+7Pal1vpHBpPBmcXzCUyMh8arb8CQLydm4ey9H7iDcw==
+	t=1794800288;
+	b=OUr65sfGFPjssltT8C93HTWFCodEhVugbc/XHFjyU0xtWnU4NUB9tWP6V68wtFShEHH1
+	 e0zyJ5QePMZEmasUXaacUVXPXV5b4mlitvOTUQdLKmL/+yKGqdIemu61z+LSZKuz/BmoO
+	 E8FWCFxaJwe9km576JBybRR7VSpo09CWbaY+6ymE5ksY5L47uDxxzydaS3Wf3QTvtIjeL
+	 2oemRsHCBGKfGld+OrzvhY4zUUO308fiYYOERQzZbkM07rW3Qvj2zkFcKyf2D5Phm0LQm
+	 SvPL41vGJy6sati/cgJ72dj2l5ClqgQRYz/kGAWxg1LdJ7GgEDihw8F565JtWRlxJLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794800096;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:Message-ID:Date:MIME-Version:
-	 User-Agent:Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding:X-Scanned-By;
-	bh=2Rg+vtDqosIKpsMtrfm0Ml7BNUuvarMYXqbb0/OYQdY=;
-	b=g59uozgjlA8RKWYHfVSGQqczrWK7xEpBhNAVD0ZoFVt1nnbgbdHfnQNZETT7kjyMCvme
-	 eYe5X4Gvmvi0HQBs0aceb9Ty0EUhiBO+63MZn1dUYfIpnPyAPYuPxi3ruBN1sQWqvMu/J
-	 s40NNb839b2hqqXDerePBONRivEHOiq7VU6WNV58GjpxrwE+Rql0Qm33DTsAqPYTQrgei
-	 HDVQFOlmnUyNKflYOw4TdkcPhNreLlI+fGPEpzHAjJcnHqG0nC8TZo6L/GDRkxpWQIuUn
-	 cxAOQ6XyqiN8WNYOSL6RTbdLPBVrdEiTo858GAe4ZeuswSRtXP9cOOXl+SmSltIHOqw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794800288;
+	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:X-B4-Tracking:X-Change-ID:To:Cc:
+	 X-Mailer:X-Developer-Signature:X-Developer-Key;
+	bh=Msgd0NATVk+Deh7ARJ6zRdTSPp77qlTcudhDUDfWd/g=;
+	b=0gpt2DDy17K47z6ogbQU2ekzyYEdVdRORfZV+99YNwF1+rpi3fUhlAsGlVgXMycqT0SL
+	 bYA8djcaXrQ3RZ7CA1LkXbeTnm88yNfCRI/ueCuDbP6rbbA8FnEPKxCDssnqbgY9QdB27
+	 M1o5rzUAix2s7zEKJ+5luY8JskG4+/srqVgOEQlHn9ZQ7jtB5+pWc8FF3eE2XIrX+o/Jx
+	 b1Nh4mSU2BrdwqrUVuhVtK7VvwtRug6whcSvEOF1O7TNukxGHJlm6CYUCnxpb2TVNACsD
+	 Zl2omcEyUIjn8KFljmP946tZxf8L73hVNAc6K2IN4sqZ5HRIrCArQ9jYKWQaLiSmPWg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=XYxjjTue;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YosgrFBI;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8513D606A33A
-	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 03:34:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8513D606A33A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39A75606A31C;
+	Mon, 16 Nov 2026 03:38:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=XYxjjTue
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1794800094;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=2Rg+vtDqosIKpsMtrfm0Ml7BNUuvarMYXqbb0/OYQdY=;
-	b=XYxjjTueJPmiCiyatbP+FxpGVrZtQkkaPq9xnxLXy249EtueWYLEH5RmIUo+WA6nrJLxei
-	+wVUIz3tocLu7WqXQRev1D5SzRHmXz7h/W6tNJBfuIYCcV9MkqS7GUe3/PnOcz8Oks9Obv
-	Vb89h27FRDKwwh5QqQIijRcyOj/tcJ8=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-319-j0GydBKSNkyYYXTgLrnMfQ-1; Sun,
- 15 Nov 2026 22:34:47 -0500
-X-MC-Unique: j0GydBKSNkyYYXTgLrnMfQ-1
-X-Mimecast-MFC-AGG-ID: j0GydBKSNkyYYXTgLrnMfQ_1794800086
-Received: from mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.95])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BDD4119560B1;
-	Mon, 16 Nov 2026 03:34:45 +0000 (UTC)
-Received: from [100.91.18.181] (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-10.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 90E05421;
-	Mon, 16 Nov 2026 03:34:43 +0000 (UTC)
-Message-ID: <eb3fd5e1-aafe-4bbd-a9ca-afcdb1554fdb@redhat.com>
-Date: Sun, 15 Nov 2026 22:34:42 -0500
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=YosgrFBI
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D387B1F000C4;
+	Mon, 16 Nov 2026 03:38:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794800287;
+	bh=Msgd0NATVk+Deh7ARJ6zRdTSPp77qlTcudhDUDfWd/g=;
+	h=From:Date:Subject:To:Cc;
+	b=YosgrFBIhZ970IDZCA81XrArA7Nl6Z9x9ixYiw8bmoVP+meP9znfgx9LnUfq6MvSP
+	 LZxVZIan5rX4tZf2ph/FDBp23cDbwTqnQw36RhoIvR/ieSjRDvWebskv4mmNmoOmUU
+	 oaEdDfx+9EsznKyFmGHtjJV/y3kBtq2rDpAM5vUCAeysndrKlcgrsGi5PRZkA4lOlC
+	 vb9lgtCpSZMzVQsrIT6yrZjbf+zTAftAJsu2+PmNDSI9QRt6PPViS6UYQxFQCndIaO
+	 XGWr4YF/pk37ykHXycc8OMhUbYEPAdipcp06PV+SU/BnAcSwcRBULUtUhZICpoMI3W
+	 cRJNX1jh4x72w==
+From: Nathan Chancellor <nathan@kernel.org>
+Date: Sun, 15 Nov 2026 20:37:57 -0700
+Subject: [PATCH v2] blk-throttle: Avoid unsequenced accesses to jiffies in
+ throtl_schedule_pending_timer()
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -71,101 +53,96 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v4 2/6] cgroup/cpuset: excpus parameter of
- remote_cpus_update() must have at least 1 active CPU
-To: Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>,
- Sashiko <sashiko-bot@kernel.org>
-References: <20261116012330.2271010-1-longman@redhat.com>
- <20261116012330.2271010-3-longman@redhat.com>
- <e437ac79-7999-43da-9fe8-6cfd475a5196@linux.dev>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <e437ac79-7999-43da-9fe8-6cfd475a5196@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.6 on 10.30.177.95
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20261115-blk-throttle-wunsequenced-v2-1-1d297c891b82@kernel.org>
+X-B4-Tracking: v=1; b=H4sIAAAAAAAA/42NQQ6CMBBFr0K6dgzTiiGuvIdhAe0UKqTVaUEN4
+ e4CXsDlS95/fxaR2FEUl2wWTJOLLvgV5CETuqt9S+DMykLm8oyIJ2iGHlLHIaWB4DX6SM+RvCY
+ DWluVl7VUGhux7h9M1r339q36cRybO+m0BTejczEF/uznE27ePz8TAoKRJZmiKJS16toTexqOg
+ VtRLcvyBe60FUHVAAAA
+X-Change-ID: 20261114-blk-throttle-wunsequenced-ccf308a23c1b
+To: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
+ Jens Axboe <axboe@kernel.dk>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, llvm@lists.linux.dev, stable@vger.kernel.org, 
+ Nathan Chancellor <nathan@kernel.org>
+X-Mailer: b4 0.17-dev
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2881; i=nathan@kernel.org;
+ h=from:subject:message-id; bh=HDprAJyUPEVxg+gggrc0F17vpUYJT+ZMNUoLcllntCA=;
+ b=owGbwMvMwCUmm602sfCA1DTG02pJDFm/qmZFhv3bttnO9eiDHfvfZ9v9+Llpk+Rk8QDxxWvW8
+ YaLJmfu6ihlYRDjYpAVU2Spfqx63NBwzlnGG6cmwcxhZQIZwsDFKQATOa/M8L9WYbd/tvrkzmvM
+ ZUEO/OsDeSZYPL9853/Uxa5zmzek39vByDDfcetG3+LZ28RPVkVXfllsfZerffLBJearf3BUqc1
+ ST+AGAA==
+X-Developer-Key: i=nathan@kernel.org; a=openpgp;
+ fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
 
-On 11/15/26 10:07 PM, Ridong Chen wrote:
->
->
-> On 11/16/2026 9:23 AM, Waiman Long wrote:
->> It is reported that remote_cpus_update() fails to invalidate a
->> populated remote partition when an ancestor cgroup update reduces its
->> effective_xcpus mask to only offline CPUs.
->>
->> When update_cpumasks_hier() updates a descendant remote partition, it
->> passes the new effective_xcpus mask (excpus) to remote_cpus_update().
->> Because excpus still contains offline CPUs, cpumask_empty(excpus) is 
->> false
->> and remote_cpus_update() only checks tasks_nocpu_error() when adding 
->> CPUs.
->>
->> With the partition left valid, update_cpumasks_hier() computes an empty
->> effective_cpus mask and jumps to get_css. The populated partition stays
->> valid with no effective CPUs instead of inheriting its parent's CPUs,
->> and its tasks remain affine to the online CPUs returned to top_cpuset.
->>
->> Fix it by invalidating the remote partition if there is no active CPU
->> available in the given excpus parameter.
->>
->> Reported-by: Sashiko <sashiko-bot@kernel.org>
->> Link: 
->> https://sashiko.dev/#/bug/linux-936b7155-f652-4146-a4ab-ec48fd392a1d
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   kernel/cgroup/cpuset.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 631fb449cef8..195d4e3a283c 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1810,7 +1810,8 @@ static void remote_cpus_update(struct cpuset 
->> *cs, struct cpumask *xcpus,
->>         WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, 
->> subpartitions_cpus));
->>   -    if (cpumask_empty(excpus)) {
->> +    /* New effective_xcpus must have at least one active CPU */
->> +    if (!cpumask_intersects(excpus, cpu_active_mask)) {
->>           WRITE_ONCE(cs->prs_err, PERR_CPUSEMPTY);
->>           goto invalidate;
->>       }
->
-> This also invalidates a remote partition with no task whose excpus
-> only has offline CPUs. According to cgroup-v2.rst, such a partition
-> is valid: cpuset.cpus.exclusive.effective may contain offline CPUs,
-> and cpuset.cpus.effective can be empty if there is no task in the
-> partition. The hotplug path and tasks_nocpu_error() follow the same
-> rule. How about only invalidating it when it is populated?
->
->       if (cpumask_empty(excpus) ||
->           (!cpumask_intersects(excpus, cpu_active_mask) &&
->            partition_is_populated(cs, NULL))) {
+After a recent improvement in clang to warn on unsequenced accesses to
+volatile variables [1], two instances appear in
+throtl_schedule_pending_timer(), which can break the build with
+CONFIG_WERROR=y / W=e:
 
-A partition can only be created if there are active CPUs in the 
-effective_xcpus. However, such a partition root can distribute its 
-exclusive CPUs down to child local partitions with the results that 
-effective_cpus can be empty if there is no task there. IOW, 
-effective_xcpus must have active CPUs while effective_cpus does not need 
-to have active CPUs if there are child partitions underneath. I am going 
-to clarify that in the doc. I will check the hotplug path and 
-task_nocpu_error() to make sure that it follows this rule. Does that 
-rule make sense to you?
+  block/blk-throttle.c:469:25: error: unsequenced accesses to volatile qualified 'jiffies' [-Werror,-Wunsequenced]
+    469 |                    expires - jiffies, jiffies);
+        |                              ~~~~~~~  ^
+  block/blk-throttle.c:469:25: error: unsequenced accesses to volatile qualified 'jiffies' [-Werror,-Wunsequenced]
+    469 |                    expires - jiffies, jiffies);
+        |                              ~~~~~~~  ^
 
+Per C11 5.1.2.3.2, accessing a volatile object is a side effect. Per C11
+6.5.2, unsequenced side effects on the same scalar object are undefined
+behavior. Per C11 6.5.2.2.10/12, the evaluation of arguments in a
+function call is indeterminately sequenced, meaning any side effects in
+the arguments are unsequenced.
 
->
-> Also, it probably needs a Fixes tag, maybe:
->
-> Fixes: f62a5d39368e ("cgroup/cpuset: Remove remote_partition_check() & 
-> make update_cpumasks_hier() handle remote partition")
+Add a local variable to hold the value of jiffies before the function
+call so that there are no unsequenced side effects, clearing up the
+warning.
 
-Yes, I miss the fix tag. Will update that in the next version.
+Cc: stable@vger.kernel.org
+Fixes: 69df0ab030c9 ("blk-throttle: separate out throtl_service_queue->pending_timer from throtl_data->dispatch_work")
+Closes: https://github.com/ClangBuiltLinux/linux/issues/2191
+Link: https://github.com/llvm/llvm-project/commit/955715460eaf9188c241c74750637fc82dfcc423 [1]
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+---
+Changes in v2:
+- Reuse value of jiffies in max_expire to avoid
+  -Wunused-but-set-variable for j when CONFIG_BLK_DEV_IO_TRACE is
+  disabled (Sashiko)
+- Link to v1: https://patch.msgid.link/20261114-blk-throttle-wunsequenced-v1-1-d28ed5553ff3@kernel.org
+---
+ block/blk-throttle.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index c5e26551956a..8e58e50bce4d 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -453,7 +453,8 @@ static void throtl_dequeue_tg(struct throtl_grp *tg)
+ static void throtl_schedule_pending_timer(struct throtl_service_queue *sq,
+ 					  unsigned long expires)
+ {
+-	unsigned long max_expire = jiffies + 8 * DFL_THROTL_SLICE;
++	unsigned long j = jiffies;
++	unsigned long max_expire = j + 8 * DFL_THROTL_SLICE;
+ 
+ 	/*
+ 	 * Since we are adjusting the throttle limit dynamically, the sleep
+@@ -466,7 +467,7 @@ static void throtl_schedule_pending_timer(struct throtl_service_queue *sq,
+ 		expires = max_expire;
+ 	mod_timer(&sq->pending_timer, expires);
+ 	throtl_log(sq, "schedule timer. delay=%lu jiffies=%lu",
+-		   expires - jiffies, jiffies);
++		   expires - j, j);
+ }
+ 
+ /**
+
+---
+base-commit: ab43ec385580b8f8abf72d70fa3acbf4e4f098a5
+change-id: 20261114-blk-throttle-wunsequenced-ccf308a23c1b
+
+Best regards,
+--  
 Cheers,
-Longman
+Nathan
 
