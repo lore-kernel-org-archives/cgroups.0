@@ -1,96 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.193
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.35
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794819940;
-	b=4qvFKRPXOv5A6dI2tUQtJOHGU9BFIJSphKxsda5jC2DbWKzEfxP56cGtJe5X4zCF4m1K
-	 iM6vaeragQl5gmAgUSAxaQq5LOd04Y0xREsIB4zn+MAqlQd6qTuAJRicMWnwUa7VbNvLt
-	 5fLEglOdhvAOMOTwmo0ep6iGLIoMIYQoZiXiLUbqLzPjkYV2lXVL2CvsV4r4Re1KgcXbj
-	 /Euga1pfkdEKyk7oHWNpeG3Kf+GpximGpug53TWy7VaHsQredzPKLNEHHlV6Cb326PTDm
-	 mK5Aqol5+FmpPTFAK7Gn/RsCXeICZqxfVKqAwFkiOFm4h4cNNC4hpQp5TQJn48MBesw==
+	t=1794824354;
+	b=MkcK+cY9Jrw/8HchMDuSPx5SHYeqdM7dUA20Tr1EgYo+2FQVBOjiBGKjAlAgabEOQPgT
+	 QgtASOqGUKqxewmHvWV9VVvFFfjIt8vHrjLSiOLF/jynXA7FY7yNTGA+ojvYbvsjZaejo
+	 93rJJIPOAuqMHb22yPbTv79Izo5GrskeAbozWul4dvJNLNqgbtyIU6TBNyoxeKvckqa8U
+	 UapOO1dO6b0FGvRurrtZSFM7qSsQw6aoA4xBLDyYqNc3kpCkWiE/7ZTWrqofY4P+eHDfV
+	 ICqLkftTLBeeIUKSCapx6VCWH4Sgcx+NnUbYVk2hZxgbwfKLjZnRv3hEGCRbvnuzmVQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794819940;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=1zvuDxYaIx+wRq51z8Ba2c/DCwXwLVuqXqRa+7I8efo=;
-	b=y1lKZ3YVY6jMSJNewTy68q63+ajVYvPKg4DM/rdXlc1XyZwjEhiU7nCsN4GEbKIb73Cm
-	 +8RQiiYsTAoKqh4+uJzBSZtFqzjyn4GWQQkWELkR0xMa60tK1eFxybcPhilv4TNkyG82i
-	 JOdsxHzibCCwHq42TwJROpPKtWYkBMQJAeb7CT9zzHYmw7rJFql4XxHtbtbkrHloPQ8Uz
-	 gNSDJCdIOfhsDn9E8k6/xe9okVQ2EM/rzSNqaaZ6k8tij/l+ousXo0I+mkouJ8eNMzVKb
-	 I010Nopd9QywfHt27O+7PLRjcIjBsxjk0/+hYfAEM26oeypajzvy4KQqMeKStWzsPDw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794824354;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=I3dgu4sJ5j0i8iuAWSr5Xv5VZDVuEVHCMp+jfORUzD8=;
+	b=N2JFJQyZJOvi7gXxBo3iMstu7ChpS5A277IKAGxTGIwTmjwFHc/dT097uEcMb3zSWvKQ
+	 jhLuVme/w6Zpso4d4C5potxqynqnfjOQxwPrx9r7me9zgPq2nOnHALzc8WYOAv18Posu3
+	 IQi7R+f+eRTUJQDq0cFm9I1AHOehN6HjeG663FN49EezHPDMncDkcqYj/eKcXm1n8lTnI
+	 Nfea1UhYAnhchvCBaEkHtjcrEuaXQ89HELBYe2W6YyzG3wj9VWwX3Y5fQewQ56FoEpjNV
+	 Mfm+t9VbL4phaZlAmaynCYMB/wZQx0jhcapHBfGiyf5HkmoBf/HDCjCM8gI+7RIX3vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Matny45j;
-	arc=none smtp.remote-ip=74.125.82.193
-Received: from mail-dy1-f193.google.com (mail-dy1-f193.google.com [74.125.82.193])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vZbu2+xG;
+	arc=none smtp.remote-ip=91.218.175.35
+Received: from mta0.migadu.com (out-35.mta0.migadu.com [91.218.175.35])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEF37606A31C
-	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 09:05:39 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AEF37606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42E02606A31C
+	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 10:19:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 42E02606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=Matny45j
-Received: by mail-dy1-f193.google.com with SMTP id 5a478bee46e88-37198ed3727so4759747eec.0
-        for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 01:05:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794819939; x=1795424739; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=1zvuDxYaIx+wRq51z8Ba2c/DCwXwLVuqXqRa+7I8efo=;
-        b=Matny45jJHPjIWXkekS7kOaHLqe+34gj0u7udcwy8lDdIpS68CDXZP5LGnCpltTdf+
-         dzp/fnKOEMmaGI2fJlFpKanKtIdr7KPLjdLdrRYri4pE25TITMaUdT3FOmIATtX5fB2W
-         nBBvWs1vdMfQTQ3F33nHPrTeDv2CfPsMiyqE88TtvyG0ze6XcceBvRd7KNPsvwIRkFip
-         MpbN2yeEb0EOPLH8gMB2g2syFrjEUZigMpOrWF69szbJKNM04yRNSM47T9TsibtwPqcz
-         sIXARK5Wf4QMMZrTGsCbgtNASTFpP02dceQrq9eYFBaw70YmcwWo8ApNHcYS0cBj4uVU
-         y0Ow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794819939; x=1795424739;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=1zvuDxYaIx+wRq51z8Ba2c/DCwXwLVuqXqRa+7I8efo=;
-        b=Gf3VSt3d2xWaz5a5Mg9CH8GcHnSpWj2XSe8dNFpWdP7UnPuq1ClXcpna0VlmM/c769
-         3/PT4oH+ZkCAvIso9SoN5NmQWj6W2bg3MhaHP+ZU+NWo7yw6iryPSkIxChXgEFNg9n5n
-         zOYAVpCqKho+jMaqj5drQTqLkucCd/gYX/K+6a+YCKZYDb9MaAMKr3G3BTBYitELVG5f
-         1VDC7GfcTnek1rxeIYROxrsxmxIFucBEVzZ4psrK+E8AjLtoflvNqFpTGI+PYyEHGO+2
-         WzXnmRi8B7FeiY5lNaye2ritiJGdscX9TqSItZOYzeTzgWWG5SvzRzCpEH/xO3yjpwl8
-         Z1gQ==
-X-Forwarded-Encrypted: i=1; AL+hErFswklF+7E5Z6DZ1RLFCDti9Im9OsRASZYeDe7DX+ttrHleMFhnpL1Olw/Hj/dAw36v6eXbM4o2@vger.kernel.org
-X-Gm-Message-State: APuU4Z/J7xWZEP3osvIGGeWQbK9Q4e2aSss6JSvxHPRSaYIjhhrCTYH/
-	LdvnGO4GOgpumj9tecG4asRzGTIG3nwEIFd1H9g4GeglsZ4U3yCqBMuM
-X-Gm-Gg: AZFdTZddy2Cmrs/5Helr6+RsOeP4Df4jyNXOpTrzZ6MS4kl79FvThtx/UVzzWvJKiTU
-	viiCCpqCOTyCI1yOoEslKRZ570IXBPlxRUTX+xBMLYZk8cLt9si5y6GRuwVTrplnszryS04g6cX
-	23g0wq46S3PaXNJA3Qk3bb0YhCbKcNcCp9xZhmxpR2KJ7nZHcfkRJDnTWHjr9pIgGKOBb5k4/7U
-	bDOw/ne8GRNCbLhS/Xvu+/C4A+WWri1y7MCUKXTfsd5hlHltMHkb65VP62DJw2iLjl40GwY4gCn
-	72+GfX69m5o8FHxZU/qkzUKpWdmuIhBuzzsjMHp8AOr6ScfiNVWU08IKRUQ87lc91i7q7PMIr0Q
-	micIrJIqOCpxMJ0aZxTHQmnrzK9yHh2mR+FSxvifONwTrqfDPooW24sB5PiEF1PHvFjxcNuWucd
-	FaUVCsQVYMNqG9LFgq22bh1goTnFjEExdUiaj3GWC6VFShl4JPGq9m9mXZ6uG2hIcrynPrlpFMI
-	iWMK2ZYeb7vwWaARrifUcVX9zOIay6zsFiByPM/PMHWstEFE2VofK89sbf++B44LbV16fLaVerY
-	iSQbWsh3w+62hcN8INiCiHP6CvGr3B2xJP1q2nuFELMZDfTcR6I3CO5Jlo7JWThpKRxTx/HL9WI
-	Op4sXw6/J20ymvh23MOoCYvcjylHLg5qhYSUXxQ==
-X-Received: by 2002:a05:693c:60d2:b0:362:2e2f:c261 with SMTP id 5a478bee46e88-377e1cebaffmr13409680eec.27.1794819938661;
-        Mon, 16 Nov 2026 01:05:38 -0800 (PST)
-Received: from localhost.localdomain ([98.148.34.5])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-3795378d7e5sm32581548eec.3.2026.11.16.01.05.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 01:05:38 -0800 (PST)
-From: Hungyu Lin <dennylin0707@gmail.com>
-To: axboe@kernel.dk
-Cc: tj@kernel.org,
-	josef@toxicpanda.com,
-	bvanassche@acm.org,
-	cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	dennylin0707@gmail.com
-Subject: [PATCH] blk-ioprio: check capabilities before promoting a cgroup to RT
-Date: Mon, 16 Nov 2026 09:05:29 +0000
-Message-ID: <20261116090529.69650-1-dennylin0707@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vZbu2+xG
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=dAkZ1pi6os0A3n/isJiL0EDETLn5Jfcuu+R3wOlJ064=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794824351; v=1; x=1795429151;
+ b=vZbu2+xGJQRrpkoKjjnmzVkQK4sDovQi/wVw4K4dovxLrMNbDR375q8QoZXrssepKEK0FBM6
+ agIH4qQQW7Q/rsD1FumG0Df5hMeqqj8EShjUccU6uR5l+qW+aCHo00bCMaPTr0VV9VH+LfTDOnV
+ BeF+ANITgbEigidtrhG+X3hs=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id fc8e9ceddc689f5f;
+	Mon, 16 Nov 2026 10:19:10 +0000
+X-Mizu-Trace-ID: fc8e9ceddc689f5f
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <be80dba8-aeab-4e2a-92ac-bd5bb560a887@linux.dev>
+Date: Mon, 16 Nov 2026 18:19:05 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -100,61 +58,111 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH-next v4 1/6] cgroup/cpuset: Fix incorrect partition
+ invalidation logic in cpuset_hotplug_update_tasks()
+To: Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Sashiko <sashiko-bot@kernel.org>
+References: <20261116012330.2271010-1-longman@redhat.com>
+ <20261116012330.2271010-2-longman@redhat.com>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261116012330.2271010-2-longman@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-ioprio_set() and the per-request I/O priority of aio and io_uring only
-hand out IOPRIO_CLASS_RT to tasks that have CAP_SYS_ADMIN or
-CAP_SYS_NICE. The io.prio.class cgroup attribute has no such check.
-Writing "promote-to-rt", or its alias "none-to-rt", to it changes the
-requests of the cgroup to the RT class.
 
-The attribute exists in every cgroup that has the io controller enabled
-and it is not hierarchical. A user that got a cgroup delegated owns the
-files of the child cgroups it creates there, so it can create a child
-cgroup, move into it and write "promote-to-rt" to its io.prio.class.
-Its requests are then issued with IOPRIO_CLASS_RT although ioprio_set()
-fails with -EPERM for the same task, and mq-deadline dispatches them
-before the best-effort requests of everybody else.
 
-The delegation model in Documentation/admin-guide/cgroup-v2.rst expects
-the settings of all resource controllers to be hierarchical, so that a
-delegatee can only distribute further what it received from its parent.
-This attribute lets it raise the priority class of its own requests
-instead.
+在 2026/11/16 09:23, Waiman Long 写道:
+> When most of the active CPUs of a system are allocated to
+> sub-partitions below the top_cpuset partition, it is possible that a
+> CPU offline operation may remove the last active CPU in the top_cpuset
+> partition. When that really happens, cpuset_handle_hotplug() will clear
+> the subpartitions_cpus to make sure active CPUs are present in the top
+> partition and let the other sub-partitions get invalidated and then
+> competes for their exclusive CPUs again.
+> 
+> In cpuset_hotplug_update_tasks(), the current code use
+> "cpumask_empty(subpartitions_cpus)" to determine if that partition
+> should be invalidated. That is fine if there is only one sub-partition.
+> As reported by sashiko that when there are more than one sub-partitions
+> and the first sub-partition will get invalidated and then it will
+> try to acquire the exclusive CPUs and become valid again. When this
+> happens, the subpartitions_cpus will no longer be empty. The remaining
+> sub-partitions will assume their exclusive CPUs are safe and proceed
+> as normal. As a result, active CPUs owned by those sub-partitions
+> remain in both top_cpuset.effective_cpus and the sub-partitions'
+> effective_cpus while missing from subpartitions_cpus, breaking partition
+> CPU exclusivity and triggering WARN_ON_ONCE() in generate_sched_domains()
+> and remote_partition_disable().
+> 
+> Fix that by checking if the sub-partitions' effective_xcpus are subset
+> of subpartitions_cpus to determine if they should be invalidated. Also
+> remove the obsolete WARN_ON_ONCE() call in remote_partition_disable().
+> 
+> Fixes: 0c7f293efc87 ("cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2")
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Link: https://sashiko.dev/#/bug/linux-bf69cd3c-833a-4599-a1f9-8dd9e044cd7c
+> Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  kernel/cgroup/cpuset.c | 19 +++++--------------
+>  1 file changed, 5 insertions(+), 14 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 1b88a93b3db4..631fb449cef8 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1768,15 +1768,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+>  static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
+>  {
+>  	WARN_ON_ONCE(!is_remote_partition(cs));
+> -	/*
+> -	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
+> -	 * which should clear subpartitions_cpus. We should not emit a warning for this
+> -	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
+> -	 * may already be cleared when disabling the partition.
+> -	 */
+> -	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
+> -		     !cpumask_empty(subpartitions_cpus));
+> -
+>  	spin_lock_irq(&callback_lock);
+>  	cs->remote_partition = false;
+>  	partition_xcpus_del(cs->partition_root_state, NULL, cs->effective_xcpus);
+> @@ -3983,9 +3974,9 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>  	if (!tmp || !cs->partition_root_state)
+>  		goto update_tasks;
+>  
+> -	if (is_remote_partition(cs) && (cpumask_empty(subpartitions_cpus) ||
+> -				       (cpumask_empty(&new_cpus) &&
+> -					partition_is_populated(cs, NULL)))) {
+> +	if (is_remote_partition(cs) &&
+> +	    (!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) ||
+> +	     (cpumask_empty(&new_cpus) && partition_is_populated(cs, NULL)))) {
+>  		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
+>  		remote_partition_disable(cs, tmp);
+>  		compute_effective_cpumask(&new_cpus, cs, parent);
+> @@ -3997,12 +3988,12 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>  	 * 1) empty effective cpus but not valid empty partition.
+>  	 * 2) parent is invalid or doesn't grant any cpus to child
+>  	 *    partitions.
+> -	 * 3) subpartitions_cpus is empty.
+> +	 * 3) effective_xcpus isn't a subset of subpartitions_cpus.
+>  	 */
+>  	if (is_local_partition(cs) &&
+>  	    (!is_partition_valid(parent) ||
+>  	     tasks_nocpu_error(parent, cs, &new_cpus) ||
+> -	     cpumask_empty(subpartitions_cpus)))
+> +	     !cpumask_subset(cs->effective_xcpus, subpartitions_cpus)))
+>  		partcmd = partcmd_invalidate;
+>  	/*
+>  	 * On the other hand, an invalid partition root may be transitioned
 
-Require CAP_SYS_ADMIN or CAP_SYS_NICE for the two policies that raise
-the priority class, like ioprio_check_cap() does. The other policies are
-left alone.
+Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
 
-Fixes: 556910e39249 ("block: Introduce the ioprio rq-qos policy")
-Cc: stable@vger.kernel.org
-Signed-off-by: Hungyu Lin <dennylin0707@gmail.com>
----
- block/blk-ioprio.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
-index 8fa8bca35062..ea32db727b16 100644
---- a/block/blk-ioprio.c
-+++ b/block/blk-ioprio.c
-@@ -14,6 +14,7 @@
- 
- #include <linux/blk-mq.h>
- #include <linux/blk_types.h>
-+#include <linux/capability.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include "blk-cgroup.h"
-@@ -91,6 +92,9 @@ static ssize_t ioprio_set_prio_policy(struct kernfs_open_file *of, char *buf,
- 	ret = sysfs_match_string(policy_name, buf);
- 	if (ret < 0)
- 		return ret;
-+	if ((ret == POLICY_PROMOTE_TO_RT || ret == POLICY_NONE_TO_RT) &&
-+	    !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_NICE))
-+		return -EPERM;
- 	blkcg->prio_policy = ret;
- 	return nbytes;
- }
--- 
-2.43.0
-
+Thanks,
+Guopeng
