@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794855965;
-	b=1nZVve3lItJvBzj1LuQzu/ghr9UJ0DTV29a3UM3dUIHUnj/3xPzUic7Gp3ywRZMBzMib
-	 EvDlUMbt6I77Uk4NbXjRRPMh47riWnX0SC6zw7bhSC4Lrz+H6KYdP/0HSbZGT+bYStCRs
-	 N3dAp3oEHGWS0rftLB0+c8KqmfeyBujhoAir26LwCyvrLqAq/mrdEHuZw6E38kwae8V2X
-	 UwojnX3AKF/uXNExY6kuVjUhIbNrmlrmBAGoi/15rz5xKVfsh3rRShrh6l7eLCuo0aEJX
-	 HDPSHBpojlYiTBNnxw1fsLm4MU7N/7f0thiD5p3wXI7PS5CKwRok1TcDoelcrGeT5DQ==
+	t=1794855961;
+	b=AvFac/zSgvoexTBImonnWDrJE5ihZaLf7skareLOBeZM9YSqso6BXo+pOPRorF3SRpZH
+	 kRwslrHxybgU09HaYFIeZxOcPhX97CtcXBSbqfN0RDLE/jz0vNkCi+xYdL+BspJdJj0/V
+	 kd9r5bEXF2Wt6mwVeSAnuu+F9CS2Oee6eB+4Q5N02xYd3EAJoCLOj1GclZNJm2gmdLVZA
+	 EBbY9UwwFe4n3o1sekmGmBQ4gjIHDTDpXU410TVQ98aXVAyKOwaOLMFRN6Zk9dmwpo6mu
+	 RGs5LqnglN8juXFktXf8mLosbiS53La8vIjxHhQFsYX2w7WbZjT/iaP2QF36YOMpdQA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794855965;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794855961;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=mIltUQDWgDrAq5CVaYRA9ajYPPZHuvdWTuz+uslCgic=;
-	b=mXn0xmMEZfgb3ov//wBeDaZvfreb63Z3lsr/yFJclCcC3/e99qzB/FvQg2QGQ+1IWhB5
-	 Awp/e52wzf7rfJ71LUBdFKx1AwFjgC0ZJHDjZvzYClxwHx6sAAbyY/RuQWYwhDMyT0bOv
-	 gfD8PdJ1vD4G5nLEI+oeYdrvhEeEAbqEZ8dFN80P7LKoICbIWY0erauzVitNn+u67fsyL
-	 mLQ1WMECJxtWSUY24QJuCW3QANs/8HKcdUq4BVSvDec4264N5+cVewyDpq5oj1rxFbHe2
-	 CuC8DvHiL1GkcYMRqzq9kyhAlLbI4P99M6viFmt9ik+/1BXKfLQGUgdSrOuU1K2/zdg==
+	bh=fuaSkK+C9AQEUnph3s+/dDRmkg+Hp1tTyBHxZ8Jwow0=;
+	b=fv96smWIiJhVFIq3XsUZ5/OGPEQj9ff5ZaSLJHde2NQF4DRRUYwHztqpoBnKwgvIRVcl
+	 wAYmyxRUBlMOLdDNe6wQoBvqvStQi5sWDItBh8LNXKTOZRvjvM6gG7XqfsoNEUsN+/e1g
+	 51LLiTB874JJsj0f3BufmjvbD0Ri2CHq8co+dX7CjLiz7vQgW5ma8cHEgaO5RUrf3u+JY
+	 zwiUQJtazH0phoSP8iOq/HcamAkCJp+OgiwJaFNfI2+sgXM5p/zohvLs/KjRDY6bOx8Sv
+	 xNbCsFt2eoMqhbjr1ZngwL8EOSwFxObl/TPB+Btt7K+sC5xDkrh+zgiXXdAtSyBvFYA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=fiKluJey;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=PL2j7T7c;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67551606A8A8;
-	Mon, 16 Nov 2026 19:06:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67551606A8A8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187BC606A887;
+	Mon, 16 Nov 2026 19:06:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 187BC606A887
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=fiKluJey
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=PL2j7T7c
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794855955;
-	bh=mIltUQDWgDrAq5CVaYRA9ajYPPZHuvdWTuz+uslCgic=;
+	s=smtpout1; t=1794855953;
+	bh=fuaSkK+C9AQEUnph3s+/dDRmkg+Hp1tTyBHxZ8Jwow0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fiKluJey2nQ0ImLzJrI5nxdEc8PG82m+vgmntS/CNLPWNgr08NP7QFDpJG0KoVgzv
-	 B+heq5fz7wlncAIImKEsJmm43CtP9HI1KP9vddxAQrdXSyLrIKRTxcAJ9QF/aklx19
-	 bjPHBFMe1YAhar5nkEk5BIflc4CgnhLpKN2J5SC0O/t2QZ43zidyq2FO4rynepLwDF
-	 1pH/PTGhPkNv8KT08xSZZ82A+MOw0H+FfSZgFjDQoKKUoy44ViSPFs8LbQaOTAqVjz
-	 8x59EOp82/yyQDM+eTiCfT0kOVZvF95x+dYh9NS09oAo5ECZWgwdMW66YrDbhSQnsx
-	 5DRhI6N2/7B/g==
+	b=PL2j7T7cq8cdIPpPHuLuESCYfnI25TBHw+Up3W/MepodJvohHT4qJPX2Wt87QxSLT
+	 C2C3pcld/Vd+nXQzavAf1D03bI8y1llFUOG4fOn/9zyX5A9gGV4gYcB15nQjUUoGb1
+	 IY1fDnr9AX8JADLWQbG45jdrwLizS9LcgmKGcUfvivSYJFHgaQnEuHp5QfedWf1elh
+	 g8Y8lT1fokEzWimnOU2p2dElJWbaOajNy4CBLueIPzsQqczm6z5sMrBkxzOH/efCRO
+	 2+mT8kOxIQdcY0+b8Z5sUHsulXK1IdBFWUm7SU3Jt7S4grZjhT71p1fXIN90Y4A5u7
+	 0wPXUMk6bAgBg==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jSy4g0qP4zQSs;
-	Mon, 16 Nov 2026 14:05:55 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jSy4d5B18zQD2;
+	Mon, 16 Nov 2026 14:05:53 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v6 08/37] sched/deadline: Do not replenish a boost from cleared parameters
-Date: Mon, 16 Nov 2026 14:05:20 -0500
-Message-Id: <20261116190549.230119-9-mathieu.desnoyers@efficios.com>
+Subject: [PATCH v6 01/37] sched: Refuse SCHED_FLAG_KEEP_PARAMS that would change the policy or the class
+Date: Mon, 16 Nov 2026 14:05:13 -0500
+Message-Id: <20261116190549.230119-2-mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20261116190549.230119-1-mathieu.desnoyers@efficios.com>
 References: <20261116190549.230119-1-mathieu.desnoyers@efficios.com>
@@ -97,123 +97,112 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When a SCHED_DEADLINE waiter boosts the owner of an rt_mutex, the owner
-runs on the waiter's parameters, through dl.pi_se. Commit 2d3d891d3344
-("sched/deadline: Add SCHED_DEADLINE inheritance logic") calls this a
-temporary solution. The owner is never throttled. When its runtime runs
-out, replenish_dl_entity() refills it at once from the waiter's
-dl_runtime.
+A sched_setattr() request with SCHED_FLAG_KEEP_PARAMS can ask for
+another policy. __sched_setscheduler() then applies only half of the
+change, and returns 0:
+- SCHED_OTHER to SCHED_BATCH leaves the policy as it was.
+- SCHED_DEADLINE to SCHED_OTHER sets DEQUEUE_CLASS. switched_from_dl()
+  then runs on a task that stays in the class. It would release
+  bandwidth the task still uses.
+- SCHED_DEADLINE on a task of another policy reserves bandwidth in
+  sched_dl_overflow(). The task keeps its policy and a dl_bw of 0, so
+  nothing releases that bandwidth. For a task boosted into the deadline
+  class, it is not even a class change.
 
-The waiter can leave SCHED_DEADLINE before the chain walk deboosts the
-owner. Its parameters can be cleared in between, at its 0-lag time.
-replenish_dl_entity() then loops forever on a dl_runtime of 0. It
-holds the rq lock with interrupts off, so the owner's CPU locks up.
+SCHED_FLAG_KEEP_PARAMS came with utilization clamping. With
+SCHED_FLAG_KEEP_POLICY, it lets sched_setattr() change only the clamps
+of a task. So __sched_setscheduler() skips __setscheduler_params(),
+which sets p->policy, and the sched_class assignment. Nothing checks
+that the request keeps the policy.
 
-O is a SCHED_OTHER task that holds the rt_mutex L. W is a SCHED_DEADLINE
-task. T is any other task:
+In testing on v7.4-rc1, a deadline waiter boosted a SCHED_OTHER mutex
+owner with a 40ms slice. One such call on the owner left 0.4 CPU in
+total_bw, until the next rebuild of the root domains.
 
-  CPU 0 (O)                         CPU 1 (W)                     CPU 2 (T)
+Fix this by refusing a request for another policy or class with
+EINVAL. Move sched_dl_overflow() after it, as the last check. Nothing
+gives back the bandwidth it reserves. A refused request also leaves
+sched_reset_on_fork alone.
 
-  locks L
-                                    blocks on L
-                                      rt_mutex_setprio(O, W)
-                                        O->dl.pi_se = &W->dl
-                                    sleeps
-                                      task_non_contending()
-                                        arms W's inactive timer
-                                                                  sched_setscheduler(W)
-                                                                    W leaves SCHED_DEADLINE
-                                                                    task_rq_unlock(W)
-                                    <W's inactive timer>
-                                    inactive_task_timer()
-                                      __dl_clear_params()
-                                        W->dl.dl_runtime = 0
-  <tick>
-  update_curr_dl_se()
-    enqueue_task_dl()
-      replenish_dl_entity()
-        runtime += W->dl.dl_runtime
-        loops forever
-                                                                    rt_mutex_adjust_pi(W)
-                                                                      rt_mutex_setprio(O, W)
-                                                                        spins on O's rq lock
+With this patch, that call is refused and total_bw does not change. The
+params_keep_boosted case of deadline_bw_test, added later in this
+series, tests it.
 
-Fix this by reading the inherited parameters once, and by not refilling
-from a runtime of 0. The owner stays runnable. Its deadline stays where
-it was. It runs until the chain walk deboosts it, or until it releases
-the lock. That also covers sysrq-n: normalize_rt_tasks() changes the
-waiter without a chain walk. The warning stays for an entity that is not
-boosted.
+Juri Lelli found the class change, from a report by Tejun Heo. The
+Sashiko AI review of the first posting of this series found the policy
+change and the boosted case.
 
-A 300ms debug delay before rt_mutex_adjust_pi() locks up v7.4-rc1 in
-8-CPU VMs, but not a kernel with this patch.
-
-The Sashiko AI review of the third posting found the lockup. Juri Lelli
-suggested this fix in place of a larger one.
-
-Fixes: a5e7be3b28a2 ("sched/deadline: Clear dl_entity params when setscheduling to different class")
-Suggested-by: Juri Lelli <juri.lelli@redhat.com>
+Fixes: a509a7cd7974 ("sched/uclamp: Extend sched_setattr() to support utilization clamping")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/all/avL8oOtjKqVNR7-l@jlelli-thinkpadt14gen4.remote.csb/
+Link: https://lore.kernel.org/all/2b5fb3f22bca6aa383be8f4781923392@kernel.org/
+Link: https://lore.kernel.org/all/20261103-b4-sched-dl-bw-fixes-v1-3-dd761fe005b4@redhat.com/
 ---
- kernel/sched/deadline.c | 28 +++++++++++++++++++++++-----
- 1 file changed, 23 insertions(+), 5 deletions(-)
+ kernel/sched/syscalls.c | 40 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 29 insertions(+), 11 deletions(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index e4d7cbf4861d..c4ea51059941 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -807,8 +807,26 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
- {
- 	struct dl_rq *dl_rq = dl_rq_of_se(dl_se);
- 	struct rq *rq = rq_of_dl_rq(dl_rq);
-+	struct sched_dl_entity *pi_se = pi_of(dl_se);
-+	u64 runtime = READ_ONCE(pi_se->dl_runtime);
-+	u64 deadline = READ_ONCE(pi_se->dl_deadline);
-+	u64 period = READ_ONCE(pi_se->dl_period);
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 0ec401af80d1..89b0d5787f45 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -647,17 +647,6 @@ int __sched_setscheduler(struct task_struct *p,
+ 		goto recheck;
+ 	}
  
--	WARN_ON_ONCE(pi_of(dl_se)->dl_runtime <= 0);
+-	/*
+-	 * If setscheduling to SCHED_DEADLINE (or changing the parameters
+-	 * of a SCHED_DEADLINE task) we need to check if enough bandwidth
+-	 * is available.
+-	 */
+-	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
+-		retval = -EBUSY;
+-		goto unlock;
+-	}
+-
+-	p->sched_reset_on_fork = reset_on_fork;
+ 	oldprio = p->prio;
+ 
+ 	newprio = __normal_prio(policy, attr->sched_priority, attr->sched_nice);
+@@ -677,9 +666,38 @@ int __sched_setscheduler(struct task_struct *p,
+ 	prev_class = p->sched_class;
+ 	next_class = __setscheduler_class(policy, newprio);
+ 
 +	/*
-+	 * A boosted entity runs on the parameters of its donor, the top
-+	 * waiter of an rt_mutex. The donor can leave the class and have them
-+	 * cleared before the chain walk deboosts this entity. They are
-+	 * cleared under the donor's rq lock, which can be another one. So
-+	 * read each of them once. Refilling from a runtime of 0 would loop
-+	 * forever. Leave the entity runnable instead: the walk deboosts it,
-+	 * or its task releases the lock.
++	 * With SCHED_FLAG_KEEP_PARAMS, the change below skips
++	 * __setscheduler_params() and the sched_class assignment. The
++	 * policy and the class stay as they are. Refuse a request for
++	 * another policy or class, rather than carry out half of it.
++	 *
++	 * The class depends on the priority, which priority inheritance
++	 * can raise. It also depends on whether a BPF scheduler is in
++	 * charge. So test the class too, not only the policy.
 +	 */
-+	if (unlikely(!runtime)) {
-+		WARN_ON_ONCE(!is_dl_boosted(dl_se));
-+		dl_se->dl_yielded = 0;
-+		dl_se->dl_throttled = 0;
-+		return;
++	if ((attr->sched_flags & SCHED_FLAG_KEEP_PARAMS) &&
++	    (policy != p->policy || prev_class != next_class)) {
++		retval = -EINVAL;
++		goto unlock;
 +	}
++
+ 	if (prev_class != next_class)
+ 		queue_flags |= DEQUEUE_CLASS;
  
- 	/*
- 	 * This could be the case for a !-dl task that is boosted.
-@@ -822,8 +840,8 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
- 	 */
- 	if (dl_se->dl_deadline == 0 ||
- 	    (dl_se->dl_defer_armed && dl_entity_overflow(dl_se, rq_clock(rq)))) {
--		dl_se->deadline = rq_clock(rq) + pi_of(dl_se)->dl_deadline;
--		dl_se->runtime = pi_of(dl_se)->dl_runtime;
-+		dl_se->deadline = rq_clock(rq) + deadline;
-+		dl_se->runtime = runtime;
- 	}
++	/*
++	 * If setscheduling to SCHED_DEADLINE (or changing the parameters
++	 * of a SCHED_DEADLINE task) we need to check if enough bandwidth
++	 * is available. Keep this check last. If a later check failed,
++	 * nothing would give back the bandwidth it reserves.
++	 */
++	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
++		retval = -EBUSY;
++		goto unlock;
++	}
++
++	p->sched_reset_on_fork = reset_on_fork;
++
+ 	scx_prepare_setscheduler(p, policy);
  
- 	if (dl_se->dl_yielded && dl_se->runtime > 0)
-@@ -836,8 +854,8 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
- 	 * arbitrary large.
- 	 */
- 	while (dl_se->runtime <= 0) {
--		dl_se->deadline += pi_of(dl_se)->dl_period;
--		dl_se->runtime += pi_of(dl_se)->dl_runtime;
-+		dl_se->deadline += period;
-+		dl_se->runtime += runtime;
- 	}
- 
- 	/*
+ 	scoped_guard (sched_change, p, queue_flags) {
 -- 
 2.47.3
 
