@@ -1,21 +1,21 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.216.245.30
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794869195;
-	b=jQja6/sFmfijt/H+0TDEl01Uij0NdaDdVhMpLYc0/gYFy6QjQfSUBmLfo/A8wpoXk+1d
-	 0IxfYKdcyVf1NLAMplGtxe1bp4c3cOaJmuu01gApN8kiH7Xn8V0lMlq8GuJvhoBi5CtJr
-	 Qcb++tFmN+eIo/mdHZD45xtlTxb+BF9VkFM/1JI/aIQs9OM00pSCzKPJiG+ZS5mqPNfLK
-	 RCgEpK6jWuZ0q+5zZpcdF5aoWgkxPOYy7PKcAQZE0GkhuLm9H1/lkGbo0a5MN4VJJ2pZ6
-	 +OMkHvf1PX5Zhjru/lFX0n1lEYrWFrC4rUo7zfmU4CUJ3Jy0oSA+oQZRu3VbSNyUGsw==
+	t=1794871036;
+	b=q8tLCo5Y+hDK9P11urBy0IWUcs4wOO8dVYERj3nLOUeZt0RAqsxH5LRH2CHkZ5P8b/Br
+	 uA0W+iAud/Gz0h3Ot0iaIJnt0p9KaoArGrJj/GYtuImfIRlNzsX0kg4VvGGksZdKT7PZ5
+	 DQTc2Z5oXR16+DZT/Exg+tY6Ec4IGd3BGtBIRTOhD6yBS5FCTj5ZsvOQa+I0+J1k8BCQC
+	 /RC89nKaGFX7yTkr+ttNmTBv8J8MDf2StSQry/shtMhHteHow9679mepPKTFZ6d27o05b
+	 kPI6B44PPYmaFvsDYsTOFI/Ttw0TZF/GcQliyskFyb3+AnkoeOWTyHCzryL6SvKWxGA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794869195;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794871036;
 	h=DMARC-Filter:Received:Date:From:To:Cc:Subject:Message-ID:References:
 	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=jqSwoAjsDQRdlLqv7HFSYNZ2dAycXMwZNoLGHbmfdsw=;
-	b=J+q6xif0AUu8Hdp8v/aeeVOUlX0gpa/Uf4R+bYKkrToZsWVPZ42kDogxcq3Al1AbkmQd
-	 ot1xfd1uErOOpEEKNxOijFATw016MKYogTTAaFReGXM4yhntgEn80Ijo42pmIUDxnQ7D2
-	 vjUoaFZGn9QPyGCOeLdK/guvaJ+T0q75peY6nY+8hmMTeVTQ0f02UdSiWM8v2rp0Ocf4n
-	 qT+vplNQitk5saVuRMIzriqBnSkbzL9CBOmWqoH49G0REdn2sHnwFQRtR3s1aGXVEp0RW
-	 ZITjNsFGMp/jxnct4bNojQsYi1O0wddRh9+gXuQbr1LT2Ca1dOBaSbxdRtRnnAHZ8rg==
+	bh=lBMZHfw7i4eJx0zD4VQ6/+RNNcDSsfzhNT1NDQ8/k0U=;
+	b=XfAlAmJkpbGMqNThMMsUE3r3OWTjhQzdzdkOEV5afSvwoWSi7bqJGmpX6U7OZfKnd8K9
+	 Vowr4c9jtgGoxf+I/6dT6SAN1KuuFeScg0+W0tNUSbGNP7QFO1XE7AzLxCh/CxDRmUL24
+	 t0FeI/0vUmt/FhIx5jNuDaFtHB5TPdhyGS0uRr8NTtSjRBkN00//6kluw2Vw23YBNLx7E
+	 890FbrOxKyxjDk0wcq1A09GfEIXHpg1SKTJUxRiovUHeJRlDDUILn2C1ZC/iF5TwGwwpd
+	 +/Q9/M3e/qtBw7W7HtGdo+KYdDyxDYc9WSso3H+TEXWNLZZ8JilVH6PwTP9JtnSW17A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=none header.from=strlen.de;
 	spf=pass smtp.mailfrom=strlen.de;
@@ -24,14 +24,14 @@ Received: from Chamillionaire.breakpoint.cc (Chamillionaire.breakpoint.cc [91.21
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82B8A606A323;
-	Mon, 16 Nov 2026 22:46:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 82B8A606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7B09606A31C;
+	Mon, 16 Nov 2026 23:17:15 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B7B09606A31C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=strlen.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=strlen.de
 Received: by Chamillionaire.breakpoint.cc (Postfix, from userid 1003)
-	id 6663260D56; Mon, 16 Nov 2026 23:46:32 +0100 (CET)
-Date: Mon, 16 Nov 2026 23:46:29 +0100
+	id 1421760342; Tue, 17 Nov 2026 00:17:13 +0100 (CET)
+Date: Tue, 17 Nov 2026 00:17:09 +0100
 From: Florian Westphal <fw@strlen.de>
 To: alireza@asgari.net
 Cc: netfilter-devel@vger.kernel.org, linux-mm@kvack.org,
@@ -49,11 +49,11 @@ Cc: netfilter-devel@vger.kernel.org, linux-mm@kvack.org,
 	Zhang Jiao <zhangjiao2@cmss.chinamobile.com>,
 	Song Hu <husong@kylinos.cn>, cgroups@vger.kernel.org,
 	netdev@vger.kernel.org, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH RFC nf-next 6/9] netfilter: nfqueue: account saved skb
- bytes per queue
-Message-ID: <avuHxb9In-dIYj_G@strlen.de>
+Subject: Re: [PATCH RFC nf-next 7/9] netfilter: nfqueue: reserve capacity
+ against the bound owner
+Message-ID: <avuO9UUriolRoRg8@strlen.de>
 References: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
- <20261115-b4-nfqueue-memory-accounting-v1-6-b9cc30819997@asgari.net>
+ <20261115-b4-nfqueue-memory-accounting-v1-7-b9cc30819997@asgari.net>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -65,46 +65,50 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261115-b4-nfqueue-memory-accounting-v1-6-b9cc30819997@asgari.net>
+In-Reply-To: <20261115-b4-nfqueue-memory-accounting-v1-7-b9cc30819997@asgari.net>
 
 Alireza Asgari via B4 Relay <devnull+alireza.asgari.net@kernel.org> wrote:
-> --- a/net/netfilter/nfnetlink_queue.c
-> +++ b/net/netfilter/nfnetlink_queue.c
-> @@ -92,6 +92,8 @@ struct nfqnl_instance {
->  	unsigned int	queue_total;
->  	unsigned int	id_sequence;		/* 'sequence' of pkt ids */
->  	struct list_head queue_list;		/* packets in queue */
-> +	u64 mem_limit;
-> +	u64 mem_used;
-
-I think u32 is fine for those.  Or do you see a use case for 2**32 mbyte
-worth of queued packets?
-
-> +/* All release paths use the saved admission cost, including notification undo. */
-> +static void nfqnl_mem_uncharge(struct nfqnl_instance *queue,
-> +			       struct nf_queue_entry *entry)
+> +static void nfqnl_mem_refund(struct nfqnl_instance *queue)
 > +{
-> +	lockdep_assert_held(&queue->lock);
-> +	queue->mem_used -= entry->truesize;
-> +	entry->truesize = 0;
+> +	u64 pages;
+> +
+> +	lockdep_assert_held(&queue->mem_mutex);
+> +	spin_lock_bh(&queue->lock);
+> +	pages = nfqnl_mem_pages(max(queue->mem_limit, queue->mem_used));
+> +	spin_unlock_bh(&queue->lock);
+> +
+> +	if (pages >= queue->memcg.pages)
+> +		return;
+> +
+> +	/* Shrinking cannot fail. Keep the packet-path copy conservative meanwhile. */
+> +	mem_cgroup_reservation_resize(&queue->memcg, pages);
+> +	spin_lock_bh(&queue->lock);
+> +	queue->mem_reserved = pages;
+> +	/* A final drain may have happened while the refund was in progress. */
+> +	if (!queue->mem_stopping &&
+> +	    pages > nfqnl_mem_pages(max(queue->mem_limit, queue->mem_used)))
+> +		queue_work(nfq_cleanup_wq, &queue->mem_work);
+> +	spin_unlock_bh(&queue->lock);
 > +}
 > +
->  static struct nfqnl_instance *
->  instance_create(struct nfnl_queue_net *q, u_int16_t queue_num, u32 portid)
->  {
-> @@ -152,6 +176,7 @@ instance_create(struct nfnl_queue_net *q, u_int16_t queue_num, u32 portid)
->  	inst->queue_num = queue_num;
->  	inst->peer_portid = portid;
->  	inst->queue_maxlen = NFQNL_QMAX_DEFAULT;
-> +	inst->mem_limit = nfqnl_mem_limit(NFQNL_QMAX_DEFAULT);
->  	inst->copy_range = NFQNL_MAX_COPY_RANGE;
->  	inst->copy_mode = NFQNL_COPY_NONE;
->  	spin_lock_init(&inst->lock);
-> @@ -199,6 +224,7 @@ static void instance_destroy_work(struct work_struct *work)
->  	rcu_read_lock();
->  	nfqnl_flush(inst, NULL, 0);
->  	rcu_read_unlock();
-> +	WARN_ON_ONCE(inst->mem_used);
+> +static void nfqnl_mem_work(struct work_struct *work)
+> +{
+> +	struct nfqnl_instance *queue =
+> +		container_of(work, struct nfqnl_instance, mem_work);
+> +
+> +	mutex_lock(&queue->mem_mutex);
+> +	nfqnl_mem_refund(queue);
+> +	mutex_unlock(&queue->mem_mutex);
+> +}
 
-I'd suggest DEBUG_NET_WARN_ONCE() here, unless you have a strong
-preference/reason for a full splat here.
+This is rather complex, do we really need all of this extra machinery?
+
+I had hoped we could do the memcg equivalent of
+
+vmalloc(4 * 1024 * 1024, GFP_KERNEL_ACCOUNT);
+on queue creation / instantiation, and vfree() on instance destruction.
+
+The only minor inconvenience is queue limit reconfiguration.  But that
+also happens from process context, so it should be enough to just
+do the equivalent of vrealloc; or, if memcg precharge cannot easily
+support that, just vmalloc, then vfree(old).
