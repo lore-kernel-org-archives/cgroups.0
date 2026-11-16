@@ -1,68 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.150
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794845453;
-	b=47IGCJtBDSdIhUkfdzNN7ciX5qE/vXoeN+Oz0D56TErgcQPm4wfOoSeic1fBD4h4pfz2
-	 iAlBn1jEaulja0z7BXlLFh+VkVVi2YqQdc30unqewqc3Te6IKM0dOpzEfx/33Vh0aoUZ6
-	 s2FYcV2cWhnF68G9vj2QfqM3OUff3l9f4l1c1rbtWZe7nZndO4H29wpnshP/VP6YzhUeY
-	 SarwIHHj6LyZc70ObWKfAnCzo6Bii5oBdjPTs5c9uuDs4UKRHNUxQJbOVe6/DQ8LI7t8E
-	 6hqXRegZn4jSEJbvFyzCjFg1xciVRf3Wh0NbIlVVfL7af79IxwsQoupJJ8z20q9L09A==
+	t=1794850039;
+	b=FzSdd8Co+MHUJmGLCT4y4obCxV8huYZDvBGVlVC4sEF2czxm3Q96L9H1XW+QZlXGU9FF
+	 5uONZL3WR1eARnOS8pV2TdHGOILa/GpeZNq0/MBvChBb/cpIvSxjeqJDIKtE9qd0js4HG
+	 6VQIt1u5PINufYagBnJANU0ijv47uxOCVwEMC0OpK5UjaWMRo0UmMO6NtZp/td7fWhLC9
+	 GCzgwDQGKbVymNq2YsW49tfUg85SncxpWE8s3tHZP92cULCn/z12UAkvVSowXpxX15HL2
+	 BChy3VsVOGzudgLgd4gnagChy8eQJLuevJtNKHxZeb5RwaCF4gM5INGjxjjGlLcFyaQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794845453;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=Oadzkl3ORJ3wQkyJMXU/6qO7rxNx4uwgoabiDJ+Xsug=;
-	b=ke471rwCmPCVnIPtRcyPdnSOi+52EANSzQjonoHh/aNrfqJFq/0LNuIrvsBie/4t1qBT
-	 woBLu4Sq8fCgzUr2He24P7fqhqu+0T5rzTPh/u41W1ovlUkFNrasgE6AXJ+wYLNBkHZSf
-	 mjoW2W7KItAvo6eFJX0IWjSoXwTTFdLQFdbTxmtqKf9vTu9IcbIO7kXJl2yIcbCUd/LAv
-	 m2n4A6hnsmlJ1NbA/Ex6q63+1ApNKU+7b+s90XRhNSV5Dmf7BKiSgWs0nuOKXTeQrznSn
-	 FSObTxQsXA40x1Ge+4IV5mJFvlvIakChz35Ghw6OVDq/mwp2J8m35Atq/SrVCAVHooA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794850039;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=2yzovXHP1AKSCJkwBWUXIlAv/gwCI3e2QnitbG71KNI=;
+	b=Jc2wQOyMUXZs12VErG3uuDzSXQf7N6d1JxU/SD33tuuUK4eV5ysJXoTQ5LD/9pnqAPEQ
+	 VHwM3GGRclX8ME89SrDPBDwYHQ9qQfA6lOBamLnyt2MJ/NEFRsgVQ44ZVOlCtl6ao5yQc
+	 0amcuc4p5Bn/pqvxdYBwzCDTsC6WollS/Sd8gZ4N1f2PDwBn9R5eXcVJ2vTTkXTrRD9jf
+	 pGzK8Wc5mDHM51xu8joC3uvS8JDG4m9xseeTHQUCKah3SmPe3vsE7OQ91hhqMKdnke0BJ
+	 BBnD/2ePH0CrTFyATx2bqUz0koKKSo9v6aD1HYthFC4EVFPoAr/qY54gfWuX4pGVUEQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ONwX6dMP;
-	arc=none smtp.remote-ip=91.218.175.150
-Received: from mta0.migadu.com (out-150.mta0.migadu.com [91.218.175.150])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k5hxH+zw;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EED38606A31C
-	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 16:10:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EED38606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4613C606A31C;
+	Mon, 16 Nov 2026 17:27:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ONwX6dMP
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=eCHYxBdwWeLQPnYgT+I0HAdi9TUCI4ucB5iF6HP0g60=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794845450; v=1; x=1795450250;
- b=ONwX6dMPf46nLT1v53fiElgDkjxy9Owao356TieVrST08i8VwXFPRKMbeA2jfCAdv22a0uCo
- HZs3SrUe13JBeeGk6yiGy/d40N5YXu58i2CVaYLnCZT3dUlP+VJgB9vfayu5ArHuQa1HRCNxIJ7
- +wnOkVEEOeLoApKlRanXhfho=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 266450e47dd57905;
-	Mon, 16 Nov 2026 16:10:46 +0000
-X-Mizu-Trace-ID: 266450e47dd57905
-X-Migadu-Flow: FLOW_OUT
-Date: Mon, 16 Nov 2026 08:10:45 -0800
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Yingjie Wang <x-professor@outlook.com>
-Cc: "akpm@linux-foundation.org" <akpm@linux-foundation.org>, 
-	Manfred Spraul <manfred@colorfullife.com>, Alexey Gladkov <legion@kernel.org>, 
-	"Eric W . Biederman" <ebiederm@xmission.com>, Vasily Averin <vasily.averin@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Michal Hocko <mhocko@suse.com>, Alejandro Colomar <alx@kernel.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, 
-	"cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-api@vger.kernel.org" <linux-api@vger.kernel.org>, 
-	"linux-man@vger.kernel.org" <linux-man@vger.kernel.org>, 
-	"linux-hardening@vger.kernel.org" <linux-hardening@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH v5 1/3] ipc/sem: account dynamically allocated sops
- arrays to memcg
-Message-ID: <avsq7s-CVIFiB8y-@linux.dev>
-References: <cover.1793250194.git.x-professor@outlook.com>
- <07d9034ec1fb5b6fd5eed2cf60ef3c84d5149e51.1793250194.git.x-professor@outlook.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=k5hxH+zw
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE66B1F000C4;
+	Mon, 16 Nov 2026 17:27:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1794850038;
+	bh=2yzovXHP1AKSCJkwBWUXIlAv/gwCI3e2QnitbG71KNI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=k5hxH+zwKwGfx7QdReyl1QJaN/qK8ywteGD6Fh7gfC9K+nWXHzPHJzqPAhBgOFFny
+	 aVeJIOfTh8ctP1Kb5boKwRehnhxRxMDlMIvsY784RAHvlMplgVXAB8pkylsz0jysND
+	 pq+mhkdcUlNd4qUUxsTJSxxTVZubXFsS3Iy9mG4636ymDrUGIG850CzjJ2YtcvtSe+
+	 TV9/K2VMzdjZODo3HhcNWeDXWlDLGNg2ir84s/0GFrmYfZq5QSQ2PCl/TfNp5Xu7Qv
+	 PI3eqA+jCWNF8f451GvMRr1/tANkKypYGQ3gM0YeMn+NOA/rR2mk2FQIl6mQ1pb3IU
+	 WVahsIxww5NnA==
+Date: Mon, 16 Nov 2026 07:27:17 -1000
+Message-ID: <e6062944917f1c9a87ab084bae9352a9@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Tao Cui <cui.tao@linux.dev>
+Cc: josef@toxicopanda.com, axboe@kernel.dk, alexei.starovoitov@gmail.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org, eddyz87@gmail.com, ast@kernel.org, daniel@iogearbox.net, linux-kselftest@vger.kernel.org, cuitao@kylinos.cn, ameryhung@gmail.com
+Subject: Re: [RFC PATCH v13 1/4] blk-iocost: add BPF struct_ops cost model support
+In-Reply-To: <20261106122356.3224638-2-cui.tao@linux.dev>
+References: <20261106122356.3224638-1-cui.tao@linux.dev> <20261106122356.3224638-2-cui.tao@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -73,37 +58,80 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <07d9034ec1fb5b6fd5eed2cf60ef3c84d5149e51.1793250194.git.x-professor@outlook.com>
+Content-Transfer-Encoding: 7bit
 
-On Thu, Oct 29, 2026 at 05:03:25AM +0000, Yingjie Wang wrote:
-> Commit 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in
-> do_semtimedop()") removed accounting based on the assumption that sops
-> arrays would remain small, describing a maximum cost of two pages.
-> 
-> SEMOPM is a UAPI default that can be changed at build time and through
-> the per-namespace sysctl. Commit 50ec499b9a43 ("sysctl: allow change
-> system v ipc sysctls inside ipc namespace") made that limit tunable by
-> IPC namespace owners without capabilities in the initial user namespace.
-> 
-> do_semtimedop() keeps up to SEMOPM_FAST operations on the stack. Charge
-> every larger, dynamically allocated operation array to the caller's memory
-> cgroup. This avoids a second size threshold and prevents a configured
-> SEMOPM limit from expanding an unaccounted heap-allocation range.
-> 
-> In a 4-vCPU KVM guest, with the benchmark pinned to one vCPU in a leaf
-> memory cgroup, accounting raised the median time per successful semop()
-> call by 2.3% to 3.2% for 65, 500 and 1000 operations, compared with
-> unaccounted allocation. An invalid semid, which allocates and copies the
-> array before returning EINVAL, rose by 5.6% to 11.9%. The 64-operation
-> stack path changed by at most 0.9%, and successful calls in the root
-> cgroup by at most 2.3%. Each result used 21 samples from three boots.
-> 
-> Suggested-by: Shakeel Butt <shakeel.butt@linux.dev>
-> Link: https://lore.kernel.org/r/20261016152609.2528805-1-x-professor@outlook.com
-> Fixes: 6a4746ba0619 ("ipc: remove memcg accounting for sops objects in do_semtimedop()")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yingjie Wang <x-professor@outlook.com>
+Hello, Tao.
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+On Fri, Nov 06, 2026 at 08:23:53PM +0800, Tao Cui wrote:
+> Attaching an iocost_model_ops struct_ops binds the model to one
+> device: the target is set in the dev member from userspace and
+> .reg creates the ioc if needed like an io.cost.model write and
+> ...
 
+From here on, the description mostly walks through what the code does.
+Can it instead explain why it works this way and what it guarantees, and
+leave the mechanics to the code?
+
+> +enum {
+> +	IOCOST_COST_F_MERGE	= 1 << 0,	/* called from the merge path */
+> +};
+
+Maybe name the flags after the callback they're passed to, e.g. enum
+iocost_calc_flags, IOCOST_CALC_MERGE and a calc_flags parameter, the way
+sched_ext pairs ops.enqueue()'s enq_flags with enum scx_enq_flags and
+SCX_ENQ_*? An unnamed enum type can't be looked up by name through BTF,
+so BPF programs can't test whether a flag exists.
+
+Also, can the comment say what the flag means to the model rather than
+where the call comes from? The bio is being merged into an IO which was
+already charged its base cost.
+
+> +	/* holds a reference on the struct_ops map, NULL if none is attached */
+> +	const struct iocost_model_ops	*attached;
+> +	struct bpf_link			*attached_link;
+> +	/* either NULL (linear) or ->attached */
+> +	const struct iocost_model_ops __rcu *model;
+
+Can the comment say why iocost holds its own reference on the map? If the
+link is destroyed after del_gendisk() has unhashed the bdev but before
+rq_qos_exit(), .unreg can't look up the disk and returns without
+detaching, and the link drops its reference. iocost's reference keeps the
+map alive until ioc_rqos_exit() detaches the model.
+
+Also, why are attached and attached_link updated under ioc->lock in
+ioc_bpf_reg() and ioc_detach_model()? Everything which reads the two
+holds rq_qos_mutex: .reg, .unreg, ioc_detach_model() and
+ioc_cost_model_write(), which gets it from blkg_conf_open_bdev(). Only
+model is read under ioc->lock alone, by ioc_autop_idx() from the timer
+and the io.cost.model show path, besides the RCU readers. What is
+ioc->lock protecting for the two? Can you document the locking on the
+fields?
+
+> +static const struct iocost_model_ops *ioc_model(struct ioc *ioc)
+> +{
+> +	if (!IS_ENABLED(CONFIG_BLK_CGROUP_IOCOST_BPF))
+> +		return NULL;
+> +	return rcu_dereference_check(ioc->model, lockdep_is_held(&ioc->lock));
+> +}
+
+ioc_model() returns NULL while the builtin linear model is in use, which
+is a model too. Maybe rename the accessor and the field together, e.g.
+ioc_bpf_model() and bpf_model, or ioc_model_bpf() and model_bpf?
+
+> +	spin_lock_irq(&ioc->lock);
+> +	rcu_assign_pointer(ioc->model, NULL);
+> ...
+> +	ioc->autop_too_fast_at = 0;
+> +	ioc->autop_too_slow_at = 0;
+
+Resetting to 0 is right, but maybe ioc_bpf_reg() is a better place for
+it? .reg is the only path which switches pricing to the BPF model without
+a forced ioc_refresh_params(), which is what zeroes the timestamps for
+io.cost.qos and io.cost.model writes. If ioc_bpf_reg() zeroes them, they
+stay zero while the BPF model is in use, which covers both detach and the
+"model=linear" switch sashiko reported on this posting.
+
+Thanks.
+
+--
+tejun
