@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.7
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.165
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794813907;
-	b=FxwKeB3moPikvOu3NdNVZkHTm8Z7uMEJnVfvGphSiqtjPiBUlrb922ePQ7QTF2ItGlRD
-	 5dL5P+4eIV2ogwMsyfiga3NloRFHMbdzOpbR+044FjQFAqo+pUAnsGhfNQQ9henLD5FK/
-	 RLt2oRHATgId+pY92Ifj1O7rjy+1W5yMw/oLB0ZXaRdxFKUIRhITMJH3z68r2OKjNJpfi
-	 87gKnYQyzQEvRZHv2VwY4GjcqbgUK86UGu/xdi7MALYotlzkgySqu+1xsVVIEkpbRt993
-	 9qTvFO/RxPlBjh+MpgWLTH33qNFCF/kHUj9XoI04HCsY7YxXD7VEnOgB2D4d/BgS7hA==
+	t=1794814661;
+	b=qWeiBMV2U6cBu8qw+Y9QcHTBgktlzNyln2+4NXb/Ec+FR/8kig+1cKThNwyRDBZCyhZv
+	 IXAA4BOQEDQ2C/KztFx+4opwolU00m+XIDqk+MqG/kZq3J0s+fnKzF2aW65ekSy0jr0a9
+	 0pe2Q+ZlxuWHwL99E51KpWluHtMBLl3N9b5pN80fYCDmM78gqNMVXADSN9/d9d9jgsJKL
+	 P1GC9bCC8GIGmm6ny1KD/fzg+3yizWAayvH83PUP4258COQ4eewpm6mSkQyb2Pb7fLYrZ
+	 5gsknAFDQEYR35OcDFwaBSn0ALESU2BT6uJ/O5eBIA3dTLR+Eq6sYTpU0w8C4v7biyA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794813907;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794814661;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=P9FhyP19g4/Z7L4dlr4LVD3QYchlsaZ1ecHmn97OucQ=;
-	b=L2dlFv0LLRUe29DnmpVfc1FOUnGMcrwK47Ths6IXD4LW966VwFxeh3ZLELtQz5QHnNlO
-	 /rzsR4dCFcm2GLDF1XpaWPh63LYJK0h+6jc9jortwo8q/MBPsRKEBuMWBYxwseKmuUfn4
-	 /hbbHFIaShNQVqhlZTfJWTR2/oiC3oZkUNaz617+PNlwsCuXbFRh4cMDsU3JVCTp1JeQb
-	 JJaOj4B/HNh6K6pGVTxsXSIhTWIr0xzyWsbkPlDKY1VxexeD9k3lXVHDAnvK4YF1EOQTZ
-	 kkLvYtbRUHDfDURXg8+YJF3dOvkK91IgguOwm0KJLyKqmHqwpy7RQOyBxTzhoTjWTWQ==
+	bh=ELGLnivSPBf/XoruTptZjLnaANO/5tU+GX+LXPFFz7o=;
+	b=ItWx4rMjneZ4rBkmzi2ued18AKq1KjlR+Ofo9EMg2e4iASo6Y7ON3zhkntkGIJAu3Tlj
+	 nY6tsgPa2FkvwESGF7vXlABD9lKjpySi7bIA254aHDG63BxPVJR+CwC4mI6L3/Io4peUT
+	 BwQ1Hy5Ole6wKOYOtFUZwuQFBJBURxMIvm+2T+hapU9nNUxVpr3Afkrp3ol60oHtr/oTV
+	 BD6TYdaJcqVVOzAmGkbm4/4m89MP3aTUWR0h0ehfSHbNNvjVdI7S5Vgo1CJOLwWblhxZQ
+	 9m/5dwWDSNwsSsNRsHJC7kmdrAgnPc/Gulnb6oj4H+7T23KWPxEDCHHIGSxeaD4dqfA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ZxQPRN+q;
-	arc=none smtp.remote-ip=95.215.58.7
-Received: from mta1.migadu.com (out-7.mta1.migadu.com [95.215.58.7])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vnzW1sV3;
+	arc=none smtp.remote-ip=95.215.58.165
+Received: from mta1.migadu.com (out-165.mta1.migadu.com [95.215.58.165])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 692A3606A323
-	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 07:25:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 692A3606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 95DAC606A323
+	for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 07:37:40 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 95DAC606A323
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=ZxQPRN+q
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vnzW1sV3
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=OXY/PavH/peuhwyWsspl7R73VH8ZvM8gYOCn3rjjGLo=;
+DKIM-Signature: a=rsa-sha256; bh=H6p33czRZZWahauFA0Jn1pndKd76EnVuASbuBmHSAtc=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794813904; v=1; x=1795418704;
- b=ZxQPRN+qu7BWvSx3kXczj3TqtMq6h+idph1ymQ/UAjMuVvCaz+l3nqnj/cdBwfXq3CezSd/f
- kSGSmMw90mjTid37RAkYaPHgeJPGbqMRJIgIV5k91akBjBR/8QgDuJc92WrRJZysa+ABSi2l/il
- K6Plhhlf10lTKaMl+uzv44Zk=
+ t=1794814658; v=1; x=1795419458;
+ b=vnzW1sV3OqhljrZMjkJs6X5X2veHGbuRzjf3BuV6u8CbjHGIuZaInqU7ipJffKLDYu8zv7/W
+ dRXLuAOoNE59Imocx22u5NYAcpzOxW6oN52dBvPJBngvrkKXrYla/eJ0+5MmgSN/BW4MTYPWqaK
+ yJxAV0OaV14TJNacqiNluYgY=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 585cded695b6ca3a;
-	Mon, 16 Nov 2026 07:25:03 +0000
-X-Mizu-Trace-ID: 585cded695b6ca3a
+Received: by smtp.migadu.com with ESMTPS id 9ab298eabfac997d;
+	Mon, 16 Nov 2026 07:37:38 +0000
+X-Mizu-Trace-ID: 9ab298eabfac997d
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <f5f1ecf6-d33a-4245-a522-34b986a3d7c2@linux.dev>
-Date: Mon, 16 Nov 2026 15:24:59 +0800
+Message-ID: <8015ad75-0e4d-4928-8e56-8a495d752468@linux.dev>
+Date: Mon, 16 Nov 2026 15:37:30 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,150 +59,113 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH-next v4 6/6] cgroup/cpuset: Fix lockdep_is_cpuset_held()
+Subject: Re: [PATCH-next v4 2/6] cgroup/cpuset: excpus parameter of
+ remote_cpus_update() must have at least 1 active CPU
 To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
  Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
  <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>
+ linux-kselftest@vger.kernel.org, Guopeng Zhang <guopeng.zhang@linux.dev>,
+ Sashiko <sashiko-bot@kernel.org>
 References: <20261116012330.2271010-1-longman@redhat.com>
- <20261116012330.2271010-7-longman@redhat.com>
+ <20261116012330.2271010-3-longman@redhat.com>
+ <e437ac79-7999-43da-9fe8-6cfd475a5196@linux.dev>
+ <eb3fd5e1-aafe-4bbd-a9ca-afcdb1554fdb@redhat.com>
 From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <20261116012330.2271010-7-longman@redhat.com>
+In-Reply-To: <eb3fd5e1-aafe-4bbd-a9ca-afcdb1554fdb@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
 
 
-On 11/16/2026 9:23 AM, Waiman Long wrote:
-> Commit a84097e625f2 ("cgroup/cpuset: Call housekeeping_update()
-> without holding cpus_read_lock") changes lockdep_is_cpuset_held()
-> to return true if either cpuset_mutex or cpuset_top_mutex is held.
-> lockdep_is_cpuset_held() is used by housekeeping_dereference_check()
-> as one of the conditions that rcu_read_lock() is not needed to
-> access HK_TYPE_DOMAIN cpumask that can be changed at run time.
-> In reality, it should return true only if cpuset_top_mutex is held as
-> housekeeping_update() is called with only cpuset_top_mutex held.
+On 11/16/2026 11:34 AM, Waiman Long wrote:
+> On 11/15/26 10:07 PM, Ridong Chen wrote:
+>>
+>>
+>> On 11/16/2026 9:23 AM, Waiman Long wrote:
+>>> It is reported that remote_cpus_update() fails to invalidate a
+>>> populated remote partition when an ancestor cgroup update reduces its
+>>> effective_xcpus mask to only offline CPUs.
+>>>
+>>> When update_cpumasks_hier() updates a descendant remote partition, it
+>>> passes the new effective_xcpus mask (excpus) to remote_cpus_update().
+>>> Because excpus still contains offline CPUs, cpumask_empty(excpus) is false
+>>> and remote_cpus_update() only checks tasks_nocpu_error() when adding CPUs.
+>>>
+>>> With the partition left valid, update_cpumasks_hier() computes an empty
+>>> effective_cpus mask and jumps to get_css. The populated partition stays
+>>> valid with no effective CPUs instead of inheriting its parent's CPUs,
+>>> and its tasks remain affine to the online CPUs returned to top_cpuset.
+>>>
+>>> Fix it by invalidating the remote partition if there is no active CPU
+>>> available in the given excpus parameter.
+>>>
+>>> Reported-by: Sashiko <sashiko-bot@kernel.org>
+>>> Link: https://sashiko.dev/#/bug/linux-936b7155-f652-4146-a4ab-ec48fd392a1d
+>>> Signed-off-by: Waiman Long <longman@redhat.com>
+>>> ---
+>>>   kernel/cgroup/cpuset.c | 3 ++-
+>>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>> index 631fb449cef8..195d4e3a283c 100644
+>>> --- a/kernel/cgroup/cpuset.c
+>>> +++ b/kernel/cgroup/cpuset.c
+>>> @@ -1810,7 +1810,8 @@ static void remote_cpus_update(struct cpuset *cs, 
+>>> struct cpumask *xcpus,
+>>>         WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus));
+>>>   -    if (cpumask_empty(excpus)) {
+>>> +    /* New effective_xcpus must have at least one active CPU */
+>>> +    if (!cpumask_intersects(excpus, cpu_active_mask)) {
+>>>           WRITE_ONCE(cs->prs_err, PERR_CPUSEMPTY);
+>>>           goto invalidate;
+>>>       }
+>>
+>> This also invalidates a remote partition with no task whose excpus
+>> only has offline CPUs. According to cgroup-v2.rst, such a partition
+>> is valid: cpuset.cpus.exclusive.effective may contain offline CPUs,
+>> and cpuset.cpus.effective can be empty if there is no task in the
+>> partition. The hotplug path and tasks_nocpu_error() follow the same
+>> rule. How about only invalidating it when it is populated?
+>>
+>>       if (cpumask_empty(excpus) ||
+>>           (!cpumask_intersects(excpus, cpu_active_mask) &&
+>>            partition_is_populated(cs, NULL))) {
 > 
-> If only cpuset_mutex is held, it is possible that there can be a parallel
-> housekeeping_update() call leading to a potential use-after-free situation
-> when HK_TYPE_DOMAIN housekeeping cpumask is being accessed. It also
-> means that rcu_read_lock will be required if only cpuset_mutex is being
-> held like when calling from hotplug, scheduler or cgroup.
+> A partition can only be created if there are active CPUs in the effective_xcpus. 
+> However, such a partition root can distribute its exclusive CPUs down to child 
+> local partitions with the results that effective_cpus can be empty if there is 
+> no task there. IOW, effective_xcpus must have active CPUs while effective_cpus 
+> does not need to have active CPUs if there are child partitions underneath. I am 
+> going to clarify that in the doc. I will check the hotplug path and 
+> task_nocpu_error() to make sure that it follows this rule. Does that rule make 
+> sense to you?
 > 
-> Fixes: a84097e625f2 ("cgroup/cpuset: Call housekeeping_update() without holding cpus_read_lock")
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->   kernel/cgroup/cpuset-v1.c | 16 ++++++++++------
->   kernel/cgroup/cpuset.c    |  9 +++++++--
->   2 files changed, 17 insertions(+), 8 deletions(-)
+
+Yes, the rule makes sense to me, and it is clearer.
+
+Note that the hotplug path currently keeps a partition with no task
+valid after all its CPUs are offlined, e.g. these test cases in
+test_cpuset_prs.sh:
+
+"  C2-3:P1  C3:P1   .      .     O3=0    .      .      .     0 A1:2|A2: A1:P1|A2:P1"
+"$SETUP_A123_PARTITIONS    .     O3=0    .      .      .     0 A1:1|A2:2|A3: 
+A1:P1|A2:P1|A3:P1"
+
+So the hotplug path and these test cases need to be updated together
+with this patch to keep the behavior consistent?
+
 > 
-> diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
-> index 7c7f2887dfaf..6bf6da639fec 100644
-> --- a/kernel/cgroup/cpuset-v1.c
-> +++ b/kernel/cgroup/cpuset-v1.c
-> @@ -686,6 +686,7 @@ int cpuset1_generate_sched_domains(cpumask_var_t **domains,
->   	int csn;		/* how many cpuset ptrs in csa so far */
->   	int i, j;		/* indices for partition finding loops */
->   	cpumask_var_t *doms;	/* resulting partition; i.e. sched domains */
-> +	cpumask_var_t hk_cpus;	/* HK_TYPE_DOMAIN housekeeping CPUs */
->   	struct sched_domain_attr *dattr;  /* attributes for custom domains */
->   	int ndoms = 0;		/* number of sched domains in result */
->   	int nslot;		/* next empty doms[] struct cpumask slot */
-> @@ -698,6 +699,11 @@ int cpuset1_generate_sched_domains(cpumask_var_t **domains,
->   	dattr = NULL;
->   	csa = NULL;
->   
-> +	alloc_cpumask_var(&hk_cpus, GFP_KERNEL);
-> +	scoped_guard(rcu) {
-> +		cpumask_copy(hk_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN));
-> +	}
-> +
-
-The return value of alloc_cpumask_var() isn't checked. With
-CONFIG_CPUMASK_OFFSTACK=y, hk_cpus is NULL on failure. Maybe goto done
-like the other allocation failures here?
-
-Also, rebuild_sched_domains() can be called from outside cpuset, e.g.
-arch_topology and the energy model, with only cpus_read_lock and
-cpuset_mutex held. partition_sched_domains_locked() reads
-HK_TYPE_DOMAIN in asym_cpu_capacity_scan() and in its fallback path.
-Will these trigger a lockdep warning after this change? If so, do they
-need an RCU read lock as well?
-
-
->   	/* Special case for the 99% of systems with one, full, sched domain */
->   	if (is_sched_load_balance(&top_cpuset)) {
->   		ndoms = 1;
-> @@ -710,9 +716,7 @@ int cpuset1_generate_sched_domains(cpumask_var_t **domains,
->   			*dattr = SD_ATTR_INIT;
->   			update_domain_attr_tree(dattr, &top_cpuset);
->   		}
-> -		cpumask_and(doms[0], top_cpuset.effective_cpus,
-> -			    housekeeping_cpumask(HK_TYPE_DOMAIN));
-> -
-> +		cpumask_and(doms[0], top_cpuset.effective_cpus, hk_cpus);
->   		goto done;
->   	}
->   
-> @@ -736,8 +740,7 @@ int cpuset1_generate_sched_domains(cpumask_var_t **domains,
->   		 */
->   		if (!cpumask_empty(cp->cpus_allowed) &&
->   		    !(is_sched_load_balance(cp) &&
-> -		      cpumask_intersects(cp->cpus_allowed,
-> -					 housekeeping_cpumask(HK_TYPE_DOMAIN))))
-> +		      cpumask_intersects(cp->cpus_allowed, hk_cpus)))
->   			continue;
->   
->   		if (is_sched_load_balance(cp) &&
-> @@ -794,7 +797,7 @@ int cpuset1_generate_sched_domains(cpumask_var_t **domains,
->   						*(dattr + nslot) = SD_ATTR_INIT;
->   				}
->   				cpumask_or(dp, dp, csa[j]->effective_cpus);
-> -				cpumask_and(dp, dp, housekeeping_cpumask(HK_TYPE_DOMAIN));
-> +				cpumask_and(dp, dp, hk_cpus);
->   				if (dattr)
->   					update_domain_attr_tree(dattr + nslot, csa[j]);
->   			}
-> @@ -806,6 +809,7 @@ int cpuset1_generate_sched_domains(cpumask_var_t **domains,
->   
->   done:
->   	kfree(csa);
-> +	free_cpumask_var(hk_cpus);
->   
->   	/*
->   	 * Fallback to the default domain if kmalloc() failed.
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 64cbcbdbf6da..d18439e13bce 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -343,10 +343,13 @@ void cpuset_full_unlock(void)
->   }
->   
->   #ifdef CONFIG_LOCKDEP
-> +/*
-> + * Holding cpuset_top_mutex will guarantee that a parallel
-> + * housekeeping_update() call modifying housekeeping cpumasks is not possible.
-> + */
->   bool lockdep_is_cpuset_held(void)
->   {
-> -	return lockdep_is_held(&cpuset_mutex) ||
-> -	       lockdep_is_held(&cpuset_top_mutex);
-> +	return lockdep_is_held(&cpuset_top_mutex);
->   }
->   #endif
->   
-> @@ -1416,8 +1419,10 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
->   		}
->   	}
->   
-> +	rcu_read_lock();
->   	cpumask_and(full_hk_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
->   		    housekeeping_cpumask(HK_TYPE_DOMAIN));
-> +	rcu_read_unlock();
->   	cpumask_andnot(full_hk_cpus, full_hk_cpus, isolated_cpus);
->   	cpumask_and(full_hk_cpus, full_hk_cpus, cpu_active_mask);
->   	res = !cpumask_weight_andnot(full_hk_cpus, new_cpus);
+>>
+>> Also, it probably needs a Fixes tag, maybe:
+>>
+>> Fixes: f62a5d39368e ("cgroup/cpuset: Remove remote_partition_check() & make 
+>> update_cpumasks_hier() handle remote partition")
+> 
+> Yes, I miss the fix tag. Will update that in the next version.
+> 
+> Cheers,
+> Longman
 
 -- 
 Best regards
