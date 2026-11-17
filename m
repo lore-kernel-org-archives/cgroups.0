@@ -1,96 +1,84 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=124.126.103.232
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794892062;
-	b=jTe0xAfjuDFXWYfUlyT1UtebP6P7xzdUdABSWDpzDeHuNlLEhsTtjv0HLhwUoe5jYvSH
-	 39kfaEE6Wlvj6Sus+9xGnuJjjcZpcBAG7ha1uNhLmFtNpyAmoAU0XDEANa+CxzaRR6D84
-	 XIIpuiSShFHCsdmoNGxbW9YBkc4i5vMj1TeT2DgTGKLx1jvDdCKlWUsk+5TcPVUc7xLnb
-	 zLOddAP6Gwzbr9TJAnsJZDNrleYPiVyecthxeiojphQTdBFudfASeFyAB9GxTSTKZxUIY
-	 WsnZEwYIIrrbZkJ4ZFxA492gWFCkc+K+L+KP72qXBQn04nEXfDqAD14A1fx6pw221ng==
+	t=1794896817;
+	b=Bllg2+j+9jem6s248yUjivQHf6otqenlQYK6AXlFy6o4HKRtzdZ2NTrdyTfst5vQxmcA
+	 1IezwaNnMM58B1F0gBaH59PUcrz0WwJU3X4pcXhw6bXiTX+UkJpbXSSRptG+Ny/RpO0jM
+	 RLMdgFoyZz/iH4liiAuueEOdNbtKHza4WgBSzOB3ur9cuHnbtmPPr5n7PYD3/mvL8L4aJ
+	 kzZ9Cyv/frUPHsvfOIVWhjJiBjODlOCbV8FwDBIy7sVq1rApcUOsBkY9koctxbo8WX4JR
+	 CVdAvGHILtaE8QVMAtNLtaZ2naSksL5nEK2jPiuMZO26esg1nCE8XF0xKR0N9cbBaeQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794892062;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Disposition:Message-ID:User-Agent;
-	bh=erZtH4IJMudy7WQUbT7BdWCH9j2OmGrPuCsVrI+Funw=;
-	b=4cCaYWyIg/gugRD48Euo5Lo4+bmP6z6Lx6CZ1R6nZwRwpaZQzYV2h0s4Ks/ivp11988N
-	 gx4AJvTp6pxCiVKU6EjQXvEDPHN9lZ0N85SnzjU61Ij00VLPc7b0Hz+2AclbnPk+EeCDk
-	 Ew2Q2JwytlEcvXAZ60gEQzhBSFdoWDNuy5J/PBYhJOtxkgFkLFK6sn49+ChDpV6Ayyw4G
-	 fDDhQ+SM5zVuDBl3gfbSxXoz2gLw++N1OUxTi95/Ulf4ePGbxZ+ja2sQiAg8Hs7n8LtBw
-	 AK1ve14JYZAfDEJvyTuoXCjPgygwEbKkdaZM35DPsMM97OyUOu6JSJsKjGr2P9PQWfg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794896817;
+	h=DMARC-Filter:X-UUID:X-CTIC-Tags:X-CID-P-RULE:X-CID-O-INFO:X-CID-INFO:
+	 X-CID-META:X-CID-BVR:X-CID-BAS:X-CID-FACTOR:X-CID-RHF:X-UUID:X-User:
+	 Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=zHwZTRyJcBmNm9HrK6+bkhzSPesMy8LyuWBdlQWUWI0=;
+	b=ws0wB4RT5wW8ApmtwgTVknAbDOwrRcMeZYfT62/VjagxHkPiI69ML/b7mUm6ObTQba+8
+	 s4pSCtWdCUhDf5QHIaZbp/Glr/iASsXxf+vCZQoH6u6z295EjlgGcjiWqx1Vgwxbbs5eJ
+	 ApvVPZESUguhIKSPkoPysBK/+GE/wT5jSZ+1JUUhqJ0+20O+9IpdczIsX2qWDB/niUP01
+	 +b5fjXFNHWCGf6zHEc0iEbvqcGpAQmrMhDTlS9sNjNPTx3Tnl+zd/3uzZHLaPrZ2btlwl
+	 E+OhxVGCKE0yTfd1xp3Tm1fPAcJ64JrW8JJb6T75vDaYi5bmUsiy7/iWCnH1WFWCAnA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=chrisdown.name;
-	spf=pass smtp.mailfrom=chrisdown.name;
-	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=kDJalYGa;
-	arc=none smtp.remote-ip=74.125.82.181
-Received: from mail-dy1-f181.google.com (mail-dy1-f181.google.com [74.125.82.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=kylinos.cn;
+	spf=pass smtp.mailfrom=kylinos.cn;
+	arc=none smtp.remote-ip=124.126.103.232
+Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89D99606A323
-	for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 05:07:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 89D99606A323
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=kDJalYGa
-Received: by mail-dy1-f181.google.com with SMTP id 5a478bee46e88-36f8cdd30beso7053109eec.1
-        for <cgroups@vger.kernel.org>; Mon, 16 Nov 2026 21:07:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google; t=1794892062; x=1795496862; darn=vger.kernel.org;
-        h=user-agent:message-id:content-disposition:content-type:mime-version
-         :references:in-reply-to:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=erZtH4IJMudy7WQUbT7BdWCH9j2OmGrPuCsVrI+Funw=;
-        b=kDJalYGah/KtbmZ2wtascJniSuHLlgKvpmT6qZOgrrzm21LczEDzLz0aUr2tA9Nigs
-         L7vgosxIxyW80BNJpe9PTxhXLJQKBPAlK+NwsV5zw8nEHvfTfmAwgEwd/l8UPSFj5nFa
-         q6sS5k9sSlJigkkHO3aJnwLGF+tO5V4C+GVvA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794892062; x=1795496862;
-        h=user-agent:message-id:content-disposition:content-type:mime-version
-         :references:in-reply-to:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=erZtH4IJMudy7WQUbT7BdWCH9j2OmGrPuCsVrI+Funw=;
-        b=XjsQS4R35iZkI7WF0e+o3OVW4tFs+BBl5tEZF1hh9s8PPq7ov5twQf59CjUZTA++Rx
-         lr3Bfbk/X8zukqoir4f1Hdbth1aJaSq+T387BZmaUm2Fos2Nj6KAE1skY7y9GpwFjxxb
-         JfrGTAmO9E0t/cqj+YJ6fwyA7zMNBgYfYdMNZZu/yjVuLPLIw6lY7lVWzLzW1mW1Yamm
-         yIyVjT3ARmVeMDLVhGUsxs3dcRwkEcZZxV9+Cx24Hk/WbtQGJEaRV7bHdFJqeLUvlB31
-         401hrnlJebnqbGoIfuFOl6XSmfTta5rmPsz4y+zw3KfGPTU2z2YYIbXx5RvqkK4hixg5
-         txDw==
-X-Forwarded-Encrypted: i=1; AL+hErG7K2wjQg9bcz4/yJiVke6x11zhZoKvQTqG4TioBFwipl/Czor/iOe0FYUCWZ3uR1h4IyGq3Mac@vger.kernel.org
-X-Gm-Message-State: APuU4Z9nrr4fOOPlxnyz7Mk39+hyM/ztFbLn0aCIEBh+IhqjrILpfwzk
-	29MBPsAnSh+rLNJ+ceIaqeHpsFN/lGyGfxA4GPx2SKVkAvzauosDbs7Bz7pRz3yaqj8=
-X-Gm-Gg: AZFdTZc4MGE2sRVKzs8cpyewMdDZiaJAlP8V3GXLTdy3mlk+iXCV3yNMuumSNspGaKD
-	CNyk3m6mDeEpxRqwVoO8f9HDnykLS0j/Lo1OBMUIpjgeNG+DuabtD7ukCURbA/YjhL8tZxqRZ49
-	GEXYl3ZrKwuICvHbcSODv1h6QK3h0MrSBzf/FYiZrl7prQyXCT4Ha43vmKqBOuqIWIwq7sE3tcR
-	SG2WkLYneU3Ox55GBB9TDjJTUTjdko7TpniWPzoFgwNX7QIrSRv7Cuc1RK8AvpdQBmYaaxdzCrN
-	jx+T+8raTr1PPsXXHBfdIcODhrMBhXYSmKUTlm9jzR4Hq+cid2biiv3dDOK+qZhZUscUVVC2Pbv
-	XYVFXiJDy5p71WiWWoaND2X+Qd1N0minFdplEBoL2cfQ9usBmsaYGEy+fVk8dDLnTFACeqpzE+5
-	cq9CQm5v5RcodbdUrDzuOZgIR+x0iSVPIfOa9YNS4Yu+BJqZovw06vua7DJfmlwWbal3ENNe/4g
-	CBqDZFohcxG7pAGzRwVJP2gL5d5NgPU5gyWG/Af6SHDfAomS1N06ejqkbgLCw0RMV21QhP3QpI8
-	Ye6xa7Q7w6J5p1YWnqybMHzAALKXHtMCd7reVBFGThUg3uzy1TVktILceZ9DEeODHqnhZwy0h9Y
-	dKIBWUDxCdt64Fbb9HpLz9Zq2Bu23mHeAExar+ZX9VayzfRz9EXNvdCTYJrmpyjEmheElMVlLtC
-	5vSHTN54wmgh9nj0+Un3YhketmsN9XTSIOtTjy3U7b4b2ikWa9WMXmamqgLxBxXj2c
-X-Received: by 2002:a05:693c:6383:10b0:380:d1bd:ed2c with SMTP id 5a478bee46e88-380d1bdeeadmr2109515eec.27.1794892061684;
-        Mon, 16 Nov 2026 21:07:41 -0800 (PST)
-Received: from [172.20.0.3] ([172.56.235.113])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-380e031f3e5sm7128627eec.12.2026.11.16.21.07.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2026 21:07:40 -0800 (PST)
-Date: Mon, 16 Nov 2026 21:07:37 -0800
-From: Chris Down <chris@chrisdown.name>
-To: Joanne Koong <joannelkoong@gmail.com>
-Cc: akpm@linux-foundation.org, david@kernel.org, yosry@kernel.org,
-	mkoutny@suse.com, shakeel.butt@linux.dev, hannes@cmpxchg.org,
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev,
-	nphamcs@gmail.com, chengming.zhou@linux.dev, sj@kernel.org, ljs@kernel.org,
-	linux-mm@kvack.org, cgroups@vger.kernel.org, damon@lists.linux.dev
-Subject: Re: [PATCH v3 4/4] mm/damon/core: use node counters instead of
-	flushing the root memcg
-In-Reply-To: <20261114002822.1043378-5-joannelkoong@gmail.com>
-References: <20261114002822.1043378-1-joannelkoong@gmail.com>
-	<20261114002822.1043378-5-joannelkoong@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E6AC606A31C;
+	Tue, 17 Nov 2026 06:26:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3E6AC606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
+X-UUID: dc784252e24f11f19a56ed5b684f684d-20261117
+X-CTIC-Tags:
+	HR_CC_COUNT, HR_CC_DOMAIN_COUNT, HR_CC_NAME, HR_CC_NO_NAME, HR_CTE_8B
+	HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE, HR_FROM_NAME
+	HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN, HR_SJ_LETTER, HR_SJ_NOR_SYM
+	HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS, HR_TO_COUNT, HR_TO_DOMAIN_COUNT
+	HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED, SA_UNTRUSTED, SA_LOWREP
+	SA_EXISTED, SN_UNTRUSTED, SN_LOWREP, SN_EXISTED, SPF_NOPASS
+	DKIM_NOPASS, DMARC_NOPASS
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.19,REQID:1d7932d1-1a0d-41c8-954b-034d9213316c,IP:10,
+	URL:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+	N:release,TS:35
+X-CID-INFO: VERSION:1.3.19,REQID:1d7932d1-1a0d-41c8-954b-034d9213316c,IP:10,UR
+	L:0,TC:0,Content:0,EDM:25,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:35
+X-CID-META: VersionHash:7db8b62,CLOUDID:b662959fe0d3c8d2f6a5fe0e09797485,BulkI
+	D:261117141047PSRW0JV4,BulkQuantity:1,SF:17|19|38|66|78|102|127|153|865|89
+	8,TC:nil,Content:0|15|50|99,EDM:5,IP:-2,URL:0,File:nil,RT:nil,Bulk:40,QS:n
+	il,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC
+	:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: dc784252e24f11f19a56ed5b684f684d-20261117
+X-User: yumiao@kylinos.cn
+Received: from kylinos.cn [(114.244.3.119)] by mailgw.kylinos.cn
+	(envelope-from <yumiao@kylinos.cn>)
+	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
+	with ESMTP id 2132674618; Tue, 17 Nov 2026 14:26:45 +0800
+From: Yu Miao <yumiao@kylinos.cn>
+To: cgroups@vger.kernel.org,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	corbet@lwn.net,
+	skhan@linuxfoundation.org,
+	rdunlap@infradead.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: jiayuan.chen@shopee.com,
+	nphamcs@gmail.com,
+	Yu Miao <yumiao@kylinos.cn>
+Subject: [PATCH] Docs/admin-guide/cgroup-v2: add missing npn tags to zswap stats
+Date: Tue, 17 Nov 2026 14:26:20 +0800
+Message-ID: <20261117062620.346767-1-yumiao@kylinos.cn>
+X-Mailer: git-send-email 2.43.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -100,18 +88,55 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Message-ID: <avvhGYhjBrOzAmT_@chrisdown.name>
-User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
+Content-Transfer-Encoding: 8bit
 
-Hi Joanne,
+The zswap, zswapped and zswap_incomp entries never show up in
+memory.numa_stat, so add the 'npn' tag to all three.  Also move
+zswap_incomp, currently listed between the zswpwb and thp_fault_alloc
+counters, next to the zswap and zswapped entries it belongs with.
 
-I've tested that this works well.
+Signed-off-by: Yu Miao <yumiao@kylinos.cn>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-Reviewed-by: Chris Down <chris@chrisdown.name>
-Tested-by: Chris Down <chris@chrisdown.name>
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 9e3c67b02ae2..3f698f109d89 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1608,12 +1608,18 @@ The following nested keys are defined.
+ 		Amount of cached filesystem data that is swap-backed,
+ 		such as tmpfs, shm segments, shared anonymous mmap()s
+ 
+-	  zswap
++	  zswap (npn)
+ 		Amount of memory consumed by the zswap compression backend.
+ 
+-	  zswapped
++	  zswapped (npn)
+ 		Amount of application memory swapped out to zswap.
+ 
++	  zswap_incomp (npn)
++		Amount of memory used by incompressible pages currently
++		stored in zswap without compression. These pages could not
++		be compressed to a size smaller than PAGE_SIZE, so they are
++		stored as-is.
++
+ 	  file_mapped
+ 		Amount of cached filesystem data mapped with mmap(). Note
+ 		that some kernel configurations might account complete
+@@ -1765,11 +1771,6 @@ The following nested keys are defined.
+ 	  zswpwb
+ 		Number of pages written from zswap to swap.
+ 
+-	  zswap_incomp
+-		Amount of memory used by incompressible pages currently stored in zswap
+-		without compression. These pages could not be compressed to
+-		a size smaller than PAGE_SIZE, so they are stored as-is.
+-
+ 	  thp_fault_alloc (npn)
+ 		Number of transparent hugepages which were allocated to satisfy
+ 		a page fault. This counter is not present when CONFIG_TRANSPARENT_HUGEPAGE
+-- 
+2.43.0
 
-Thanks!
-
-Chris
