@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.56
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.248
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794902676;
-	b=mJN2owd07cRq/v7pWKfM0mgETRSHxVwXe6h3JC1hHtlpafnUTPhQiRgdgkF538T3+fVG
-	 g7Ss3GY4+THGDvWwnN45e8DGa4crq5+/VtkZJ2XzKV+WqT5JBCg3xrWQwEVJ2VXBGp2JJ
-	 tlFkxZi5bTPEFEcyjS58C5kcyKFmI5G2QKZgU/gFkCi5tGDQwevYohWi7OBHOCLDcNGTP
-	 4RyAA3JQiG5JjHQu0P4+NN2HoxuzX8qglo2RVK6s3RaTJ04sxOnxmPcmVJ4PK5jnTbvkO
-	 I9LKN/PudQelMDWC/dqeEsFbhHiiqGhZ8bhzr6pJffxRc0Tb8JhU5IwNTY4n+Nu4vCw==
+	t=1794902679;
+	b=jDA31yaTxd+0YiSjw6K4rxl+2SaKYqVr7a4qzeb8vg67ko5VDWiRkAPlw+x8ZGqqL1kZ
+	 n/ogEIWaV2darAvN0McsLzNFJ246eNpbwrV54RuWQMV88wS+tCr08P9wqLb+V0z68ifdd
+	 VKCcqbk/in0VownAG7F2z/885CfKkanklMpCD4SdYGLfCO3Uc2xgwjdK5gqjc/iVdTHX2
+	 F1RMribHWn3cxiVIu2vjmKy3vr955c2CfDpoJvt59HDuYrfzXD5d320c7gendQmKVLr+U
+	 Q2axGRM99NlK3G/ZtLM4egE2aBWcp+TAfjHsYfJurVCB9R4POPP0yL8oEBMHOGJLa6A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794902676;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794902679;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=BjhDYtdm4/pQJcy2Nq6/VwI3066PPOd59IcuMnYXHok=;
-	b=VzWWbT/Ovk1Co/XdiiTS7Vp/iBZDPGzoHR3xS6uuDu9j/WEyw0swKoJh2bWsITPlPhuD
-	 pmANb8tpfPDCrLg/HNfQueRLEjtdQ3YPMrwGwbmAPIB1ZdZJVNXO3CE6LknNMZQkDDxp/
-	 bqgYctVrWqd2anlYoSePQaeh2m1BMeivRWA8jPN+P4qI0d1PPizdS/dZI5zwpVeTs7Try
-	 60CU5seVNcJSPiUACVwF1WDUsbTqM3y1aUlKDPJq7LSrdECrNMgwpIuBuVmHrcEiNbuEY
-	 d+vjFO0QL6O6QA2Ej0kQLEjQFmSyj2KkPqRqobvPNFQ7WhgIjNw+FdGO8w/rJ27r0cw==
+	bh=vXF8oVQRnsv2ot54KZJo/sivs9IEK1CA2mVPqtmHEpE=;
+	b=L6miGOOPhwj4cVED1y/w01MTc8KsToIR7Q1HgZHIt0s/jhjyj9ZmEeUMo59I4JGhtoI8
+	 61IMrCcdWdPVrmYqZyxYJSN9btDHn5qaFFg0fS5FWKWjLY9jEamDHkI45BzFlClPakZEt
+	 BsfkeA2QBxnQHn0DDpmkjoK3jMme+pkFTdkWIUXzwBE0TuL0er4aR45OmQgC8EuVVSKiq
+	 YHF73I+I2fP4TiEH58SuM8JyIiX9O9hihC+G16DotIy5uELjycLXdNcqWwpjfNI2LjVIg
+	 tJxJBhXajYUc/K6qWUh8ksMFtUHHgDq77Cal1AXeb5yR5uTAFzMYBFVdICa7E1in9kw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=HAnxMb7g;
-	arc=none smtp.remote-ip=95.215.58.56
-Received: from mta1.migadu.com (out-56.mta1.migadu.com [95.215.58.56])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lmfEcNYC;
+	arc=none smtp.remote-ip=91.218.175.248
+Received: from mta0.migadu.com (out-248.mta0.migadu.com [91.218.175.248])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBCCB606A32C
-	for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 08:04:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CBCCB606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0BAA606A896
+	for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 08:04:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C0BAA606A896
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=HAnxMb7g
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=lmfEcNYC
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=tIZd3eeHeKEfMcEKXFH5YHQpdMOXGI0H+yUu5ZTMA9E=;
+DKIM-Signature: a=rsa-sha256; bh=tUoF/AF9aJL8T6z27kbc5MffrFYSSF3reZSFJQMzMtw=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794902673; v=1; x=1795507473;
- b=HAnxMb7gG7n9/CDjQ2lgY4jNGhnGQXAorlcDp5JPO6iaUb9qklCz+7BqgpGX+FxkiHXxFqST
- gXjVDMVvWS69YleOfAhqee/ffXnz+wCPpDD88l8t2CSyfcSLFyRms3J+70k8tYrLaWzjyEpmWZ6
- iWBTkicnQMvY2ejUk7QyH+8w=
+ t=1794902676; v=1; x=1795507476;
+ b=lmfEcNYCbZTd26bIDYO2TnJG/JHdK/UTeHJrWAv9/mpX1ujBe5n7AnpNLBSFWpfwlxbfNEEG
+ 7kDhevuwHoZoActQctm33DJVN2Mc6zlE5trLRzPWrxBI2lDcsYQBgCNxb+uTcsfj7uLTWLyPWh+
+ qwfku+otFb//lzvlhCA9ua5U=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 86acde6d42413ff3;
-	Tue, 17 Nov 2026 08:04:32 +0000
-X-Mizu-Trace-ID: 86acde6d42413ff3
+Received: by smtp.migadu.com with ESMTPS id 9847e282a775229b;
+	Tue, 17 Nov 2026 08:04:36 +0000
+X-Mizu-Trace-ID: 9847e282a775229b
 X-Migadu-Flow: FLOW_OUT
 From: "Hui Zhu" <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -60,9 +60,9 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org
 Cc: Hui Zhu <zhuhui@kylinos.cn>,
 	stable@vger.kernel.org
-Subject: [PATCH 1/2] mm: memcg: fix zero throttle delay on 32-bit kernels
-Date: Tue, 17 Nov 2026 16:04:20 +0800
-Message-ID: <6931674296b98139f5e02821d66ad1855eba36c9.1794902513.git.zhuhui@kylinos.cn>
+Subject: [PATCH 2/2] mm: memcg: fix memory.high throttle lost to u64 overflow
+Date: Tue, 17 Nov 2026 16:04:21 +0800
+Message-ID: <f1cfcbc31ade9851c3c09db6bfd190682a130245.1794902513.git.zhuhui@kylinos.cn>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <cover.1794902513.git.zhuhui@kylinos.cn>
 References: <cover.1794902513.git.zhuhui@kylinos.cn>
@@ -79,55 +79,57 @@ Content-Transfer-Encoding: 8bit
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-calculate_high_delay() stores max_overage * max_overage * HZ, computed as
-u64, into an unsigned long before shifting it right by 34 bits in total.
-On 32-bit kernels the store truncates the value first, so the shift always
-yields zero. Tasks over memory.high or memory.swap.high are then never
-throttled, and the reclaim retry loop in __mem_cgroup_handle_over_high()
-is skipped as well.
+calculate_high_delay() squares max_overage and scales it by HZ in u64.
+max_overage is the ratio ((usage - high) << 20) / high, and memory.high has
+no lower bound, so the product wraps once a cgroup is about 130x over its
+limit (at HZ=1000). The wrapped value is arbitrary and can be exactly zero:
+with memory.high set to one page and usage at 2049 pages, one page past the
+8M mark, max_overage is 2^31, the product wraps to zero and the penalty
+comes out 0 jiffies instead of the 2 seconds the formula calls for. The
+caller then takes its "penalty_jiffies <= HZ / 100" exit, skipping both the
+throttle and the reclaim retry loop.
 
-Keep the intermediate in u64 so the shifts see the full width, and clamp
-to MEMCG_MAX_HIGH_DELAY_JIFFIES before narrowing to the unsigned long
-return value: a truncated result would escape the caller's own min().
-Nothing changes on 64-bit kernels, where clamping each term is equivalent
-to clamping their sum, which the caller already does.
+Clamp the overage to MEMCG_MAX_DELAY_OVERAGE before squaring it. The bound
+keeps the product within u64 for any supported HZ, and by then the delay
+has long saturated at MEMCG_MAX_HIGH_DELAY_JIFFIES, so no penalty is
+shortened.
 
-Fixes: e26733e0d0ec ("mm, memcg: throttle allocators based on ancestral memory.high")
+Fixes: 0e4b01df8659 ("mm, memcg: throttle allocators when failing reclaim over memory.high")
 Cc: stable@vger.kernel.org
-
 Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
 ---
- mm/memcontrol.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 84f4a8fd4d16..1ba42724ed1e 100644
+index 1ba42724ed1e..aeec1bbabb26 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2576,7 +2576,7 @@ static u64 swap_find_max_overage(struct mem_cgroup *memcg)
- static unsigned long calculate_high_delay(unsigned int nr_pages,
- 					  u64 max_overage)
- {
--	unsigned long penalty_jiffies;
-+	u64 penalty_jiffies;
+@@ -2521,6 +2521,15 @@ static void high_irq_work_func(struct irq_work *work)
+  #define MEMCG_DELAY_PRECISION_SHIFT 20
+  #define MEMCG_DELAY_SCALING_SHIFT 14
  
++/*
++ * Cap for the overage passed to calculate_high_delay(). Squaring a larger
++ * overage and scaling it by HZ overflows u64, and the wrapped product may
++ * come out zero, skipping the throttle entirely. At the cap the square
++ * still fits in u64 for any HZ, and the delay has long saturated at
++ * MEMCG_MAX_HIGH_DELAY_JIFFIES, so clamping never shortens it.
++ */
++#define MEMCG_MAX_DELAY_OVERAGE (1ULL << 26)
++
+ static u64 calculate_overage(unsigned long usage, unsigned long high)
+ {
+ 	u64 overage;
+@@ -2581,6 +2590,8 @@ static unsigned long calculate_high_delay(unsigned int nr_pages,
  	if (!max_overage)
  		return 0;
-@@ -2601,7 +2601,13 @@ static unsigned long calculate_high_delay(unsigned int nr_pages,
- 	 * MEMCG_CHARGE_BATCH pages is nominal, so work out how much smaller or
- 	 * larger the current charge patch is than that.
- 	 */
--	return penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
-+	penalty_jiffies = penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
-+
-+	/*
-+	 * Clamp before narrowing to unsigned long: a truncated return value
-+	 * would escape the caller's min() and look like a small delay.
-+	 */
-+	return min_t(u64, penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
- }
  
- /*
++	max_overage = min_t(u64, max_overage, MEMCG_MAX_DELAY_OVERAGE);
++
+ 	/*
+ 	 * We use overage compared to memory.high to calculate the number of
+ 	 * jiffies to sleep (penalty_jiffies). Ideally this value should be
 -- 
 2.53.0
 
