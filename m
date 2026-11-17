@@ -1,54 +1,79 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.73
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.15
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794903022;
-	b=oxmQlnjE/5XUN/+P8GyCMqxpyw5MwJlvmZ6JPRYwf127Js+j6iAZs5ffueHUWKXSaYEY
-	 MfQ1b1xUogfR7Mkb3376JXXWFnngOlLwdC71bJJub6zxhzqWnV5Qi2QiKirfWtQ1+maMC
-	 nfDF1s15whw6JR/qyj4tq+4deTCJV//l6MByrDXAJi1dJMm4yEVr9TeXU/Y/qIpCOxeWL
-	 NehxhuFI3jrQIxsVmbIiqyKldMroakC93wuO6JcXJH2apDMIWBRgj8NQJX+fS+EzB1Nwy
-	 IMtob6QqRjg1kuSVfL5TjVtj4t6KRm0Qm1xyT1lk7T3qKCtnecGEremGnK9itWc5K2g==
+	t=1794904777;
+	b=ZR6/LbKxI3SiGOws2boyvRA2uenqAHVHBLcn72Bulp0pJHHjQFqRgHpFLTipB0e655Rl
+	 Ba43sGvZTCCToya73iL8sXe6ue9cYCI6MHQvSwKoWADiUoldu+pVUByXGMq8hHzY3gwVV
+	 5A0e4E15+ehCDasE7mzSTEHZuaIOurQQAc4ZfCj1lXC+OOyHqeTnn6Tco51Ka7zrttjCn
+	 Xe5Lg1eBhuEUAKJasEoBka0efwOhE0TVRsRRpZAjsRUemsXyex0ljcr/zfQRjJYgy532y
+	 WY2KvbNbUUuT+7ShFxkf3OYy9S+dSIFM2obHqzQ5BLTs6Ur5hNRFA2oqeRmEXHCjVIA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794903022;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794904777;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-Id:
+	 X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=LmGROQ8j6ssfXVbTrRZUW1rS5G1Xj+GI9rns6J0VgQk=;
-	b=4KLfhxr/a/u2BbAepTOPAEI2nCTYrz3IootHIxdI/AlKj9E0P+tOy+Jo6W1OvmxA7WVr
-	 WrKxfWkLPaEuywnNn4cVMhHm7J+4bNL8KtdhNZvIbyCpEYRydDRahDUInrDrhjKybwqDM
-	 P+B48O8M+N+xyuUcBZIf3c4AHel7Xn8VYzcqjHqWqrexR2f5e6H/rdVdlnumj7mJMH4sJ
-	 sfIoYcQKxefcnwA2S+3J6pvr2mX1j4LFhVBg7N2kCpeiokLZpaJ7mrDGU5qYAfdMdmkhS
-	 JpPx68vMqcW0zexEGgH5nUzfOE8qmUMiADkPe8BH2YIMhiq4FPmcOmVEE9y4fepXw3w==
+	bh=XmS2Ybw4fClc4m3xDQofcdzVpjOmLTbkgJAH30zx6Wc=;
+	b=HFSpNHJUEJ5qHRqs6MXbwsAq9jLsFhhHbQWaYc5Ms7i7xmdEi2jmi2Rc/VN1ANEN5dQa
+	 XHdAE6d8U3276mqBC2oD5rL2c1ooGFmsZr0kd8dGNTuERreD9i+rJ3K7lbo0LO0cWD3iB
+	 OD+CRrnQySWyBGwcdafPAOXvgaYvB3VMAGjMxLrEP67ao9EEt/f8nL0ShUkU0AA2F/+GB
+	 t+h+gAt1XTXzktBkJJkQS1AS35bgw4AU+QTCm+ufAuCgcmEeUSC05igVZBLEP4IAbGeYH
+	 Qk96IfbTZgDQX8iipON8TIqEzlMCXnEfdsBpoHwVgV4AyfZhsCM93NhCRT1C/rcLzyw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=T8C2zjZX;
-	arc=none smtp.remote-ip=91.218.175.73
-Received: from mta0.migadu.com (out-73.mta0.migadu.com [91.218.175.73])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=i9BqFDhw;
+	arc=none smtp.remote-ip=95.215.58.15
+Received: from mta1.migadu.com (out-15.mta1.migadu.com [95.215.58.15])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DB76606A323
-	for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 08:10:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DB76606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A66606A893
+	for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 08:39:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B4A66606A893
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=T8C2zjZX
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=i9BqFDhw
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=cn6tymwrhooG82BjdGKkfjlm33e7584SzGicUSgvQKM=;
+DKIM-Signature: a=rsa-sha256; bh=LW7CTRXKDIQ0Q2Yz6X6SCI0G0kzOFEfnSjvu1UtxrG8=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1794903019; v=1; x=1795507819;
- b=T8C2zjZX6lY7Kta2Llo6OcdUZ4LqOjd09HISFHVvV454h87DzX8MbPJaEkClE9lEopW31d2u
- y3HbbIsjespdAcQNJ0GFTjrPboRP1myBSU73x46TtmY67hUbAZbQjGCvrkEkIm6w1Oowf8GjQOQ
- 8bQ+phUxk90CiXSqGCwcbEGI=
+ t=1794904774; v=1; x=1795509574;
+ b=i9BqFDhwC5oGb8EJWma/HXQGfC/0s2xQ8XhkV3tiZVfxfDGBCB+RzKxJ8Tq0EmveScJq1Y4u
+ RHiINo/SlU2akhKz9ayYeZt73OGInrqhczlqURtACTlK+vLXY2j2oRxE8t82tqunjP5z62Kx3u1
+ kc7SLNDsFWT2yeI+MniYieq4=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d49511be82a76482;
-	Tue, 17 Nov 2026 08:10:18 +0000
-X-Mizu-Trace-ID: d49511be82a76482
+Received: by smtp.migadu.com with ESMTPS id 31bfc8e230cb5987;
+	Tue, 17 Nov 2026 08:39:34 +0000
+X-Mizu-Trace-ID: 31bfc8e230cb5987
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <64588236-7ab4-4d63-8ab5-8a1658eb15b0@linux.dev>
-Date: Tue, 17 Nov 2026 16:10:06 +0800
+From: Ridong <ridong.chen@linux.dev>
+To: longman@redhat.com,
+	frederic@kernel.org,
+	tj@kernel.org,
+	peterz@infradead.org,
+	mingo@redhat.com,
+	juri.lelli@redhat.com,
+	vincent.guittot@linaro.org,
+	dietmar.eggemann@arm.com,
+	rostedt@goodmis.org,
+	bsegall@google.com,
+	mgorman@suse.de,
+	vschneid@redhat.com,
+	kprateek.nayak@amd.com,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	guopeng.zhang@linux.dev,
+	mathieu.desnoyers@efficios.com,
+	Ridong Chen <chenridong@xiaomi.com>
+Subject: [PATCH] sched/isolation: Publish new HK_TYPE_DOMAIN cpumask under cpuset_mutex
+Date: Tue, 17 Nov 2026 16:39:15 +0800
+Message-Id: <20261117083915.2971979-1-ridong.chen@linux.dev>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <054a53a3-c038-48fe-ac01-fc24fd8065d0@linux.dev>
+References: <054a53a3-c038-48fe-ac01-fc24fd8065d0@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,134 +83,170 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: cui.tao@linux.dev, josef@toxicopanda.com, axboe@kernel.dk,
- alexei.starovoitov@gmail.com, cgroups@vger.kernel.org,
- linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
- bpf@vger.kernel.org, andrii@kernel.org, eddyz87@gmail.com, ast@kernel.org,
- daniel@iogearbox.net, linux-kselftest@vger.kernel.org, cuitao@kylinos.cn,
- ameryhung@gmail.com
-Subject: Re: [RFC PATCH v13 1/4] blk-iocost: add BPF struct_ops cost model
- support
-To: Tejun Heo <tj@kernel.org>
-References: <20261106122356.3224638-1-cui.tao@linux.dev>
- <20261106122356.3224638-2-cui.tao@linux.dev>
- <e6062944917f1c9a87ab084bae9352a9@kernel.org>
-From: Tao Cui <cui.tao@linux.dev>
-In-Reply-To: <e6062944917f1c9a87ab084bae9352a9@kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Hello, Tejun.
+From: Ridong Chen <chenridong@xiaomi.com>
 
-在 2026/11/17 01:27, Tejun Heo 写道:
-> Hello, Tao.
-> 
-> On Fri, Nov 06, 2026 at 08:23:53PM +0800, Tao Cui wrote:
->> Attaching an iocost_model_ops struct_ops binds the model to one
->> device: the target is set in the dev member from userspace and
->> .reg creates the ioc if needed like an io.cost.model write and
->> ...
-> 
-> From here on, the description mostly walks through what the code does.
-> Can it instead explain why it works this way and what it guarantees, and
-> leave the mechanics to the code?
-> 
-Rewritten. The commit message now describes what the attachment
-guarantees: one attached model per device, pricing follows the
-model across io.cost.model writes, attaching doesn't enable the
-controller, and the model can't go away while it's pricing. The
-freeze ordering and the detach mechanics are left to the code.
+Commit a84097e625f2 ("cgroup/cpuset: Call housekeeping_update() without
+holding cpus_read_lock") calls housekeeping_update() after dropping
+cpus_read_lock and cpuset_mutex, so the HK_TYPE_DOMAIN cpumask is now
+switched and freed outside of those locks. But readers holding either
+lock may still access it without rcu_read_lock() as allowed by
+housekeeping_dereference_check(), and synchronize_rcu() doesn't wait
+for them:
 
->> +enum {
->> +	IOCOST_COST_F_MERGE	= 1 << 0,	/* called from the merge path */
->> +};
-> 
-> Maybe name the flags after the callback they're passed to, e.g. enum
-> iocost_calc_flags, IOCOST_CALC_MERGE and a calc_flags parameter, the way
-> sched_ext pairs ops.enqueue()'s enq_flags with enum scx_enq_flags and
-> SCX_ENQ_*? An unnamed enum type can't be looked up by name through BTF,
-> so BPF programs can't test whether a flag exists.
-> 
-Renamed. The enum is now iocost_calc_flags with
-IOCOST_CALC_MERGE and the calc_cost parameter is calc_flags.
-The named enum is used for the kernel-side definition; the BPF
-callback argument remains u64, matching the existing struct_ops
-interface style.
+  CPU A                                  CPU B
+  rebuild_sched_domains()                cpuset_update_sd_hk_unlock()
+                                           mutex_unlock(&cpuset_mutex)
+                                           cpus_read_unlock()
+    mutex_lock(&cpuset_mutex)
+    p = housekeeping_cpumask(DOMAIN)
+                                           housekeeping_update()
+                                             rcu_assign_pointer()
+                                             synchronize_rcu()
+                                             kfree(old)
+    access p <- UAF
 
-> Also, can the comment say what the flag means to the model rather than
-> where the call comes from? The bio is being merged into an IO which was
-> already charged its base cost.
-> 
-Updated accordingly.
->> +	/* holds a reference on the struct_ops map, NULL if none is attached */
->> +	const struct iocost_model_ops	*attached;
->> +	struct bpf_link			*attached_link;
->> +	/* either NULL (linear) or ->attached */
->> +	const struct iocost_model_ops __rcu *model;
-> 
-> Can the comment say why iocost holds its own reference on the map? If the
-> link is destroyed after del_gendisk() has unhashed the bdev but before
-> rq_qos_exit(), .unreg can't look up the disk and returns without
-> detaching, and the link drops its reference. iocost's reference keeps the
-> map alive until ioc_rqos_exit() detaches the model.
-> 
-The field comment now says exactly this.
+Fix it by moving the pointer switch into housekeeping_publish(), which
+is called before dropping the locks. Then CPU A either finishes before
+CPU B switches the pointer, or only sees the new cpumask:
 
-> Also, why are attached and attached_link updated under ioc->lock in
-> ioc_bpf_reg() and ioc_detach_model()? Everything which reads the two
-> holds rq_qos_mutex: .reg, .unreg, ioc_detach_model() and
-> ioc_cost_model_write(), which gets it from blkg_conf_open_bdev(). Only
-> model is read under ioc->lock alone, by ioc_autop_idx() from the timer
-> and the io.cost.model show path, besides the RCU readers. What is
-> ioc->lock protecting for the two? Can you document the locking on the
-> fields?
-> 
-attached and attached_link themselves are protected by
-rq_qos_mutex. The ioc->lock coverage is only needed for bpf_model,
-which is read under ioc->lock by the timer and io.cost.model show
-paths. The field comments now document the locking rules.
+  CPU A                                  CPU B
+                                         cpuset_update_sd_hk_unlock()
+                                           housekeeping_publish()
+                                             rcu_assign_pointer()
+    mutex_lock(&cpuset_mutex) <- wait
+                                           mutex_unlock(&cpuset_mutex)
+                                           cpus_read_unlock()
+    p = housekeeping_cpumask(DOMAIN)       housekeeping_update()
+        <- new cpumask                       synchronize_rcu()
+                                             kfree(old)
 
->> +static const struct iocost_model_ops *ioc_model(struct ioc *ioc)
->> +{
->> +	if (!IS_ENABLED(CONFIG_BLK_CGROUP_IOCOST_BPF))
->> +		return NULL;
->> +	return rcu_dereference_check(ioc->model, lockdep_is_held(&ioc->lock));
->> +}
-> 
-> ioc_model() returns NULL while the builtin linear model is in use, which
-> is a model too. Maybe rename the accessor and the field together, e.g.
-> ioc_bpf_model() and bpf_model, or ioc_model_bpf() and model_bpf?
-> 
-Renamed to ioc_bpf_model() and bpf_model.
+The rest of housekeeping_update(), including the workqueue flushes,
+still runs without those locks.
 
->> +	spin_lock_irq(&ioc->lock);
->> +	rcu_assign_pointer(ioc->model, NULL);
->> ...
->> +	ioc->autop_too_fast_at = 0;
->> +	ioc->autop_too_slow_at = 0;
-> 
-> Resetting to 0 is right, but maybe ioc_bpf_reg() is a better place for
-> it? .reg is the only path which switches pricing to the BPF model without
-> a forced ioc_refresh_params(), which is what zeroes the timestamps for
-> io.cost.qos and io.cost.model writes. If ioc_bpf_reg() zeroes them, they
-> stay zero while the BPF model is in use, which covers both detach and the
-> "model=linear" switch sashiko reported on this posting.
-> 
-Moved. ioc_bpf_reg() zeroes the timestamps inside the ioc->lock
-section together with the settle, and the zero in ioc_detach_model()
-is dropped; as you say, they stay zero for the whole BPF period,
-which covers both the detach and the model=linear switch.
+Fixes: a84097e625f2 ("cgroup/cpuset: Call housekeeping_update() without holding cpus_read_lock")
+Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+---
+ include/linux/sched/isolation.h |  6 ++++--
+ kernel/cgroup/cpuset.c          | 12 ++++++++----
+ kernel/sched/isolation.c        | 23 ++++++++++++++++-------
+ 3 files changed, 28 insertions(+), 13 deletions(-)
 
-Besides your comments, p1 also picked up two fixes from testing:
-calc_cost() now matches the builtin pricing scope, and a dead owning
-map now reports -ENODEV instead of -EBUSY.
-
-Thanks,
-Tao
-
-> Thanks.
-> 
-> --
-> tejun
+diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+index cf0fd03dd7a24..09fabf42e3224 100644
+--- a/include/linux/sched/isolation.h
++++ b/include/linux/sched/isolation.h
+@@ -43,7 +43,8 @@ extern const struct cpumask *housekeeping_cpumask(enum hk_type type);
+ extern bool housekeeping_enabled(enum hk_type type);
+ extern void housekeeping_affine(struct task_struct *t, enum hk_type type);
+ extern bool housekeeping_test_cpu(int cpu, enum hk_type type);
+-extern int housekeeping_update(struct cpumask *isol_mask);
++extern struct cpumask *housekeeping_publish(struct cpumask *isol_mask);
++extern void housekeeping_update(struct cpumask *isol_mask, struct cpumask *old);
+ extern void __init housekeeping_init(void);
+ 
+ #else
+@@ -71,7 +72,8 @@ static inline bool housekeeping_test_cpu(int cpu, enum hk_type type)
+ 	return true;
+ }
+ 
+-static inline int housekeeping_update(struct cpumask *isol_mask) { return 0; }
++static inline struct cpumask *housekeeping_publish(struct cpumask *isol_mask) { return NULL; }
++static inline void housekeeping_update(struct cpumask *isol_mask, struct cpumask *old) { }
+ static inline void housekeeping_init(void) { }
+ #endif /* CONFIG_CPU_ISOLATION */
+ 
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 8a8a424a389f3..1673bb25a797b 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1472,17 +1472,21 @@ static void cpuset_update_sd_hk_unlock(void)
+ 		rebuild_sched_domains_locked();
+ 
+ 	if (update_housekeeping) {
++		struct cpumask *old;
++
+ 		update_housekeeping = false;
+ 		cpumask_copy(isolated_hk_cpus, isolated_cpus);
+ 
+ 		/*
+-		 * housekeeping_update() is now called without holding
+-		 * cpus_read_lock and cpuset_mutex. Only cpuset_top_mutex
+-		 * is still being held for mutual exclusion.
++		 * Publish the new cpumask with cpus_read_lock and cpuset_mutex
++		 * held, but call housekeeping_update() without them. Only
++		 * cpuset_top_mutex is still being held for mutual exclusion.
+ 		 */
++		old = housekeeping_publish(isolated_hk_cpus);
+ 		mutex_unlock(&cpuset_mutex);
+ 		cpus_read_unlock();
+-		WARN_ON_ONCE(housekeeping_update(isolated_hk_cpus));
++		if (!WARN_ON_ONCE(IS_ERR(old)))
++			housekeeping_update(isolated_hk_cpus, old);
+ 		mutex_unlock(&cpuset_top_mutex);
+ 	} else {
+ 		cpuset_full_unlock();
+diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+index 156025ef81b75..9e202269e42f6 100644
+--- a/kernel/sched/isolation.c
++++ b/kernel/sched/isolation.c
+@@ -120,23 +120,26 @@ bool housekeeping_test_cpu(int cpu, enum hk_type type)
+ }
+ EXPORT_SYMBOL_GPL(housekeeping_test_cpu);
+ 
+-int housekeeping_update(struct cpumask *isol_mask)
++/* Called with cpus_read_lock and cpuset_mutex held */
++struct cpumask *housekeeping_publish(struct cpumask *isol_mask)
+ {
+ 	struct cpumask *trial, *old = NULL;
+-	int err;
++
++	lockdep_assert_cpus_held();
++	lockdep_assert_cpuset_lock_held();
+ 
+ 	trial = kmalloc(cpumask_size(), GFP_KERNEL);
+ 	if (!trial)
+-		return -ENOMEM;
++		return ERR_PTR(-ENOMEM);
+ 
+ 	cpumask_andnot(trial, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT), isol_mask);
+ 	if (!cpumask_intersects(trial, cpu_online_mask)) {
+ 		kfree(trial);
+-		return -EINVAL;
++		return ERR_PTR(-EINVAL);
+ 	}
+ 
+ 	if (!housekeeping.flags)
+-		static_branch_enable(&housekeeping_overridden);
++		static_branch_enable_cpuslocked(&housekeeping_overridden);
+ 
+ 	if (housekeeping.flags & HK_FLAG_DOMAIN)
+ 		old = housekeeping_cpumask_dereference(HK_TYPE_DOMAIN);
+@@ -144,6 +147,14 @@ int housekeeping_update(struct cpumask *isol_mask)
+ 		WRITE_ONCE(housekeeping.flags, housekeeping.flags | HK_FLAG_DOMAIN);
+ 	rcu_assign_pointer(housekeeping.cpumasks[HK_TYPE_DOMAIN], trial);
+ 
++	return old;
++}
++
++/* Called without cpus_read_lock and cpuset_mutex held */
++void housekeeping_update(struct cpumask *isol_mask, struct cpumask *old)
++{
++	int err;
++
+ 	synchronize_rcu();
+ 
+ 	pci_probe_flush_workqueue();
+@@ -160,8 +171,6 @@ int housekeeping_update(struct cpumask *isol_mask)
+ 	WARN_ON_ONCE(err < 0);
+ 
+ 	kfree(old);
+-
+-	return 0;
+ }
+ 
+ void __init housekeeping_init(void)
+-- 
+2.34.1
 
