@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794924680;
-	b=iR/A0bQzTMMSp0gMQTTtx3cQRj9bZsNFTC4yKUnuK6LE1j3zKtYvS62SXaxr9uswrKJd
-	 ZsHUV17eyMcG6SYNkMZt9UKxKMoIcLkyBVsV3Jmd1w4tu4q6ukFwnMR75VgNQr4ou2M4g
-	 vt5xjFfJVnDm/44rmD6rsE7hnL93XsV9kaMrAymPzpQvcxxL3BoN37kozCWY15+yXknhh
-	 WN6Om9vgmbh2WE/98mQPvzTRb8Uhcpym0uSR/nkVwf9rt1QaXmwEJbbu4IfPmsgXWMq5p
-	 t6peUBNzaDhY4YWflU24BHxq4BmEc2EFUU4hFA4E9VMEn3WPmzR8YKHRFjib/PwggcQ==
+	t=1794924676;
+	b=ZKAhKm1i8jbNkDNAooGdDD7skEweXPU8bMXGtBQ511379SVFykT+LSV5pQMwM/mE9FdI
+	 YUQiYRRnhsMy6GSgORwUaOmZxVVFs85cgJ3IBju8RyPzY2aDAUoT+qGbjPag8ylKVb2td
+	 HHffwCt6box47QrB4wm4zQYNSmWl29bAqyCFb076hKLpGIk2M18NzfOwvz5gtHkLVvW+6
+	 c4g813ToJ1DJo4KspS1PZjU5f7ySvamUiG8BIJST0wH+gc6gpuz5h9XXIT894kHCPhp4b
+	 MwWdU8zUo7TZrZWeKVcMlb7h89vAmYGSNo/+nS776WbdIlp0rtSP2/p4HBbWndgNk4A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794924680;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794924676;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=KqRB2fUoQdvMAgjnahxWAzykLWpjNoV8n8Li6/lrrPI=;
-	b=AXK0d7qZ8CrZXVYPDuEUKdySkPrhL9oTghUXMweYAJKLliqu3OoAWZJbwJV5lqCrCona
-	 L2KHPBirJi3/FucII08VNYJL4fARwJpVLRADCiLWBsafLlBbvy54PQWWTXXbA5Aadnjkn
-	 D09JIbL/7dn771ZlEnxJdtMyZyMgdJcRqsWHE/FdpEG1GEo6XugQI3Me7Tfv3B6S5CqUF
-	 ntkdnzy1MVDsppM+I/l1x3iI4eJZNF2hpeBUt42pXEfo/cEShIIhhCjLl34cHtMKz1yU2
-	 NrBnf/V5QHY/kWr0z84QxOUyq6KGfT5nvCyftvYmTx0vJHhE33R7sQHnIvBoZNGTvgw==
+	bh=jnFa78rUjtTG/tfWtGZnX8Qs907JGvyWaK5R6QvkTmg=;
+	b=2UQNEeaj25ix99w+13mcKJAZnVC79gdhsGxKUNYep836Jc4a8hcqFx03o1hu4QKpJI7S
+	 lVdovAxiObfPjdDt9qnRhedAJCPAhkuDAYpFKZkxm3iaX8ssHj5Y6MkqPIDrKyNrUBhcy
+	 r2QEv5qjuLBru0CbWwvqvj0KZZtJ13BB6vCURyqoFKAHofRzvzhKPAY7/u3DobQPrlhKO
+	 BariWMZsbniThdzsCadwiCPv/9/xLO1IFu7039o1ToYEiZvtkQBlswlIy13o1rLCgONA3
+	 MVtM4mygshgTM4SE3378fIb6EmqlCnqqDimgc+V+idBEknyOGTzbcUzT8LgASVT2bLA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=Q11l9hCf;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=MpGb2Elh;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3F41606BDA3;
-	Tue, 17 Nov 2026 14:11:16 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E3F41606BDA3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF1A60A263F;
+	Tue, 17 Nov 2026 14:11:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3FF1A60A263F
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=Q11l9hCf
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=MpGb2Elh
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794924669;
-	bh=KqRB2fUoQdvMAgjnahxWAzykLWpjNoV8n8Li6/lrrPI=;
+	s=smtpout1; t=1794924666;
+	bh=jnFa78rUjtTG/tfWtGZnX8Qs907JGvyWaK5R6QvkTmg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Q11l9hCfnwThZYZ6PkKciT9Qs9tV/93zZseyRwGZt/7zFzN4W/c6lyqsSn5zTqtLU
-	 a9Y4RPQUtlWTSb/6WNKIBAyYP/ktWya6yCVb1Iu3v3gAa97cEbNf6h6b6dibknROuj
-	 582psWubJiqzyIPWLasX9FlWaiKtwjvrS5bBMp2XG/R9lRU7Mm2ZiQQksO0JOqPDd0
-	 79rMnwe2sOybg4UQ05iGVQ5ZLvQJ2psHp1qAHp5/L/pMpO1SQjF46d6DfaD7V4TEdl
-	 rdO4rOBjCZhBUlaI3/G4Yz+DlQ2FaF5TZsAmXmHxpfy6ZnJ+8u0G7MMry6Ps8Vw5O9
-	 UOPbhbStG9DEQ==
+	b=MpGb2ElhgK2od6MKqcfReKO00rHsYtc+W1JZAhtUzer30JzjE0xmas/OHOCdNp7Bf
+	 gwq05uNGJ014gk3xlnwqo1D9qeF6lPMVzx63odcN7IpPKRT9nZgJEv/GAZcdE7g5qt
+	 PywY9dE2mL+Lo3Xuc3ZtrI3kRvc9dRxhLwYWdqgGUNzflyYKz2zQT5UYGr6uuFGGrS
+	 GiXJzVCRt+zXv/9Bjb85d3CPcMKTMUISLUfLoJQ40lSDeNLtOy93MKw0fk2TpGWbL9
+	 9cGNrm7VGgl0KPrWMdhEpaxBZ2U6f4MbdlwHuPTtZKoW3Nyy6njULJNelbQpXztHPA
+	 uSCExVZU8KAzg==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV54Xs6zR8K;
-	Tue, 17 Nov 2026 09:11:09 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV24sHszRZP;
+	Tue, 17 Nov 2026 09:11:06 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v7 29/40] sched/deadline: Keep the last CPU a task has in its root domain
-Date: Tue, 17 Nov 2026 09:10:50 -0500
-Message-Id: <a075dad17300a5b31dc3d99bef81fb9dadd6cbcd.1794922146.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v7 13/40] sched/deadline: Release the bandwidth of a task that leaves the class asleep
+Date: Tue, 17 Nov 2026 09:10:34 -0500
+Message-Id: <a809425266acca7cfadd2e8187a7b5a815ba32cb.1794922146.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
 References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
@@ -97,200 +97,84 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-dl_bw_deactivate() refuses to take a CPU offline when the rest of its
-root domain cannot hold the deadline bandwidth counted there. It also
-keeps the last CPU of a root domain that counts a deadline task. That
-test comes from commit d4742f6ed7ea ("sched/deadline: Correctly account
-for allocated bandwidth during hotplug").
+A task that leaves SCHED_DEADLINE while it is not queued can keep its
+bandwidth in total_bw until the next rebuild of the root domains.
+Repeated, this fills total_bw up to the admission limit. Then
+sched_setattr(SCHED_DEADLINE) and CPU offlining fail with EBUSY.
 
-That test looks at the root domain, not at the mask of each task. With
-isolcpus="domain", a cpuset that is not a partition root can hold one
-housekeeping CPU and some isolated CPUs. A deadline task in it can be
-counted in the housekeeping root domain. When that housekeeping CPU
-goes offline, the root domain keeps its other CPUs, so the offline is
-accepted. But the task has only isolated CPUs left. It runs in the
-default root domain, which did not admit it. Its bandwidth follows with
-no admission test, and the default root domain can exceed its limit.
+A task that leaves the class keeps its bandwidth until its 0-lag time.
+Releasing it earlier would allow temporary overloads. For a queued task,
+switched_from_dl() calls task_non_contending(). It releases the
+bandwidth if the 0-lag time is past. Otherwise it arms the inactive
+timer, which releases it then. For a task that is not queued,
+switched_from_dl() relies on the timer armed when the task blocked.
 
-Refuse the offline with EBUSY in that case. Walk the deadline tasks
-counted in the root domain of the CPU. Refuse if one of them has CPUs
-left to run on, but none in that root domain. Skip the walk if no task
-holds a bandwidth. A task whose mask holds no other CPU gets the CPUs of
-an ancestor of its cpuset: add cpuset_cpus_allowed_without() to tell
-which. Like __set_cpus_allowed_ptr(), it keeps them within the affinity
-set by the user, if they intersect. Skip a dead task: it runs no more.
+But the timer is not always pending when the task leaves the class:
+- The task blocked after its 0-lag time. The timer was not armed.
+- The timer fired while the task was still in the class. It only
+  removed running_bw.
+- The task was woken up on another CPU and is not enqueued there yet.
+  The wakeup cancelled the timer.
+- The task came back to the class asleep. switched_to_dl() cancelled
+  the timer.
 
-Do not refuse during a suspend. It takes the CPUs offline with the
-tasks frozen, and the resume puts them back. Do not refuse without
-admission control either: there is no limit to exceed.
+Then nothing releases total_bw.
 
-An administrator who needs the CPU offline can first give the cpuset of
-the task another CPU of that root domain. The offline is then accepted,
-and the task wakes up on that CPU: the hotplug_keeps_root_domain case
-tests this. The administrator can also turn admission control off, by
-writing -1 to /proc/sys/kernel/sched_rt_runtime_us.
+Fix this in switched_from_dl(). For a task that is not queued and has
+no timer pending, call task_non_contending(), as for a queued task. It
+arms the timer if the 0-lag time is ahead. Otherwise it releases the
+bandwidth now and clears the parameters, as inactive_task_timer() does.
 
-The walk cannot miss a task. sched_setattr() only makes a deadline task
-of a task whose mask holds its whole root domain. sched_setaffinity()
-only gives a deadline task such a mask. A mask also gets smaller by a
-cpuset change or a cpuset move, and both exclude CPU hotplug.
+Clearing the parameters keeps later paths from releasing the bandwidth
+again:
+- A timer handler that already started finds a dl_bw of 0.
+- The deboost of a later priority inheritance boost finds no
+  parameters.
 
-For user-space, the refused offline is a write of 0 to
-/sys/devices/system/cpu/cpuN/online that fails with EBUSY. An offline
-that leaves each deadline task a CPU in its root domain is accepted as
-before.
+An owner that the task boosts as a waiter can find the parameters
+cleared too. "sched/deadline: Do not replenish a boost from cleared
+parameters" handles this, so a backport needs it first. Without it, the
+owner's CPU can lock up as soon as the waiter leaves the class.
 
-The case hotplug_last_refused of deadline_bw_test, added later in this
-series, tests this. Without this patch the offline is accepted. The
-cases hotplug_user_mask_refused and hotplug_dead_accepted test the
-affinity set by the user and a dead task.
+Juri Lelli's first fix, since dropped from tip, released the bandwidth
+here without clearing dl_bw. The bandwidth of a boosted task was then
+released twice.
 
-Fixes: d4742f6ed7ea ("sched/deadline: Correctly account for allocated bandwidth during hotplug")
+Juri Lelli suggested the call to task_non_contending() in review.
+
+The Sashiko AI review of the third posting found the two cases with the
+0-lag time ahead. deadline_bw_test, added later in this series, tests
+this in pi_former_owner_asleep and deboost_released_resets_period.
+
+Fixes: 209a0cbda7a0 ("sched/deadline: Improve the tracking of active utilization")
+Reported-by: Tejun Heo <tj@kernel.org>
+Closes: https://lore.kernel.org/all/2b5fb3f22bca6aa383be8f4781923392@kernel.org/
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
+Link: https://lore.kernel.org/all/20261103-b4-sched-dl-bw-fixes-v1-2-dd761fe005b4@redhat.com/
 ---
- include/linux/cpuset.h  |  9 +++++++
- kernel/cgroup/cpuset.c  | 26 ++++++++++++++++++
- kernel/sched/deadline.c | 60 ++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 94 insertions(+), 1 deletion(-)
+ kernel/sched/deadline.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index 5d0c01a25354..68849539cc8b 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -79,6 +79,8 @@ extern void lockdep_assert_cpuset_lock_held(void);
- extern void cpuset_cpus_allowed_locked(struct task_struct *p, struct cpumask *mask);
- extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
- extern bool cpuset_cpus_allowed_fallback(struct task_struct *p);
-+extern void cpuset_cpus_allowed_without(struct task_struct *p, int cpu,
-+					struct cpumask *mask);
- extern int cpuset_num_cpus(struct cgroup *cgroup);
- extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
- #define cpuset_current_mems_allowed (current->mems_allowed)
-@@ -214,6 +216,13 @@ static inline bool cpuset_cpus_allowed_fallback(struct task_struct *p)
- 	return false;
- }
- 
-+static inline void cpuset_cpus_allowed_without(struct task_struct *p, int cpu,
-+					       struct cpumask *mask)
-+{
-+	cpumask_and(mask, task_cpu_possible_mask(p), cpu_active_mask);
-+	cpumask_clear_cpu(cpu, mask);
-+}
-+
- static inline int cpuset_num_cpus(struct cgroup *cgroup)
- {
- 	return num_online_cpus();
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7bdb9e21a7ed..3ccd61a37d30 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -4312,6 +4312,32 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
- 	spin_unlock_irqrestore(&callback_lock, flags);
- }
- 
-+/*
-+ * Set @pmask to the active CPUs that the cpuset of @tsk gives it once @cpu
-+ * is offline: those of the nearest ancestor that keeps one. Leave it empty
-+ * if there is none. As cpuset_update_tasks_cpumask() does, keep the CPUs
-+ * possible for @tsk. As __set_cpus_allowed_ptr() does, keep those of the
-+ * affinity the user set, if one is left. The caller holds the CPU hotplug
-+ * lock for writing, which keeps the cpusets and their tasks as they are.
-+ * It holds the pi_lock of @tsk, which keeps its user affinity.
-+ */
-+void cpuset_cpus_allowed_without(struct task_struct *tsk, int cpu,
-+				 struct cpumask *pmask)
-+{
-+	struct cpuset *cs;
-+
-+	guard(rcu)();
-+	for (cs = task_cs(tsk); cs; cs = parent_cs(cs)) {
-+		cpumask_and(pmask, cs->effective_cpus, cpu_active_mask);
-+		cpumask_clear_cpu(cpu, pmask);
-+		if (!cpumask_empty(pmask))
-+			break;
-+	}
-+	cpumask_and(pmask, pmask, task_cpu_possible_mask(tsk));
-+	if (tsk->user_cpus_ptr && cpumask_intersects(pmask, tsk->user_cpus_ptr))
-+		cpumask_and(pmask, pmask, tsk->user_cpus_ptr);
-+}
-+
- /**
-  * cpuset_cpus_allowed_fallback - final fallback before complete catastrophe.
-  * @tsk: pointer to task_struct with which the scheduler is struggling
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index e5f77d3c5fa0..47264640de14 100644
+index 2b5a2a43addf..67cb1b1abbb8 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -5028,9 +5028,67 @@ static int dl_bw_manage(enum dl_bw_request req, int cpu, u64 dl_bw)
- 	return overflow ? -EBUSY : 0;
- }
+@@ -3640,6 +3640,14 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+ 		if (p->dl.dl_non_contending)
+ 			sub_running_bw(&p->dl, &rq->dl);
+ 		sub_rq_bw(&p->dl, &rq->dl);
++		/*
++		 * Without an armed timer, nothing releases total_bw. Do as for
++		 * a queued task: arm the timer if the 0-lag time is ahead, or
++		 * release the bandwidth and clear the parameters now. Call
++		 * task_non_contending() after sub_rq_bw(), which needs dl_bw.
++		 */
++		if (!p->dl.dl_non_contending)
++			task_non_contending(&p->dl, false);
+ 	}
  
-+/*
-+ * Return true if @p has CPUs to run on once @cpu is offline, but none in
-+ * the root domain of @cpu, which counts its bandwidth. A dead task runs no
-+ * more. It can wait for its 0-lag time, or for its parent to reap it.
-+ * Return false for it.
-+ */
-+static bool dl_task_leaves_span(struct task_struct *p, int cpu,
-+				const struct cpumask *span)
-+{
-+	struct cpumask *msk;
-+
-+	guard(raw_spinlock_irqsave)(&p->pi_lock);
-+	if (READ_ONCE(p->__state) == TASK_DEAD || dl_task_bw_span(p) != span)
-+		return false;
-+	msk = this_cpu_cpumask_var_ptr(local_cpu_mask_dl);
-+	/* A task in a migrate_disable() section has a cpus_ptr of one CPU. */
-+	cpumask_and(msk, &p->cpus_mask, cpu_active_mask);
-+	cpumask_clear_cpu(cpu, msk);
-+	/* With no CPU left, the cpuset gives @p the CPUs of an ancestor. */
-+	if (cpumask_empty(msk))
-+		cpuset_cpus_allowed_without(p, cpu, msk);
-+	return !cpumask_empty(msk) && !cpumask_intersects(msk, span);
-+}
-+
-+/*
-+ * Return true if @cpu is the last CPU that a deadline task can run on in
-+ * the root domain that counts its bandwidth. With @cpu offline, the task
-+ * would run in another root domain, which did not admit it. The mask of
-+ * a task can hold CPUs of two root domains: with isolcpus="domain", or on
-+ * cgroup v1 with sched_load_balance off.
-+ *
-+ * A suspend takes the CPUs offline with the tasks frozen, and the resume
-+ * puts them back. Without admission control, there is no limit to exceed.
-+ * Return false in both cases.
-+ */
-+static bool dl_cpu_last_of_task(int cpu)
-+{
-+	const struct cpumask *span;
-+	struct task_struct *g, *p;
-+
-+	if (cpuhp_tasks_frozen || !dl_bandwidth_enabled())
-+		return false;
-+	/* No task holds a bandwidth: do not walk the task list. */
-+	if (!atomic_read(&dl_nr_bw_tasks))
-+		return false;
-+	guard(rcu)();
-+	span = cpu_rq(cpu)->rd->span;
-+	for_each_process_thread(g, p) {
-+		if (task_has_dl_policy(p) && dl_task_leaves_span(p, cpu, span))
-+			return true;
-+	}
-+	return false;
-+}
-+
- int dl_bw_deactivate(int cpu)
- {
--	return dl_bw_manage(dl_bw_req_deactivate, cpu, 0);
-+	int ret = dl_bw_manage(dl_bw_req_deactivate, cpu, 0);
-+
-+	if (!ret && dl_cpu_last_of_task(cpu))
-+		ret = -EBUSY;
-+	return ret;
- }
- 
- int dl_bw_alloc(int cpu, u64 dl_bw)
+ 	/*
 -- 
 2.47.3
 
