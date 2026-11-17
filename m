@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1794924672;
-	b=PkoRTwZfV84zyd6eH12l6zAt3BYowEfryRksbwBMq6ZGGATXv6WDIR3qWSYWhzuDWwN1
-	 rEeJPf5uBfNyO2CLgNILz7o2lXABT8XZaQ4G1RsS9zo5LEjeNsfhW6pfS4Nnvh/i7L2GS
-	 d9d/vQ9aDIeqAwO1yUK34tJ0f/xf/xb7v569yWJvb+bpYBUrkpPOeJTfMIdYwJl9QuSVi
-	 BfnUq5D/K4knAK3iaGu3TrZnTtddcxaovxtf4Tw8lvyrPFnY4lEnOg37PHStNDgSJUVtH
-	 UfODGiYGIh04VjjLF3rQwS1rRvCO9Q47mXdFlmUVkCZqulUT4ka+PjcT38mqgJkWgvg==
+	b=4paqDdW9uqxVzd/6QcaBeR/w1OGPYCLAu7TOQ3zxJivcZch2N8ncKz/HSuTlpJqGsbUl
+	 IvdOpJQfBNDaeB2i5JUPHmKUkvdU/W+/Ww213hyYvf118xxLEcCyNFlD3HW7KOiuo+Niy
+	 UcAvg/GWKfkHTA6Mtoi0yXCsWqbBAdm6NFKnPk6f7naCQZ5IahagXyJiqvMYAqGtulhF2
+	 VR+S7t41zXVZhwgRXhpnyB01yEFppxMHw33KlTuwiCrsdKES54iINXVQEfn4AdShDF4Lo
+	 CRy85XhAiVObSVpBW3otHrKSpMvbrr77wxS8DPT+BJSH2c7MO9kR6kSST97fBGfDeHQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1794924672;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=O5H9pZY7Q0EmKk/qr6MbxksyVpf2IMb1LVbGM2g9LGs=;
-	b=X8wbOREaqwzVxuZNiuBnV7mMenLJ++qeEZ2JckhMr5fa58ub8K6r0CxgIjTtqFpsH/Iy
-	 O6ZI8dSO8Ny4TvEor/tCw+yxewfe8rGEvBAEQjGa84+MHs+q98Up926n2tnLLG/z0oGyM
-	 BOAMX1dP84guNxAnBpHQf7PUvjXY6A590lvfDPkptU3kg15qQmmIyrt9WhFxDLQ7u4oXh
-	 GhEmO4sow/lXOlA/qoReOD/YwnCbN313sN+2wmzHcPMFQ7IaZXJQGoCEgs29Vn2LAdu+a
-	 uyM9mDPO8PkyOueiSBzOUacE0Gl8vhWKZQR+DWX+XeugEkWaEwnKi5GRCmIuZ0tatZQ==
+	bh=lFP7Jb5QnBavccKZP1TiZmt+Fu/KItkai8FCKofUJpE=;
+	b=HNUVSLKPtFNh7cA9RkU8DucmGrXDyGu6/5LHYk4f0OXeENe1cXLLy3I3QTv5SDHr1psz
+	 1IxRDdal5KkVFcJs84lmQkzbuRO91HZl6f3IAiFDG1fS4jx7oJ8S6iKmTkHiTRN0S6qNZ
+	 w6fhOsYKGlUQPHaP19akWLv6wBdSgYnNUehLsWefsD9UsGMsi7kDJn0k4plBS20DmEwQf
+	 kCSMtEDDa/i0u5vrEXCrJcRbuCb4O0pxiD2qCKGrXZNfEBA6r57lr8jUUXADJa/BWMJ9x
+	 POW5mpr8PXdvHBWHG3E0SqlCvF8/bk9u4H9fFYlFsLv76v8fpzPRcSndxEoDU/KmHiA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=hqvFcRdH;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=gogpd7mf;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48130606A899;
-	Tue, 17 Nov 2026 14:11:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 48130606A899
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31480606A89B;
+	Tue, 17 Nov 2026 14:11:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 31480606A89B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=hqvFcRdH
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=gogpd7mf
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794924664;
-	bh=O5H9pZY7Q0EmKk/qr6MbxksyVpf2IMb1LVbGM2g9LGs=;
+	s=smtpout1; t=1794924667;
+	bh=lFP7Jb5QnBavccKZP1TiZmt+Fu/KItkai8FCKofUJpE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=hqvFcRdHclh9H1T62yxo15z2z9mwRHnsCoZIAvZmFOSLeAJOF45FwmLfW2d108Njo
-	 cgMS3O87/7AtlCWDgvBBWOsgWXTVWIkLnIKMBxoMA8P7dRch7uqE6DBphaC9PI9nnL
-	 xkr6Hv8UIJPNvVHDsH2NAO0dJ/l/W+y7CxvLeF6c18HKSWglxkX0ZU7M4aPErHz1sZ
-	 SytYuxghmytzG40x342LW99zUnQw2ZmlHjiVK5gPJyjNrNu5Spe+gHse7A2qL6Dp5i
-	 6lkxI5XSXxa1iCLlLbb+g/gGChjsTzWEFpiIEcIW2eClHj/sXaSXkpMdhypTJvyYL7
-	 8Mnwy86XPUV4Q==
+	b=gogpd7mf04Jgr7IlyWrr0imevP79mmfNZw/KWYtHGE1dAdz8RkHw2SODVHzWpUPgc
+	 MBLwmSAVCT1XVtfVCMittQftpuLkrTfZyNAmJEb7hPhECj3QaDcyFzqIBTs6DAicR4
+	 NVJbGl74liPtVmO7Q4t2Js4RcISXBeghAbQcH/hRRjfUZ+I94Nh58VDnB6FjlpdPWB
+	 rnoWQZ0ICOyEDGTs8ib0cUNPVZOa8alMeAL2MA3OOWnKR4qu+/iZZL5SgNMQIeBz7t
+	 uy2UqE2UuLN+EXfDFAOWp4cqRUfLpsQwY1AJAkGA4HfDZKYFMC5jwzvhRscqp+NS+6
+	 pJ/Ik3fM0z6Cg==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV01vWwzRkT;
-	Tue, 17 Nov 2026 09:11:04 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV35pdZzRTN;
+	Tue, 17 Nov 2026 09:11:07 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v7 01/40] sched: Refuse SCHED_FLAG_KEEP_PARAMS that would change the policy or the class
-Date: Tue, 17 Nov 2026 09:10:22 -0500
-Message-Id: <94150f1808cf4ed0579165c39c23fff83440336a.1794922146.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v7 19/40] sched/deadline: Leave a dying task out of a rebuild of the accounting
+Date: Tue, 17 Nov 2026 09:10:40 -0500
+Message-Id: <f9efeeae47bd95ba9f775750b1ac399e71d1e17f.1794922146.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
 References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
@@ -97,112 +97,88 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A sched_setattr() request with SCHED_FLAG_KEEP_PARAMS can ask for
-another policy. __sched_setscheduler() then applies only half of the
-change, and returns 0:
-- SCHED_OTHER to SCHED_BATCH leaves the policy as it was.
-- SCHED_DEADLINE to SCHED_OTHER sets DEQUEUE_CLASS. switched_from_dl()
-  then runs on a task that stays in the class. It would release
-  bandwidth the task still uses.
-- SCHED_DEADLINE on a task of another policy reserves bandwidth in
-  sched_dl_overflow(). The task keeps its policy and a dl_bw of 0, so
-  nothing releases that bandwidth. For a task boosted into the deadline
-  class, it is not even a class change.
+A rebuild of the root domains' accounting takes the pi_lock of each
+deadline task, not its rq lock. A dying task past its 0-lag time
+releases its bandwidth at its last schedule. It holds its rq lock there,
+not its pi_lock. Then it clears dl_bw. The rebuild can find the task
+between the two steps.
 
-SCHED_FLAG_KEEP_PARAMS came with utilization clamping. With
-SCHED_FLAG_KEEP_POLICY, it lets sched_setattr() change only the clamps
-of a task. So __sched_setscheduler() skips __setscheduler_params(),
-which sets p->policy, and the sched_class assignment. Nothing checks
-that the request keeps the policy.
+In this diagram, T is a deadline task that exits on CPU 0 past its 0-lag
+time. bw is its dl_bw. CPU 1 rebuilds the accounting:
 
-In testing on v7.4-rc2, a deadline waiter boosted a SCHED_OTHER mutex
-owner with a 40ms slice. One such call on the owner left 0.4 CPU in
-total_bw, until the next rebuild of the root domains.
+  CPU 0 (T)                                  CPU 1 (rebuild)
 
-Fix this by refusing a request for another policy or class with
-EINVAL. Move sched_dl_overflow() after it, as the last check. Nothing
-gives back the bandwidth it reserves. A refused request also leaves
-sched_reset_on_fork alone.
+  do_task_dead(): TASK_DEAD, under pi_lock
+  __schedule(): T's rq lock taken
+    task_non_contending(T)
+      dl_task_release_bw(T)
+        total_bw -= bw
+        dl_bw_gen recorded
+        record cleared
+                                             dl_rebuild_rd_accounting()
+                                               dl_clear_root_domains()
+                                                 dl_bw_gen++
+                                                 total_bw reset
+                                               dl_add_task_root_domain(T)
+                                                 T's pi_lock taken
+                                                 dl_bw != 0, dl_bw_gen old
+                                                 total_bw += bw
+      __dl_clear_params(T): dl_bw = 0
 
-With this patch, that call is refused and total_bw does not change. The
-params_keep_boosted case of deadline_bw_test, added later in this
-series, tests it.
+dl_bw_gen does not help, since the release came before the rebuild. The
+rebuild would count a bandwidth that nothing releases again. The root
+domain would then refuse deadline tasks it has room for, until the next
+rebuild.
 
-Juri Lelli found the class change, from a report by Tejun Heo. The
-Sashiko AI review of the first posting of this series found the policy
-change and the boosted case.
+Fix this with the record of the bandwidth, dl_bw_cpu. The release
+clears it under dl_departed_lock, which the walk holds. So leave out a
+dead task with no record. A dead task with a record has not reached its
+last schedule. The walk counts it as a live task. That schedule then
+releases the bandwidth, or puts the task on the departed list. A dead
+task on the departed list keeps its bandwidth until its timer, and the
+rebuild counts it as before.
 
-Fixes: a509a7cd7974 ("sched/uclamp: Extend sched_setattr() to support utilization clamping")
+The Sashiko AI review of v2 of this series found this window. Its review
+of v4 found a gap in the first version of this fix. That version also
+left out a task between TASK_DEAD and its last schedule, with its 0-lag
+time ahead.
+
+This patch completes "sched/deadline: Rebuild the root domains'
+accounting from the task list". The walk of that patch finds exiting
+tasks, which the cpuset iterator skipped. The fix needs the record
+that "sched/deadline: Record the root domain holding a task's
+bandwidth" adds. The three go to stable together.
+
+Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/all/2b5fb3f22bca6aa383be8f4781923392@kernel.org/
-Link: https://lore.kernel.org/all/20261103-b4-sched-dl-bw-fixes-v1-3-dd761fe005b4@redhat.com/
 ---
- kernel/sched/syscalls.c | 40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ kernel/sched/deadline.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
-index 0ec401af80d1..89b0d5787f45 100644
---- a/kernel/sched/syscalls.c
-+++ b/kernel/sched/syscalls.c
-@@ -647,17 +647,6 @@ int __sched_setscheduler(struct task_struct *p,
- 		goto recheck;
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 01fbbd02cf8d..779acb9836dc 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -3787,6 +3787,17 @@ void dl_add_task_root_domain(struct task_struct *p)
+ 		if (recorded < 0 || !cpu_active(recorded))
+ 			goto unlock;
+ 		cpu = recorded;
++	} else if (READ_ONCE(p->__state) == TASK_DEAD && p->dl.dl_bw_cpu < 0) {
++		/*
++		 * Count nothing for a dead task with no record. Its last
++		 * schedule released the bandwidth under its rq lock, and has
++		 * not cleared dl_bw yet. The release clears the record under
++		 * dl_departed_lock, which this walk holds. A dead task with a
++		 * record has not reached its last schedule. Count it as a
++		 * live task. That schedule then releases what the walk
++		 * counted, or puts the task on the departed list.
++		 */
++		goto unlock;
  	}
- 
--	/*
--	 * If setscheduling to SCHED_DEADLINE (or changing the parameters
--	 * of a SCHED_DEADLINE task) we need to check if enough bandwidth
--	 * is available.
--	 */
--	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
--		retval = -EBUSY;
--		goto unlock;
--	}
--
--	p->sched_reset_on_fork = reset_on_fork;
- 	oldprio = p->prio;
- 
- 	newprio = __normal_prio(policy, attr->sched_priority, attr->sched_nice);
-@@ -677,9 +666,38 @@ int __sched_setscheduler(struct task_struct *p,
- 	prev_class = p->sched_class;
- 	next_class = __setscheduler_class(policy, newprio);
- 
-+	/*
-+	 * With SCHED_FLAG_KEEP_PARAMS, the change below skips
-+	 * __setscheduler_params() and the sched_class assignment. The
-+	 * policy and the class stay as they are. Refuse a request for
-+	 * another policy or class, rather than carry out half of it.
-+	 *
-+	 * The class depends on the priority, which priority inheritance
-+	 * can raise. It also depends on whether a BPF scheduler is in
-+	 * charge. So test the class too, not only the policy.
-+	 */
-+	if ((attr->sched_flags & SCHED_FLAG_KEEP_PARAMS) &&
-+	    (policy != p->policy || prev_class != next_class)) {
-+		retval = -EINVAL;
-+		goto unlock;
-+	}
-+
- 	if (prev_class != next_class)
- 		queue_flags |= DEQUEUE_CLASS;
- 
-+	/*
-+	 * If setscheduling to SCHED_DEADLINE (or changing the parameters
-+	 * of a SCHED_DEADLINE task) we need to check if enough bandwidth
-+	 * is available. Keep this check last. If a later check failed,
-+	 * nothing would give back the bandwidth it reserves.
-+	 */
-+	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
-+		retval = -EBUSY;
-+		goto unlock;
-+	}
-+
-+	p->sched_reset_on_fork = reset_on_fork;
-+
- 	scx_prepare_setscheduler(p, policy);
- 
- 	scoped_guard (sched_change, p, queue_flags) {
+ 	rq = cpu_rq(cpu);
+ 	dl_b = &rq->rd->dl_bw;
 -- 
 2.47.3
 
