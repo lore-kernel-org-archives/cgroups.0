@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794924678;
-	b=P56bpNu0k8pN5pYm7iXCtbF2pUYEnxVF0h7S6IFD0QoMzNa4uVitUk2V6xkYZXzaDm1i
-	 BDQhr0jCqe5t8KwG4qW+p5/qoZTddC+ybER0TujzpqBegrQIXmQC7/gMFddo1AdgJSZ1F
-	 oUzpMTWIbP82yc4O+rtLWLZyH6hTVD7t9VqeELaf6RFFfV/84hMUy7veAebs/eoDJ3oVh
-	 GC3HrQjiqNdQzmdv5Vkd+JRulbXJagPmQHcO1c7opXS7Ni2zQWaYsotG3S8TCOP5lIVeg
-	 l901LOEObmWGyfAEW/uqzt7GlRSoIdGPliQvdFKrBPCTngIDuGzSzMSxqGJEQ6ISAIQ==
+	t=1794924673;
+	b=eNGx/0GZdKEFcTjqG3A2lFgyNO0sgYtkISOFby/PXf1YN4bl3Nqmg453vDwaE4SFUp9b
+	 igZgY4m0/hfi+lkgUUobWp6pczuYCyaEA78dLbG60VLID5Tn9SKyzp9GCHjLBbBEdGgvT
+	 GVitdALolCB5zAAnxtxiLGk/RsdnspbZUXDay5BmSoHPq87mJjWDBZsGxb6TMnk0PCzYc
+	 aUOvksBpxZ/BTSzyyxsSsuBv0iDlbSiqnpiJkObtjqtRgLwMoPACpvL26cK6+NJoo1uei
+	 jap/WF6MuTYmia0Kr1wd8WaDhDspsdMSIqrCoZ5SD7c2WNcUs8spT+4yk0AHUV5ndTw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794924678;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794924673;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=m+HE3BkDFQ4IV4fsS1sl09qCu7vuyN4FY+nitCf4dGE=;
-	b=hilmcANmFt9Eul8cPs6cMqpOb9Ccl6+ATnSOkHwfi/3o+EUHtbwDK7Tda8VwHUHyx9am
-	 6MYCvSAizW4NFQJSHqBdwsjZE0DLD8Di5nXilipFj4JMOiX/XxVoFEEVsmoy5oLVzU1wp
-	 u2J3lERk5Z84Q9AxXI4wgUelF6lPjoae+l/vkZTAP9965BguyGTjIaMFjsxXP8UnWdOtK
-	 XXXMadmgl6ytBoFNrg15qek0r6+nPvIqwd57OEqO5Ij0jgnRh41Sn2Gj2R4pwkd3GGaeZ
-	 XYpYiF06qcHtBl1p2/ufzwS9ZUbQ9XvcuOC48NOaeiWlcdWuYPaKt2+6heflEdT9OHA==
+	bh=XmtFHJqVvoTtGRz/y/GqV14z8opE1wDNUpcCPG7fdZI=;
+	b=XPPE3Ew7TFRA+DUgZF7Cu6IwQ/S3oW/3dQoyvIBeTCEdaOcd/8hbpnsSBeulxUg1XMws
+	 kY9PmYxZ713UPTaTGTy46Qpom9urhPoE22jLe29nigx0HxaC7GH5N+9yfmiRXsxanAfCM
+	 2roEYwyLVQeDHA8nGIughRTzuuZ5jQTRf2nWCU4/l+VZVY0z3xw30dZrEHpZEa+UfmlSe
+	 94Tlw5yNABZtP2+D0LHaNpTIzC6ZhaeDlsa5swY8ex/SLIX8r1R+Y2Zz5vca7Il1BEixo
+	 F+uXDZAn+MDPtxLJnqsQ273xv5vb5s7sFiauh4C5LCpSAy5XY7dBPUvLkgI2AThMgBg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=APwtBQL3;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=H2E+LIt3;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD78860A2623;
-	Tue, 17 Nov 2026 14:11:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BD78860A2623
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43C9460A5BE9;
+	Tue, 17 Nov 2026 14:11:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43C9460A5BE9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=APwtBQL3
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=H2E+LIt3
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794924669;
-	bh=m+HE3BkDFQ4IV4fsS1sl09qCu7vuyN4FY+nitCf4dGE=;
+	s=smtpout1; t=1794924668;
+	bh=XmtFHJqVvoTtGRz/y/GqV14z8opE1wDNUpcCPG7fdZI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=APwtBQL3cn6pHrJQSZ4jodB1d5QhDpOqSSQRg8ghSAhJMHv2AaP+BwIUKpPn9JJWR
-	 qxo1anfEj38X3PDZmJx7dMQ2a/+XE4VPfQXPrF2C34sbo2NCdVEFwkOGX5qIbOwTNZ
-	 16HsFv5PnmeKwOQ8pU18Ub/Zcv2CC5BSsimSDdO8mtAhcSj8HydIDP8VTq7djkxTCc
-	 Y7nXkCQZ+XMJgCQEk8lmkhR/7FSBTUQXx4fkhr/pFfBzHYi8U8MTyd5mU1QKAnQgFO
-	 tFw4B9zS41Xnzo4GIPkPnwOljZlrO+0aK55cTb9xYgMB20gvcXg8VE311mjQEF7nDd
-	 MMaKVIdFV7kdw==
+	b=H2E+LIt3cDObqdBT96EXxaCNmnugbEyt95KgHlnia/S4dY+fI3jhJWVERsCKC4MQA
+	 dA0nr7BrBqwPKGC1pMRUTDKUotIuQxHHj5Wbu9W40i4fR4CR2IRdT8prxxiXuPrJZa
+	 85TNo2iZ8JrOCcjD2a/zAmLsfJaoL0s0XQlNC2CuEDBflzJ2YlovnLy0GjtH6LhZG1
+	 kdl/czCvnjtXL23nGpnjeAtTYH+nLUaDJ2Ntl6+zJ6CYGxPJVWa4HeGaMAdz8zsEic
+	 tDXDvO/iBFF9EgJ1KqvvOC1Lov4GVTAmCCsq+zOdWSev+025ovNydTDTDYhPkc/vZE
+	 hIWVm3fUHI9bw==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV50NqBzRHP;
-	Tue, 17 Nov 2026 09:11:09 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV41DPXzRKP;
+	Tue, 17 Nov 2026 09:11:08 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v7 26/40] sched/deadline: Make a rebuild count a task in the root domain it runs in
-Date: Tue, 17 Nov 2026 09:10:47 -0500
-Message-Id: <d956394fd7c5d85d9cd92489b0abf5c709c4545d.1794922146.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v7 21/40] sched/deadline: Move a task's bandwidth only where room was made
+Date: Tue, 17 Nov 2026 09:10:42 -0500
+Message-Id: <c5828240061a322c1fc988cb0ec00fb7f453f156.1794922146.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
 References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
@@ -97,182 +97,186 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A rebuild of the accounting counts each deadline task on the first
-active CPU of its cpuset. Commit 318e18ed22e8 ("sched/deadline: Walk up
-cpuset hierarchy to decide root domain when hot-unplug") made this
-choice. It relies on the bandwidth check to keep such a CPU active.
-This guess would go wrong in three ways:
+Commit 7f51412a415d ("sched/deadline: Fix bandwidth check/update when
+migrating tasks between exclusive cpusets") moves a deadline task's
+bandwidth in two halves. cpuset_can_attach() reserves it in the
+destination root domain. set_cpus_allowed_dl() then frees it in the
+source, when the task's affinity changes. Its comment relies on the
+first half: "We already made space for us in the destination domain".
 
- - A cpuset, like the root one, can hold CPUs isolated by
-   isolcpus="domain" beside housekeeping CPUs. If an isolated CPU comes
-   first, the task would be counted in the default root domain. Its own
-   root domain would then be short of that bandwidth.
- - A task confined to isolated CPUs can see them all go offline. The
-   rebuild would then find no active CPU, and hit its BUG_ON().
- - dl_task_offline_migration() moves a throttled task, with its
-   bandwidth, off CPUs that went offline. The rebuild would count it in
-   its cpuset, not where it moved.
+But set_cpus_allowed_dl() runs on every change of affinity. It frees the
+bandwidth whenever the new mask leaves the task's root domain, with or
+without a reservation. sched_setaffinity() gets there too, if the task's
+cpuset spans two root domains. With isolcpus="domain", any cpuset that
+is not a partition root can hold isolated CPUs and other CPUs, which are
+in two root domains. With admission control on, __sched_setaffinity()
+refuses such a mask. With sched_rt_runtime_us at -1, nothing refuses it.
+The bandwidth is then freed in the source and added nowhere: no root
+domain counts it any more. The destination would underflow when the task
+leaves.
 
-In the first and third cases, a root domain would admit deadline tasks
-beyond its capacity.
+Fix this by flagging the affinity changes that come with a reservation,
+as SCA_DL_BW_RESERVED. cpuset_attach_task() sets it, through the new
+set_cpus_allowed_bw_reserved(). set_cpus_allowed_dl() moves the
+bandwidth only with the flag. Without it, the bandwidth stays where it
+is counted, until the next rebuild of the accounting counts it anew.
+The flag also skips the early exit of __set_cpus_allowed_ptr_locked()
+for a mask that does not change. The task may already have that mask
+from a change that moved no bandwidth, such as a sched_setaffinity()
+without admission control.
 
-Fix this by choosing the CPU in this order:
+The attach still flags a task that sched_setattr() made a deadline task
+after cpuset_can_attach(), with nothing reserved for it. "sched: Make
+deadline policy and affinity changes wait for a cpuset attach" fixes
+that.
 
- 1. The CPU the task is on, if it is active and in the task's mask. A
-    mask can hold CPUs of two root domains, for instance after
-    select_fallback_rq() widened it. Also the CPU the task is queued on
-    out of its mask, if it is active and recorded with the bandwidth.
-    Without admission control, dl_task_offline_migration() can put a
-    throttled task there. It runs there until it blocks.
- 2. dl_bw_cpu, the CPU recorded with the bandwidth, if it is active and
-    in the mask. A task moved asleep is not on its new CPUs yet.
- 3. The first active CPU of the mask, a housekeeping one if any.
- 4. With no active CPU in the mask: dl_bw_cpu if it is active, else an
-    active CPU of the cpuset.
+No case of deadline_bw_test fails before this patch and passes with it.
+no_admission_affinity_moves, added later in this series, covers this
+path together with "sched/deadline: Move a task's bandwidth to the root
+domain it runs in".
 
-The mask of the task comes before its cpuset. A partition change sets
-the task masks before its rebuild, and the housekeeping mask after.
-
-Leave out a task with no active CPU, instead of the BUG_ON(). dl_bw_gen
-then keeps its release from removing anything.
-dl_task_offline_migration() counts it again when it moves it.
-
-A task that select_fallback_rq() moves to another root domain still runs
-where its bandwidth is not counted. The next patch moves the bandwidth
-with it.
-
-The Sashiko AI reviews of v1 to v4 found these cases.
-
-Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
-Fixes: 318e18ed22e8 ("sched/deadline: Walk up cpuset hierarchy to decide root domain when hot-unplug")
+Fixes: 7f51412a415d ("sched/deadline: Fix bandwidth check/update when migrating tasks between exclusive cpusets")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/deadline.c | 88 +++++++++++++++++++++++++++++++++++------
- 1 file changed, 77 insertions(+), 11 deletions(-)
+ include/linux/sched.h   |  2 ++
+ kernel/cgroup/cpuset.c  | 13 ++++++++++++-
+ kernel/sched/core.c     | 26 +++++++++++++++++++++++++-
+ kernel/sched/deadline.c | 14 +++++++++-----
+ kernel/sched/sched.h    |  2 ++
+ 5 files changed, 50 insertions(+), 7 deletions(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index a9b8bd019d4b..9ff79141c630 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -927,14 +927,20 @@ static struct rq *dl_task_offline_migration(struct rq *rq, struct task_struct *p
- 			__dl_sub(dl_b, p->dl.dl_bw,
- 				 cpumask_weight(src_rq->rd->span));
- 			raw_spin_unlock(&dl_b->lock);
--
--			dl_b = &later_rq->rd->dl_bw;
--			raw_spin_lock(&dl_b->lock);
--			__dl_add(dl_b, p->dl.dl_bw,
--				 cpumask_weight(later_rq->rd->span));
--			raw_spin_unlock(&dl_b->lock);
- 		}
-+		/*
-+		 * Count the bandwidth in the root domain the task moves to.
-+		 * Do it also when a rebuild left the task out, for want of an
-+		 * active CPU. A rebuild that reaches the task after this finds
-+		 * its dl_bw_gen current, and leaves it alone.
-+		 */
-+		dl_b = &later_rq->rd->dl_bw;
-+		raw_spin_lock(&dl_b->lock);
-+		__dl_add(dl_b, p->dl.dl_bw,
-+			 cpumask_weight(later_rq->rd->span));
-+		raw_spin_unlock(&dl_b->lock);
- 		p->dl.dl_bw_cpu = later_rq->cpu;
-+		p->dl.dl_bw_gen = dl_bw_gen;
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 4a1cb869facc..dee4d4df624c 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1972,6 +1972,8 @@ extern void set_cpus_allowed_force(struct task_struct *p, const struct cpumask *
+  * Return: zero if successful, or a negative error code
+  */
+ extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
++extern int set_cpus_allowed_bw_reserved(struct task_struct *p,
++					const struct cpumask *new_mask);
+ extern int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node);
+ extern void release_user_cpus_ptr(struct task_struct *p);
+ extern int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask);
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 7628cf77bdfd..194a438e25c3 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3261,6 +3261,7 @@ static cpumask_var_t cpus_attach;
+ 
+ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
+ {
++	bool reserved = false;
+ 	struct mm_struct *mm;
+ 
+ 	lockdep_assert_cpuset_lock_held();
+@@ -3270,11 +3271,21 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
+ 	else
+ 		cpumask_andnot(cpus_attach, task_cpu_possible_mask(task),
+ 			       subpartitions_cpus);
++	/*
++	 * cpuset_reserve_dl_bw() made room in @cs for the bandwidth of the
++	 * deadline tasks that cpuset_can_attach() counted. Flag the move, so
++	 * that the bandwidth of this task moves with it.
++	 */
++	if (dl_task(task) && dl_task_needs_bw_move(task, cs->effective_cpus))
++		reserved = true;
+ 	/*
+ 	 * can_attach beforehand should guarantee that this doesn't
+ 	 * fail.  TODO: have a better way to handle failure here
+ 	 */
+-	WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
++	if (reserved)
++		WARN_ON_ONCE(set_cpus_allowed_bw_reserved(task, cpus_attach));
++	else
++		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
+ 
+ 	if (cpuset_v2() && !attach_ctx.mems_updated)
+ 		return;
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index c77cae5d1be1..2a964286a7cd 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3207,7 +3207,15 @@ static int __set_cpus_allowed_ptr_locked(struct task_struct *p,
  	}
  
- 	set_task_cpu(p, later_rq->cpu);
-@@ -3820,6 +3826,60 @@ static void dl_get_task_effective_cpus(struct task_struct *p, struct cpumask *cp
- 	cpuset_cpus_allowed_locked(p, cpus);
+ 	if (!(ctx->flags & SCA_MIGRATE_ENABLE)) {
+-		if (cpumask_equal(&p->cpus_mask, ctx->new_mask)) {
++		/*
++		 * A move with SCA_DL_BW_RESERVED must reach
++		 * set_cpus_allowed_dl(), even if the mask does not change.
++		 * @p may have this mask from a change that moved no
++		 * bandwidth, such as sched_setaffinity() without admission
++		 * control.
++		 */
++		if (cpumask_equal(&p->cpus_mask, ctx->new_mask) &&
++		    !(ctx->flags & SCA_DL_BW_RESERVED)) {
+ 			if (ctx->flags & SCA_USER)
+ 				swap(p->user_cpus_ptr, ctx->user_mask);
+ 			goto out;
+@@ -3280,6 +3288,22 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
  }
+ EXPORT_SYMBOL_GPL(set_cpus_allowed_ptr);
  
 +/*
-+ * Return a CPU of the root domain where a rebuild of the accounting should
-+ * count the bandwidth of @p, or nr_cpu_ids if there is none.
-+ *
-+ * Prefer the CPU @p is on, if it is active and in the mask of @p. The
-+ * task runs, or wakes up, in the root domain of that CPU. A mask can hold
-+ * CPUs of two root domains: housekeeping CPUs and CPUs isolated by
-+ * isolcpus="domain". When every CPU of a mask goes offline,
-+ * select_fallback_rq() can widen it to both. It moves no bandwidth.
-+ * Prefer that CPU also if @p is queued there, out of its mask, and the
-+ * CPU is the one recorded. Without admission control,
-+ * dl_task_offline_migration() can put a throttled task and its bandwidth
-+ * on any active CPU. The task runs there until it blocks.
-+ *
-+ * Else prefer the CPU recorded with the bandwidth, if it is active and in
-+ * the mask. It is in the root domain that admitted the bandwidth, or that
-+ * its last move put it in. A task moved asleep is still on a CPU of the
-+ * root domain it left, out of its mask. Else take the first active CPU of
-+ * the mask, a housekeeping one if there is one. A task on isolated CPUs
-+ * that all went offline can have no active CPU at all.
++ * Like set_cpus_allowed_ptr(), for a caller that has made room for the
++ * deadline bandwidth of @p in the root domain of @new_mask. Move that
++ * bandwidth there with @p. Return 0 on success, or a negative error
++ * code.
 + */
-+static unsigned int dl_task_rebuild_cpu(struct task_struct *p)
++int set_cpus_allowed_bw_reserved(struct task_struct *p, const struct cpumask *new_mask)
 +{
-+	struct cpumask *msk = this_cpu_cpumask_var_ptr(local_cpu_mask_dl);
-+	int recorded = p->dl.dl_bw_cpu;
-+	unsigned int cpu;
++	struct affinity_context ac = {
++		.new_mask  = new_mask,
++		.flags     = SCA_DL_BW_RESERVED,
++	};
 +
-+	/*
-+	 * Look at the mask of the task first. A change of the cpusets sets
-+	 * the mask of each task before its rebuild. The housekeeping mask
-+	 * that dl_get_task_effective_cpus() reads is updated after it. If no
-+	 * CPU of the mask is active, take the CPU recorded if it is active.
-+	 * dl_task_offline_migration() moved the task there, or an earlier
-+	 * rebuild counted it there. Else ask the cpuset.
-+	 */
-+	cpumask_and(msk, &p->cpus_mask, cpu_active_mask);
-+	cpu = task_cpu(p);
-+	if (cpumask_test_cpu(cpu, msk) ||
-+	    (cpu == recorded && cpu_active(cpu) && task_on_rq_queued(p)))
-+		return cpu;
-+	if (cpumask_empty(msk)) {
-+		if (recorded >= 0 && cpu_active(recorded))
-+			return recorded;
-+		dl_get_task_effective_cpus(p, msk);
-+		cpumask_and(msk, msk, cpu_active_mask);
-+	} else if (recorded >= 0 && cpumask_test_cpu(recorded, msk)) {
-+		return recorded;
-+	}
-+	cpu = cpumask_first_and(msk, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT));
-+	if (cpu < nr_cpu_ids)
-+		return cpu;
-+	return cpumask_first(msk);
++	return __set_cpus_allowed_ptr(p, &ac);
 +}
 +
- /* From dl_rebuild_rd_accounting(), under the locks it asserts. */
- void dl_add_task_root_domain(struct task_struct *p)
- {
-@@ -3827,7 +3887,6 @@ void dl_add_task_root_domain(struct task_struct *p)
- 	struct rq *rq;
- 	struct dl_bw *dl_b;
- 	unsigned int cpu;
--	struct cpumask *msk;
+ /*
+  * Change a given task's CPU affinity to the intersection of its current
+  * affinity mask and @subset_mask, writing the resulting mask to @new_mask.
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 779acb9836dc..aba03fd6b381 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -3622,12 +3622,16 @@ static void set_cpus_allowed_dl(struct task_struct *p,
+ 	WARN_ON_ONCE(!dl_task(p));
  
- 	raw_spin_lock_irqsave(&p->pi_lock, rf.flags);
  	/*
-@@ -3842,10 +3901,17 @@ void dl_add_task_root_domain(struct task_struct *p)
- 		return;
- 	}
+-	 * Migrating a SCHED_DEADLINE task between exclusive
+-	 * cpusets (different root_domains) entails a bandwidth
+-	 * update. We already made space for us in the destination
+-	 * domain (see cpuset_can_attach()).
++	 * Migrating a SCHED_DEADLINE task between exclusive cpusets
++	 * (different root_domains) entails a bandwidth update. Move the
++	 * bandwidth only if the caller made room for it in the destination,
++	 * as SCA_DL_BW_RESERVED says. Only cpuset_attach_task() sets it.
++	 * Otherwise, the bandwidth stays where it is counted, until the next
++	 * rebuild of the accounting. Moving it without room would leave no
++	 * root domain counting it.
+ 	 */
+-	if (dl_task_needs_bw_move(p, ctx->new_mask)) {
++	if ((ctx->flags & SCA_DL_BW_RESERVED) &&
++	    dl_task_needs_bw_move(p, ctx->new_mask)) {
+ 		unsigned int src_cpu = dl_task_root_domain_cpu(p);
+ 		struct dl_bw *src_dl_b = &cpu_rq(src_cpu)->rd->dl_bw;
+ 		unsigned int cpu;
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index fd6d36b6b1e2..9e3ca69abc36 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2983,6 +2983,8 @@ extern struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf);
+ #define SCA_MIGRATE_ENABLE	0x04
+ #define SCA_USER		0x08
+ #define SCA_DL_CHECK		0x10
++/* The caller made room for the deadline bandwidth in the new root domain. */
++#define SCA_DL_BW_RESERVED	0x20
  
--	msk = this_cpu_cpumask_var_ptr(local_cpu_mask_dl);
--	dl_get_task_effective_cpus(p, msk);
--	cpu = cpumask_first_and(cpu_active_mask, msk);
--	BUG_ON(cpu >= nr_cpu_ids);
-+	cpu = dl_task_rebuild_cpu(p);
-+	if (cpu >= nr_cpu_ids) {
-+		/*
-+		 * No active CPU can count the bandwidth of this task. Leave it
-+		 * out of this rebuild. dl_bw_gen then keeps its release from
-+		 * removing anything. A later rebuild, or
-+		 * dl_task_offline_migration(), counts it again.
-+		 */
-+		raw_spin_unlock_irqrestore(&p->pi_lock, rf.flags);
-+		return;
-+	}
+ extern void update_group_capacity(struct sched_domain *sd, int cpu);
  
- 	raw_spin_lock(&dl_departed_lock);
- 	/*
 -- 
 2.47.3
 
