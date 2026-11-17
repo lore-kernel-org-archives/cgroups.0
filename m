@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794924669;
-	b=XOv5WxnmPmP7UqgsX/+SDzod0nYqH3SwgbDUVK2+vcMTngd1bASTEn8xdQkGrdjnq82Q
-	 RSjr5l6VSso8NQkCB7cCLUyOaF/kCDUkSebDlXTCsLjSJbDaQRqDmlfURgDskrVkw41AW
-	 WWAMYC2qucbD8eFNgeDRyso391Y2RDYEW32W1g04Spm0XVvPxoJ/FF4fH9/HYd4Ep3KBt
-	 MGoV5m6yoifYSrNintbEm+7XCsgPgIpzBcsCIRZmOE5bcOYD5BWY/U1mP5YdSxOjwMsiO
-	 SNEaU3bAvAnbIooo6PPGjNxzz4yscgAlPhIaduzyli2k1zPmhxQAIb+dgB/AAZRVMzA==
+	t=1794924674;
+	b=cGOqEq+vM/s7fXG4lYK5+8lBd87aHJ13TgVlYbA0EGCxh5codkj9EYER5Dsi8abZVmuE
+	 mNQxSZaVCXxrVQ40S05FHH0ZCNbOWHr4WXYZn7bD4M7uaLP+cUANaPl9SFLvqvYumzY/w
+	 vJ949CFVOyGPqbfZTNCrgmFQkWleY2nua1nPnRS7mHp4PhdEHYdC0l6THGhdqpwS9FY34
+	 fA/jR1L2w3ZvPqbFVM0T5EZWj5FLKXK8/yx4cIEudWlLKet6aT7xTuuwxy90q25+jwrxt
+	 LZWvlzrFD5aeNfsbE6/1p59g+O6gMvdR1Nnm5yy7tRXoPvUwjuNwkBAo7ar69ilDd2w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794924669;
+	a=rsa-sha256; c=relaxed/relaxed; t=1794924674;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=sYEvR0y/S587RGU4gKT0zwa1IWS1hIurv3wif+IluiY=;
-	b=LePbAO3kta0vdywAFykemYEpH6YbRJKkyC8eU3B9tUnvXjCqROILgnt24S4QwewZYeE6
-	 LTPdpq2o6IEAGvrv1nsjrZrR4IrkEjxMYmkTcMkRLZ40keEM9k1HRrBIcIvfZD8zbHDBT
-	 ruqaRfRWxYJaMTpHGQTd5KbfyH42MDg8H1z2q0bYp8y2R1v3hZtA44sT5+kztSCfrLvNl
-	 vVvWdS1az8Wa9hC4mFf7JchCme9OtRD3ScXMB2FRlICeLo45X5xRmJwoO2Vhuarza+aZp
-	 tTyr3Nm3m6aplw4WcIdg+gVqQtc19ua5/yxsVIzPaFtaHrRbKDBQS1A1KNpIQjDBlIw==
+	bh=9p94hJD2vP0zDldchA7bxwpBsXvy/6CynoDvMnhZnkE=;
+	b=COwge/Pta3TeCxBMZAtjDvXYF6repOEZ6n9uipibhC5jG5H6g4/tIlpGRRq1BuEhxEAk
+	 yLicyTcXsm/oRZfhnk6ogWDcv7uI2bcx9AOFz+wHfv1chCBU6Aq/pi5w41GkIpXd5gK4m
+	 QQ6geQOwMCKu3+TiKGJe+IMrV1GlDzkNJNjYj6uHKzvUDoBXQTNtjNCO5UJBpYPnJvXsf
+	 Jgiq5AQlxcCY3ALMJBL+UQXuDyVlEIrnm+aJi/8fKkvFMyVm6N41TyT007exiNqTOBRm7
+	 bD6LYB5qmfZI+pdaIzJ6a1b4ERBlJdPQcHO0qnsG9OJYvBJtZtHjR5zTadBlno+Q03Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b="ET30B//a";
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=U8mDQt4B;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FF87606A88D;
-	Tue, 17 Nov 2026 14:11:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8FF87606A88D
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 907A160A6F55;
+	Tue, 17 Nov 2026 14:11:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 907A160A6F55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=ET30B//a
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=U8mDQt4B
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1794924664;
-	bh=sYEvR0y/S587RGU4gKT0zwa1IWS1hIurv3wif+IluiY=;
+	s=smtpout1; t=1794924668;
+	bh=9p94hJD2vP0zDldchA7bxwpBsXvy/6CynoDvMnhZnkE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ET30B//aODFgRQm8Vbgl7+Cgwx7bPMty5bW0aREb8IupvAYrnkM4VIrTiifPlFPfJ
-	 y1dr9iGyWJciIzbOIucDtF9isVNQERVeP1e99oFgXXvvgAhNRqEw03tkgG4gmIF7Pu
-	 wHhxWmxF7WZstQ71vKtOC4csmhaSBMeZ2PhSmlwaBO8QXcEaZtEGZC8wlfaF7ilcoT
-	 KWcZbypJVSXgDJO9+2Ew3nsuIeQ3XX1RFG89YkJ1OTVXYPfGScnX8blB9pktK5TnWA
-	 Cfg3Up/22XEbrdSftxwOLbxa2ilMi9THzky84M8R8ctIvJvHGzDT/WDMeajhemgIuj
-	 GHxrksX2VBs6A==
+	b=U8mDQt4BlODQO6pkeMr6NR5xlohd9ptKPEfrkt2B98QA0pCmM7fqXD9ENLKBBfzJJ
+	 eN9IqU8w9NMzPOO2tTBEzAWNOvEqoJmC7NeZR67mB573nAfQAnGkTQBFjRSVp+5ld+
+	 /ARLJxkWxsQgKOL+GhnB4ahmxMIbOwMzlhF2EJ0Jy4xk2LTIZr8Dcmv5ekdPUw9XKV
+	 +vsJkPFIbSKziVciMjrMKIVL9a5f1GZFSqhph05rQ89z4Q0o23B7Lco6x0bi36cW7j
+	 iAIx+EpmwILwtWu6UzOQ5tyaKNKHTale4W/yvXvCCswJmi7g2kausQcvbh43VD8583
+	 s4bbpRRAwUp6g==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV04sdSzRgp;
-	Tue, 17 Nov 2026 09:11:04 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jTRV42VsXzRZR;
+	Tue, 17 Nov 2026 09:11:08 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v7 03/40] sched: Let a task boosted by a deadline waiter change its policy
-Date: Tue, 17 Nov 2026 09:10:24 -0500
-Message-Id: <5734c5a12c6cee0a459aa772d3edac6eb8a247ec.1794922146.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v7 22/40] cgroup/cpuset: Wait for an attach before rebuilding the sched domains
+Date: Tue, 17 Nov 2026 09:10:43 -0500
+Message-Id: <b09e7af5f4bae1fa4b7386d0808b1b536af44553.1794922146.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
 References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
@@ -97,81 +97,118 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A SCHED_OTHER or SCHED_FIFO task that holds an rt_mutex can be boosted
-into the deadline class by a deadline waiter. Then a sched_setattr() or
-sched_setscheduler() call on it fails with EBUSY, unless it asks for
-SCHED_DEADLINE. sysrq-n would not reset it either.
+cpuset_can_attach() reserves the bandwidth of the deadline tasks it
+moves in the destination root domain. cpuset_attach() moves their
+bandwidth later, on the strength of that reservation.
 
-The admission test runs "if setscheduling to SCHED_DEADLINE (or
-changing the parameters of a SCHED_DEADLINE task)", as its comment
-says. sched_dl_overflow() then handles three cases, by the task's
-policy: the task enters, leaves or stays in SCHED_DEADLINE. But the
-call site tests dl_task(p). That tests the priority, so a boosted task
-passes it. For such a task and another policy, sched_dl_overflow()
-matches no case and returns -1.
+Commit 75f7a25ec6bb ("cgroup/cpuset: Prevent race between task attach
+and cpuset state change") lets cpuset_attach() rely on what
+cpuset_can_attach() set up. The writes of cpus, mems and cpus.partition
+wait for an attach in progress, in wait_attach_done_lock(). CPU hotplug
+cannot run in between either: it takes cpus_write_lock, and the attach
+holds cpus_read_lock throughout.
 
-Fix this by testing the policy, with task_has_dl_policy(). A boosted
-task has no bandwidth of its own to admit or release.
+But a rebuild of the sched domains does not wait. A write of
+sched_rt_runtime_us and the energy model rebuild them through
+rebuild_sched_domains(). The cgroup v1 writes of sched_load_balance and
+sched_relax_domain_level, and hk_sd_workfn(), use cpuset_full_lock().
 
-Now sysrq-n can take a boosted task out of the class.
-normalize_rt_tasks() calls __sched_setscheduler() without pi, so the
-task gets its normal priority. Nothing then drops the boost. At the
-unlock, rt_mutex_setprio() sees no change of priority. The pi_se of the
-task would keep pointing to the waiter, which can exit. So also drop the
-boost in __setscheduler_dl_pi() when the task leaves the class, as
-rt_mutex_setprio() does.
+In this example, a rebuild drops the reservation. T is a deadline task
+asleep in root domain R. Thread A moves T to a partition root P, which
+has a root domain of its own. Thread B writes sched_rt_runtime_us:
 
-The boosted_owner_policy case of deadline_bw_test, added later in this
-series, fails with EBUSY on v7.4-rc2. It passes with this series. The
-sysrq_boosted_owner case of deadline_switch_test tests the sysrq-n path.
+  A                                      B
 
-Fixes: 332ac17ef5bf ("sched/deadline: Add bandwidth management for SCHED_DEADLINE tasks")
+  cpuset_can_attach()
+    takes cpuset_mutex
+    cpuset_reserve_dl_bw()
+      P's total_bw += T's bandwidth
+    drops cpuset_mutex
+                                         rebuild_sched_domains()
+                                           takes cpuset_mutex
+                                           dl_rebuild_rd_accounting()
+                                             clears R's and P's total_bw
+                                             counts T in R (not moved yet)
+                                           drops cpuset_mutex
+  cpuset_attach()
+    takes cpuset_mutex
+    cpuset_attach_task(T)
+      set_cpus_allowed_dl(T)
+        R's total_bw -= T's bandwidth
+        records a CPU of P
+
+P now lacks the bandwidth of T, and admits deadline tasks beyond its
+capacity. When T leaves P, P's total_bw underflows. In testing, the
+race left a destination admitting 3 tasks of 10% too many, or P
+admitting no task at all.
+
+Fix this by waiting for an attach in progress in
+rebuild_sched_domains_cpuslocked() and in cpuset_full_lock(). The
+latter then takes its locks in the order of the writes of cpus and
+cpus.partition. A rebuild from CPU hotplug finds no attach in progress.
+The online, offline and kill of a cpuset never wait: they hold
+cgroup_mutex, which the attach holds throughout.
+
+The move_vs_rebuild case of deadline_bw_test, added later in this
+series, tests this race. Without this patch, it fails in 5 of 8 VMs with
+8 CPUs. With it, the case passes in 8 of 8. The next patch needs this
+wait too: without it, it would give back a reservation that a rebuild
+dropped already.
+
+Found by the Sashiko AI reviews of v2 (the race) and v3 (the cgroup v1
+writes) of this series.
+
+Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/syscalls.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ kernel/cgroup/cpuset.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
-index 6f8ce5fd94a1..cb115aa9b0b3 100644
---- a/kernel/sched/syscalls.c
-+++ b/kernel/sched/syscalls.c
-@@ -304,6 +304,13 @@ static inline void __setscheduler_dl_pi(int newprio, int policy,
- 			scope->flags |= ENQUEUE_REPLENISH;
- 		}
- 	}
-+
-+	/*
-+	 * Without pi, as from normalize_rt_tasks(), a boosted task can leave
-+	 * the class. Drop its boost then, as rt_mutex_setprio() does.
-+	 */
-+	if (!dl_prio(newprio))
-+		p->dl.pi_se = &p->dl;
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 194a438e25c3..51b6be460794 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -296,17 +296,20 @@ void lockdep_assert_cpuset_lock_held(void)
+ 	lockdep_assert_held(&cpuset_mutex);
  }
- #else /* !CONFIG_RT_MUTEXES */
- static inline void __setscheduler_dl_pi(int newprio, int policy,
-@@ -691,6 +698,10 @@ int __sched_setscheduler(struct task_struct *p,
- 	 * is available. Keep this check last. If a later check failed,
- 	 * nothing would give back the bandwidth it reserves.
- 	 *
-+	 * Test the policy, not the priority. A task boosted into the class
-+	 * by priority inheritance has no bandwidth of its own to admit or
-+	 * release.
-+	 *
- 	 * With SCHED_FLAG_KEEP_PARAMS, the task keeps its parameters, so
- 	 * there is nothing to admit. Such a call changes other attributes,
- 	 * such as the utilization clamps. A deadline task does not use its
-@@ -699,7 +710,8 @@ int __sched_setscheduler(struct task_struct *p,
- 	 * them from the task without a lock.
- 	 */
- 	if (!(attr->sched_flags & SCHED_FLAG_KEEP_PARAMS) &&
--	    (dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
-+	    (dl_policy(policy) || task_has_dl_policy(p)) &&
-+	    sched_dl_overflow(p, policy, attr)) {
- 		retval = -EBUSY;
- 		goto unlock;
- 	}
+ 
++static void wait_attach_done_lock(void) __acquires(&cpuset_mutex);
++
+ /**
+  * cpuset_full_lock - Acquire full protection for cpuset modification
+  *
+  * Takes both CPU hotplug read lock (cpus_read_lock()) and cpuset mutex
+- * to safely modify cpuset data.
++ * to safely modify cpuset data. Waits for an attach in progress before
++ * it takes cpuset mutex.
+  */
+ void cpuset_full_lock(void)
+ {
+ 	mutex_lock(&cpuset_top_mutex);
+ 	cpus_read_lock();
+-	mutex_lock(&cpuset_mutex);
++	wait_attach_done_lock();
+ }
+ 
+ void cpuset_full_unlock(void)
+@@ -1005,7 +1008,14 @@ void rebuild_sched_domains_locked(void)
+ 
+ static void rebuild_sched_domains_cpuslocked(void)
+ {
+-	mutex_lock(&cpuset_mutex);
++	/*
++	 * Wait for an attach in progress. cpuset_can_attach() has reserved
++	 * the deadline bandwidth of the moving tasks in their new root
++	 * domain, and cpuset_attach() moves it on the strength of that
++	 * reservation. A rebuild of the accounting in between would drop
++	 * the reservation.
++	 */
++	wait_attach_done_lock();
+ 	rebuild_sched_domains_locked();
+ 	mutex_unlock(&cpuset_mutex);
+ }
 -- 
 2.47.3
 
