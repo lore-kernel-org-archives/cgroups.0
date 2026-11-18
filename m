@@ -1,124 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.44
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795007737;
-	b=h9TdChZOBsytRhA3GHhi4fg4FCMxIXug8/d8KiEvzNtLPFIC+rvkX+L7UbbPnoCCyjts
-	 6qoXK0tf0fIJS/qYCFvzY4mSG8PbsAB44C9dCYnYkU8kKIjek3ldllyKtjFnYUF5WZw7G
-	 gyO30h06J3kvkvgWzNkClioa2dPOtqv+NjexFJEF+CSOGq9IkVj1CKnWIS36M3LV4bsWK
-	 pGxTTyIB2vgXsCRgH12yT9OT5NPMD3F+EF/TZ/XgcWN3fsRFU2lW0jgASzn/iyr42qq1J
-	 9KU6YoNoXRDijOVk+JcD0bytQbh+9o/eQE6faO15isaDwlqhuQD/DO9ZsLZDsFSU/PQ==
+	t=1795007865;
+	b=Dx0mVmn2yWxYYsmMUcqP5QRGR6d/x/5uZF6/WvPoG3s6L8WzYQDJfoOt0eoCuhjaEoyX
+	 WDDCOZnW3rnaFwM7vhrHvU1ROh9wKUNBb9zrY2mWp/F5YBYbE1xvlwHbUOxL4Z7AEnd19
+	 5kMnKYZXEbWMzQsHKxwSjK88FBsHwQhq/tn8sxMswMJYh8VMp4WrLhczNTKK1N3ajpXb5
+	 PORXxSh26j46akpyLDnFv4Sz5tmQAuP8+lZ/RzDe1bDAPTxLGHF/N5Gk53xPtbNJN9oO4
+	 GneoR1oqz+/o9FpmZhh4cKyAI5ljnxTvrPtQPs/o9pV40czz+eYvp8Ls7QiBjKmzxOg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795007737;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=GDBgSBwB9SZv912xAYmFSFm0+XZuKPzPjOZZNdWEPXQ=;
-	b=lTxCnWxaD9WRTrftD7sf7WNpLxImOm4mAkkOvgAj3W7yAf6f6Zye1aF7L5XMbJX/GIb9
-	 cc2ldCSxvMwSLQZBAHJb5C3nmUbgXvky4rrvOXZEK+6LqCh4+rX17Ee4Uy3sebdWbb1/Y
-	 wiNCLTIKZA+VKxWEYmHWqu/KUFNzbxu96v2s4Ic77iaOTH/d3KjGwhI/A4wDJ8TN5M7f2
-	 BTX3Wz8ODQ5vPYHZ2aXipeDCigJSdyxbQ2yq0LSyQdzksbHQl7LVnD/GZb1dLPBVUwDCT
-	 TU2Ts8lzEqpwjDZjvp9sQWhJ3s4IunDYBC/ME6/rX4LLhhYGARlj52bEqWu3AQZlGdg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795007865;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Cc:Subject:To:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=ou7VqJIvrJwbDof8WuTCn2yqRr3nuLImwl+n8z/KCYU=;
+	b=KzLh8a6lKgHiH7zifDRt5EfM4dEF+gGNSRo7Wh5PGRETizSK+Ed3nSMnxCP4p3z9Qqf5
+	 VJVj7KqGEv9TSjYSejLjd1tikKmd5gWUNjpOOLnnB1InI3gw8r6YQ57L/8clOsDicDbOv
+	 R9iH02kspWs5qEmKEMwSNB7saIvUp5zq2KdEThOs4l8Fm9c27+H1SV0gnnYG2rh2cYo/Y
+	 E98pRA0eFHLPateyMxWiUj2EVMU13jRrxuX1fvnudZsWy5mOzR/RhpRZKDB9kpxI9+ybE
+	 OmAr0Hewlg9a+udcKk/6N6zwMA8ZfhKyKz9EfamxgomejCsBdi/CtlSVlIsvseJUmWg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dw2tFieo;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=aZ71aw2n;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wRuLXZI5;
+	arc=none smtp.remote-ip=95.215.58.44
+Received: from mta1.migadu.com (out-44.mta1.migadu.com [95.215.58.44])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DD76606A320
-	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 13:15:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7DD76606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C453606A330
+	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 13:17:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5C453606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dw2tFieo;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=aZ71aw2n
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795007735;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GDBgSBwB9SZv912xAYmFSFm0+XZuKPzPjOZZNdWEPXQ=;
-	b=dw2tFieoV2fUktIlo0TDK4I8UddhaWCMjQ0RpJmBwGRrUxLeTyC9lJV2MMZi1yZ2WLP5dN
-	pYIHMhX/LR1ysEbldW1KdHlw3RLwaNPw0TzqV/TIiPnEsZUkO+pvdhAz3n0nYk9jaOC8r7
-	gfhq3iKct+gLMo+hhnQF3t0piot4PT8=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-517-O3CEGGvjP-eUcJjsoNiV0Q-1; Wed, 18 Nov 2026 08:15:34 -0500
-X-MC-Unique: O3CEGGvjP-eUcJjsoNiV0Q-1
-X-Mimecast-MFC-AGG-ID: O3CEGGvjP-eUcJjsoNiV0Q_1795007733
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-4a799d93bc3so276618f8f.1
-        for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 05:15:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795007733; x=1795612533; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=GDBgSBwB9SZv912xAYmFSFm0+XZuKPzPjOZZNdWEPXQ=;
-        b=aZ71aw2n8oHteORzK1U/UStkmYdaD98yxYzrW+hkEZQEEtPaFjB1Y6q4hV4xCJpCwx
-         cnsqw71jhW44xU/UIWFXJtPXRLw4bJe7KtTVNGUFrYhkQnPGngKWt/+mC5OstdzU++IZ
-         3esEFjloz3o/Os0RkoqXLx1TvuAQaBu/u2lN74HCh7hgrmNG/xNaJqA9FbFy0HgdA7nK
-         z7CBcJCq1Ij9WGdnNevbF+o45xuwfsprrcxTiqlKYd1kwpeDIUB1wezCjoL3DRNyTmcS
-         zbFa1C2XKYOstvughcn84NKIzTZKoeQ3bIV7C7lTMtIuXJRm1gWKJiRRKp8JxjYdbzRS
-         PNkQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795007733; x=1795612533;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=GDBgSBwB9SZv912xAYmFSFm0+XZuKPzPjOZZNdWEPXQ=;
-        b=SerFya8vM6hau24uv8JOvQrpdYwT+0YKJYSK/obphBImeURv92NNv1Fn7Ma86N1cLd
-         V50H+jzemIjgHLsFbuWb62umagcOKYgOmynWLqMw+zPfsKsvnNQayKQV/McLNFEXTyxU
-         PmDQupYgT1iTGHulScdedtdmHwl7dSVHlmt0DnoBLaz2Miw1/D+DE7YiaP1qYoNNOfaZ
-         lWYoW/2Wa3p7Fy/LLzmCUZE2Y/0+JYxCgG0F6v3UtlhBahKkMYuOI8EZShQgQ6jmpVRb
-         fMNCqYAToU9U5Z0rJ25E6rdbgMryfy6dI9MgMNu6/g1/szROuDrLda28BZyQs9Wb3dyP
-         b4bQ==
-X-Forwarded-Encrypted: i=1; AL+hErG2/OXbEXiSkVaPlcY7lSS3/ZKN6ldXm58ErRv/x1vXXczrDNtj/ufffHcnsRb0UTnyI/PJKPhw@vger.kernel.org
-X-Gm-Message-State: APuU4Z9gOvwD+99sG2TTk8HqaBj4B6Xf+eh87piRY8gr3RLYKoaEWOZD
-	AmbDjFVPlfvaCIstkEFl3gWcQ9iNGB9hOfPlA1YWpbUGbKXswUOZxv/om/p8LnbYaqNu45G18kz
-	rvSDvwyqKv0KTOGK4U+qRkom0oJWNZQXGwRKx+74cFYcwXJwoJSUC3nULDkc=
-X-Gm-Gg: AZFdTZfeUpH/bP43jSAPJc7bN0O28kbY913I7hnbHYI6J4VVkrhv2nTmJfX5lgrf8aJ
-	SeFL84uj2VARRzBNLIbQg6umSphi/4lz1ZhmmiAwBmU/2ENQNVe3xmjqSVR653v3eKjVbQWYNM9
-	SWuP2iNNe0YaabCucDp178qT/K6DFD8953Ffls9qI7VtAc+3tK2scGAUN9q6FrtFfqnBuVy0IQN
-	3TJk/50kgpUWDdbHU9SHsWpKAlAk3fO7r+ZP1l2roFdt8/mo8VobI6a76qQ4NlevImhyrZfpddB
-	4qxYELV4U4TEY9wsTooc/BtPw5SnsMGS/YArPZM0uVktjjsFif2F6BhjrXcMvZmaRP3Szp9JV8z
-	JQ9M0Yh28yY8rred6XSrG22FX4gVhXFtc6CBKK8KYgt7DmjmbWK+/XdpBm/Tc3OmhZiqNHrVu0n
-	F4cgY=
-X-Received: by 2002:a05:6000:1889:b0:4a8:714:7ad4 with SMTP id ffacd0b85a97d-4a807147c78mr1864899f8f.32.1795007733069;
-        Wed, 18 Nov 2026 05:15:33 -0800 (PST)
-X-Received: by 2002:a05:6000:1889:b0:4a8:714:7ad4 with SMTP id ffacd0b85a97d-4a807147c78mr1864799f8f.32.1795007732558;
-        Wed, 18 Nov 2026 05:15:32 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4a64b60940csm4651876f8f.0.2026.11.18.05.15.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Nov 2026 05:15:31 -0800 (PST)
-Date: Wed, 18 Nov 2026 14:15:28 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
-	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org, longman@redhat.com,
-	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
-	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev,
-	stable@vger.kernel.org
-Subject: Re: [PATCH v7 08/40] sched/deadline: Do not replenish a boost from
- cleared parameters
-Message-ID: <av2k8JlLvUcBBOhn@jlelli-thinkpadt14gen4.remote.csb>
-References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
- <cefacab5f1c0e7617f17e050af4ef5f6db01700a.1794922146.git.mathieu.desnoyers@efficios.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=wRuLXZI5
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=/ZzSIR3rPfPXJJtOS8PvCdyzoY8bbs32yVXQ2eK08Ew=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795007862; v=1; x=1795612662;
+ b=wRuLXZI55fFf4X88ZVUxePGmdNFnkBpJPhJ5pfnszsresV0CwftRxx0PxzRELfa+UBAfZcMO
+ FQOInKGpTqEv5BS5eDRQ8sUT32bNtNTkQwggRCG8l0wsmd759p4mOgBuhycUrmPvr+EK5cJvEop
+ luJovKH0Z0iVLm04/TBuf5y8=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 663fd380a80634db;
+	Wed, 18 Nov 2026 13:17:42 +0000
+X-Mizu-Trace-ID: 663fd380a80634db
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <0da8e4bf-ad3d-4a69-a1af-b2be9c63160c@linux.dev>
+Date: Wed, 18 Nov 2026 21:17:36 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -128,120 +58,67 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cefacab5f1c0e7617f17e050af4ef5f6db01700a.1794922146.git.mathieu.desnoyers@efficios.com>
+User-Agent: Mozilla Thunderbird
+Cc: cui.tao@linux.dev, cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, bpf@vger.kernel.org, andrii@kernel.org,
+ eddyz87@gmail.com, daniel@iogearbox.net, linux-kselftest@vger.kernel.org,
+ cuitao@kylinos.cn, ameryhung@gmail.com
+Subject: Re: [RFC PATCH v14 0/4] blk-iocost: BPF struct_ops cost model
+To: tj@kernel.org, josef@toxicopanda.com, axboe@kernel.dk, ast@kernel.org,
+ alexei.starovoitov@gmail.com
+References: <20261118131029.797007-1-cui.tao@linux.dev>
+From: Tao Cui <cui.tao@linux.dev>
+In-Reply-To: <20261118131029.797007-1-cui.tao@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello,
+Hello, Alexei,
 
-On 17/11/26 09:10, Mathieu Desnoyers wrote:
-> When a SCHED_DEADLINE waiter boosts the owner of an rt_mutex, the owner
-> runs on the waiter's parameters, through dl.pi_se. Commit 2d3d891d3344
-> ("sched/deadline: Add SCHED_DEADLINE inheritance logic") calls this a
-> temporary solution. The owner is never throttled. When its runtime runs
-> out, replenish_dl_entity() refills it at once from the waiter's
-> dl_runtime.
+在 2026/11/18 21:10, Tao Cui 写道:
+> This series lets a BPF program take over the cost model of one
+> device. The BPF model provides calc_cost() for charged IOs plus two
+> transfer coefficients for the completion-time sizing, io.cost.model
+> selects between the attached model and the builtin one, and enabling
+> and disabling the controller stays with io.cost.qos.
 > 
-> The waiter can leave SCHED_DEADLINE before the chain walk deboosts the
-> owner. Its parameters can be cleared in between, at its 0-lag time.
-> replenish_dl_entity() then loops forever on a dl_runtime of 0. It
-> holds the rq lock with interrupts off, so the owner's CPU locks up.
+> The builtin model is a linear formula derived from a handful of device
+> parameters, and the right formula is device specific. A BPF model can
+> be adapted to the device and updated without rebuilding the kernel.
 > 
-> O is a SCHED_OTHER task that holds the rt_mutex L. W is a SCHED_DEADLINE
-> task. T is any other task:
-> 
->   CPU 0 (O)                         CPU 1 (W)                     CPU 2 (T)
-> 
->   locks L
->                                     blocks on L
->                                       rt_mutex_setprio(O, W)
->                                         O->dl.pi_se = &W->dl
->                                     sleeps
->                                       task_non_contending()
->                                         arms W's inactive timer
->                                                                   sched_setscheduler(W)
->                                                                     W leaves SCHED_DEADLINE
->                                                                     task_rq_unlock(W)
->                                     <W's inactive timer>
->                                     inactive_task_timer()
->                                       __dl_clear_params()
->                                         W->dl.dl_runtime = 0
->   <tick>
->   update_curr_dl_se()
->     enqueue_task_dl()
->       replenish_dl_entity()
->         runtime += W->dl.dl_runtime
->         loops forever
->                                                                     rt_mutex_adjust_pi(W)
->                                                                       rt_mutex_setprio(O, W)
->                                                                         spins on O's rq lock
-> 
-> Fix this by reading the inherited runtime, deadline and period once, and
-> by not refilling from cleared ones. They are cleared under the waiter's
-> rq lock, not the owner's. So test all three. The owner stays runnable.
-> It gets no runtime. A negative runtime is reset to 0: the owner's own
-> reservation does not pay for the boost. An owner with no parameters of
-> its own gets a deadline of now. A deadline of 0 would mark its dl_rq as
-> empty. The wakeup of a boosted task already gives that deadline when its
-> donor is cleared. The owner runs until the chain walk deboosts it, or
-> until it releases the lock. That also covers sysrq-n:
-> normalize_rt_tasks() changes the waiter without a chain walk. The
-> warning stays for an entity that is not boosted.
+> The series is based on next-20261117.
 
-The above paragraph is a bit hard to decipher. :)
+p1 changed quite a bit since the version you acked, mostly from
+tj's review and Sashiko's testing reports, so here's a quick
+summary.
 
-Maybe something like the below?
+The flag enum and the model accessors are renamed. The merge flag
+is now enum iocost_calc_flags with IOCOST_CALC_MERGE, calc_cost()
+takes a calc_flags parameter, and ioc_model()/model become
+ioc_bpf_model()/bpf_model so the builtin model is no longer
+represented as a NULL model. The named enum also makes the flags
+discoverable through BTF.
 
----
-Fix this by not refilling from cleared parameters. The donor's
-parameters are cleared under the donor's rq lock, not the owner's, so
-replenish_dl_entity() can see them change under it. Read dl_runtime,
-dl_deadline and dl_period once, and bail out if any of them is 0.
+calc_cost() now has the same pricing scope as the builtin model:
+bios with no data and no flush state and ops other than reads,
+writes and zone appends cost nothing, flushes are passed through
+so the model can price them from the bio flags, and
+completion-time sizing now follows the model's transfer
+coefficients.
 
-On bailing out, the owner gets no new runtime, but stays runnable and
-unthrottled. It runs until the chain walk deboosts it, or until it
-releases the lock. Keeping it runnable also covers sysrq-n:
-normalize_rt_tasks() changes the waiter without a chain walk, so a
-throttled owner might never get to release the lock.
+On attach iocost holds its own reference on the struct_ops map,
+so a model cannot go away while it is pricing. A dead owning map
+reports -ENODEV instead of -EBUSY now, and the autop stepping
+timestamps are cleared at attach so a stale pre-attach profile
+cannot fire a step at the model=linear switchback.
 
-The bandwidth the owner consumed while boosted belongs to the donor, so
-a negative runtime is reset to 0 rather than charged to the owner's own
-reservation. An owner with no parameters of its own gets a deadline of
-now. Its deadline must not stay 0: the dl_rq uses an earliest deadline
-of 0 to mean that no deadline entity is queued (see inc_dl_deadline()).
+The attached and attached_link updates also moved out of
+ioc->lock: rq_qos_mutex already orders all their accessors, and
+ioc->lock is only needed for publishing bpf_model to the timer
+and show paths.
 
-Until the deboost (which should happen "soon enough"), such an owner
-sorts first on its CPU's dl_rq and runs ahead of the other deadline
-tasks there.
-
-The warning is kept for an entity that is not boosted.
----
-
-> The reset bounds the overrun. But a runtime of 0 still counts as
-> exceeded. So until the deboost, update_curr_dl_se() still requeues the
-> owner at each update. An owner with SCHED_FLAG_DL_OVERRUN still gets
-> SIGXCPU.
-> 
-> With a 300ms debug delay before rt_mutex_adjust_pi(), v7.4-rc2 locks
-> up in 8-CPU VMs. A kernel with this patch does not.
-> 
-> The Sashiko AI review of the third posting found the lockup. Juri Lelli
-> suggested this fix in place of a larger one.
-
-Also for other changelogs, I am not sure this kind of info adds much, as
-I fear it will be hard to track down in history anyway.
-
-> Fixes: a5e7be3b28a2 ("sched/deadline: Clear dl_entity params when setscheduling to different class")
-> Suggested-by: Juri Lelli <juri.lelli@redhat.com>
-> Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-> Cc: stable@vger.kernel.org
-> Link: https://lore.kernel.org/all/avL8oOtjKqVNR7-l@jlelli-thinkpadt14gen4.remote.csb/
-> ---
-
-For the implementation,
-
-Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+I'm still carrying your Acked-by. Since p1 changed quite a bit,
+I'm happy to drop it until you've had a chance to take another
+look if you'd prefer.
 
 Thanks,
-Juri
-
+Tao
