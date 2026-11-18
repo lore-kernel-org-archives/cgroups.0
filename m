@@ -1,102 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.161.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794959855;
-	b=XP4LGyqI4H9Sm86JmuGHDzX/8rykGUNMvYgmyMNFXg9cRsna62kHXZURNDjO9uqAuTbx
-	 HA4uYhfqPtfA4MRBxgHwxjzTTT1L7jze0Cn/SyDsKvTHh8fmALVDtdjklWUqNyUoduSWw
-	 zDzPCReozaMppr2DsnzTASaC/AfUdL8pjRzNs/HaVkKHUUKTL1zcEGAtsobpEcb/5JktG
-	 2SeW5JNogQcOoYNU19gDYnn/fxRaig7zvOIqk+Oo2KrT3r1JiGTEgn0dOb2hJLSefYOPh
-	 UW+TLG390RAH8Cpm5ZSm7ebStf7qNkFYTQWz3yCM9MWuMcDKMXJdD1hBL1jzdymYRKg==
+	t=1794960230;
+	b=PayJ9QmxCJR9qUaGJ5nh05hkNByNLxPH4MxpTD8uxgy8vHRySVEudaXYabzAzaQyUMhE
+	 Y+QPkdJgLpn2o70GnRIJUU/2+GAANeKX1Gw+umxWHFBVA1eM572Lwgoo9F9U400+tSl5n
+	 nMimgMYumqqFN1cQr9Bc7dcZaIW6kJyyTFVKQ3iF/HXugrWEMNVS8u0HrTfIFkmvyZVA2
+	 J4kyv7bG/IaMOa3qORDH/7ltK3rRMZVXh+T4wUNVtl9XhP2Csj+Q6ZAt84OuuZ9ombij6
+	 MvDzIouYH83TOCSqPaj/ZRtR3UR8dqcdbQa/CPxNQ3qqUcgoEzZ+XaJ9HN51FRu5lqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794959855;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:Mail-Followup-To:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=q3OTBwL+TyzHGc36tg10hWnQr6i2w3v45IA4aHIlkR8=;
-	b=OMehO47Zyk6y94k5rO+Pa4HLloj/iWcgjP7IjNWxF/e0NqQOxrzamRSt6dKj/RhGKBdH
-	 qYsUBOHwjTn+D31rUhcZEDCDRVH8lPma3GRhAZM3vXpHWdjfj04vfftGPWOJRhzNB7G0l
-	 iyr+GspVsmI97zD0JklwTRNCa2XW0Ts7X1COgoamtoyC5JEWWvM++bc/MWGp0x0Cx0jtH
-	 R00CcE+VeImGKqyv9rPOplitgf7V8DPpkirZHSAAASC/kKo/8/b4hEfnJPL/HOWymeI2Z
-	 N6lS4i+WnD7sAwQPA6x+3azcUNFvHlNzw34qek7u4T7g0f4lC6Vg13Xxillzy+F1/Vw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794960230;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=HgUCjkwjNnVwNpG7C+Rc1zoxk9Eyoo4+LcOho9UT1no=;
+	b=QSJJjN5E4B6/P/QH2YZtonh7r+BjAiQ7DVNy+gofqriz9JLDQHFg5SbXPGraStL8iyPz
+	 2cKOxirgfEZlnGJk+FdhyX18iCjRp/8wH0U1hByxPVzbu3Xk4wBlNg4TnHnes/JzTtIf3
+	 Ygz76R0VmgK/4OzJgZAooTF9LY290ppIJFx0N0l7nOopxM5uOOtgGFdwkDjt2G0n4dKwX
+	 8DHuPxFGpj8xCSVWB06oYw6Ch34Lh5+R63Ycta6xijeHvWwdVf2++IoPU6LgYipcLSUhT
+	 gmBVqLhk11M03D5rYQBajkVP7wifDbEVxWE9tjrltouM3fQe19RaF9jWQcEn//xrVCQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=u7zqySAa;
-	arc=none smtp.remote-ip=209.85.161.50
-Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=pVjbsq71;
+	arc=none smtp.remote-ip=95.215.58.51
+Received: from mta1.migadu.com (out-51.mta1.migadu.com [95.215.58.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2020606A332
-	for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 23:57:34 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2020606A332
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F561606A31C
+	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 00:03:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8F561606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=u7zqySAa
-Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-71ac798b8bbso270840eaf.1
-        for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 15:57:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1794959853; x=1795564653; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:mail-followup-to:message-id:subject:cc:to:from:date:from
-         :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=q3OTBwL+TyzHGc36tg10hWnQr6i2w3v45IA4aHIlkR8=;
-        b=u7zqySAaeYlhQpUqV32/X9eVu1RKlum8oNRsvTE0fE9E/aFMffn73Sjoe6uqQ+UtF6
-         kFw4KN7mtWw7vryJ8J2BaTVqAinedz5zMu6sBZJux61Y73pSxtRTi2UVibzBDM07DXut
-         zQDVi8UZ8hNSRxTub8QfrDLw6lhXILUFeJl9c/rooB1T1Z32GdUzCVlWmA9B6GzU+WLH
-         FCe5awUUR1fFU7u/bKBu+Zb0rfEqOR0Hg5KrzgwNbQ58CP4ZiBGle/c+Itb7dkxBoGEE
-         tWX1+5H46LnaqccEfkZ5MRv9NaFp9blwOAN8sSC7xlw+fTHzL491r8VuA47VelVm7Mvb
-         KYCA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794959853; x=1795564653;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:mail-followup-to:message-id:subject:cc:to:from:date
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=q3OTBwL+TyzHGc36tg10hWnQr6i2w3v45IA4aHIlkR8=;
-        b=Fvz5R7GzrWKIocwNaotQNH8qK5kWSpTWx8LtTOqeYyV0lkoUsfse+dY5kpK6Kvc+qz
-         otaTC3uUGM4YOOwwXGBwNqtzsykC3NYSwJYeNrttj3tAXudU0aSLDs0FS9AXsOX7gdQW
-         N4jl/pmoFEQkFshpcBkEI4l3jTBf1a9qLHu53jVWH9A0gTs81eCgZkJqdPywss4Tt9A+
-         3i6nQngw/RZ7rocZ81z0xdUdvT703HeRQkx5IIuigc3ZsKNTiDD5xfXjgqkPcEphrdNB
-         Mdl1f4iPGcfliWVHtMHBhLUHuV7/6A1eKuJGIu8ypVOeMNbVBDJY4PN/tYZRk56yYgYm
-         Ta/w==
-X-Forwarded-Encrypted: i=1; AL+hErEuW3afhm2hYlFSguz1/lvO3wsiJKS6nvEq2dG0Ipv7jl2r/0i7RFBi4CjLCpSnT85FGkOHg0EQ@vger.kernel.org
-X-Gm-Message-State: APuU4Z9ug2cEZqtfhIKk4k+a8WyJfZ1db2cyur22AJCXfnaJ1GTSKXAf
-	xIg/WbCvUg3VZnyYtAskMNeP1umbOt8rq/fv+v7L+MG1ha7ay4KsjJoy
-X-Gm-Gg: AYBFou39blUcPbhxvphX0eF7KqK0jHyUNj7/xNMFnv2F3BBwlhTWD2x0dPGwchKTUKo
-	q3pjDTRTCjMBuILdg1rjDG+zJxKQ/ixLhbnzhu+M881WA6GsDGzIWWYhEut9n1aid19/1GnqNy5
-	xxh8vXnklh3TCgAqYx11tF8HhVa3i1duUqqhc7lSVXcjFXzP6bIM3jP1pVg5dyDHik7cb928x0Q
-	a9MehakRIIIRIWi2WMD5EuT1L7iLEeBRrs246AsauHjzrbKZPRBiiJ2O0B+bqQMNaqCUjP0TVpH
-	ljka0VOGW78b0qLynIeIRQa5frPwIrrL+9W1WVCZXAlfC9JMHcRGoUp0s7p+F1mm8jyNs3x8Nnm
-	DLlmZECaZw12QEhidAqTy1ZucW2lBcqLzkzVQcHTKcj87fqj621PZ8bXMtUi04Q0SUHwFyTrpeR
-	XJq36KKtgbSfT1n2mWKG76R0cxyLwuPQfJNLXH3r0aYs+rJ5zM/05VR+tI9mLWpT9l/TbnyGUoH
-	EOryAmY6nGLjBpJ3GQD9yj2Srs14BwYZ52PftqlL5qL2aJsOplaVQajKNmHnBG2+RnVSMunyCv3
-	bpPyyOnDEP3PB+zmA/QXgYmjQ8lE2pnYYEhIoENlCxc6rdghhw2beQVFj9JR
-X-Received: by 2002:a05:6820:1c8c:b0:71a:e1a9:4b74 with SMTP id 006d021491bc7-71b1859452cmr762291eaf.72.1794959853612;
-        Tue, 17 Nov 2026 15:57:33 -0800 (PST)
-Received: from localhost ([2a03:2880:10ff:1::])
-        by smtp.gmail.com with ESMTPSA id 006d021491bc7-71b1945800asm648215eaf.5.2026.11.17.15.57.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 15:57:33 -0800 (PST)
-Date: Tue, 17 Nov 2026 15:57:31 -0800
-From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Hui Zhu <hui.zhu@linux.dev>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Chris Down <chris@chrisdown.name>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, Hui Zhu <zhuhui@kylinos.cn>, stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] mm: memcg: fix zero throttle delay on 32-bit kernels
-Message-ID: <avznwfoMxq9s2NwC@devbig011.atn3.facebook.com>
-Mail-Followup-To: Hui Zhu <hui.zhu@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Chris Down <chris@chrisdown.name>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, Hui Zhu <zhuhui@kylinos.cn>, stable@vger.kernel.org
-References: <cover.1794902513.git.zhuhui@kylinos.cn>
- <6931674296b98139f5e02821d66ad1855eba36c9.1794902513.git.zhuhui@kylinos.cn>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=pVjbsq71
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=8O2Z9i9XyyFs2NBWXPLqftjmKWFZwxaV3dOPhJ6/7fo=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794960227; v=1; x=1795565027;
+ b=pVjbsq71T9RBMDxDrGSDyKWPt759GyH808oSThBjQ2O0I/LTGIlSgSuZauL/vAn2Okk+9hGJ
+ b3WQKYxGnnFNfbX8vW116HUGR9K3jKdP5T2IPoxP2LjAm3KgBDeXVa9c98XvHTi5RMOpFspC1bo
+ ZaZi250aFnePlkYt5b+etqNQ=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id be12e469f8aa84fa;
+	Wed, 18 Nov 2026 00:03:47 +0000
+X-Mizu-Trace-ID: be12e469f8aa84fa
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <4d3e46fb-a374-4a9b-a47e-1c661b7f0f37@linux.dev>
+Date: Wed, 18 Nov 2026 08:03:35 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -106,83 +58,193 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6931674296b98139f5e02821d66ad1855eba36c9.1794902513.git.zhuhui@kylinos.cn>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] sched/isolation: Publish new HK_TYPE_DOMAIN cpumask under
+ cpuset_mutex
+To: Waiman Long <longman@redhat.com>, frederic@kernel.org, tj@kernel.org,
+ peterz@infradead.org, mingo@redhat.com, juri.lelli@redhat.com,
+ vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+ bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+ kprateek.nayak@amd.com, hannes@cmpxchg.org, mkoutny@suse.com
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ guopeng.zhang@linux.dev, mathieu.desnoyers@efficios.com,
+ Ridong Chen <chenridong@xiaomi.com>
+References: <054a53a3-c038-48fe-ac01-fc24fd8065d0@linux.dev>
+ <20261117083915.2971979-1-ridong.chen@linux.dev>
+ <36d49371-31de-4305-89c4-2ce64dd6848c@redhat.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <36d49371-31de-4305-89c4-2ce64dd6848c@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 17, 2026 at 04:04:20PM +0800, Hui Zhu wrote:
-> From: Hui Zhu <zhuhui@kylinos.cn>
 
-Hello, thanks for the patch.
 
-> calculate_high_delay() stores max_overage * max_overage * HZ, computed as
-> u64, into an unsigned long before shifting it right by 34 bits in total.
-> On 32-bit kernels the store truncates the value first, so the shift always
-> yields zero. Tasks over memory.high or memory.swap.high are then never
-> throttled, and the reclaim retry loop in __mem_cgroup_handle_over_high()
-> is skipped as well.
+On 11/18/2026 12:15 AM, Waiman Long wrote:
+> On 11/17/26 3:39 AM, Ridong wrote:
+>> From: Ridong Chen <chenridong@xiaomi.com>
+>>
+>> Commit a84097e625f2 ("cgroup/cpuset: Call housekeeping_update() without
+>> holding cpus_read_lock") calls housekeeping_update() after dropping
+>> cpus_read_lock and cpuset_mutex, so the HK_TYPE_DOMAIN cpumask is now
+>> switched and freed outside of those locks. But readers holding either
+>> lock may still access it without rcu_read_lock() as allowed by
+>> housekeeping_dereference_check(), and synchronize_rcu() doesn't wait
+>> for them:
+>>
+>>    CPU A                                  CPU B
+>>    rebuild_sched_domains()                cpuset_update_sd_hk_unlock()
+>>                                             mutex_unlock(&cpuset_mutex)
+>>                                             cpus_read_unlock()
+>>      mutex_lock(&cpuset_mutex)
+>>      p = housekeeping_cpumask(DOMAIN)
+>>                                             housekeeping_update()
+>>                                               rcu_assign_pointer()
+>>                                               synchronize_rcu()
+>>                                               kfree(old)
+>>      access p <- UAF
+>>
+>> Fix it by moving the pointer switch into housekeeping_publish(), which
+>> is called before dropping the locks. Then CPU A either finishes before
+>> CPU B switches the pointer, or only sees the new cpumask:
+>>
+>>    CPU A                                  CPU B
+>>                                           cpuset_update_sd_hk_unlock()
+>>                                             housekeeping_publish()
+>>                                               rcu_assign_pointer()
+>>      mutex_lock(&cpuset_mutex) <- wait
+>>                                             mutex_unlock(&cpuset_mutex)
+>>                                             cpus_read_unlock()
+>>      p = housekeeping_cpumask(DOMAIN)       housekeeping_update()
+>>          <- new cpumask                       synchronize_rcu()
+>>                                               kfree(old)
+>>
+>> The rest of housekeeping_update(), including the workqueue flushes,
+>> still runs without those locks.
+>>
+>> Fixes: a84097e625f2 ("cgroup/cpuset: Call housekeeping_update() without 
+>> holding cpus_read_lock")
+>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+>> ---
+>>   include/linux/sched/isolation.h |  6 ++++--
+>>   kernel/cgroup/cpuset.c          | 12 ++++++++----
+>>   kernel/sched/isolation.c        | 23 ++++++++++++++++-------
+>>   3 files changed, 28 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+>> index cf0fd03dd7a24..09fabf42e3224 100644
+>> --- a/include/linux/sched/isolation.h
+>> +++ b/include/linux/sched/isolation.h
+>> @@ -43,7 +43,8 @@ extern const struct cpumask *housekeeping_cpumask(enum 
+>> hk_type type);
+>>   extern bool housekeeping_enabled(enum hk_type type);
+>>   extern void housekeeping_affine(struct task_struct *t, enum hk_type type);
+>>   extern bool housekeeping_test_cpu(int cpu, enum hk_type type);
+>> -extern int housekeeping_update(struct cpumask *isol_mask);
+>> +extern struct cpumask *housekeeping_publish(struct cpumask *isol_mask);
+>> +extern void housekeeping_update(struct cpumask *isol_mask, struct cpumask *old);
+>>   extern void __init housekeeping_init(void);
+>>   #else
+>> @@ -71,7 +72,8 @@ static inline bool housekeeping_test_cpu(int cpu, enum 
+>> hk_type type)
+>>       return true;
+>>   }
+>> -static inline int housekeeping_update(struct cpumask *isol_mask) { return 0; }
+>> +static inline struct cpumask *housekeeping_publish(struct cpumask *isol_mask) 
+>> { return NULL; }
+>> +static inline void housekeeping_update(struct cpumask *isol_mask, struct 
+>> cpumask *old) { }
+>>   static inline void housekeeping_init(void) { }
+>>   #endif /* CONFIG_CPU_ISOLATION */
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 8a8a424a389f3..1673bb25a797b 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -1472,17 +1472,21 @@ static void cpuset_update_sd_hk_unlock(void)
+>>           rebuild_sched_domains_locked();
+>>       if (update_housekeeping) {
+>> +        struct cpumask *old;
+>> +
+>>           update_housekeeping = false;
+>>           cpumask_copy(isolated_hk_cpus, isolated_cpus);
+>>           /*
+>> -         * housekeeping_update() is now called without holding
+>> -         * cpus_read_lock and cpuset_mutex. Only cpuset_top_mutex
+>> -         * is still being held for mutual exclusion.
+>> +         * Publish the new cpumask with cpus_read_lock and cpuset_mutex
+>> +         * held, but call housekeeping_update() without them. Only
+>> +         * cpuset_top_mutex is still being held for mutual exclusion.
+>>            */
+>> +        old = housekeeping_publish(isolated_hk_cpus);
+>>           mutex_unlock(&cpuset_mutex);
+>>           cpus_read_unlock();
+>> -        WARN_ON_ONCE(housekeeping_update(isolated_hk_cpus));
+>> +        if (!WARN_ON_ONCE(IS_ERR(old)))
+>> +            housekeeping_update(isolated_hk_cpus, old);
+>>           mutex_unlock(&cpuset_top_mutex);
+>>       } else {
+>>           cpuset_full_unlock();
+>> diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+>> index 156025ef81b75..9e202269e42f6 100644
+>> --- a/kernel/sched/isolation.c
+>> +++ b/kernel/sched/isolation.c
+>> @@ -120,23 +120,26 @@ bool housekeeping_test_cpu(int cpu, enum hk_type type)
+>>   }
+>>   EXPORT_SYMBOL_GPL(housekeeping_test_cpu);
+>> -int housekeeping_update(struct cpumask *isol_mask)
+>> +/* Called with cpus_read_lock and cpuset_mutex held */
+>> +struct cpumask *housekeeping_publish(struct cpumask *isol_mask)
+>>   {
+>>       struct cpumask *trial, *old = NULL;
+>> -    int err;
+>> +
+>> +    lockdep_assert_cpus_held();
+>> +    lockdep_assert_cpuset_lock_held();
+>>       trial = kmalloc(cpumask_size(), GFP_KERNEL);
+>>       if (!trial)
+>> -        return -ENOMEM;
+>> +        return ERR_PTR(-ENOMEM);
+>>       cpumask_andnot(trial, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT), 
+>> isol_mask);
+>>       if (!cpumask_intersects(trial, cpu_online_mask)) {
+>>           kfree(trial);
+>> -        return -EINVAL;
+>> +        return ERR_PTR(-EINVAL);
+>>       }
+>>       if (!housekeeping.flags)
+>> -        static_branch_enable(&housekeeping_overridden);
+>> +        static_branch_enable_cpuslocked(&housekeeping_overridden);
+>>       if (housekeeping.flags & HK_FLAG_DOMAIN)
+>>           old = housekeeping_cpumask_dereference(HK_TYPE_DOMAIN);
+>> @@ -144,6 +147,14 @@ int housekeeping_update(struct cpumask *isol_mask)
+>>           WRITE_ONCE(housekeeping.flags, housekeeping.flags | HK_FLAG_DOMAIN);
+>>       rcu_assign_pointer(housekeeping.cpumasks[HK_TYPE_DOMAIN], trial);
+>> +    return old;
+>> +}
+>> +
+>> +/* Called without cpus_read_lock and cpuset_mutex held */
+>> +void housekeeping_update(struct cpumask *isol_mask, struct cpumask *old)
+>> +{
+>> +    int err;
+>> +
+>>       synchronize_rcu();
+>>       pci_probe_flush_workqueue();
+>> @@ -160,8 +171,6 @@ int housekeeping_update(struct cpumask *isol_mask)
+>>       WARN_ON_ONCE(err < 0);
+>>       kfree(old);
+>> -
+>> -    return 0;
+>>   }
+>>   void __init housekeeping_init(void)
 > 
-> Keep the intermediate in u64 so the shifts see the full width, and clamp
-> to MEMCG_MAX_HIGH_DELAY_JIFFIES before narrowing to the unsigned long
-> return value: a truncated result would escape the caller's own min().
-> Nothing changes on 64-bit kernels, where clamping each term is equivalent
-> to clamping their sum, which the caller already does.
+> Yes, that should work too.
 > 
-> Fixes: e26733e0d0ec ("mm, memcg: throttle allocators based on ancestral memory.high")
-
-Is this the right fixes tag? That one doesn't introduce the division by
-MEMCG_CHARGE_BATCH.
-
-> Cc: stable@vger.kernel.org
+> Acked-by: Waiman Long <longman@redhat.com>
 > 
-> Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
-> ---
->  mm/memcontrol.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
+> I will let other decide which one do they want.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 84f4a8fd4d16..1ba42724ed1e 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2576,7 +2576,7 @@ static u64 swap_find_max_overage(struct mem_cgroup *memcg)
->  static unsigned long calculate_high_delay(unsigned int nr_pages,
->  					  u64 max_overage)
->  {
-> -	unsigned long penalty_jiffies;
-> +	u64 penalty_jiffies;
->  
->  	if (!max_overage)
->  		return 0;
-> @@ -2601,7 +2601,13 @@ static unsigned long calculate_high_delay(unsigned int nr_pages,
->  	 * MEMCG_CHARGE_BATCH pages is nominal, so work out how much smaller or
->  	 * larger the current charge patch is than that.
->  	 */
-> -	return penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
-> +	penalty_jiffies = penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
-> +
-> +	/*
-> +	 * Clamp before narrowing to unsigned long: a truncated return value
-> +	 * would escape the caller's min() and look like a small delay.
-> +	 */
+Thanks.
 
+-- 
+Best regards
+Ridong
 
-I think this is a bit verbose for what is happening here.
-Why not:
-
-return min_t(u64, penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH,
-	     MEMCG_MAX_HIGH_DELAY_JIFFIES);
-
-Or just dropping the comment block seems fine. I think folks should be
-familiar enough with values wrapping around.
-
-Thanks, have a great day!
-Joshua
-
-> +	return min_t(u64, penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
->  }
->  
->  /*
-> -- 
-> 2.53.0
-> 
-> 
