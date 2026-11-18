@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795019545;
-	b=LwqO62wA1SESgYlU5Ovyjvq+VvX0mwNt0WaIqdFYOlv+MrcFBYQwg11CePhGprycEHn8
-	 JncDc/j9fP103KciJq3fvTkeKTIlRMKhe3Ll0cTSf7pHvesqmOuqXvUlgLZRSGYopugMC
-	 UxZZ4E/2kbRQqc2GB+JLZpi2Wz8OzvNwgEnTEsGOqU0olV5LKZjD+goUf/v9jTB8hMERi
-	 ajjjS4EOwok/l4opXnothd2kq5yjtw4Y3MjogXllmd2PeAzQZdK2UdaHqS9PEJfF81Jmt
-	 uVxBHP7F21u3eTHhGm8lqiBYpO9UJw29yo7dXVUg+HQR7Yk2mwCdV0aex3VjAKGjw2g==
+	t=1795021108;
+	b=EpIixkFFwnvCakXXFaZ4jDGFttMbsWkIJB41IrZm0OmaNjYQuCv6x5vQvlJQsKpQxv2y
+	 SKNSjffWryttzWfvu1BF57wlz6Fv8t5nTUEWIV9p9/2oesC6iM3GtmD+0IMqu8CIxdMUw
+	 l070aOfGZ1hMTC1NIJSa5rxHRp64xSeBwi2dMsrKYTlO+V+y+HWOFOQFTdY9deriVpK1v
+	 wWe5Z9tMASQqrgXYlupPSO7sYsmiu1U1vpTmPdHBLT4QwcA4AOVjJzPkLQk41x/Ncxb1J
+	 +v1P7hyZMxUjscqbs1y+52cKSRO9dJvDrnqtbSXuX2kKeXX2ut7gGQfL0eKyg2BkxdA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795019545;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795021108;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=drTtZs8QFnjtIGUvlZc1Bgt1LjubynbTgCVephC51cc=;
-	b=TvgO1ejI3XYuwmmBk88OXuPYUrNjsCmOAJobBZ6WG09hfnenjfaYK3c3xJKhTuGERdnE
-	 zPDrhhc1EE8vUJLLdTjamUh50CNOweeO2GSpT8ImT9p66MM2hK7FMEYPmPxW4+51kPY/g
-	 X54XJzFwlFDocCBf6QWwX/jYo5JeYIXRxqRs6p9k8z+5LEiT1tAneNWRjZHwF2EyNbsSQ
-	 KOcxZIyL/WaWUsoAdvtKc62nDQcq7hRE3PNHRY5FbmPDhDODFcg83+ckDCWE9Pxi3cEZM
-	 UY4h+nspHVACPjQLWfrRstnI+cFIA+/bXj73ETUgIBoFvvovgi01jBA+1sXdlJF9CiA==
+	bh=TSwhsJSNjnAtKDkFULTFwFmDhe+Yv9c61DRAS88DMuI=;
+	b=Uo1Lx9usheRejLxm9FCvTBnITsZil8ygMOjdztG4ioXHXWYmyau/GSOzlNfID+3YN835
+	 xZcVKQVYwWFtrEh5OWVWP9yWuLWOyajsSBdXm6pOJh2wDuCXjUSPbE48ohpvnHur5kqAB
+	 JQlNpEuDjkKydqDEiQfA0u4VySrmrpPQNo547JMMlt4/QYvuBW4Rcodikvn8ItzRpWI+I
+	 sik5UC8vDLb3j60M9KjLZQrYUGOkafXYnHFfVSFt14lgptm4SXOGED1dNrLTKxh4o9Wd8
+	 5xQm56SB6jw+UM4+X/pBTa36mVvaplj9NCJbX1or3nJru+i6G53J9SPxtLhU6hnHIyg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="oIaS/a3c";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oFZKfKQl;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FDD2606A7C6;
-	Wed, 18 Nov 2026 16:32:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB430606A31C;
+	Wed, 18 Nov 2026 16:58:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oIaS/a3c
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6879D1F000D2;
-	Wed, 18 Nov 2026 16:32:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=oFZKfKQl
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03CE41F000C4;
+	Wed, 18 Nov 2026 16:58:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795019545;
-	bh=drTtZs8QFnjtIGUvlZc1Bgt1LjubynbTgCVephC51cc=;
+	s=k20260515; t=1795021108;
+	bh=TSwhsJSNjnAtKDkFULTFwFmDhe+Yv9c61DRAS88DMuI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=oIaS/a3cfNudxVlDn5leymKjxjIpsE1Vf/XCpG8UczJek/Q4u4Dqylb8AEqRlQhl2
-	 oRtte00LwzlC4dvtHWudaypqe596Lu44XALxqq02bnhPzEakS38NQ/XcIBF7pSIn3P
-	 wXNK2QR00Cbr/Qn5INqFMK1tYyvLnCaRfGmemwfYD5SngczyLPM891HvA0jp0P8X3V
-	 aZ11nskgCxd4vvsT3spKu18qH/NV0zfVvdrge+zBylheS3rnDM8x3iHzDe0MkQ0yRE
-	 T5GwrsFIHbFoZYCZaFy+5vh4v1IpvgXTfxs1uJ/7bdG62RKO4nD5830VbxfouC8S4s
-	 yaCtNvLe5Atlw==
-Message-ID: <49cf1965-7466-42c3-bc9d-9097cc223c81@kernel.org>
-Date: Wed, 18 Nov 2026 17:32:19 +0100
+	b=oFZKfKQleOycQXAfqulsKeEapGKLGTey4/+kx9d5tDssB9lQtl8VnoLZYSunOwlFN
+	 yKTCvk4zRFgTjUPQtxiIAiludCEsBREbUVdLyrkMoTWvXDqBRn/asPIuirMZXZl3jg
+	 V7We/Q3VL0z5Iatc+kK4+7AuY9XnH2pS7xtJGdkWR6gcH3PRpi3AVuaY/lyNfDvjKX
+	 wIpP3KgUpJqvlEudYzswYxye/f89Gnb/iGdIntHyaxOQLsqQoAUwM8zqxg2nBWxZJB
+	 5vw9Z1rm/vWb0ymAND4jHc2hyhlWiEJ/pZRBorFcNVImYcIJQSHOixwPifNyZNn6Dk
+	 hNxPvcK2Rfx7Q==
+Message-ID: <2650b0d0-49a9-450c-af6a-df1aa129c3b7@kernel.org>
+Date: Wed, 18 Nov 2026 17:58:23 +0100
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -52,7 +52,8 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-next v3 6/7] mm/slab: refactor free_to_pcs()
+Subject: Re: [PATCH for-next v3 7/7] mm/slab: call debug_locks and KCSAN
+ checks in kfree_nolock()
 Content-Language: en-US
 To: "Harry Yoo (Meta)" <harry@kernel.org>,
  Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
@@ -66,7 +67,7 @@ To: "Harry Yoo (Meta)" <harry@kernel.org>,
 Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
  linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
 References: <20261115-kmalloc-nolock-fixes-v3-0-9034dd4ecaab@kernel.org>
- <20261115-kmalloc-nolock-fixes-v3-6-9034dd4ecaab@kernel.org>
+ <20261115-kmalloc-nolock-fixes-v3-7-9034dd4ecaab@kernel.org>
 From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
 Autocrypt: addr=vbabka@kernel.org; keydata=
  xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
@@ -107,213 +108,83 @@ Autocrypt: addr=vbabka@kernel.org; keydata=
  NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
  OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
  jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
-In-Reply-To: <20261115-kmalloc-nolock-fixes-v3-6-9034dd4ecaab@kernel.org>
+In-Reply-To: <20261115-kmalloc-nolock-fixes-v3-7-9034dd4ecaab@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/15/26 16:09, Harry Yoo (Meta) wrote:
-> Every caller of free_to_pcs() has to call can_free_to_pcs() before it.
-> Refactor this by adding a slab parameter and calling can_free_to_pcs()
-> from free_to_pcs(). To do this, move can_free_to_pcs() above
-> free_to_pcs().
+> kfree_nolock() skips free hooks that may acquire spinlocks because it
+> can be called from any context. debug_check_no_locks_freed() and
+> __kcsan_check_access() are skipped as well.
 > 
-> Note that can_free_to_pcs() cannot be folded into free_to_pcs() as
-> free_to_pcs_bulk() still needs it.
+> However, they acquire a spinlock only when they report a bug.
+> debug_check_no_locks_freed() disables interrupts and walks
+> current->held_locks, and reaches printk only when a held lock is inside
+> the freed object. KCSAN takes report_lock only when it observes a race.
 > 
-> While at it, let free_to_pcs() take free_flags instead of allow_spin.
-> 
-> No functional change intended.
+> Just like KASAN, take the risk of potential deadlock for bug reporting.
+> Call debug_check_no_locks_freed() and __kcsan_check_access() regardless
+> of allow_spin.
 > 
 > Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
 
-Nice.
+Seems fair.
 
 Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-I see that makes the nit for 4/7 immaterial.
-But I have a new one :)
-
 > ---
->  mm/slub.c | 119 ++++++++++++++++++++++++++++++++------------------------------
->  1 file changed, 61 insertions(+), 58 deletions(-)
+>  mm/slub.c | 25 ++++++++++++-------------
+>  1 file changed, 12 insertions(+), 13 deletions(-)
 > 
 > diff --git a/mm/slub.c b/mm/slub.c
-> index aec9fb6e2235..fd3de3bee1de 100644
+> index fd3de3bee1de..fad19ec6af4b 100644
 > --- a/mm/slub.c
 > +++ b/mm/slub.c
-> @@ -6148,15 +6148,71 @@ __pcs_replace_full_main(struct kmem_cache *s, struct slub_percpu_sheaves *pcs,
->  	return pcs;
->  }
+> @@ -2708,19 +2708,25 @@ bool slab_free_hook(struct kmem_cache *s, void *x, unsigned int free_flags)
 >  
-> +static __always_inline bool can_free_to_pcs(struct slab *slab)
-> +{
-> +	int slab_node;
-> +	int numa_node;
-> +
-> +	if (!IS_ENABLED(CONFIG_NUMA))
-> +		goto check_pfmemalloc;
-> +
-> +	slab_node = slab_nid(slab);
-> +
-> +#ifdef CONFIG_HAVE_MEMORYLESS_NODES
+>  	kmsan_slab_free(s, x);
+>  
 > +	/*
-> +	 * numa_mem_id() points to the closest node with memory so only allow
-> +	 * objects from that node to the percpu sheaves
+> +	 * debug_locks, KCSAN, KASAN may acquire a spinlock to report a bug,
+> +	 * but otherwise cannot deadlock. Take the risk of deadlock for
+> +	 * reporting.
 > +	 */
-> +	numa_node = numa_mem_id();
+> +	debug_check_no_locks_freed(x, s->object_size);
 > +
-> +	if (likely(slab_node == numa_node))
-> +		goto check_pfmemalloc;
-> +#else
+> +	/* Use KCSAN to help debug racy use-after-free. */
+> +	if (!still_accessible)
+> +		__kcsan_check_access(x, s->object_size,
+> +				     KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ASSERT);
 > +
-> +	/*
-> +	 * numa_mem_id() is only a wrapper to numa_node_id() which is where this
-> +	 * cpu belongs to, but it might be a memoryless node anyway. We don't
-> +	 * know what the closest node is.
-> +	 */
-> +	numa_node = numa_node_id();
-> +
-> +	/* freed object is from this cpu's node, proceed */
-> +	if (likely(slab_node == numa_node))
-> +		goto check_pfmemalloc;
-> +
-> +	/*
-> +	 * Freed object isn't from this cpu's node, but that node is memoryless
-> +	 * or only has ZONE_MOVABLE memory, which slab cannot allocate from.
-> +	 * Proceed as it's better to cache remote objects than falling back to
-> +	 * the slowpath for everything. The allocation side can never obtain
-> +	 * a local object anyway, if none exist. We don't have numa_mem_id() to
-> +	 * point to the closest node as we would on a proper memoryless node
-> +	 * setup.
-> +	 */
-> +	if (unlikely(!node_state(numa_node, N_NORMAL_MEMORY)))
-> +		goto check_pfmemalloc;
-> +#endif
-> +
-> +	return false;
-> +
-> +check_pfmemalloc:
-> +	return likely(!slab_test_pfmemalloc(slab));
-> +}
-> +
->  /*
->   * Free an object to the percpu sheaves.
->   * The object is expected to have passed slab_free_hook() already.
->   */
->  static __fastpath_inline
-> -bool free_to_pcs(struct kmem_cache *s, void *object, bool allow_spin)
-> +bool free_to_pcs(struct kmem_cache *s, struct slab *slab, void *object,
-> +		 unsigned int free_flags)
->  {
-> +	bool allow_spin = free_flags_allow_spinning(free_flags);
-
-This could be moved to the if () block below that actually uses allow_spin.
-
->  	struct slub_percpu_sheaves *pcs;
+>  	/* Hooks that acquire locks or kmalloc_nolock() skips alloc hook counterpart */
+>  	if (likely(allow_spin)) {
+>  		kmemleak_free_recursive(x, s->flags);
+> -		debug_check_no_locks_freed(x, s->object_size);
 >  
-> +	if (unlikely(!can_free_to_pcs(slab)))
-> +		return false;
-> +
->  	if (!local_trylock(&s->cpu_sheaves->lock))
->  		return false;
+>  		if (!(s->flags & SLAB_DEBUG_OBJECTS))
+>  			debug_check_no_obj_freed(x, s->object_size);
 >  
-> @@ -6355,57 +6411,6 @@ bool __kfree_rcu_sheaf(struct kmem_cache *s, void *obj, unsigned int free_flags)
->  	return false;
->  }
->  
-> -static __always_inline bool can_free_to_pcs(struct slab *slab)
-> -{
-> -	int slab_node;
-> -	int numa_node;
+> -		/* Use KCSAN to help debug racy use-after-free. */
+> -		if (!still_accessible)
+> -			__kcsan_check_access(x, s->object_size,
+> -					     KCSAN_ACCESS_WRITE | KCSAN_ACCESS_ASSERT);
 > -
-> -	if (!IS_ENABLED(CONFIG_NUMA))
-> -		goto check_pfmemalloc;
-> -
-> -	slab_node = slab_nid(slab);
-> -
-> -#ifdef CONFIG_HAVE_MEMORYLESS_NODES
-> -	/*
-> -	 * numa_mem_id() points to the closest node with memory so only allow
-> -	 * objects from that node to the percpu sheaves
-> -	 */
-> -	numa_node = numa_mem_id();
-> -
-> -	if (likely(slab_node == numa_node))
-> -		goto check_pfmemalloc;
-> -#else
-> -
-> -	/*
-> -	 * numa_mem_id() is only a wrapper to numa_node_id() which is where this
-> -	 * cpu belongs to, but it might be a memoryless node anyway. We don't
-> -	 * know what the closest node is.
-> -	 */
-> -	numa_node = numa_node_id();
-> -
-> -	/* freed object is from this cpu's node, proceed */
-> -	if (likely(slab_node == numa_node))
-> -		goto check_pfmemalloc;
-> -
-> -	/*
-> -	 * Freed object isn't from this cpu's node, but that node is memoryless
-> -	 * or only has ZONE_MOVABLE memory, which slab cannot allocate from.
-> -	 * Proceed as it's better to cache remote objects than falling back to
-> -	 * the slowpath for everything. The allocation side can never obtain
-> -	 * a local object anyway, if none exist. We don't have numa_mem_id() to
-> -	 * point to the closest node as we would on a proper memoryless node
-> -	 * setup.
-> -	 */
-> -	if (unlikely(!node_state(numa_node, N_NORMAL_MEMORY)))
-> -		goto check_pfmemalloc;
-> -#endif
-> -
-> -	return false;
-> -
-> -check_pfmemalloc:
-> -	return likely(!slab_test_pfmemalloc(slab));
-> -}
-> -
->  /*
->   * Try to free as many objects (already processed by free hooks) as possible to
->   * a single per-cpu sheaf.
-> @@ -6642,7 +6647,7 @@ void slab_free(struct kmem_cache *s, struct slab *slab, void *object,
->  	if (unlikely(!slab_free_hook(s, object, free_flags)))
->  		return;
->  
-> -	if (likely(can_free_to_pcs(slab)) && likely(free_to_pcs(s, object, true)))
-> +	if (likely(free_to_pcs(s, slab, object, free_flags)))
->  		return;
->  
->  	__slab_free(s, slab, object, object, 1, addr);
-> @@ -6656,7 +6661,6 @@ void memcg_alloc_abort_single(struct kmem_cache *s, void *object,
->  			      unsigned int alloc_flags)
->  {
->  	struct slab *slab = virt_to_slab(object);
-> -	bool allow_spin = alloc_flags_allow_spinning(alloc_flags);
->  	unsigned int free_flags = to_free_flags(alloc_flags);
->  
->  	if (slab_want_init_on_free(s))
-> @@ -6667,11 +6671,10 @@ void memcg_alloc_abort_single(struct kmem_cache *s, void *object,
->  	if (unlikely(!slab_free_hook(s, object, free_flags)))
->  		return;
->  
-> -	if (likely(can_free_to_pcs(slab)) &&
-> -	    likely(free_to_pcs(s, object, allow_spin)))
-> +	if (likely(free_to_pcs(s, slab, object, free_flags)))
->  		return;
->  
-> -	if (likely(allow_spin))
-> +	if (likely(free_flags_allow_spinning(free_flags)))
->  		__slab_free(s, slab, object, object, 1, _RET_IP_);
->  	else
->  		defer_free(s, object);
-> @@ -6991,7 +6994,7 @@ void kfree_nolock(const void *object)
->  	if (unlikely(!slab_free_hook(s, x, free_flags)))
->  		return;
->  
-> -	if (likely(can_free_to_pcs(slab)) && likely(free_to_pcs(s, x, false)))
-> +	if (likely(free_to_pcs(s, slab, x, free_flags)))
->  		return;
->  
+>  		if (kfence_free(x))
+>  			return false;
+>  	}
+> @@ -2728,13 +2734,6 @@ bool slab_free_hook(struct kmem_cache *s, void *x, unsigned int free_flags)
 >  	/*
+>  	 * Give KASAN a chance to notice an invalid free operation before we
+>  	 * modify the object.
+> -	 *
+> -	 * If KASAN finds a bug it will do kasan_report_invalid_free() which
+> -	 * will call raw_spin_lock_irqsave() which is technically unsafe from
+> -	 * NMI, but take chance and report kernel bug. The sequence of
+> -	 * kasan_report_invalid_free() -> raw_spin_lock_irqsave() -> NMI
+> -	 * -> kfree_nolock() -> kasan_report_invalid_free() on the same CPU
+> -	 *  is double buggy and deserves to deadlock.
+>  	 */
+>  	if (kasan_slab_pre_free(s, x))
+>  		return false;
 > 
 
