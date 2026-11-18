@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795035836;
-	b=r/pd8YypFApnmi+IpEe7dZxlYeb8nIFNgJJ5gaJMDYKYXvf6foe2ic24mNPtGmv2lxs3
-	 ZrG4mfvDm+jT6i8F8cxXueCLZQhiajWsjnTAYqWdXX5QZZEgdsxvvyOjrGA942CGiCVSL
-	 EpVRZYQOiXh+3weLAYEc22WDT+tnQmFLSh2R4oD3ak0+S0XrzPnEYyttk+kOj6sW+5Enc
-	 DLSzB6fN0TYSncjlbyzgO7cyYdnh4F+bn5f39T0O8KQPZlxq7LxmlIKj4o7sgiHg4kWgS
-	 25b/NZffusJk7/y6/j0Lk3LxZcWeWbz6g6diJzg6snms8wRLE7daca7OzWASFN2ng6Q==
+	t=1795035837;
+	b=NowFb1uwaQkAk8jcIR3wBFrncCyV/3HYq00n3OZcbW1aOXtdKen/qCKu5VFwCYVLO4tb
+	 Ip9ksn5mV8R41M5Rkgum+glBDpvE3zIGbteMHSHD5KqIaxOjQpwng1ABU9cWqWvlzzY6O
+	 fLBTO0Rw1C+WsTpyuW7QqeqM5XnRPBZKFArL4wiPhSEYK+k2YK/zEOrHZjr3pNDE6oUfW
+	 xga5d4alfCGCTNeP+lNIUFxzGzz0oUoVLGfDmo7UbTqTBb7D8VSnwCZ8NMPp8MZhPFiKQ
+	 jKFvg4KNmGgXr6/7Oxh+n6+fbUR2zQaAawgd2Ts5MBvojFIlufQn9u6n1Y7kF14U/bg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795035836;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795035837;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=OzxS8FucW3HiaXjFt3oHPV/7/cOrPnUfOI6umwv44A8=;
-	b=vk+JMpinhkUGTJEWBS7wRhhiY/GbM6lo9P9JxezCXKpAqglPMDL68NDrfORLCWO/kixL
-	 OfIEqlgy+tHTZUo9XMWslk8WF0t/PNCof1fupw0EIqjnn8EXeRJFdojiA2TUbunJ6L0EP
-	 TvKE5wtuDQqyJnD7GHK7UaslEVrDuewV2sfUJkfrsF/NjlJew40HHUBBsPJx3bAsiS8x1
-	 iKICwfbU8albZi1ANH7sRAQ8UrdThp8HGNgzhMkYq0LEdc2iIqZWh2ovxwbSxOKa4HVF/
-	 XeWHCnTY4BBUi03NSA/iudzVjkXUotUxOui3C9uFcE3klnbSIqYxf2I2kY13YLTOYPw==
+	bh=9lfMIxrq3hRipEynq2/JnfZMxHCxW1AecXQL4pdwryY=;
+	b=lLDsGJlUpuI9BaWnOsN2i6tMNfbNfQElzlgtvpWan20vdDiIyiVoxDF7S6SDaMSp6Kxo
+	 FOUKPOXEcLnVyJm14aawTSQxXZSP1vC32pk3BrIPP6V71g97xOKJ5MAtCl5RbAoPMpDLQ
+	 51rTvsF+rEFC3zivYTfGLVtgoDj6TrSqXfAW/iD7rqT1aDDnYV3jPINxjRLNY3iO10quB
+	 t94oMEpLHgSAAtyrQrY5knNYWJv5E8aLwA7rzC2/XQvsjziJK432fVH0Se4E1zwzQ6Ia5
+	 5v6Cpb38j+tRtpckPEBIOQDK+jjB7go7yxxQrpjd2e9pUGlHz3bpMbNJGUTMmV3wYYA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D3lo9h+g;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AZ1rX3p3;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C23ED60A5BC1;
-	Wed, 18 Nov 2026 21:03:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92DFE60A263D;
+	Wed, 18 Nov 2026 21:03:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D3lo9h+g
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AZ1rX3p3
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795035836;
-	b=uh+xdzm07rqzRQ3Ja2W6WHwX0sOidRrC4gDFML+SknfQZKf0u1Um2HSppEZL/lz40sS7
-	 X2qj3Bc9/WhDQqLI4l/lQMNbGEYDM/V1PvOmVx8EylE7BgTyrjXR770eNp4FgTXFA4Gq7
-	 /70mCINeDhLKA86ei52OqR9sp69htmsG9qjevBfy6u/0hf8FxcOBsP2XhAr5GcPuUUztp
-	 7IYp8WRWoB1ATIUM1cxCjP6oAEC8XCafOuEJQBLzXgPkAV+ZwQ08YIVmltMVCD9dlXtr2
-	 Z/3irkzsm1LqQOG5lZpNBotm+Wn5NQQKhk6ozML51TsTC5BepjwUdt7rl3n3CwO30eA==
+	t=1795035837;
+	b=EC1HRUyUhREtP/bIwRo1L3doBapD+1n/yp+0zIqGk5zmgzwX2nZqd3gtA8yr/BfMaI3X
+	 erSdlwgUsIqgJUvL5HF1xc82/8nHIHk5OJ3lLyqquuQzVHU5vAxkSdGJQ1oLfKn8cR1Lc
+	 BOIFBdH1uJND9RvJQjXULW7FVf1y2UVG+3eYKN2km7zD6CtABgHDtuyqs2SR+rxFs6Krp
+	 HA/6kOTnAOmwfzniZbOOKL3emG/U6fhZ77a20qdW89Wf+4wSmxQ/b1m4hUgnLJPFpr5x3
+	 hn8H9UuM7nGX66uPjNbJ+IAUIh9fr6kn3994/OORIwVT0JhC0if8F4LF+kpRu3svuUg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795035836;
+	c=relaxed/relaxed; t=1795035837;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=OzxS8FucW3HiaXjFt3oHPV/7/cOrPnUfOI6umwv44A8=;
-	b=axJF7Oo0N50wKMFvs0myxDJZzH0HhX5LUroBUTcQ/8eUwcrnSmk4wsnBdb//TI1ucIU0
-	 v4aRWapU4v5SIDlCPrzQI9XakW/71MOIzFjd0bLIW4MNdnYzjZeJ49Qga6Bp1ayquMS15
-	 WsJMp9A3NckBNvAQzonOryRJk/qVj83W0v+E9VGmDiCUdb2CKphw0wEzdvJiQQ32mKi7H
-	 Jr6QN3xMLwWxoeE/O+ekM4hYdUQl7Hltt/5R5pbibnESph02YIYkc+rsgDqCg9/NNmXB/
-	 39v7aHY0sW8pIo2ZTiT8sHPktcjRDzVMvZAoKSXTEE97AkhB7HCHN2mTCC6kSr+I+sw==
+	bh=9lfMIxrq3hRipEynq2/JnfZMxHCxW1AecXQL4pdwryY=;
+	b=nRfNwtipSqltSsbMhgb+xRsOmzBSuXhohVThUCGxx4rFyzMFJAudwV3LXzdyDnmWtnqK
+	 7K5qwbrSunkOzrsuIVTerj2xcLDok0kiuGufMBA1z30lHWbyVRsqBrUVdFr9yCIlsHtbY
+	 O50EyneceefqYoU3YKMgqznnvUTkUg/yg2MBoUZtJeyAIunY7DXKym7I63yu4l6QHS1D8
+	 CZrYJr6VU733ulyZ985HAz0C3ifYL7ipuyR2HVR/Z2I7CgFf7C5w30ag4OBve3LxQ8hgf
+	 4q8s0UgSkii0LU7rDYgtvp3LJj6zjlJ+rbsY/X0Oo7yKmDOA6xczK6VSFOI/Uc9Gskg==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id BCB4A1F000CF;
+	by smtp.kernel.org (Postfix) with ESMTPS id EA5941F000CA;
 	Wed, 18 Nov 2026 21:03:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795035836;
-	bh=OzxS8FucW3HiaXjFt3oHPV/7/cOrPnUfOI6umwv44A8=;
+	s=k20260515; t=1795035837;
+	bh=9lfMIxrq3hRipEynq2/JnfZMxHCxW1AecXQL4pdwryY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=D3lo9h+gigqV3OulDUq27LKMkLt6nSjTbaVo2FxfQ/xK0hdn3RlotwC0ngw/LM9rn
-	 8hA6UeaLi7c9m58rb87FOsp4UdJ2AP5RHcTNeY2YR5+dqdWfGHH6243V2zuSqPeKtv
-	 8/zNvgyc7nRyGxlh2qyBbzXXHF0b133NONr6KbKrf2Tf8jBrEzEM7oadh16YY4XYy+
-	 kSvm27BAy3ukpGOdmqpqKBvrRk901GbQhUgIpPGCo93G/1G8v1fZuDWZET7D6XSzmw
-	 aC8cpwT8Fpbdbw7hKXhq/zMuPWe3i6xJUHAdXRRnlYRmm7t+c6i6LijQc8IQ0Eo/Qs
-	 1kFD3fMq3y4vw==
+	b=AZ1rX3p3qZ148Ucw/lPIMI8pF6Mhzpc7ghBtxme34TWQtOQGcsu+ZmKN1GqLK3BVr
+	 uOo8wbSiKDWpJoqTcPNxsOM2ZI65VTei5D/8sOA7sff9vnVowociSqHbWl0DPipk4s
+	 zITMm+V9OJunXo3SGnNHa+WfF4XWNqN0TVm+KFIDb08oLvMprGg52+b8LY00v7RxJk
+	 a0rsIcHGvIMKYIvVspGskeSjmCaiCp6C6X0RZXL2PiDIc4g61ipWsX0ZZ1lI7u7wd+
+	 0pCOy2h8jUpkinMhWeQ3wyQ0jkl5bimdcOzqT3hh7FeEoir6no+UwGEUdAbN6p+K6Y
+	 kaY+48f3B74YQ==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 53A354AFB4;
+	by lkml.kernel.org (Postfix) with ESMTP id 6CAC64AFB8;
 	Wed, 18 Nov 2026 21:03:44 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Thu, 19 Nov 2026 05:03:44 +0800
-Subject: [PATCH v5 12/17] mm/khugepaged: convert to LRU refs based
- operations for MGLRU
+Date: Thu, 19 Nov 2026 05:03:45 +0800
+Subject: [PATCH v5 13/17] mm/madvise: adapt for LRU refs based operations
+ for MGLRU
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261119-mglru-fg-v5-12-9eee2fe97a2d@tencent.com>
+Message-Id: <20261119-mglru-fg-v5-13-9eee2fe97a2d@tencent.com>
 References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com>
 In-Reply-To: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com>
 To: linux-mm@kvack.org
@@ -118,11 +118,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  damon@lists.linux.dev, linux-doc@vger.kernel.org, 
  Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795035820; l=1308;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795035820; l=4228;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=GSfbPNgLMnXCEtSfL4kSp4PCNV1ejnHpWoKv9fS/jaE=;
- b=fzCjWB4x5yy6GmzZuPiQKuZftrRJcednIvgNY0u6IIjiMANZVD50MXigQUOLXSTn1Tj0Ir4M5
- KAHzmaqS4cFBX+0o23LoWpkoJV6E899oz/mVRQoPRYaHozTcuf+K8pv
+ bh=e2/wJGzz7UG796pvpeTdS9931gFtuVmfWc7pwiPH3QE=;
+ b=+qZfN5m6KQraLSxPw2LvM1FrBRrXilTuqXKSet3TJOUvO75N6rGPtiesIIjGUXb2O85Wj3jA2
+ F91Iy7qUcOWDYAZfWjd36BhpmJykCLiDEadB3E+6w5bq5f9AbyMuM1i
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -133,36 +133,117 @@ Content-Transfer-Encoding: 7bit
 
 From: Kairui Song <kasong@tencent.com>
 
-For MGLRU, PG_referenced is only the lowest bit of the folio LRU refs
-count, so folios with nonzero even refs no longer have the bit set.
-folio_pte_referenced() testing the raw bit misses hot folios at
-refs 2, 4 or 6, under-counting the referenced folios of a candidate range
-and aborting otherwise good collapses with SCAN_LACK_REFERENCED_PAGE.
+For the active/inactive LRU, madvise clears PG_referenced so that one more
+access is not enough to reactivate a folio, and keeps PG_workingset on a
+folio demoted out of the active list so its refault is still accounted as
+a workingset refault (PSI).
 
-Test the refs count directly when MGLRU is enabled, mirroring the
-smaps conversion.  The classical LRU keeps the plain bit test.
+MGLRU keeps that history in the folio's refs count instead, which now
+lives in PG_referenced, PG_workingset and LRU_REFS_MASK, so writing to
+those bits directly corrupts the count. The two hints want different
+things:
 
-Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+- MADV_COLD resets the count in folio_deactivate(), which also requests
+  deactivation.
+- MADV_PAGEOUT clears non-workingset refs and caps the rest at
+  LRU_REFS_WORKINGSET after isolation, before handing the folio to
+  reclaim_pages(). The hint marks the folio as cold, so the
+  eviction shadow records the capped count and does not inflate the
+  eviction/refault counters of the hot tiers that drive aging, while
+  folios at or above the workingset threshold keep their PSI
+  classification.
+
+PG_young is cleared for both LRUs as before, so the referenced walk does
+not count stale history as a recent access.
+
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/khugepaged.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/madvise.c | 54 ++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 40 insertions(+), 14 deletions(-)
 
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index 4bbe319ef86f..68f7a30e36be 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -579,7 +579,9 @@ static bool folio_pte_referenced(struct folio *folio,
- 		struct vm_area_struct *vma, unsigned long addr, pte_t pteval)
- {
- 	/* The folio was referenced previously ... */
--	if (folio_test_young(folio) || folio_test_referenced(folio))
-+	if (folio_test_young(folio))
-+		return true;
-+	if (folio_check_lru_refs(folio))
- 		return true;
- 	/* ... or the PTE mapping was recently used */
- 	return pte_young(pteval) || mmu_notifier_test_young(vma->vm_mm, addr);
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 2d54cb9863ea..7486c492f437 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -360,6 +360,42 @@ static inline int madvise_folio_pte_batch(unsigned long addr, unsigned long end,
+ 				     FPB_MERGE_YOUNG_DIRTY);
+ }
+ 
++static void madvise_cold_prep_folio(struct folio *folio)
++{
++	/*
++	 * VM couldn't reclaim the folio unless we clear PG_young.
++	 * As a side effect, idle-page tracking loses recent referenced history.
++	 */
++	folio_test_clear_young(folio);
++
++	/*
++	 * For the active/inactive LRU, a folio demoted out of the active
++	 * list should have PG_workingset so its refault is still accounted
++	 * as a workingset refault, and the referenced bit always needs to
++	 * be cleared even for inactive folios. For MGLRU, MADV_COLD clears
++	 * refs in folio_deactivate(); MADV_PAGEOUT handles refs after isolation.
++	 */
++	if (!lru_gen_enabled()) {
++		folio_clear_referenced(folio);
++		if (folio_test_active(folio))
++			folio_set_workingset(folio);
++	}
++}
++
++static void madvise_pageout_prep_folio(struct folio *folio)
++{
++	unsigned int refs = folio_lru_refs(folio);
++
++	/*
++	 * For MGLRU, clear refs below LRU_REFS_WORKINGSET and cap
++	 * the rest at it: MADV suggests the folio is cold, so the eviction shadow
++	 * should not record its hotness in the high tier counters, but
++	 * the workingset classification is preserved for PSI.
++	 */
++	if (lru_gen_enabled())
++		folio_set_lru_refs(folio, refs >= LRU_REFS_WORKINGSET ? LRU_REFS_WORKINGSET : 0);
++}
++
+ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 				unsigned long addr, unsigned long end,
+ 				struct mm_walk *walk)
+@@ -434,12 +470,10 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 			tlb_remove_pmd_tlb_entry(tlb, pmd, addr);
+ 		}
+ 
+-		folio_clear_referenced(folio);
+-		folio_test_clear_young(folio);
+-		if (folio_test_active(folio))
+-			folio_set_workingset(folio);
++		madvise_cold_prep_folio(folio);
+ 		if (pageout) {
+ 			if (folio_isolate_lru(folio)) {
++				madvise_pageout_prep_folio(folio);
+ 				if (folio_test_unevictable(folio))
+ 					folio_putback_lru(folio);
+ 				else
+@@ -544,18 +578,10 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
+ 			tlb_remove_tlb_entries(tlb, pte, nr, addr);
+ 		}
+ 
+-		/*
+-		 * We are deactivating a folio for accelerating reclaiming.
+-		 * VM couldn't reclaim the folio unless we clear PG_young.
+-		 * As a side effect, it makes confuse idle-page tracking
+-		 * because they will miss recent referenced history.
+-		 */
+-		folio_clear_referenced(folio);
+-		folio_test_clear_young(folio);
+-		if (folio_test_active(folio))
+-			folio_set_workingset(folio);
++		madvise_cold_prep_folio(folio);
+ 		if (pageout) {
+ 			if (folio_isolate_lru(folio)) {
++				madvise_pageout_prep_folio(folio);
+ 				if (folio_test_unevictable(folio))
+ 					folio_putback_lru(folio);
+ 				else
 
 -- 
 2.56.1
