@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795037120;
-	b=JuJ35K2EuKHUpp3ruuwdsRvDT/mLiSoC0xb0TbQ+wTlTV6MSYzGf5j3wotk3Ny0zJ+P7
-	 pjH9xxnS1JedRS6qgCh8KGvwYvSRb8FQqTutIRXlMSO4gkLKKLQqvyiWwtFt0aPCMrNn5
-	 F3mUOc5VgCV3DqTImn/bhXoqJdC7/IT8xPKjz+QxPo3wg8cboDOa1UdVIZQnKdLA48UZB
-	 K5Wy3p3+LxN0oAectdo4GoXa6y83BrHwq+bjxAiX1cHREFOppQuT1CCAOFz4VC3xJgnku
-	 kS5rKCmropRtuCfYPlOiBYf0Q4OIiMBHdooXCt7dyhMvb0ZRfbM+zTGAVAa3NB9fIYA==
+	b=SdvMFt1I4VrixEylvl/Uw4vl+LzcdFgyB6wmP/ebCvVnkjxsATghT5Al5egl2G2BJPSq
+	 pfjhVLn1eMo463LneyNxbcicX9JS3DkDrgdF+SlhdUi3v7rjCfe5kTqM3bAqpX2BeZpIQ
+	 H2fXbDmKvGEoqHR1Hw+j6wPfAvuABdioFWiUhRCAE7NsjdmcjL/DEzLLoOkj96m719dlU
+	 C/GYf0Rt68Y/nkV4huq6T/F+IXHWV4W9MvmZcQS2vsYM9l5pHxdJlNK9+xbFznSFnkULZ
+	 7ozJoJXbmmfTl8oH9LhS8oUPRK6aGPNh7btPFBJhK3PbBVTBjn6Xj6pd1wxKgF5iCAg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795037120;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=6c2WfmmuO5OP5xCe2CrO1/Z/FsV4bpBjjt1tFRNTMew=;
-	b=Y0a827VR6eZGpPB3ficLnhY/Wix1J2ybh0EgrsECheL1S7NnRCchPtCuhQmJffq2NoWt
-	 K/cdB7Zb8+VfE5h9KBZfJ5/+yyVNvjCt2EMV+Gu3OahQMxcgHRGc5TlDGPKAW0o9W8b+D
-	 IU8C5nLagGYENcY+iFdRKwOpHAeFz0sovUSVeDPTpg21HKZDGWaZcmrn63qqdt0eg1RQP
-	 dss0huJG77rX0dxKEBBKSX7lEYk7nm/WOVyJbakdjLaAfm95wqhN45mbVU1+5/djbqiE8
-	 lZVyp9/w/AnAsyoZpELBMwDBrswcZCFQ3NeoF2EzQakplunDSs9qWSly4BAlJtBafSQ==
+	bh=J+xqGM/XTVoLXbet9Pqsqr3DEOW4nOHD7WQm9LFTgGg=;
+	b=apGQDhWE47FRPS4xB0xy/GwJC/RpxdYcPMZwKIe0VbAFquK5zVsdR+HgURXWBF49Jpt4
+	 pxu69FuaZhtTb3fsu/v5q2wymBCAOFfzV/9oJT1TKXH3Mra2Am1X9+qa1+7AzJbdZl0JV
+	 7AtHOZELQBN1C9Ym+19ZABsc1XmmLoH7KYPJ9DUBWCed1FfhTXRHmic99/EoRmYFiIg+C
+	 R7KIMWWgX1OuOUhilX3dYbfOtT4gXCJlExRchsEjqvhF/KTBFU5qIZgNiRpaDXRaANrty
+	 exbGxDCMOYmhk7CI5g6wnUAMb4uS3Ya1H/H/0xPl/BVL0BuN8hL2rF4mt8jzTqkSQQQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=Bbq8vMSD;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=YLWSUiuq;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1B6760A5BE5;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A600260A5BD0;
 	Wed, 18 Nov 2026 21:25:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E1B6760A5BE5
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org A600260A5BD0
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=Bbq8vMSD
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=YLWSUiuq
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795037118;
-	bh=6c2WfmmuO5OP5xCe2CrO1/Z/FsV4bpBjjt1tFRNTMew=;
+	s=smtpout1; t=1795037117;
+	bh=J+xqGM/XTVoLXbet9Pqsqr3DEOW4nOHD7WQm9LFTgGg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Bbq8vMSDPZh8j8MkXQiQIVqF9QqnZKy2+JGCs1vH9tj0Z3JfUrhVa0oEkgtgUmLAG
-	 ay5KqVcv0lPqQl1kOu7j2A0dwcjLJWmpvqkoyT7ua/Ifxraqeyqib10nxrPCuiELHV
-	 834rkwdEPDfBrF4uoIdMYByK30j7fvk6SMyXBvrEIpnBhFOuE2AfTXWZfQ6WYrYoSS
-	 ugR7iny5xWxk795W2Wv+lPRuLkCQ3tVKV1uPtDB9o+NqErYCYaw8FCg1yzieFsixSm
-	 OboxJm4I8FG50wM/HrH6nPsX4fDfJBUjoXMu4brB7xK/K1VpKw0RHmikEkeWm9su9B
-	 WDnk7l9nS4gzA==
+	b=YLWSUiuqAsATC2i9PlFa/HyO5Byq6yQlwPOh5UBhDpGX2QWEaM4V0W7kMCbCdb6Tp
+	 ieDT68BahlKSXJmhMTyizmn8GmSZaSI9FQwDpelTo6xRnKRKqm2GOTfCIuELJ96J+f
+	 3l+DsRGMXo7vOQqTjWzdXEdNGmO2j5PADJ+a62owVeyMnS/+xxWWH14+flKZQOef1R
+	 fNXFZb6AOE3hN20Px4C2PHqWdj6VxSFeOPJmCtTAUfdmKyjjFi7mwE48NZnF0gK/2Q
+	 Ar4d0AYgTIupHKWKUueORwJVC8Ax9UiyRd6C1J+AhapaAfiDMChe11FNkRNoTZsDxb
+	 jG3pIt8vYkp7w==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVF4Z0LFrzSGH;
-	Wed, 18 Nov 2026 16:25:18 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVF4Y65nBzRVR;
+	Wed, 18 Nov 2026 16:25:17 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -78,10 +78,11 @@ Cc: linux-kernel@vger.kernel.org,
 	weihengqiuu@gmail.com,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v2 14/16] sched/debug: Show the deadline bandwidth of each runqueue
-Date: Wed, 18 Nov 2026 16:25:10 -0500
-Message-Id: <e5539bf182028d7a1f13c579dc5edd4bf364048e.1795037078.git.mathieu.desnoyers@efficios.com>
+	linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH v2 13/16] sched/deadline: Check SCHED_DEADLINE affinity under the rq lock
+Date: Wed, 18 Nov 2026 16:25:09 -0500
+Message-Id: <5b0e698d12772886d395d7a887a05fbff51ade16.1795037078.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795037078.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795037078.git.mathieu.desnoyers@efficios.com>
@@ -96,40 +97,138 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-For each CPU, sched_debug prints the deadline bandwidth of its root
-domain. It does not print the two sums of its runqueue. this_bw is the
-bandwidth of the deadline tasks assigned to the CPU. running_bw is the
-part of it that belongs to active tasks.
+From: Andrea Parri <parri.andrea@gmail.com>
 
-GRUB reclaiming depends on both sums. grub_reclaim() takes this_bw -
-running_bw as the inactive bandwidth of the CPU. The more inactive
-bandwidth, the slower a reclaiming task uses up its runtime.
+A task can end up SCHED_DEADLINE with an affinity narrower than its root
+domain when sched_setaffinity() and sched_setattr() race on it. Both
+calls succeed, although each fails when made after the other:
+sched_setattr() with -EPERM, sched_setaffinity() with -EBUSY.
 
-The kernel warns when a sum wraps around, and when running_bw exceeds
-this_bw. Bandwidth left behind in this_bw triggers no warning.
+__sched_setaffinity() calls dl_task_check_affinity() before
+__set_cpus_allowed_ptr() takes task_rq_lock(), whereas
+__sched_setscheduler() runs its admission test and switches the policy
+under a single task_rq_lock(). So both calls can pass their checks:
 
-Print both sums. The deadline_bw_test selftest added later in this
-series reads this_bw in its params_waking case. It checks that this_bw
-is back to its first value once the tasks of the case are gone.
+  CPU 1: sched_setaffinity(p, cpu0)    CPU 2: sched_setattr(p, DEADLINE)
 
+  dl_task_check_affinity()
+    !task_has_dl_policy(p): return 0
+                                       task_rq_lock()
+                                       admission test passes
+                                       p->policy = SCHED_DEADLINE
+                                       task_rq_unlock()
+  __set_cpus_allowed_ptr()
+    task_rq_lock()
+    p->cpus_mask = cpu0
+
+The window includes CPU 1 spinning on task_rq_lock() while CPU 2 holds
+it. With one thread narrowing a sleeping task to CPU 0 while another
+makes it SCHED_DEADLINE, 923514, 959547 and 983997 of 1000000 rounds
+ended with both calls succeeding on three boots of a 4-CPU guest.
+
+Move the check into __set_cpus_allowed_ptr_locked(), next to the
+PF_NO_SETAFFINITY re-check, under the same lock as the admission test.
+Whichever call takes task_rq_lock() second then sees the other's
+result: sched_setaffinity() fails with -EBUSY if p is already
+SCHED_DEADLINE, and sched_setattr() fails with -EPERM if p's affinity
+is already cpu0.
+
+A new SCA_DL_CHECK flag selects the check, and only
+__sched_setaffinity() sets it, so sched_setaffinity() and
+relax_compatible_cpus_allowed_ptr() keep the check and other callers
+stay unchecked. restrict_cpus_allowed_ptr() already does its deadline
+check this way.
+
+__sched_setaffinity() clears SCA_DL_CHECK before the second
+__set_cpus_allowed_ptr() call it makes after racing with a cpuset
+update, so the cpuset mask still wins there, as it does when
+cpuset_update_tasks_cpumask() narrows a deadline task. SCA_CHECK stays
+set for the PF_NO_SETAFFINITY re-check.
+
+With this applied, the same test ends with both calls succeeding in 0
+of 1000000 rounds on each of three boots, and sched_setaffinity()
+fails with -EBUSY whenever it loses.
+
+The race was reported by Sebastian. The fix was written with the help
+of an LLM.
+
+Fixes: 332ac17ef5bf ("sched/deadline: Add bandwidth management for SCHED_DEADLINE tasks")
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Closes: https://lore.kernel.org/20261103081149.DuyWNhVe@linutronix.de
+Signed-off-by: Andrea Parri <parri.andrea@gmail.com>
+Cc: stable@vger.kernel.org
+Reviewed-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 ---
- kernel/sched/debug.c | 2 ++
- 1 file changed, 2 insertions(+)
+ kernel/sched/core.c     | 11 +++++++++++
+ kernel/sched/sched.h    |  1 +
+ kernel/sched/syscalls.c | 12 +++++++-----
+ 3 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index ddb382df454b..2c373adf3196 100644
---- a/kernel/sched/debug.c
-+++ b/kernel/sched/debug.c
-@@ -1175,6 +1175,8 @@ void print_dl_rq(struct seq_file *m, int cpu, struct dl_rq *dl_rq)
- 	SEQ_printf(m, "  .%-30s: %lu\n", #x, (unsigned long)(dl_rq->x))
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 5ed660f099a5..32fe889e02fb 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3195,6 +3195,17 @@ static int __set_cpus_allowed_ptr_locked(struct task_struct *p,
+ 		goto out;
+ 	}
  
- 	PU(dl_nr_running);
-+	PU(running_bw);
-+	PU(this_bw);
- 	dl_bw = &cpu_rq(cpu)->rd->dl_bw;
- 	SEQ_printf(m, "  .%-30s: %lld\n", "dl_bw->bw", dl_bw->bw);
- 	SEQ_printf(m, "  .%-30s: %lld\n", "dl_bw->total_bw", dl_bw->total_bw);
++	/*
++	 * Check under the same lock that __sched_setscheduler() holds for
++	 * its admission test, so that p cannot become SCHED_DEADLINE
++	 * between this check and the mask update below.
++	 */
++	if (ctx->flags & SCA_DL_CHECK) {
++		ret = dl_task_check_affinity(p, ctx->new_mask);
++		if (ret)
++			goto out;
++	}
++
+ 	if (!(ctx->flags & SCA_MIGRATE_ENABLE)) {
+ 		if (cpumask_equal(&p->cpus_mask, ctx->new_mask)) {
+ 			if (ctx->flags & SCA_USER)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 92134ce326a4..20ad13f388cb 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2972,6 +2972,7 @@ extern struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf);
+ #define SCA_MIGRATE_DISABLE	0x02
+ #define SCA_MIGRATE_ENABLE	0x04
+ #define SCA_USER		0x08
++#define SCA_DL_CHECK		0x10
+ 
+ extern void update_group_capacity(struct sched_domain *sd, int cpu);
+ 
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index b87b878be63f..5983232476a9 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -1225,11 +1225,7 @@ int __sched_setaffinity(struct task_struct *p, struct affinity_context *ctx)
+ 	cpumask_and(new_mask, ctx->new_mask, cpus_allowed);
+ 
+ 	ctx->new_mask = new_mask;
+-	ctx->flags |= SCA_CHECK;
+-
+-	retval = dl_task_check_affinity(p, new_mask);
+-	if (retval)
+-		goto out_free_new_mask;
++	ctx->flags |= SCA_CHECK | SCA_DL_CHECK;
+ 
+ 	retval = __set_cpus_allowed_ptr(p, ctx);
+ 	if (retval)
+@@ -1258,6 +1254,12 @@ int __sched_setaffinity(struct task_struct *p, struct affinity_context *ctx)
+ 			if (empty)
+ 				cpumask_copy(new_mask, cpus_allowed);
+ 		}
++
++		/*
++		 * The cpuset mask must win here, as it does when
++		 * cpuset_update_tasks_cpumask() sets it on a deadline task.
++		 */
++		ctx->flags &= ~SCA_DL_CHECK;
+ 		__set_cpus_allowed_ptr(p, ctx);
+ 		retval = -EINVAL;
+ 	}
 -- 
 2.47.3
 
