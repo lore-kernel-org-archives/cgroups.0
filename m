@@ -1,122 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795017191;
-	b=tp7Q5FUjjXzeQTRwb/xp46ct1Mx+L9sDajm6GXT2M50UXMok+kl2RWnDF5U1f3U9FpMu
-	 I8EDXeHuFA9jVs4gd4uhUVEuY/p0k4EO47XIZVXg69mviNuNcP9GlEc0eNSsIWN2SokuS
-	 OVBBKGWWXhGV81qV87xCkWZyXGmJx6adusDauLu1ngyvgkqQYra8c5ZkRiidqonhy3p4s
-	 S9K9Z/9UqhDrKdFh1/zknreDdCeyaQm3XuzXXbXw2vxzhul2qyiFZFhyRdWSluS5EGSpW
-	 oOJjrLOnpuSKER5HLlcum3eUZwqWcUE6qu+5Q+wnLYI0HghKoVn92BkDmQ9W+WSBhSQ==
+	t=1795017291;
+	b=2743dKAk0y6SY7s2B/w+Q0qePFAAWX/UPbjzVRZtCPw6dIgg3kdsPUVAUmLTmDdqgSwq
+	 EZJunLKSEm+sLIe/Qx7g1VL7xxVdBqWi5EplW1MevRqQ2CvIX8mcm+eL1I7wqPAoC0eZA
+	 RO0TXawozJ4aqfOs/qwnIJpuFwbQboS63wfadpBED1aA5e813Gdk4ZiMQt8M7v86yIJz6
+	 TpzlJl5FAs74dCVjVf7E/jXDHm9oPedr+qSn/uMWluJCXVh+//mgTllVmoQLZTyneC+pD
+	 rWiYaWEV4FGga7nd/IOBP3KGg0okoDZJxVC8OmPLGnrRUFHg22VbLzpNpJAJA1ShcCA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795017191;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=a85wi9zMKa3ITk5iiE5QycHbAdVE4Knzk7eFGcpu7xQ=;
-	b=C2a+w23pTwLsb99lDA0gdjg/E/PdY6oDVpASgSqi0XPBqt7GS0uvRU/sfVtIg9EEhfZT
-	 cHhAuNn6garqHclRT62fXjJMpfbGy2GfbuPj3jFhZKM0mZlHaBjr2Ron9ypUpH4z1hzCg
-	 EGLe9IZl42Ca319IwmITp5X/HS5BQndBLT5jXxAh2bT160QSmZtuaXMruGqwImTMVRmI5
-	 K+CIEf0xBlnix2IXZaQRxfd2ymhQkl0EybQFt8Hv+nrQlux6fRLB+WFebW8DASGiNmdeQ
-	 Tnlkfxj0FCuf7oRvwy+Sj6Ws0iMXLcJtaakgy33r4iPZhEVoNPv2L1GVx8i1EzBDA0A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795017291;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=DmJfzC/sRq3TlQhBoN1iY/MRqsblNPUXimCuifUw2i4=;
+	b=ePtpA21Z4vqigN6/dsglWfn20YJfSP+5hAiVUByULX6jsLUsBWme+DZZytBfKRJe9iam
+	 VoT8+XkDtQU2oa5WSHKwrT0C5YzQ+A9rq6MM/iWybuZjDBfSaf1PX8v4gSbdO6f19W7QB
+	 JodPYQUENeGA6qQ2H5DBTOOWI0UERWMBUgogMZ3sUnjBa1S4aJdwPqGbTcALCDpVuX/vG
+	 DAsAQ2/LVCJNs5tAGbXVoUYKi+XZ9Fu33I+qGEXLYtbEkdR+LdgWULMvKqGxct7FSVco0
+	 ZHnXIELwI14RKJFtge+Yk2Myb+MhvPmkaS89p9++sM0Da+2PhgpJa0JmF/3Q37AmCqQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=GntU17sT;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=TGw4wEhA;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ipYi9E6e;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20F3F606A32C
-	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 15:53:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 20F3F606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBFD0606A32F;
+	Wed, 18 Nov 2026 15:54:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=GntU17sT;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=TGw4wEhA
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795017190;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=a85wi9zMKa3ITk5iiE5QycHbAdVE4Knzk7eFGcpu7xQ=;
-	b=GntU17sTwCEPiLDxsAqaaHOhZPXKJ7NLXyZMmlw3JzRCYtB0alzbzQZycSXIpOriK7VLHv
-	t8hAaNRiK99MmrAtT7qhu3446lEtrafcw8570cbYm37YyB5TDVQWZnHfOAuKh2yrlzPW41
-	PT4IZ5RMTOA4Sr8sl9fSZETH13RTWSk=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-627-Sc9IuD-cMDmF4gGbV5PmDQ-1; Wed, 18 Nov 2026 10:53:08 -0500
-X-MC-Unique: Sc9IuD-cMDmF4gGbV5PmDQ-1
-X-Mimecast-MFC-AGG-ID: Sc9IuD-cMDmF4gGbV5PmDQ_1795017187
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-4a68703d177so506882f8f.2
-        for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 07:53:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795017187; x=1795621987; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=a85wi9zMKa3ITk5iiE5QycHbAdVE4Knzk7eFGcpu7xQ=;
-        b=TGw4wEhAEYz6dqxQddcwF2q5nSNk0fQ5KZjLd4qAAC0huj85vW++9H7xg052kqQirP
-         4/7ZflEl59RJrPbO/EwbDUqXwmzPJxlBDlLJ6s7npb3cYtAN2ekn4ofpZVQwed46KD2c
-         Eqs5qRBbPDEBSz2TL+ZkYV7lvc4UvrGUUE9R9vhHD+DOnNoRQUchIlmhv7hs+g8wY2nL
-         J0JBUz2GRuOtN6+q4vogAaMvpb3HTZlwBUp2c/VYqaiYtc09cziupcrDNI/jGLDgWAfZ
-         cGBjqv0W6tTxOfu4dSrjQALmErhn9ZYqntp25FkEf9b/XdZoC5XKRUbvE5UBGfnETMIh
-         vWNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795017187; x=1795621987;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=a85wi9zMKa3ITk5iiE5QycHbAdVE4Knzk7eFGcpu7xQ=;
-        b=FX/IMfRX5Jh+6ZGYNAIP8k9IS/FoBE8SajUV/v9Eph+84COgPHxgrwTrkUXPaDGOyz
-         lF7sTnEqc5aQ4GZvI9cK3YWgEpLGmTbWanp5RKKuRfz91mVzWCzy7X0DsDS/lJl8nO1E
-         fyg5TPebHt+ffly730XqiUUCv6HJQGOYtKyqSNl25jRfGqtE/R7nzR5Hb1l7Cg78OdVB
-         o82c43/+K++Mwz1CKrQM1aagIHyS6CIGs7ZLT8TSGW/FU1t35mfBn8t5qoQ2BteSxQxm
-         X+kz4zmGa7AbcrGNjsqVHnfW2GnyxR5joIgVF1dVQQVlQalbjyFkHwf+75PcePVTDWVq
-         6wew==
-X-Forwarded-Encrypted: i=1; AL+hErFtN6GzWfSoQHtzp0L4jN7mbsjtp3wfIjnsevSfx2XniTkgmRPsOPKnq81wKxmD682BVIj/mesT@vger.kernel.org
-X-Gm-Message-State: APuU4Z+RvvUy9mlClfzFuI9SzzOPjPrxtfJTqOa033QHb9cMGMdYlEvF
-	TDMhDqGu0hiccVP13kH6vJ7Z8lTdjLSIjuAtGo9EgMl9osZmfXgZZVX3fRBSZOT+pYHucTwuI8Y
-	NMKAEqJtTDqOY9YykJ6dLgyc3MPksQMTAd6v/QjONuPFTEh0vPKkzenhKskg=
-X-Gm-Gg: AZFdTZduETGMlZJut08jM5ZYeMbQeZoJct9oWX982g/LiT80OcjdRTcqJ5SOFxgeXym
-	oRv1sfnu1cilvSSHJyVh7T4ruTcGkLoJPRKIeN+r9syVTa3LHwao+Xx/DjJu6EubwpulW/lQvbg
-	cRSDjg1lK0zPb3l1u7H6wskco0TmvNdaDuFEz215IY1f1xtSLGWd6tYDlIxExCOfiJwEC1f7p+u
-	rIFQQQFUk0ajBtIrYO9bx78cFCMpkAwWIKuT4x+iWbFDWbOu4Ob6NxZS3Y7spgFAPGarzSV5xxM
-	+HkfR/KXSdJ8pTd+AFK5FeFTbUKEd/DuJL1vHAuM5TeHZC98DN3oFN3FM1ajWM8Rv3HdPvPn5ez
-	GRQFDuoIlhb0b1xQRGnQ12htgb/emed8n3UFRVy6c/VG4LBacA1usU9RMDjwiHKwgX+lspa8yDj
-	RE+zo=
-X-Received: by 2002:a05:6000:310e:b0:4a8:7115:fa0f with SMTP id ffacd0b85a97d-4a87115fd47mr1608200f8f.32.1795017187537;
-        Wed, 18 Nov 2026 07:53:07 -0800 (PST)
-X-Received: by 2002:a05:6000:310e:b0:4a8:7115:fa0f with SMTP id ffacd0b85a97d-4a87115fd47mr1608144f8f.32.1795017187160;
-        Wed, 18 Nov 2026 07:53:07 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4a65683d5a2sm5699651f8f.43.2026.11.18.07.53.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Nov 2026 07:53:06 -0800 (PST)
-Date: Wed, 18 Nov 2026 16:53:03 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
-	boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
-	kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org, longman@redhat.com,
-	ridong.chen@linux.dev, tj@kernel.org, hannes@cmpxchg.org,
-	mkoutny@suse.com, shuah@kernel.org, bigeasy@linutronix.de,
-	clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH v7 00/40] sched/deadline: bandwidth accounting fixes and
- selftests
-Message-ID: <av3J3zMfkRplg-N4@jlelli-thinkpadt14gen4.remote.csb>
-References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ipYi9E6e
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3B221F000C4;
+	Wed, 18 Nov 2026 15:54:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795017291;
+	bh=DmJfzC/sRq3TlQhBoN1iY/MRqsblNPUXimCuifUw2i4=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=ipYi9E6elWAi2Wc6DUpjs2dCpCCGm6GaVIR0YbPs0dkd9x4JZMaISzryIIxxdy2ac
+	 avidtPhahy4S2vbejNTSzGtufOYSUF18usCZyy9AekrJV6i0rkCSWahGdhLIAhPqv9
+	 hp7lx6eTb7B6+6dgSMzCqk9ivlXNhu6vCTGrIA345xjQ5gjNBug7eJPZrMQsh+Ec2B
+	 UuQ98OvAPkenUR8cN9UQVY4Jjd1hKHndHmylk/6P4MbNZKu6/YzGelhRmUiTzzurEA
+	 fBGPB67h6fbliEoajzSm4zD2M1AijSSS1smbPDcw+YbOiBg29cA9TnBc+EYJqrgA5y
+	 RGae54Msu6SNA==
+Message-ID: <b367d98f-54fc-4d29-8e3a-2d19dc4e2603@kernel.org>
+Date: Wed, 18 Nov 2026 16:54:46 +0100
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -126,32 +51,82 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH for-next v3 3/7] mm/slab: handle SLAB_FREE_NOLOCK in
+ slab_free_hook() instead of open coding
+Content-Language: en-US
+To: "Harry Yoo (Meta)" <harry@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>,
+ Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
+Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
+References: <20261115-kmalloc-nolock-fixes-v3-0-9034dd4ecaab@kernel.org>
+ <20261115-kmalloc-nolock-fixes-v3-3-9034dd4ecaab@kernel.org>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ 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
+In-Reply-To: <20261115-kmalloc-nolock-fixes-v3-3-9034dd4ecaab@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hello,
-
-On 17/11/26 09:10, Mathieu Desnoyers wrote:
-> Hi Ingo, Juri,
+On 11/15/26 16:09, Harry Yoo (Meta) wrote:
+> kfree_nolock() deliberately skips slab free hooks that should not be
+> called in unknown context. However, there is one more place that
+> needs the same thing: memcg_alloc_abort_single().
 > 
-> This series fixes 36 bugs of SCHED_DEADLINE. Most of them are in its
+> Instead of open coding slab_free_hook(), let it handle
+> SLAB_FREE_NOLOCK. This is required to correctly handle allocation
+> failures due to memcg charging.
+> 
+> kfree_nolock() now respects init_on_free which has been ignored.
+> Besides that, no functional change intended.
+> 
+> Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
+> Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
 
-...
-
-Thanks again for all the work on this!
-
-So, I feel we are making progress, but the set keeps growing/changing.
-
-While we spend more time on the "upper half" of it, would it maybe make
-sense to split the lowest part so that foundation fixes can start to be
-merged. I'm thinking 1-8, 10, 13, 14, 16, 20, 37 (37 is not a fix but
-harmless). Not all associated test will pass of course, which is not
-super nice, but we know they pass with the complete set and can maybe
-come later.
-
-Just a thought, happy to continue iterating over the complete set.
-
-Thanks,
-Juri
+The sashiko issue seems pre-existing and orthogoval. LGTM.
+Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
