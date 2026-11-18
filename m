@@ -1,45 +1,120 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795009747;
-	b=lji9x8VrleceZF2xv97ZaR3voEW+6drIV5muDEOTsfs8uF/URmTiQsyzJ8xnMKreyhF3
-	 rG1/i2q7UBP8T6o7QVlwpq4JwvFyxEOCqN2m81n61KvwBojTHvE02KESrevDbO0WuE134
-	 m90ItUtatd0el+rdkIj2/sfLBof9wESPmBZGwP3dneDoq5IpKe8Xql4rDmIPAbI0GuTXz
-	 AvFgUs71c86tB/oI/8Yms7kJuLWQ7u8WtZlG+6M2UWUCCHt+WKFgbneqH5By9qiTBMQCD
-	 B/mD7ytGv6OWIhtCTXG1L2EebrcBG3BHaVXnDI+MhY7VKU3a4fsBRudjIVSdBfUzmhQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795009747;
-	h=Received:DKIM-Signature:Content-Type:MIME-Version:Message-Id:
-	 In-Reply-To:References:Subject:From:To:Cc:Date;
-	bh=Lf9IjcA2+oZMwxII2T5OD9H6hKAKYAUPWKlQiPhHjMg=;
-	b=hxVrvi6/zNsM8VAVay0H2KGYA8HMMfJVfTpyjtpSSk9ksOjaYp0vTCGNk4wmxReFFuz1
-	 uYWplrOGgF+3CoPBHvjc3cgXx+TSi2P8GQ451RF6GnxxsLSkxFdAd5XQHlbVi/UH0s7ei
-	 rtSFTAA6eTPMWHAwfa6sizSCpziaEn/pCvVz8TRKO4JxnDZZuEMH4UHsGZ9ppzC/fIU4m
-	 P4I7IlHf5D/MjM3uzG35VO0Ijxmu1o8szlncR4wTt6sCS4AYwzIl7IQyIOng5fHItTF8s
-	 GJrYbyWVAj9TAlcFhxkOm0twVqzHtPa6poAHKT3SRz7voDWIW5QS7JEpILrBK37OKRw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoLY0off;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795010139;
+	b=w5bK+Cr27b79CnR+svjlZSj3oWhKHaOlcg4jjdoSXwfSenNKsWmrngW4LJrgF4xZir2X
+	 tbS1nLM0an+G8GB52Ridb15pwACKEFcBM6TWcnPxrUht7CTbe31op6JnINtL8p5pckesc
+	 Pm1Q7i65UIBgcOcLsUfjNZX8MGyaLu912Gn6al+NYhQiT1APVFNQ0qpnxahuNYN77tHGa
+	 Mi3PV5nHcWKKBGqYKOZIBWBngFu7uZGLjcULR66SqVYypB8JaeKe6J0V7gyDDTvhuA+Cp
+	 iwVnIIq8lUanNNmYcNgUpaVUUtlmO73q6no5+PhIwuRi5VKwJUYBpVCTBcNQs81rRcg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795010139;
+	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
+	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
+	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=Q93IOK+81L655tUS3XT9KzQ8Uws4KOL15ej2huBrpiw=;
+	b=gGUQRAOcUG5ULttutXSEmexpJeHlW79aSX1IJ33812YjA45Pp5I/UtJwhABgKQbuAzfW
+	 LLewjZ/hk+YKpudZMkXHtaTagiYgolTx8yB53oowFxrpOANxo2oo0l7Ywc0ncfzZZ+Iq7
+	 2aLB7uddua6lx3kO81CvPK5z1ObAo6qHFclRst3p17zXUBnZTh9AnLlFPV/lqCr6cNRUV
+	 hDiTd6+D+Xp2ut/kwbY6KxAv4R3VMqPMaUq08pNIKurMzQdKG2yvudzngkfVxOXSDZWSC
+	 FNEFzmH3GgatYemiRtbiewNuleYpzKDkQD3/yGDXjR6A8QyWTd1Ld0LX34CPN4Uiumg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=redhat.com;
+	spf=pass smtp.mailfrom=redhat.com;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=OjstRZPU;
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b="YdeGXNs/";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35010606A33F;
-	Wed, 18 Nov 2026 13:49:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11510606A333
+	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 13:55:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11510606A333
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CoLY0off
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8CFD1F000CB;
-	Wed, 18 Nov 2026 13:49:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795009747;
-	bh=Lf9IjcA2+oZMwxII2T5OD9H6hKAKYAUPWKlQiPhHjMg=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date;
-	b=CoLY0offtUoehSU0pfUjtBAVA181JYa2POkTHHcFfM5OZa2QqBkjiINTqBnP6IYT1
-	 S0oTZF5X6GGrn6PlyKl/OiPoMp9jhlTgKOn7Rz1E1z6DrW3ce99hAkhlFcK46x5X7z
-	 5Eq+er2X6Py1mHOGaqfj09HG41fVTCgcvrt3Mvla1rT+4uAI8xgY6DLqXiJmIVQZRN
-	 vg+kUVRDr8bTW1j9tSSB4Uxo4uTMY3OKDEvdvvAGV5QhL8wbqcRDB8hM2u10PKcsAF
-	 uqLB6nEsbV4jDkyjUqiGmXXo4TI9YPai25yTPp74HfrkGDQ0aKfm7EIkDLugboK5mZ
-	 cL5Ei7yRfijgg==
-Content-Type: multipart/mixed; boundary="===============4220229775293101488=="
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=OjstRZPU;
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=YdeGXNs/
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1795010138;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Q93IOK+81L655tUS3XT9KzQ8Uws4KOL15ej2huBrpiw=;
+	b=OjstRZPUuPltanCOyBQ3iOpkd+I/auuTftInDAc3XyC7QkBVfo25wgy74zhvwHCBAUH7Ew
+	eAQdNh6sx1x9HqJibyHv3XJFIzSQYy5zFNumBW8ghGiJwaZZS2YCwPCmJxq9MYVsZd56bA
+	CJhgz/hSStRP4LzHMBHxfcT46SQy4Qg=
+Received: from mail-yx1-f69.google.com (mail-yx1-f69.google.com
+ [74.125.224.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-504-XY8WqVUsNwGG--MnaqpFpg-1; Wed, 18 Nov 2026 08:55:36 -0500
+X-MC-Unique: XY8WqVUsNwGG--MnaqpFpg-1
+X-Mimecast-MFC-AGG-ID: XY8WqVUsNwGG--MnaqpFpg_1795010136
+Received: by mail-yx1-f69.google.com with SMTP id 956f58d0204a3-67bec5d62ebso1419879d50.1
+        for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 05:55:36 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795010136; cv=none;
+        d=google.com; s=arc-20260327;
+        b=JuJho9yS9fCOOnpO56LDfNEodMOjBaXAbZGz5TgAtD+N5babZeZESDflB0Aqb7E6N7
+         UfxWr9VutfvQoh6Ky6UnUeyODsPWPwG0qy55DWqS3J9+Evdd+Hj55ktIPifwC5Tu6tiz
+         coWHZ3v/dvcCuMw5KlrqI4oOifrTDwV59K6P8Iv4gKGlrA5Kc9o/xjatuQ/nikXju1QU
+         XaStVoA8orRHes4Q9l1tQSiJ3alVNm2M7MgWgNvH8cFnuocePxmVnz2FeG1+fsOhxqAH
+         9KS2WshaBo4V2uK5j9LkKM4BQ4gVU7z8Ao8uusHU8nB9PwCBtOcvGprDP0NP2F5PbWfy
+         pVxg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=Q93IOK+81L655tUS3XT9KzQ8Uws4KOL15ej2huBrpiw=;
+        fh=FvZWwX1zS31m6cyAKyrb0gwGSrFs0e7Ei0l3NZxcRs4=;
+        b=M04NJf0nsCNpWS04K1TtYVE/+SpP3AWtSaasvCXcKCGi961CchDAXeD67IuUaPvFo8
+         qsK1LhAwPt+6x/OmKX790j2FZyJWaEURr4iQOmRRMFSywvx7KSzDX0paW2Y1Ig2b8DPe
+         AJ+zTPa7zWNg7jS7LnxKGLPVg6mS1BeRRNrOha0JL3mzA6DQ8DyezH3lrMnJ/5whAYhv
+         lOMfazt+ttkwILwJEShLhC550iG6o7XQ3OU6YUMzzrAouzWFAxOMg2glgL8zOD96F+wK
+         TLcpxKHehbHZybbv9bUAztORNT4ukQFwEfsQyWL4YAq9YeLVDiL30x2p3UCfL2yr2nX1
+         raeA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1795010136; x=1795614936; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=Q93IOK+81L655tUS3XT9KzQ8Uws4KOL15ej2huBrpiw=;
+        b=YdeGXNs/g+hxp03HRbQSUUfYwpG+Q463Psgnm5pI6nowFTE0GT/AT+9Eba8UqJXu2F
+         Rjm7s6KZtfcTE+jLnJqY9Yha9DiDRbhjBVk9n/zG7Tl/p4QVD4cOVryiVPrvuioWjJ2V
+         kC4s94SucOy//FSYm1394CoCF5UK5zXU1gxH2PfPcfRIkd2mTJdDSJhVy7FSL4lT5EZc
+         m+HBczANYjijzYP43BM9ZWyF2lkON43QQgIwWQhgllRW+41fvFVuY2rQaXLV1H9y0Dqo
+         Sq+5Nt2E0oRySNF5RHc6s28Fs0dEBL+ug6DeSjIEnvBqVwZGg+FdASv6oArpfSCSBBSS
+         kWvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795010136; x=1795614936;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=Q93IOK+81L655tUS3XT9KzQ8Uws4KOL15ej2huBrpiw=;
+        b=jPsHlkVL5A7Q2cPyApM7kbzJwf9svLM+5FzSVPiwFNXkEtyyoudlJlkOsfMKL0ivvt
+         m1oMrPMhu19RjCLReFBkKE7NIzckIM6OkDqLy3CrXHw7VunsIWshY65I0rcnApwKQtzW
+         lo1HFQkuMDFkbNWK9zO1+RbzvKG6N9Lxgen12y5MM1XPY8LPMvvjmxOIS/qIflFc+aZM
+         3sTCFt460FXpNVuPVJzuSICTuVJnqMzJzM2OUjMDesTKCwFkavHO2QvAM3wnHJ6I8sag
+         ABiuNq1CCYkqtdQwgsYR7OZQw7Ko6S0VmvIWp/mJTMnjnsnAmWSU424DzrPvJ3vvdlXR
+         I0Hw==
+X-Forwarded-Encrypted: i=1; AL+hErHUg5CNfY1IQ4GMsc945ktvbRwmVHPI73c9Pfj/wy7mPrQrVpIWe8NxnRRfCzobmjDv3AA6oCAr@vger.kernel.org
+X-Gm-Message-State: APuU4Z9jQAxiLCLq7dgRvBxhCQBYOIGFWdmxU/haC4pueurko4YsmerN
+	sADz9+BgDgZjtfVsLBK+Qh8dtBno4qck++rjWO34OBZmHpShruNx0T+vr2aW0UvlPvPP+bGAl3e
+	ncgiTbLKR66OUwkrv8p9mgpMtvwultNjBk9q6jnMCeSB8IizAW/bU4ZLpgwiiJ6zfW4ZnfLMGw6
+	t63I6UkNjpPzIog8LzQptRr5H9P8k+G2PUyA==
+X-Gm-Gg: AZFdTZeCU3qrqw2KdvRmUV12K1souHkznZEse+o5cXiT+DDLhympxK7CtJG5cU/gZRo
+	6C10r9RxUOreCzOfLyBdyxBtoYRfIARTunAooKDQJvCRc0yapb8qugKfdmtTeqB6nGjW203gD1t
+	AFay0N0QGyN2Fm0/q17JQmFxaqfgT4eB4JiowRBlRYiTniHmX5tseyn/Kx
+X-Received: by 2002:a05:690e:1387:b0:67b:f249:5b16 with SMTP id 956f58d0204a3-67dd3fdee8amr1338621d50.55.1795010135902;
+        Wed, 18 Nov 2026 05:55:35 -0800 (PST)
+X-Received: by 2002:a05:690e:1387:b0:67b:f249:5b16 with SMTP id
+ 956f58d0204a3-67dd3fdee8amr1338592d50.55.1795010135440; Wed, 18 Nov 2026
+ 05:55:35 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -49,113 +124,141 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Message-Id: <59496aca38bf7cf3d4d3e11d5ac32e144ae92bf9fa8b3d2420ae65464fea51df@mail.kernel.org>
-In-Reply-To: <20261118131029.797007-4-cui.tao@linux.dev>
-References: <20261118131029.797007-4-cui.tao@linux.dev>
-Subject: Re: [RFC PATCH v14 3/4] selftests/bpf: add iocost cost model test
-From: bot+bpf-ci@kernel.org
-To: cui.tao@linux.dev,tj@kernel.org,josef@toxicopanda.com,axboe@kernel.dk,ast@kernel.org,alexei.starovoitov@gmail.com
-Cc: cgroups@vger.kernel.org,linux-block@vger.kernel.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,andrii@kernel.org,eddyz87@gmail.com,daniel@iogearbox.net,linux-kselftest@vger.kernel.org,cui.tao@linux.dev,cuitao@kylinos.cn,ameryhung@gmail.com,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,mason@kernel.org,ihor.solodrai@linux.dev
-Date: Wed, 18 Nov 2026 13:49:04 +0000 (UTC)
+References: <20261117-v2_20230123_tjmercier_google_com-v5-4-1ce975f2a9ad@redhat.com>
+ <44c0c45c0e2f47ed77bc45be47ebb3fb@paul-moore.com>
+In-Reply-To: <44c0c45c0e2f47ed77bc45be47ebb3fb@paul-moore.com>
+From: Albert Esteve <aesteve@redhat.com>
+Date: Wed, 18 Nov 2026 14:55:24 +0100
+X-Gm-Features: Aa3M54okPSWfJ_g3ixS3iw1yy5owTDFGTKhnOXZ64bND8Gaqu8R-9XYtSNGyOOw
+Message-ID: <CADSE00LVsFVOmezzLgPrPWDd+L+SSGzGvqKTiX25waxRnVPh9Q@mail.gmail.com>
+Subject: Re: [PATCH v5 4/8] lsm: Add memcg_charge_task LSM hook
+To: Paul Moore <paul@paul-moore.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+	Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Andrew Morton <akpm@linux-foundation.org>, 
+	Benjamin Gaignard <benjamin.gaignard@collabora.com>, Brian Starkey <Brian.Starkey@arm.com>, 
+	John Stultz <jstultz@google.com>, "T.J. Mercier" <tjmercier@google.com>, 
+	Christian Brauner <brauner@kernel.org>, James Morris <jmorris@namei.org>, 
+	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
+	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	=?UTF-8?B?T25kcmVqIE1vc27DocSNZWs=?= <omosnacek@gmail.com>, 
+	Jens Wiklander <jenswi@kernel.org>, Sumit Garg <sumit.garg@kernel.org>, 
+	Philipp Stanner <phasta@kernel.org>, airlied@gmail.com, cgroups@vger.kernel.org, 
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org, 
+	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, op-tee@lists.trustedfirmware.org, 
+	echanude@redhat.com, mripard@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
---===============4220229775293101488==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+On Tue, Nov 17, 2026 at 11:54=E2=80=AFPM Paul Moore <paul@paul-moore.com> w=
+rote:
+>
+> On Nov 17, 2026 Albert Esteve <aesteve@redhat.com> wrote:
+> >
+> > Both DMA_HEAP_IOCTL_ALLOC and the new DMA_BUF_IOCTL_XFER_CHARGE ioctl
+> > accept a charge_fd field that, when set, causes the allocation to be
+> > charged to an arbitrary process's cgroup rather than the caller's.
+> >
+> > Charging is currently limited to the caller's own memcg subtree unless
+> > the caller holds CAP_SYS_RESOURCE. But the capability is all-or-nothing=
+.
+> > A process holding it, along with a dma-heap device node or a dma-buf
+> > fd can charge unlimited memory to any other process's cgroup, potential=
+ly
+> > exhausting that cgroup's limit and triggering OOM kills independent of
+> > the victim's own activity or privileges.
+> >
+> > Add security_memcg_charge_task(), called in get_obj_cgroup_from_fd()
+> > when charge_fd refers to another process. The hook receives
+> > the credentials of the allocating process (from) and the credentials
+> > of the process whose cgroup will be charged (to), giving security
+> > modules a controlled enforcement point for cross-cgroup objcg
+> > attribution policy.
+> >
+> > When CONFIG_SECURITY is not set the hook compiles to an inline
+> > returning 0, adding no overhead to the fast path.
+> >
+> > Signed-off-by: Albert Esteve <aesteve@redhat.com>
+> > ---
+> >  include/linux/lsm_hook_defs.h |  1 +
+> >  include/linux/security.h      |  7 +++++++
+> >  mm/memcontrol.c               | 11 +++++++++++
+> >  security/security.c           | 15 +++++++++++++++
+> >  4 files changed, 34 insertions(+)
+>
+> ...
+>
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 03cd90d5e623..2e6fcbe14d43 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -60,6 +60,7 @@
+> >  #include <linux/lockdep.h>
+> >  #include <linux/resume_user_mode.h>
+> >  #include <linux/psi.h>
+> > +#include <linux/security.h>
+> >  #include <linux/seq_buf.h>
+> >  #include <linux/sched/isolation.h>
+> >  #include <linux/kmemleak.h>
+> > @@ -3198,10 +3199,12 @@ static bool mem_cgroup_may_charge(struct mem_cg=
+roup *memcg)
+> >  struct obj_cgroup *get_obj_cgroup_from_fd(int fd)
+> >  {
+> >       struct cgroup_subsys_state *css;
+> > +     const struct cred *tcred;
+> >       struct obj_cgroup *objcg;
+> >       struct mem_cgroup *memcg;
+> >       struct task_struct *task;
+> >       unsigned int pidfd_flags;
+> > +     int ret;
+> >
+> >       if (mem_cgroup_disabled())
+> >               return ERR_PTR(-EOPNOTSUPP);
+> > @@ -3226,6 +3229,14 @@ struct obj_cgroup *get_obj_cgroup_from_fd(int fd=
+)
+> >               if (IS_ERR(task))
+> >                       return ERR_CAST(task);
+> >
+> > +             tcred =3D get_task_cred(task);
+> > +             ret =3D security_memcg_charge_task(current_cred(), tcred)=
+;
+>
+> Do you ever envision this "from" cred being something other than
+> current_cred()?
 
-> selftests/bpf: add iocost cost model test
+Good point. No, I do not.
 
-TL;DR: In the iocost selftest, the setns() unwind on the skip path may reset
-test_progs' cwd to "/" (and possibly leave a chroot), so later unrelated tests
-could fail with -ENOENT when null_blk is unavailable.
+> If the answer is "no", we might want to consider changing
+> the LSM hook slightly to help prevent misuse in the future:
+>
+>   int security_current_memcg_charge_task(const struct cred *tcred);
 
-> diff --git a/tools/testing/selftests/bpf/prog_tests/iocost_model.c b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
-> new file mode 100644
-> --- /dev/null
-> +++ b/tools/testing/selftests/bpf/prog_tests/iocost_model.c
+Agreed. I'll apply the same to the cgroupfd variant for symmetry (its
+"from" is also always current_cred()).
 
-[ ... ]
-
-> +static bool iocost_test_env(void)
-> +{
-
-[ ... ]
-
-> +	/*
-> +	 * Isolate the configfs and cgroup mounts from the host. A
-> +	 * failed setup unwinds the namespace so that a later retry does
-> +	 * not stack private namespaces.
-> +	 */
-> +	orig_ns = open("/proc/self/ns/mnt", O_RDONLY);
-> +	if (unshare(CLONE_NEWNS) ||
-> +	    mount(NULL, "/", NULL, MS_REC | MS_PRIVATE, NULL)) {
-> +		printf("%s:SKIP:cannot make mounts private: %s\n",
-> +		       __func__, strerror(errno));
-> +		test__skip();
-> +		goto out;
-> +	}
-> +	mkdir("/sys/kernel/config", 0755);
-> +	(void)mount("none", "/sys/kernel/config", "configfs", 0, NULL);
-> +	SYS_NOFAIL("modprobe null_blk nr_devices=0");
-> +	if (access("/sys/kernel/config/nullb", W_OK)) {
-> +		printf("%s:SKIP:needs null_blk with configfs support\n",
-> +		       __func__);
-> +		test__skip();
-> +		goto out;
-> +	}
-> +
-> +	ready = true;
-> +	ok = true;
-> +
-> +out:
-> +	if (orig_ns >= 0) {
-> +		if (!ok)
-> +			setns(orig_ns, CLONE_NEWNS);
-> +		close(orig_ns);
-> +	}
-> +	return ok;
-> +}
-
-When a prerequisite check fails after unshare(CLONE_NEWNS), for example
-when access("/sys/kernel/config/nullb", W_OK) fails because null_blk is
-not built, not installed, or modprobe is missing, this goes back with
-setns(orig_ns, CLONE_NEWNS).
-
-Can this change the cwd of the test_progs process?  mntns_install() in
-fs/namespace.c ends with:
-
-	/* Update the pwd and root */
-	set_fs_pwd(fs, &root);
-	set_fs_root(fs, &root);
-
-unshare() keeps the cwd, so only this skip path moves the process to "/".
-
-The serial tests run in the test_progs main process, so the new cwd
-persists for every test that runs afterwards.  Many of those open objects
-by cwd-relative path, for example serial_test_kfree_skb() loading
-"./test_pkt_access.bpf.o", select_reuseport.c opening
-"test_select_reuseport_kern.bpf.o", and l4lb_all.c using "test_l4lb.bpf.o".
-The flavored runners also lose the chdir() done by cd_flavor_subdir().
-
-So on a kernel with the iocost BPF support but no usable null_blk, would
-the iocost tests report SKIP and then unrelated tests fail with -ENOENT?
-If test_progs runs inside a chroot, does the root reset also leave the
-chroot?
-
-The comment says the unwind exists "so that a later retry does not stack
-private namespaces", but serial_test_iocost_model() and
-serial_test_iocost_model_streams() call cgroup_setup_and_join(), and
-setup_cgroup_environment() calls unshare(CLONE_NEWNS) every time, so
-namespaces stack regardless.
-
-Would it work to drop the setns() unwind and cache the failure in a
-static, or to save the cwd with open(".", O_RDONLY | O_DIRECTORY) before
-unshare() and fchdir() back to it after setns()?
+BR,
+Albert.
 
 
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
+>
+> > +             put_cred(tcred);
+> > +             if (ret) {
+> > +                     put_task_struct(task);
+> > +                     return ERR_PTR(ret);
+> > +             }
+> > +
+> >               rcu_read_lock();
+> >               css =3D task_css(task, memory_cgrp_id);
+> >               put_task_struct(task);
+>
+> --
+> paul-moore.com
+>
 
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/44312765238
---===============4220229775293101488==--
