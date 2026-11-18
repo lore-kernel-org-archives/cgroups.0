@@ -1,120 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.189.100
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795009124;
-	b=eBxGQdnPlzyPul/VoZ0B3GXuvqzEo/E1WbQ0XNn0XfhoPEyfq6wkEHdZOVYZrTr0EfPt
-	 b1vO7+4TRSTWR02zEg9wGkVJBVjvnVIcIEZsDDjq3q2OeGVkoTHhl/22fGiHZWI03Hk6d
-	 7WPQmyvCbpPBbe0WbDt9mMnjzOvwHT+1/8a2mUZPxQ6NCMpfsRoTE6gyUmY3sN2IetS3J
-	 Jz+JiqeP99MGQTPizxy+AwTiExCDfbrJZEqhpc1Bbcmuh52iGtRVYibKy9EaH5ilgfMWH
-	 wH/GGprsKwc0sN4ppNxaEDddCnHCrBiFMqs6ag0KVzzBElWtVEQ7wIyCyr8ByZ/vSeQ==
+	t=1795009492;
+	b=ijD8TDBniJOa3JAG6ejo7I9aCgh2HzB1lGdaE6lLZSwS6FUCeqbcit+gMrXPEiM5jQYS
+	 0YcTspPS4sVYA5b74ncbf0ooCxrWF+RiovIARoKKp3eFxJVvmrA3C4Zx1f+rKVF0zQWen
+	 rAEuGsxCUOyjlShThzLCZzfAznSauj/T219rwhf1dn7aA1nFZFJH7G2YfrrVq6klsusoC
+	 nadII2OmsGyx0b5Owgfqp0AEZrfjgckOh3bndV4gEhpKy831uO+xWMJQmViwiAhkzw6Dr
+	 3+iSDwsIRtIlraSTYmf2Ot8L3obSbxkuBuSBZk4/3CX1y4oo6yBioFSQKds4T29cWSA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795009124;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:MIME-Version:References:In-Reply-To:From:Date:
-	 X-Gm-Features:Message-ID:Subject:To:Cc:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=h50xYCZDbBstrT/18dKKndyJ3XtJH6sY5/J/QnXGpDQ=;
-	b=h4Ap1VDeNxjKYZ3V92f22J7MV8RRRjyWRPwY5x6GJnKzsRJagas7+AoMHBgeImTY/vkt
-	 uNbY3vBCWCqH1sfmFwaDHrzvHynqRqHameFDVYyb4y9QDfzVCBt+EU6E1aOLfG6ZrsjYv
-	 Xk9p0t8A5Kr2/bzQ9KPD2ecCHP4DeoYZcvX/c6k0UyHtYgZuBq1m1BZ3ouFKaUT5we37P
-	 eRK+in7KWwJ/3r704gRCdHZLRulDdZfcH5Bz3O0E6WkUdThZU+WCsJuTi8mG3SRdNEEJI
-	 YH9jGOQumYwoklLODGtJAEZgAqQFJZEycr1k1sR43Y1v4fdvtMgMS4q8990D8NpNi5g==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795009492;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Message-ID:Date:
+	 User-Agent:Subject:To:Cc:References:From:Content-Language:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=x/D5GLCdkWoucjtSiDwdb0e+0Tl2CDlfFJNe6ZUHRxA=;
+	b=cFDez2hzwcOi3aRwX4aLfPhZt8Qmt80q01qe2nXjH4zhOGPLYmkt8KCxvFjEIXxEkqDm
+	 83I6WGelc8XTLVqP86nPO6wXvTdT2Jtd+UEJemAvsd5NzU1tIZ4PsBqfW1IEmDOdoHW1J
+	 CMjL0wyfudPRtcasBDZMVSdL6W4bSUKtaJLFMbW5cdu0Ek1RpHQL+wPhVn6ASb2XQ4yW/
+	 OMxEZlMt5OfA4enCabzBnuspRNhHMKPKAdRajRrAc2+juFSICFB3fMTLqZRoQZyGhb8SH
+	 CspAAIxP36Pqld6fhBtVq9PKx0iynsmtpqqZL9ulq2P8n6prZ7Wl/cuuMMk2r1KYRhA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=DGPTWsj1;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b="m1U/f12J";
-	arc=pass header.oldest-pass=0 smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dmarc=pass header.from=efficios.com;
+	spf=pass smtp.mailfrom=efficios.com;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=Aus4pigh;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.189.100
+Received: from YT3PR01CU008.outbound.protection.outlook.com (mail-canadacentralazon11020100.outbound.protection.outlook.com [52.101.189.100])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0CAC60A2607
-	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 13:38:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E0CAC60A2607
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA523606A31C;
+	Wed, 18 Nov 2026 13:44:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BA523606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=DGPTWsj1;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=m1U/f12J
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795009123;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=h50xYCZDbBstrT/18dKKndyJ3XtJH6sY5/J/QnXGpDQ=;
-	b=DGPTWsj1tcK7BHakniQKRg5wXJb+lKnVxEXj7BGYIhDdMMYbwh2Wr4/0Q49v/m3qW/dsds
-	PXzd7CI8GoGaxh0JFgxa6zOio0f0IZ5MVYE9tBbnaiArvxV89Y8rW+ZKtFnlw/19nIqn4Z
-	OXySadyFXfPUeMnq2XHkraGwVLEvGSw=
-Received: from mail-yw1-f197.google.com (mail-yw1-f197.google.com
- [209.85.128.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-458-a0NmMH94MueFAJrtnqPgZg-1; Wed, 18 Nov 2026 08:38:41 -0500
-X-MC-Unique: a0NmMH94MueFAJrtnqPgZg-1
-X-Mimecast-MFC-AGG-ID: a0NmMH94MueFAJrtnqPgZg_1795009121
-Received: by mail-yw1-f197.google.com with SMTP id 00721157ae682-8b3ad09ad82so13425297b3.3
-        for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 05:38:41 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795009121; cv=none;
-        d=google.com; s=arc-20260327;
-        b=PmKDhW3lPEsaCUVgylrhDy6SUYuMZFEFWVbgCaMhfItaEJQa/7Zv2pUjUezwZYwGYu
-         eN6MgZzHK6kbbHHTggVk1dMwTHYhU2F28+jfbKk9ybzuNBuzcLdPQDfkAFYIZMT9HWUr
-         3iPtI2tzzOmMeVvgnpoO7EYLFV8yym7PPwkyQcDzJxWYFcC3appV4fKd5JWPpeg4OAWu
-         00yKU60caGAGPIfgyhUR2cm0E90GrMSFlhzA6E5e5twlAO5Y5znWosjJQwQE/dpIxWDz
-         4VL6LFAZaWMC9/TqYy06ybB0nvaW8IBDkIXTaIeysaaWcIH4fhvEEa8yES6DK6hlGbe3
-         kI1Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=h50xYCZDbBstrT/18dKKndyJ3XtJH6sY5/J/QnXGpDQ=;
-        fh=bafV7QYVG+yaT+ueTiG2ySeKmn8uKAFymBs3yLxgn6Q=;
-        b=iK7A6pK6ZgnzlhlKqRKvi+SXaoqSluj9bIzc2rsoXU0GBAnElaDU60Gxrgpu+rfKlN
-         00oyBj3ynZul4sL9u2ReL3H1dxnShnEFt31819U2rbxh/CjvRpx86lotCacjDnmK0jEY
-         ujqYA3Pnub02y7b14PE/e2JctFQfUPtSkp5UtAF80D+AFDmj9giy7x9MskKXgRKGMQqy
-         l4U8U0prwcc3BM2ZhoiNeYQV5gyMH8huSmUliBGNtSBBEHgg35vGko0MPqEG0kRP10pb
-         JS7f/owcwaw4n5M5rVD5M8ODPqa6Ascp3OdQmarAXPaTWqyAym5zl56TsKMMXuWdhVqY
-         rYYQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795009121; x=1795613921; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=h50xYCZDbBstrT/18dKKndyJ3XtJH6sY5/J/QnXGpDQ=;
-        b=m1U/f12J+ShUTGTGggJRi8KWH5geQbIoUtFMFOrndyGwP0Lkjvyue4j595npuKQp7v
-         UynlTtWXc/N0WgxJO1Eh9B0rgmNUcUCd/fe2y2aqqhwEQc5sz7XB3d3BF8blaFQQsm6l
-         BIFKk/wJx3tUMG+ZzqdOa04aWuQnHC9c3eHjYq77Zs5R6PpyZS6fg5pUCCDzRlxbuqeL
-         6TWfG8AGCYSHLpH+pLf9WpAQ9HEa4rOwR2cAEOBu/tri1gSzxl1aXRj3xSBR9pXZKIMm
-         9sqYw0Eu6CMouTg16/H3YR/idZKQXNHpJbp9J077XuX6pp7ekW4DOfM8so6CkAaAAyiW
-         esFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795009121; x=1795613921;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=h50xYCZDbBstrT/18dKKndyJ3XtJH6sY5/J/QnXGpDQ=;
-        b=zakleXpCCVlr4NM/XcMCbHkqIYC3bQCWN7DCQ9o+WTIgbLrk8nHXFXjaLDtBBZvo6j
-         1/ZEURbzmr9oPYLEaFdE+bK78RNuciu3yxtShxkqmgFbxq1vBl/vq+cfB0m1aewFRaIZ
-         0mUdy5uX4RKDN6VHgqQH4y7JedHTW0ZOLN8fHWo5M1nOg2K5VdYZOlWzLRdunsdm7LbL
-         URdzw12Y/YXB4kP+kpXq8s5NFMPF3A/n5gKolcTbAKieoCJ0cQzr/0zfPLYLN3v6ti4I
-         XL8nwE8o4R7B57COWEwD1nBdX456IXsalRpoDMzzma6LN3qQOgSVaqom5ptGCyyC4cgM
-         kLuA==
-X-Forwarded-Encrypted: i=1; AL+hErHvMaBnMjNqBQbp4LK9Rgl2vTtWKBFGi/J4nCtl5fDRmY44/75p/zXzliGDeDMu2ZIXNcv4wOLq@vger.kernel.org
-X-Gm-Message-State: APuU4Z/nQHhj9Mh1kLsSDfdNjxQOVMM0Joz4PRGufJH0hvZoS/DpUbaZ
-	KRqx0F0VcIehDleh5q80hppVNk7zdKCbPuyKInypTl6yYmv2mqXj4IkAqAMzgHIVdObtKGoQuMR
-	M9LB+xnv5UGeD9g9dHofQ+HFZVWKI/Q0rfrOe3vhlgqLqb2OX5AoAIkQ7DJMvlQwezfISxyopne
-	sFa6VL0WgUSM9IZrOBQGDtZY+Q1vSmXpmbTA==
-X-Gm-Gg: AZFdTZdtFxWrR5BgZCAkozYFQXdbRcFILeXslr/EgG0mXpkK0J3flqRKjugXnNgGNce
-	DK2N9bcPEr/o+lkANE0g1nookXLBDLrb1703TeR68zy8JP6fgx+zEn77gkhMlCp9fwmZkOcxXYq
-	1NiEskpn4sAvGqjOOVhoqd6RshSbBB/LpvyIzXg80Wp7Z8EErZxi1ifwtW
-X-Received: by 2002:a05:690c:368a:b0:873:5bb2:6bfd with SMTP id 00721157ae682-8b4fed83351mr10018237b3.39.1795009120757;
-        Wed, 18 Nov 2026 05:38:40 -0800 (PST)
-X-Received: by 2002:a05:690c:368a:b0:873:5bb2:6bfd with SMTP id
- 00721157ae682-8b4fed83351mr10017817b3.39.1795009119849; Wed, 18 Nov 2026
- 05:38:39 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=selector1 header.b=Aus4pigh
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=N8ckg9LtPxEyRYRHJ9l5dXd5w8y5l8qf7tyFqJ1WiNhNly253PRvYt0q313OpClDQaykiMbIKyW2OfRZA/eTfeESaZ8SuF1YefGlbDu3CbjyHa+7jRhufR68iKHox6b3KV+fIIL3D99BYt8WCMTz942SzZZMoWi7vL/yUKi0WXKMCMcgfsIPRZDJVRqTMb4SJtgYg11E3AsoXg94T+DP+ve91rcEZZoXweGOMhJhZEUt0QNO81E7yrEpN3KSP2nZn4YmAZr1w2GG4K5KLSq4jnosI8maBeVRuq83NZU3FCtLhrmOJ2z3V4lEQultvxzp8W6pyoH98Qe81QUFfpwdpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=x/D5GLCdkWoucjtSiDwdb0e+0Tl2CDlfFJNe6ZUHRxA=;
+ b=jTuhigXcs2zEdWB6eT7C6g7dAp1o9A0p3I6duZPE46SBw7NNnLLShSMV/+BSnUouZH4OTNCjLZowtrNisqshu+ZddrDtJr+4cw8KhbqCBgVqUaX7+h1H4ub7emxmlE/kUXVtSAxr/Wf0rUvmNBZN86WTyezJn9Kj+hnlJ88x0uRy8QoK64PHPukdORHlzEQ9VXnEPsa7q/byQI6Rqgx3iXy488KSj7DburN/OiEeooZJStj5k6iaIWiQS4dTwShs1u7FF/rL7vy8MCiL6TBTGdk6nyXADcq8Qrahnv28t/iPkOZ69A6NECg8jIkPeojQFwHtq2MhiQS1ILb0afaWkQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=efficios.com; dmarc=pass action=none header.from=efficios.com;
+ dkim=pass header.d=efficios.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x/D5GLCdkWoucjtSiDwdb0e+0Tl2CDlfFJNe6ZUHRxA=;
+ b=Aus4pighJ//eoLQLi6dp0ZQsEj/os/xTYTbAbSb64x9er4E5mrdzxeQ/oy4XI7t9qM0PR0sQYFzd+WnFjsQKMoluGEI6O5Yh78VviD9/EB4MxjEtWdnCSz79jGOeuz12KhzYXSYUlAd8uNjWeYZGdny25mhnJHRuaitnoP0NIQ9k2u9S3187h1QSNuwU7RrKFxGVDSFnzUVzhy6a+PDkjB6vxb8+tKPTPHytB1rLNODFsTEDeEV+9iOMKYFR0P16dpUt3N3N9LZ+uOZBloiGvicA9y3DMv06+3YL65uDSN+hAqeVyXNCeyX6PhW/+ak3HDNpMoWwuQCnpLcqd5wmTw==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=efficios.com;
+Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1d0::10) by YT5PR01MB619307.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1b0::9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Wed, 18 Nov
+ 2026 13:44:50 +0000
+Received: from YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::6b9e:a901:67c5:7ddc]) by YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ ([fe80::6b9e:a901:67c5:7ddc%6]) with mapi id 15.21.0615.013; Wed, 18 Nov 2026
+ 13:44:50 +0000
+Message-ID: <ddd215ff-d6de-4dea-b12a-80948a9b5ea6@efficios.com>
+Date: Wed, 18 Nov 2026 08:44:48 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 08/40] sched/deadline: Do not replenish a boost from
+ cleared parameters
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
+ linux-kernel@vger.kernel.org, tglx@kernel.org, will@kernel.org,
+ boqun@kernel.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
+ bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
+ kprateek.nayak@amd.com, luca.abeni@santannapisa.it,
+ mathieu.poirier@linaro.org, longman@redhat.com, ridong.chen@linux.dev,
+ tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
+ bigeasy@linutronix.de, clrkwllms@kernel.org, parri.andrea@gmail.com,
+ m.szyprowski@samsung.com, kayracizmeci@gmail.com, weihengqiuu@gmail.com,
+ cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-rt-devel@lists.linux.dev, stable@vger.kernel.org
+References: <cover.1794922146.git.mathieu.desnoyers@efficios.com>
+ <cefacab5f1c0e7617f17e050af4ef5f6db01700a.1794922146.git.mathieu.desnoyers@efficios.com>
+ <av2k8JlLvUcBBOhn@jlelli-thinkpadt14gen4.remote.csb>
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Content-Language: en-US
+In-Reply-To: <av2k8JlLvUcBBOhn@jlelli-thinkpadt14gen4.remote.csb>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: YQZPR01CA0007.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c01:85::25) To YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:1d0::10)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -124,240 +109,94 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261117-v2_20230123_tjmercier_google_com-v5-0-1ce975f2a9ad@redhat.com>
- <4356992ac4fb7876fb5759189ba4b492@paul-moore.com>
-In-Reply-To: <4356992ac4fb7876fb5759189ba4b492@paul-moore.com>
-From: Albert Esteve <aesteve@redhat.com>
-Date: Wed, 18 Nov 2026 14:38:28 +0100
-X-Gm-Features: Aa3M54php6hihR6Ihi3l34Ri9nQdKaLYB3Ss2kJeRmi5f3v9ab0vBjDa0q2nnvI
-Message-ID: <CADSE00JyTwrbNh4r8PZWLqOHWpepyHkaL+9fkc+AbVRmCc-f-g@mail.gmail.com>
-Subject: Re: [PATCH v5 0/8] memcg: dma-buf cgroup accounting and charge transfer
-To: Paul Moore <paul@paul-moore.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
-	Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Andrew Morton <akpm@linux-foundation.org>, 
-	Benjamin Gaignard <benjamin.gaignard@collabora.com>, Brian Starkey <Brian.Starkey@arm.com>, 
-	John Stultz <jstultz@google.com>, "T.J. Mercier" <tjmercier@google.com>, 
-	Christian Brauner <brauner@kernel.org>, James Morris <jmorris@namei.org>, 
-	"Serge E. Hallyn" <serge@hallyn.com>, Stephen Smalley <stephen.smalley.work@gmail.com>, 
-	Shuah Khan <shuah@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	=?UTF-8?B?T25kcmVqIE1vc27DocSNZWs=?= <omosnacek@gmail.com>, 
-	Jens Wiklander <jenswi@kernel.org>, Sumit Garg <sumit.garg@kernel.org>, 
-	Philipp Stanner <phasta@kernel.org>, airlied@gmail.com, cgroups@vger.kernel.org, 
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, op-tee@lists.trustedfirmware.org, 
-	echanude@redhat.com, mripard@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: YT6PR01MB491026:EE_|YT5PR01MB619307:EE_
+X-MS-Office365-Filtering-Correlation-Id: 7904f9c4-5833-4481-a9cf-08df457a1e03
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|376014|7416014|366016|1800799024|4143699003|56012099006|10067099003|261026121527099003|22082099003|18002099003;
+X-Microsoft-Antispam-Message-Info:
+	MzC/1X6Ac77QKlJcRFbNrBN7eL4nAhI4TkPLwy4wh7T239HMI9zKsz3hxPIkaMJj8dFVSvKRuPVtX9XhaDlW4PuO5uXhwArsO8rJUGbC82bAq5NldgC/dJaF6gIcfrgUkmLays5wQdyofJvyTzESSF5769n6KUhk4QpIfLO48K4/h847qR83CXtKexB17cpUOfQOcHYK72M5Zd0t6n0iWlfihP++0ZEgwzG8GZKmShw1jxtkagBmCz2kgfC470+bwadMfvkLjJeeI0nYQSCdqonoj5zSMQW2p1JL2C0IAu66m5wWoV/sm8Ro3g6wGcnOf900cnf2IY3n5/WoMuwkqEh1Lih+oIvcSjwoA4xi/Ku4geoK6jHKrkPt7QvvcAPOyJjxyisJNxBi5tM6VdHCDjt1jiGPuya/3irbzH/GY1x+oq+Bpx2gzkWbhlEiezrZOPavfCEaalcbF7ZstkwovqfNzE7k9R2CJckg4KXd28ey2FICXuCaLEd0uKAgRTvDY9pPaQqCquBWHktmPR2wi+rA+qrljnZgWNuwGrq4sGfdNNPJxsEc0xT2xIuZ8SD/3uqvTHM2rS8oRsBj9QQvq69VYS+h6SUteji0p+/Itao=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(376014)(7416014)(366016)(1800799024)(4143699003)(56012099006)(10067099003)(261026121527099003)(22082099003)(18002099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?NVpwNFZjL3kyWmZCT3htcjl0U0JJdHZwdHBsbExzRGJRWG44WE1YcTJpeDd3?=
+ =?utf-8?B?WEN6N3NGMWo2c3JNM2hTTlpjMGRSSElsMVBVZjFPbWg2RUE1ZXV0WEM2UG9N?=
+ =?utf-8?B?dFRoQnpXQjBkNndEL3B6N0Q1SnNicHNpNXJSdUc5cFRmQ2dHODhnT3hQS1NU?=
+ =?utf-8?B?YlNNWlRIbVFuQ245aXR2amNadXl2VmFaS09FbjlMOUp0bVpWblVZd1RPRnJ6?=
+ =?utf-8?B?ODRzUEVjN29PR3B0bENPcnlad3hZaVFaYU1lZEEyMVZvUmhxMTI5c3FmZTBh?=
+ =?utf-8?B?d1plK09rVnBjc2Nnb0xiL3JiaGJzU0xMdkRMVXVyc0VhbHVRMFFQUlZtRVV1?=
+ =?utf-8?B?RElmRzFRbVhKUEJWeVdORXpQNkNESmQ1bzRCSWJxSDVrdTBWT3Z5OWVmMmln?=
+ =?utf-8?B?Z2Q3KzI3VVVHNW5kWlpnRk02b0xycjBSeGdRYlFJdEEwLy9EQmdvbWNOU2gy?=
+ =?utf-8?B?NVlVT0F1ZS9WT1lRZVdueEU4RHY1a0Y2TjlSZ2pkVG1aYzlVaVdJUS85eWFN?=
+ =?utf-8?B?QllPMjNnTTNGMDd1V1ArTllYVDE2Yi9VS3YvZXZyazNGWEw2TlFWYUY5T2Nk?=
+ =?utf-8?B?NVZqNWwrRUpadktxZzBaMkVISzFBQTZ2QmJDeVE5Uk5VRVk3NjBRWVBxOTFi?=
+ =?utf-8?B?ZjRpUHpQZHlOWndLMXhETHVPRm5uTVVab3MvaHZRTmF0T3pOWVo2cEl6cStn?=
+ =?utf-8?B?a2xaemZoU2ZPR2dCUXZLSndYeVNvc2t0ZXVSRDI0VWs0WVA5YllORkdabnRv?=
+ =?utf-8?B?UE5FOFhTSUJTQWlndllCUlU5RE1PdVZmSmh0cFJMSnpjZ1M3ZGV1UGN6YVlO?=
+ =?utf-8?B?UzJVaHUvTk1Na01RcVUwYVBPZHQrTGdXcDRNcmZ5R3ZPQ0xMSTJTSTMyRG9Q?=
+ =?utf-8?B?QU9UbVVYcGRRM3dKclo2MHlWZVpZT3lHSnF1dEZDb01qRHp1dkVzQVZtVWJ6?=
+ =?utf-8?B?QmxVZHcraVcvVDF2WHlQTG9rekhibjdzbkpRMnVNVVp0b0VWUExYWGx6RXpI?=
+ =?utf-8?B?WDYxdEI1cmZzQ2w5dGVXSjcvM2tMYXlTb1NOck1hL2h5UWllSVVjM3hSQmdO?=
+ =?utf-8?B?elBUSkVmeGluQWR2NjFOMW1DZ2hBaERSL3FuZXNtM2lQb21mZW05TVIrZHUz?=
+ =?utf-8?B?UlR1Q2NJcXE4N3VZbDlGSDdjTW8rSVY2ZzNxaHFBTXZjYVc2eElNb3pIUnoy?=
+ =?utf-8?B?dTRJdWR0Rk9yeW50YkpSYmpGaDVreWNiRTEwQUNVZE0xVUlRTFRCUXgweStV?=
+ =?utf-8?B?ZkRWaTJtRE1ZaVlHZFJyRDBlUGJIZFFtRkFRbDhFYzR5R3I3WFBNaUUzQXNo?=
+ =?utf-8?B?VUFyYlFTbUN5VmdLSVA0TjVrRk1GYU41akFVYTl6emhIMVZmTkJEREppWHFq?=
+ =?utf-8?B?YjJwdU9nVDFGR1lTY0NUUS8waElNNnFKelFLczQ5ZHNxSzUxTXZyMlkxY2x2?=
+ =?utf-8?B?M2RSOVh1ZDNHNTBhSDRRS0pFZnNZU21Ua2lQOStaa2grWlZNdlljRnVQRWp0?=
+ =?utf-8?B?aTJheEpZcndiZUsralVWdTVqVW5RYVVRaEVkUXh2b1JQbGVxQ2U5NzBOK2FL?=
+ =?utf-8?B?SWRqeStXZmxJaFM3SzltSnFRMzl1NVVvZ1JhTklLcnRYRUZFV25uZ1BQeUNO?=
+ =?utf-8?B?eTF1RHplcmdad1J3aHNib2hrWWk2WVVXOWlVa0twVnM5dDJickVtSWVPTG92?=
+ =?utf-8?B?b2R4Y2NSQUFTMVVXcVRqQXFyeFk2VTN4c3FPVTlHcU1RWSs0VEFoSmk0Wm9I?=
+ =?utf-8?B?U3JFSDlYQUdHZC9qaGNWQm1hYllaOEJ4L2xxazZBK1liYUNyR3N4TTFnYlFY?=
+ =?utf-8?B?KzBENDFLNytjZUNLVXpST2JpUFBjaTBBaklYOFhJb1I0TzExRDc1TUlEaXRy?=
+ =?utf-8?B?VFpnOFNhQmllOUVPamZjbXBhN3Z4REtxNjJDM1VRVlZoVFNSdVdXbVVtWFVV?=
+ =?utf-8?B?a1JMaStTdDQ2WDZDT0hPQmtVb3VWVEpBSGR1cm1ITU1yd0VjNURzWjVMUVpu?=
+ =?utf-8?B?TStaWFEydWZ0Q0dnVlFYMmhkRlpYZUc5VFQvb09wSTc4djVkc1k0b1FVeitH?=
+ =?utf-8?B?L1ZvVU5CM0FQVWR0V0hFSC9BaTA3aW9QV0hMeERUZTZUQzg2TEhBbERGV1kv?=
+ =?utf-8?B?TmRqVlFKblo4M0VEcUw4YUNpRzBESENWcGJWcjlIYVRab202ZkZhUDBmN0p1?=
+ =?utf-8?B?VHV2QUdaZGdoVE85dVp4YUQwSmlpN3VobTNiOUZRUk5McnExTHdwNmxaYm9W?=
+ =?utf-8?B?ajA1N1k4bk51OHFPVEs4dEJwTEVIT1o4d1FjbVUybFBMNnpYSWczTml4ZHlW?=
+ =?utf-8?B?aUxHbld3VHE0QlIvdDRURk0yY1JaVmo1SzZiRXVlQmViTlpzdnNkR09ZQmNQ?=
+ =?utf-8?Q?Yrg/YXNgEKh+IPSMRDAeR01mamQpFF5oAclT2?=
+X-OriginatorOrg: efficios.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7904f9c4-5833-4481-a9cf-08df457a1e03
+X-MS-Exchange-CrossTenant-AuthSource: YT6PR01MB491026.CANPRD01.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Nov 2026 13:44:50.2542
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4f278736-4ab6-415c-957e-1f55336bd31e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: rSBlirgqyzReNu1ELI/qqdbK04lJyM0eC+/uZ9ZlslDW3sb6qvImtfRL0KRt1AdU7pc3ZkbJwht+6FNrFc3NAtx/BJVB9TmW5wc5kAvKuoU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: YT5PR01MB619307
 
-On Tue, Nov 17, 2026 at 11:54=E2=80=AFPM Paul Moore <paul@paul-moore.com> w=
-rote:
+On 18/11/26 14:15, Juri Lelli wrote:
+> The above paragraph is a bit hard to decipher. :)
 >
-> On Nov 17, 2026 Albert Esteve <aesteve@redhat.com> wrote:
-> >
-> > Shared-memory allocator services (e.g., Android's gralloc)
-> > allocate dma-bufs on behalf of client processes in different
-> > cgroups. Today those allocations are charged to the allocator's
-> > own cgroup, leaving client cgroups with no visibility into their
-> > actual memory consumption and defeating resource limits.
-> >
-> > This series adds memory cgroup accounting for dma-buf allocations,
-> > building on T.J. Mercier's earlier series [1] and incorporating
-> > feedback from previous versions and LPC discussions [2].
-> >
-> > Patch 1 introduces the MEMCG_DMABUF stat and the
-> > obj_cgroup_reserve_dmabuf()/obj_cgroup_cancel_dmabuf() and
-> > mem_cgroup_commit_dmabuf()/mem_cgroup_uncharge_dmabuf() helpers
-> > in mm/memcontrol.c
-> >
-> > Patch 2 wires up the charging policy: dma_buf_export() stores
-> > exp_info.objcg and updates the stat, a new charge_fd field in
-> > DMA_HEAP_IOCTL_ALLOC accepts a pidfd or cgroupfd to identify
-> > the target cgroup, and __GFP_ACCOUNT is removed from system-heap
-> > allocations to avoid double counting.
-> >
-> > Patch 3 adds DMA_BUF_IOCTL_XFER_CHARGE, a general ioctl on any
-> > dma-buf fd to transfer charges post-allocation. This covers the
-> > double-hop allocator case (SurfaceFlinger -> gralloc -> kernel)
-> > and works for buffers from any exporter that opts in. Charging
-> > is gated by dmabuf->objcg being set at export time, ensuring that
-> > transfer is only applied for buffers backed by system memory where
-> > size reflects actual bytes. If the receiving cgroup lacks capacity
-> > for the charge, the ioctl returns -ENOMEM and the original charge
-> > is preserved.
-> >
-> > Patches 4-7 add access control for cross-cgroup charging. Letting
-> > userspace decide who to charge needs to be a privileged operation
-> > because it has material impact on OOM decision and resource limits.
-> > Charging outside the caller's own memcg subtree requires
-> > CAP_SYS_RESOURCE. On top of that, LSM hooks gate the two charge_fd
-> > flavours: security_memcg_charge_task() gates the pidfd path (target
-> > identified by task credentials) and security_memcg_charge_cgroup()
-> > gates the cgroupfd path (target identified by cgroup directory label),
-> > with SELinux implementations using process2:charge_to and
-> > cgroup:charge_to permissions.
+> Maybe something like the below?
+
+Yes, thanks. The next version takes your text as is.
+
+> Also for other changelogs, I am not sure this kind of info adds much, as
+> I fear it will be hard to track down in history anyway.
+
+Agreed. The next version drops the sentences that name the review that
+found a bug, in all the changelogs. The credits to people stay.
+
+> For the implementation,
 >
-> I'm probably misunderstanding the description here, but in both cases
-> (the pidfd or cgroupfd case), ultimately the cgroup is charged, yes?  In
-> the cgroupfd case it is more direct, but in the pidfd case it is still
-> the cgroup associated with the process identified by pidfd, yes?
-
-Your understanding is correct here.
-
->
-> If that's the case - and it very well may not be (!) - it probably makes
-> more sense to combine the two SELinux access controls into one.  Yes, the
-> LSM hooks and callbacks would likely need to be different due to the
-> mechanics of it, but the permission check "cgroup/charge" could be the
-> same.
-
-Combining SELinux access controls makes sense to me. I kept them split
-because I wanted to preserve granularity between the two flavours, and
-process2 seemed like a natural fit for the pidfd path, but I guess it
-can still be achieved with a single permission through the target
-types.
-
-I'll rework for v6. So, in the pidfd case the check target would
-remain the process's domain:
-
-   allow allocator_t client_t:cgroup charge_to;
-
-where allocator_t is the domain requesting the charge (i.e., the
-central allocator), and client_t is the domain of the process the
-pidfd refers to. The groupfd path would check the cgroup directory
-label like so:
-
-  allow allocator_t cgroup_t:cgroup charge_to;
-
-Would that be ok?
-
->
-> > Patch 8 adds selftests. The tests and vmtest script were mostly
-> > written by an LLM, closely following the style of the surrounding
-> > tests and the virtme-ng setup. All code has been reviewed and tested.
->
-> I think we need to have selinux-testsuite tests to go along with
-> this, especially as this would be the first patchset to add cgroup
-> controls.  Historically I've pushed back on piecemeal cgroup additions,
-> pushing for some basic design of how to manage access controls for
-> resource management first, but since evidently no one wants to do that,
-> we really do need tests.
->
-> https://github.com/SELinuxProject/selinux-testsuite
-
-Agreed! I was already playing with it between the last version and
-this one. I have some tests drafted, more or less. I was unfamiliar
-with the testsuite, so instead of offloading the work to an LLM, I
-tried to follow along and proceeded too slowly.
-
-I will link a PR when sending the next version.
-
->
-> > Known limitations:
-> >
-> > - Single-owner model: a dma-buf carries one memcg charge regardless
-> >   of how many processes share it.
->
-> Once again, I'm sure I'm misunderstanding things, but are you saying
-> that multiple cgroups can end up sharing the same dma-buf despite
-> only one of the cgroups taking the accounting hit?
-
-Yes, you are correct. A dma-buf (its fd) can be shared by multiple
-processes from multiple cgroups, but only one holds the charge. With
-this series it can be transferred, but never shared.
-
-Sharing could be a follow-up series. Perhaps splitting the charge
-equally? But sharing is a big problem on its own, so I preferred to
-keep it out of this series.
-
->
-> Hopefully the charged cgroup is deterministic?
-
-Yes, the charged cgroup is deterministic: it is set at allocation, and
-only moves via an explicit ioctl.
-
->
-> > - Only memcg accounting. CMA heaps would additionally need dmem
-> >   controller integration.
->
-> Do you have a rough idea of how that would work?  I ask only because I'm
-> interested in seeing if that would require an additional LSM hook or if
-> there is some way we could leverage the same hook(s) used here.
-
-Rough idea, yes. Today, no dma-buf allocation charges dmem at all, and
-of course no target charging either. The first goal for CMA is simply
-getting those heaps accounted. In that regard, Eric Chanudet has a
-series making CMA allocations memcg-accountable with per-area counter
-[1], and is working on extending that approach to dmem. It's a bit on
-hold waiting for the feedback on this series.
-
-But afaik the cross-cgroup charging and central allocator problem is
-mainly a system-memory one. Whether dmem ever needs the same
-cross-cgroup attribution (e.g., DRM central allocator wanting to
-charge clients' dmem budgets) is not clear to me.
-
-Nonetheless, if it does, the internals should be mostly the same;
-everything, including the permission checks is controller-agnostic.
-Only the controller performing the charge changes. I expect no
-additional hook is required.
-
-[1] https://lore.kernel.org/all/20260821-cma-memcg-regions-v1-0-d21b165b844=
-0@redhat.com/
-
->
-> > - If a transfer of an uncharged buffer fails, the buffer remains
-> >   charged to the original cgroup. The allocator (userspace) is
-> >   expected to handle this (retry, free, ...).
-> > - The LSM hooks are intentionally narrow. Broader cgroup access control=
-s
-> >   (e.g. for the memfd/kexec handover case [2]) could be a separate effo=
-rt
-> >   reusing the same pattern.
-> > - Only system heap sets exp_info.objcg today. Other exporters
-> >   (DRM, V4L2, etc.) can opt in by setting it, but are not
-> >   covered by this series.
-> > - Related to the above: lazy backing-store allocation is not supported.
-> >   This can be extended later, e.g., by adding a flag on the dma-buf
-> >   struct for explicitly marking when memory is committed.
->
-> Similar to the CMA case, any rough ideas on what this would look like?
-
-Yes, again I have a rough idea. We already separate reserve and commit
-operations, so the idea is to delay when a charge is committed. For
-that we can use a flag in the dma-buf struct to mark when the memory
-is committed. The limit is still enforced up front (so a lazy exporter
-cannot overcommit), and the stat reflects the actual allocation.
-
-The permission model is also unchanged for this case. The flag only
-affects when the stat will reflect the charge.
+> Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 
 Thanks!
-Albert.
 
->
-> > Note on TTM/GPU accounting [3]: that effort charges system memory
-> > allocated for GPU buffers per page, with its own stats (gpu_active
-> > and gpu_reclaim). This series charges at the dma-buf level, for
-> > memory with no memory.stat category of its own; exporters whose
-> > memory is already charged by their allocator must not opt in, so
-> > the two do not overlap.
-> >
-> > [1] https://lore.kernel.org/cgroups/20230109213809.418135-1-tjmercier@g=
-oogle.com/
-> > [2] https://lpc.events/event/20/contributions/2416/
-> > [3] https://lore.kernel.org/all/20260706052330.1110909-1-airlied@gmail.=
-com/
-> >
-> > Signed-off-by: Albert Esteve <aesteve@redhat.com>
->
-> --
-> paul-moore.com
->
+Mathieu
 
+
+-- 
+Mathieu Desnoyers
+EfficiOS Inc.
+https://www.efficios.com
