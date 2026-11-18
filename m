@@ -1,53 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.24
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794989226;
-	b=jiWyxOwofyWOcx5pS0PIF3I0wlsMAcYeCLFFiwJO23CTSZ/toRjrP+30HNiEy+AviOKC
-	 la6001XAh9NNMEx9Y+ewWVZsphd10Eg45KC3HJ0aECxEM8kY7lh8v6NRhNoC9hv4JGB21
-	 GLwa/SLeDFiCggJxa2C/E6bQ0/t107nD7NFtKwjVy/xLBIj5WDY3j+gOhpAEvG9hiPM9s
-	 aOSgMb2cThV5u7tY0SsHgCy9XMEmW/Hrw31hHkVHKz710MlMeLHwOmF7bHzr8bI8v6BYX
-	 CLBE3WLqJd44cAcDNAQG5tbviDhpYXXLfwl5Pk3OXatyi7OTt4D0K4EwTKFXin6U5Kg==
+	t=1794993721;
+	b=OCoBF0cgjuXUJpWK034E65yVeGsdgHhA2atuypU3PyGNUvVX2CJctBLl7JLzHyC782ln
+	 U0dQXcf/0vCbRv+ZgoGndRra7LRrPf+ymyM+6iqWFprvwDTYUdtq616lKrwi/JWQw92cj
+	 v81OsmUDLooNU76wzyonlmzKd04lhMVKn/XtvtzyPlBooZYIh2575XITJrexTtbH5pmyf
+	 izqUfu8I69rnL8v2DCCH4LnJtWjqP4ve5KCoMSc9IQv7FWreeGfod+4aJd1H8N9J+X+2B
+	 Wx+V+Vo2ybY9FouZjJmdwa11WkUqFsfd9+muEqeridL/lIfJFJfgLJkv8miAWEyi2Jw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794989226;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=1Bo/wvG56jqqMTFF5RAZSJ1/6NN/t3qLrAptrG7cT7s=;
-	b=WRSMlP/cf6CkzXjoAOtJ0kpre/9wEEwXJHa+iHm/sbfbxBNBC+/21DefMSdt3bghZNQW
-	 7wrng0pI8/CGohwFXDNxUZ1xoWnDL3zMz/buxPTpBFOMSVF70NjMykFpoK9RW7Y/Vc7iS
-	 d3G4oxijjTfcoSaz7fUFQ39L4d82r2GMxzjiEPyBYTy5Lj9CbOoX392Eu/YGAl3oVwpJ7
-	 RUzdwrq/FrdC/ioSpq/ynFdThU0ypQSgb+9Ep4ijN/UeXgYwpwbaL43odkF3Be/acbuKr
-	 7mrHTSS7BkLBKdC+2W6KXpPvRndDbg7ktXU6Qq9cJg0O5uhNjaKvgAk2C2HWvltiYGA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794993721;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=gzIfQo+V40+G/VauJiKWlPuxA1l3b/hPJPpuHDGZsmA=;
+	b=qOVoWQnQ9gpmad2IqEJFfas7sP1rH/mBqzcTDER5Vmoh1BhiVFz3XxGAwelj6cdQiSzy
+	 NCiXsm8pVawFITQgMlgDfhqs450c6m1e1suJEZrZTxJ4HwEvQQrJPyhenUM9smof8bhlt
+	 bbyt+xxOBL7KnD4n5TUMC8fVmlpF7is8Hk9lvvrrhRUewZZhqfNaQdSzBbcdEoukXB/ZD
+	 sKXoUUdxGEfmZZhBjdiCLVf78hb32d/C1Ox3ZhaUmvolgoCKWdaU72pNJherGWG/oSZhu
+	 n9t+5fvN8U3iIH29SLDwOZ/5D+3JAego4KlQfN2dZ3FQBA1/g/ehmMO441+zk/4rctw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WklOBgTr;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=p3VRkYAW;
+	arc=none smtp.remote-ip=91.218.175.24
+Received: from mta0.migadu.com (out-24.mta0.migadu.com [91.218.175.24])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 081D7606A31C;
-	Wed, 18 Nov 2026 08:07:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87D08606A31C
+	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 09:22:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 87D08606A31C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WklOBgTr
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48BE31F000C4;
-	Wed, 18 Nov 2026 08:07:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1794989225;
-	bh=1Bo/wvG56jqqMTFF5RAZSJ1/6NN/t3qLrAptrG7cT7s=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=WklOBgTrOnumaaV94d2YEKWrGjabVcrhdbw/IlAHUxYCQOX5oZ0l0e0bgHxYtvJms
-	 SFmeaYjRuuv92m8WP08lvOOIpYftB2L0PszkK5Z4fte+8diwEGblvazYLQEtsOctSx
-	 d8+lS0wFgF+EWafUzXvrwF/z3M0rrFV+Uldwb2hNMAMJVHuRnaAw+fjYY/opV6/nR2
-	 B54E6vfyASCCnwJrov9shVK2KcCMCTFQ6PwhcwZpCSDqw4v41KW1djeMTsTkRXPPaC
-	 V5kNEsheOngf1/jjQ0sUmZtqZAD+3MDH4vXVcsat74LcX1vorw1rdoWFkkyUiY+MKT
-	 PhyaxrtPCyEzQ==
-Date: Tue, 17 Nov 2026 22:07:04 -1000
-Message-ID: <58cb2cbaf82c0f671213eaca46465cd5@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Yuri Andriaccio <yurand2000@gmail.com>
-Cc: bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com, hannes@cmpxchg.org, juri.lelli@redhat.com, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com, peterz@infradead.org, rostedt@goodmis.org, vincent.guittot@linaro.org, vschneid@redhat.com, yuri.andriaccio@santannapisa.it
-Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
-In-Reply-To: <20261111175657.250354-1-yurand2000@gmail.com>
-References: <20261109163616.195264-1-yurand2000@gmail.com> <212c244d534ee1fdb0538a980789e16c@kernel.org> <20261111175657.250354-1-yurand2000@gmail.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=p3VRkYAW
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=aApfAP319qtaqrvPZcix/c+LpziV/0GztArdiAixTSw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794993718; v=1; x=1795598518;
+ b=p3VRkYAWRP8IDP0E6kljvYhfMeZnH9VwOYpDlc2BgQ6PYyKc22Ce1z2G3dI832BwHQ6c0wMT
+ /hbHINBoBMnIlWApxMJk5WrYg5SbgGB/r7MpAooSGnCKH00rAx0K8iSlqKMYwjVgul8phLsALN/
+ nDy1G4tzQ8pFV2Dw2H4rSrP8=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 368022f8a7a724ec;
+	Wed, 18 Nov 2026 09:21:58 +0000
+X-Mizu-Trace-ID: 368022f8a7a724ec
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <58a7a7fa-500d-467a-840f-fedb59a73e52@linux.dev>
+Date: Wed, 18 Nov 2026 17:21:53 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,57 +58,139 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 01/12] cpuset: introduce partition_enable()
+To: Ridong Chen <ridong.chen@linux.dev>, Waiman Long <longman@redhat.com>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
+References: <20261114083124.1340140-1-ridong.chen@linux.dev>
+ <20261114083124.1340140-2-ridong.chen@linux.dev>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261114083124.1340140-2-ridong.chen@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello, Yuri.
 
-The summary sounds fine for the most part. Some comments below.
 
-On Wed, Nov 11, 2026 at 06:56:57PM +0100, Yuri Andriaccio wrote:
-> - `cpu.rt.max` only accepts per-CPU settings, so the global "default" is
->   removed. Removing all overrides means the cgroup is a "max" cgroup, while
->   just a single override means that the cgroup has its own budget.
->   + This new interface disallows zero-runtime overrides, as a zero override
->     is equal to an empty override when there is at least one non-zero override.
->     As an example: [<CPU0 10ms 100ms>, <CPU1 0ms 100ms>] is equal to just
->     having [<CPU0 10ms 100ms>]. This seems a bit odd, how to make this better?
+在 2026/11/14 16:31, Ridong Chen 写道:
+> From: Ridong Chen <chenridong@xiaomi.com>
+> 
+> Add partition_enable() to consolidate updates to key cpuset structures
+> during partition enablement, including:
+> 1. remote_partition
+> 2. effective_xcpus
+> 3. partition_root_state
+> 4. prs_err
+> 
+> Key operations performed:
+> 1. Invokes partition_xcpus_add() to assign exclusive CPUs
+> 2. Maintains remote partition flag
+> 3. Syncs the effective_xcpus mask
+> 4. Updates partition_root_state and prs_err
+> 5. Triggers scheduler domain rebuilds
+> 6. Sends partition change notifications
+> 
+> This helper also handles the transition between root and isolated
+> states of a valid partition. In that case the cpumasks are unchanged
+> and only the isolation state of the CPUs in @new_excpus is updated. The
+> caller passes the CPUs used by the partition itself, as the CPUs of its
+> valid child partitions keep their own state.
+> 
+> A partition_state_update() helper is added to set partition_root_state
+> and prs_err, and to reset the partition data when the new state is not
+> a valid partition.
+> 
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
+>  kernel/cgroup/cpuset.c | 56 ++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 56 insertions(+)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 7e374210c123..860cb7ea3efb 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1702,6 +1702,62 @@ static void compute_effective_nodemask(nodemask_t *new_mems,
+>  		nodes_copy(*new_mems, parent->effective_mems);
+>  }
+>  
+> +static void partition_state_update(struct cpuset *cs, int new_prs,
+> +				   enum prs_errcode prs_err)
+> +{
+> +	lockdep_assert_held(&callback_lock);
+> +
+> +	cs->partition_root_state = new_prs;
+> +	WRITE_ONCE(cs->prs_err, prs_err);
+> +	if (!is_partition_valid(cs))
+> +		reset_partition_data(cs);
+> +}
+> +
+> +/**
+> + * partition_enable - Transitions a cpuset to a partition root
+> + * @cs: The cpuset to enable partition for
+> + * @parent: Parent cpuset of @cs, NULL for remote parent
+> + * @new_prs: New partition state to set
+> + * @new_excpus: New effective exclusive CPUs mask for the partition, or the
+> + *              CPUs whose isolation state changes when switching between
+> + *              root and isolated
+> + *
+> + * Transitions a cpuset to a partition root, only for v2.
+> + * It also supports the transition between root and isolated partition.
+> + */
+> +static void __maybe_unused partition_enable(struct cpuset *cs, struct cpuset *parent,
+> +					    int new_prs, struct cpumask *new_excpus)
+> +{
+> +	int old_prs = cs->partition_root_state;
+> +
+> +	lockdep_assert_cpuset_lock_held();
+> +	WARN_ON_ONCE(new_prs <= 0);
+> +	WARN_ON_ONCE(!cpuset_v2());
+> +
+> +	if (old_prs == new_prs)
+> +		return;
+> +
+> +	spin_lock_irq(&callback_lock);
+> +	if (old_prs > 0) {
+> +		/*
+> +		 * Switch between root and isolated, cpumasks are unchanged.
+> +		 * @new_excpus holds the CPUs whose isolation state changes.
+> +		 */
+> +		isolated_cpus_update(new_prs, new_excpus);
+> +	} else {
+> +		/* enable partition should only add exclusive cpus */
+> +		partition_xcpus_add(new_prs, parent, new_excpus);
+> +		/* enable remote partition */
+> +		if (!parent)
+> +			cs->remote_partition = true;
+> +		cpumask_copy(cs->effective_xcpus, new_excpus);
+> +	}
+> +	partition_state_update(cs, new_prs, PERR_NONE);
+> +	spin_unlock_irq(&callback_lock);
+> +	cpuset_force_rebuild();
+> +	notify_partition_change(cs, old_prs);
+> +}
+> +
 
-It's odd because a missing entry means "max" when there are no entries
-and zero when there are some. Can a missing entry always mean "max",
-per CPU? On a CPU that a cgroup has no entry for, its tasks would be
-served by the nearest ancestor which has one. Zero then becomes a
-regular value which is shown on read, and the two configs in your
-example are different. The former can't run RT tasks on CPU1. The
-latter runs them on the ancestor's budget there.
+Hi Ridong,
 
-This means that a cgroup can have its own budget on some CPUs and be
-"max" on the others. That is a fundamental part of the interface, so I
-think it's best to get it right from the get-go rather than starting
-with a restriction.
+I haven't found any functional issues with this patch, and I think the overall direction of the refactoring is good. I just had a thought of my own and wanted to hear what you think.
 
-The root has no ancestor to fall back to, so a missing entry can't mean
-anything there. It has to always carry an entry for every possible CPU,
-which defaults to zero, and reject "max":
+Currently, partition_enable() handles two different operations: enabling a partition and switching a valid partition between root and isolated. As a result, new_excpus has two different meanings depending on old_prs. Looking at the callers introduced in patches 4/12, 8/12, and 11/12, they all use partition_enable() to enable a previously non-valid partition. None of them seems to need the old_prs > 0 branch.
 
-  0-127 runtime=0 period=1000000
+I understand that this branch may be intended for the follow-up refactoring of update_prstate(), since partition_switch() introduced in v4 also calls partition_enable().
 
-> - `cpu` and `cpuset` controllers are decoupled, as it was before the `cpuset`
->   integration patch. The user/admin is responsible for inconsistencies between
->   the two controllers (i.e. empty intersection between active server in the
->   rt-cgroup and the allowed cpuset just disallows executing RT tasks entirely).
+However, could we consider keeping partition_enable() focused solely on enabling partitions, so that new_excpus always has a single meaning? The root/isolated transition could remain in update_prstate() for now and be handled separately when update_prstate() is simplified later, perhaps through partition_switch(), or by introducing another function such as partition_set_isolation(), or some other more suitable approach.
 
-Yes, let's decouple them. With that, can the CPU offline lockout go
-away too? An entry for an offline CPU can stay configured and take
-effect again when the CPU comes back.
+If I've misunderstood anything or overlooked a reason for keeping these two operations together, please let me know.
 
-One more thing on the unprivileged FIFO/RR tasks in cgroups. No other
-cgroup resource config grants privileges that way. e.g. If an rlimit is
-set on memory, memory.low doesn't do anything to work around it. I
-think who can use RT policies should be left to system configuration,
-i.e. RLIMIT_RTPRIO and CAP_SYS_NICE. Can you drop that patch?
+Thanks, and all the best!
 
-Thanks.
+Best regards,
+Guopeng
 
---
-tejun
+>  /*
+>   * remote_partition_enable - Enable current cpuset as a remote partition root
+>   * @cs: the cpuset to update
+
