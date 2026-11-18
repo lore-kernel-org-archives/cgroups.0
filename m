@@ -1,47 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795017291;
-	b=2743dKAk0y6SY7s2B/w+Q0qePFAAWX/UPbjzVRZtCPw6dIgg3kdsPUVAUmLTmDdqgSwq
-	 EZJunLKSEm+sLIe/Qx7g1VL7xxVdBqWi5EplW1MevRqQ2CvIX8mcm+eL1I7wqPAoC0eZA
-	 RO0TXawozJ4aqfOs/qwnIJpuFwbQboS63wfadpBED1aA5e813Gdk4ZiMQt8M7v86yIJz6
-	 TpzlJl5FAs74dCVjVf7E/jXDHm9oPedr+qSn/uMWluJCXVh+//mgTllVmoQLZTyneC+pD
-	 rWiYaWEV4FGga7nd/IOBP3KGg0okoDZJxVC8OmPLGnrRUFHg22VbLzpNpJAJA1ShcCA==
+	t=1795018059;
+	b=pjLTmqE5huSYB29iXhxWNIzNufYiPQ2YlNN7EnsBw5Q8hqA8BrtosNvqRJTIYt6UV7j0
+	 XBqbr4afBezJMvPpYsCo+gUdNJmV6ag3S0fmlQhcar9lhCcPYHX5zT9WA2FudlYW12YyO
+	 YoYMleCVLqqkWyCLjVgrY6pZN0YYPIhsB9ukLNYOGjTzXLq9cafLC1G2fr57M9tWX4soF
+	 zo2VDgZS0+ioQrc7jJm9UgybTYTunjOBRxwjsh9C4xL3PSJhCummP8mWCnHttV9UnAYrd
+	 ys0Awj0Z0vxvt/q17sB8xWwFI6DLIHf8JdnJ5z9IPCZ3chDiIsWuqYqrUJvYRRRCiSg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795017291;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=DmJfzC/sRq3TlQhBoN1iY/MRqsblNPUXimCuifUw2i4=;
-	b=ePtpA21Z4vqigN6/dsglWfn20YJfSP+5hAiVUByULX6jsLUsBWme+DZZytBfKRJe9iam
-	 VoT8+XkDtQU2oa5WSHKwrT0C5YzQ+A9rq6MM/iWybuZjDBfSaf1PX8v4gSbdO6f19W7QB
-	 JodPYQUENeGA6qQ2H5DBTOOWI0UERWMBUgogMZ3sUnjBa1S4aJdwPqGbTcALCDpVuX/vG
-	 DAsAQ2/LVCJNs5tAGbXVoUYKi+XZ9Fu33I+qGEXLYtbEkdR+LdgWULMvKqGxct7FSVco0
-	 ZHnXIELwI14RKJFtge+Yk2Myb+MhvPmkaS89p9++sM0Da+2PhgpJa0JmF/3Q37AmCqQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795018059;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:In-Reply-To:
+	 References:Subject:Message-Id:Date:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:X-Mailer;
+	bh=CV7oamrSYXfpp3NnleoEpP5E6f5lbD9kU3nbbqKEnc8=;
+	b=g+/dwkdUbn+vgw6kPZz85DjXPYuJZYqQec4o0kIpZlK++RJLMNQZ3lNX5c0w9d5iXVdt
+	 ZUc2RwcZkezvIfMW+F0jvnQzRdzMerHu+AxpcvuUsV8s+3Jloo46avov+mjuBUXE/G1ma
+	 VXdbQQ2ky0lLagk4yC+RssPVoTbpWrcAARs7OpjnRT4Vi6fNMi4+YsipqaA3dR//Lv2qH
+	 4ZEaD07bospkHiGK/AleAamy9hdnK+6MSMOqgthUD374d4DxE3uqeqgYKwzpLAD27IdL4
+	 TupYxn1OaDoGz+jLMEOfc39OHbbQcvZptfV9Nhi/5I68tpn9YTnqNDcbxlc2FyjZcdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ipYi9E6e;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=none header.from=kernel.dk;
+	spf=pass smtp.mailfrom=kernel.dk;
+	dkim=pass header.d=kernel-dk.20260707.gappssmtp.com header.i=@kernel-dk.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=a5rhgeb3;
+	arc=none smtp.remote-ip=209.85.160.50
+Received: from mail-oa1-f50.google.com (mail-oa1-f50.google.com [209.85.160.50])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBFD0606A32F;
-	Wed, 18 Nov 2026 15:54:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCBD1606A331
+	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 16:07:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BCBD1606A331
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ipYi9E6e
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3B221F000C4;
-	Wed, 18 Nov 2026 15:54:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795017291;
-	bh=DmJfzC/sRq3TlQhBoN1iY/MRqsblNPUXimCuifUw2i4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=ipYi9E6elWAi2Wc6DUpjs2dCpCCGm6GaVIR0YbPs0dkd9x4JZMaISzryIIxxdy2ac
-	 avidtPhahy4S2vbejNTSzGtufOYSUF18usCZyy9AekrJV6i0rkCSWahGdhLIAhPqv9
-	 hp7lx6eTb7B6+6dgSMzCqk9ivlXNhu6vCTGrIA345xjQ5gjNBug7eJPZrMQsh+Ec2B
-	 UuQ98OvAPkenUR8cN9UQVY4Jjd1hKHndHmylk/6P4MbNZKu6/YzGelhRmUiTzzurEA
-	 fBGPB67h6fbliEoajzSm4zD2M1AijSSS1smbPDcw+YbOiBg29cA9TnBc+EYJqrgA5y
-	 RGae54Msu6SNA==
-Message-ID: <b367d98f-54fc-4d29-8e3a-2d19dc4e2603@kernel.org>
-Date: Wed, 18 Nov 2026 16:54:46 +0100
+	dkim=pass (2048-bit key) header.d=kernel-dk.20260707.gappssmtp.com header.i=@kernel-dk.20260707.gappssmtp.com header.a=rsa-sha256 header.s=20260707 header.b=a5rhgeb3
+Received: by mail-oa1-f50.google.com with SMTP id 586e51a60fabf-4a76f0cce5fso596709fac.2
+        for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 08:07:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20260707.gappssmtp.com; s=20260707; t=1795018057; x=1795622857; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=CV7oamrSYXfpp3NnleoEpP5E6f5lbD9kU3nbbqKEnc8=;
+        b=a5rhgeb35b8T5xllNNAeAnECO5OGWZ6FRR7g3JBTBjO3p29UNlMA5n5uAkVzlQrWDb
+         9X9tktBgkFW+N1AWN82LjGdQogSQ4C20Uq3ZqEfNc6b6QQnInosH7yAuraUEAckqLXRN
+         H8QXC6YWgM0rKmm4+aQArZeRlYHi5A9ujcVq17/4jz1Po88aC8PZnbgZwqfdfkRwCDwC
+         qIHH+l6buu7Fbly+5y4La0q2XL0yaSHrAlzPVTYXoW28SKbupT9CWG8AVuN6tBNNGPlM
+         8hw0B9CbHIRCEOd4dlJM8dAk2Ph1GA2THTGe5CsJF+6hPmUpcm7u9I0yji42m2YfX3bz
+         V/bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795018057; x=1795622857;
+        h=content-transfer-encoding:content-type:mime-version:date:message-id
+         :subject:references:in-reply-to:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=CV7oamrSYXfpp3NnleoEpP5E6f5lbD9kU3nbbqKEnc8=;
+        b=q3q1Shg3rSwhSHiY7wHGEp37Vb4fuh4jNCxa5jQhOHgc9dulE92SnY738KDWiVT065
+         lBNdknTUb8iA4n/4xHg5MQ4ncc+jDeHMtQFOZTf6kAj+oWtE92cZYnfjhikec0i3soaq
+         nyb7CUyNEkjGV0oOMZ0bIi2ojgNHzehpySBbfPrffnGZV0Y5NeRahjWU0hqlfoWqlSX0
+         8Z/pDxK1S/QWJ+zQuL9MWmRXHRotaSssnOex3dSy1OgaJWXi2fUW4RY1HS6zKclf9Jn9
+         qhvlOS01tLwPt6BPEbo6AMOxhEazYCnzyJ4+1JVvVR23PSPRDmVdk4Ly3g0/3xKA3fO0
+         /9OA==
+X-Gm-Message-State: APuU4Z+6XLgCj0MQPC3+leEQ2HG26OYfgZXhm8uE+AzsBuzRqWd2A2DR
+	YymWAMMY2k5LNorLHucU/3cZmP/ukHLEZJf0V6RugghCox9PIAsWmatevheU3r/BHWORB9h1Vjr
+	prRzMT0M=
+X-Gm-Gg: AYBFou06xneo6Cav7Ql8XCesLy27PyDPBWedEqik/APyZ6xP4F3um2W4ZeUKQ1R5bkj
+	1X1vb8/bxzWn6u9obaWUzYKSzGvZMqkJ9mTpjtOiFSlOpbHJZPekHjDPiG7Hf046Zt4zQ1lO0zh
+	UOMe0Bwd9VNlQqmRpDoLqAYdckZu3H9z1BqtmaXiry8bBwjc8zS/pFsmR/QnvrF/bTkt84dt0xB
+	aQ50IZf28aZJAm+cCTxlb27BAAEpawHT/t2POB6hjoBK0pbw2pPtpklLqHY7ceh58AOKLUF7AML
+	X2fG2JalVwfrBNK8/P7HxraNix1p32y2sanU7xx3PH6rDG9XxnPybcHvqQ5dpP5KD84AuibKZFY
+	6ee8iqX0z0dHY2hagcoBme0tMRWZi9Jmpx4COBUPaK9hk2Uvzd1F2SM0AUdsQ8QWuhFDkIbLl/w
+	cipSbW9WfMSAerFS0A8BQ2xtoVuf99ElBZDe48SehpnZbI5mfnbPN0R/ZH7QB2r0CW5MD6w/GB8
+	aoX9QQOAymQ9uKIuHz7PvNDliccPhEdrlDnpD34WQV16gecFFx1SpuPGVld+tp5J0sVWpzaHHMb
+	1LQlcGvKaDbWSVz0jWFDGL4xpAuai+NtzCUoF5OUa3kHLfe6GnIP5u7ei4uMMe9m0d178g+JuIU
+	lUiAf8X39jDgZJiDt14U4Jfa7Wwc2AvvrDp9S27sXLynnHiTA8w4=
+X-Received: by 2002:a05:6870:d285:b0:4ad:5a7a:f7e9 with SMTP id 586e51a60fabf-4b7613c52femr2613744fac.34.1795018057354;
+        Wed, 18 Nov 2026 08:07:37 -0800 (PST)
+Received: from [192.168.11.112] ([96.43.243.130])
+        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-4b743721fe9sm2624231fac.6.2026.11.18.08.07.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Nov 2026 08:07:36 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, 
+ Nathan Chancellor <nathan@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, llvm@lists.linux.dev, stable@vger.kernel.org
+In-Reply-To: <20261115-blk-throttle-wunsequenced-v2-1-1d297c891b82@kernel.org>
+References: <20261115-blk-throttle-wunsequenced-v2-1-1d297c891b82@kernel.org>
+Subject: Re: [PATCH v2] blk-throttle: Avoid unsequenced accesses to jiffies
+ in throtl_schedule_pending_timer()
+Message-Id: <179501805630.17649.245726738544852847.b4-ty@b4>
+Date: Wed, 18 Nov 2026 09:07:36 -0700
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -51,82 +100,34 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-next v3 3/7] mm/slab: handle SLAB_FREE_NOLOCK in
- slab_free_hook() instead of open coding
-Content-Language: en-US
-To: "Harry Yoo (Meta)" <harry@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>,
- Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
-Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev
-References: <20261115-kmalloc-nolock-fixes-v3-0-9034dd4ecaab@kernel.org>
- <20261115-kmalloc-nolock-fixes-v3-3-9034dd4ecaab@kernel.org>
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Autocrypt: addr=vbabka@kernel.org; keydata=
- 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
-In-Reply-To: <20261115-kmalloc-nolock-fixes-v3-3-9034dd4ecaab@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.15.2
 
-On 11/15/26 16:09, Harry Yoo (Meta) wrote:
-> kfree_nolock() deliberately skips slab free hooks that should not be
-> called in unknown context. However, there is one more place that
-> needs the same thing: memcg_alloc_abort_single().
-> 
-> Instead of open coding slab_free_hook(), let it handle
-> SLAB_FREE_NOLOCK. This is required to correctly handle allocation
-> failures due to memcg charging.
-> 
-> kfree_nolock() now respects init_on_free which has been ignored.
-> Besides that, no functional change intended.
-> 
-> Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
-> Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
 
-The sashiko issue seems pre-existing and orthogoval. LGTM.
-Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+On Sun, 15 Nov 2026 20:37:57 -0700, Nathan Chancellor wrote:
+> After a recent improvement in clang to warn on unsequenced accesses to
+> volatile variables [1], two instances appear in
+> throtl_schedule_pending_timer(), which can break the build with
+> CONFIG_WERROR=y / W=e:
+> 
+>   block/blk-throttle.c:469:25: error: unsequenced accesses to volatile qualified 'jiffies' [-Werror,-Wunsequenced]
+>     469 |                    expires - jiffies, jiffies);
+>         |                              ~~~~~~~  ^
+>   block/blk-throttle.c:469:25: error: unsequenced accesses to volatile qualified 'jiffies' [-Werror,-Wunsequenced]
+>     469 |                    expires - jiffies, jiffies);
+>         |                              ~~~~~~~  ^
+> 
+> [...]
+
+Applied, thanks!
+
+[1/1] blk-throttle: Avoid unsequenced accesses to jiffies in throtl_schedule_pending_timer()
+      commit: ae1171f38098098e88c13c38e462d27babb50038
+
+Best regards,
+-- 
+Jens Axboe
+
+
 
