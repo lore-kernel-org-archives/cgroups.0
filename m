@@ -1,101 +1,47 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.43
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795018201;
-	b=107X4m59X+ed3dR/5RHXpzbq7PAzJpliWgpZgCEV274rRXlHkCkPRTB+N8fDCb9c3Rm7
-	 cnH7nc0Z2mTjL2icxxCOPGwWr7igk4ANENq61I7EQc9QFF9twRXUcNyiL+Ho+ZJGF5FjO
-	 sHJtjV3FspSULOLNkG56jNskyDK8RSPZzH8F9GQMOeRUrj4Dd3qC/3coCFxaorBto0wyp
-	 98WDj7udnOvZn7MuYq3mfZCjkYcxeM1hJPZjqBUy4KlwQ1+ZO3Fl82JuF7gu2szPtd/hp
-	 NdoOkBYpsjp+b/AOqSqtESb4x6BHWg0lVQnrNmvdYZ+0tXERtbk0LVbQruKanM1x2Dw==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795018201;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:MIME-Version:References:
-	 In-Reply-To:From:Date:X-Gm-Features:Message-ID:Subject:To:Cc:
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795019065;
+	b=q/DV42IJUXPiMuk9x6yA3/DRSiNvNwDeWWRlIDdZ308l3D4RfDd553u1jxd2NU0SLxB1
+	 6qvAag/sF/JqJPg7XCeelHJoZuDTHmbenzNMfvVm7jMaQXXLe70s8DlKkLWugjrt8hi32
+	 rBSOGrbjRzSegC+GrTe2SlBGlGia4LvSpXYo/b9eBKhmp2TGANpRKxTcpC40SCbiPcVir
+	 Nma/AhqotnqThpTzveKZfC7V7wozvz83V1jg1Y/p4M1ugDutR4Yqbqy1fd65jTQ+AnV4t
+	 l4y8VvkwyvXOc7cofXry9WgC6xDq9YPLCicLfbMRVBxMZZEN3f88Sc2FjC0MHEEOV0A==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795019065;
+	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:Content-Language:To:Cc:References:From:Autocrypt:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=HbYXoP2RPMw58RAwQCFRXLN2yd0B0w7a3Dun8Sb9Zn8=;
-	b=mJetv82zeJP15iC+7Qvb0Wp7Qi0GltVa6YHLIcPoHuPDEAx1GJtk6XT7ec12pDTZlomh
-	 5zsHfwm1kkJZjvqCOiEtCo7d89SfpdRnZIM7mdnWTXx2saDGFZBLMeIWLJk3TJQ943cz0
-	 CAmIc6GL+0R+RuSvMLGzTC8CSn4z+2faFlRUjYeFK1zuHDVk/V3JeL/mx3FmA+I6ojbQ4
-	 x0l5BlMQ0PcAD4SV3xk2MmbLW14nSW1jTLhLFc8zuPN4LnSVgSWoniiXreSHv+2B5PwhF
-	 QU0vcKxGFiMrHkjmFJ6ZPj7M72Fg/2xh3dPn/ag5LmGlBeUh74VOEYYAtQ+HOToFtkA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=pKpVVSBx;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.43
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	bh=hyyvwqh0yUCrKvJZHku7usPSuKgxk7/6YeOVXPVE234=;
+	b=NLdgR1mvsI8RRFQtNDpOOzATRxUlteMp13nF1FTpFl2H1hUpZ0k29qC+bCzf2oBO1CvV
+	 kWvEhcz45JCjgo0FLPQtCN6CRDFJKUw5I1pajfGvJTEVDEkdTMaGr34g/TNW9TXTQwrU5
+	 7dleW19z8xbNeLCasB7jyqaPXw2wdXLOKetbFQFQB6bVzjBpDb5M/pEWqcuQKl+gQg/Rw
+	 MeMQx+hd0uhiC7kp/NnxS7GBlRRKhHK82wC3KO1cCFUcuoJjb7X96iQ+YFj1fsK3MNNMR
+	 bX23YWf6wBHoXX1oeyu6CTNodP4ep/kaTfsA6FCI0ZBi+tMlr7vgSzP+DfJn+xOAUnA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VYQ6iK1v;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77E49606A31C
-	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 16:10:01 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 77E49606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2581060A262E;
+	Wed, 18 Nov 2026 16:24:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=pKpVVSBx
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-4a9a8d6cea8so12323205e9.1
-        for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 08:10:01 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795018200; cv=none;
-        d=google.com; s=arc-20260327;
-        b=Uqu0arA+Vf7iL6p2b16F6kOjp7KlBO/ri5dwFeJvwAuPdTqXQZ9VQLmtkOJjVbRW07
-         miS/gi0A0gFX0MyT/EQsVD5lFBWxnvopcsiNSFI3PT5OJtLmqatwSFQAgHWLaZEoLgH1
-         nzOgEoQAZWlm3fjj8at6j8rJ4gwzGbHzpf67sOJB40/+1KhXLzazFkkRLx0k9PkDtDdH
-         bCBmvBC3LjTdUJLiFG372esJ2c6mGcmIi3qrcO8b+7N+NsX3SnK5zKXu/b2tJldovdBs
-         KEj/hlhYc8lRnl1ayC9vgiGp4Me5a3KZTGCjQSHW52iAtSD4GRt3w1bImo4lyapLaJE9
-         Ti3Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=HbYXoP2RPMw58RAwQCFRXLN2yd0B0w7a3Dun8Sb9Zn8=;
-        fh=Zli8C3CxmBmTVtEGu8xuuzLA98n9lJO9kgBXzbJ2xQs=;
-        b=awoznz0jzplVgL21cE9h5Zj3/yAM006WF3zXjsMPVUM9PgAVC0sGac+83IWRQQtS6q
-         cqsAWVmvJJzFL22D6Hx99vOxrNc8HPv/U0ymVNHJEeewCQQRBs0oywyUNiulazYFc2D8
-         be465FmxSw8wGc8hFRwVxlvJaw9cjZ26kPLZLW/75iF+QgD3Xlxap3IvKCkYC6EqgZ7Q
-         +BE5of62fHaxqAP3iKxZ0DOaz4To+dTqkqhy9S5LyyK0S+MiSOXYsmZENz/ETfCJWd35
-         moEIjt+BSJqijI0gYgabrCJUySMgaw7JrnozBOJMKq6QkgtVtCNgVsVWWWfOmBfPkDXe
-         3ogQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795018200; x=1795623000; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=HbYXoP2RPMw58RAwQCFRXLN2yd0B0w7a3Dun8Sb9Zn8=;
-        b=pKpVVSBxsv0XSkTMIy8QhpV8iYfpJgFtuIOOMraAqkh6IoY/LmnCeoFY2+atEoT7Mm
-         51yqYjvClrxz7PJEnwcKX+ag5vvKZvXQsxOzLhCYh4JsRBfQzN29l0NprtTdgWvsd6ix
-         AH0QnRKu1GLZ31o6b5lUrcbRaETqVFDnyZJS7t3cmGzJhOaIhFJp2bMr5emwdD29hhJc
-         RTs7I+nGHlyycNopVtnLI4PuG1cfcui/Xum192WTkqg+lt112F9t0Y4AcEwSdQ+g6qnJ
-         fEyxFj0SlLXR+vzEfwDVpIGqxFUfo5VZRX4qXbDxIZEzPRytaBJz01a74eiTXZMyIuVA
-         jVbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795018200; x=1795623000;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=HbYXoP2RPMw58RAwQCFRXLN2yd0B0w7a3Dun8Sb9Zn8=;
-        b=RVbXtJ7/nMyGt4ExXzCCZZUsOALv1uVynDrO3B4yBnC7LzSGwa7S4s4UBGz4bKYfNf
-         6H8VxwjyRa380zjltZWTGHvyKW/sygA913AusYI6ubW4lWtbTgmPKpeZkO3NO2dxiXob
-         8k0PRiQIOiJwzWHRgXK0QjxCw8BqObs9VrffTR2gf4dp5oxNcjPgEqR+XLs7nEPjYlih
-         y5ukvCz6CPa4Q8TsaqrlQXZttlT/ttPcgYwPAgCPesKTbguGHCtrXQ+5yndo/zv0+ux/
-         noEvdCrSWHiorf8m5kUiQHNYbJwvhyU5BEfPLZXvu0uWXYeOTThoskbw+d6G7wdEXOH2
-         NbPg==
-X-Gm-Message-State: APuU4Z9UVGBdNmX9SBPesJEy5jL70/Myzs2q8lNbkx6hdvXlOMNsCV0Z
-	v/eDdDFOA6h9xkTPstRSM1ndY8jGRXkyQX+CppdcodBP8vbSJbjHc7SoZmybcaSWqxNoOeZSapG
-	Tg8klx47oTOFiemcRs+glkpkqvdWozlM=
-X-Gm-Gg: AYBFou0qHuEcPHYuz9Hg4mwnAuPuaScx74QeoEwVpzLLZ3Yr5iz3SEqL8TAlBcYbcWq
-	B0zJ7g0aMnIddH6vfZDUeprJOx/WFKf9vawH+ihVvfiT4rEHOPVmCGEenn68xftV65/+xedUqeB
-	xnRH+yH0pxUOigz2jL1V/1VmdDN7qZ762Tp2cVygUuQber3xtnTYnDgDv+0jqX6StrBVozC/2al
-	darazelYkb+GkUdCPe6CTtqqZX2V8GhVuBgjcu74DDQauhXVWygP9rI+qI9OiD+ySNw43K3tI4Q
-	cHJGz+ckB53qEQbCpwWnIXms5AYnC9Mc2dDS9+jdo0JGRfNQ/pvNwYXSu292u/8hX0nJtLt6gCb
-	tU4CUbDRhv2JdDcz5gfcqsGfUv/kd449ehnMKFjd3FHG6BZzXhtP3+eltbWgPPKkXbhhgoRIls/
-	nLEisBz3GcMiDO+OS1ckDvBsO/faV9UYrU+imMUn1Ap2NelZPZe3rMWzAv7pLAPs8RRyCMTLVcM
-	8fZ
-X-Received: by 2002:a05:600c:3b1c:b0:4bb:5d38:259f with SMTP id
- 5b1f17b1804b1-4bb7da24a26mr60211045e9.12.1795018199716; Wed, 18 Nov 2026
- 08:09:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=VYQ6iK1v
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDEF51F000C5;
+	Wed, 18 Nov 2026 16:24:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795019064;
+	bh=hyyvwqh0yUCrKvJZHku7usPSuKgxk7/6YeOVXPVE234=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To;
+	b=VYQ6iK1vi6FHFW84MrhdkFONbt4aEau9XczusyK5CLhQaKISBgiYb9QEf+pMVSAZC
+	 7CS7yb2kyDszUaZVo4m6EjIIYx0AgTpRIGFoJqZ2l0THzAAC7tCdolmeWTJk0hVT+j
+	 vLYFsbBA1lZ173kFzYIBhEhmgyd0/XlKq8bTr3s8YbxDYXdRv/ou8P1BCjbckSoiqw
+	 6YroToxg40CQAFHKtUr5oGvZ+98pujuxWDEuGK11S2xMJtqrCBH0GV7397ngf3xNC9
+	 vtzs8fYfKBNXsug2DAwNIrwmN+t1++HWGwVk/IO/HD+jAyxv+l2X3Hmymi/9B8sNn0
+	 mWvWbR9ojFiVQ==
+Message-ID: <02c600ac-c968-4143-9e70-ccd2da858e09@kernel.org>
+Date: Wed, 18 Nov 2026 17:24:19 +0100
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,29 +51,172 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261117062620.346767-1-yumiao@kylinos.cn> <20261118130537.750211-1-yumiao@kylinos.cn>
-In-Reply-To: <20261118130537.750211-1-yumiao@kylinos.cn>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Wed, 18 Nov 2026 08:09:47 -0800
-X-Gm-Features: Aa3M54qRdo3OaZ77M4orB5mZ70nSvNFV6Jxp2gOAsd1jbRDwyTe3QzmeCNTj854
-Message-ID: <CAKEwX=MssYOr0J7tk54qUF7DbNb550KZrFmwnBD40L+tWde+5A@mail.gmail.com>
-Subject: Re: [PATCH v2] Docs/admin-guide/cgroup-v2: fix npn tags in memory.stat
-To: Yu Miao <yumiao@kylinos.cn>
-Cc: cgroups@vger.kernel.org, tj@kernel.org, hannes@cmpxchg.org, 
-	mkoutny@suse.com, corbet@lwn.net, skhan@linuxfoundation.org, 
-	rdunlap@infradead.org, linux-doc@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-mm@kvack.org, 
-	jiayuan.chen@shopee.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH for-next v3 4/7] mm/slab: fix a deadlock in
+ memcg_alloc_abort_single()
+Content-Language: en-US
+To: "Harry Yoo (Meta)" <harry@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Alexei Starovoitov <ast@kernel.org>, Hao Li <hao.li@linux.dev>,
+ Christoph Lameter <cl@gentwo.org>, David Rientjes <rientjes@google.com>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>
+Cc: kernel-team@meta.com, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, linux-rt-devel@lists.linux.dev,
+ Sashiko <sashiko-bot@kernel.org>
+References: <20261115-kmalloc-nolock-fixes-v3-0-9034dd4ecaab@kernel.org>
+ <20261115-kmalloc-nolock-fixes-v3-4-9034dd4ecaab@kernel.org>
+From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+Autocrypt: addr=vbabka@kernel.org; keydata=
+ xsFNBFZdmxYBEADsw/SiUSjB0dM+vSh95UkgcHjzEVBlby/Fg+g42O7LAEkCYXi/vvq31JTB
+ KxRWDHX0R2tgpFDXHnzZcQywawu8eSq0LxzxFNYMvtB7sV1pxYwej2qx9B75qW2plBs+7+YB
+ 87tMFA+u+L4Z5xAzIimfLD5EKC56kJ1CsXlM8S/LHcmdD9Ctkn3trYDNnat0eoAcfPIP2OZ+
+ 9oe9IF/R28zmh0ifLXyJQQz5ofdj4bPf8ecEW0rhcqHfTD8k4yK0xxt3xW+6Exqp9n9bydiy
+ tcSAw/TahjW6yrA+6JhSBv1v2tIm+itQc073zjSX8OFL51qQVzRFr7H2UQG33lw2QrvHRXqD
+ Ot7ViKam7v0Ho9wEWiQOOZlHItOOXFphWb2yq3nzrKe45oWoSgkxKb97MVsQ+q2SYjJRBBH4
+ 8qKhphADYxkIP6yut/eaj9ImvRUZZRi0DTc8xfnvHGTjKbJzC2xpFcY0DQbZzuwsIZ8OPJCc
+ LM4S7mT25NE5kUTG/TKQCk922vRdGVMoLA7dIQrgXnRXtyT61sg8PG4wcfOnuWf8577aXP1x
+ 6mzw3/jh3F+oSBHb/GcLC7mvWreJifUL2gEdssGfXhGWBo6zLS3qhgtwjay0Jl+kza1lo+Cv
+ BB2T79D4WGdDuVa4eOrQ02TxqGN7G0Biz5ZLRSFzQSQwLn8fbwARAQABzSNWbGFzdGltaWwg
+ QmFia2EgPHZiYWJrYUBrZXJuZWwub3JnPsLBsAQTAQoAWhYhBKlA1DSZLC6OmRA9UCJPp+fM
+ gqZkBQJqFFy6GxSAAAAAAAQADm1hbnUyLDIuNSsxLjEyLDIsMgIbAwUJGtCBUAULCQgHAwUV
+ CgkICwUWAgMBAAIeBQIXgAAKCRAiT6fnzIKmZJIUEADFx/tREzUImHrEwVHeSvDFmA7tJysI
+ UVrlvrM09E7GIuzphzv7jYmo8n3ANpCczLEVr4G0syYQdTigaZgv3+FQDIIzhKih1IHhu1Ei
+ XHlywNWKnQxxQEUNi5Mwx43wQz5XVw9F1A7gtKBKNtfogO511hAbrzagrYajyQacEJ/+sfhZ
+ 9Da8ltHIXD8pcYaHUfQgEusCgmEd9+KrUwrTbckFKmYq5chuE6yJ4J0EmWknL096jIE6CnzF
+ FRslQ3B1UKDjxVsm1ZHfir5NeWszLkTvGFsddFaWTgh8UycESG6VQzKXjjewXu2pG7YQYRpj
+ QKm1W5X2TkwWkXRBZTmfmbhxIUMh3+zf5wQ463rSmDN/8v81tdqBtAW6rH/kzg1GvkaTHXn0
+ 507yEHFzBksk2viAuIxxr7km8+/KARYLIdGtx30EG8cKzAUZOK6WqxtNCsXUJNrVE8CWrCaD
+ icoNu7Fs1c5hmPHdSTnU48ce67449DdnO4neLSNhRiGlMHJgfJUmgrxu/hcYeOZ3haWmEQ2w
+ uW1Mh01OHi8QZHCEyAbABrPs9GUgccc/4eYXX9hIgxfSkYzn8f+8NuIFPWl/0uTvjgqU29FQ
+ SbzOLxHq9439Ox40G5mS5eZXRGxITYR+6TXvRGI6P/264jvflnr/pDGUttaikU+0W+1uxgKH
+ cmYbEc7ATQRbGTU1AQgAn0H6UrFiWcovkh6EXVcl+SeqyO6JHOPm+e9Wu0Vw+VIUvXZVUVVQ
+ La1PQDUi6j00ChlcR66g9/V0sPIcSutacPKfdKYOBvzd4rlhL8rfrdEsQw5ApZxrA8kYZVMh
+ FmBRKAa6wos25moTlMKpCWzTH84+WO5+ziCTsTUZASAToz3RdunTD+vQcHj0GqNTPAHK63sf
+ bAB2I0BslZkXkY1RLb/YhuA6E7JyEd2pilZOrIuBGl/5q2qSakgnAVFWFBR/DO27JuAksYnq
+ +aH8vI0xGvwn75KqSk4UzAkDzWSmO4ZHuahKtQgZNsMYV+PGayRBX9b9zbldzopoLBdqHc4n
+ jQARAQABwsF8BBgBCgAmAhsMFiEEqUDUNJksLo6ZED1QIk+n58yCpmQFAmfIHFQFCRYU6J8A
+ CgkQIk+n58yCpmS2PA//bqN1LfcotmArgElsa+0EGZSQlYgK48pm8WAeTXTngudP9IJ4SuKY
+ HR5RNjHcBeqN+Me0zxRqYzRb8nGanHEkDyf4Im8DQM8d6vbyU+FcPmG4skud4kgS1zMHnlVd
+ SXfSIwKC/hKgdHG8aBV7545Lz9X6Iohea+94wneD0aw/hqF+QWewGZhWJriWAZtvEkzNjQOi
+ 4U9F/trLten/x7bpphDSnDMKJtITbtzATT1Dq7o7VpIUK1nCTQALMuMjKCdi8OdU/+V+R3O4
+ 0PXWvX8qrvqYapVbZ+9KqT74FsuB0Ya9uXwgBF2Q6cRuETZk5vqaqKxzqoQZCO8AOz/58j6O
+ 2RHNy/mZEN+7tJ5Tsq42zVJ4jxsT8b9YplavCMsnBgDeRWhcbYhCyttoL7nYISyWg4kQYZ/P
+ wIV3OuNv2f8iKYsxNsRuClOAF82+gvqOy1/1pprFjy8uo2pkoOrb63aOP3vO5VHnRKgra6dq
+ NcaZ+c6J4H+nEJGi2SkHAUJz5oBzuThvPudLvPA/SK8sKoM01IRxSihev/S/5WLazXB1PGem
+ OCbvzC1IjWJJraxiDJ5IygokapUa2RP7+WBR22skQ3SSl6G107QgWKSyTOGWEaRmV53vxQLV
+ jXuCmzSSasTL60zq5yGrT4/DYQVSNEUiUbG4pYekxJujNeEDkUlky0Y=
+In-Reply-To: <20261115-kmalloc-nolock-fixes-v3-4-9034dd4ecaab@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Wed, Nov 18, 2026 at 5:06=E2=80=AFAM Yu Miao <yumiao@kylinos.cn> wrote:
->
-> The zswap, zswapped, zswap_incomp, swpin_zero, swpout_zero, zswpin,
-> zswpout and zswpwb entries never show up in memory.numa_stat, so add
+On 11/15/26 16:09, Harry Yoo (Meta) wrote:
+> When kmalloc_nolock() successfully grabs a slab object but memcg aborts
+> the allocation, the object is freed via __slab_free(). Calling
+> __slab_free() in unknown context is not allowed and can lead to a
+> deadlock.
+> 
+> Free the object via defer_free() when spinning is not allowed.
+> 
+> While at it, try freeing the object to the percpu sheaves first in both
+> contexts, as kmem_cache_free_bulk() already does for bulk allocations.
+> This also avoids queueing an irq_work for every failed charge when
+> spinning is not allowed.
+> 
+> Reported-by: Sashiko <sashiko-bot@kernel.org>
+> Closes: https://sashiko.dev/#/patchset/20260610-slab_alloc_flags-v2-0-7190909db118%40kernel.org?part=9
+> Fixes: af92793e52c3 ("slab: Introduce kmalloc_nolock() and kfree_nolock().")
+> Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
 
-For the (z)swap one:
+Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
 
-Reviewed-by: Nhat Pham <nphamcs@gmail.com>
+nit (not worth respinning just for that)
 
-(but the rest LGTM too FWIW).
+> ---
+>  mm/slab.h |  8 ++++++++
+>  mm/slub.c | 22 +++++++++++++++++-----
+>  2 files changed, 25 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 15b0d98ae1d4..fb80a72ad952 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -37,6 +37,14 @@ static inline unsigned int to_alloc_flags(unsigned int free_flags)
+>  		return SLAB_ALLOC_DEFAULT;
+>  }
+>  
+> +static inline unsigned int to_free_flags(unsigned int alloc_flags)
+> +{
+> +	if (alloc_flags & SLAB_ALLOC_NOLOCK)
+> +		return SLAB_FREE_NOLOCK;
+> +	else
+> +		return SLAB_FREE_DEFAULT;
+> +}
+> +
+>  static inline bool alloc_flags_allow_spinning(const unsigned int alloc_flags)
+>  {
+>  	return !(alloc_flags & SLAB_ALLOC_NOLOCK);
+> diff --git a/mm/slub.c b/mm/slub.c
+> index 7c0adc104988..8252c0b681cc 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -2531,7 +2531,8 @@ static inline void slab_obj_ext_has_codetag_init(void)
+>  
+>  #ifdef CONFIG_MEMCG
+>  
+> -static void memcg_alloc_abort_single(struct kmem_cache *s, void *object);
+> +static void memcg_alloc_abort_single(struct kmem_cache *s, void *object,
+> +				     unsigned int alloc_flags);
+>  
+>  static __fastpath_inline
+>  bool memcg_slab_post_alloc_hook(struct kmem_cache *s, gfp_t flags,
+> @@ -2549,7 +2550,7 @@ bool memcg_slab_post_alloc_hook(struct kmem_cache *s, gfp_t flags,
+>  		return true;
+>  
+>  	if (likely(size == 1)) {
+> -		memcg_alloc_abort_single(s, *p);
+> +		memcg_alloc_abort_single(s, *p, ac->alloc_flags);
+>  		*p = NULL;
+>  	} else {
+>  		kmem_cache_free_bulk(s, size, p);
+> @@ -6647,18 +6648,29 @@ void slab_free(struct kmem_cache *s, struct slab *slab, void *object,
+>  #ifdef CONFIG_MEMCG
+>  /* Do not inline the rare memcg charging failed path into the allocation path */
+>  static noinline
+> -void memcg_alloc_abort_single(struct kmem_cache *s, void *object)
+> +void memcg_alloc_abort_single(struct kmem_cache *s, void *object,
+> +			      unsigned int alloc_flags)
+>  {
+>  	struct slab *slab = virt_to_slab(object);
+> -	unsigned int free_flags = SLAB_FREE_DEFAULT;
+> +	bool allow_spin = alloc_flags_allow_spinning(alloc_flags);
+> +	unsigned int free_flags = to_free_flags(alloc_flags);
+>  
+>  	if (slab_want_init_on_free(s))
+>  		free_flags |= SLAB_FREE_INIT;
+>  
+>  	alloc_tagging_slab_free_hook(s, slab, &object, 1);
+>  
+> -	if (likely(slab_free_hook(s, object, free_flags)))
+> +	if (unlikely(!slab_free_hook(s, object, free_flags)))
+> +		return;
+> +
+> +	if (likely(can_free_to_pcs(slab)) &&
+> +	    likely(free_to_pcs(s, object, allow_spin)))
+
+I think it could be a single likely(x && y)
+
+> +		return;
+> +
+> +	if (likely(allow_spin))
+>  		__slab_free(s, slab, object, object, 1, _RET_IP_);
+> +	else
+> +		defer_free(s, object);
+>  }
+>  #endif
+>  
+> 
+
