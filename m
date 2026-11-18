@@ -1,102 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.176
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.209
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1794973128;
-	b=Jt6zwI6wByccTHrzI26lM/inhjyz8ILl0LGnlfBfgMPTFxk0IXRu8jYr0Igd8YzUWlAe
-	 cBe62uBCLtpsK4xU9eqUepymWyfLP6WRgywimosMyFtMScJVgzn6fOR4DuGdr4Vf3UI3c
-	 2Y3y6x4ydAhYW3FFsjT993ky069qmfu2MKuAjxarr7vtc1Km4DANrjTtTIxSPFbD7n+Ky
-	 iBeSwioEtbRhV543ywXC+XgXiF1P4luNs7MlARzkopu5Qba23FTh5EuKz1XbzsScvv164
-	 MtDpUgE0IDAi5DXPwXFjBXTwqKlrmuTXZLAugnnfMmVNTetFQCPxPb0A02hZVJnVUcw==
+	t=1794980333;
+	b=HiIKkPj4/2TACzSbvkx0yniKk8bFA61F0+6F6pL1irfRIZSO/n0+2OgqvQgbo06I1TV/
+	 QvK0EnODl744jYdQx+5hkls72Q5N2hRCuVslVMSmYfPj3CZsMEg4fGi3wnjaxiylaiQdq
+	 h7HRBUcWAxCFL+FijEfHUS/bl27mnE3jKSsvvDoNdv25gCdBrn/HKFWWUMTSYR1dlCiqm
+	 jgdL1Onr3DyoIgbeSxhJz5NxLZZaFZd0+To6jlmDbVvdnRTQQqCHunZiaLxeUh7GdxCRB
+	 FPYARWo1TYEMixQdoMdYYKJXn4+beLlxJDHlOITyrkMzolIq1sQLiU2dh1UAIOM8aKA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1794973128;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:In-Reply-To:References:MIME-Version:
-	 Content-Type:Content-Disposition:Message-ID:User-Agent;
-	bh=Kvmn+xw8fMzfurQj4tJUer/fYr30jKP4x1tcbpp4Ht4=;
-	b=z9w2cSIrNIUbU3zdMuHvq6vP/pobT9ZFn0flRuc98XFCZJYxgaGbsl0dei7/OhHaNWDe
-	 fyK1QUbE+P0HpoLIuyPLlMXO8b2xG8sSeIPZJB0lYb4STP0JIjQzk8FeXgw1V8FYO7G7p
-	 V4f1t+JJfIWIOrQFjoYFZAAhJPDQusOeKyMtZyUF1zQmF1TsMM9yL7Ame22GrFE6SeyWo
-	 4miaZClx9YeHBXckkg/z51Gg8rdzP2MwtDAFlUWk/rLgxyhcEdKP99nd7oy2v+5iAiL6d
-	 ofsobUGTYtJuJpOvtX1SvRbdBh9rAC6RirjAT6WWrMdlkgNUKsqpncM9P8DiSnNUJ6w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1794980333;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=uPAqbowMtLzbIekB9EQTVpQCqoE4uZmeuAc0TOycEFk=;
+	b=yV0rHr42c68XEaLG3NEpGqaq/Eg7D6WxcLSVqXLNNPWJRbEpfOoC7IsiOFdijNRmK9sN
+	 wHkzQqkX0sKjoU+LpkEuo6deNDeR1HiP5+2cUP5gBmz6RMHYKKxT1VsJDGu5Y9qR7vaXv
+	 VtOqbTorK5R5StDgT7HgcGKIYmOrbFmXfTSFoqnO6aAUTQEwNiCuXZ7BEEyNrCdBEu2nk
+	 n9N1pqRpcUNP+uvZB2YP3AvVF9fBlXbDZ2V2hqrsLDryJNU8HDJovwOzWwMSxmY5Zrfy7
+	 VhkfYB25Nbn2B/DS22zHtKVjT6Ln5Kgp1QcGnma+BR/Z6mnuXpMuB1NHbdPmVgj0W7A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=chrisdown.name;
-	spf=pass smtp.mailfrom=chrisdown.name;
-	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=IfmRfcsh;
-	arc=none smtp.remote-ip=74.125.82.176
-Received: from mail-dy1-f176.google.com (mail-dy1-f176.google.com [74.125.82.176])
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=AZpGlpev;
+	arc=none smtp.remote-ip=95.215.58.209
+Received: from mta1.migadu.com (out-209.mta1.migadu.com [95.215.58.209])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAF3C606A32C
-	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 03:38:47 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EAF3C606A32C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 286E4606A325
+	for <cgroups@vger.kernel.org>; Wed, 18 Nov 2026 05:38:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 286E4606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=IfmRfcsh
-Received: by mail-dy1-f176.google.com with SMTP id 5a478bee46e88-380b40319bdso950173eec.1
-        for <cgroups@vger.kernel.org>; Tue, 17 Nov 2026 19:38:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google; t=1794973127; x=1795577927; darn=vger.kernel.org;
-        h=user-agent:message-id:content-disposition:content-type:mime-version
-         :references:in-reply-to:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=Kvmn+xw8fMzfurQj4tJUer/fYr30jKP4x1tcbpp4Ht4=;
-        b=IfmRfcshEf8CC2x8ZQabjNmG5gsCHR8OAyUtXOaUA4Luli9y7mZZBExDxK8bPLb6Zd
-         rac2EJ4N6fEvhpBJDmWkpYnWbeIl08HM+7laGQT5cBlru06kB4cFZA9zPjBO34lNREZV
-         78QFlxDIg5xGljN2NBs0N5kiQMWyWvSEK4+Dc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1794973127; x=1795577927;
-        h=user-agent:message-id:content-disposition:content-type:mime-version
-         :references:in-reply-to:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=Kvmn+xw8fMzfurQj4tJUer/fYr30jKP4x1tcbpp4Ht4=;
-        b=225syS4wK/hvondvobh6z9vFnWOQPbODD1+buPZlKWl3pI5i5l06knGDZ6Mxc4WO70
-         Z+nvu1iqDNsaFS0X5SwTY42UzpPgnJnAzNnmSx2d4j3qIT97O26ay6UVkavo3kYom1ZQ
-         CW+p8aFaiyD05fz23DY+8qb78BRujfP5ea4o42S5XXzdhQ9WxB/VPCH3Vc5C9/X6DjqE
-         8h9A5dFNQcjtc1z7IIhTfozplpZ1Dspjewqbio/UZtioivICnoQNUmfyQX6+7LZRq6+D
-         cpZRdqwhBW0rhQ85gV9ICMLJ0Y0Opepo0kwQboiZ0COFqJKPemry/7R1xRFjFBWxjsjg
-         hyOw==
-X-Forwarded-Encrypted: i=1; AL+hErHqn0wlp8MxtknQkcuKXxYpv9/k75WpRy6SIjATSffNApFn/4BDh9QcVm9M5irDrlgKLUzS88xp@vger.kernel.org
-X-Gm-Message-State: APuU4Z8sy2tvQ/ifniRRA5nVPLF8IoGJ9PofBz+sXM9DkHfHvlHk4sWb
-	HsSesM7Gbaq/oSNbFUA2G79PRgBkkgl0PYHGiENpo5o1l1ooEhCQirQYoEGJjuiac9w=
-X-Gm-Gg: AYBFou22hw6XfIjM0IGFxpiEYkdnheDKLuIl/CHR8WVPfvAsIbiaWqjnCTF6idsTT53
-	hAIRpISPdlEBD99qythgOEWOL9Ms8BVgs0En4xCZqeCwxNXJGh4ksdcg47pNHsy4R7+WY9EKk20
-	aeMcAn+6goTssKwqUxeP98Wb9nIcAjI91pLfPJBG3hLf+9JIDnDqSaarIDGXpv0zdyjH01T1EKO
-	LMs5FPJhhSMAEDz+L8A+pwcGPLfLCYLeyATICBBUjeOUOtGKikWidrCEAVyTdbD67vYQjbiowp0
-	mEyV/mPQxVHCGYmOACq8nIwPy3d3dr56FQ4nnkAd88+sx/AblZ5KGRdrsp3GJB32xdeeXfWGgly
-	uOUfU2TNISRzVuAPEPK4PdRQbsO3/2n1ilvqoH/xIarncM5rTSWf1MpMZ0G4Ri+KC4CgkwSQuWA
-	BoIbtAChbiwmp6LXGSSEKDxEHJ2nFsO7PaEjk8zdwzRb6bCuOrjlvetk/9hLjLLuOX7tTXwgc53
-	8iOqJoFfgbkFa0LyM2zs+Upkir3wIKzWbJxLGO0dhhac0bGGY+MSVdJXz1EtDQsIBGmXYIO0GWl
-	Qj19tGP0Kg/p0RddgobG9F5l7NLhGG0ahUZFsPYZNG6lppn9cT8hV9ob6LVD/seW7/HhwichDSb
-	+N+GJY3owjcPkzfZTL2JPy9WpKORUI1Ki/+KWZxnV/MB4+Nl/dVhIvJ4bZiSRthSDP30O7ebvQp
-	a4YyJmVZ5dFnfp1A4SzWpkp2usyBRFql/qTWJ36qOXP9afc98myCUgqLbe4CuXkco7
-X-Received: by 2002:a05:7022:fc01:b0:1b5:1a6c:af64 with SMTP id a92af1059eb24-1b543bcd4b2mr1258863c88.17.1794973126774;
-        Tue, 17 Nov 2026 19:38:46 -0800 (PST)
-Received: from [172.20.0.2] ([172.56.235.113])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-382a63059f8sm4907822eec.9.2026.11.17.19.38.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2026 19:38:46 -0800 (PST)
-Date: Tue, 17 Nov 2026 19:38:43 -0800
-From: Chris Down <chris@chrisdown.name>
-To: Alireza Asgari via B4 Relay <devnull+alireza.asgari.net@kernel.org>
-Cc: netfilter-devel@vger.kernel.org, linux-mm@kvack.org,
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	David Hildenbrand <david@kernel.org>,
-	Pablo Neira Ayuso <pablo@netfilter.org>, Florian Westphal <fw@strlen.de>,
-	Phil Sutter <phil@nwl.cc>, Shuah Khan <shuah@kernel.org>,
-	Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>,
-	Zhang Jiao <zhangjiao2@cmss.chinamobile.com>, Song Hu <husong@kylinos.cn>,
-	cgroups@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, Alireza Asgari <alireza@asgari.net>
-Subject: Re: [PATCH RFC nf-next 0/9] netfilter: nfqueue: account queued memory
-	and reserve capacity
-In-Reply-To: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
-References: <20261115-b4-nfqueue-memory-accounting-v1-0-b9cc30819997@asgari.net>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=AZpGlpev
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=2FR8HM/p++ob46YeHJNL26wRuxeb82p19yKGmVM2grk=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1794980330; v=1; x=1795585130;
+ b=AZpGlpevNzmKYFzyNrix7BV0m72pm7SAjYAoEEcUOGwPCwLzuNQLxjdPm5QF/VrNx1i+awcS
+ 8YDgkK/VPB4bRgMNfjE9HImHhyQizmcuTQQOJvlskVkVTdclFqYbF36Xs/00h/yQvwDObCPoOQm
+ s7r2v/b/BameUUb3MzjmXQJU=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 67d94c72d45337b4;
+	Wed, 18 Nov 2026 05:38:50 +0000
+X-Mizu-Trace-ID: 67d94c72d45337b4
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <6e73ae4b-5400-4f6d-bf5b-2892827ea144@linux.dev>
+Date: Wed, 18 Nov 2026 13:38:41 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -106,45 +58,109 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Message-ID: <av0dwzvTBXXLqWCa@chrisdown.name>
-User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
+User-Agent: Betterbird (macOS/Intel)
+Subject: Re: [PATCH 0/2] mm: memcg: fix memory.high allocator throttling
+To: Chris Down <chris@chrisdown.name>, Joshua Hahn <joshua.hahnjy@gmail.com>,
+ zhangjiao2 <zhangjiao2@cmss.chinamobile.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, Hui Zhu
+ <zhuhui@kylinos.cn>, Song Hu <husong@kylinos.cn>
+References: <cover.1794902513.git.zhuhui@kylinos.cn>
+ <avzSkT9-jsCrMoeX@chrisdown.name>
+Content-Language: en-US
+From: Hui Zhu <hui.zhu@linux.dev>
+In-Reply-To: <avzSkT9-jsCrMoeX@chrisdown.name>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Hi Alireza,
 
-Alireza Asgari via B4 Relay writes:
->3. Whether the proposed bulk reservation interface is an appropriate MM
->   interface for this use, including the explicit restriction of charged
->   growth to 64-bit kernels. Is this compatibility tradeoff acceptable for
->   the initial interface?
+2026/11/18 06:17, Chris Down:
+> Hi Hui,
+>
+> Thanks for fixing these, I've verified that these fix the issues
+> reported.
+>
+> That said, Zhang Jiao sent a fix for the same two problems a few weeks
+> ago, and Johannes thought the overage cap there was a bit of a magic
+> value, which we have plenty of in mm already, and I agree we shouldn't
+> add more [1].
+>
+> Could you please coordinate so we don't have two patchsets doing the
+> same thing?
+>
+> Chris
+>
+> [1] https://lore.kernel.org/all/auNrakxaET8qkuAn@cmpxchg.org/
 
-Hmm, I don't think this needs a new interface. obj_cgroup_charge() and
-obj_cgroup_uncharge() on the objcg you take at BIND already deal with root
-ownership, reparenting and the kmem statistics, which is most of what patch
-4 reimplements. They would just need exporting.
+Hi Chris, Joshua, Zhang Jiao,
 
->4. Whether non-reclaiming reservation growth is the desired failure policy.
+Chris: thanks for the pointer, and apologies for the duplicate. I missed
+Zhang Jiao's patch [1], and Song Hu's earlier report of the overflow, which
+already proposed check_mul_overflow() [2]. I've added Zhang Jiao to the
+thread so we can settle the coordination here rather than off-list.
 
-I don't think so. A long-running cgroup usually sits at memory.max, mostly
-with page cache, so resizing the queue would fail with ENOMEM even though
-most of that memory could be reclaimed.
+You and Johannes are right about the cap. I've dropped
+MEMCG_MAX_DELAY_OVERAGE and reworked 2/2 into the shape Johannes suggested,
+with calculate_high_delay() and the caller's penalty_jiffies both in u64 so
+the value is narrowed only after the caller's clamp. That also removes the
+in-function min() from 1/2, which was undoing ff144e69f733 ("mm/memcg: move
+penalty delay clamping out of calculate_high_delay()"). The series shrinks
+from 19 insertions to 9.
 
->Increasing capacity obtains the additional reservation before publishing
->the new limit. Failure leaves the existing configuration intact. Shrinking
->preserves queued packets and retains page-rounded backing for the greater
->of the configured allowance and outstanding saved charges. Excess capacity
->is refunded as entries drain, with refund work serialized against resizing
->and coordinated with queue destruction. Refunds settle the actual memory
+Joshua: the Fixes tag is the right one, though I can see why the diff
+suggested otherwise. The division comes from 0e4b01df8659; my patch only
+touched that line to add the clamp. The bug is the reordering in
+e26733e0d0ec, which replaced
 
-Keeping the charge at the larger of the limit and the bytes still queued
-makes sense. Otherwise one could shrink a full queue, charge the refund to
-another queue, and leave the old packets uncharged. But, unless I'm
-mistaken, the excess doesn't have to come back as the queue drains.
-Configuration already runs under the nfnl subsystem mutex, so if the excess
-is released at the next configuration change or when the queue is
-destroyed, it looks like mem_work, mem_mutex and mem_stopping can all go.
+     penalty_jiffies = ((u64)overage * overage * HZ)
+         >> (MEMCG_DELAY_PRECISION_SHIFT + MEMCG_DELAY_SCALING_SHIFT);
 
-Thanks!
+with
 
-Chris
+     penalty_jiffies = max_overage * max_overage * HZ;
+     penalty_jiffies >>= MEMCG_DELAY_PRECISION_SHIFT;
+     penalty_jiffies >>= MEMCG_DELAY_SCALING_SHIFT;
+
+Before that, the shift ran on the u64 temporary and the narrowing into
+unsigned long happened afterwards. After it, the value is narrowed
+first, so shifting it right by 34 always yields zero. The division plays
+no part, and in v2 the diff no longer goes near it. Your other point is
+settled by the same rework: with the clamp gone, the comment goes too.
+
+How I'd like to proceed:
+
+  - Zhang Jiao: would it be OK if I send the combined series? The overflow
+    fix stays under your name and keeps your changelog, in the shape
+    Johannes suggested, and I'd carry the 32-bit truncation alongside it in
+    the same series. If you would rather send it yourself, or split it
+    differently, say so and I'll follow.
+
+  - Song Hu and I have been in touch off-list, and they are working in this
+    area as well, so the patches under my name will carry them as
+    Co-developed-by.
+
+  - v2 will include what was missing before: a Fixes tag for each of the two
+    regressions (e26733e0d0ec, v5.6, for the 32-bit truncation;
+    0e4b01df8659, v5.4, for the overflow), Cc: stable, a changelog that says
+    plainly that throttling was completely inert on 32-bit, and the wrap
+    threshold corrected to about 130x at HZ=1000 -- the 4096x figure misses
+    the HZ factor.
+
+Two separate patches rather than one, because they are different
+regressions with different lifetimes, which matters for the stable
+backports.
+
+One number that may be worth putting in the changelog: the smallest
+exact-zero case is memory.high at one page with usage at 2049 pages, where
+max_overage is exactly 2^31 and the product wraps to zero.
+
+Thanks,
+Hui
+
+[1] 
+https://lore.kernel.org/all/20261029073857.974-1-zhangjiao2@cmss.chinamobile.com/
+[2] https://lore.kernel.org/all/20260818012115.65838-1-husong@kylinos.cn/
+
