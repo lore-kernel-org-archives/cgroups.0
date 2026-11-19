@@ -1,122 +1,103 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795098969;
-	b=E10y2Xp4P0N73PsOP1Bm0G73gW8uNoZ/ExLDVqqX8XTYbXFNijnAEvRZmwZk+VO8nSNt
-	 g5NU0ZA/2GCaAOiyOsMOETfF6D1IjZYWPAV28f8et83UFm8ae1W3IQRi3BgLTUvoYHGMW
-	 GPg8lNmNbTc7nyWNofPXoXHY9fKtm/7yXNYynFp7ha8Ee57/AchcjUZmHZfl2elsxmGDW
-	 VRA43ExpaGAjASKecf/SFv+GmXD9t1YKNtN4XrOnACt9cxyrxdirYvnDY2yWLmhPRmi7h
-	 E/ds8TTr+dBexemPNgfv5mSfW6ybpoOYigG/O+Rrm7h/497TfDGKh8sbmBV5c3oH/3g==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795098969;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=jq7QluxFWPHAuK60qLtOSJq6FvP6A976D+oHoxb50WU=;
-	b=Jh1SJzy8OPnuShj7TgvBc+BsK+1P1VABkm5BH1770mYAFpZDao6o42qmw7Bx7IA12Wgf
-	 yqcL2T3weEbK6tcZRvdkLpH8kXmpLgNPx3a4p8H1Vf2K5IMQEWuaL8PqjK8UKPZ2lJE+9
-	 W0o3pc/QziXEMlS1grd0HrfzuIl3bSV0MlB5va1sCIokeZQI5XJP6UE+tgFGPFWv3Cu5M
-	 5xqGq4i5i3WqfLwBRJNMmpx/zPuL0jUlu1ccwb5yEPxbuVwJTcHnOZPXAPFKAbsxUDspb
-	 SQZ9ZPILSPnFzPkS57RRhuY1EciB2C78ZO9MisMDQnqjP0gXWxS/fsbszBrbTmmyS/A==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="dPiO6Bw/";
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=FiSXS6yC;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.65.84
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795099337;
+	b=Vzql+E5CRZoFq6ki+94KJPvOaayrd2k6RWqIeBPaYtoVyF6NIaPLmwCY8qoC+Xe0cA65
+	 3MF7S3TI3Rs2CrXVunLqfNsV69B178KfvM7fIlNB/fzFSXM8KhBoecz8uaW7hiqESnHL8
+	 MzeGwROo77hFur2FQcseSrdcOd6JoxeYDNe+6cb8qmGRjdStBPiLbLs0/AucdaHbrkANo
+	 Z5Z5ZrT3vi9ikdDbpwu2G6pfO47jCl6aomFYgQZx7sv9i5zHNk6dRdS6B7W/H8pXOkdam
+	 kFS/73sqsikBzHIjr/pctvoXetoj1RhuJ3MRZpE8bff1GV94hzrrQiLqc8A5hVFfc9g==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795099337;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:In-Reply-To:References:X-Mailer:Content-Type:
+	 Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:
+	 X-MS-Exchange-AntiSpam-MessageData-1:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=c921SPMOQsfcmponr5NlvfFRSDM1i4bxOk8lebXUCxo=;
+	b=LGvaxq3WppGrGDFo5HYP9Fvi7Zht8HNCv2r2rt+0Hz8wOApF49dSyfBSJ13w78Sn2rPe
+	 Fx1pPcV2xyF7oSOsInaiMDviOUX/gExwNbCdJozRgpmj4osGt57jf61qoIWcZmbNYMcfk
+	 qE/A/PHHWNi7zztniJTP+BRsKttbs+SfCJ8o+TBM/DigS6zUuTQW/NQh9OmLLUANkgykX
+	 jPjSNKjYpzmwTSjF8MtpmsdSPrvq7zQiKiDaOwgenfAxU+E1uE72dn/pXP8ocXoLMz9xY
+	 eV7IAMrKHSAJIGJS9TKAiVAYXM2EnFS+r6BxYE4qThu6aYlaJb+fXc73cc2iEK3QyLQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=santannapisa.it;
+	spf=pass smtp.mailfrom=santannapisa.it;
+	dkim=pass header.d=santannapisa.it header.i=@santannapisa.it header.a=rsa-sha256 header.s=selector1 header.b=pT4qgoNh;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.65.84
+Received: from DU2PR03CU002.outbound.protection.outlook.com (mail-northeuropeazon11021084.outbound.protection.outlook.com [52.101.65.84])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C328C606A320
-	for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 14:36:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C328C606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F7B2606A320;
+	Thu, 19 Nov 2026 14:42:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 3F7B2606A320
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=santannapisa.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=santannapisa.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=dPiO6Bw/;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=FiSXS6yC
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795098967;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=jq7QluxFWPHAuK60qLtOSJq6FvP6A976D+oHoxb50WU=;
-	b=dPiO6Bw/gFXqG1AdJZ+P4oUboAz8qzDhWcfsBQ9m1B+pbrRjonZnlZGK2MebSnqc6zsp4B
-	qSyMDpVGUnYPdD4SI3rr3M/i47q80Tf7eylAEb1ZZdwQvaaP7ffVnDdsIbo7w+O4FRSH2j
-	DRku2vnzkKnhpPl7mQF5Q8DOhMU1S5s=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-42-7rI4UGF5PdqB7U-t23SZKg-1; Thu, 19 Nov 2026 14:36:06 +0000
-X-MC-Unique: 7rI4UGF5PdqB7U-t23SZKg-1
-X-Mimecast-MFC-AGG-ID: 7rI4UGF5PdqB7U-t23SZKg_1795098964
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-48df02b91f9so646796f8f.1
-        for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 06:36:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795098964; x=1795703764; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=jq7QluxFWPHAuK60qLtOSJq6FvP6A976D+oHoxb50WU=;
-        b=FiSXS6yCOufYiTlGUvdZm74i00rEKHl5MKL78teZJdohSVEay22CNDKlce/cR70GHc
-         QA31hrGFSayAUsCKbDCPeXOom52Iq3LeoJE7FuKnYcwwLhksgap6zoD0WdgpQlRSA97b
-         rbmzHUEEoGn6J+PiPvXSaCX2JtkY7mb8oBGTkGtFyh2eWoIleVn/Uf7aPBfJWIe6EYet
-         tT3fKCz0o6YQX87iNeuR/HnNSbLbIZ0YgTcIPjrG16KJfcQuhw9Y4zUE4mr0w0lMp9dC
-         kqK1OU8/jCN0PQxEZAeSYqWUkBFBTBTVs0Ikh3YAHXDKf8hchB0edan9JXGLuYMPEX1z
-         X07w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795098964; x=1795703764;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=jq7QluxFWPHAuK60qLtOSJq6FvP6A976D+oHoxb50WU=;
-        b=qThJR2jDjST8fvlI+uWSFDaBbpmTzMIARw4sH45wxzgouA2iWge87wrpg/c95V5TqK
-         GByg8OWq5vDyjaPF4Btnd8QfBalCQDCt72ghNRvRacUItDTh0sLeFqLPML9JEAnQmLlE
-         Xf7WwvoHtFOpfyqOL9QWwFf2sDXClM35h/enqYShGgZyBPQmRurcHCAYqFgxHwBvbFsc
-         dnQNX/sOn5cFrmvbRolnJW8K1cB+GxN2dzEZAKk05S7hdgEG578Mq5STb3skqwgdLs5C
-         4k4kiL0QghLXcqOe+9/RBhAgnhVpc3PmB67ynK0EochvD6VcETv5SaQeVxGztBB568SM
-         glgg==
-X-Forwarded-Encrypted: i=1; AL+hErFfwSX8JFY6apwK19Hcbbu5IzdTtwrTu2GWHUvePsPSd+J4qFV5zdexjByW8S9016lOWvYqrU5Q@vger.kernel.org
-X-Gm-Message-State: APuU4Z+P9SQrErGxQ5hWDXYqAGQ5vxVmXHPUGs8DKn+v8MJ1HG+1C1OH
-	bQiY/A8opaQg4DcbvBw7SyrhkXYV9GMAX7ylgIYOoUmp54N5npybX60DRy+Pw0yDCxEVmo8yr+0
-	kZXcaT74L9oUqX2YfK8q2Zlaa1sYPb2oLPgkK9/WAs/3IfCVWJL7sxBbvLm0=
-X-Gm-Gg: AYBFou1xNxUyNkaZzYrrTCGNi3MVR9HRazwWYnSle5/Oj3UKT6xOijUPv2C2G6Q9NhK
-	ifdK7H7bDeYllgWZHnvd0RsQ1SRxfps94POUL/xPVY57Z54mNGsshWkffITrrOPfc+8qugchmN1
-	g9RCVIZ1rjZovl6sikjF4A/0U6AZbNieszB9Vd6zVQeLZUFcm9rs9UB2r0PNgrNAfzOsGCg6qUV
-	I2QFJxHSlnDfiwNjXe05qI+fkp0gP5NCf5UoDsbH0LZuvailfTuN/h0TSNPJE7OSE9/VOzcBpov
-	vDw20QBypJToSkHiPcj4CK0Wa6WdbVV7+y6lQGzVx7PWV7LJie0hFPP0+MzZJU7CGfpWxmJp1Pd
-	bg/Iom5kx58aV792EpFRHsduJM74enoGwPK7IbYb5QGPDkOyj3x4FH0YXrWPHu+zLcjIKkVPYnE
-	SSec8=
-X-Received: by 2002:a05:600c:4e86:b0:4a2:526b:d40f with SMTP id 5b1f17b1804b1-4bb8609ad6dmr30007555e9.0.1795098964155;
-        Thu, 19 Nov 2026 06:36:04 -0800 (PST)
-X-Received: by 2002:a05:600c:4e86:b0:4a2:526b:d40f with SMTP id 5b1f17b1804b1-4bb8609ad6dmr30007085e9.0.1795098963704;
-        Thu, 19 Nov 2026 06:36:03 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb884b8429sm1879735e9.14.2026.11.19.06.36.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Nov 2026 06:36:03 -0800 (PST)
-Date: Thu, 19 Nov 2026 15:36:01 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: luca abeni <luca.abeni@santannapisa.it>
+	dkim=pass (1024-bit key, unprotected) header.d=santannapisa.it header.i=@santannapisa.it header.a=rsa-sha256 header.s=selector1 header.b=pT4qgoNh
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=E39SLkSvHH092KrdFJOfHFQZBrbP7DqyEncQxqArqXBN7TFWKuHMi1R6IwzBLHFaUiI0FAMrRbaJQhNE3j2IM3Ycr/HnYjXq/ufTlnpXHRaOAaDI8OfRp8hGK01PI/Zz4j/m1enYs5pn2cWTGAKYUg3PuU3XDanPDWKOW2cnCnMEIjGrW53viJEWRzgm3WI0HMS4twj7UguEVp+A57qbHGUkRenn6K9GdeeRS4uca4rxl7jAvT0sD93oCjvd7L9NB34TFWvGk1pNqePMiLXMGesyjvn5lU1KqVttts5UMVUq5imFS2tSOPujncg4cgjbltvHABOw+qI+cbVmeIx3gg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=c921SPMOQsfcmponr5NlvfFRSDM1i4bxOk8lebXUCxo=;
+ b=aa0zVQUU2ajFrNtqN3QGAKBOFe6ITnaul0rkxqpWLQH1WyB1qJqcyr5RqrRHntxh98sbPvUx2Enl1suLF2RybgOvwUPG3YZmt9dO7v3LxPGDikgUuQo9P8/dGhw5A+Yu8zo/xc/OEjCNKCJrO2ZXKVrodCqMWEy18GhjPM/xfCrMR4isTkYCgGCUmlktLcviD4/whXibLaD80horP+Us+QIK73GJh5cR7XUH3rEg7b6ZtVk7BKui4u3EqB4u6BSFzxhSfCW3B4E2hs6C9TMBQg0TbFzvIOdFE8Uz+UBlQS7FpQnKGycJlGiDTlfY5i2dhUdlREYbRjW99olGuOrpug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=santannapisa.it; dmarc=pass action=none
+ header.from=santannapisa.it; dkim=pass header.d=santannapisa.it; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=santannapisa.it;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=c921SPMOQsfcmponr5NlvfFRSDM1i4bxOk8lebXUCxo=;
+ b=pT4qgoNhnNiXtbH32CLgSxx8YZyJtP5Hym+ek2dxDGCgqcP35ptJnih5U4hLW9RRkoQrknZUtmK59dvbo3yO/G+C2xDCmfe/oxtsvMdJnWpyFjpngkgLX5pf/KnXJ1mHH/B4if5j8Md4/aGjyHNMmirtw7YK2BkU/0t1Zh5qLd0=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=santannapisa.it;
+Received: from PAVPR03MB8969.eurprd03.prod.outlook.com (2603:10a6:102:32e::7)
+ by DU0PR03MB9005.eurprd03.prod.outlook.com (2603:10a6:10:478::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Thu, 19 Nov
+ 2026 14:42:07 +0000
+Received: from PAVPR03MB8969.eurprd03.prod.outlook.com
+ ([fe80::26c1:111c:f60d:f9b9]) by PAVPR03MB8969.eurprd03.prod.outlook.com
+ ([fe80::26c1:111c:f60d:f9b9%7]) with mapi id 15.21.0615.013; Thu, 19 Nov 2026
+ 14:42:07 +0000
+Date: Thu, 19 Nov 2026 15:42:04 +0100
+From: luca abeni <luca.abeni@santannapisa.it>
+To: Juri Lelli <juri.lelli@redhat.com>
 Cc: Tejun Heo <tj@kernel.org>, Yuri Andriaccio <yurand2000@gmail.com>,
-	bsegall@google.com, cgroups@vger.kernel.org,
-	dietmar.eggemann@arm.com, hannes@cmpxchg.org,
-	kprateek.nayak@amd.com, linux-kernel@vger.kernel.org,
-	mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com,
-	peterz@infradead.org, rostedt@goodmis.org,
-	vincent.guittot@linaro.org, vschneid@redhat.com,
-	yuri.andriaccio@santannapisa.it
+ bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com,
+ hannes@cmpxchg.org, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org,
+ mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com, peterz@infradead.org,
+ rostedt@goodmis.org, vincent.guittot@linaro.org, vschneid@redhat.com,
+ yuri.andriaccio@santannapisa.it
 Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
-Message-ID: <av8JUXtjhd3PoWL7@jlelli-thinkpadt14gen4.remote.csb>
+Message-ID: <20261119154204.503ea610@linux.fritz.box>
+In-Reply-To: <av8JUXtjhd3PoWL7@jlelli-thinkpadt14gen4.remote.csb>
 References: <20261109163616.195264-1-yurand2000@gmail.com>
- <212c244d534ee1fdb0538a980789e16c@kernel.org>
- <20261111175657.250354-1-yurand2000@gmail.com>
- <58cb2cbaf82c0f671213eaca46465cd5@kernel.org>
- <av7cRIyAMoiIR5k-@jlelli-thinkpadt14gen4.remote.csb>
- <20261119152744.3a2f7aed@linux.fritz.box>
+	<212c244d534ee1fdb0538a980789e16c@kernel.org>
+	<20261111175657.250354-1-yurand2000@gmail.com>
+	<58cb2cbaf82c0f671213eaca46465cd5@kernel.org>
+	<av7cRIyAMoiIR5k-@jlelli-thinkpadt14gen4.remote.csb>
+	<20261119152744.3a2f7aed@linux.fritz.box>
+	<av8JUXtjhd3PoWL7@jlelli-thinkpadt14gen4.remote.csb>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.53; x86_64-suse-linux-gnu)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MI1PEPF00000AE1.ITAP293.PROD.OUTLOOK.COM
+ (2603:10a6:298:1::4ba) To PAVPR03MB8969.eurprd03.prod.outlook.com
+ (2603:10a6:102:32e::7)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -126,128 +107,107 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261119152744.3a2f7aed@linux.fritz.box>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAVPR03MB8969:EE_|DU0PR03MB9005:EE_
+X-MS-Office365-Filtering-Correlation-Id: dd90ce37-7329-4936-0729-08df464b491b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|786006|1800799024|376014|7416014|10070799003|23010399003|261022075727099003|261102123227099003|4143699003|261026121527099003|5023799004|56012099006|11063799006|10067099003|261021121427099003|261022113327099003|22082099003|18002099003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	LonT/t5q9jCtfYN449okZyfaKsboLnOke4WBBKLPjZV+wg/vVZToyYrfahd4nJPYvzyFAMR6i/hmCOtZ0RauHSyxxkac17SJxOgZ1CiHnaC232GhPeazjkgGKJd69A70UkLbubO1GyeBTszS7FxpTfMVTBALe1pu+sCgnC9Za4NFBk1M2ZIvOJhy7Y4tU8N1w+S+BUlJ6JgEaSv/FkCp/6ziGbyPHYEPj6n99V5Z7Vpszqn0bsJCC8CdmYbuBA3Irfw441PeYc4pWgofdQg7eCTBACDnLgVCeDa18i4YMLcV8etj273iSdWxmTtz9Vkl1RwnATZ2IRZOLnmr+ZAE48Nsf6ZGGfO0VqDcsPnQYK8wYkg9k0TU3KVK9VMQ/cElmCl+bXEy9IUTkEbMpMG3lRPo7mk/ZyP9V0UVi5piIh2eMyFydSZO1rMpuqczHay0lpRF4ICEEXmWhLYug3VU6wX2WW+4aGLpPyE/N19flWqZFbukkawyj9phVOAqFuwp091sSeemJbFozIrNfkwxZGiadD9I/ExI6R0khf9EfA32rTJ6GTHJSKiwdwB+zYvCtfPsuDTF+Iy3vR1XJ3m9k50yYb5R4nVuuSTJYDq1CS3K55LjZfz2/VceybgE8lxnCaWoH2Ub3JngLMPqu61SvwXxuk0TPSI9LLY/Wvih6hs=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAVPR03MB8969.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(786006)(1800799024)(376014)(7416014)(10070799003)(23010399003)(261022075727099003)(261102123227099003)(4143699003)(261026121527099003)(5023799004)(56012099006)(11063799006)(10067099003)(261021121427099003)(261022113327099003)(22082099003)(18002099003)(3023799007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?HR/MZxXpZixW61BXkWQ35RgM2WGs8qivUeSlEWSKFnhtP6bbvu9Hety6jwBk?=
+ =?us-ascii?Q?uzhmAMcAwlEiGuAHgeGroU2Ti1HQdxBnJOhF6l03uxF4JSDHBtG+dBxgctdX?=
+ =?us-ascii?Q?LSmDRC94MRWaMRUbVgEBepujDOg1hN+qin+kiQzVoXdFe4USID7yExUju6xN?=
+ =?us-ascii?Q?o6nd+bWEO63/gHzCyeMZUSBdWgwbWH2PSYAlSEQugWM50xm9quJhIfV+vaav?=
+ =?us-ascii?Q?KyEaf+AY4vwL2CoBZP6CtkjwhgvM4GPa5qMhzKkWHJMSWCEh1mV2v3eHCUcG?=
+ =?us-ascii?Q?+3RRf9uZOtLQ07r+ZRi5lqPqOmjtMDNV1fjbqaOL8/BDtZF7sFkIG8w8A/gh?=
+ =?us-ascii?Q?zwz427YZLN1Zhp2D6g0CJKw6hoH/D6SlpIGWxDh544HBLBJ3RybTDURYWPJw?=
+ =?us-ascii?Q?UxVEmqBZYek3W7bbY27D9JKo1CP/gRk87zq8iWqwjEFFkwF2cycpQYxeX8Um?=
+ =?us-ascii?Q?BaaE5g5iGKBzc3qG334s0OX7JA1zBJUZfL5GXMh3mFTuiEzMkdT6WTTa/sVH?=
+ =?us-ascii?Q?sTpkw+RMj9Y6zmAz4De4Q7D/nWn4r57CXtvDOdsLD2kkwRkw4bv0ByBMCDki?=
+ =?us-ascii?Q?k/KbHNir2i8jOOhfuXjy6549p3naYMCNrXD2xGIrG6xM4ZH5yL6umwQUL+LI?=
+ =?us-ascii?Q?kcr9p/1/f0vdFTIisUbOlDAbFeE4K7phOL0UFd8mDQm4+rVudyCmxUw1rKVu?=
+ =?us-ascii?Q?0a7iWWkPLXlpP/UniC0DesfkkH0CILxHef5UswUPVfA6RqmS/8hXFTID/xO6?=
+ =?us-ascii?Q?i750eV9u2J3ZTfRzI/TvB4h3jWlN27EprAdcx1CmVMfbAPz34XtdPV9r9MXN?=
+ =?us-ascii?Q?/M63fDeGjOZUJvtDHLiE3N8cSEuXC1bd7wZmnYgfOBL8aWYRWUNXKglOx5ip?=
+ =?us-ascii?Q?od4wR+3jIszXxP3VbldxlSuG9huRh+tyxCIRk6ed8gROtwL8n7th1YngTP1M?=
+ =?us-ascii?Q?STGU2MiGDcaUiSoc4MXJxu8DsQaf8M+UNsjbQdsgVxSmxrnlTnkcnQBUI3tp?=
+ =?us-ascii?Q?UfKOdXQZu6KyMT35NK3YRcI9C9XTBZyfSRZG181VZAy69KoibkchoowqsJBD?=
+ =?us-ascii?Q?5FeJGNzozpm/xrG+N1bc57P7F/J4zzqnd3mIDUVi9dFxnL9WHv2z22A/c3vg?=
+ =?us-ascii?Q?wHBX2VcdhflMoNjXg5G6H4J3wklbiDX1epGKHldQKRUfmRgDrpD28Z8/WMkg?=
+ =?us-ascii?Q?Z/tqi4IfbN73R6imTZDhs0Jn8fEwVaPDotTaCDhA4ymK7OmqRfMrcqrq56lc?=
+ =?us-ascii?Q?v0hTUBDZyvbiOcbl4bYkJm61SBT+6leqIroIMobLRreAG8RVeNNx06H2r5T4?=
+ =?us-ascii?Q?NMFK83hciUIbDqJbPNBAy/pb2WkCoW/BmLIMitLXp1LFEN4jyEU8UyX3GvrR?=
+ =?us-ascii?Q?zmo2U+D4e7z+5fHDIpvLDw/TkiT2CkS7VGHMgmjQYO4Rh0stAJTQSzhRiANZ?=
+ =?us-ascii?Q?YqolMbDW64jbetYiTP2DQzGjQ6ddOpOA8DdaccLl5aVvBje1gqLVcfJbkSCU?=
+ =?us-ascii?Q?YD3krjcJP+mWecktBPM6euccZBLH2i25R7Q5jAh2XKFJ9e3eXxZ6lXU+CorN?=
+ =?us-ascii?Q?8CGADTVOVgwRhXUifJ05Cv+tSF935tksnDu4mEOjpf/OFR4J12/rJO29NORS?=
+ =?us-ascii?Q?MUueGyOaFEi4FXsoJmV1c6+mG59dkIZDbuj7TnmsYIm1NHuwdtnBAhi4yKOS?=
+ =?us-ascii?Q?YgdZ/9EAm+6BopbMH8nrYdPpHztou6JTksbjPWdumCf3JRojl6OwlLYI5KO4?=
+ =?us-ascii?Q?bU61Un4dGOWSC0S19YaVUSm6ZuqoUNeZMefiOrif1fohkhShPf00qCvn4nzD?=
+X-MS-Exchange-AntiSpam-MessageData-1: yBa+q0ekNDgnebadAjXZvtEJrvKM9lD/8nc=
+X-OriginatorOrg: santannapisa.it
+X-MS-Exchange-CrossTenant-Network-Message-Id: dd90ce37-7329-4936-0729-08df464b491b
+X-MS-Exchange-CrossTenant-AuthSource: PAVPR03MB8969.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 14:42:07.4359
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: d97360e3-138d-4b5f-956f-a646c364a01e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Wj2ddUxJtqVzPMnxHwv4o1Hozdn5bPRFWCMDw/NVTCVrsPkOgf7J+JE7asqtLLVgT/RlP/Z1097U2TZZoXTzRWZpfxwgQdKdK7i+C8bnefc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DU0PR03MB9005
 
-On 19/11/26 15:27, luca abeni wrote:
-> Hi Juri,
-> 
-> On Thu, 19 Nov 2026 12:23:48 +0100
-> Juri Lelli <juri.lelli@redhat.com> wrote:
-> [...]
-> > > On Wed, Nov 11, 2026 at 06:56:57PM +0100, Yuri Andriaccio wrote:  
-> > > > - `cpu.rt.max` only accepts per-CPU settings, so the global
-> > > > "default" is removed. Removing all overrides means the cgroup is
-> > > > a "max" cgroup, while just a single override means that the
-> > > > cgroup has its own budget.
-> > > >   + This new interface disallows zero-runtime overrides, as a
-> > > > zero override is equal to an empty override when there is at
-> > > > least one non-zero override. As an example: [<CPU0 10ms 100ms>,
-> > > > <CPU1 0ms 100ms>] is equal to just having [<CPU0 10ms 100ms>].
-> > > > This seems a bit odd, how to make this better?  
+On Thu, 19 Nov 2026 15:36:01 +0100
+Juri Lelli <juri.lelli@redhat.com> wrote:
+> > > > The root has no ancestor to fall back to, so a missing entry
+> > > > can't mean anything there. It has to always carry an entry for
+> > > > every possible CPU, which defaults to zero, and reject "max":
+> > > > 
+> > > >   0-127 runtime=0 period=1000000    
 > > > 
-> > > It's odd because a missing entry means "max" when there are no
-> > > entries and zero when there are some. Can a missing entry always
-> > > mean "max", per CPU? On a CPU that a cgroup has no entry for, its
-> > > tasks would be served by the nearest ancestor which has one. Zero
-> > > then becomes a regular value which is shown on read, and the two
-> > > configs in your example are different. The former can't run RT
-> > > tasks on CPU1. The latter runs them on the ancestor's budget there.
-> > > 
-> > > This means that a cgroup can have its own budget on some CPUs and be
-> > > "max" on the others. That is a fundamental part of the interface,
-> > > so I think it's best to get it right from the get-go rather than
-> > > starting with a restriction.
-> > >   
+> > > Also, related to the above: on the root these numbers mean
+> > > something else (how much DL bandwidth cgroups may reserve, not a
+> > > server for the root's tasks), and showing them in the same file
+> > > and format is part of what makes the example misleading. Would
+> > > you be OK with dropping cpu.rt.max on the root and exposing the
+> > > parameters through a separately named root-only file (or the
+> > > existing sysctls)? That way, having no entry all the way up
+> > > consistently means unmanaged FIFO/RR, and nothing on the root
+> > > looks like a budget those tasks share.  
 > > 
-> > Agree on making zero a regular value and on a missing entry always
-> > meaning "max".
+> > Regardless of the filenames we decide, the defaults for these
+> > settings indicate the fraction of CPU time that can be consumed by
+> > all real-time tasks that are not in the root cgroup, right?  
 > 
-> I think "0" as a regular value is agreed upon by everyone :)
-> But I would avoid "missing entries meaning max"... See my previous
-> email.
-> Basically, I think a cgroup should either inherit from the parent for
-> every core, or define a deadline entity (even one with 0 runtime) on
-> every core. Mixing the two is, in my opinion, problematic (for example,
-> it would change the serving reservation when a task migrates from one
-> core to another)).
-> I hope this "all-or-nothing" approach is acceptable...
+> Not quite, I think? They cap the bandwidth that can be reserved for
+> cgroup servers, so they only cover RT tasks that are served by one.
+> RT tasks in a non-root "max" cgroup (with no configured ancestor) are
+> not in the root cgroup, but run in the root runqueue
+
+Ah, right, sorry about the confusion... I was counting them as
+belonging to the root cgroup, but you are right, they are in different
+cgroups.
+
+So, yes, I was victim of the confusion you'd like to avoid :)
+
+
+
+			Luca
+
+
+
+> and aren't
+> limited by those values at all (sched_rt_can_attach() lets them in
+> unconditionally). Which is the kind of confusion I'd like the root
+> interface to avoid.
 > 
+> Thanks,
+> Juri
 > 
-> [...]
-> > Making a missing entry mean zero at the top would bring back the
-> > ambiguity you pointed out, so what about keeping your semantics and
-> > adding a validity rule instead:
-> > 
-> >   A cgroup can be served by the root either on all of its CPUs or on
-> >   none of them.
-> 
-> As mentioned above, I would be even more drastic:
->    A cgroup can be served by an ancestor either on all of its CPUs or on
->    none of them.
-> 
-> What do you think? Can this approach be acceptable?
-
-Yes, works for me. The example I gave is just the extreme case of the
-problem you describe (the "other reservation" being no reservation at
-all), and your argument covers the nested case I still allowed.
-
-Tejun, I think this still addresses the original concern: zero is a
-regular value with a single meaning ("no RT on this CPU"), and no
-entry only exists for a cgroup that is "max" as a whole. It's not a
-restriction to relax later, though: a task changing reservation on
-migration is what we want to rule out.
-
-> > In practice, a cgroup whose parent is entirely root served (e.g. a
-> > top level group) has entries for all possible CPUs or for none. A
-> > write that would leave some CPUs served by a server (or zero) and
-> > others by the root fails with -EINVAL, like the existing admission
-> > checks. Further down, a missing entry is fine and means the parent's
-> > context on that CPU, which is always a real server or an explicit
-> > zero.
-> > 
-> > With that, per CPU:
-> > 
-> >   - no entry: served by the parent's context on that CPU
-> >   - runtime=0: no RT on that CPU, shown on read
-> >   - runtime=N period=P: own server on that CPU
-> 
-> If what I wrote above is OK, I would just avoid the "no entry" case,
-> and I would define the interface so that missing entries are not
-> possible (for example, see my previous email: we first set a (runtime,
-> period) for all core, then we can override some of them... But not with
-> "max").
-
-OK.
-
-> > > The root has no ancestor to fall back to, so a missing entry can't
-> > > mean anything there. It has to always carry an entry for every
-> > > possible CPU, which defaults to zero, and reject "max":
-> > > 
-> > >   0-127 runtime=0 period=1000000  
-> > 
-> > Also, related to the above: on the root these numbers mean something
-> > else (how much DL bandwidth cgroups may reserve, not a server for the
-> > root's tasks), and showing them in the same file and format is part of
-> > what makes the example misleading. Would you be OK with dropping
-> > cpu.rt.max on the root and exposing the parameters through a
-> > separately named root-only file (or the existing sysctls)? That way,
-> > having no entry all the way up consistently means unmanaged FIFO/RR,
-> > and nothing on the root looks like a budget those tasks share.
-> 
-> Regardless of the filenames we decide, the defaults for these settings
-> indicate the fraction of CPU time that can be consumed by all real-time
-> tasks that are not in the root cgroup, right?
-
-Not quite, I think? They cap the bandwidth that can be reserved for
-cgroup servers, so they only cover RT tasks that are served by one.
-RT tasks in a non-root "max" cgroup (with no configured ancestor) are
-not in the root cgroup, but run in the root runqueue and aren't limited
-by those values at all (sched_rt_can_attach() lets them in
-unconditionally). Which is the kind of confusion I'd like the root
-interface to avoid.
-
-Thanks,
-Juri
 
