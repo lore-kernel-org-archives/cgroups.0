@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.96.117
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.100.83
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795061252;
-	b=oAqlXCjTzyY1bRP7HWuLjFrwPRhy1/v4mwv+44WxaWcxHqrbIpAVWtG4H0NtSwBenOMJ
-	 TpBQGUOUX8Ds8H9FWTkPGyNjgDvig0Pfk6lJeXi3OX+1FCYsB6F0S0fHUF96m7l20LANg
-	 sX1LR0TGwBg1Xaa1KXZB08siOEt3PUIiZkPjFOpSSPydHH+7h95oAmgWNtbHB4M9v8Ln3
-	 b9YpX3e5RyGDiNUVAhIlLzpKi5adarnPgCqX/QVzO2wN0bfIss06/9JNQloZp/5K5M1Zc
-	 56UnPasf6KS/Fnd+B1tgBf1VyT1kCZUPi0iBPcHejVLdxO5Yz2o79o3TS2kjJdYpstg==
+	t=1795061249;
+	b=ccnF/ZyYgN9/93GPmpDLfpyq6BQFizMqLf0ypau1uPwqnp7wZBC8EkkfN3KoaScaQ0vw
+	 HlkD1vET+28/HiygLctQzLl9Hi5UczYlC8kVRjVNxs3CYEZL/8pU8Lecl/6efZsPfIEav
+	 BHP4uyQxr68aiMl6xzY94kuvUfBuchdeOzq3SN6o0Hkd6nIGeCAWCiTLdbrjyQJfh3PtT
+	 2irDwxNMSDrICdHTfFQAQmJJgISjon/3cMpixb39ankP7XJayuesJdKOruIaZ3YFqu8TE
+	 jUxEIdjrP/QZbZ1Fj2jI4ZMHgt1u13w38PxN9HslsauO23WV7bng3mUVkURqiI7IBhw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795061252;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795061249;
 	h=DMARC-Filter:Received:Received:From:To:Cc:Subject:Date:Message-ID:
 	 X-Mailer:In-Reply-To:References:Content-Transfer-Encoding:
 	 Content-Type:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
@@ -24,31 +24,31 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=+eHhVVsOmO0JdoWmm4cepF93v6NHncQmzT0Cf9yDGK0=;
-	b=F3gi3D9G293hEKVSk/IuuIBjuvMPakhxQeKacCY2Y6EsG8FsHIBCjkdlyPo5E32FBt+0
-	 P24bYVliRxGZSaegx+L8NV2Nt1eQm1EA4o8ThL/rc8hmUrXnbdOa+uP1abrIRNcrSUKes
-	 1Ox8cEDb2yYe/0iH1FJGPsf2r8JVCSuQH9hjfu4lqLZEMgJM9wnaO7gYSuq8uF/oo6Vy6
-	 R0VQpgqHHTurRGc1HbCHtGib81oKMr1Xve37E12Sfy3x6rKXizRWe6S/rF7FepUmwvxov
-	 Qfyx53hOxx37uFCEOG4d9dh08FVlHCa8t/ud41rDHwYTkU/MOZOybB0r9dknAtqMHdA==
+	bh=v1YQmYrtQN03py1+huoTf75RYVuK2/mjH8luBCGttSk=;
+	b=FmMrKj6enIOVWhYLrBfulOsG2thKR9KZBUusuPjKfx/nr96xWkILlj72s+vA6v3jJoLe
+	 MaP9rDNjqex0AQDlhv7nyZ4mAHoBS5eUqszcCichbnZzleS+1a7bypt2vY42XfVOwK09G
+	 x/vshtpDH70ww82SsL5drROYYho3Qzug79ZiiyVLFwkSsjKQlfvwHXBMy2Ila/sVX6/IK
+	 oI4cDtLRCB/zi6VYP780W24AM2AJHpq8rAHHDUirgOMw5NKMq6mAptnYwLhjACircQng8
+	 pvBWzvTvvlumRyIzdsH1qwgiHF1ZEOBhu9m7cOZP0EwtyCqq1M50wOh35wyayNuEJKA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=none header.from=atomlin.com;
 	spf=pass smtp.mailfrom=atomlin.com;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.96.117
-Received: from LO0P265CU003.outbound.protection.outlook.com (mail-uksouthazon11022117.outbound.protection.outlook.com [52.101.96.117])
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.100.83
+Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021083.outbound.protection.outlook.com [52.101.100.83])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86D6060A2619;
-	Thu, 19 Nov 2026 04:07:31 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86D6060A2619
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57958606A331;
+	Thu, 19 Nov 2026 04:07:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 57958606A331
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ICzKYy7uY6VWb0ZvLDgcwpzUdRKQHoHbDi12SE8y4b8QdKBBiZ9n5s/c10EGR/EcDEwC5VT1jjkj6dCbNebmw/6DKc8LU93mF1pWiPr6Y0ficPWvRgOkYjjox5FLu4+SBc+cqQ928qXvYuHlSDCKO11A8ZbgCl0eYTLttow93JaFj9ZxD0Il1g2uD1weKFl79CNNuvRkYFOT0zzz78ezwRtfO5FnyApgLi+WQPYODZa/rha+9Gn1oXvUDfg/sFiSVErDxLLAd1pLfLiUowNsesTQWrRdkRYuuPfAkRxHQn3KEVY7d9Y1udzNwaXAtubNWv+UJeGVRGsqqcSQ8ne3rQ==
+ b=KbHt4RY4t8AiJ++uBdCyqqf1nK8Kt3ZP9sKQFCSJy8Gax65wsYZ7+mwcXFo8/X7V9eG0sC+2RVc6ZFlrCsnL1pLyhIO7IP/dtUuS31AYHUEe2MTYQiWlWWR0Dz5Dhu3xQE8y8DhMtbJWAtdZFLy1wGfPdIeKlKg61k2B9N5kvTdHkAni1HVddDbJSCMKPh/5G+Ic83xUOvkj22c+uMTFwPpjs1ciknSpr6uZoXhlJ+09U30YA0cTNsl1Kt0sk7O6IafcNrBk/SrGAjqs3j2KM4YKXFdJpVxPj4ml0ODAaGanLc649M8roTwoY03TX2NruqBurbTKr7lg5XHGAseh0g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=+eHhVVsOmO0JdoWmm4cepF93v6NHncQmzT0Cf9yDGK0=;
- b=ktIFQrjQ6uZIJ7DyB26isXsq+PGAdYpvUP/Pnunzr4WLGvl6UJ30V//OTi9/LLqGGu8z568nDFNvwDnSj2swOpvij8vzgfs2Y5TNcFcuME3ScdfyM79xt0PgOOnOzQeTtDxs5RB0z1i4FVf0PRBCKwSQol09+PYBC8QKjPQcn8b4FYE6ybCmm3YpMjbOazPwzBQS/PtADKCxLgJexOQ8iCOrqP1SGZHWcXQiyxTd7+HvHo4Y5BOjHM4VhkuTnsJojO6LUhQqyCTej4y5kAEbsnas4v9UrJaXTEweKIJZViEVSPeEwyZR2MtBuikkZ7y+fIYWHLdrzpbfiNqqpdFHGg==
+ bh=v1YQmYrtQN03py1+huoTf75RYVuK2/mjH8luBCGttSk=;
+ b=iVZMVfhMMU66MHud6APwSUhbEEBeBWx/y7EcfVwa05072kox3BROJH6yQs1pArSwVmHg1LJUM1ULbHnX7wJynFrOChyyLMyfa89aNhrj2doUCw6JKM6F5tr3O3kLLBUJaXm6wXCD8GvVQ/FmbJ98eVA/jyGy1gLPErM5JXNRnDrEY6aTxsEjMTy3dsSRMYDbZbvV/y4CmMFUg7Ffqk3UvDzqbZTDh+bEmXmcYY0pc6DoFkAVToLop6WtYb7SN65vJjzRN9v955Br195gBSRGHdh+Gm/BgVkMApbK8j8CDuxURNzrlZbEaI26n3BOgHNht+sXt5FgIiGU7Ku7AFFZUA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
  dkim=pass header.d=atomlin.com; arc=none
@@ -58,11 +58,11 @@ Received: from CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:b1::11)
  by LO9P123MB7808.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:3e7::7) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Thu, 19 Nov
- 2026 04:07:29 +0000
+ 2026 04:07:24 +0000
 Received: from CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM
  ([fe80::beaf:db0b:23fd:822a]) by CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM
  ([fe80::beaf:db0b:23fd:822a%4]) with mapi id 15.21.0639.010; Thu, 19 Nov 2026
- 04:07:29 +0000
+ 04:07:24 +0000
 From: Aaron Tomlin <atomlin@atomlin.com>
 To: tsbogend@alpha.franken.de,
 	paul@paul-moore.com,
@@ -113,17 +113,17 @@ Cc: ihor.solodrai@linux.dev,
 	bpf@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v6 2/2] selftests/bpf: Verify task_setscheduler LSM hook parameters
-Date: Wed, 18 Nov 2026 23:07:05 -0500
-Message-ID: <20261119040705.684987-3-atomlin@atomlin.com>
+Subject: [PATCH v6 1/2] security: Expand task_setscheduler LSM hook
+Date: Wed, 18 Nov 2026 23:07:04 -0500
+Message-ID: <20261119040705.684987-2-atomlin@atomlin.com>
 X-Mailer: git-send-email 2.55.0
 In-Reply-To: <20261119040705.684987-1-atomlin@atomlin.com>
 References: <20261119040705.684987-1-atomlin@atomlin.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: PH7PR17CA0005.namprd17.prod.outlook.com
- (2603:10b6:510:324::14) To CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:b1::11)
+X-ClientProxiedBy: BN9PR03CA0983.namprd03.prod.outlook.com
+ (2603:10b6:408:109::28) To CWLP123MB4179.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:400:be::14)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -135,415 +135,364 @@ Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CWXP123MB4183:EE_|LO9P123MB7808:EE_
-X-MS-Office365-Filtering-Correlation-Id: 62829ee0-f9ee-4c85-0c3b-08df45f2a0b4
+X-MS-Office365-Filtering-Correlation-Id: 771dcdce-09ed-4267-2b1a-08df45f29db1
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|23010399003|7416014|376014|366016|6133799003|22082099003|261009223027099003|17002099007|18002099003|3023799007|921020|261021135927099003|56012099006|261026121527099003|261102125427099003|261102123227099003|261028144727099003|261026140227099003|261021121427099003|261022105027099003|261022113327099003|261022075727099003|10067099003;
+	BCL:0;ARA:13230040|1800799024|23010399003|7416014|376014|366016|6133799003|22082099003|261009223027099003|18002099003|3023799007|921020|261021135927099003|56012099006|261026121527099003|261102125427099003|261102123227099003|261028144727099003|261026140227099003|261021121427099003|261022105027099003|261022113327099003|261021123027099003|261022075727099003|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	4qN+pUF0MIOLvN0pE4qYy8VSzYkuNkFbEk7kSKqa5jqAMpF/KmrYteOrsgsQf5sCLJkkdY5GIDzX7nBRCLwHkFoKi5j4oSa+yyDtzHpPpuqyBKmtsKLPfR9tkHOeExb6kncnK3WLAWtpMBhsRYZqx8yjBHO2sFWpNauMWSZ5WHGbAVp70bbfwoarUx1PPCZFhuHSjMGJTpcgOPuwLRlGHvMRu8yMbDcoUzpx0o4ADfhZ9NDqGk7fcKxheZ0biXOIHVoj2jFKIrOgZ59Nb9cboJf9c+BcjoDV5qsuvIenwsl2A8K9nK+3/WELJOB1HHIAgb8VbndKUnY6A5HB/6acAO5T2EVo5z5E9tDH8rOIIHRUlVirYRQsVoLTYvqf2nPLJiYeA3C3oLZAIzOWnSRHiObHx5zrhWeotOe/45jqOMLHm+rdPuXco+Kq6rYgI3nBZ7uX9jJR/07v1L3Fu6GhtcVdBHMBoQ+9I9oeqxrtaxZh6v9i2QXbkqdm1bnvnjVb27cuxnhM778+Q2XBkYRKUpt5P8e8lnnnUHIlTojQXN1SuWmofi6Yn9Tio+7AYCoNcbQiNEsDO1rv3JKVvH8keq1vZWEwZGtT5jE8e6eoJeFv3Cj8W/V2B/TBJ5gCTQzaZsCr8/ykCapHMv+8v3arpJBy9Ypf4szzh0f+Ha6HBnW4Qq9rDkSZVvlHeC5R7o85b+a4vKrZpXBiuFyT/ZNB3Q==
+	D9uUPaqATU0rxddw/ZNh8DzcffwK6bmaVXbMoE4gdBCLyJNtiZnmWPi/a06BsJONzZ8H+ngvhclhCC6lItvRqmRpeyv+SjGv6JDTZPn5lnbvdOefbWfqR4S0SdS64PXcZdI0qBPsTRUB34rm/76T5KTSz7jbL/bNLM2o3SSw2Kw37TUkKC2a9g4llQxMq031jkRCvmIH+qXgy+a7s+rSBQZ1ikZAuzjZrUGs9HcIDtr3THMNecu4folPyyyMQNpoWlN0MG3swVg9X82vR2sprawkKbHh8XK8VsOnOSeSpQmo57QTTclju8uBP5y/I3LsBVjT6glEoJ0GCDTlyZ8GbXLzVD10MU/JrQTWFXAmFKlMZ/PvintRLnhnVGqm++MtmMWswaNqY26mDoSsSmip32DEhd6hpB2YoVMNUSRUFnb8JaMAUltWlCHT65n8cst7yCVqH27gTu6hv3oUNPi1dXQ5XHHzpaixiIqgNjoj5p0K7tF+PLM90WDtdaeQnlsiorFNtUAVgRlUGGyVcFtS5AneM0klJG6LAeMNSZVVM57TD9zCIAEtftaapWcNILYtNOBgIJBNcAb1Xv642KDzq11j693E2xEgWtmjzh9FJG/0jvPrBA1DuELDPmRq2IIOjGIis+Zs/A978d8HMdIL4MFaizZdwsZ7OrmWZtQvHENRJESn05/Rht5cJ1fgyDGJ2nOgcCM1k1qOPCAJygYtIg==
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(7416014)(376014)(366016)(6133799003)(22082099003)(261009223027099003)(17002099007)(18002099003)(3023799007)(921020)(261021135927099003)(56012099006)(261026121527099003)(261102125427099003)(261102123227099003)(261028144727099003)(261026140227099003)(261021121427099003)(261022105027099003)(261022113327099003)(261022075727099003)(10067099003);DIR:OUT;SFP:1102;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(23010399003)(7416014)(376014)(366016)(6133799003)(22082099003)(261009223027099003)(18002099003)(3023799007)(921020)(261021135927099003)(56012099006)(261026121527099003)(261102125427099003)(261102123227099003)(261028144727099003)(261026140227099003)(261021121427099003)(261022105027099003)(261022113327099003)(261021123027099003)(261022075727099003)(10067099003);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?w8Bpb70N45bbrGBKjxZiVyzoy01kEtbK/BD92biK6/zxRzHhk0aNpTqaGb5T?=
- =?us-ascii?Q?x42TytK1fJWMmteSAARchMFqIUohNO/LRR1/HaQXwg+Al0FE09wLJLCXj0EZ?=
- =?us-ascii?Q?VUBPcFoXNjyqbVmBiuwI9c3VvkOgAJqPbjEW7FZdeYuYAQvzLNNVvyJx0z36?=
- =?us-ascii?Q?4p0CZTxfrs4+8mV0NFkIQsddVrKy7empKp41e72KV6gIbGtq9uDKAV3aT35Z?=
- =?us-ascii?Q?ELY5DqNmDWexrjS/FZPv/V13SlzT9eye62imNZiF+2mVPZ8zijV51VQJlXaw?=
- =?us-ascii?Q?fhbeF7x/wUWCPsvGUHfkr1vo7pi9XyUBGhIZxvDpw+sJqCkLa7S8rsIfnKWw?=
- =?us-ascii?Q?Su52N0H1gD+R5Yr8j1n4+kYx9kaULNt1z5lS8mowFeTeSY7GTUnPByzthVuv?=
- =?us-ascii?Q?w5J/JcLouPrJGkaTZL2bQ8aA1NylR4ZDO3Ub6Q9uAeu7Q7SnmkZW/vwTFxRw?=
- =?us-ascii?Q?AAjWGo4DsQvkSrfnGgimFrZfYa/lm3SejM4JKociM00k8Lmpm4X/5eawNGyH?=
- =?us-ascii?Q?/XmdkXknmrusvZf14Ls3viznttvgeyrZwJT47XqRNy1pFlQBB+WB6wocjG8j?=
- =?us-ascii?Q?eJFMtCAI7g0e1depFyu0UHpFXLGd0kJWp3dGK+5I/RfvYSNDcaLLZBqaQu/+?=
- =?us-ascii?Q?oZROxX5xwPDhn7pnB58BVNd2UIuWwlPshpZymbeLqVUoIqjJBQnrkcOxHR5R?=
- =?us-ascii?Q?UwcHUdlm61Ms9IBJZCY13LDkaPXyyfgDR4Sv2AonQiGaJ+MV5ycYHZNjF8T+?=
- =?us-ascii?Q?Ob1SXFol4QidjUgZM6sOlJiLAXu28elP5E7vBNKChMDVE4jM1Nq4MNZJk6v8?=
- =?us-ascii?Q?BBMT55Qz/6MgYXu0GtE6fD5f4UFrun4XxV9gIhBqcj4ipXsAUHeCiqDTYprE?=
- =?us-ascii?Q?/cN8uKPoleTMgaP0qekptupC/Spdk2sMfXlN9w+EZeLfiUxB/5JdhCTvcFjm?=
- =?us-ascii?Q?kqyJ+eLSXuBfp2Be/AMYosxoughIa9ASieB8NfTlv5LQT6nwjSqVI5u5tdHt?=
- =?us-ascii?Q?1e4GmPCvXkVKDgqkJdzbTXQk6xXFFkqZXJ6jmrI5gDkRwsb97tAxeASyn8ta?=
- =?us-ascii?Q?vD2g5NC0TqLzP1tlW0eFI1vlBdGs/DXmdaha/qyDvPVNzAtq3NI0Ze+IJ7uy?=
- =?us-ascii?Q?xdOlRNkcc8Fv4Bxa9brqwXg/rrmJ6ZeecnySXimMUkqNuVRvhPfAh0tThS2L?=
- =?us-ascii?Q?kb4Ng+cqOmEO7rrdbTsQMwJt/esYFZiG6amCHgeY2fCnfuXAYK3rlWLqG4AZ?=
- =?us-ascii?Q?RQUkoYdaJ9HGgBYjpKO/T56mGgwGfTKXItNUh1dwoqvpaN4xa8uJdKMdBG9O?=
- =?us-ascii?Q?BuhaSq8+6VPI1C6j7MKIypBqENsCrngza1y2to54dJADsBkTWpV6RLFHqnON?=
- =?us-ascii?Q?Zq9NRwPc7KAYmCHdrSmu4chzFvsN0vlJUk9d8yGWe75pHgbpvDKJ3jq3nm/B?=
- =?us-ascii?Q?dKvBC4D8m1M7ZKvESnTmeIJiN5A9goAAQuyfEXbL5v0rz8bfWn2cw3Dfb8iG?=
- =?us-ascii?Q?pCo+hCmS1EfVOhmyQAYTtqIRfhnb5GGnhaLuWHJXj3i1Plf+OyCGxQnUY6d3?=
- =?us-ascii?Q?BuuR4y+rpIj2iijdytKW9dubL6isQ2jTF4iz+SfsQssjJRY52Yn7qja07lAp?=
- =?us-ascii?Q?vrPI1AegbG4oF2w3ggoKAZFtWMibv5/U9JCTAqmYs4we5lFydt4RWn1yzWqz?=
- =?us-ascii?Q?LORsHkvAZr9G4UglsMPGxgEYzLtUWATprT1RzsWahYz4+EMwum0pwNn7Ujre?=
- =?us-ascii?Q?ajc0zuBIWw=3D=3D?=
+	=?us-ascii?Q?N0z20XtYLJtc8C7oDRWTj5iDMauiiM96QOl8+mEAFTAOIWntjDT+jt0RFryh?=
+ =?us-ascii?Q?bDQdJjs9XLCCbB9DEgws+IIhsANAoYEsYLuec+cFWrM8lcEFI1YCxocTNzbk?=
+ =?us-ascii?Q?ax5x/rrMaTcYoY8h4Va1iHStJSMByHiEYuNao6h0uMq8j31HHLLIauUAB6Rm?=
+ =?us-ascii?Q?SKzrCwfW/7/MXU4WdJXBsDBL9fTtSCBZQADR3k9i5NmQDeLaNd7F2uGGXY16?=
+ =?us-ascii?Q?cHpsR5Dz4M9nm/aR7kuHcr1OaSa0d4sAmC5mayA9QQedOLY9vBbebI40ebTO?=
+ =?us-ascii?Q?KKJZZjBK0tDp9bZpJOYYwrFmOrTvTFWKbDeOrpKOsicVdxC/6jHFfJnAFr5Q?=
+ =?us-ascii?Q?YZMb9ePhKNUHykXy7iEseN4bqBdU8mo7d8F54kwJUsIsA6Gcmv1+6jZsiMxN?=
+ =?us-ascii?Q?s7xFvyEYakyTKmqnTdsrXPcxrXh5gald11qJ3CViQHW0RH8lhBwsRFyNf1QR?=
+ =?us-ascii?Q?lYF+3s6lLslEHipBofmlExay00yJv5Y4kjdF7hOQNfhjByim6YkxOFvVaLG7?=
+ =?us-ascii?Q?2S0hbmPJCx0iVAujALjdx1rhRqAoJ4rhx0BEvdJVH3mdZ8SAyd2TDd4JLJBs?=
+ =?us-ascii?Q?+yoGwbSNkBVFCPSFFSiLvFS16bY46IKsFhfHCZqlo5Nq9/LOv580DcsCA6l2?=
+ =?us-ascii?Q?U7uyz3kD+g/Wpg3tFHW9eDHzTZi4GFqlYlGnmKFwTyw6tuPUMpsDXxZf0la6?=
+ =?us-ascii?Q?HVEWSmRUfaDezJ0BnPBcDzBab2QxeyRzM3osKGrl1s2KsRS0OEnDumVv19yG?=
+ =?us-ascii?Q?ATye7KGTFzx7mSoDrITnpjkBGwsruBlir5nixWOk9JsjD4mDlkNeXLQh/47+?=
+ =?us-ascii?Q?Fh3iG5MnWwbLqvdSUCPrUFKTdT8dJYsAFjRveOZIEipZd0QZN719jbna5XQo?=
+ =?us-ascii?Q?7Ji1N1PwfwTbOmJXZ8JOXU0dwL+HRaU1KnPb6xj4gradg+Z4R7lp48NIH8mT?=
+ =?us-ascii?Q?BPDbEbUh5U23on3j9ywQJC9mEQdqvchxtiaa0KBN9JkGdlqsDFMJGssIs6RW?=
+ =?us-ascii?Q?IDHvmKNuIFkoGodPplnDAyJNRcNKMnWZzffeTFJRnhF2Q/34Mf/DHhhfV6ii?=
+ =?us-ascii?Q?luyYPFwQGHM7w0PCWPkcuMZuaF3aUV+5QZzMD6IIVf29A6aaNAYBRwLtJkFd?=
+ =?us-ascii?Q?QmfC40LhXcdPRBBJGz7L2dpx7ntKJr9QCBzxAN0W2PYVf+2V5srxxNbXZCgg?=
+ =?us-ascii?Q?0Xn+k1lwzoM5N8KlnJCdDyWhDLS9aUm0Mpq8h4YMJaki3fdyZtjJZUfA59wg?=
+ =?us-ascii?Q?8XNUXHUphsfuJEBtb9v4JFOHFGYeHKaI1SSsqp4YdQuYq60tyzvOiOguK5vO?=
+ =?us-ascii?Q?lHlx5pcJnS5RHaAakaujvbFUMkiwbG8h8eO1423oR0ZvXFbkFYIeOBx+j2yH?=
+ =?us-ascii?Q?TGSJACMkY8r/sdkHH51Lz+VuaB1b99O8RfBbnBNifFRQrvhiNbv3zgZoMFmJ?=
+ =?us-ascii?Q?NU72E7A2pkDxu9N9SYaYFOjowFY1lEIaJX1EA/jYoWZd9NUMuNPP3vUULpVj?=
+ =?us-ascii?Q?wGdUHU5dsoNV5a3LpULRiG5ycCR75Yp1VAv0nGKVuB2pQKXZ0ZHXarlUJepP?=
+ =?us-ascii?Q?e5OxqvVrewdFkdhOjN0ZRPBG2Ph291DgV2ofUSvySJjAXfOQKwnKk6f2xq+/?=
+ =?us-ascii?Q?JFqbYpyrb0K6jQ/CeLkC5AdY6JkWab0UydABXxZiIdE4WPeYDzWSXzgDNotA?=
+ =?us-ascii?Q?+3sp6w8zREz9Jp49oJFRRcMOtdoruVG7YVzPXyU6lK1cuMVz78oScvL87QTj?=
+ =?us-ascii?Q?Ogc5eoQ5Ng=3D=3D?=
 X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 62829ee0-f9ee-4c85-0c3b-08df45f2a0b4
-X-MS-Exchange-CrossTenant-AuthSource: CWXP123MB4183.GBRP123.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 771dcdce-09ed-4267-2b1a-08df45f29db1
+X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB4179.GBRP123.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 04:07:29.2472
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Nov 2026 04:07:24.2896
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Dw7aPEZSWhPZNMtEN3SsYVZBsdDX6YDLKbd7fwes6CJkPygvzAca6A95LgDBqXoBHVcuhRhNl+yLWkb1g+z4Dg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: sfh1s2xdYFOFMXe1XPP976vHDwrKkN7sLMhE/oGMGTmAzcQZ6MPyDdxnQGNfSVhI8W4KHDf93e1nDDy7De4z6Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO9P123MB7808
 
-Extend the BPF LSM selftest to attach to the task_setscheduler hook and
-exercise scheduling policy updates via sched_setscheduler(), parameter
-updates via sched_setparam() and sched_setattr() with
-SCHED_FLAG_KEEP_POLICY, CPU affinity changes via sched_setaffinity(),
-and child timer slack updates via /proc/[pid]/timerslack_ns. Verify that
-the hook observes the expected sched_attr and cpumask arguments across
-each path, including the resolved scheduling policy and effective
-SCHED_FLAG_RESET_ON_FORK state for parameter-only updates as well as
-NULL pointers when an argument does not apply, and that returning -EPERM
-denies each operation.
+At present, the task_setscheduler LSM hook only accepts the target
+task_struct pointer. It lacks visibility into the requested scheduling
+attributes (sched_attr) and the CPU affinity or cpuset mask (cpumask).
+Consequently, security modules cannot inspect the target scheduling
+parameters or CPU mask passed through the hook.
 
-Also add verifier test cases confirming that dereferencing the nullable
-attr or in_mask parameters without an explicit NULL check is rejected by
-the BPF verifier.
+For CPU affinity requests via sched_setaffinity(), auditing or
+filtering the raw mask requested by userspace requires inspecting the
+mask before __sched_setaffinity() intersects it with the task's allowed
+cpuset CPUs. Seccomp filters cannot perform this inspection because the
+affinity mask and scheduling attribute structures are passed behind
+user pointers, and scheduler tracepoints only observe the effective
+mask after intersection with the cpuset configuration.
 
+This patch expands the security_task_setscheduler() hook signature to
+include pointers to the requested sched_attr and cpumask alongside the
+target task_struct. In __sched_setscheduler(), a local copy of
+sched_attr is populated with the resolved scheduling policy and
+effective SCHED_FLAG_RESET_ON_FORK state so that parameter-only updates
+(such as sched_setparam() or sched_setattr() with
+SCHED_FLAG_KEEP_POLICY) always pass the effective values to the hook
+rather than internal sentinels or caller defaults. For
+sched_setaffinity(), the user-requested affinity mask is passed, whilst
+for cpuset migrations and CLONE_INTO_CGROUP the destination cpuset's
+effective_cpus mask is passed. Note that direct writes to cpuset.cpus
+update task affinity via cpuset_update_tasks_cpumask() without invoking
+this hook. Call sites that do not provide scheduling attributes or a
+CPU mask (such as /proc/[pid]/timerslack_ns writes) pass NULL for the
+respective parameter. To protect against unverified dereferences, both
+parameters are annotated with __nullable in the LSM hook definition,
+ensuring the BPF verifier mandates explicit NULL checks for attached
+eBPF programs.
+
+This change updates all in-tree security modules (capabilities,
+SELinux, and Smack) to accommodate the new parameters mechanically,
+whilst providing LSMs such as the BPF LSM with visibility into and
+mediation of explicit scheduling policy and parameter updates,
+sched_setaffinity() requests, and cpuset task migrations.
+
+Reviewed-by: Casey Schaufler <casey@schaufler-ca.com> # Smack
 Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
 ---
- .../selftests/bpf/prog_tests/test_lsm.c       | 164 ++++++++++++++++++
- tools/testing/selftests/bpf/progs/lsm.c       |  51 ++++++
- .../selftests/bpf/progs/verifier_lsm.c        |  49 ++++++
- 3 files changed, 264 insertions(+)
+ arch/mips/kernel/mips-mt-fpaff.c |  2 +-
+ fs/proc/base.c                   |  2 +-
+ include/linux/lsm_hook_defs.h    |  4 +++-
+ include/linux/security.h         | 15 +++++++++++----
+ kernel/cgroup/cpuset.c           |  4 ++--
+ kernel/sched/syscalls.c          | 11 +++++++++--
+ security/commoncap.c             |  9 +++++++--
+ security/security.c              | 21 ++++++++++++++++-----
+ security/selinux/hooks.c         |  4 +++-
+ security/smack/smack_lsm.c       | 13 +++++++++++--
+ 10 files changed, 64 insertions(+), 21 deletions(-)
 
-diff --git a/tools/testing/selftests/bpf/prog_tests/test_lsm.c b/tools/testing/selftests/bpf/prog_tests/test_lsm.c
-index c0ae813698ae..5081c243bc5e 100644
---- a/tools/testing/selftests/bpf/prog_tests/test_lsm.c
-+++ b/tools/testing/selftests/bpf/prog_tests/test_lsm.c
-@@ -21,8 +21,30 @@
+diff --git a/arch/mips/kernel/mips-mt-fpaff.c b/arch/mips/kernel/mips-mt-fpaff.c
+index 4fead87d2f43..c7a5d55cf7ca 100644
+--- a/arch/mips/kernel/mips-mt-fpaff.c
++++ b/arch/mips/kernel/mips-mt-fpaff.c
+@@ -110,7 +110,7 @@ asmlinkage long mipsmt_sys_sched_setaffinity(pid_t pid, unsigned int len,
+ 		goto out_unlock;
+ 	}
  
- char *CMD_ARGS[] = {"true", NULL};
+-	retval = security_task_setscheduler(p);
++	retval = security_task_setscheduler(p, NULL, new_mask);
+ 	if (retval)
+ 		goto out_unlock;
  
-+#ifndef SCHED_RESET_ON_FORK
-+#define SCHED_RESET_ON_FORK	0x40000000
-+#endif
-+
-+#ifndef SCHED_FLAG_KEEP_POLICY
-+#define SCHED_FLAG_KEEP_POLICY	0x08
-+#endif
-+
-+struct test_sched_attr {
-+	__u32 size;
-+	__u32 sched_policy;
-+	__u64 sched_flags;
-+	__s32 sched_nice;
-+	__u32 sched_priority;
-+	__u64 sched_runtime;
-+	__u64 sched_deadline;
-+	__u64 sched_period;
-+	__u32 sched_util_min;
-+	__u32 sched_util_max;
-+};
-+
- enum {
- 	INODE_IDMAP_ALL = (1U << 6) - 1,
-+	SETSCHED_SAW_ALL = (1U << 5) - 1,
- };
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index c9aebee0a338..d9a3c892586e 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -2596,7 +2596,7 @@ static ssize_t timerslack_ns_write(struct file *file, const char __user *buf,
+ 		}
+ 		rcu_read_unlock();
  
- int exec_cmd(int *monitored_pid)
-@@ -255,6 +277,141 @@ static int test_lsm_inode_idmap(struct lsm *skel)
- 	return ret;
- }
+-		err = security_task_setscheduler(p);
++		err = security_task_setscheduler(p, NULL, NULL);
+ 		if (err) {
+ 			count = err;
+ 			goto out;
+diff --git a/include/linux/lsm_hook_defs.h b/include/linux/lsm_hook_defs.h
+index 87d9d06710cb..411a5b977915 100644
+--- a/include/linux/lsm_hook_defs.h
++++ b/include/linux/lsm_hook_defs.h
+@@ -256,7 +256,9 @@ LSM_HOOK(int, 0, task_prlimit, const struct cred *cred,
+ 	 const struct cred *tcred, unsigned int flags)
+ LSM_HOOK(int, 0, task_setrlimit, struct task_struct *p, unsigned int resource,
+ 	 struct rlimit *new_rlim)
+-LSM_HOOK(int, 0, task_setscheduler, struct task_struct *p)
++LSM_HOOK(int, 0, task_setscheduler, struct task_struct *p,
++	 const struct sched_attr *attr__nullable,
++	 const struct cpumask *in_mask__nullable)
+ LSM_HOOK(int, 0, task_getscheduler, struct task_struct *p)
+ LSM_HOOK(int, 0, task_movememory, struct task_struct *p)
+ LSM_HOOK(int, 0, task_kill, struct task_struct *p, struct kernel_siginfo *info,
+diff --git a/include/linux/security.h b/include/linux/security.h
+index 40831fab5470..b2c43e745447 100644
+--- a/include/linux/security.h
++++ b/include/linux/security.h
+@@ -84,6 +84,7 @@ struct audit_krule;
+ struct ns_common;
+ struct user_namespace;
+ struct timezone;
++struct sched_attr;
  
-+static int find_first_cpu(const cpu_set_t *mask)
-+{
-+	int cpu;
-+
-+	for (cpu = 0; cpu < CPU_SETSIZE; cpu++) {
-+		if (CPU_ISSET(cpu, mask))
-+			return cpu;
-+	}
-+
-+	return -1;
-+}
-+
-+static int test_lsm_task_setscheduler(struct lsm *skel)
-+{
-+	struct test_sched_attr sattr = {
-+		.size = sizeof(sattr),
-+		.sched_flags = SCHED_FLAG_KEEP_POLICY,
-+	};
-+	struct sched_param param = {}, saved_param = {};
-+	cpu_set_t mask, saved_mask;
-+	char timerslack_path[64];
-+	int cpu, saved_policy = -1;
-+	pid_t child_pid = -1, waited;
-+	bool restore_sched = false;
-+	bool restore_aff = false;
-+	int len, ret = -1;
-+
-+	saved_policy = sched_getscheduler(0);
-+	if (!ASSERT_GE(saved_policy, 0, "sched_getscheduler"))
-+		return -1;
-+	if (!ASSERT_OK(sched_getparam(0, &saved_param), "sched_getparam"))
-+		return -1;
-+	restore_sched = true;
-+
-+	if (!ASSERT_OK(sched_getaffinity(0, sizeof(saved_mask), &saved_mask),
-+		       "sched_getaffinity"))
-+		goto out;
-+	restore_aff = true;
-+
-+	cpu = find_first_cpu(&saved_mask);
-+	if (!ASSERT_GE(cpu, 0, "find_first_cpu"))
-+		goto out;
-+
-+	if (saved_policy != SCHED_OTHER &&
-+	    !ASSERT_OK(sched_setscheduler(0, SCHED_OTHER, &param),
-+		       "sched_setscheduler_other"))
-+		goto out;
-+
-+	child_pid = fork();
-+	if (!ASSERT_GE(child_pid, 0, "fork"))
-+		goto out;
-+	if (child_pid == 0) {
-+		pause();
-+		_exit(0);
-+	}
-+
-+	len = snprintf(timerslack_path, sizeof(timerslack_path),
-+		       "/proc/%d/timerslack_ns", child_pid);
-+	if (!ASSERT_GE(len, 0, "timerslack_snprintf") ||
-+	    !ASSERT_LT(len, sizeof(timerslack_path), "timerslack_snprintf_len"))
-+		goto out;
-+
-+	skel->bss->setsched_seen = 0;
-+	skel->bss->setsched_affinity_cpu = cpu;
-+	skel->bss->setsched_deny = 0;
-+
-+	if (!ASSERT_OK(sched_setscheduler(0, SCHED_BATCH | SCHED_RESET_ON_FORK,
-+					  &param),
-+		       "sched_setscheduler_batch"))
-+		goto out;
-+	if (!ASSERT_OK(sched_setparam(0, &param), "sched_setparam_batch"))
-+		goto out;
-+	if (!ASSERT_OK(syscall(__NR_sched_setattr, 0, &sattr, 0),
-+		       "sched_setattr_keep_policy"))
-+		goto out;
-+	if (!ASSERT_EQ(sched_getscheduler(0),
-+		       SCHED_BATCH | SCHED_RESET_ON_FORK,
-+		       "sched_getscheduler_reset_on_fork"))
-+		goto out;
-+
-+	CPU_ZERO(&mask);
-+	CPU_SET(cpu, &mask);
-+	if (!ASSERT_OK(sched_setaffinity(0, sizeof(mask), &mask),
-+		       "sched_setaffinity"))
-+		goto out;
-+
-+	if (!ASSERT_OK(write_file(timerslack_path, "0"), "timerslack_ns_allow"))
-+		goto out;
-+
-+	if (!ASSERT_EQ(skel->bss->setsched_seen, SETSCHED_SAW_ALL,
-+		       "setsched_seen"))
-+		goto out;
-+
-+	skel->bss->setsched_deny = 1;
-+
-+	if (!ASSERT_EQ(sched_setscheduler(0, SCHED_BATCH, &param), -1,
-+		       "sched_setscheduler_deny") ||
-+	    !ASSERT_EQ(errno, EPERM, "sched_setscheduler_deny_errno"))
-+		goto out;
-+
-+	if (!ASSERT_EQ(sched_setparam(0, &param), -1, "sched_setparam_deny") ||
-+	    !ASSERT_EQ(errno, EPERM, "sched_setparam_deny_errno"))
-+		goto out;
-+
-+	if (!ASSERT_EQ(syscall(__NR_sched_setattr, 0, &sattr, 0), -1,
-+		       "sched_setattr_deny") ||
-+	    !ASSERT_EQ(errno, EPERM, "sched_setattr_deny_errno"))
-+		goto out;
-+
-+	if (!ASSERT_EQ(sched_setaffinity(0, sizeof(mask), &mask), -1,
-+		       "sched_setaffinity_deny") ||
-+	    !ASSERT_EQ(errno, EPERM, "sched_setaffinity_deny_errno"))
-+		goto out;
-+
-+	if (!ASSERT_EQ(write_file(timerslack_path, "0"), -1,
-+		       "timerslack_ns_deny") ||
-+	    !ASSERT_EQ(errno, EPERM, "timerslack_ns_deny_errno"))
-+		goto out;
-+
-+	ret = 0;
-+out:
-+	skel->bss->setsched_deny = 0;
-+	if (child_pid > 0) {
-+		kill(child_pid, SIGKILL);
-+		do {
-+			waited = waitpid(child_pid, NULL, 0);
-+		} while (waited < 0 && errno == EINTR);
-+	}
-+	if (restore_aff)
-+		sched_setaffinity(0, sizeof(saved_mask), &saved_mask);
-+	if (restore_sched)
-+		sched_setscheduler(0, saved_policy, &saved_param);
-+	return ret;
-+}
-+
- static int test_lsm(struct lsm *skel)
- {
- 	struct bpf_link *link;
-@@ -282,6 +439,10 @@ static int test_lsm(struct lsm *skel)
- 	if (!ASSERT_OK(err, "test_lsm_inode_idmap"))
- 		return err;
- 
-+	err = test_lsm_task_setscheduler(skel);
-+	if (!ASSERT_OK(err, "test_lsm_task_setscheduler"))
-+		return err;
-+
- 	err = stack_mprotect();
- 	if (!ASSERT_EQ(err, -1, "stack_mprotect") ||
- 	    !ASSERT_EQ(errno, EPERM, "stack_mprotect"))
-@@ -302,6 +463,9 @@ static int test_lsm(struct lsm *skel)
- 	skel->bss->mprotect_count = 0;
- 	skel->bss->inode_identity_idmap_seen = 0;
- 	skel->bss->inode_idmapped_mount_seen = 0;
-+	skel->bss->setsched_seen = 0;
-+	skel->bss->setsched_affinity_cpu = 0;
-+	skel->bss->setsched_deny = 0;
+ enum lsm_event {
+ 	LSM_POLICY_CHANGE,
+@@ -198,7 +199,9 @@ extern int cap_mmap_addr(unsigned long addr);
+ extern int cap_task_fix_setuid(struct cred *new, const struct cred *old, int flags);
+ extern int cap_task_prctl(int option, unsigned long arg2, unsigned long arg3,
+ 			  unsigned long arg4, unsigned long arg5);
+-extern int cap_task_setscheduler(struct task_struct *p);
++extern int cap_task_setscheduler(struct task_struct *p,
++				 const struct sched_attr *attr,
++				 const struct cpumask *in_mask);
+ extern int cap_task_setioprio(struct task_struct *p, int ioprio);
+ extern int cap_task_setnice(struct task_struct *p, int nice);
+ extern int cap_vm_enough_memory(struct mm_struct *mm, long pages);
+@@ -537,7 +540,9 @@ int security_task_prlimit(const struct cred *cred, const struct cred *tcred,
+ 			  unsigned int flags);
+ int security_task_setrlimit(struct task_struct *p, unsigned int resource,
+ 		struct rlimit *new_rlim);
+-int security_task_setscheduler(struct task_struct *p);
++int security_task_setscheduler(struct task_struct *p,
++			       const struct sched_attr *attr,
++			       const struct cpumask *in_mask);
+ int security_task_getscheduler(struct task_struct *p);
+ int security_task_movememory(struct task_struct *p);
+ int security_task_kill(struct task_struct *p, struct kernel_siginfo *info,
+@@ -1408,9 +1413,11 @@ static inline int security_task_setrlimit(struct task_struct *p,
  	return 0;
  }
  
-diff --git a/tools/testing/selftests/bpf/progs/lsm.c b/tools/testing/selftests/bpf/progs/lsm.c
-index e210e07d3a37..d8ff10d4174e 100644
---- a/tools/testing/selftests/bpf/progs/lsm.c
-+++ b/tools/testing/selftests/bpf/progs/lsm.c
-@@ -86,6 +86,15 @@ int mprotect_count = 0;
- int bprm_count = 0;
- __u32 inode_identity_idmap_seen = 0;
- __u32 inode_idmapped_mount_seen = 0;
-+__u32 setsched_seen = 0;
-+__u32 setsched_affinity_cpu = 0;
-+int setsched_deny = 0;
-+
-+#define SCHED_BATCH			3
-+#define SCHED_FLAG_RESET_ON_FORK	0x01
-+#define SCHED_FLAG_KEEP_POLICY		0x08
-+
-+bool bpf_cpumask_test_cpu(u32 cpu, const struct cpumask *cpumask) __ksym __weak;
- 
- enum {
- 	INODE_IDMAP_CREATE	= 1U << 0,
-@@ -96,6 +105,14 @@ enum {
- 	INODE_IDMAP_PERMISSION	= 1U << 5,
- };
- 
-+enum {
-+	SETSCHED_SAW_ATTR		= 1U << 0,
-+	SETSCHED_SAW_SETPARAM		= 1U << 1,
-+	SETSCHED_SAW_KEEP_POLICY	= 1U << 2,
-+	SETSCHED_SAW_AFFINITY		= 1U << 3,
-+	SETSCHED_SAW_BOTH_NULL		= 1U << 4,
-+};
-+
- static __always_inline bool is_monitored_idmap(struct mnt_idmap *idmap)
+-static inline int security_task_setscheduler(struct task_struct *p)
++static inline int security_task_setscheduler(struct task_struct *p,
++					     const struct sched_attr *attr,
++					     const struct cpumask *in_mask)
  {
- 	__u32 pid = bpf_get_current_pid_tgid() >> 32;
-@@ -164,6 +181,40 @@ int BPF_PROG(test_inode_permission, struct mnt_idmap *idmap,
- 	return record_inode_idmap(idmap, INODE_IDMAP_PERMISSION, ret);
+-	return cap_task_setscheduler(p);
++	return cap_task_setscheduler(p, attr, in_mask);
  }
  
-+SEC("lsm/task_setscheduler")
-+int BPF_PROG(test_task_setscheduler, struct task_struct *p,
-+	     const struct sched_attr *attr, const struct cpumask *in_mask,
-+	     int ret)
-+{
-+	__s32 pid = bpf_get_current_pid_tgid() >> 32;
+ static inline int security_task_getscheduler(struct task_struct *p)
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 3219f927c35e..d122de948572 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3267,7 +3267,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 			attach_ctx.old_cs = task_cs(task);
+ 
+ 		if (setsched_check) {
+-			ret = security_task_setscheduler(task);
++			ret = security_task_setscheduler(task, NULL, cs->effective_cpus);
+ 			if (ret)
+ 				goto out_unlock;
+ 		}
+@@ -3816,7 +3816,7 @@ static int cpuset_can_fork(struct task_struct *task, struct css_set *cset)
+ 	if (ret)
+ 		goto out_unlock;
+ 
+-	ret = security_task_setscheduler(task);
++	ret = security_task_setscheduler(task, NULL, cs->effective_cpus);
+ 	if (ret)
+ 		goto out_unlock;
+ 
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 45a127deeadd..16c97553e5ff 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -533,6 +533,8 @@ int __sched_setscheduler(struct task_struct *p,
+ 		return -EINVAL;
+ 
+ 	if (user) {
++		struct sched_attr lsm_attr = *attr;
 +
-+	if (ret || !monitored_pid || monitored_pid != pid)
-+		return ret;
-+
-+	if (attr && !in_mask) {
-+		if (attr->sched_policy == SCHED_BATCH &&
-+		    (attr->sched_flags & SCHED_FLAG_RESET_ON_FORK)) {
-+			if (p->policy != SCHED_BATCH)
-+				setsched_seen |= SETSCHED_SAW_ATTR;
-+			else if (attr->sched_flags & SCHED_FLAG_KEEP_POLICY)
-+				setsched_seen |= SETSCHED_SAW_KEEP_POLICY;
-+			else
-+				setsched_seen |= SETSCHED_SAW_SETPARAM;
-+		}
-+	} else if (!attr && in_mask) {
-+		if (bpf_cpumask_test_cpu(setsched_affinity_cpu, in_mask))
-+			setsched_seen |= SETSCHED_SAW_AFFINITY;
-+	} else if (!attr && !in_mask) {
-+		if (p->pid != pid)
-+			setsched_seen |= SETSCHED_SAW_BOTH_NULL;
-+	}
-+
-+	if (setsched_deny)
-+		return -EPERM;
-+
-+	return 0;
-+}
-+
- SEC("lsm/file_mprotect")
- int BPF_PROG(test_int_hook, struct vm_area_struct *vma,
- 	     unsigned long reqprot, unsigned long prot, int ret)
-diff --git a/tools/testing/selftests/bpf/progs/verifier_lsm.c b/tools/testing/selftests/bpf/progs/verifier_lsm.c
-index 8fbf7862265f..8e2bc3040867 100644
---- a/tools/testing/selftests/bpf/progs/verifier_lsm.c
-+++ b/tools/testing/selftests/bpf/progs/verifier_lsm.c
-@@ -188,6 +188,55 @@ int BPF_PROG(null_check, struct file *file)
+ 		retval = user_check_sched_setscheduler(p, attr, policy, reset_on_fork);
+ 		if (retval)
+ 			return retval;
+@@ -540,7 +542,12 @@ int __sched_setscheduler(struct task_struct *p,
+ 		if (attr->sched_flags & SCHED_FLAG_SUGOV)
+ 			return -EINVAL;
+ 
+-		retval = security_task_setscheduler(p);
++		lsm_attr.sched_policy = policy;
++		if (reset_on_fork)
++			lsm_attr.sched_flags |= SCHED_FLAG_RESET_ON_FORK;
++		else
++			lsm_attr.sched_flags &= ~SCHED_FLAG_RESET_ON_FORK;
++		retval = security_task_setscheduler(p, &lsm_attr, NULL);
+ 		if (retval)
+ 			return retval;
+ 	}
+@@ -1215,7 +1222,7 @@ long sched_setaffinity(pid_t pid, const struct cpumask *in_mask)
+ 			return -EPERM;
+ 	}
+ 
+-	retval = security_task_setscheduler(p);
++	retval = security_task_setscheduler(p, NULL, in_mask);
+ 	if (retval)
+ 		return retval;
+ 
+diff --git a/security/commoncap.c b/security/commoncap.c
+index d47ab3022343..7a9a5091d761 100644
+--- a/security/commoncap.c
++++ b/security/commoncap.c
+@@ -1222,13 +1222,18 @@ static int cap_safe_nice(struct task_struct *p)
+ /**
+  * cap_task_setscheduler - Determine if scheduler policy change is permitted
+  * @p: The task to affect
++ * @attr: Requested scheduling attributes (ignored)
++ * @in_mask: Requested CPU affinity or destination cpuset mask (ignored)
+  *
+  * Determine if the requested scheduler policy change is permitted for the
+- * specified task.
++ * specified task. The capabilities security module does not evaluate the
++ * @attr or @in_mask parameters, relying solely on cap_safe_nice().
+  *
+  * Return: 0 if permission is granted, -ve if denied.
+  */
+-int cap_task_setscheduler(struct task_struct *p)
++int cap_task_setscheduler(struct task_struct *p,
++			  const struct sched_attr *attr __always_unused,
++			  const struct cpumask *in_mask __always_unused)
+ {
+ 	return cap_safe_nice(p);
+ }
+diff --git a/security/security.c b/security/security.c
+index f6583d507395..ebb06f1044e5 100644
+--- a/security/security.c
++++ b/security/security.c
+@@ -3261,17 +3261,28 @@ int security_task_setrlimit(struct task_struct *p, unsigned int resource,
+ }
+ 
+ /**
+- * security_task_setscheduler() - Check if setting sched policy/param is allowed
++ * security_task_setscheduler() - Check if setting sched policy/param/affinity is allowed
+  * @p: target task
++ * @attr: requested scheduling attributes, or NULL if not changing parameters
++ * @in_mask: user-requested CPU affinity mask for sched_setaffinity(), the
++ *           destination cpuset's effective_cpus mask for cpuset cgroup
++ *           migration and CLONE_INTO_CGROUP, or NULL otherwise
+  *
+- * Check permission before setting scheduling policy and/or parameters of
+- * process @p.
++ * Check permission before setting the scheduling policy, parameters, and/or
++ * CPU affinity of process @p, or migrating/cloning @p into a cpuset. Note
++ * that during cpuset migration and CLONE_INTO_CGROUP, @in_mask reflects the
++ * destination cpuset's effective CPU configuration rather than a per-task
++ * pinning request, and may be passed even when the effective CPU mask itself
++ * does not change (for example, on cgroup v1 migrations or when only memory
++ * nodes change on cgroup v2).
+  *
+  * Return: Returns 0 if permission is granted.
+  */
+-int security_task_setscheduler(struct task_struct *p)
++int security_task_setscheduler(struct task_struct *p,
++			       const struct sched_attr *attr,
++			       const struct cpumask *in_mask)
+ {
+-	return call_int_hook(task_setscheduler, p);
++	return call_int_hook(task_setscheduler, p, attr, in_mask);
+ }
+ 
+ /**
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index 6168dd5f91c2..4fc3e8c51035 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -4690,7 +4690,9 @@ static int selinux_task_setrlimit(struct task_struct *p, unsigned int resource,
  	return 0;
  }
  
-+SEC("lsm/task_setscheduler")
-+__description("not null checking nullable attr in bpf_lsm_task_setscheduler")
-+__failure __msg("invalid mem access 'trusted_ptr_or_null_'")
-+int BPF_PROG(task_setscheduler_attr_no_null_check, struct task_struct *p,
-+	     const struct sched_attr *attr, const struct cpumask *in_mask)
-+{
-+	__u32 policy;
-+
-+	policy = attr->sched_policy;
-+	__sink(policy);
-+
-+	return 0;
-+}
-+
-+SEC("lsm/task_setscheduler")
-+__description("not null checking nullable in_mask in bpf_lsm_task_setscheduler")
-+__failure __msg("invalid mem access 'trusted_ptr_or_null_'")
-+int BPF_PROG(task_setscheduler_mask_no_null_check, struct task_struct *p,
-+	     const struct sched_attr *attr, const struct cpumask *in_mask)
-+{
-+	unsigned long bits;
-+
-+	bits = in_mask->bits[0];
-+	__sink(bits);
-+
-+	return 0;
-+}
-+
-+SEC("lsm/task_setscheduler")
-+__description("null checking nullable pointers in bpf_lsm_task_setscheduler")
-+__success
-+int BPF_PROG(task_setscheduler_null_check, struct task_struct *p,
-+	     const struct sched_attr *attr, const struct cpumask *in_mask)
-+{
-+	unsigned long bits;
-+	__u32 policy;
-+
-+	if (attr) {
-+		policy = attr->sched_policy;
-+		__sink(policy);
-+	}
-+	if (in_mask) {
-+		bits = in_mask->bits[0];
-+		__sink(bits);
-+	}
-+
-+	return 0;
-+}
-+
- SEC("lsm_cgroup/file_open")
- __description("sleepable lsm_cgroup program is rejected")
- __failure __msg("Program of this type cannot be sleepable")
+-static int selinux_task_setscheduler(struct task_struct *p)
++static int selinux_task_setscheduler(struct task_struct *p,
++				     const struct sched_attr *attr __always_unused,
++				     const struct cpumask *in_mask __always_unused)
+ {
+ 	return avc_has_perm(current_sid(), task_sid_obj(p), SECCLASS_PROCESS,
+ 			    PROCESS__SETSCHED, NULL);
+diff --git a/security/smack/smack_lsm.c b/security/smack/smack_lsm.c
+index 28a8e12603ce..61574ee35c85 100644
+--- a/security/smack/smack_lsm.c
++++ b/security/smack/smack_lsm.c
+@@ -2350,10 +2350,19 @@ static int smack_task_getioprio(struct task_struct *p)
+ /**
+  * smack_task_setscheduler - Smack check on setting scheduler
+  * @p: the task object
++ * @attr: Requested scheduling attributes (ignored)
++ * @in_mask: Requested CPU affinity or destination cpuset mask (ignored)
+  *
+- * Return 0 if read access is permitted
++ * Evaluate whether the current task has write access to the target task @p
++ * to change its scheduling policy. The Smack security module relies
++ * strictly on label-based access control and does not evaluate CPU
++ * affinity masks or scheduling attributes.
++ *
++ * Return: 0 if write access is permitted
+  */
+-static int smack_task_setscheduler(struct task_struct *p)
++static int smack_task_setscheduler(struct task_struct *p,
++				   const struct sched_attr *attr __always_unused,
++				   const struct cpumask *in_mask __always_unused)
+ {
+ 	return smk_curacc_on_task(p, MAY_WRITE, __func__);
+ }
 -- 
 2.55.0
 
