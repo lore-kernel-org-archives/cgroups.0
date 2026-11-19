@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795119389;
-	b=vCy51lQ01pmAsdPiwslp8JybZ1ID4CCfDmGe6e2A5WEV8RENR/KZrYEOY1ayk8eGMYp0
-	 RzdznSD2zzQqgkEoQyYIeGRQZnFprTBZI3rJR+Muzketi2curZWjkQHh7EugOD7J/i9MF
-	 LtMmwm804FnCM7NUVUN4Fq7CM7vR5viH2e95knAwQOz/hV6BSNi2nNxCHuEzqPwtwWKe/
-	 K1uOGZ1sZexPbI4Q5zVFTDA2+1wPU5FqFvarmys390GI4n1RQAkMYNgFdV28s+ldondRK
-	 jW6XyWwHXmd7GJ/Jxm/h4o8VAixM70ctqVr9Nh6K9v8iu2FG1i34glpHK/f1tj/tzAw==
+	b=QvIf9SuvPkjHaVSBaMEqX3VxKOaglAzfSbnd+oXGDsph+pqDqBqMh8TLkf46LFPgRGqh
+	 Irmmc8aD7qseOnJK0emABz7GcrlrgHSpCMIe82dT6vE1OSj5HmOB77EflV0q7ZxIt5SSs
+	 cJn+c7NWoqV0EgznSEf1mBqZ3l64QLZaJuIvSnirItvm2f920xpL02CKpxYywHuDV69K5
+	 axnfuUwB+/xAp3favN+aDN1nX2AbYdUs+RR2NBx+5yQxdie4rFNe8h28cQ/7ZSFz0fM76
+	 F3xyr+xuFnq9xKPcrkyrjNuPgtO4SI7dS5pZdHmuErUn4RIdsIGCPDcwmZmXwJqVEFA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795119389;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=dacbOogbwNRhpR/7iOlXSNqp2+egjetAWwBLZZQJ5Ls=;
-	b=RTBOFNu0QexSwE6vJaD7DXIZsWNkYJkbwBx6mGF204wzuFyFOmfeiC6iQEqqN3hwTJml
-	 bFwaHwKosuD2fz8vbTgnC7MH3XZyVFja5LTIRkyHaR4MVPoBov7CFjAPPuYwQMf0uYi0E
-	 x6PgkHWXAKMCuC3gTvVW2JDm22GWBK0xDKF+N1tT2QY/tKMYvYMQWw0yU74WD0Ohdkv4p
-	 7oc0DmVjvOaC9vgH/W++/8Qr+zxSAVHsU6GwXnu9eGDdq+Kei3OkHZ0zDZTNW005mIv1G
-	 iwb3CPbtRzfEalScU0ZmMP/zmdY++KbCM8nyqvmBj76gtLrDgTYVXrrEe6e3dXI7DRg==
+	bh=tgh7H+2WFtZ5mB2jhIYsx1nfnkCrP9mRM11xQn6EsR0=;
+	b=BYcoGza/q2k3gb08IgqALqfWb5wdA8lirfx/l/JUx/jh/Gwo9iBV6A8PBv91upIaHz2G
+	 N9k+AYe3Mn+JCE0M63pLUzPPIOsgM1oFfDC2qVXJ89USrYNOgF67+wa1WBl/fYJR7MKFC
+	 IgETb6P4DTqfox5uHespdj2Fkn15Z1dGQaEBR7Y8pAUtq4dZekPzqrXbrUeVTYwX1U3ln
+	 W0MjFFQ9fWF2XcsMQ3uxD0nu2/5wM2EfHrAVczD9OZBZyPiF8cBOJckAiZrV9jUGUpqBl
+	 w5RWZCEBz+REgAnqqjMZY1vkR0f6qlX2/4l+Q5fzjHJdpc9we6CnBZmEVCSkkkqeabA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=duPXvNDb;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=UzmQtlxM;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 975E260A6F43;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CED7260A6F50;
 	Thu, 19 Nov 2026 20:16:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 975E260A6F43
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CED7260A6F50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=duPXvNDb
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=UzmQtlxM
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
 	s=smtpout1; t=1795119382;
-	bh=dacbOogbwNRhpR/7iOlXSNqp2+egjetAWwBLZZQJ5Ls=;
+	bh=tgh7H+2WFtZ5mB2jhIYsx1nfnkCrP9mRM11xQn6EsR0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=duPXvNDbty/ak2ZBKL4MUpMKIvBL0cog+KkERl9t/NGiRo5UDB3/pjOGLByqktWQi
-	 9XPc5PbJdrrHQEMi5G8pnVOiOkoApQBK6B7ClHFqUKgWAl1h/dYG2pF81Xw9Zr6WPs
-	 kHQAfzl9dmrekUlOlyNqQvQV5vibk9xotE8K1FdaERSZAw79Q/CAwDMvf+lm4iRRIq
-	 zcSRMfMQ/sE5KHxB4eAqgKDk/NO9+qlEi3K8xL04Fa6YMAIGvqlssn+9vu3pEjurSH
-	 nQY+f5IpiNHB1V4aEbY+pG/hDafx6QlGwLuf97q2mBn5JK3Rkj00SYYnaKKoem8kBF
-	 CIe+tq8c7HnxA==
+	b=UzmQtlxMvp5BL0KovURdxwjTOyhwkcCyR+hQ4iOOSMCN9rCqjAnQiLHbfomwl3+UB
+	 xkWZJSBBvkfk3d0DqrP/WsbTjsrprzuZr6KAmRwOmCKwjSN3NDs0WCIOL5jxi9Xkyv
+	 mJemB5kqg578SZrlsV2SmnhhfhGKcuwY2t8YTSlIl60zgcnijkbBfBBp0maKc8wyYO
+	 jOAZq3kquknvtK5Lx3ftza2cc+7CAV45Lzb75U2ZYmxLej6P6y7dZZ9G6izKnN8YS2
+	 qfqWsItRthm603pqqJzjvCikPFeRJnxjbwDVwBJoGyNttWp5JgnUDQ4SOnljrv3JEg
+	 /RmBBvnmIKsrA==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVZ1jdRzS7j;
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVZ5WY8zSjd;
 	Thu, 19 Nov 2026 15:16:22 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v8 26/33] sched/deadline: Start a period for a task that enters the class blocked
-Date: Thu, 19 Nov 2026 15:16:05 -0500
-Message-Id: <b218275f5c0dabbb914bf1ae9cf6a32f0551dd0e.1795116791.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v8 29/33] sched/deadline: Cancel the replenishment timer with the parameters
+Date: Thu, 19 Nov 2026 15:16:08 -0500
+Message-Id: <1e9b9a97400aca6a4ae184ab2619680954db11b9.1795116791.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
@@ -97,154 +97,64 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit fb00aca47440 ("rtmutex: Turn the plist into an rb-tree") sorts
-the waiters of an rt_mutex by priority. For deadline tasks, "the one
-with the earliest deadline wins". A waiter takes the deadline of its
-task.
+A task that leaves SCHED_DEADLINE has its parameters cleared at its
+0-lag time. Its replenishment timer can still be armed then. If the
+task comes back and throttles before that timer fires, start_dl_timer()
+does not restart it, since it is queued. The replenishment would then
+come at the period of the reservation the task left. Too early, it would
+give the task runtime it has not earned. Too late, it would delay the
+task by up to a period.
 
-A task can enter the class while it waits on an rt_mutex.
-sched_setattr() can make it SCHED_DEADLINE. A priority inheritance
-boost can also put it in the class, if it owns another rt_mutex.
-switched_to_dl() leaves a task that is not queued to its wakeup. But
-the chain walk reads the deadline first, and copies it into the waiter.
-A task new to the class has a deadline of 0.
+Commit a649f237db18 ("sched,dl: Fix sched class hopping CBS hole") armed
+the replenishment timer when a task leaves the class. The timer then
+reset the task if it was still out. Commit 209a0cbda7a0
+("sched/deadline: Improve the tracking of active utilization") moved
+that reset to the inactive timer, at the 0-lag time. Nothing cancels
+the replenishment timer there.
 
-So the waiter goes before every other deadline waiter. It takes the
-rt_mutex first, whatever their deadlines. Those waiters can then miss
-their deadlines. It also boosts a deadline owner whose own deadline is
-earlier.
+The timer of a throttled task fires at its next period, which can come
+after the 0-lag time:
+- A task that yielded is throttled with runtime left. Its 0-lag time
+  comes before its deadline.
+- A constrained-deadline task that overran by little reaches its 0-lag
+  time before the end of its period.
 
-Fix this by starting a new period in switched_to_dl() for a task that
-waits on an rt_mutex, if its deadline has passed. The period uses the
-reservation the task runs on: its own, or the copy a boost made. This
-is what setup_new_dl_entity() does at an enqueue. At the wakeup,
-update_dl_entity() then checks that period as for any wakeup.
+Fix this by cancelling the timer where the parameters are cleared. This
+includes task_non_contending(). switched_from_dl() calls it to release
+the bandwidth of a task that leaves asleep past its 0-lag time. A
+constrained task that overran as it blocked has the timer armed there
+too.
 
-A new donor of a task with no parameters of its own needs the same. For
-a queued task, the enqueue of the boost starts a period from the new
-donor. For a blocked task, dl_boost_blocked() starts it at the boost.
+The Sashiko AI review of this series found this. It has no reproducer.
 
-The setattr_blocked_keeps_order and boost_blocked_keeps_order cases,
-added to deadline_bw_test later in this series, test this. Both fail on
-v7.4-rc2 and on the series without this patch. The triage of the Sashiko
-AI review of this series found the bug.
-
-Fixes: fb00aca47440 ("rtmutex: Turn the plist into an rb-tree")
+Fixes: 209a0cbda7a0 ("sched/deadline: Improve the tracking of active utilization")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/core.c     |  4 ++++
- kernel/sched/deadline.c | 46 +++++++++++++++++++++++++++++++++++++++++
- kernel/sched/sched.h    |  1 +
- 3 files changed, 51 insertions(+)
+ kernel/sched/deadline.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 781eff645525..d30b28bfd919 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -7954,8 +7954,12 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
- 			if (!dl_prio(p->normal_prio) ||
- 			    (pi_task && dl_prio(pi_task->prio) &&
- 			     dl_entity_preempt(&pi_task->dl, &p->dl))) {
-+				bool new_donor = p->dl.pi_se != pi_task->dl.pi_se;
-+
- 				p->dl.pi_se = pi_task->dl.pi_se;
- 				scope->flags |= ENQUEUE_REPLENISH;
-+				if (!scope->queued && new_donor)
-+					dl_boost_blocked(p);
- 			} else {
- 				dl_deboost(&p->dl);
- 				/*
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 8ac78958a17a..77a1d1f463f6 100644
+index d284036ecb8a..95db8afd8353 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -125,6 +125,12 @@ void dl_deboost(struct sched_dl_entity *dl_se)
- 	}
- 	dl_drop_boost(dl_se);
- }
-+
-+/* Return true if @p waits on an rt_mutex. The caller holds its pi_lock. */
-+static inline bool dl_task_pi_blocked(struct task_struct *p)
-+{
-+	return p->pi_blocked_on;
-+}
- #else /* !CONFIG_RT_MUTEXES: */
- static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
- {
-@@ -139,6 +145,11 @@ static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
- {
- 	return false;
- }
-+
-+static inline bool dl_task_pi_blocked(struct task_struct *p)
-+{
-+	return false;
-+}
- #endif /* !CONFIG_RT_MUTEXES */
+@@ -788,6 +788,7 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
+ 				if (dl_task && READ_ONCE(p->__state) == TASK_DEAD)
+ 					sub_rq_bw(dl_se, &rq->dl);
+ 				dl_task_release_bw(p);
++				cancel_replenish_timer(dl_se);
+ 				__dl_clear_params(dl_se);
+ 			}
+ 		}
+@@ -2643,6 +2644,7 @@ static enum hrtimer_restart inactive_task_timer(struct hrtimer *timer)
+ 		}
  
- static inline u8 dl_get_type(struct sched_dl_entity *dl_se, struct rq *rq)
-@@ -1116,6 +1127,30 @@ static inline void replenish_dl_new_period(struct sched_dl_entity *dl_se,
- 	trace_sched_dl_replenish_tp(dl_se, cpu_of(rq), dl_get_type(dl_se, rq));
- }
+ 		dl_task_release_bw(p);
++		cancel_replenish_timer(dl_se);
+ 		__dl_clear_params(dl_se);
  
-+#ifdef CONFIG_RT_MUTEXES
-+/*
-+ * Start a period from the new donor of @p, if @p has no reservation of its
-+ * own and waits on an rt_mutex. The enqueue does this for a queued task, in
-+ * replenish_dl_entity(). A blocked task is not enqueued, but the chain walk
-+ * copies its deadline into its waiter.
-+ *
-+ * The caller calls it only when the donor changes. A new period changes the
-+ * deadline, so the chain walk finds the waiter out of date and goes on. In a
-+ * ww_mutex cycle, a new period at each step would never let the walk stop.
-+ *
-+ * The caller holds the rq lock and the pi_lock of @p, and has updated the
-+ * rq clock.
-+ */
-+void dl_boost_blocked(struct task_struct *p)
-+{
-+	struct sched_dl_entity *dl_se = &p->dl;
-+
-+	if (!dl_se->dl_deadline && !dl_se->dl_throttled &&
-+	    dl_task_pi_blocked(p))
-+		replenish_dl_new_period(dl_se, task_rq(p));
-+}
-+#endif
-+
- /*
-  * We are being explicitly informed that a new instance is starting,
-  * and this means that:
-@@ -4565,6 +4600,17 @@ static void switched_to_dl(struct rq *rq, struct task_struct *p)
- 	if (!task_on_rq_queued(p)) {
- 		add_rq_bw(&p->dl, &rq->dl);
- 
-+		/*
-+		 * A task that waits on an rt_mutex cannot wait for its wakeup.
-+		 * The chain walk sorts its waiter by its deadline first. A task
-+		 * new to the class has a deadline of 0, which goes before every
-+		 * real one. Start a new period now, as setup_new_dl_entity()
-+		 * does at an enqueue.
-+		 */
-+		if (dl_task_pi_blocked(p) && !p->dl.dl_throttled &&
-+		    dl_time_before(p->dl.deadline, rq_clock(rq)))
-+			replenish_dl_new_period(&p->dl, rq);
-+
- 		return;
- 	}
- 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index f80ea5541b3f..717ced2bb487 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -358,6 +358,7 @@ extern int  sched_dl_overflow(struct task_struct *p, int policy, const struct sc
- extern void __setparam_dl(struct task_struct *p, const struct sched_attr *attr);
- #ifdef CONFIG_RT_MUTEXES
- extern void dl_deboost(struct sched_dl_entity *dl_se);
-+extern void dl_boost_blocked(struct task_struct *p);
- 
- /* End the boost of @dl_se. The caller holds the rq lock of its task. */
- static inline void dl_drop_boost(struct sched_dl_entity *dl_se)
+ 		goto unlock;
 -- 
 2.47.3
 
