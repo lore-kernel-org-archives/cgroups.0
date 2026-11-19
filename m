@@ -1,58 +1,57 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795115240;
-	b=ONXwCO070hm7RkBkFGiQ5HFBs7PEkh2OhVN2L7EZtVX7C/X7b54yu8UvgBr3MUd7go18
-	 N6bsP0NABRvevCx/+bJiJgoLY3nJFxjAowBer7ixIHd/8cvSq+iirLQGUeGO4yvjA3nPC
-	 grbDHDrMgft2qskqaduBq2x04snw0X2zWWOK1+lTtC1MRxYd1wtt504D37q7yA2/94mFi
-	 zniLWAZ4U46nkPzvYLGYVBmQaan3OE0ahkgpk8VNkkb5YhDV6m74NMosbXumVX6jlqVxM
-	 d1EljroS0uSGlOI5w66a5bw/4qZj2VwGH0mf1X3mWaXvr/XxJW7fpou/y2GZHXyfvqw==
+	b=5U0+5UwHkw85RjJzDe1x/6IQ5dpnJPa5g17tmcZCOtnBSg8+uNyc4HdnQ4XaFbg8y0V2
+	 khhPdqy+J7pRIT4WOO3Zb9Hq1mLOZsisZRylrBBupwzCX8Rhp1s4gyGBPLdEHrx1kcpT/
+	 LSUIPbDlMHpmUEJMJ0XfQL6ppwqD+fcr1Ni8hAJmI88JJcP6ZxA4Zw8hPeUV/Nj+bIomd
+	 bzgTppRNofUspBM3Y6AM3THsE9MBG1Kpytkgg8SZyDtHRGmGqbCyw4z+CNsju9wIRS9LF
+	 lVH2QAw9RuGOjnMZfww2tuX1rGHbWnqQWieYujlCCPkZ6Ar6fK/8QgZsEU3SbYuW/IA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795115240;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=RLn8yKF3g7QUGSp7veDOf+hNiTVPpQE0bsbaLD0AvWs=;
-	b=A9oOu6+ZlaSKVxIUOqkZX9tFIpTQeFnK5goHNkyKquqOrzFr84UxlojcNWz7S9b5KieW
-	 KTU3m6ik0ZVvImCa0sanYRgjntnZ3UKF1FekySqYiP2Q43v6fEtdVU4prXxArWxqUcCkx
-	 AhUvid4gPBEgNHrhlEKg2Lv4nyB9pT3kosJq+qfkpP7mXWUE01nr4ch54dMyo18PY0dJk
-	 JK7QenQeK3J0kcIYZwLPHd+kuXGXzEG3SQdaCScDtt4mfp938nfIWNnf4qs/JnKhwgwb2
-	 /RX0tKsdL7eBtHt38jJfRQP75+bXbP/ncMEA5vWa1vBG3vnBPg4vz3k0Q+KB0E4gBbg==
+	bh=hjTYAqi/gpMkX55Y0igyLpnABuy/mfhM7aTE6x5O19I=;
+	b=awwWUQqXngLeilAQ1u9hiJmWq//1a7zGa0mZ5CT7w46ppXr8YmmatHlH06MicVsuIeky
+	 a5ejkP8Wi847MwdMGH+R4m0gq+yC2FGKXZzRqzKn40KV+OEk1PPIQ0d/Uf+HWWq4y+hxz
+	 kVyH+3yo4KzA+p9sZobzxszjttJsBGsTDyNdGBSq4ByRW4o6EK6fdFhoez7rD0V7QQrBl
+	 INRmJ6OCsTSZ9fOR396lPbAaAIG1SidO+AUrW/nXwIxWeP9IEjKBhnPfZl2co3++BLRUu
+	 9WP2WFMBKfEtqJ6czbD9L/2xLQyfJKuCDXeJfyvlr4ZvwaNFcR+eJyIplQ0wjVPt9Mg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=tGd5BA8k;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b="xv2O/Nma";
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2918A606A330;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7451E606A33B;
 	Thu, 19 Nov 2026 19:07:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2918A606A330
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7451E606A33B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=tGd5BA8k
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=xv2O/Nma
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795115238;
-	bh=RLn8yKF3g7QUGSp7veDOf+hNiTVPpQE0bsbaLD0AvWs=;
+	s=smtpout1; t=1795115239;
+	bh=hjTYAqi/gpMkX55Y0igyLpnABuy/mfhM7aTE6x5O19I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=tGd5BA8kuRs9BgZbucSOy8uE3yIeVD65P5fsYE7KJx+FHiU3t2BarKZyBACqPuw0e
-	 cCnWqm+f02olkXHat89R7NjZkOQcfB4OEQpnnGL8vXsRXDOLvx04TeLnCphjN/mssP
-	 EIhfKqs4ItEsaacER5MFOLLPg3UDUJQZzeQi1Lt41P4hCcXKUjiPhHLAfcG3Ka7HeX
-	 sJlc8C1IEdOHP5u348uSsb9ChbWOHH9B0nGQQeu81sQoCEy2+fSjxl5360p9j76vRU
-	 w+H8HFF3Ogpbr8edReNjpqwOLo/E/T9oR367OAj3uQHqjAzxuUN65buKGqQjWVohRp
-	 PuYFr9QVuMqbw==
+	b=xv2O/NmaoletQ0lc4EgaAsfHdoeSM4Zq4kdy3txowrZ0sBxPkTEEsL0Yl/jvMq8qf
+	 Epp4qzYTuc4oUUQ1VUndnuoFZzsq7E2vXAUrYhsaMe+w7gOZDfHcHWeKH/I8v+1UR1
+	 Mrd0TT++J2D4VFsDVBbpMaVhNT0m6nbUeobT+wAKIepWo3PZEn7sXdsKsrC79ntqAJ
+	 oQkqTCm6tUrnwHJzzHjQOTBMtsvOs+CfF/DatvEWcWx3zvEbjUc8poYanHMkAGlbsh
+	 WPXk99PxN0TfyrCs8OlUeJHQVI00bzhO/N8BchmgHf6dMddxQMI516XRcgOPyE4XKw
+	 mBNkGp8/N9ZAQ==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVnyt5skLzST0;
-	Thu, 19 Nov 2026 14:07:18 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVnyv089kzSFB;
+	Thu, 19 Nov 2026 14:07:19 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
 	mingo@redhat.com,
 	vincent.guittot@linaro.org
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	tglx@kernel.org,
+Cc: tglx@kernel.org,
 	will@kernel.org,
 	boqun@kernel.org,
 	dietmar.eggemann@arm.com,
@@ -79,10 +78,11 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
-	stable@vger.kernel.org
-Subject: [PATCH v5 11/17] sched/deadline: Release the bandwidth of a task that leaves the class asleep
-Date: Thu, 19 Nov 2026 14:07:08 -0500
-Message-Id: <7ae6a18e84b5d03196cbfa4c2158e8ab72cffaf9.1795115075.git.mathieu.desnoyers@efficios.com>
+	stable@vger.kernel.org,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Subject: [PATCH v5 12/17] sched/deadline: Reject SCHED_DEADLINE on exited tasks
+Date: Thu, 19 Nov 2026 14:07:09 -0500
+Message-Id: <3a0a9885dc017068281e1bea820e11970718fbb5.1795115075.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795115075.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795115075.git.mathieu.desnoyers@efficios.com>
@@ -97,98 +97,63 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A task that leaves SCHED_DEADLINE while it is not queued can keep its
-bandwidth in total_bw until the next rebuild of the root domains.
-Repeated, this fills total_bw up to the admission limit. Then
-sched_setattr(SCHED_DEADLINE) and CPU offlining fail with EBUSY.
+From: Juri Lelli <juri.lelli@redhat.com>
 
-A task that leaves the class keeps its bandwidth until its 0-lag time.
-Releasing it earlier would allow temporary overloads. For a queued task,
-switched_from_dl() calls task_non_contending(). It releases the
-bandwidth if the 0-lag time is past. Otherwise it arms the inactive
-timer, which releases it then. For a task that is not queued,
-switched_from_dl() relies on the timer armed when the task blocked.
+sched_setattr(SCHED_DEADLINE) on a zombie task succeeds and charges
+total_bw via sched_dl_overflow(), but the task has already done its
+final schedule() and will never run again. Nothing releases the reserved
+bandwidth. Repeating this fills total_bw to the admission cap, after
+which sched_setattr(SCHED_DEADLINE) and CPU offline fail with -EBUSY.
 
-But the timer is not always pending when the task leaves the class:
-- The task blocked after its 0-lag time. The timer was not armed.
-- The timer fired while the task was still in the class. It only
-  removed running_bw.
-- The task was woken up on another CPU and is not enqueued there yet.
-  The wakeup cancelled the timer.
-- The task came back to the class asleep. switched_to_dl() cancelled
-  the timer.
+Reject sched_setattr(SCHED_DEADLINE) on exited tasks with -ESRCH.
 
-Then nothing releases total_bw.
+A task of the class that exited, switched to another policy, runs
+switched_from_dl(), which decrements the count of deadline tasks of its
+cpuset that cgroup_task_dead() decremented already: at 0 with a deadline
+task left in it, the cpuset is skipped by the next rebuild of the root
+domains' accounting, and that task's bandwidth with it. Reject that as
+well. The deadline_bw_test selftest added later in this series has the
+case, death_zombie_switched: on v7.4-rc1 the switch is accepted, and
+the one-CPU partition root the zombie ran in admits 9 tasks of 10% after
+a rebuild, with a task of 30% still in it, where 6 are due.
 
-Fix this in switched_from_dl(). For a task that is not queued and has
-no timer pending, call task_non_contending(), as for a queued task. It
-arms the timer if the 0-lag time is ahead. Otherwise it releases the
-bandwidth now and clears the parameters, as inactive_task_timer() does.
-
-Clearing the parameters keeps later paths from releasing the bandwidth
-again:
-- A timer handler that already started finds a dl_bw of 0.
-- The deboost of a later priority inheritance boost finds no
-  parameters.
-
-An owner that the task boosts as a waiter can find the parameters
-cleared too. "sched/deadline: Do not replenish a boost from cleared
-parameters" handles this, so a backport needs it first. Without it, the
-owner's CPU can lock up as soon as the waiter leaves the class.
-
-Before this patch, a task that left the class asleep kept its
-parameters. That hid a bug of the rtmutex chain walk. The walk can stop
-before the end of a chain. An owner then keeps as its donor a deadline
-waiter that left the class. With this patch, the parameters of that
-donor are cleared. Until the owner unlocks, each refill gives it no
-runtime and a deadline of about now. This is the bail-out of
-"sched/deadline: Do not replenish a boost from cleared parameters".
-Other deadline tasks keep their bandwidth, but run late. Real-time and
-fair tasks on that CPU could starve. The pi_chain_top_moves case of a
-later series has the steps. With this patch, the case fails in every
-run. It passes on v7.4-rc2. Two rtmutex fixes of that series make it
-pass with this patch.
-
-Juri Lelli's first fix, since dropped from tip, released the bandwidth
-here without clearing dl_bw. The bandwidth of a boosted task was then
-released twice.
-
-Juri Lelli suggested the call to task_non_contending() in review.
-
-The Sashiko AI review of this series found the two cases with the 0-lag
-time ahead. deadline_switch_test, added later in this series, tests
-the release in asleep_round_trip.
-
-Fixes: 209a0cbda7a0 ("sched/deadline: Improve the tracking of active utilization")
-Reported-by: Tejun Heo <tj@kernel.org>
-Closes: https://lore.kernel.org/all/2b5fb3f22bca6aa383be8f4781923392@kernel.org/
-Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+Fixes: 332ac17ef5bf ("sched/deadline: Add bandwidth management for SCHED_DEADLINE tasks")
+Reported-by: Weiheng Qiu <weihengqiuu@gmail.com>
+Closes: https://lore.kernel.org/all/3f6e6c87-645b-45fd-8fc6-8da5bc5b82d8@gmail.com/
+Link: https://lore.kernel.org/all/20261103-b4-sched-dl-bw-fixes-v1-4-dd761fe005b4@redhat.com/
 Cc: stable@vger.kernel.org
-Link: https://lore.kernel.org/all/20261103-b4-sched-dl-bw-fixes-v1-2-dd761fe005b4@redhat.com/
+Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
+[mathieu: reject a task of the class leaving it too, found by the
+ Sashiko AI review of the patch]
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 ---
- kernel/sched/deadline.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ kernel/sched/syscalls.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 75c82a255070..77c53e3e32c7 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -3630,6 +3630,14 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
- 		if (p->dl.dl_non_contending)
- 			sub_running_bw(&p->dl, &rq->dl);
- 		sub_rq_bw(&p->dl, &rq->dl);
-+		/*
-+		 * Without an armed timer, nothing releases total_bw. Do as for
-+		 * a queued task: arm the timer if the 0-lag time is ahead, or
-+		 * release the bandwidth and clear the parameters now. Call
-+		 * task_non_contending() after sub_rq_bw(), which needs dl_bw.
-+		 */
-+		if (!p->dl.dl_non_contending)
-+			task_non_contending(&p->dl, false);
- 	}
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 9b04e77297ae..b87b878be63f 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -592,6 +592,19 @@ int __sched_setscheduler(struct task_struct *p,
+ 	if (retval)
+ 		goto unlock;
  
++	/*
++	 * Reject SCHED_DEADLINE on exited tasks. A zombie will never be
++	 * scheduled again, so sched_dl_overflow() would charge total_bw
++	 * that nothing will ever release. And reject a change of policy of
++	 * one in the class: cgroup_task_dead() took it off the count of
++	 * deadline tasks of its cpuset, which switched_from_dl() would
++	 * decrement a second time.
++	 */
++	if ((dl_policy(policy) || dl_task(p)) && p->exit_state) {
++		retval = -ESRCH;
++		goto unlock;
++	}
++
  	/*
+ 	 * If not changing anything there's no need to proceed further,
+ 	 * but store a possible modification of reset_on_fork.
 -- 
 2.47.3
 
