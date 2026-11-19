@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795119390;
-	b=Ia11KYsK6lPxmeMtJNO3kowSBAUGSv82TKT+7DzUYKtT/+5LR4yPXiteBhljum0PS99d
-	 ZTwE53SaNMdWD7ptoO0ElVCCizpGsJaRJATFDgCE0/qshyhGDVDRo2AIjjUf7wWC8qM8N
-	 lM2pRSVn+UE7c7hxFlmoC/7siosMR+xsSpTPlbVZ2i3c5tnFsokdD6oJOjfx71n3qyT7F
-	 IPt1/6qec/+f7iRTfpmnhkX1GY6DanHOSLHFLyV85yuUfWidaxTaJGMUvw9BHMxmaQ20k
-	 yaIaBsfpIqU/iqrdGTcUEJAlqlCsyJp7rMpq1K0CGvW+BlXAQ7JoCSOKOK/R31btwCw==
+	t=1795119385;
+	b=YrTj49bDkjHt7raLnRA5wMydWqdo6P32KmkhSk21GV12jmBB810sqqnJqAoKjwnZGbel
+	 aUVaXUuBOjwgF1KJ9JAZ8VOluXfIEXq+6a8DrViDQ1U0yvCuiOZw0V4E7z95effEIJbog
+	 rHoTdL5HECDB74ZUeZ9wfDAdTT1jsmkFDobYJGQdDZ8DCCYqRFpFCMUkCFODEtfwZ7Gw8
+	 tVOjCHm2Fjy6+DBGPpwnKEb7j2Rr7KnufNhCCW7YWscZ4xneYsisewyxBCEbPETOkAEcR
+	 aNEAUAa2YnTGFCOijxXPwqIiV0S8d7dx4ZUzLirUqGcFJ1ke74usluKpt7db5s8qGUA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795119390;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795119385;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=A4c4fSBFkLM1NlHXZXhx9U6uyxz8jTzDAehMSamsQuA=;
-	b=OqJE3FruC8/FxYx68w6Ag9pEVh+ZBYUVxvQJprHMOrIRKo2v5900rn04YvDCkqbpq/V3
-	 QIS7hYktxHaa5G3picMTIad82OBcbD2aLKt4FrgL6Q8LpUy7eFB4Y2E9pVosXLBC7kwW8
-	 iHQV5hsvVUPL/k23XDh2Vk/1qGlSuDffnna6CK4jpYS2VhAjKfQdF9nPEhFeloLUcoxy5
-	 0+2+OYkCX0ML/NaKalatYx419W3CcvCVEoW/DmBkyj7CUGmo8vaKNx6s0mvHKA4jJAMwe
-	 3Z1fbfwo4Ys5qxjjXY/TAznc2BZHxSk3PrkSJN3wK/OKt8X80/IZEVndefKiAwCORPw==
+	bh=9iqHh4hnCASqOHANssuig5vG7JV/Q+NS3AVYObYZQA0=;
+	b=CH3ihHRkM3NrY2i12bblyd8GKQFY8GmOh43o6fCz/AMFzEiAh10jyWnQ0WsWQ2O/g/iX
+	 gwQjZ4VhFSYNApKmKEEfQwDJx+WqGVN2qVsU5TRIIKBeli4/F0arlIVnENpYBblKkkPvO
+	 MC3VdFdD0e+Vk6cCe+M0QtU1RN8JmlbXFrWocNKL7eh2h1S3US+S66AfpDTj+A2LQijCU
+	 UV6kH6o7WZikDLAPVZHLMgctcmPPMoxsR6t5k0fD7k4Z1gxB26eEXsRh5a2Z3QAVec8RV
+	 +CYl26btUHNmBZFPg2AhzSn6z6L9CYbUoN+VP7OreS+r00D5a8Z5sNi3iGJTBpPyaow==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=FcWs1hAD;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=ooxL7+CP;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2BBC60A6F4E;
-	Thu, 19 Nov 2026 20:16:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C2BBC60A6F4E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9964D606A32C;
+	Thu, 19 Nov 2026 20:16:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9964D606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=FcWs1hAD
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=ooxL7+CP
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795119382;
-	bh=A4c4fSBFkLM1NlHXZXhx9U6uyxz8jTzDAehMSamsQuA=;
+	s=smtpout1; t=1795119377;
+	bh=9iqHh4hnCASqOHANssuig5vG7JV/Q+NS3AVYObYZQA0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=FcWs1hADkxX3TnWKvbbcaGNhH1xQtGSU0upn6/vhDvBQzLepz/cKWHbOmWVOmLRyE
-	 OJI2Rz0EAiC8FX9bbV47d1/80naKgle2aKKNr4mNF+kJR99yC6vdmEvIOqxt7Onp1u
-	 YpQDI1A9Ck020tQ/k9l+uJU/o/TeSkRzroHwIVVFlmeG495AfavmF/Zkehh75mX5te
-	 GGhPZoELlu33teS8/E66tsRDdkChl13DAreDNtVHZT04JFfaKQdKUbW1C4vnziqdss
-	 ov88ACrjxJjQmxmUucr7eqIwkGDHutEQynvm2SRFi43tUgfdesr3plSwf3/2wD2PJp
-	 RzMHo3OZQj7rA==
+	b=ooxL7+CP9vJQJXBG9qi7K5tUg4BeNYl20dOZfPcMD5ZrRPW+acOQHlf+YarZauFeo
+	 U0B+cvSZ+lMJmM65LQpHQawJa19KeK56srE1mDof8o5C7P8jQXV1GFkWd7TDp4RW1U
+	 l60tADaH/1GsNdifJQ2WMxfErcu1gJFcSj/+l7Kt8w4NM+pZ07JR14LtjUOiaUj10e
+	 wDfxC1PdBtOOIkAOn8pGYP4j+XfRkxGKBvwap9ctEJE3fQ/r8mxKn+siyQGbKqF1Vx
+	 liuXPDWMipGFbMbFEaLZiHpHr6HBsIJ7tBmGW5WksEVABSNm9e/U8+k7EpLyuvJO4N
+	 zTCphzv2pCLJw==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVZ4HhxzS7k;
-	Thu, 19 Nov 2026 15:16:22 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVT51QMzTdB;
+	Thu, 19 Nov 2026 15:16:17 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -78,10 +78,11 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v8 28/33] selftests/sched: Test deadline boosts in deadline_bw_test
-Date: Thu, 19 Nov 2026 15:16:07 -0500
-Message-Id: <4f77243a593f5f1edfa9db07a559068482076a45.1795116791.git.mathieu.desnoyers@efficios.com>
+	linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH v8 01/33] sched/deadline: Keep departing bandwidth across a root domain rebuild
+Date: Thu, 19 Nov 2026 15:15:40 -0500
+Message-Id: <10f25a9a1bd4238019f7aa042da73ed1a4e10d00.1795116790.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
@@ -96,716 +97,502 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the seven cases of deadline_bw_test that test the fixes of priority
-inheritance boosts and deboosts, earlier in this series. They cover:
-- a deboost after the donor refilled the owner's runtime, in the class
-  and out of it
-- a deboost of an owner that left the class asleep, or that enters the
-  class while boosted
-- a former deadline owner that sleeps with the lock
-- the order of the waiters of a lock, when sched_setattr() or a boost
-  puts a waiter in the class while it waits
+A task that leaves SCHED_DEADLINE, or dies, keeps its bandwidth in
+total_bw until its 0-lag time. This keeps admission control on the safe
+side. Then inactive_task_timer() removes it from the root domain of the
+task's CPU. Two things break this:
 
-The comment above each case gives its scenario.
+ - A rebuild of the accounting clears every root domain, then adds back
+   the deadline tasks of the cpusets. It misses a task that left
+   SCHED_DEADLINE, or a dead one. Their bandwidth is dropped, and the
+   timer removes it again.
+ - A task that left SCHED_DEADLINE can also move to another root
+   domain. The timer then takes total_bw from that one, which never
+   had it.
 
-The message of each fix names the cases that test it.
-deboost_released_resets_period and pi_former_owner_asleep are not named
-there. They fail on v7.4-rc2, and pass with the first series alone.
-They test deboosts, so they come here.
+Either way, a root domain admits deadline tasks beyond its capacity
+until the next rebuild.
 
-On v7.4-rc2, in 8 VMs of 8 CPUs, six of these cases fail in every VM:
-- boost_blocked_keeps_order
-- deboost_after_donor_refill
-- deboost_in_class_resets_period
-- deboost_released_resets_period
-- pi_former_owner_asleep
-- setattr_blocked_keeps_order
+Fix this with dl_departed_list. A departing task goes on it with the
+CPU it is on. A rebuild puts its bandwidth back in that CPU's root
+domain. The timer removes it from there, and so does
+sched_dl_overflow() for a task that returns to SCHED_DEADLINE.
 
-deboost_out_after_donor_refill is new, and was not run there. It fails
-without "sched/deadline: Start a period at a deboost out of the class".
+Priority inheritance can boost a departed task back into the class,
+after it moved to another root domain. The boost cancels the timer and
+takes the task off the list. Keep the CPU recorded then. When the boost
+ends, the bandwidth is taken from the root domain that counts it, not
+from the one the task runs in. The pi_departed_moved case, added to
+deadline_bw_test later in this series, tests this.
 
-With the fixes up to here, every case passes wherever it runs.
+A rebuild still drops the bandwidth of a task whose CPU is inactive, or
+that dies during the rebuild. Each task records a count of the rebuilds,
+dl_bw_gen, with its bandwidth. The timer removes nothing if a rebuild
+dropped the bandwidth since.
 
+Make dl_cookie and dl_bw_visited() static: only deadline.c uses them.
+
+deadline_rebuild_test, added later in this series, fails every time on
+v7.3 and v7.4-rc2 kernels. A one-CPU partition root admits two tasks of
+600ms every second there, where it has room for one. It passes with
+this patch.
+
+Fixes: 387e31300b57 ("sched/deadline: Fix the update of the total -deadline utilization")
+Fixes: f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: stable@vger.kernel.org
 ---
- .../sched/deadline/deadline_bw_test.c         | 479 ++++++++++++++++--
- 1 file changed, 444 insertions(+), 35 deletions(-)
+ include/linux/sched.h          |  16 +++
+ include/linux/sched/deadline.h |   5 +-
+ kernel/cgroup/cpuset.c         |  11 +-
+ kernel/sched/deadline.c        | 254 +++++++++++++++++++++++++++++----
+ 4 files changed, 249 insertions(+), 37 deletions(-)
 
-diff --git a/tools/testing/selftests/sched/deadline/deadline_bw_test.c b/tools/testing/selftests/sched/deadline/deadline_bw_test.c
-index c83e0272771f..fe63c8f093e7 100644
---- a/tools/testing/selftests/sched/deadline/deadline_bw_test.c
-+++ b/tools/testing/selftests/sched/deadline/deadline_bw_test.c
-@@ -880,12 +880,31 @@ static int pi_chain_two_owners(void)
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 88cda9c10cb8..b6d4e365afee 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -739,6 +739,22 @@ struct sched_dl_entity {
+ 	 */
+ 	struct hrtimer			inactive_timer;
+ 
++	/*
++	 * A task that leaves SCHED_DEADLINE, or dies, before its "0-lag
++	 * time" keeps its bandwidth in its root domain until the inactive
++	 * timer removes it. Meanwhile, @dl_departed_node links the task on
++	 * the list that a rebuild of the root domains' accounting reads.
++	 * @dl_departed_cpu is a CPU of the root domain that counts the
++	 * bandwidth. It stays recorded while priority inheritance boosts the
++	 * task back into the class. Otherwise @dl_departed_cpu is -1.
++	 *
++	 * @dl_bw_gen is the value of dl_bw_gen when the bandwidth was last
++	 * counted. If a rebuild dropped it since, there is nothing to remove.
++	 */
++	struct list_head		dl_departed_node;
++	int				dl_departed_cpu;
++	unsigned int			dl_bw_gen;
++
+ 	/*
+ 	 * Bits for DL-server functionality. Also see the comment near
+ 	 * dl_server_update().
+diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
+index 273538200a44..bdf39ac1d43d 100644
+--- a/include/linux/sched/deadline.h
++++ b/include/linux/sched/deadline.h
+@@ -32,7 +32,7 @@ static inline bool dl_time_before(u64 a, u64 b)
+ struct root_domain;
+ extern void dl_add_task_root_domain(struct task_struct *p);
+ extern void dl_clear_root_domain(struct root_domain *rd);
+-extern void dl_clear_root_domain_cpu(int cpu);
++extern void dl_clear_root_domains(void);
+ /*
+  * Return whether moving DL task @p to @new_mask requires moving DL
+  * bandwidth accounting between root domains. This helper is specific to
+@@ -43,9 +43,6 @@ extern void dl_clear_root_domain_cpu(int cpu);
+ extern bool dl_task_needs_bw_move(struct task_struct *p,
+ 				  const struct cpumask *new_mask);
+ 
+-extern u64 dl_cookie;
+-extern bool dl_bw_visited(int cpu, u64 cookie);
+-
+ static inline bool dl_server(struct sched_dl_entity *dl_se)
+ {
+ 	return dl_se->dl_server;
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 3219f927c35e..4159abfbbbb5 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -985,22 +985,15 @@ void dl_rebuild_rd_accounting(void)
+ {
+ 	struct cpuset *cs = NULL;
+ 	struct cgroup_subsys_state *pos_css;
+-	int cpu;
+-	u64 cookie = ++dl_cookie;
+ 
+ 	lockdep_assert_cpuset_lock_held();
+ 	lockdep_assert_cpus_held();
+ 	lockdep_assert_held(&sched_domains_mutex);
+ 
++	dl_clear_root_domains();
++
+ 	rcu_read_lock();
+ 
+-	for_each_possible_cpu(cpu) {
+-		if (dl_bw_visited(cpu, cookie))
+-			continue;
+-
+-		dl_clear_root_domain_cpu(cpu);
+-	}
+-
+ 	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
+ 
+ 		if (cpumask_empty(cs->effective_cpus)) {
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 63890866dd0c..30dce8cb1209 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -163,7 +163,13 @@ static inline unsigned long dl_bw_capacity(int i)
+ 	}
  }
  
- /*
-- * Run as the owner thread: take pi_lock, and sleep 400ms while holding
-- * it. Return NULL, or 1 on an error.
-+ * Run as the owner thread. With @arg (was_dl) set, first become a
-+ * deadline task of 30ms every 100ms, run 1ms, and sleep on owner_go. The
-+ * main thread switches the owner to SCHED_OTHER during that sleep. Then
-+ * take pi_lock, and sleep 400ms while holding it. Return NULL, or 1 on an
-+ * error.
-  */
- static void *sleeping_owner(void *arg)
- {
-+	int was_dl = (long)arg;
+-bool dl_bw_visited(int cpu, u64 cookie)
++/*
++ * Used for dl_bw check and update, used under sched_rt_handler()::mutex and
++ * sched_domains_mutex.
++ */
++static u64 dl_cookie;
 +
- 	owner_tid = gettid_();
-+	if (was_dl) {
-+		if (set_deadline(0, 30 * NSEC_PER_MSEC, PERIOD)) {
-+			owner_holds = -1;
-+			sem_post(&owner_ready);
-+			return (void *)1;
-+		}
-+		spin_ns(NSEC_PER_MSEC);
++static bool dl_bw_visited(int cpu, u64 cookie)
+ {
+ 	struct root_domain *rd = cpu_rq(cpu)->rd;
+ 
+@@ -217,6 +223,112 @@ __dl_overflow(struct dl_bw *dl_b, unsigned long cap, u64 old_bw, u64 new_bw)
+ 	       cap_scale(dl_b->bw, cap) < dl_b->total_bw - old_bw + new_bw;
+ }
+ 
++/*
++ * A task that leaves SCHED_DEADLINE, or dies, before its 0-lag time keeps
++ * its bandwidth in total_bw until that time. Then the inactive timer
++ * removes it. Meanwhile the task may run anywhere, under another policy.
++ * The timer holds a reference to it.
++ *
++ * A rebuild of the root domains' accounting (dl_clear_root_domains() and
++ * dl_add_task_root_domain()) does not find such a task among the deadline
++ * tasks of the cpusets. So dl_departed_list holds these tasks, from their
++ * departure to their timer. The rebuild puts their bandwidth back in the
++ * root domain of the CPU each one was on when it left.
++ *
++ * dl_bw_gen numbers the rebuilds of the accounting: how many times the
++ * root domains were wiped and reconstructed (dl_clear_root_domains()
++ * increments it). A task records the number of its last definite
++ * state, counted or settled. That number dates the state:
++ *
++ *  - Current: the bandwidth is counted, or a release settled it since
++ *    the rebuild began. A release subtracts; the walk of the cpusets
++ *    skips.
++ *  - One behind: the clear that just ran wiped it. The rebuild puts
++ *    it back.
++ *  - Older: an earlier rebuild dropped it. A task on the departed list
++ *    stays out, and its release removes nothing. A task that is in the
++ *    class is counted again.
++ *
++ * Only equalities are compared, so the wrap of the counter is
++ * harmless.
++ *
++ * A rebuild drops the bandwidth when the CPU recorded is no longer
++ * active. It also drops the bandwidth of a task that dies while the
++ * rebuild runs. The cpuset walk skips that task, and it was not dead yet
++ * when the list was put back.
++ *
++ * dl_departed_lock protects the list and both counts. Take it with
++ * interrupts disabled, under the task's rq lock or pi_lock or in the
++ * rebuild, and before any dl_bw lock.
++ */
++static LIST_HEAD(dl_departed_list);
++static DEFINE_RAW_SPINLOCK(dl_departed_lock);
++static unsigned int dl_bw_gen;
++
++/*
++ * Put @p on dl_departed_list with @cpu, a CPU of the root domain that
++ * keeps its bandwidth. @p leaves SCHED_DEADLINE, or dies, before its
++ * 0-lag time. Do nothing if @p is on the list already. Keep the CPU
++ * recorded if @p has one: priority inheritance boosted @p back into the
++ * class and its boost ends. The caller holds the rq lock of @p.
++ */
++static void dl_task_depart(struct task_struct *p, int cpu)
++{
++	struct sched_dl_entity *dl_se = &p->dl;
++
++	lockdep_assert_irqs_disabled();
++	guard(raw_spinlock)(&dl_departed_lock);
++	if (!list_empty(&dl_se->dl_departed_node))
++		return;
++	if (dl_se->dl_departed_cpu < 0)
++		dl_se->dl_departed_cpu = cpu;
++	list_add(&dl_se->dl_departed_node, &dl_departed_list);
++}
++
++/*
++ * Take @p off dl_departed_list. Priority inheritance boosts @p back into
++ * the deadline class. Keep the CPU recorded: its root domain still counts
++ * the bandwidth, wherever @p runs now. The caller holds the rq lock of
++ * @p.
++ */
++static void dl_task_undepart(struct task_struct *p)
++{
++	struct sched_dl_entity *dl_se = &p->dl;
++
++	lockdep_assert_irqs_disabled();
++	guard(raw_spinlock)(&dl_departed_lock);
++	list_del_init(&dl_se->dl_departed_node);
++}
++
++/*
++ * Remove the bandwidth of @p from the root domain that counts it. That is
++ * the root domain of the CPU recorded when @p departed, or else of @cpu.
++ * Clear the record. Take @p off dl_departed_list. Remove nothing if a
++ * rebuild dropped the bandwidth since it was counted. Then record the
++ * current dl_bw_gen in @p, so that a rebuild in progress does not count it
++ * again. The caller holds the rq lock of @p.
++ */
++static void dl_task_release_bw(struct task_struct *p, int cpu)
++{
++	struct sched_dl_entity *dl_se = &p->dl;
++	struct dl_bw *dl_b;
++
++	lockdep_assert_irqs_disabled();
++	guard(raw_spinlock)(&dl_departed_lock);
++	if (dl_se->dl_departed_cpu >= 0) {
++		cpu = dl_se->dl_departed_cpu;
++		dl_se->dl_departed_cpu = -1;
++		list_del_init(&dl_se->dl_departed_node);
++	}
++	if (dl_se->dl_bw_gen == dl_bw_gen) {
++		dl_b = dl_bw_of(cpu);
++		raw_spin_lock(&dl_b->lock);
++		__dl_sub(dl_b, dl_se->dl_bw, dl_bw_cpus(cpu));
++		raw_spin_unlock(&dl_b->lock);
++	}
++	dl_se->dl_bw_gen = dl_bw_gen;
++}
++
+ static inline
+ void __add_running_bw(u64 dl_bw, struct dl_rq *dl_rq)
+ {
+@@ -509,13 +621,9 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
+ 				sub_running_bw(dl_se, dl_rq);
+ 
+ 			if (!dl_task || READ_ONCE(p->__state) == TASK_DEAD) {
+-				struct dl_bw *dl_b = dl_bw_of(task_cpu(p));
+-
+ 				if (dl_task && READ_ONCE(p->__state) == TASK_DEAD)
+ 					sub_rq_bw(dl_se, &rq->dl);
+-				raw_spin_lock(&dl_b->lock);
+-				__dl_sub(dl_b, dl_se->dl_bw, dl_bw_cpus(task_cpu(p)));
+-				raw_spin_unlock(&dl_b->lock);
++				dl_task_release_bw(p, task_cpu(p));
+ 				__dl_clear_params(dl_se);
+ 			}
+ 		}
+@@ -524,8 +632,18 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
+ 	}
+ 
+ 	dl_se->dl_non_contending = 1;
+-	if (!dl_server(dl_se))
+-		get_task_struct(dl_task_of(dl_se));
++	if (!dl_server(dl_se)) {
++		struct task_struct *p = dl_task_of(dl_se);
++
++		get_task_struct(p);
 +		/*
-+		 * Sleep. The main thread switches this thread to SCHED_OTHER
-+		 * 200ms later, past its 0-lag time.
++		 * A dying task keeps its bandwidth in the root domain of the
++		 * CPU it runs on. Record that CPU. switched_from_dl() records
++		 * a task that leaves SCHED_DEADLINE.
 +		 */
-+		sem_post(&owner_ready);
-+		sem_wait_sig(&owner_go);
++		if (READ_ONCE(p->__state) == TASK_DEAD)
++			dl_task_depart(p, task_cpu(p));
 +	}
- 	if (take_pi_lock())
- 		return (void *)1;
- 	owner_holds = 2;
-@@ -896,30 +915,47 @@ static void *sleeping_owner(void *arg)
  
- /*
-  * A SCHED_OTHER owner takes pi_lock and sleeps 400ms while holding it.
-- * The main thread then waits 20ms for the lock, 5 times. For each wait it
-- * becomes a deadline task of 5ms every 50ms. Each wait boosts the
-+ * The main thread then waits 20ms for the lock, @rounds times. For each
-+ * wait it becomes a deadline task of 5ms every 50ms. Each wait boosts the
-  * sleeping owner, and its timeout deboosts it. Every wait must time out.
-+ *
-+ * With @was_dl, the owner was a deadline task of 30ms every 100ms before.
-+ * It ran 1ms and slept. The main thread switched it to SCHED_OTHER 200ms
-+ * later, past its 0-lag time.
-  */
--static int pi_other_owner_asleep(void)
-+static int pi_asleep(int was_dl, int rounds)
- {
- 	pthread_t o;
- 	int r, ret = KSFT_PASS;
+ 	hrtimer_start(timer, ns_to_ktime(zerolag_time), HRTIMER_MODE_REL_HARD);
+ }
+@@ -2277,17 +2395,13 @@ static enum hrtimer_restart inactive_task_timer(struct hrtimer *timer)
+ 		goto no_task;
  
- 	if (pi_init())
- 		return KSFT_SKIP;
--	if (pthread_create(&o, NULL, sleeping_owner, NULL)) {
-+	if (pthread_create(&o, NULL, sleeping_owner, (void *)(long)was_dl)) {
- 		ksft_print_msg("the owner thread could not start\n");
- 		return KSFT_FAIL;
- 	}
--	if (wait_for(5000, owner_holds) || owner_holds != 2) {
-+	if (was_dl) {
-+		if (sem_wait_for(&owner_ready, 5000)) {
-+			ksft_print_msg("the owner did not become a deadline task\n");
-+			ret = KSFT_FAIL;
-+		} else {
-+			sleep_ns(200 * NSEC_PER_MSEC);
-+			if (set_other(owner_tid)) {
-+				ksft_print_msg("the owner cannot leave SCHED_DEADLINE\n");
-+				ret = KSFT_FAIL;
-+			}
-+		}
-+		sem_post(&owner_go);
-+	}
-+	if (ret == KSFT_PASS && (wait_for(5000, owner_holds) || owner_holds != 2)) {
- 		ksft_print_msg("the owner never took the lock\n");
- 		ret = KSFT_FAIL;
- 	}
- 	if (ret == KSFT_PASS)
- 		sleep_ns(20 * NSEC_PER_MSEC);
--	for (r = 0; r < 5 && ret == KSFT_PASS; r++) {
-+	for (r = 0; r < rounds && ret == KSFT_PASS; r++) {
- 		if (wait_lock_for(20, 1)) {
--			ksft_print_msg("round %d of 5 failed\n", r + 1);
-+			ksft_print_msg("round %d of %d failed\n", r + 1, rounds);
- 			ret = KSFT_FAIL;
+ 	if (!dl_task(p) || READ_ONCE(p->__state) == TASK_DEAD) {
+-		struct dl_bw *dl_b = dl_bw_of(task_cpu(p));
+-
+ 		if (READ_ONCE(p->__state) == TASK_DEAD && dl_se->dl_non_contending) {
+ 			sub_running_bw(&p->dl, dl_rq_of_se(&p->dl));
+ 			sub_rq_bw(&p->dl, dl_rq_of_se(&p->dl));
+ 			dl_se->dl_non_contending = 0;
  		}
+ 
+-		raw_spin_lock(&dl_b->lock);
+-		__dl_sub(dl_b, p->dl.dl_bw, dl_bw_cpus(task_cpu(p)));
+-		raw_spin_unlock(&dl_b->lock);
++		dl_task_release_bw(p, task_cpu(p));
+ 		__dl_clear_params(dl_se);
+ 
+ 		goto unlock;
+@@ -3553,12 +3667,33 @@ void dl_add_task_root_domain(struct task_struct *p)
+ 	dl_get_task_effective_cpus(p, msk);
+ 	cpu = cpumask_first_and(cpu_active_mask, msk);
+ 	BUG_ON(cpu >= nr_cpu_ids);
++
++	raw_spin_lock(&dl_departed_lock);
++	/*
++	 * Skip a task whose dl_bw_gen is current. Either
++	 * dl_clear_root_domains() put it back as a departed task, and
++	 * priority inheritance boosted it into the class since. Or it died
++	 * since the rebuild started, and dl_task_release_bw() released its
++	 * bandwidth. A task that died since with its 0-lag time ahead is on
++	 * the departed list. Count it in the root domain of the CPU
++	 * recorded, if that CPU is active.
++	 */
++	if (p->dl.dl_bw_gen == dl_bw_gen)
++		goto unlock;
++	if (p->dl.dl_departed_cpu >= 0) {
++		cpu = p->dl.dl_departed_cpu;
++		if (!cpu_active(cpu))
++			goto unlock;
++	}
+ 	rq = cpu_rq(cpu);
+ 	dl_b = &rq->rd->dl_bw;
+ 
+ 	raw_spin_lock(&dl_b->lock);
+ 	__dl_add(dl_b, p->dl.dl_bw, cpumask_weight(rq->rd->span));
+ 	raw_spin_unlock(&dl_b->lock);
++	p->dl.dl_bw_gen = dl_bw_gen;
++unlock:
++	raw_spin_unlock(&dl_departed_lock);
+ 	raw_spin_unlock_irqrestore(&p->pi_lock, rf.flags);
+ }
+ 
+@@ -3616,9 +3751,51 @@ void dl_clear_root_domain(struct root_domain *rd)
+ 		dl_server_add_bw(rd, i);
+ }
+ 
+-void dl_clear_root_domain_cpu(int cpu)
++/*
++ * Clear every root domain before a rebuild of their accounting, and count
++ * the rebuild in dl_bw_gen. Put back the bandwidth of their servers. Put
++ * back the bandwidth of the tasks on dl_departed_list, which no cpuset
++ * holds as deadline tasks. Put each in the root domain of the CPU
++ * recorded for it, or drop it if that CPU is not active.
++ * dl_add_task_root_domain() then adds the deadline tasks of the cpusets.
++ */
++void dl_clear_root_domains(void)
+ {
+-	dl_clear_root_domain(cpu_rq(cpu)->rd);
++	struct sched_dl_entity *dl_se;
++	u64 cookie = ++dl_cookie;
++	struct dl_bw *dl_b;
++	int cpu;
++
++	guard(raw_spinlock_irqsave)(&dl_departed_lock);
++	dl_bw_gen++;
++	for_each_possible_cpu(cpu) {
++		if (!dl_bw_visited(cpu, cookie))
++			dl_clear_root_domain(cpu_rq(cpu)->rd);
++	}
++	list_for_each_entry(dl_se, &dl_departed_list, dl_departed_node) {
++		cpu = dl_se->dl_departed_cpu;
++		/*
++		 * Skip bandwidth that an earlier rebuild dropped. It is not
++		 * counted now, and its release removes nothing
++		 * (dl_task_release_bw()).
++		 */
++		if (dl_se->dl_bw_gen != dl_bw_gen - 1)
++			continue;
++		/*
++		 * Drop the bandwidth of a task whose CPU is inactive. A CPU
++		 * that goes offline is in the default root domain by then.
++		 * The root domain that counted the task cannot be found
++		 * from the recorded number. The release then removes
++		 * nothing, and no later rebuild restores it.
++		 */
++		if (!cpu_active(cpu))
++			continue;
++		dl_b = dl_bw_of(cpu);
++		raw_spin_lock(&dl_b->lock);
++		__dl_add(dl_b, dl_se->dl_bw, dl_bw_cpus(cpu));
++		raw_spin_unlock(&dl_b->lock);
++		dl_se->dl_bw_gen = dl_bw_gen;
++	}
+ }
+ 
+ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+@@ -3674,9 +3851,20 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+ 	 * We cannot use inactive_task_timer() to invoke sub_running_bw()
+ 	 * at the 0-lag time, because the task could have been migrated
+ 	 * while SCHED_OTHER in the meanwhile.
++	 *
++	 * For the same reason, the timer cannot take the task's bandwidth
++	 * from the root domain of the CPU the task is on by then. And a
++	 * rebuild of the root domains meanwhile would not find the task
++	 * among the deadline tasks. So record a CPU of the root domain that
++	 * keeps the bandwidth until the timer removes it (dl_task_depart()).
++	 * Test dl_non_contending: it tells that the timer is armed and its
++	 * handler has not run. hrtimer_active() stays true for a while after
++	 * the handler returns.
+ 	 */
+-	if (p->dl.dl_non_contending)
++	if (p->dl.dl_non_contending) {
+ 		p->dl.dl_non_contending = 0;
++		dl_task_depart(p, task_cpu(p));
++	}
+ 
+ 	/*
+ 	 * Since this might be the only -deadline task on the rq,
+@@ -3696,6 +3884,17 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+ static void switched_to_dl(struct rq *rq, struct task_struct *p)
+ {
+ 	cancel_inactive_timer(&p->dl);
++	/*
++	 * A task on the departed list gets here when priority inheritance
++	 * boosts it back into the class before its 0-lag time. (A policy change
++	 * took it off the list in sched_dl_overflow().) The inactive timer no
++	 * longer removes its bandwidth: the task does when it leaves the class
++	 * again. So take it off the list. The task keeps the CPU recorded. It
++	 * takes the bandwidth from the root domain of that CPU, even if it
++	 * moved to another root domain meanwhile.
++	 */
++	if (!list_empty(&p->dl.dl_departed_node))
++		dl_task_undepart(p);
+ 
+ 	/*
+ 	 * In case a task is setscheduled to SCHED_DEADLINE we need to keep
+@@ -3810,12 +4009,6 @@ DEFINE_SCHED_CLASS(dl) = {
+ #endif
+ };
+ 
+-/*
+- * Used for dl_bw check and update, used under sched_rt_handler()::mutex and
+- * sched_domains_mutex.
+- */
+-u64 dl_cookie;
+-
+ int sched_dl_global_validate(void)
+ {
+ 	u64 runtime = global_rt_runtime();
+@@ -3936,8 +4129,6 @@ int sched_dl_overflow(struct task_struct *p, int policy,
+ 
+ 	if (dl_policy(policy) && !task_has_dl_policy(p) &&
+ 	    !__dl_overflow(dl_b, cap, 0, new_bw)) {
+-		if (hrtimer_active(&p->dl.inactive_timer))
+-			__dl_sub(dl_b, p->dl.dl_bw, cpus);
+ 		__dl_add(dl_b, new_bw, cpus);
+ 		err = 0;
+ 	} else if (dl_policy(policy) && task_has_dl_policy(p) &&
+@@ -3963,6 +4154,19 @@ int sched_dl_overflow(struct task_struct *p, int policy,
  	}
-@@ -927,6 +963,16 @@ static int pi_other_owner_asleep(void)
- 	return ret;
+ 	raw_spin_unlock(&dl_b->lock);
+ 
++	/*
++	 * A task that comes back before its 0-lag time still has the
++	 * bandwidth it left with. The new bandwidth replaces it, so remove the
++	 * old one from the root domain that keeps it (dl_task_release_bw()).
++	 * No rebuild can run meanwhile: the caller holds cpuset_mutex.
++	 */
++	if (!err && dl_policy(policy) && !task_has_dl_policy(p)) {
++		lockdep_assert_cpuset_lock_held();
++		if (p->dl.dl_departed_cpu >= 0)
++			dl_task_release_bw(p, -1);
++		p->dl.dl_bw_gen = dl_bw_gen;
++	}
++
+ 	return err;
  }
  
-+static int pi_other_owner_asleep(void)
-+{
-+	return pi_asleep(0, 5);
-+}
-+
-+static int pi_former_owner_asleep(void)
-+{
-+	return pi_asleep(1, 5);
-+}
-+
- /*
-  * Run as the owner thread. Become a deadline task of 30ms every 100ms,
-  * and take pi_lock. Hold it for 300ms, spinning 2ms and sleeping 5ms in
-@@ -1635,9 +1681,9 @@ static atomic_int owner_first_period_ms;
- static _Atomic pid_t donor_tid;
- 
- /*
-- * Run as the owner O of deboost_resets_period(). Store the CPU time of
-- * step 4, in ms, in owner_first_period_ms. Return NULL, 1 on an error, or
-- * 2 if no waiter boosted it within 1s.
-+ * Run as the owner O of deboost_case(). @arg is its @mode. Store the CPU
-+ * time of step 4, in ms, in owner_first_period_ms. Return NULL, 1 on an
-+ * error, or 2 if no waiter boosted it within 1s.
-  */
- static void *deboosted_owner(void *arg)
- {
-@@ -1645,6 +1691,17 @@ static void *deboosted_owner(void *arg)
- 	int err;
- 
- 	owner_tid = gettid_();
-+	if (arg == (void *)1L) {
-+		err = set_deadline(0, 60 * NSEC_PER_MSEC, PERIOD);
-+		if (err) {
-+			ksft_print_msg("the owner refused as a deadline task: %s\n",
-+				       strerror(-err));
-+			return (void *)1;
-+		}
-+		spin_ns(NSEC_PER_MSEC);
-+		sem_post(&owner_ready);
-+		sem_wait_sig(&owner_go);
-+	}
- 	if (take_pi_lock())
- 		return (void *)1;
- 	owner_holds = 2;
-@@ -1655,9 +1712,18 @@ static void *deboosted_owner(void *arg)
- 			return (void *)2;	/* never boosted */
- 		}
- 	}
-+	if (arg == (void *)2L) {
-+		err = set_deadline(0, 10 * NSEC_PER_MSEC, PERIOD);
-+		if (err) {
-+			ksft_print_msg("the boosted owner refused as a deadline task: %s\n",
-+				       strerror(-err));
-+			drop_pi_lock();
-+			return (void *)1;
-+		}
-+	}
- 	spin_ns(5 * NSEC_PER_MSEC);
- 	drop_pi_lock();
--	err = set_deadline(0, 10 * NSEC_PER_MSEC, PERIOD);
-+	err = arg == (void *)2L ? 0 : set_deadline(0, 10 * NSEC_PER_MSEC, PERIOD);
- 	if (err) {
- 		ksft_print_msg("the owner refused as a deadline task: %s\n", strerror(-err));
- 		return (void *)1;
-@@ -1694,8 +1760,8 @@ static void *donor_waiter(void *arg)
+@@ -4103,6 +4307,8 @@ void init_dl_entity(struct sched_dl_entity *dl_se)
+ 	init_dl_task_timer(dl_se);
+ 	init_dl_inactive_task_timer(dl_se);
+ 	__dl_clear_params(dl_se);
++	INIT_LIST_HEAD(&dl_se->dl_departed_node);
++	dl_se->dl_departed_cpu = -1;
  }
  
- /*
-- * The owner O starts as SCHED_OTHER. The donor D is the waiter that
-- * boosts it: a deadline task of 40ms every 100ms.
-+ * Run a deboost case. The owner O starts as SCHED_OTHER. The donor D is
-+ * the waiter that boosts it: a deadline task of 40ms every 100ms.
-  * 1. O takes pi_lock and spins.
-  * 2. D blocks on pi_lock. This boosts O, which then runs on D's runtime.
-  * 3. O spins 5ms more and unlocks. The unlock deboosts O.
-@@ -1704,8 +1770,16 @@ static void *donor_waiter(void *arg)
-  *
-  * O must get about 10ms in step 4. The case fails above 20ms: O then
-  * still runs on the runtime that the boost left.
-+ *
-+ * @mode changes one step:
-+ * - 0: nothing.
-+ * - 1: before step 1, O runs 1ms as a deadline task of 60ms every 100ms,
-+ *   and sleeps. The main thread switches it to SCHED_OTHER 300ms later,
-+ *   past its 0-lag time.
-+ * - 2: O becomes the deadline task of step 4 in step 3 instead, before
-+ *   the 5ms. It stays in the deadline class at the deboost.
-  */
--static int deboost_resets_period(void)
-+static int deboost_case(long mode)
- {
- 	int err, ret = KSFT_PASS;
- 	void *o_ret, *w_ret;
-@@ -1714,10 +1788,27 @@ static int deboost_resets_period(void)
- 	if (pi_init())
- 		return KSFT_SKIP;
- 	owner_first_period_ms = -1;
--	if (pthread_create(&o, NULL, deboosted_owner, NULL)) {
-+	if (pthread_create(&o, NULL, deboosted_owner, (void *)mode)) {
- 		ksft_print_msg("the owner thread could not start\n");
- 		return KSFT_FAIL;
- 	}
-+	if (mode == 1) {
-+		if (sem_wait_for(&owner_ready, 5000)) {
-+			/* The owner may get there late. Let it end. */
-+			sem_post(&owner_go);
-+			join(o);
-+			return KSFT_FAIL;	/* the owner said why */
-+		}
-+		sleep_ns(3 * PERIOD);
-+		err = proc_state_of(owner_tid) == 'S' ? set_other(owner_tid) : -EAGAIN;
-+		sem_post(&owner_go);
-+		if (err) {
-+			ksft_print_msg("the owner could not leave the class asleep: %s\n",
-+				       strerror(-err));
-+			join(o);
-+			return KSFT_FAIL;
-+		}
-+	}
- 	if (wait_for(5000, owner_holds) || owner_holds != 2) {
- 		ksft_print_msg("the owner never took the lock\n");
- 		join(o);
-@@ -1752,6 +1843,27 @@ static int deboost_resets_period(void)
- 	return ret;
- }
- 
-+/* Run deboost_case() with a plain SCHED_OTHER owner. */
-+static int deboost_resets_period(void)
-+{
-+	return deboost_case(0);
-+}
-+
-+/*
-+ * Run deboost_case() with an owner that left the deadline class asleep.
-+ * Its bandwidth was released then.
-+ */
-+static int deboost_released_resets_period(void)
-+{
-+	return deboost_case(1);
-+}
-+
-+/* Run deboost_case() with an owner that enters the class while boosted. */
-+static int deboost_in_class_resets_period(void)
-+{
-+	return deboost_case(2);
-+}
-+
- /*
-  * Return the runtime that the deadline task @tid has left, in ns, from
-  * dl.runtime in /proc/<tid>/sched. Return -1 if it cannot be read.
-@@ -1782,14 +1894,16 @@ static long long dl_runtime_left(pid_t tid)
- #define REFILL_DONOR_RUNTIME	(2 * NSEC_PER_MSEC)
- #define REFILL_DONOR_PERIOD	(10 * NSEC_PER_MSEC)
- 
--static sem_t refill_donor_ready;
--static atomic_int refill_donor_locking;
-+static sem_t refill_donor_ready, refill_measured;
-+static atomic_int refill_donor_locking, refill_hold_donor;
- static _Atomic long long refill_owner_left;
- 
- /*
-- * Run as the donor D of deboost_keeps_own_runtime(). Become a deadline
-- * task of 2ms every 10ms and sleep until the owner holds pi_lock. Then
-- * block on pi_lock. Return NULL once it got the lock, or 1 on an error.
-+ * Run as the donor D of refill_case(). Become a deadline task of 2ms
-+ * every 10ms and sleep until the owner holds pi_lock. Then block on
-+ * pi_lock. With refill_hold_donor, stay a deadline task after the unlock
-+ * until refill_measured is posted. Return NULL once it got the lock, or 1
-+ * on an error.
-  */
- static void *refill_donor(void *arg)
- {
-@@ -1809,16 +1923,18 @@ static void *refill_donor(void *arg)
- 	err = take_pi_lock();
- 	if (!err)
- 		drop_pi_lock();
-+	if (refill_hold_donor)
-+		sem_wait_sig(&refill_measured);
- 	if (set_other(0))
- 		ksft_print_msg("the donor cannot leave SCHED_DEADLINE\n");
- 	return (void *)(long)err;
- }
- 
- /*
-- * Run as the owner O of deboost_keeps_own_runtime(). @arg is the CPU
-- * time, in ms, that O spins with the lock once it is boosted. Store the
-- * runtime O has left after the unlock in refill_owner_left. Return NULL,
-- * 1 on an error, or 2 if the donor did not block on the lock within 1s.
-+ * Run as the owner O of refill_case(). @arg is the CPU time, in ms, that
-+ * O spins with the lock once it is boosted. Store the runtime O has left
-+ * after the unlock in refill_owner_left. Return NULL, 1 on an error, or 2
-+ * if the donor did not block on the lock within 1s.
-  */
- static void *refill_owner(void *arg)
- {
-@@ -1865,18 +1981,25 @@ static void *refill_owner(void *arg)
-  *                                        preempts O: its deadline is
-  *                                          earlier
-  *                                        blocks on pi_lock, boosts O
-- *   runs 1ms more
-+ *   runs @spin_ms more
-  *   unlocks: the boost ends
-  *                                        takes pi_lock, unlocks
-  *   reads its dl.runtime
-  *
-  * A boosted task that runs out of runtime is not throttled. Its runtime
-- * is refilled from the parameters of its donor. Here O has used about 3ms
-- * of its own 5ms at the unlock, and was never refilled. It must keep what
-- * it has left. A new period would hand it a full runtime at every
-- * contended unlock. The case fails if O has 4ms or more.
-+ * is refilled from the parameters of its donor: 2ms here.
-+ *
-+ * - @spin_ms is 8: O runs out of its own 5ms, and is refilled from D at
-+ *   least once. At the unlock it holds what the last refill left, 2ms at
-+ *   most. That is not the runtime of its own reservation. O must start a
-+ *   new period at the unlock, with 5ms. The case fails if O has 3.5ms or
-+ *   less.
-+ * - @spin_ms is 1: O has used about 3ms of its own 5ms at the unlock, and
-+ *   was never refilled. It must keep what it has left. A new period would
-+ *   hand it a full runtime at every contended unlock. The case fails if O
-+ *   has 4ms or more.
-  */
--static int deboost_keeps_own_runtime(void)
-+static int refill_case(long spin_ms)
- {
- 	void *o_ret = NULL, *d_ret = NULL;
- 	int err, ret = KSFT_PASS;
-@@ -1903,7 +2026,7 @@ static int deboost_keeps_own_runtime(void)
- 		join(d);
- 		return KSFT_FAIL;
- 	}
--	if (pthread_create(&o, NULL, refill_owner, (void *)1L)) {
-+	if (pthread_create(&o, NULL, refill_owner, (void *)spin_ms)) {
- 		ksft_print_msg("the owner thread could not start\n");
- 		sem_post(&owner_go);
- 		join(d);
-@@ -1930,7 +2053,11 @@ static int deboost_keeps_own_runtime(void)
- 	} else if (left < 0) {
- 		ksft_print_msg("the runtime of the owner cannot be read\n");
- 		ret = KSFT_SKIP;
--	} else if (left >= 4 * NSEC_PER_MSEC) {
-+	} else if (spin_ms == 8 && left <= 3500 * NSEC_PER_USEC) {
-+		ksft_print_msg("the owner has %lld us after the unlock: what the donor's refill left\n",
-+			       left / NSEC_PER_USEC);
-+		ret = KSFT_FAIL;
-+	} else if (spin_ms == 1 && left >= 4 * NSEC_PER_MSEC) {
- 		ksft_print_msg("the owner has %lld us after the unlock: a new runtime, with no refill from the donor\n",
- 			       left / NSEC_PER_USEC);
- 		ret = KSFT_FAIL;
-@@ -1938,6 +2065,157 @@ static int deboost_keeps_own_runtime(void)
- 	return ret;
- }
- 
-+/* Run refill_case() with an owner that is refilled from its donor. */
-+static int deboost_after_donor_refill(void)
-+{
-+	return refill_case(8);
-+}
-+
-+/* Run refill_case() with an owner that stays on its own runtime. */
-+static int deboost_keeps_own_runtime(void)
-+{
-+	return refill_case(1);
-+}
-+
-+/*
-+ * Run as the owner O of deboost_out_after_donor_refill(). Store total_bw
-+ * of O's root domain right after the unlock in refill_owner_left. Return
-+ * NULL, 1 on an error, or 2 if the donor did not block on the lock within
-+ * 1s.
-+ */
-+static void *former_owner(void *arg)
-+{
-+	uint64_t t0;
-+	int err;
-+
-+	owner_tid = gettid_();
-+	err = set_deadline(0, REFILL_OWN_RUNTIME, PERIOD);
-+	if (err) {
-+		ksft_print_msg("the owner refused as a deadline task: %s\n", strerror(-err));
-+		return (void *)1;
-+	}
-+	spin_ns(2 * NSEC_PER_MSEC);
-+	if (take_pi_lock())
-+		return (void *)1;
-+	if (set_other(0)) {
-+		ksft_print_msg("the owner cannot leave SCHED_DEADLINE\n");
-+		drop_pi_lock();
-+		return (void *)1;
-+	}
-+	owner_holds = 2;
-+	sem_post(&owner_go);
-+	t0 = now_ns();
-+	while (!refill_donor_locking || proc_state_of(donor_tid) != 'S') {
-+		if (now_ns() - t0 > NSEC_PER_SEC) {
-+			drop_pi_lock();
-+			return (void *)2;
-+		}
-+	}
-+	spin_ns(8 * NSEC_PER_MSEC);
-+	drop_pi_lock();
-+	refill_owner_left = total_bw_of(top_cpu(1));
-+	sem_post(&refill_measured);
-+	return NULL;
-+}
-+
-+/*
-+ * As refill_case() with @spin_ms 8, but O leaves SCHED_DEADLINE once it
-+ * holds pi_lock. O and D share the CPU of P.
-+ *
-+ *   owner O: 5ms every 100ms             donor D: 2ms every 10ms
-+ *
-+ *                                        sleeps
-+ *   starts its period, runs 2ms
-+ *   takes pi_lock
-+ *   switches to SCHED_OTHER: its 0-lag
-+ *     time is about 40ms ahead
-+ *   wakes D up
-+ *                                        preempts O
-+ *                                        blocks on pi_lock, boosts O
-+ *   runs 8ms: runs out of its own
-+ *     runtime, is refilled from D
-+ *   unlocks: leaves the class
-+ *                                        takes pi_lock, unlocks, waits
-+ *   reads total_bw
-+ *
-+ * At the unlock, O's runtime and deadline come from D's refills. O must
-+ * start a period of its own there. Its 0-lag time is then now, and its
-+ * bandwidth must be gone from total_bw at once. Mixed with O's own
-+ * parameters, the runtime and deadline of the refills put the 0-lag time
-+ * about 100ms ahead.
-+ */
-+static int deboost_out_after_donor_refill(void)
-+{
-+	void *o_ret = NULL, *d_ret = NULL;
-+	int err, ret = KSFT_PASS;
-+	long long base;
-+	pthread_t o, d;
-+
-+	if (total_bw_of(top_cpu(1)) < 0) {
-+		ksft_print_msg("sched_debug tells of no total_bw\n");
-+		return KSFT_SKIP;
-+	}
-+	if (pi_init())
-+		return KSFT_SKIP;
-+	if (sem_init(&refill_donor_ready, 0, 0) || sem_init(&refill_measured, 0, 0)) {
-+		ksft_print_msg("sem_init: %s\n", strerror(errno));
-+		pi_fini();
-+		return KSFT_SKIP;
-+	}
-+	refill_donor_locking = 0;
-+	refill_hold_donor = 1;
-+	refill_owner_left = -1;
-+	donor_tid = 0;
-+	if (pthread_create(&d, NULL, refill_donor, NULL)) {
-+		ksft_print_msg("the donor thread could not start\n");
-+		refill_hold_donor = 0;
-+		return KSFT_FAIL;
-+	}
-+	if (sem_wait_for(&refill_donor_ready, 5000) || donor_tid <= 0) {
-+		ksft_print_msg("the donor is not ready\n");
-+		sem_post(&owner_go);
-+		sem_post(&refill_measured);
-+		join(d);
-+		refill_hold_donor = 0;
-+		return KSFT_FAIL;
-+	}
-+	base = total_bw_of(top_cpu(1));	/* with D, without O */
-+	if (pthread_create(&o, NULL, former_owner, NULL)) {
-+		ksft_print_msg("the owner thread could not start\n");
-+		sem_post(&owner_go);
-+		sem_post(&refill_measured);
-+		join(d);
-+		refill_hold_donor = 0;
-+		return KSFT_FAIL;
-+	}
-+	err = pthread_join(o, &o_ret);
-+	if (err) {
-+		ksft_print_msg("pthread_join: %s\n", strerror(err));
-+		ret = KSFT_FAIL;
-+	}
-+	if (o_ret == (void *)1)
-+		sem_post(&owner_go);	/* the owner never woke the donor up */
-+	if (o_ret)
-+		sem_post(&refill_measured);
-+	err = pthread_join(d, &d_ret);
-+	if (err) {
-+		ksft_print_msg("pthread_join: %s\n", strerror(err));
-+		ret = KSFT_FAIL;
-+	}
-+	refill_hold_donor = 0;
-+	if (o_ret == (void *)2) {
-+		ksft_print_msg("the donor never blocked on the lock\n");
-+		ret = KSFT_FAIL;
-+	} else if (o_ret || d_ret) {
-+		ret = KSFT_FAIL;	/* the thread said why */
-+	} else if (refill_owner_left != base) {
-+		ksft_print_msg("total_bw %lld right after the unlock, %lld expected\n",
-+			       (long long)refill_owner_left, base);
-+		ret = KSFT_FAIL;
-+	}
-+	return ret;
-+}
-+
- static sem_t ret_ready, ret_go;
- static _Atomic pid_t ret_tid;
- static atomic_int ret_first_period_ms;
-@@ -2032,7 +2310,7 @@ static pthread_mutex_t pi_lock2;
- static sem_t holder_go;
- static atomic_int holder_holds, chain_waits, donor_done, x_waits, l2_takes;
- static atomic_int chain_rank, x_rank;
--static _Atomic pid_t x_tid;
-+static _Atomic pid_t x_tid, fair_tid;
- 
- /* The holder thread: take pi_lock2, and hold it until holder_go. */
- static void *l2_holder(void *arg)
-@@ -2190,6 +2468,7 @@ static int pi_init_lock2(void)
- 	x_rank = -1;
- 	donor_tid = 0;
- 	x_tid = 0;
-+	fair_tid = 0;
- 	return 0;
- }
- 
-@@ -2288,6 +2567,129 @@ static int deboost_blocked_keeps_order(void)
- 	return ret;
- }
- 
-+/*
-+ * The fair waiter: wait on pi_lock2 as a fair task. With @arg set, hold
-+ * pi_lock meanwhile, for a donor to boost it. Otherwise the main thread
-+ * makes it a deadline task while it waits. It leaves the class at the end.
-+ */
-+static void *fair_waiter(void *arg)
-+{
-+	int err;
-+
-+	fair_tid = gettid_();
-+	if (arg && take_pi_lock())
-+		return (void *)1;
-+	chain_waits = 1;
-+	err = take_l2_ranked(&chain_rank);
-+	if (arg)
-+		drop_pi_lock();
-+	else if (set_other(0))
-+		ksft_print_msg("a waiter cannot leave SCHED_DEADLINE\n");
-+	return err ? (void *)1 : NULL;
-+}
-+
-+/*
-+ * Check the order of the waiters of pi_lock2 when one of them enters the
-+ * class while it waits. The holder has pi_lock2:
-+ * 1. The fair waiter waits on pi_lock2. With @boost, it holds pi_lock.
-+ * 2. The other waiter, a deadline task, waits on pi_lock2.
-+ * 3. The fair waiter enters the class:
-+ *    - Without @boost, the main thread makes it a deadline task of 10ms
-+ *      every 200ms.
-+ *    - With @boost, a donor of 40ms every 100ms waits on pi_lock, and
-+ *      boosts it.
-+ * 4. The holder drops pi_lock2.
-+ *
-+ * The other waiter must take pi_lock2 first: it started its period
-+ * earlier, with a shorter deadline. At step 3 the fair waiter is not
-+ * queued, and the chain walk copies its deadline into its waiter node on
-+ * pi_lock2. A deadline of 0 in the node would put the fair waiter first.
-+ */
-+static int blocked_keeps_order(long boost)
-+{
-+	void *f_ret = NULL, *x_ret = NULL, *w_ret = NULL;
-+	int ret = KSFT_FAIL, have_f = 0, have_x = 0, have_w = 0, err;
-+	pthread_t h, f, x, w;
-+
-+	if (pi_init())
-+		return KSFT_SKIP;
-+	if (pi_init_lock2()) {
-+		pi_fini();
-+		return KSFT_SKIP;
-+	}
-+	if (pthread_create(&h, NULL, l2_holder, NULL)) {
-+		ksft_print_msg("the holder thread could not start\n");
-+		goto out_fini;
-+	}
-+	if (wait_for(5000, holder_holds) || holder_holds != 1) {
-+		ksft_print_msg("the holder never took pi_lock2\n");
-+		goto out;
-+	}
-+	have_f = !pthread_create(&f, NULL, fair_waiter, (void *)boost);
-+	if (!have_f || wait_for(1000, chain_waits && proc_state_of(fair_tid) == 'S')) {
-+		ksft_print_msg("the fair waiter never waited on pi_lock2\n");
-+		goto out;
-+	}
-+	have_x = !pthread_create(&x, NULL, early_waiter, NULL);
-+	if (!have_x || wait_for(1000, x_waits && proc_state_of(x_tid) == 'S')) {
-+		ksft_print_msg("the other waiter never waited on pi_lock2\n");
-+		goto out;
-+	}
-+	if (boost) {
-+		have_w = !pthread_create(&w, NULL, donor_waiter, NULL);
-+		if (!have_w || wait_for(1000, donor_tid && proc_state_of(donor_tid) == 'S')) {
-+			ksft_print_msg("the donor never waited on pi_lock\n");
-+			goto out;
-+		}
-+		if (prio_of(fair_tid) != DL_TASK_PRIO) {
-+			ksft_print_msg("the donor never boosted the fair waiter\n");
-+			goto out;
-+		}
-+	} else {
-+		err = set_deadline(fair_tid, 10 * NSEC_PER_MSEC, 2 * PERIOD);
-+		if (err) {
-+			ksft_print_msg("the fair waiter refused as a deadline task: %s\n",
-+				       strerror(-err));
-+			if (err == -EBUSY)
-+				ret = KSFT_SKIP;	/* no room in P */
-+			goto out;
-+		}
-+	}
-+	ret = KSFT_PASS;
-+out:
-+	sem_post(&holder_go);	/* pi_lock2 goes to its top waiter */
-+	if (have_w && pthread_join(w, &w_ret))
-+		ret = KSFT_FAIL;
-+	if (have_x && pthread_join(x, &x_ret))
-+		ret = KSFT_FAIL;
-+	if (have_f && pthread_join(f, &f_ret))
-+		ret = KSFT_FAIL;
-+	join(h);
-+	if (f_ret || x_ret || w_ret) {
-+		ret = KSFT_FAIL;	/* the thread said why */
-+	} else if (ret == KSFT_PASS && chain_rank < x_rank) {
-+		ksft_print_msg("the fair waiter took pi_lock2 before the earlier waiter\n");
-+		ret = KSFT_FAIL;
-+	}
-+out_fini:
-+	pthread_mutex_destroy(&pi_lock2);
-+	sem_destroy(&holder_go);
-+	pi_fini();
-+	return ret;
-+}
-+
-+/* sched_setattr() puts the fair waiter in the class. */
-+static int setattr_blocked_keeps_order(void)
-+{
-+	return blocked_keeps_order(0);
-+}
-+
-+/* A boost puts the fair waiter in the class. */
-+static int boost_blocked_keeps_order(void)
-+{
-+	return blocked_keeps_order(1);
-+}
-+
- /*
-  * The threads of pi_chain_donor_leaves(): O, M, W, Z and Y. leave_tid[]
-  * holds their tids. leave_y_ns is the CPU time Y gets in O's window, or
-@@ -9948,6 +10350,7 @@ static const struct p_case {
- } p_cases[] = {
- 	{ "pi_deadline_owner", pi_deadline_owner, MEASURED_IN_P },
- 	{ "pi_other_owner_asleep", pi_other_owner_asleep, MEASURED_IN_P },
-+	{ "pi_former_owner_asleep", pi_former_owner_asleep, MEASURED_IN_P },
- 	{ "pi_unlock_running", pi_unlock_running, MEASURED_IN_P },
- 	{ "pi_chain_two_owners", pi_chain_two_owners, MEASURED_IN_P },
- 	{ "pi_departed_moved", pi_departed_moved, FROM_OUTSIDE },
-@@ -9961,9 +10364,15 @@ static const struct p_case {
- 	{ "params_keep_boosted", params_keep_boosted, MEASURED_IN_P },
- 	{ "boosted_owner_policy", boosted_owner_policy, MEASURED_IN_P },
- 	{ "deboost_resets_period", deboost_resets_period, MEASURED_IN_P },
-+	{ "deboost_released_resets_period", deboost_released_resets_period, MEASURED_IN_P },
-+	{ "deboost_in_class_resets_period", deboost_in_class_resets_period, MEASURED_IN_P },
-+	{ "deboost_after_donor_refill", deboost_after_donor_refill, MEASURED_IN_P },
-+	{ "deboost_out_after_donor_refill", deboost_out_after_donor_refill, MEASURED_IN_P },
- 	{ "deboost_keeps_own_runtime", deboost_keeps_own_runtime, MEASURED_IN_P },
- 	{ "return_asleep_new_params", return_asleep_new_params, MEASURED_IN_P },
- 	{ "deboost_blocked_keeps_order", deboost_blocked_keeps_order, MEASURED_IN_P },
-+	{ "setattr_blocked_keeps_order", setattr_blocked_keeps_order, MEASURED_IN_P },
-+	{ "boost_blocked_keeps_order", boost_blocked_keeps_order, MEASURED_IN_P },
- 	{ "pi_chain_donor_leaves", pi_chain_donor_leaves, MEASURED_IN_P },
- 	{ "pi_chain_top_moves", pi_chain_top_moves, MEASURED_IN_P },
- 	{ "pi_chain_top_moves_rt", pi_chain_top_moves_rt, MEASURED_IN_P },
+ bool dl_param_changed(struct task_struct *p, const struct sched_attr *attr)
 -- 
 2.47.3
 
