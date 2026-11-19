@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795119388;
-	b=jfIzfuNlLu31WcVdg19iZ9eGve3sRous9JCPfo1oF+jGNHFXxuObcS2pixGtFMhX0Q0P
-	 SrIuUDSAuOHFVM8LnvQ6pVJHDkpAOZR8pcixzMACcMRYoTN4B79wJ2/DKqHscB/EfD4sO
-	 P3fn989E+QeqTk8bOajnnu9AhLiHTjxL6hIyPKRWe+wj8g9fWXgS99hjEmO8/eBxjcogO
-	 Ig4JSPl678KnZe20yzMLViepYxVqTVvJAY72B16qUYOvdMocZU0XnUNVQCjXdQkFpH42h
-	 bSvVx5Jsoa7e+e3QNtDa4SGUBlT0Q6xyXk1ryE66L+PEhjMms2kl0xzaQeDn0kp2VMA==
+	b=y/65CL5nLmvCn4QSA9Rs9UrZwdMpEKWhx5wO9eyMli/TyQSLvfGcP/sd0wsp3jMApcKM
+	 t958nBqSvHuUOePAmED8NabfPcO12kHYf9JdYja7cKQuoHbhiMVu9EBW4feyNZORESDah
+	 N1dNs6mL+xZHi9UHMHWpEMfI3eDubDPOS4GcLmMDKNzl159I8nwa8tDejLaibaKKWs/E1
+	 j3EaIagMIUI0QC5IEASTYjXE2KznjdMezLagsq3NQ84ox064WcJjZO0Jf9dI7GuD3Q0Qp
+	 M1ZQXWSyzfSlAHVgh8rcwri3oQy9NzUNi0lfCw5n5wo1HXhB3eBvzksaDmYVa+xIpsQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795119388;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=GezWjWrQJ5IW6qykfDU7HVQbVcRc8oRe51PIbCtx9s8=;
-	b=BkQvYevnCfTmEeoTwXgFVhlk+yJUBgE0YNq1qUe3/4/Ep5AzWuBIa9b8KopAy/QB3GbK
-	 3vpHZk81T4XYXv73abYGbDbrZT3x9WOIVum0Z/RP5x1fEdkg+9yid7ErlT4ejj4eIn+FG
-	 Xb0dPgBBStyfV5rjVtJPs4M9/aWoQy06c8SbqNQrEhUXy6JGNjf8VxMSZ+u7XGsR73yOh
-	 Evwnzm+Goc24LHH4pL3JyEvsmB/OPu1WJ6PWELPENvKMNi9q+UWczXJshVlD5wbNbC03H
-	 x9zLia+Q7vaxTVleMsdG7GTx5bH8XwYXPw8ER+SQBcvDCz8ZzFSx8Dt4rozcnJAToSg==
+	bh=eKtPF0D4KeipGVGK8LJzEwVR7p9f+gTu2lblD4xfFnk=;
+	b=1Ll8ydZRw28EK/pKG+htwaY7aILoIX0U8NtwpjbyQGMHzxZ+peQxwosw9I4UvQlHQqmM
+	 NUSJeBiPvaTq3tApOXxwjddp4GEtW0PN7bUboopQ+1eVDsHa+VE8j6Xg6khMIpkv+CajY
+	 sowEk15tecYiR9mX5z2BiqFwP4iatAHlswLlslDcJQp9rH7AJ3XzKcHersJqiuVnU0K2h
+	 wKLGxEI+CGmN4ZxY1XBq6J/RUMJSG/hhuzS88yP7CrmYIiZ1BzmHDkpvR9XFC8Ed8J1xO
+	 kt9OebkxGlOEhJjPCSMCOA952pfjGk9Lt9f9KIoqo/bb8/v141Ue3NhrcHquY5kTsmA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=pbPeCFF9;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=noZ1z9jn;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D398560A6F52;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BDF360A5BCD;
 	Thu, 19 Nov 2026 20:16:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D398560A6F52
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BDF360A5BCD
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=pbPeCFF9
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=noZ1z9jn
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795119383;
-	bh=GezWjWrQJ5IW6qykfDU7HVQbVcRc8oRe51PIbCtx9s8=;
+	s=smtpout1; t=1795119381;
+	bh=eKtPF0D4KeipGVGK8LJzEwVR7p9f+gTu2lblD4xfFnk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pbPeCFF9Kv5NkvldH6jwNBjXRW8uJaaPtfylPYaeN92lEqkNK3mZvAwwC34q6v1Tm
-	 vI5DQVAzCEhoPaJmeq5oEFWb9Ccw/BvG14/TQdEmuC906vsrBwhVVwLW1FhNolHHSV
-	 eiGFV0CX/2HzGWIVxiA50f/chAKCLMJKK/rIkD7c8mozCDu6/IaM6EGg5HBqMlPLWB
-	 qT7aIfiOY+lJbzO6lLD4IzHIESLrrrOcU12hMXods/9hlBVEpPbm+ILPoFjrqoMdSn
-	 t4uTSafk5RiWtDlnhECtLZ+3nJa0cMasNnGv5ntOkTahIe0tx404D+w8SeMszUViS8
-	 yq+LHwy0RydCg==
+	b=noZ1z9jnSM1wqYu9UHDg7dh9yhq/XLNPUSH3sfmWHx5ywJHof4h7Vdm8XgC1kn6Sp
+	 TfN8wteJ6T3Gg+8IBPQExFYmMesN0Cmb6ytuP2F2Us6sjEO7bIqfQlHidOXFSiQWED
+	 T1W3ClBGVQ9Lq0RemZBE5wOh+fJ7lE831EqJqyYHjTWPsuN3SGO99fdTFygQVkXKsc
+	 I5yaVAIsxtCq2+g03An9tSwC9D4426MSFu3rWuP4OxFcx/X+IjcqmHKLHB8MxzH77g
+	 WAcHGdHjoAfF3Q5yoUbvJj5y0pr4AmnwSWDdEM7ha5NSUveux5Ok47QMFQ6fziHeg4
+	 5tbgIJA04WKaA==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVZ6hxlzT9h;
-	Thu, 19 Nov 2026 15:16:22 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVY2dtvzT9g;
+	Thu, 19 Nov 2026 15:16:21 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v8 30/33] sched/deadline: Cap the runtime left of a constrained task at dl_runtime
-Date: Thu, 19 Nov 2026 15:16:09 -0500
-Message-Id: <886008fc50ab6666b44b8e5ec32db5a7c4b1230f.1795116791.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v8 21/33] rtmutex: Continue the walk when the owner's top waiter changes lock
+Date: Thu, 19 Nov 2026 15:16:00 -0500
+Message-Id: <705d9352cc611ed8b744e80a75067f112ff1ef3d.1795116791.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
@@ -97,82 +97,95 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-sched_setattr() can change the parameters of a SCHED_DEADLINE task. The
-task keeps its runtime and its absolute deadline: the new parameters
-take effect at the next period. At the next wakeup, update_dl_entity()
-checks the runtime left against the new parameters.
+The chain walk stops at an owner whose top pi waiter is not the top
+waiter of the lock just walked. That lock then does not set the
+owner's priority, so there is nothing to pass on.
 
-For a constrained task, that check uses the density, dl_runtime /
-dl_deadline. Commit 2317d5f1c349 ("sched/deadline: Use deadline instead
-of period when calculating overflow") made dl_entity_overflow() compare
-with it: "We care about if the runtime can make its deadline, not its
-period." Commit 3effcb4247e7 ("sched/deadline: Use the revised wakeup
-rule for suspending constrained dl tasks") then cut the runtime of a
-constrained task that overflows to density * laxity. Both bound the
-runtime by dl_runtime only while the deadline is at most dl_deadline
-ahead.
+But the step before can change the owner's top pi waiter. It
+requeues a waiter whose priority dropped. The top pi waiter of the
+owner can then be a waiter on another lock. The owner's priority, or
+its deadline donor, changed. The walk still stops at it, and the next
+owner keeps the old ones.
 
-A change to a shorter dl_deadline breaks that. The old deadline can be
-farther ahead. The check then keeps more runtime than the new
-dl_runtime, or computes more. For example, take a task of 50ms every
-100ms with 49ms left. Changed to 8ms in 20ms every 100ms, it would wake
-with 39.6ms. It would then run far more than its new runtime in this
-period. Admission control already counts the new, smaller bandwidth. So
-other deadline tasks could miss their deadlines.
+O and M are SCHED_OTHER tasks. W and Z are SCHED_DEADLINE tasks. W
+has the earlier deadline. X is a SCHED_FIFO task:
 
-An implicit task is not affected. Its check compares with its
-bandwidth, which bounds the runtime for any deadline.
+   O         M                 W                                  Z             X
 
-Fix this by keeping no more than dl_runtime before the check, for a
-constrained task. A boosted task runs on the parameters of its donor,
-and is left alone. The runtime is signed and can be negative there, so
-compare it as signed.
+   locks L2  locks L1 and L1'
+                               blocks on L1'
+                                 M->dl.pi_se = &W->dl
+             blocks on L2
+               O->dl.pi_se = &W->dl
+                                                                  blocks on L1
+                               sched_setscheduler(SCHED_OTHER)
+                                 rt_mutex_adjust_pi(W)
+                                   M->dl.pi_se = &Z->dl
+                                   walk at M: L1' is not M's top
+                                     stops
+                                                                                blocks on L1'
+                                                                                  walk stops at M
+                               times out on L1'
+                                 not the top waiter: no walk
+                               exits
 
-The cases change_constrained_new_params and wake_constrained_new_params,
-added to deadline_bw_test later in this series, test this. The first
-changes a running task, the second a sleeping one. Both fail without
-this patch.
+O's next refill reads W's freed task_struct. With RT priorities
+only, O stays boosted to W's old priority until it unlocks L2.
+
+Remove this test. The next test already stops the walk when the
+owner's waiter is up to date. An out of date waiter is now requeued,
+and the walk goes on to the next owner.
+
+The cases pi_chain_top_moves and pi_chain_top_moves_rt, added to
+deadline_bw_test later in this series, test this. pi_chain_top_moves_rt
+fails without this patch and passes with it. pi_chain_top_moves also
+needs the previous patch.
 
 The Sashiko AI review of this series found this.
 
-Fixes: 2317d5f1c349 ("sched/deadline: Use deadline instead of period when calculating overflow")
-Fixes: 3effcb4247e7 ("sched/deadline: Use the revised wakeup rule for suspending constrained dl tasks")
+Fixes: 23f78d4a03c5 ("[PATCH] pi-futex: rt mutex core")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/deadline.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ kernel/locking/rtmutex.c | 24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 95db8afd8353..01497171919d 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -1468,6 +1468,25 @@ static void update_dl_entity(struct sched_dl_entity *dl_se)
- {
- 	struct rq *rq = rq_of_dl_se(dl_se);
- 
-+	/*
-+	 * The checks below compare the runtime left with the density,
-+	 * dl_runtime / dl_deadline. That bounds the runtime by dl_runtime
-+	 * only while the deadline is at most dl_deadline ahead. After a
-+	 * change to a shorter dl_deadline, the deadline can be farther
-+	 * ahead, and the runtime left larger than dl_runtime. A constrained
-+	 * task would then run more than dl_runtime in a period. Keep no
-+	 * more than dl_runtime.
+diff --git a/kernel/locking/rtmutex.c b/kernel/locking/rtmutex.c
+index c78dfe9c93fc..c06261259a56 100644
+--- a/kernel/locking/rtmutex.c
++++ b/kernel/locking/rtmutex.c
+@@ -821,23 +821,15 @@ static int __sched rt_mutex_adjust_prio_chain(struct task_struct *task,
+ 	 * Drop out, when the task has no waiters. Note,
+ 	 * top_waiter can be NULL, when we are in the deboosting
+ 	 * mode!
 +	 *
-+	 * An implicit task is checked against its bandwidth, which holds
-+	 * for any deadline. A boosted task runs on the parameters of its
-+	 * donor. Leave both alone.
-+	 *
-+	 * The runtime is signed, and can be negative here.
-+	 */
-+	if (!dl_is_implicit(dl_se) && !is_dl_boosted(dl_se) &&
-+	    dl_se->runtime > (s64)dl_se->dl_runtime)
-+		dl_se->runtime = dl_se->dl_runtime;
-+
- 	if (dl_time_before(dl_se->deadline, rq_clock(rq)) ||
- 	    dl_entity_overflow(dl_se, rq_clock(rq))) {
++	 * Do not compare top_waiter with the top pi waiter of the
++	 * task here. The previous step can have made a waiter on
++	 * another lock the top pi waiter of the task. The priority of
++	 * the task changed then, and the next owner must follow. The
++	 * test below tells whether there is something to pass on.
+ 	 */
+-	if (top_waiter) {
+-		if (!task_has_pi_waiters(task))
+-			goto out_unlock_pi;
+-		/*
+-		 * If deadlock detection is off, we stop here if we
+-		 * are not the top pi waiter of the task. If deadlock
+-		 * detection is enabled we continue, but stop the
+-		 * requeueing in the chain walk.
+-		 */
+-		if (top_waiter != task_top_pi_waiter(task)) {
+-			if (!detect_deadlock)
+-				goto out_unlock_pi;
+-			else
+-				requeue = false;
+-		}
+-	}
++	if (top_waiter && !task_has_pi_waiters(task))
++		goto out_unlock_pi;
  
+ 	/*
+ 	 * If the waiter priority is the same as the task priority
 -- 
 2.47.3
 
