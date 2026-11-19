@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795096185;
-	b=1z1egI69CQ+bCJimVULOmDHyGkuL+ZukMFIuNsxd9HaTx7tH216liv09L3af523RFDlG
-	 2kpaaJhLuyylrspFLpLoHaK7UWEZXq3WS6Z4Qinn0BFYCknBRnLYxK+2w3+cPKEFkOrhb
-	 KcsLll3FCkk3H3XjQdlFblOL3emwah34QQR9zk8LGNGgm+eRX7gGrORqSO+Y/ZPKtgMZG
-	 q23eTUaggh27jZLESIG16P0qCylU+OqvR7QNTL3kib4x0k5igYvpLgvKnKr3FFjMKt2y6
-	 oeY5FZwSfrEzfGtXl//kAA+UIdkoaPo9FUYisooTMQ6gqiJcPDrgNJE3rGBxE5k2lig==
+	t=1795096186;
+	b=QgQ9flOb/uAKUX5Xd21LSzJnPjKqYgbtM2VDI82Pa1qNzdfcv0P1DsbrRI/tjEu3wN/0
+	 3C2D/d/FjmUVAzDPjYMKzhqxS3udICA0C7bWyy1jG42Yce4x1Qv6di3cXOn2uHfsyJTyR
+	 Nl2VMImqCZ/Aymb0UtO+tu4B851RPuANhSOVXOSgR2SVkh4mYrOVkD6BGaSnfZiXPow5Z
+	 plk1i9gZ646iJMeqmMbG8BaDuZX2w89GresqZyVdZlg/y/ugZ61nJ1j7AceeHe27sdckd
+	 9+OFD7Iv4lMf+KYOxhVxD3DyOS89k780P9mzcXoLt6N+1j6Il9m0Laro/84hcamC1Bg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795096185;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795096186;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=2GDIvsu7zv8+pf1iUkWvntMzShMjZhVgxoA9fdCxHRA=;
-	b=5C0K/GGDYC96QXexcIjvXwt8uuZk9FC1BdaYR3YGTt3inW2NTvov9EGTUbIfF5t1XUSh
-	 g6B+tKEzCxC7YOCGrf9VzCa9GnDyAXtEsIikrXhGHNm8NftVbxaZYpDmu2i7POV2DDgPp
-	 35F9D74UV6LNdTeugj+gLmbo0Bi7Kd9YJ7ds+OERcFCSzdZv2pvw6ZeXecBVNs+ICSaXN
-	 enPTk4cZ/W1oj2mPNQ30lmgtEPXB+PLNTxYi/MfErAEmtJ+0aZsk5VvCjV7oDJDE+i91q
-	 uNgu0MfZX4jkZdl925E9V5C7XP2yHHfVN7pLd+srJcIh8Lj/CdtpRiAHgPqkAaPYfug==
+	bh=RpH3Eqg7iYrUnR+bT4B28VRSM1FxKzR8GEzsrCXC1us=;
+	b=KFyUd9M/YlFdjtMqhG9OmkT9tfzBTZdgDJpt7bv8SmAq3j9e6YjfNLGXaZoLBJhrUkt2
+	 X1pO51YJDUvU8aG7Zrzfw+7D59xAb1dGjKmRrHiA9SWTOat6GOlN5LTbjQyUrl4vadPUF
+	 h1PUjd/BnET6aFpswmimSUY9aMpjA29lQNLlfyg7Nj0PYvpxDUMDRw1zlbE46xUZOMAG5
+	 6z4Jzz3msbc7HJ7oyevOotzuLw1oyTrJJjzuSLgkpCSt2pwoOwkfQ8mteBFV2gu8xfiQH
+	 lgBRn2xh83Azzdb3o4wRjIjGW7FDKxHltF78/W89xZFLXSmb2/E/5/RPCKuUSaCnjnw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=giYbwbun;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=RMWfKBA4;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62241606A337;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF02D60A2614;
 	Thu, 19 Nov 2026 13:49:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 62241606A337
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF02D60A2614
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=giYbwbun
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=RMWfKBA4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
 	s=smtpout1; t=1795096184;
-	bh=2GDIvsu7zv8+pf1iUkWvntMzShMjZhVgxoA9fdCxHRA=;
+	bh=RpH3Eqg7iYrUnR+bT4B28VRSM1FxKzR8GEzsrCXC1us=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=giYbwbunNbe9ifK26sp25U2sulHu9xW0BZ2VNfb//JGrIMXy5zZ2t8TdSQVF7FiXP
-	 ZsR7REsIJZcwbbnIUKgBv9WA1tN5ueOwfbXL9K2gzHIZ9I5vgd4og1H5u16BJiHhtM
-	 U9fmiySkt0ORy9Kqwkt3A5GIT8yoyVyd7fIoLnSjPbH0UXSQSw42PlMEE3f1nN/Ga6
-	 mXPA/2l56cYQRjXs+TDeZedQVN+OC3KpMKgP3MAuEcgG5gh3wi6mPP/Rp/IqeNe5Y/
-	 WJQ8LN6VtTeHg1Awc1HPemt35ZLbMt0t3YONZaUWGgWw3uSnMkZXffl3uU04tcR5xH
-	 uXu2/O84uuztQ==
+	b=RMWfKBA4nGMb+GNjuzYdRrWuICJk8AFaw5hNkb3PUkT811bIEJ9ohGTpzAYAT1EKI
+	 siGFYPtSSHcqUOzZfNndTUBmMgaid0Zb91DiyzviGtNjud4FQjJFwufYCofCiljHhh
+	 kI/cTOX1ILJBnpb4x2RSRQjklbAiAoI51Dh+RwqcrFCryvjO8GDQH4lupOXsc97aY8
+	 nc71QWR/Lx0Ny0RPCYHjTlpy3XDNn5H61ZS56mXo1oeYpaWzG77MR87yHZMgH1epjI
+	 6XQu/LAflWI13aW2bQlt8ta1G8CLO5GvZGVydw/zZn+wO2jL+Z01RwHHPcYg4yMXeb
+	 LIINcyYl9Hxjw==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVfwS24gzzSbg;
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVfwS3QhpzSPX;
 	Thu, 19 Nov 2026 08:49:44 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
@@ -80,9 +80,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v3 04/17] sched/deadline: Do not divide by zero active CPUs of a root domain
-Date: Thu, 19 Nov 2026 08:49:27 -0500
-Message-Id: <46cf3d11435498c167e87c1e402c6ab2522f71ab.1795092090.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v3 05/17] sched/deadline: Refuse dl_server debugfs writes while the rq is offline
+Date: Thu, 19 Nov 2026 08:49:28 -0500
+Message-Id: <30870826885d7aa42b641d23701066e03b1a2b9b.1795092090.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795092090.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795092090.git.mathieu.desnoyers@efficios.com>
@@ -97,81 +97,62 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-__dl_sub() and __dl_add() divide by their cpus argument. Most callers
-pass dl_bw_cpus(), the number of active CPUs of a root domain. That
-number can be 0, and the division then traps.
+Commit 4043f5498416 ("sched/deadline: Reject debugfs dl_server writes
+for offline CPUs") refuses a write to a dl_server's runtime or period
+on an offline CPU. Its message says that such a write has no meaningful
+semantics.
 
-Commit daec57983670 ("sched/deadline: Reclaim bandwidth not used by dl
-tasks") added extra_bw, the bandwidth that deadline tasks can reclaim
-on a runqueue. A change of a root domain's total_bw is spread over the
-extra_bw of its active CPUs.
-
-During hotplug, a CPU sits in the default root domain, which can then
-have no active CPU. This lasts from the rebuild in
+It tests cpu_online(). But during hotplug the CPU is still online while
+it sits in the default root domain. This lasts from the rebuild in
 sched_cpu_deactivate() to the offline, and from the online to
-sched_cpu_activate(). A debugfs write to the runtime or period of its
-fair or ext server divides there. A write of the current value passes
-admission in the window. In 8-CPU VMs of v7.4-rc2, a loop of such writes
-oopses at the first offline and online:
+sched_cpu_activate(). That root domain does not count the server's
+bandwidth. A write in the window still goes through admission. With
+admission control off, it changes total_bw there. On v7.4-rc2, a write
+of the current value divides by zero in that window. The previous patch
+removes the division, not the write.
 
-  Oops: divide error: 0000 [#1] SMP NOPTI
-  RIP: 0010:dl_server_apply_params+0x335/0x380
-  Call Trace:
-   sched_server_write_common.isra.0+0x1c0/0x260
-   full_proxy_write+0x58/0x90
-   vfs_write+0xcb/0x550
+Fix this by testing rq->online instead. It is set under the runqueue
+lock when the CPU joins a root domain that counts it, after
+cpu_active() is set. Test cpu_active() too. On the way down, it is
+cleared before rq->online.
 
-By reading, two other paths would divide by zero:
-- inactive_task_timer(), for a task that left SCHED_DEADLINE or died,
-  if its CPU went offline.
-- sched_setattr(SCHED_DEADLINE) on a task asleep on an offline CPU,
-  with admission control off.
+A write now fails with EBUSY while the CPU goes offline or comes
+online, as a write on an offline CPU already does. Writes at any other
+time are unchanged.
 
-Fix this by changing total_bw alone when the root domain has no active
-CPU.
+Applied without the previous patch, this patch alone also stops the
+oops. The reproducer survives 20 rounds with no warning, in 3 VMs of 3.
 
-With this patch, the reproducer survives 20 rounds with no warning.
-
-Fixes: daec57983670 ("sched/deadline: Reclaim bandwidth not used by dl tasks")
+Fixes: d741f297bcea ("sched/fair: Fair server interface")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/deadline.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ kernel/sched/debug.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index dfae08625342..b614d5fc1a1a 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -189,18 +189,25 @@ void __dl_update(struct dl_bw *dl_b, s64 bw)
- 	}
- }
+diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
+index e6a3b516c703..ddb382df454b 100644
+--- a/kernel/sched/debug.c
++++ b/kernel/sched/debug.c
+@@ -410,7 +410,16 @@ static ssize_t sched_server_write_common(struct file *filp, const char __user *u
+ 			return  -EINVAL;
+ 		}
  
-+/*
-+ * Spread a change of total_bw over the extra_bw of the active CPUs of the
-+ * root domain. @cpus is their number. With no active CPU, as can happen
-+ * during CPU hotplug, change total_bw alone.
-+ */
- static inline
- void __dl_sub(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
- {
- 	dl_b->total_bw -= tsk_bw;
--	__dl_update(dl_b, (s32)tsk_bw / cpus);
-+	if (cpus)
-+		__dl_update(dl_b, (s32)tsk_bw / cpus);
- }
+-		if (!cpu_online(cpu_of(rq)))
++		/*
++		 * Refuse the write while the runqueue is offline. This
++		 * includes the windows where the CPU goes offline or comes
++		 * online. The root domain then does not count the server's
++		 * bandwidth, and may have no active CPU. rq->online is set
++		 * under this lock when the CPU joins a root domain that
++		 * counts it. cpu_active() is set before that. On the way
++		 * down, cpu_active() is cleared first.
++		 */
++		if (!rq->online || !cpu_active(cpu_of(rq)))
+ 			return -EBUSY;
  
- static inline
- void __dl_add(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
- {
- 	dl_b->total_bw += tsk_bw;
--	__dl_update(dl_b, -((s32)tsk_bw / cpus));
-+	if (cpus)
-+		__dl_update(dl_b, -((s32)tsk_bw / cpus));
- }
- 
- static inline bool
+ 		update_rq_clock(rq);
 -- 
 2.47.3
 
