@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795119386;
-	b=WAeiawhVzftp8U6+emZRV7EUDwUexRoEvSQ7VBorW5i5mXmZ74GZvFTwUu+9UTkFgeAj
-	 PmikgDE/ZICdrv1QPQGYgC2r0TavmuHVyCgn+hNI96g6+F4uKvEov4hqfY9qsExe7wKId
-	 vvnXbEyGjBRB5kQmqkJ2UrDmG0ZBRTndeTaDFl5Z2U4VXnt0oQE/K2x4RWwEec6Ty6KiX
-	 G2wrBhqKEJWbVjuRRSOalEkVlW1tZ+NMy2bGwpW8pE6EQ42WYsrvgv3Dc7BaJt5iJp86v
-	 Si453ARKEMAvSYqbs3wom/g2rrqDVvixM4EQKoDeeRHEQHFpl6TcVqLvJxv1nxVT+3w==
+	b=iPWfjZLZKecjF9kwe5dOdHQNfwPx0m0upOsqxHXS/jKhzVwywTOHnlKVbVhUTzRA61iX
+	 IX4wtOw9hvCVooJ+qy6upcOASphr7oUR+82IkAIIa/y5OdqdBHUF0ccuMABV0iGRcUAig
+	 qog/TA5tGVwrTX8NzkUCfrVXl7foOwz+8l62LDwfe2tW2/SyoTuedN3UUXxekYtQGG4e6
+	 BlG2v6H9cfBxiGoHMaZMv6HUp+RHX/vmSvuPtvpCahyCqoUAqgLibCi+GlVoIr1GU9JFs
+	 SoTdnwDcnDAypkmnoIBTAG2rqYiBJvfNGnOD0MWMRd3w7ldoeTMFPXocQtNahxw+rzg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795119386;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=ARZwEE87GgaUUX1mVW8A1EuEtfYACZcNUNdvQu1+hTQ=;
-	b=knYZe5uopAJ4c2XHkEXG/KpOlBOsskDGGcjBA7WRlJXI+3f6PbihvyPojy4qBusYlI12
-	 vRiJE5ZV62t21Eh0HZoZ3LubEyR2uhsZj72m1a4/kG/pQ94KOz9w6u+uOT4FyXnuqYUaS
-	 T+gl1j7xFNV+14XP5w+LxiD85AKAKqrTXkKEmpeOerCWPtM3HsJpCjZP6oFQeQHwaxNCR
-	 UlUCi/JvzyJpzqp0UayEVmN8AWhRfk9unP/h7ECVJeTVvo9BRwcUyJQIoAWpVvmpbrY7v
-	 7dR6xYIvBxUhKq6fdzQ6yK6nDlfGQjaUhuH0lTcKV8+byfoYrIt662RN5B++i4jmxEA==
+	bh=/JW7ukIhFZWXfz6oTuWb9VIiPUZc6j7n8rYBHLzqbIs=;
+	b=Isi5mLqu40mITuCKV0zDyGcf0Qs/+yRa5mcb4qrL5mDmOL1JFfGn4C27cS118Y+BmX9u
+	 S6RhwlJy7jXdPSvR+XN4ja/R9IlB6eEbMXDBAPNM4qrg7D6PayKHpvbIcZQryjeDFSEwn
+	 o8eYFhCw5B1wSj/hLOXnN4OX1CPW61bOGU7ng5Sqrji5BrOvqHqkxSv1IJmO0mgm2TUSu
+	 EtDvk1bJjG1q/HA/L0LMYVlHVszzpCrJQjl+i2yOztKdtYRFY5lz9MJwnYVjBcU8P4Scx
+	 Gr2j5rbtBSzynaBybNjWY4u8iqVI+FlTs1l+7pdW0gTd5c4QbJSyFg59sqJR64lWZ7g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=tGA39KpY;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=DmXJJNaW;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8EA060A262A;
-	Thu, 19 Nov 2026 20:16:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E8EA060A262A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32BD260A2638;
+	Thu, 19 Nov 2026 20:16:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 32BD260A2638
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=tGA39KpY
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=DmXJJNaW
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795119378;
-	bh=ARZwEE87GgaUUX1mVW8A1EuEtfYACZcNUNdvQu1+hTQ=;
+	s=smtpout1; t=1795119379;
+	bh=/JW7ukIhFZWXfz6oTuWb9VIiPUZc6j7n8rYBHLzqbIs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=tGA39KpYSDcett0nf6NcBz0kZRzdBTiO8LZ6fluIvu0DpW0qDRCTZE5ywWWSbKcyo
-	 iQ5jLrNEDzzPn9lkGLSn+OeOAd+w16fF+R13uyI8EHk+UGdemMuxOG5snWaJCW/BQu
-	 tFtPI9BwBCifM1lEDjgu9iMmyluM5V2wPAbv+LaZoNjc1V5Y5AQHc0XdweNMtpLu2a
-	 pk1cxqfwTzP094pDe+0LO3XG3J/VJVn+gnGX1eBYM/zFXTdjjhol3Ij95/NDPK8OEj
-	 CzBNt66mc+QIomcMVQH/+bg0wu6jN+1bAq3U3uUQTZhMy1rZYEejhSU/Fmez4yZ6jn
-	 8j3AmXSdGEF2Q==
+	b=DmXJJNaWxCei/9U220KLHtq4tgS3BMTaWO8R2So4PcI1vNyjaQLh3T8kQrSYtB49+
+	 Cs8gqzOIZiBlyA/D54IIo0zaM4uJGLDuAAzen/AAvZqXAMGgyC9cslSIRp8kaWtrp1
+	 CAC/+V4bcCnadPiogBiFWsJ7CdHkaAovehEIehb7tRrUNtZc4rbPc8U93ruGlKyes4
+	 m/8wQlI1OdeaKmm2iZHD3bHa6fH2b69Q3bkVtZo47GTrZRtMLquZJWvkg8KNS8euw3
+	 8ADz0+AbEJXfI70L7i3xDbqCJz96J4bfVvqYHv4P9GW+uBSQ9Xb9kYnT2phUBRlVWk
+	 nXmRVZ9uvL4dw==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVV5jLXzSrH;
-	Thu, 19 Nov 2026 15:16:18 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jVqVW2bGTzS4l;
+	Thu, 19 Nov 2026 15:16:19 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v8 07/33] sched/deadline: Move a task's bandwidth only where room was made
-Date: Thu, 19 Nov 2026 15:15:46 -0500
-Message-Id: <d8af8e266437a8056a55c60a131eea23faa11b8d.1795116790.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v8 10/33] cgroup/cpuset: Give back the bandwidth an attach did not move
+Date: Thu, 19 Nov 2026 15:15:49 -0500
+Message-Id: <16b073635c20326b883c0b9eea8ce9a6a1ddd97f.1795116790.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795116790.git.mathieu.desnoyers@efficios.com>
@@ -97,185 +97,192 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit 7f51412a415d ("sched/deadline: Fix bandwidth check/update when
-migrating tasks between exclusive cpusets") moves a deadline task's
-bandwidth in two halves. cpuset_can_attach() reserves it in the
-destination root domain. set_cpus_allowed_dl() then frees it in the
-source, when the task's affinity changes. Its comment relies on the
-first half: "We already made space for us in the destination domain".
+Commit 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach()
+fails") reserves the bandwidth of an attach as one sum.
+cpuset_can_attach() adds up the bandwidth of the deadline tasks it
+moves. Once all tasks pass their checks, it reserves the sum in the
+destination root domain. If another controller refuses the attach,
+cpuset_cancel_attach() frees the sum. If the attach goes through, the
+move of each task uses its part of the sum.
 
-But set_cpus_allowed_dl() runs on every change of affinity. It frees the
-bandwidth whenever the new mask leaves the task's root domain, with or
-without a reservation. sched_setaffinity() gets there too, if the task's
-cpuset spans two root domains. With isolcpus="domain", any cpuset that
-is not a partition root can hold isolated CPUs and other CPUs, which are
-in two root domains. With admission control on, __sched_setaffinity()
-refuses such a mask. With sched_rt_runtime_us at -1, nothing refuses it.
-The bandwidth is then freed in the source and added nowhere: no root
-domain counts it any more. The destination would underflow when the task
-leaves.
+But a task can leave SCHED_DEADLINE between cpuset_can_attach() and
+cpuset_attach(). The previous patch makes sched_setattr() wait for the
+attach. sysrq-n does not wait: it cannot sleep. The task then moves no
+bandwidth. Its part of the reservation stays in the destination's
+total_bw, until the next rebuild of the accounting. The destination can
+then refuse deadline tasks that would fit.
 
-Fix this by flagging the affinity changes that come with a reservation,
-as SCA_DL_BW_RESERVED. cpuset_attach_task() sets it, through the new
-set_cpus_allowed_bw_reserved(). set_cpus_allowed_dl() moves the
-bandwidth only with the flag. Without it, the bandwidth stays where it
-is counted, until the next rebuild of the accounting counts it anew.
-The flag also skips the early exit of __set_cpus_allowed_ptr_locked()
-for a mask that does not change. The task may already have that mask
-from a change that moved no bandwidth, such as a sched_setaffinity()
-without admission control.
+Fix this by keeping the tally of what the attach moves, in
+sum_moved_dl_bw. Once the attach is through, give back what it did not
+move.
 
-The attach still flags a task that sched_setattr() made a deadline task
-after cpuset_can_attach(), with nothing reserved for it. "sched: Make
-deadline policy and affinity changes wait for a cpuset attach" fixes
-that.
+set_cpus_allowed_dl() decides the move under the runqueue lock.
+cpuset_attach_task() does not hold it. So the tally counts what
+set_cpus_allowed_dl() reports in the affinity context.
 
-No case of deadline_bw_test fails before this patch and passes with it.
-no_admission_affinity_moves, added later in this series, covers this
-path together with "sched/deadline: Move a task's bandwidth to the root
-domain it runs in".
+The random_mix case, added to deadline_bw_test later in this series,
+found the bug. It could no longer lower a fair server in a partition
+root with no room left.
 
-Fixes: 7f51412a415d ("sched/deadline: Fix bandwidth check/update when migrating tasks between exclusive cpusets")
+The move_normalized case, added with that test, fires sysrq-n while a
+process with a sleeping deadline thread of 30% moves into a one-CPU
+partition root. Without this patch, the partition kept the 30% in 3
+guests of 3. It admitted 6 tasks of 10% where it had room for 9.
+
+Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- include/linux/sched.h   |  2 ++
- kernel/cgroup/cpuset.c  | 13 ++++++++++++-
- kernel/sched/core.c     | 26 +++++++++++++++++++++++++-
- kernel/sched/deadline.c | 14 +++++++++-----
- kernel/sched/sched.h    |  2 ++
- 5 files changed, 50 insertions(+), 7 deletions(-)
+ include/linux/sched.h           |  3 ++-
+ kernel/cgroup/cpuset-internal.h |  2 ++
+ kernel/cgroup/cpuset.c          | 30 +++++++++++++++++++++++++-----
+ kernel/sched/core.c             | 12 ++++++++----
+ kernel/sched/deadline.c         |  4 ++++
+ kernel/sched/sched.h            |  2 ++
+ 6 files changed, 43 insertions(+), 10 deletions(-)
 
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 4098b4e0f67e..e88616448b85 100644
+index e88616448b85..81a8d80a1aee 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1966,6 +1966,8 @@ extern void set_cpus_allowed_force(struct task_struct *p, const struct cpumask *
-  * Return: zero if successful, or a negative error code
+@@ -1967,7 +1967,8 @@ extern void set_cpus_allowed_force(struct task_struct *p, const struct cpumask *
   */
  extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
-+extern int set_cpus_allowed_bw_reserved(struct task_struct *p,
-+					const struct cpumask *new_mask);
+ extern int set_cpus_allowed_bw_reserved(struct task_struct *p,
+-					const struct cpumask *new_mask);
++					const struct cpumask *new_mask,
++					u64 *moved);
  extern int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node);
  extern void release_user_cpus_ptr(struct task_struct *p);
  extern int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask);
+diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
+index bf847953c78d..93aa46d76b04 100644
+--- a/kernel/cgroup/cpuset-internal.h
++++ b/kernel/cgroup/cpuset-internal.h
+@@ -170,6 +170,8 @@ struct cpuset {
+ 	int nr_migrate_dl_tasks;
+ 	/* DL bandwidth that needs destination reservation for this attach. */
+ 	u64 sum_migrate_dl_bw;
++	/* The part of sum_migrate_dl_bw moved. The rest is given back. */
++	u64 sum_moved_dl_bw;
+ 	/*
+ 	 * CPU used for temporary DL bandwidth allocation during attach;
+ 	 * -1 if no DL bandwidth was allocated in the current attach.
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7628cf77bdfd..194a438e25c3 100644
+index ce9c57617f49..2f39c3d12550 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -3261,6 +3261,7 @@ static cpumask_var_t cpus_attach;
- 
- static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
- {
-+	bool reserved = false;
- 	struct mm_struct *mm;
- 
- 	lockdep_assert_cpuset_lock_held();
-@@ -3270,11 +3271,21 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
- 	else
- 		cpumask_andnot(cpus_attach, task_cpu_possible_mask(task),
- 			       subpartitions_cpus);
-+	/*
-+	 * cpuset_reserve_dl_bw() made room in @cs for the bandwidth of the
-+	 * deadline tasks that cpuset_can_attach() counted. Flag the move, so
-+	 * that the bandwidth of this task moves with it.
-+	 */
-+	if (dl_task(task) && dl_task_needs_bw_move(task, cs->effective_cpus))
-+		reserved = true;
- 	/*
+@@ -3140,10 +3140,24 @@ static void clear_attach_data(struct llist_head *head, bool cancel)
+ 	llist_for_each_entry_safe(cs, next, lnode, attach_node) {
+ 		init_llist_node(&cs->attach_node);
+ 		if (cs->nr_migrate_dl_tasks) {
+-			if (cancel && cs->dl_bw_cpu >= 0)
+-				dl_bw_free(cs->dl_bw_cpu, cs->sum_migrate_dl_bw);
++			/*
++			 * Give back the bandwidth the attach did not move.
++			 * If the attach is cancelled, that is all of the
++			 * reservation. Otherwise, it is what no move used,
++			 * such as the part for a task that left
++			 * SCHED_DEADLINE. The class it left releases its own
++			 * bandwidth, from the root domain that counts it.
++			 */
++			if (cs->dl_bw_cpu >= 0) {
++				u64 bw = cancel ? cs->sum_migrate_dl_bw :
++					 cs->sum_migrate_dl_bw - cs->sum_moved_dl_bw;
++
++				if (bw)
++					dl_bw_free(cs->dl_bw_cpu, bw);
++			}
+ 			cs->nr_migrate_dl_tasks = 0;
+ 			cs->sum_migrate_dl_bw = 0;
++			cs->sum_moved_dl_bw = 0;
+ 			cs->dl_bw_cpu = -1;
+ 		}
+ 	}
+@@ -3303,10 +3317,16 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
  	 * can_attach beforehand should guarantee that this doesn't
  	 * fail.  TODO: have a better way to handle failure here
  	 */
--	WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
-+	if (reserved)
-+		WARN_ON_ONCE(set_cpus_allowed_bw_reserved(task, cpus_attach));
-+	else
-+		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
+-	if (reserved)
+-		WARN_ON_ONCE(set_cpus_allowed_bw_reserved(task, cpus_attach));
+-	else
++	if (reserved) {
++		u64 moved;
++
++		/* Count what the move reports it moved. */
++		WARN_ON_ONCE(set_cpus_allowed_bw_reserved(task, cpus_attach,
++							  &moved));
++		cs->sum_moved_dl_bw += moved;
++	} else {
+ 		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
++	}
  
  	if (cpuset_v2() && !attach_ctx.mems_updated)
  		return;
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 32fe889e02fb..bd5f3dfa50ac 100644
+index c0a714dde425..fff2725a4cd5 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -3207,7 +3207,15 @@ static int __set_cpus_allowed_ptr_locked(struct task_struct *p,
- 	}
- 
- 	if (!(ctx->flags & SCA_MIGRATE_ENABLE)) {
--		if (cpumask_equal(&p->cpus_mask, ctx->new_mask)) {
-+		/*
-+		 * A move with SCA_DL_BW_RESERVED must reach
-+		 * set_cpus_allowed_dl(), even if the mask does not change.
-+		 * @p may have this mask from a change that moved no
-+		 * bandwidth, such as sched_setaffinity() without admission
-+		 * control.
-+		 */
-+		if (cpumask_equal(&p->cpus_mask, ctx->new_mask) &&
-+		    !(ctx->flags & SCA_DL_BW_RESERVED)) {
- 			if (ctx->flags & SCA_USER)
- 				swap(p->user_cpus_ptr, ctx->user_mask);
- 			goto out;
-@@ -3280,6 +3288,22 @@ int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask)
- }
- EXPORT_SYMBOL_GPL(set_cpus_allowed_ptr);
- 
-+/*
-+ * Like set_cpus_allowed_ptr(), for a caller that has made room for the
-+ * deadline bandwidth of @p in the root domain of @new_mask. Move that
-+ * bandwidth there with @p. Return 0 on success, or a negative error
-+ * code.
-+ */
-+int set_cpus_allowed_bw_reserved(struct task_struct *p, const struct cpumask *new_mask)
-+{
-+	struct affinity_context ac = {
-+		.new_mask  = new_mask,
-+		.flags     = SCA_DL_BW_RESERVED,
-+	};
-+
-+	return __set_cpus_allowed_ptr(p, &ac);
-+}
-+
+@@ -3301,17 +3301,21 @@ EXPORT_SYMBOL_GPL(set_cpus_allowed_ptr);
  /*
-  * Change a given task's CPU affinity to the intersection of its current
-  * affinity mask and @subset_mask, writing the resulting mask to @new_mask.
+  * Like set_cpus_allowed_ptr(), for a caller that has made room for the
+  * deadline bandwidth of @p in the root domain of @new_mask. Move that
+- * bandwidth there with @p. Return 0 on success, or a negative error
+- * code.
++ * bandwidth there with @p, and set @moved to the bandwidth moved, 0
++ * if none. Return 0 on success, or a negative error code.
+  */
+-int set_cpus_allowed_bw_reserved(struct task_struct *p, const struct cpumask *new_mask)
++int set_cpus_allowed_bw_reserved(struct task_struct *p,
++				 const struct cpumask *new_mask, u64 *moved)
+ {
+ 	struct affinity_context ac = {
+ 		.new_mask  = new_mask,
+ 		.flags     = SCA_DL_BW_RESERVED,
+ 	};
++	int ret;
+ 
+-	return __set_cpus_allowed_ptr(p, &ac);
++	ret = __set_cpus_allowed_ptr(p, &ac);
++	*moved = ac.dl_bw_moved;
++	return ret;
+ }
+ 
+ /*
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 40d87cd31d33..56d1f6636edc 100644
+index 56d1f6636edc..317367daa87d 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -3612,12 +3612,16 @@ static void set_cpus_allowed_dl(struct task_struct *p,
- 	WARN_ON_ONCE(!dl_task(p));
- 
- 	/*
--	 * Migrating a SCHED_DEADLINE task between exclusive
--	 * cpusets (different root_domains) entails a bandwidth
--	 * update. We already made space for us in the destination
--	 * domain (see cpuset_can_attach()).
-+	 * Migrating a SCHED_DEADLINE task between exclusive cpusets
-+	 * (different root_domains) entails a bandwidth update. Move the
-+	 * bandwidth only if the caller made room for it in the destination,
-+	 * as SCA_DL_BW_RESERVED says. Only cpuset_attach_task() sets it.
-+	 * Otherwise, the bandwidth stays where it is counted, until the next
-+	 * rebuild of the accounting. Moving it without room would leave no
-+	 * root domain counting it.
+@@ -3619,6 +3619,9 @@ static void set_cpus_allowed_dl(struct task_struct *p,
+ 	 * Otherwise, the bandwidth stays where it is counted, until the next
+ 	 * rebuild of the accounting. Moving it without room would leave no
+ 	 * root domain counting it.
++	 *
++	 * Report in @ctx the bandwidth moved. The caller made its own test
++	 * without the runqueue lock, so it must count only what this reports.
  	 */
--	if (dl_task_needs_bw_move(p, ctx->new_mask)) {
-+	if ((ctx->flags & SCA_DL_BW_RESERVED) &&
-+	    dl_task_needs_bw_move(p, ctx->new_mask)) {
- 		unsigned int src_cpu = dl_task_root_domain_cpu(p);
- 		struct dl_bw *src_dl_b = &cpu_rq(src_cpu)->rd->dl_bw;
- 		unsigned int cpu;
+ 	if ((ctx->flags & SCA_DL_BW_RESERVED) &&
+ 	    dl_task_needs_bw_move(p, ctx->new_mask)) {
+@@ -3647,6 +3650,7 @@ static void set_cpus_allowed_dl(struct task_struct *p,
+ 		cpu = cpumask_any_and(ctx->new_mask, cpu_active_mask);
+ 		p->dl.dl_bw_cpu = cpu < nr_cpu_ids ? (int)cpu : -1;
+ 		p->dl.dl_bw_gen = dl_bw_gen;
++		ctx->dl_bw_moved = p->dl.dl_bw;
+ 	}
+ 
+ 	set_cpus_allowed_common(p, ctx);
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 20ad13f388cb..61c73c7d3f27 100644
+index f4cd35811b96..65fc17909d56 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2973,6 +2973,8 @@ extern struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf);
- #define SCA_MIGRATE_ENABLE	0x04
- #define SCA_USER		0x08
- #define SCA_DL_CHECK		0x10
-+/* The caller made room for the deadline bandwidth in the new root domain. */
-+#define SCA_DL_BW_RESERVED	0x20
- 
- extern void update_group_capacity(struct sched_domain *sd, int cpu);
+@@ -2678,6 +2678,8 @@ extern const u32		sched_prio_to_wmult[40];
+ struct affinity_context {
+ 	const struct cpumask	*new_mask;
+ 	struct cpumask		*user_mask;
++	/* Out: the deadline bandwidth moved to the new root domain. */
++	u64			dl_bw_moved;
+ 	unsigned int		flags;
+ };
  
 -- 
 2.47.3
