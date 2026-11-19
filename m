@@ -1,55 +1,55 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795117449;
-	b=FrlDsEGBPnJZ3+4oMc4hQvv3cjqaq8TKInw8o1Qo1ycK+SzoHYHFqY9oYDZp2/FgSeeL
-	 Pmw1XPJcNqrmiE87ksvlwbjH5AC+M4sk9Dk8Djz9SXHaMA3ffhQf/w+ojLdTQzmrdIqy7
-	 iaGiq4w80HpVPHMQuEQ08lreu9VshP5j13aRUJZ6M3Ym1UtZji/vpvqFx9uLABXGYGsf9
-	 iisCwxQfpv+MjlCmsp4LpOw4dhV7c0PXVlJscV2JXe87O8VsL6CHoDqpzW4EoCpkgD0NB
-	 Eob5no5Xca/Staf18CZr3+u3RhXvAYuCC9BxqD/3OTJGeeSejBg39/fWio7b6ow1kiA==
+	t=1795117477;
+	b=Oeg588gl010H/y6A2n6rde6mu79Fk5oIVz4HleXD16GQicsHfy/OmOz+okXlz6zVo6Q0
+	 60v0PNTNPHMsfh/NJ6gysnTmj+FmA5hUcTWZNAULLmJGq2IlJo4CsamrBLfVrHYtC1tq8
+	 vPtt7jdubaO+7kqNvs29B4b+R3h7ZAkX/lpHM2E7fT/OzaE7G2TsUwe+5f9a9iefYxYu3
+	 YL7v0ESdRz0G/i6C3gpLcavPO7GJYLdAyaunwwpFN90kXTDQ62F2sW1JuPQflue8Ju7Za
+	 LXx18HV0nuTbR05WQWWk24a5l4MjHLfsQZWGTie07WIg9AuEW3a5SGfFu4HCR/xDtoA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795117449;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795117477;
 	h=Received:DKIM-Signature:Received:X-Forwarded-Encrypted:
 	 X-Gm-Message-State:X-Received:MIME-Version:References:In-Reply-To:
 	 From:Date:X-Gmail-Original-Message-ID:X-Gm-Features:Message-ID:
 	 Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=sB1Pq7vBNntqu94r/2oUTzxPCprX1DSImM5jhZ6L7Ys=;
-	b=D5sWk+7iNP+pgSQOqIozgJfWduU/3FFum1uGxKKsDfjUv+mc9pM12odgjwLSDs2nwTsW
-	 a65hFkgqNRUg9Va+b+UEzVm1jVWu4DRHyjiawdbewN1JRMsc9VI5xlVB8qwU40sr33ACG
-	 qF5WdDXl6fLG1vpNicLbH49E67tLTnT0/yXdp0qoggl9JqII17PUUdGyTtKpTt1rgqjOh
-	 46cmYU8mZyPAOxxV+k/y6mmaq2PCByCWZ75SR8YocAc+4HHmQ2FZtQZKuQ13gdYflFrlo
-	 rQlSGDdicLCgchRw/Yl/pTlFAS/jKm8Rzs86ZLsYeb8GbREDU/ajCfa30jIEcctzYQQ==
+	bh=YKyrivJzo+Mben9cmzx8JhnXyAay12IuEg5j9gR3E6E=;
+	b=EovtJLn3WMwpnRgCN/y5pSAgzyDm0HYMHWbNL/6+0Rd/hclTfKT2Uzo6nw+qPmmbHf0O
+	 SXW9nghwPXlduGDhnRaD1+oWWl1Ao7vIwjEahdcq+GWYar1f0iAGJpqJK+n+SoIVJwLsm
+	 de4gqHIPgC0QMxr/OKBXqix+LKbrcNe/ROiLNRW++Z8GGh13u93ug9q34JTAC2tPGs067
+	 Tws6wipGzSvhYOPl/WeE9QLtJTe9WjvcdHoBlrUk6f/HxyOQ6BXqY06XYsK8fAto7y75a
+	 9fJT3bH/Ve583+nBWge6qvoALx/05ewXcfBZSsWuQCqiv6TV/8fCDCgVRSMIqLgdCdg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IeVLrVCS;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OaoXci3l;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D809A606A333
-	for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 19:44:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAE73606A32C
+	for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 19:44:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IeVLrVCS
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58AAD1F0092A
-	for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 19:44:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=OaoXci3l
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6FE31F0092A
+	for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 19:44:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795117449;
-	bh=sB1Pq7vBNntqu94r/2oUTzxPCprX1DSImM5jhZ6L7Ys=;
+	s=k20260515; t=1795117477;
+	bh=YKyrivJzo+Mben9cmzx8JhnXyAay12IuEg5j9gR3E6E=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc;
-	b=IeVLrVCSsRPiQX0drUz2UWM7wWQUoOv9UhM9eXUGEnnoMcl+sQW+qiCun3+CTmWkV
-	 mi/z8zorQ0ZxXwChyn2aP6ccRSaXE9uwamxIHeos9YGbYyFT2rbjndXO694GPBly+2
-	 6KuZK6TJIwcGzxnyatmp98KHy8TPz+7rfIzZRNZp0T5Li9IYVmSLsp8gOT9puZ22bv
-	 xvd0gn6xaYu+9VYtSV98kfDQkkgDxi0n63CKvmRsbGvvKr9aiBgR8OVAiNJmkLOF0O
-	 2WDCxDrm02ztgXhsgGUGkmjZPeUM+3m4wl+RxhVKX+MYCKfabM6JTsL9CTVKC4O29a
-	 EBOJBLo2oZtzA==
-Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-94962d80d34so10172385a.2
-        for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 11:44:09 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AL+hErG3XgtB01bq09Ppihmd2VL5m0sGqjJGcnlHenJAry75aN0Jnb5GIxd5audbQpi3hHvXyxZU4+1l@vger.kernel.org
-X-Gm-Message-State: APuU4Z8qp0mOxgacouEqell9sl2HZkgyk68min/c68T64lgFlXh8K4Hg
-	e+KNQvmiUk2rXdnDjGgtiVFhIpJTVb1uXNzG61puzgNhRDl1onAMLJyhEjAyzqprJYgkpJgCkEt
-	79E0wfr6j/hUc+cWVoY4fiqMDm9ENfbM=
-X-Received: by 2002:a05:620a:130d:b0:943:f301:49b9 with SMTP id
- af79cd13be357-949bab32ac3mr114181385a.53.1795117448550; Thu, 19 Nov 2026
- 11:44:08 -0800 (PST)
+	b=OaoXci3lHVzfeCba3lln8uF7Qn9l96givMQbGbGKWNk7T3kABm78qlP4MdS4F2Fqu
+	 /Y4lzfYPSQbPYX8HLaFPQqkRqRinSsLy7Vpz45XPcYOzATFoPJpOHNHjfGpSDDYrjj
+	 TffPUltbSp9ZowtNe2jRuvCW2Qz4JzGn+hjouog7Cs7/mbtsW70Jxv9+lU57+sQkzd
+	 CZ46yF4bryVojOPkVGe4AUHNOQlOW3G6NZ+jU3PO+JE90rMbrSU1GNBfzixhvtYMey
+	 mfzINn1iW9Q9zHeH7kun39HuPeDfujI6kZnHIzb3UjSnlox3D4jA+qKJJQt7/nWmzG
+	 KSVcUcLVqnyGw==
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-93a40a9a01aso166891885a.0
+        for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 11:44:37 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AL+hErHfPoLU1yJdWeQmGu6v+A53BQjXBRWxykpxDk3pbnEIQuantuXx3ZjjmjP4kEz1KzSQrWiuz602@vger.kernel.org
+X-Gm-Message-State: APuU4Z+dF5h+eEd8NmZJgeRKJ4AOzNG7THnTB2NxGWgemQCRalC1PxRu
+	B97fqgVBj1VyvbWe8VG/5P6PFXCUHVR2L/2l5T4dZ3x2TUSc/9elQvH4e2fNCexO41qClxYQ8Hv
+	YAdMpHDh9lpMHaACULFiqiMuLRJtPIMw=
+X-Received: by 2002:a05:620a:261d:b0:93e:c12d:4ec7 with SMTP id
+ af79cd13be357-949b3841debmr323824085a.39.1795117477060; Thu, 19 Nov 2026
+ 11:44:37 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,15 +59,14 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com> <20261119-mglru-fg-v5-2-9eee2fe97a2d@tencent.com>
-In-Reply-To: <20261119-mglru-fg-v5-2-9eee2fe97a2d@tencent.com>
+References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com> <20261119-mglru-fg-v5-3-9eee2fe97a2d@tencent.com>
+In-Reply-To: <20261119-mglru-fg-v5-3-9eee2fe97a2d@tencent.com>
 From: Barry Song <baohua@kernel.org>
-Date: Fri, 20 Nov 2026 03:43:57 +0800
-X-Gmail-Original-Message-ID: <CAGsJ_4z93rWEzqAQ_sWWVKbmQ5M3qjxX4o_qYzeX3xs+=2V8yA@mail.gmail.com>
-X-Gm-Features: AclHuK83S9SvqTl7DWMa7lyKfrDc7jrgO_opWySalBDGVE3ZIlzAIZT17fPF3ZA
-Message-ID: <CAGsJ_4z93rWEzqAQ_sWWVKbmQ5M3qjxX4o_qYzeX3xs+=2V8yA@mail.gmail.com>
-Subject: Re: [PATCH v5 02/17] mm/memcontrol: allow update of LRU statistic
- without holding LRU lock
+Date: Fri, 20 Nov 2026 03:44:24 +0800
+X-Gmail-Original-Message-ID: <CAGsJ_4xXdPsnHFX6SUff_1vbsEmGCHdZcXAmOumiN8EMar+KAA@mail.gmail.com>
+X-Gm-Features: AclHuK_KKF5P4wFEq4Ot8gOVbDoJlPrF_Qs2r1floMy82S2ahYTVnc8-alAnTWA
+Message-ID: <CAGsJ_4xXdPsnHFX6SUff_1vbsEmGCHdZcXAmOumiN8EMar+KAA@mail.gmail.com>
+Subject: Re: [PATCH v5 03/17] mm/mglru: make generation page counters atomic
 To: kasong@tencent.com
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
 	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
@@ -100,11 +99,12 @@ On Thu, Nov 19, 2026 at 5:03=E2=80=AFAM Kairui Song via B4 Relay
 >
 > From: Kairui Song <kasong@tencent.com>
 >
-> To enable moving file pages in folio_mark_accessed directly and lazily
-> for MGLRU, allow updating the LRU statistic atomically without holding a
-> lock. It may cause temporary counter underflow, which should be fine as
-> the counter is eventually consistent and only serves as an estimate.
+> No feature change, convert them to atomic so we can update them without
+> holding the LRU lock. A temporary underflow is fine: readers clamp a
+> negative value to zero, and the counters only need to be eventually
+> consistent.
 >
+> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 
 LGTM,
@@ -112,5 +112,8 @@ LGTM,
 Reviewed-by: Barry Song <baohua@kernel.org>
 
 > ---
->  include/linux/mm_inline.h | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+>  include/linux/mm_inline.h |  6 ++----
+>  include/linux/mmzone.h    |  2 +-
+>  mm/vmscan.c               | 26 +++++++++++++-------------
+>  mm/vmscan.h               |  2 +-
+>  4 files changed, 17 insertions(+), 19 deletions(-)
