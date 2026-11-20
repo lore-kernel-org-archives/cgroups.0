@@ -1,101 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.44
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795200818;
-	b=HUAYLQJ/YUYjWbOTOMoxOqYzruo+XuO5ptPqpawiB3ep0W/wjPzqYH3Gk36n9yDRNbxY
-	 6X7hiYbuvCGU9FJ5T+05ozk244qC1CQrXEJSDnwZV1V9fOlOPdx6UgrruPg1PsEyRgtVR
-	 gcoBSqKAku4QvHLsulcyO/tNgrQ2EA+eP/Vlmuw4Y7EIX60GyGekoDARGHNlR/YKjcgR7
-	 xSNQa+JvEbmc2xnHhBez/ilAswtB3J8NjBx36esN5B3nKuyMx+CMivdpNFt1A2jSpUt6t
-	 tvWJZ5nM1rxdinXqqgzIM3SrC75NTzOqcIHuWc8PCfVi5/SanLAGtvxkje0DaTAOTsg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795200818;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.176
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795201148;
+	b=G7eIFGDIo/yApR8bMizQM+G9zcxCez0Hgr0DGJIkerySFWG6DM/geovLEysK1BQl/2pI
+	 BdhuNpe6qCi4SUDQHeBO0iPYOPynGAJR7SGIVlUiOhCVF71yJoEF0M7hIoTfpEqPkHGK1
+	 rmZ3/T/IwzFYlb79PD36qmdm3yPgUSQak/P12ud9qxeberevGtCW3Prbs1XEEyxCZ5GLQ
+	 gXH4sbvh8dhhN/7nrWB9AheMsZUjmPRrminICZZF8HcPsOUxLZYEsMtnf7QdjRmCiiaCd
+	 4AUjmLnMkinVYFzH9OkPU5wDHRPxca5kxE8C68Gne00E94ItYSmWwH9MzpWl3W3+23w==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795201148;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
-	b=K2Vc4n6jJEMHTxwID0WvpqcLrHkTcUpf3MHQ4rId4WRamqsBO61xwjt9yc25ON12ULol
-	 X6LrgI/VBgbovCDJhC66IRoMOQVa6IzHOomy7jdh/eGqG7BljLopn8CkpQdjKzn3PHHdw
-	 p+1bWfIdcFnKxqUf33LG62VzMiSCUcDkmINedn8MrgCIN0pMCDae1x9+MOsnQPqa5TrnU
-	 Jl0X6/Qf0HObBvQVVMDEBTuWkRZaBT36GdW74YwqsnMQ3G3acj1mSJHfYE/BDOIIjqL2A
-	 1/xiLux/F12bU9leW+5jd5NKEXD9I+Z2vV7kqPx1fYCoE+CyHGB0AumZuhbpX5qdNDA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rw5csPJs;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.44
-Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:From:To:
+	 Cc:In-Reply-To:References:Date:Message-Id:X-Mailer;
+	bh=QpjWV7nVPK4jNL88HvKbtHJ/44FkOvQPFo/KHrxl1Aw=;
+	b=YQ7RsGVmlU07fsQ7JLWsy5N+6ANB7nyrl8RECokYb5ZSumZQGiTYnqy40MC06Km+pKrr
+	 mGFaZAPdFipjKwGg7nrFgOwAgfA6WsspQ7t3sB3z0XZTBX6CTPR/z58ewV1rqdR3i0ZiS
+	 ayONA4Y4GBDU928LNXJub/YwmZB3hyi+JBlT7RM3FU1U/vFisKs3e/k29lf2khXRywYVu
+	 nLnbB6m0pcHLr85EjXCstCoKRWsK7daHp0jnONGEYnv5tfVtzPPf+gXcSoJz/3hu2wVhh
+	 7BpzMQJuuzKOCfVzIu2OCAli8ekP6rqJ/UBYPvDCxCR1ASIoJJpn4vemaKoVXoilhpg==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=Na8SXjJd;
+	arc=none smtp.remote-ip=209.85.160.176
+Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43430606A33B
-	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 18:53:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43430606A33B
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFAAB60A2618
+	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 18:59:06 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BFAAB60A2618
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rw5csPJs
-Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-4a9be758734so812503f8f.1
-        for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 10:53:38 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795200817; cv=none;
-        d=google.com; s=arc-20260327;
-        b=DV11swfnWzwl+9LrgyrUJfV3+lwv+n5YcKKA6a/OtZSVvU3v8ZMldRSTS21xEa+V5q
-         7i3YoXqoaznHSlQM01hYEyQtr2JZCR+310wSNRrxEcJZhOBxL4JhDct3YgouPfssv9Yt
-         CBQgkgFVYeE2J2BuktOrMh4oc2pgX8BAD1EgO5EnlCvnH2PgRS0z6Ogpit/bmx+PxkSE
-         wp/DgIOb+o97+Kx3vrPhHNo/lom24/Wf9V3HKFIafT7N7v8HkD5oiiYVIxn0FgDwEHUd
-         Dl2BH3lfTGq3HcMl/JpLz2EUWka5C0RayTqwo42fMdQivH1rHcdjh/02XIzsPgCYh4Pb
-         5MZw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
-        fh=Wd/U7gHJodHPJOZpGrDbFLHEzMva1wff8jlLucsQf84=;
-        b=SYLb3VTerh+Xqrc7sxEnSs9vcUFRxba8R3v3sHoTDwpRElqsVV9MbrqLm4oT9DS/2p
-         4uxcSQwM1VgNcAPSDB4f5fdUj69ZF1jdPld6SsIXUoZg9M6wcLub9RQPEBRA2OpcUNE6
-         zAiLV9ig0oa6+8Y65myTq+mXNnn/jvWb2cBL/UHgleUGTLOsTpYOU3/JBq/yUwBNrbt8
-         5/b9oo5jP1+vqpyAmc+V3OYbClNILHFKWVvy1gHlySpNsi0nD0NxizdR5WEaBRZ8Pqwr
-         p/eXLSzgb0sri8VoBL0BJt/bnj7/64PziyDxID+FwJ9U4KEDiPfViL8enHT1Xw3KMIi4
-         0e9w==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=Na8SXjJd
+Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-53644b28706so19849471cf.3
+        for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 10:59:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795200817; x=1795805617; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
-        b=rw5csPJsy9Grjv/kuDIkQSXttCNYOg6+rxmUPkkASaR7hWAbzckAvDPMREyWl41Jpv
-         6Wm4HIb37WTD7f4yTaQh+u4hRgprD96xHlk/B2phHMxFlPNy08tezRtQWluJzIaEjUUT
-         PPuzW4vTJq86XyFDNlVSKVe5AIRdRzYZW/eO0yRqe8COET/d48wXeOwyg94GVNqvy748
-         FWFVvoQmBR+tm46nKnmocK2A8XvnLiQch6HurDhEHcRra4Q3yN8jMhVDEiN8bCaymXly
-         uXLs9MHrnh3ERbakZWvGtw9nV3LjfdNqtxGygeVv5OkZh3/K8meJgem6swkzw1Yaiaki
-         tePQ==
+        d=gourry.net; s=google; t=1795201145; x=1795805945; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=QpjWV7nVPK4jNL88HvKbtHJ/44FkOvQPFo/KHrxl1Aw=;
+        b=Na8SXjJdGUVWDeqxqwuMR3Udnc3JNjfyk3MTxe3QTRK6WZ76d7I+8tS90Y0CdUuXZA
+         ozFtgrB8we5s3tBqJqZcDv80Ku/wbh/GB4PCsBMGwkvpKkzwa34jt1f6hdT26CVXC5UP
+         CqXkNaWn5gwOSbAvxEed0NE1PQJozJiRIR7CWvSazN38YSX1t5MjQC7PqbHfNae4SLU2
+         cRYRjbxZdeSI2Yb8n7W13IJok9pj2aMDEqWhp8T3dZvqoUOiu0H8ebtzuoxe8RQRnyoe
+         2tmTqqK0Yz+5RXyD+Ed2jDx8IyB6oTTNJ8Tf0OYn05H7iul3Rs9K0jNoFETg+lTdYUmT
+         Z6uQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795200817; x=1795805617;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1795201146; x=1795805946;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
-        b=lPuFPd94Ukk6+4CkvgyHyXr1whTVwwxiLRT5JvS041BRHSmHqhSF9K5nWzryxeea2W
-         isK5W2OP7xgEUXAO1eQ75gwLjj0r3gCigLhTSCtvBghbUDiuKPVMkExAuWTpXSsbNjzo
-         zBYVlBtTljeLngnPDdU9BTPZhDfto37q6ul992s3wy+8OIcAChDbxWqdzbhL4sbkh+Wk
-         InJHm0df/ds8ywUk+UdxKvoZEcuJnC+Ryj7DVjjs5LKjZvkxFLHXw3MsLN6OCCGvnWu9
-         LMp3Z07Id0U3B4jCnjT6IB+5Cok/Yn7T6xDAzqWekmMZ8+DWw1GBU9gvqEotvhjowynQ
-         2n6w==
-X-Forwarded-Encrypted: i=1; AL+hErFw9J7V308uYZkWr7JbM0pxGTt1CTtfzM2nS5pJCEJibHx7a2tfn9Scn5drk1WLUwCdIOikX22N@vger.kernel.org
-X-Gm-Message-State: APuU4Z8yLcCMzbas8xU4wiHY/Bxb+bpluIRDa38JEN1c9N1ZaWe8Xrmu
-	/Rsb57WQIHFzSoHZvRuw+LuZnGeOqX8eAJqpsqdbVq4pviNY163q15MGpJEDR9JWIfyYGcpXJ8M
-	ACa7m8a3qOaff5KqDDm2PB9WjK1L8Jog=
-X-Gm-Gg: AZFdTZdenwdnAQJctDX0i+xHLWhjpDqyfT5DOyMWmvFlTcTvz5qJ6lUkgw4/w4xIuqq
-	2eDltjVjvsYHWnI3Lq6YNsz0PSsOGtMG4NZZ1H2fbQpR1CVS180GfXJSCJyZOTnhHT337qvKGb+
-	7SaTTjWfvwhs1x0eIbAo56Q2RdmOWVN2PpQ3gMRqok/Yzmb0dyqvfi3KKtRfqk7AicDia0/XvTH
-	qw8a+vSj0hxbq8EqleLYoL5zTy/O9HO0WhbsNqh+MvzauWdvhU/S2GlHFG31Mf4luUTTIWSHVap
-	qu0kapQXxIBCsrIzCE1tIcbYvY/1OQqzfz95r4ySdmuOJQBOKw5sB1rIh0Bnkkcml0HEY0JOO7D
-	zDmK6cUDKOa+LVnarvJYu8bXRRvIO7eRh00yw2KM4JJis318XoPTm70SCgP7buBozhfVCZU3YNw
-	oMT2cY/l8C4WuKJxiTmLU=
-X-Received: by 2002:a05:6000:2883:b0:4a4:39bb:970d with SMTP id
- ffacd0b85a97d-4abab02c469mr8089761f8f.2.1795200816511; Fri, 20 Nov 2026
- 10:53:36 -0800 (PST)
+        bh=QpjWV7nVPK4jNL88HvKbtHJ/44FkOvQPFo/KHrxl1Aw=;
+        b=Z91a0Fw0QKSOeJRrBlcULeHfJPz+mtKTGQ22gl+8BefGGXexc8D8DkfbSdwpGywPTJ
+         W5wThe9NZ4QXaUXcwu0uvlWqyr/hXBbzFk8dSCc9HIHnbfBSzxtyHtC3+slQt/l1xHbC
+         HVQrAOYtC0R8uR63BCERO+EUmIlYapJOpW5izM0aDgiqLkVBYPhgZikBcGiiQj/KHPem
+         y8wGD+osgoSvtE3qbXo3nocQI1knnW4Sl9l4GRYOKF0mEKBhYjLeGNzO21OGfDSalYyF
+         byOgUd9S+XEKGiEYCd3grR/FReNKYVl5OYO0gsMOaHqeQSmcvBAxe9EOhYnIgGJGHCKo
+         0y6Q==
+X-Forwarded-Encrypted: i=1; AL+hErHCQsnHAtGbT30xLqKuvJ4McG6g3GfAHHFcGpQuSlj5Ha73PTtLdhMpIbxjal4rbXnxobVAIHCE@vger.kernel.org
+X-Gm-Message-State: APuU4Z9rMkUZRjZAOYa9SrUpBVhe3UhKg95YOhjXTbmqTuYm7k6MfRTm
+	sFpXk192jUOdMxUDBSI6TrOQh2ZTTp8a3TlxTBfrQb+W494sGx53Kg4iC4h3iIPh5pA=
+X-Gm-Gg: AYBFou1Ifn23oR5K02/40PHEf5uWR2P7kwTRglpC8TG2tHX6BX2S+7eieYZ9ctNczxs
+	gx+BXWDweTQ7X/mqdrPkRoNjuY/LqXqTGwQWF22rrQ8QWyxtatnJiI9PTgAXLuazOPmZuyHD1Jl
+	2Vus9fNDW92d3KgixCq+/m62HRMxGOCn1GTdgy/6vFjiuUL9rs3n7nORj5gw9+TfIzVf2nq2mLX
+	uMKhc1oawGr2T8KyTfFl75OtQzumxlYr/infhEr4/JoyCNV1Hwrb7Q7ryOlrriVgyZhS5j/JZUT
+	XQ4jgu4yzt6oVPQA1hHgxKYIdTdZ1AAI513pF/AaloGMw4viLobZJfYvst5y0gZwJwX02m2SR8x
+	MiHmqVrWJickYA48Dl88STESXcX/1kPYOtDBNK/SybhCEnXmiFY3hfhfUXxIFXvTi9DaHoBFUOY
+	wxxhgcm0SHORUUCEjRuW3KGmO4RJn/K7G5o9tPRZdgxGZ+QATXVIs1eNqmw5Qqr36tOVGSCeXI5
+	wbkqukzL7dXtH753K0nPCsPkM/Tr4dShn4bGzhR30Y9GxHlTtxbXtp6dUEgBmM6ySHq5JSSLsDF
+	044998OW4yvKQsQPKNNiJOdNokQnUX94bH9c0OX+BG4Pjt+/Qq9/TRxAX5FbFogtaFamDJWCVYj
+	UNQ4eAX4=
+X-Received: by 2002:a05:622a:1a89:b0:55d:2c9a:3776 with SMTP id d75a77b69052e-55d76a811c8mr74428711cf.65.1795201145651;
+        Fri, 20 Nov 2026 10:59:05 -0800 (PST)
+Received: from [192.168.50.231] (pool-71-191-145-202.washdc.fios.verizon.net. [71.191.145.202])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-55d7884d01csm30305771cf.21.2026.11.20.10.59.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Nov 2026 10:59:05 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,78 +89,99 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20260817131843.45121-1-husong@kylinos.cn> <CAO9r8zPqJncFKQbF3tGe1d4sg-4dLQ3dQRGze_vab26wWrXTqA@mail.gmail.com>
- <179438454803.6.16655549133383619919.zswap-rstat-counters@gmail.com>
- <CAJnrk1YzYswBKv5F3=FF_o_4Pywgw0ifLq0tXYSWO7TARnFRJQ@mail.gmail.com> <CANGjgdnTjbou-XFqip7B_cGjrfZzZpan3dFuAk1-rU3bJOu8NA@mail.gmail.com>
-In-Reply-To: <CANGjgdnTjbou-XFqip7B_cGjrfZzZpan3dFuAk1-rU3bJOu8NA@mail.gmail.com>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Fri, 20 Nov 2026 10:53:24 -0800
-X-Gm-Features: Aa3M54oX3M667iXU9--_PVn5exl7P5ruO3wAPnPpv8aIQlT07cgivJguladt78o
-Message-ID: <CAJnrk1YRBkoMppbn-GitdTXaNmpCf8kM2WHWvSfNPzNygoqw+g@mail.gmail.com>
-Subject: Re: [PATCH] mm: memcg: use ratelimited stats flush in obj_cgroup_may_zswap()
-To: Chengfeng Lin <lin2530632123@gmail.com>
-Cc: Yosry Ahmed <yosry@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Song Hu <husong@kylinos.cn>, 
-	Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Nhat Pham <nphamcs@gmail.com>, 
-	Chengming Zhou <chengming.zhou@linux.dev>, yunzhao@cloudflare.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 00/60] Private NUMA nodes
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: "Gregory Price (Meta)" <gourry@gourry.net>
+Cc: Yury Norov <yury.norov@gmail.com>, 
+ Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
+ David Hildenbrand <david@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Oscar Salvador <osalvador@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Suren Baghdasaryan <surenb@google.com>, 
+ Brendan Jackman <brendan.jackman@linux.dev>, Zi Yan <ziy@nvidia.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+ Randy Dunlap <rdunlap@infradead.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ Johan Hovold <johan@kernel.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
+ Rakie Kim <rakie.kim@sk.com>, Ying Huang <ying.huang@linux.alibaba.com>, 
+ Matthew Brost <matthew.brost@intel.com>, Byungchul Park <byungchul@sk.com>, 
+ Alistair Popple <apopple@nvidia.com>, SJ Park <sj@kernel.org>, 
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Vincent Guittot <vincent.guittot@linaro.org>, 
+ Dietmar Eggemann <dietmar.eggemann@arm.com>, 
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, 
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>, 
+ K Prateek Nayak <kprateek.nayak@amd.com>, Kees Cook <kees@kernel.org>, 
+ Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
+ Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>, 
+ Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+ Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
+ Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
+ Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
+ Xu Xin <xu.xin@linux.dev>, Chengming Zhou <chengming.zhou@linux.dev>, 
+ Lorenzo Stoakes <ljs@kernel.org>, Pedro Falcato <pfalcato@suse.de>, 
+ Jann Horn <jannh@google.com>, Chris Li <chrisl@kernel.org>, 
+ Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+ Youngjun Park <youngjun.park@lge.com>, 
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+ Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>, 
+ Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>, 
+ Dave Jiang <dave.jiang@intel.com>, 
+ Alison Schofield <alison.schofield@intel.com>, 
+ Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, 
+ linux-mm@kvack.org, linux-cxl@vger.kernel.org, linux-doc@vger.kernel.org, 
+ driver-core@lists.linux.dev, damon@lists.linux.dev, 
+ linux-pm@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
+ linux-kselftest@vger.kernel.org
+In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+Date: Fri, 20 Nov 2026 13:59:03 -0500
+Message-Id: <179520114342.412063.6068641130948664600.b4-reply@b4>
+X-Mailer: b4 0.17-dev
 
-On Sun, Nov 15, 2026 at 5:38=E2=80=AFAM Chengfeng Lin <lin2530632123@gmail.=
-com> wrote:
->
-> Hi Joanne,
->
-> I tested the non-forced flush in our setup. It delivered PAGEOUT CPU
-> savings similar to those of the hierarchical per-CPU counter variant.
->
-> The only change in the non-forced variant was:
->
->     __mem_cgroup_flush_stats(memcg, true);
->     -> mem_cgroup_flush_stats(memcg);
->
-> Both variants used the same MM base, 2967f3ccdb5f, and the unchanged
-> reproducers attached to my previous mail: 32 MiB with one worker, and
-> 256 MiB with eight workers. The finite memory.zswap.max remained 64 MiB;
-> compressed occupancy was about 18.75 MiB in the larger test, below the ca=
-p.
-> The hardware was the same i7-12700KF with microcode 0x3e.
->
-> I ran five separate boots: baseline, non-forced, baseline, counters,
-> baseline. Each boot had two warmups and nine measured program runs per
-> condition, including an unlimited control. Reductions below are relative
-> to the mean of each variant's two adjacent baselines:
->
-> Finite-limit PAGEOUT CPU   Non-forced             Counter variant
-> 1 worker / 32 MiB          12.640 ms (-45.72%)     13.276 ms (-43.04%)
-> 8 workers / 256 MiB       202.784 ms (-84.03%)    207.455 ms (-83.55%)
->
-> These are summed worker CPU times, not elapsed times. Whole-program CPU
-> reductions (non-forced / counters) were 22.57% / 20.97% with one worker
-> and 61.82% / 59.97% with eight.
-> The counter variant is the same hierarchical per-CPU adaptation tested in
-> my previous mail; it retains the existing rstat updates.
->
-> PAGEOUT CVs (non-forced / counters) were 4.65% / 4.33% with one worker
-> and 2.91% / 9.26% with eight. The maximum absolute PAGEOUT baseline drift
-> in these finite-limit comparisons was 1.69%. The small mean differences
-> do not establish that one variant is faster.
->
-> Separate instrumented admission runs also confirmed that non-forced does
-> not mean no flush: the limit check performed 53 / 818 actual rstat flushe=
-s
-> for one / eight workers, versus 8192 / 65536 with forced flushing and zer=
-o
-> with counters, while successful stores remained 8192 / 65536.
->
-> So the simpler change appears sufficient for the main benefit in this
-> below-cap workload.
+On 2026-11-20 13:08 -0500, Gregory Price (Meta) wrote:
+> This is v6 of the Private NUMA node series. The series falls into four
+> parts, each building on the one before:
+> 
+>    1-18  mm: introduce N_MEMORY_COMMON
+>   19-26  restrict folio-walking MM services to common memory
+>   27-44  N_MEMORY_PRIVATE, kept out of cpusets, mempolicy, accounting
+>          and the page allocator's ordinary paths
+>   45-61  private node features, memory hotplug of private memory,
+>          dax/kmem private mode, selftests and documentation
+> 
+> Patches 1-26 change no behavior on any system and can be reviewed and
+> merged on their own. Without private nodes, every path in patches 27-61
+> behaves as before.
+> 
+> The full stack is also available at:
+> https://github.com/gourryinverse/linux/tree/scratch/gourry/managed_nodes/private_nodes_v6
 >
 
-Thank you for your work with testing this, Chengfeng. When I come back
-from vacation in three weeks, I will submit this change as part of a
-larger series and I'll make sure your email is cc'ed on that.
+Apologies - my b4 prep dropped a commit from the stack because I made
+the mistake of filtering on author (myself) and it stripped out this
+commit:
 
-Thanks,
-Joanne
+https://lore.kernel.org/linux-mm/20260923211041.3127588-4-gourry@gourry.net/
+
+The commit is one the branch listed above, and should be otherwise
+indepedent of the series (can be pulled in ahead of everything else).
+
+Sorry for the noise / compilation error, won't happen again.
+
+-- 
+~Gregory
+
