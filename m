@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795207371;
-	b=pnefzb7RVz6ZXs1XJ/nXoRveOS6VW+yfsFht3yL0S3fqLZt3cUs6nSywQnbuHtVS6yo8
-	 hzPKrT/xgaM0RSjEmWhV8g6xHTw8Dr6t2VonRxuOtp77souihIIhooAZyTFSMdBv5PwK7
-	 DG05nixQWOnqMng6FMXYIfjyT5jifzJeZTEsPQmbGfk1v3+oW8acFn/drc5RLQTtDYWXn
-	 P/uOFV6Cj0/DZGkU/UKz5Vayv/6eNuPlOxV8v6VYglg2pXKT6gtTi1sIzgHrNgQf+bV1A
-	 RHczaGjv4p5/5SNXqfupuQ22xkM0eCB7RwXFbhMAYMq5nHvt6yFw3x6nxDsnbcJHFTw==
+	t=1795207366;
+	b=iYPV8NEJM5D7YfUMPm+mxZ3Q8Eb5I/ghrA9D0cpZz4PFaeOrN7Tcy1JMlo6i76GGwOJC
+	 9UnljB2li2ZHGld/RPnbjFAGriyA5u0BDjgeNtU5zg+a+cQiOmJJO/s8gBQaN1/vO1j9t
+	 AlBYaoE6141eY2PXdDqBgtVfp7ARHKxvf1eFpR+d30o1POAw2LRgdflT3cllzu2LsVKr+
+	 msS8s2vuP4LK6R8YJ1ju64Oed9T+9FlA9/o1Kvlh/wM1wvG3AbSVuMLc6vlO5hR7F4b0h
+	 escjQvBS0p+LrTW0IHbFxd4NgTafHoPAOogN2LOcMCTl4j63dRn5lIZIjqKgLJ+R8Gw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795207371;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795207366;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=pkKHclEHtzFwZ98wGICdNU2wyxUYuejc/zF8bayUEtY=;
-	b=uFdVZtcptHhKfXha7tfTqow7hYC6OoRKiPhwuStgzU7ehJsXxMXKfsKS+kUsrJonbBsb
-	 d74iG3P0sLbyLyLeChDJmVIhaQQfFFUtJNT2JoNxP+le/INzakcZtPSWad5cjlsv29IW2
-	 ZaOXeXyAktTd525wjk/RYChI1rDDiuGgKmHuosHsLuzaJHZYwwcLBptTUbiacz68m2Fke
-	 zm+xPgO/TUw4VI/1NLR14hnITb2Ro71uAxCbKEO8DOqFy9U7VLIub8J5n8FiPKUIwR34h
-	 aki6Yu6xHntyoUoRVDnF3rxAsETSFgTzlczU5ahnGNo3ElDLdx2+rw2fe5kcdxvuBKg==
+	bh=QrrArDQOF4dfm32QJuRH/e7c5ZAzldoowdEh2SWWdhU=;
+	b=csP25DKX4YP7ZwV1R9TgXvOSKp2CzWty+z8/nTl2AeB3dPYdiplsFNXO1TfV4+I812Mb
+	 Cl7I0VsJx3JvzxKiXqfyNnishnIna6DPpirMB/81f/0qmLzniNcpTXWQoKUMcDIvBQxLG
+	 RYbBS7STzSEwGeFgKAdJlGlfPgHjs/dfiVEHxi3eYd0M/QsGwAUo0vmCsmY4kJXq39+3s
+	 bstW3LyWYTp7FSMct0pEz74b2zRQb33sqmPKE6b3oIVBrjOK35Eny9wl8lfAJhWyMyqmJ
+	 767BfAPsEHWRP3ivc40je9C9m3kMqO1MD/jF9eOy3fnEGVjiEWLKcf4OTIRxHkHj2cQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=E6KaSjla;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=OmIekafS;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7106A60A6F5A;
-	Fri, 20 Nov 2026 20:42:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 7106A60A6F5A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB6D260A3817;
+	Fri, 20 Nov 2026 20:42:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB6D260A3817
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=E6KaSjla
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=OmIekafS
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
 	s=smtpout1; t=1795207356;
-	bh=pkKHclEHtzFwZ98wGICdNU2wyxUYuejc/zF8bayUEtY=;
+	bh=QrrArDQOF4dfm32QJuRH/e7c5ZAzldoowdEh2SWWdhU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=E6KaSjla0UJfUBcnef5KIK3v1qMtQBNkNxU160Z2hafbYKMyzs91kLaoDYc5GZacj
-	 M1kR8l5h+9hKiOSr33FiTjfDWwsTIDWwzulmTvAUr1FaZPCCeVxXD1a1m1jj56563m
-	 No9OGQlFqeKALKooEU0SnLKcb1WyaEqP28c/bSuElstIZph6hd1ue1hicrMZCFhHyv
-	 BkGinXqy5ykudj4VRF43/aeosCgYY+dAWLSdeADTT6A4Xfznnl/Hcu/AAAx1/W8xzo
-	 sDkVfWXUn2rPu+aOl8BR2I9u23B4Q7U6znNK3YwvHs9v2kGqSJl3Bpt8+dfCd3F5xE
-	 YDU0aaOCpkV2g==
+	b=OmIekafSLEkCL1F5R/kvhy9DZVcpDh5sqDQDvBDrWTYpl39vbpGBGZt8IKI1Lak1q
+	 qHJa4MUoke+LUvvQibl9RpLTngqZuq8+Wz8WCHsF43235cTHGQJy/nz5hgli43LCZc
+	 U/hDZZYkqkbt1tSHIbVKiwH7NdXud8JyEnuz/WU+rhAya5oWsUSr9rE0HW74oWSU9O
+	 hDlmD4ZLoaUsAzlzikbYCUbbTdW7/nWIJ4ks1mBWhxDiqVpiZX6wm90o4IUk9aTxv/
+	 w+lyQOcI3g/hIdUynGIHxYsra8kKh3sWcLE379Ig7VIb3v8tEwYc5BcPv4J65+uCJk
+	 /RNHvIlApXH7w==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2N66nLzTqd;
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2N0xcrzSrx;
 	Fri, 20 Nov 2026 15:42:36 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v10 27/40] sched/deadline: Count the bandwidth a boosted task is given
-Date: Fri, 20 Nov 2026 15:42:04 -0500
-Message-Id: <fd06ed50ac0072fcbf30f5b5c44f2ef0c0a991a9.1795207232.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v10 23/40] sched/deadline: Hold a reference on the deadline donor of a boosted task
+Date: Fri, 20 Nov 2026 15:42:00 -0500
+Message-Id: <19834911fdb02b3941d9021425e247c4b597b210.1795207232.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
@@ -97,148 +97,228 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-sched_setattr(SCHED_DEADLINE) on a sleeping task that priority
-inheritance boosted into the class leaves the new bandwidth out of
-this_bw. switched_to_dl() does not run, since the task is in the class
-already. sched_dl_overflow() changes this_bw only for a task of the
-deadline policy. When the task wakes up, __add_running_bw() warns:
+A task boosted by a SCHED_DEADLINE waiter runs on the parameters of a
+donor, dl.pi_se. Since commit 2279f540ea7d ("sched/deadline: Fix
+priority inheritance with multiple scheduling classes"),
+rt_mutex_setprio() copies the donor of the top waiter to the owner. So
+each owner along a chain points at the deadline task at its head.
 
-	WARN_ON_ONCE(dl_rq->running_bw > dl_rq->this_bw);
+rt_mutex_setprio() keeps the top waiter, pi_top_task, as a plain
+pointer. The top waiter is blocked, so it cannot exit. The donor further
+up the chain has no such guarantee. When it stops waiting, the owners
+below it are fixed by chain walks. A walk can be preempted, and it runs
+in the context of the task that started it, not the donor's.
 
-When the task leaves the runqueue, this_bw would stay short by that
-bandwidth, and skew GRUB reclaiming on that CPU.
+M, O and P are SCHED_OTHER tasks. W is a SCHED_DEADLINE task:
 
-Fix this by changing this_bw in __setparam_dl(), which every task that
-gains deadline parameters goes through. If no runqueue counts the
-bandwidth of the task, dl_change_utilization() now adds the new one. It
-now also runs when the bandwidth does not change. It then returns early,
-so that a sleeping task keeps its running_bw and its inactive timer.
+  P         O              M                          W
 
-A sugov kthread given a reservation of its own now has its bandwidth
-counted in this_bw. It reaches dl_change_utilization(), so this patch
-removes the WARN_ON_ONCE() for SCHED_FLAG_SUGOV there.
-sched_dl_overflow() returned early for an unchanged bandwidth, even if
-no root domain counts it. That is the case for such a kthread, and for a
-task that a rebuild left out. sched_dl_overflow() now admits such a
-bandwidth as new. Without room, that fails with EBUSY. The Sashiko AI
-review of this series found this early return.
+  locks L3  locks L2       locks L1
+            blocks on L3
+                           blocks on L2
+                                                      blocks on L1
+                                                        M, O, P get W's parameters
+                           times out on L2
+                             O deboosted
+                             walk from O: preempted
+                                                      times out on L1
+                                                        M not blocked: no walk
+                                                      exits
+  runs out of runtime
+    refill reads P->dl.pi_se:
+      W's freed task_struct
 
-A reproducer shows the warning, and this_bw unchanged by the change.
-With this patch, this_bw takes the new bandwidth, and nothing warns.
+P would run on parameters read from freed memory, until M's walk
+reaches it.
 
-Fixes: 8fd27231c330 ("sched/deadline: Track the "total rq utilization" too")
+Setting up the deadline task needs CAP_SYS_NICE. The timeout of a
+FUTEX_LOCK_PI needs no privilege. This was found by reading.
+
+Fix this by holding a reference on the donor's task, for each task whose
+donor is another task. dl_set_donor() gives a task the donor of its top
+waiter. dl_clear_donor() ends the boost. Both move the reference.
+put_task_struct() frees the task through call_rcu(), so it can run
+under the rq lock. A late walk can still leave P on the parameters of
+an exited donor for a while. P now reads them from valid memory.
+
+dl_set_donor() reads the donor of the top waiter without the waiter's
+locks. Another CPU can change that donor at the same time, and put the
+last reference on the old one. So dl_set_donor() takes its reference
+with tryget_task_struct(). If that fails, it reads the new donor
+again.
+
+put_task_struct() frees every task through call_rcu() since v6.17:
+commit 8671bad873eb ("sched: Do not call __put_task_struct() on rt if
+pi_blocked_on is set"). Before it, put_task_struct() frees the task at
+once without PREEMPT_RT. So stable trees older than v6.17 need that
+commit first.
+
+__dl_clear_params() no longer resets the donor. switched_from_dl() can
+call it on a boosted task, before the deboost drops the reference.
+init_dl_entity() resets it for a new task, whose copy of the pointer
+holds no reference.
+
+No case tests the use after free: it needs a walk preempted at the right
+step.
+
+Fixes: 2279f540ea7d ("sched/deadline: Fix priority inheritance with multiple scheduling classes")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+Cc: stable@vger.kernel.org # 6.16.x and older: 8671bad873eb: sched: Do not call __put_task_struct() on rt if pi_blocked_on is set
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/deadline.c | 54 ++++++++++++++++++++++++++++++++---------
- 1 file changed, 43 insertions(+), 11 deletions(-)
+ kernel/sched/core.c     |  8 +++---
+ kernel/sched/deadline.c | 12 ++++++---
+ kernel/sched/sched.h    | 56 +++++++++++++++++++++++++++++++++++++++++
+ kernel/sched/syscalls.c |  4 +--
+ 4 files changed, 70 insertions(+), 10 deletions(-)
 
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 3dd42581cc17..9831b4aa5235 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7969,19 +7969,19 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+ 			if (!dl_prio(p->normal_prio) ||
+ 			    (pi_task && dl_prio(pi_task->prio) &&
+ 			     dl_entity_preempt(&pi_task->dl, &p->dl))) {
+-				p->dl.pi_se = pi_task->dl.pi_se;
++				dl_set_donor(&p->dl, pi_task);
+ 				scope->flags |= ENQUEUE_REPLENISH;
+ 			} else {
+-				p->dl.pi_se = &p->dl;
++				dl_clear_donor(&p->dl);
+ 			}
+ 		} else if (rt_prio(prio)) {
+ 			if (dl_prio(oldprio))
+-				p->dl.pi_se = &p->dl;
++				dl_clear_donor(&p->dl);
+ 			if (oldprio < prio)
+ 				scope->flags |= ENQUEUE_HEAD;
+ 		} else {
+ 			if (dl_prio(oldprio))
+-				p->dl.pi_se = &p->dl;
++				dl_clear_donor(&p->dl);
+ 			if (rt_prio(oldprio))
+ 				p->rt.timeout = 0;
+ 		}
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 9a4639ae676a..aa12908aeaea 100644
+index cc5be00b2b0c..a566e9252a41 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -633,22 +633,37 @@ void cancel_inactive_timer(struct sched_dl_entity *dl_se)
- 	cancel_dl_timer(dl_se, &dl_se->inactive_timer);
- }
- 
-+/*
-+ * Make the runqueue of a sleeping task count @new_bw as the bandwidth of
-+ * the task. Do nothing for a queued task. The dequeue and the enqueue
-+ * around the change of its parameters update this_bw.
-+ */
- static void dl_change_utilization(struct task_struct *p, u64 new_bw)
- {
--	WARN_ON_ONCE(p->dl.flags & SCHED_FLAG_SUGOV);
-+	struct sched_dl_entity *dl_se = &p->dl;
-+	struct rq *rq = task_rq(p);
- 
- 	if (task_on_rq_queued(p))
- 		return;
- 
- 	/*
--	 * The task is waking up on another CPU, and no runqueue counts its
--	 * bandwidth. The enqueue adds it, with the new parameters that
--	 * __setparam_dl() sets right after this.
-+	 * No runqueue counts the bandwidth of the task. Add the new one to
-+	 * this runqueue, so that add_rq_bw() adds nothing later. This holds
-+	 * for a task that enters the class asleep, for a special entity given
-+	 * a reservation of its own, and for a task waking up on another CPU:
-+	 * task_cpu() already points at the CPU it wakes on.
- 	 */
--	if (!p->dl.dl_bw_oncpu)
-+	if (!dl_se->dl_bw_oncpu) {
-+		__add_rq_bw(new_bw, &rq->dl);
-+		dl_se->dl_bw_oncpu = 1;
-+		return;
-+	}
-+
-+	/* Same bandwidth: leave running_bw and the inactive timer alone. */
-+	if (new_bw == dl_se->dl_bw)
- 		return;
- 
--	dl_rq_change_utilization(task_rq(p), &p->dl, new_bw);
-+	dl_rq_change_utilization(rq, dl_se, new_bw);
- }
- 
- static void __dl_clear_params(struct sched_dl_entity *dl_se);
-@@ -4919,10 +4934,6 @@ int sched_dl_overflow(struct task_struct *p, int policy,
- 	if (attr->sched_flags & SCHED_FLAG_SUGOV)
- 		return 0;
- 
--	/* !deadline task may carry old deadline bandwidth */
--	if (new_bw == p->dl.dl_bw && task_has_dl_policy(p))
--		return 0;
+@@ -5080,10 +5080,6 @@ static void __dl_clear_params(struct sched_dl_entity *dl_se)
+ 	dl_se->dl_defer_running		= 0;
+ 	dl_se->dl_defer_armed		= 0;
+ 	dl_se->dl_bw_oncpu		= 0;
 -
- 	/*
- 	 * Change the bandwidth of a deadline task where it is counted: in
- 	 * the root domain of the CPU recorded with it. A task moved asleep
-@@ -4937,6 +4948,16 @@ int sched_dl_overflow(struct task_struct *p, int policy,
+-#ifdef CONFIG_RT_MUTEXES
+-	dl_se->pi_se			= dl_se;
+-#endif
+ }
+ 
+ void init_dl_entity(struct sched_dl_entity *dl_se)
+@@ -5098,6 +5094,14 @@ void init_dl_entity(struct sched_dl_entity *dl_se)
  	 */
- 	counted = task_has_dl_policy(p) && p->dl.dl_bw_cpu >= 0 &&
- 		  p->dl.dl_bw_gen == dl_bw_gen;
-+
+ 	dl_se->dl_bw = 0;
+ 	__dl_clear_params(dl_se);
++#ifdef CONFIG_RT_MUTEXES
 +	/*
-+	 * !deadline task may carry old deadline bandwidth. The same
-+	 * bandwidth needs no admission if it is counted. If it is not, admit
-+	 * it as new below. A special entity given a reservation of its own
-+	 * has no bandwidth counted, nor has a task that a rebuild left out.
++	 * The copy points at the donor of the parent, without a reference.
++	 * Reset it here only: __dl_clear_params() can run on a boosted entity,
++	 * from switched_from_dl() before the deboost drops its reference.
 +	 */
-+	if (new_bw == p->dl.dl_bw && counted)
-+		return 0;
++	dl_se->pi_se = dl_se;
++#endif
+ 	dl_se->dl_bw_cpu = -1;
+ 	dl_se->dl_bw_resv_cpu = -1;
+ 	INIT_LIST_HEAD(&dl_se->dl_departed_node);
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index e2bb192f1ee6..859d782cc899 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -356,6 +356,62 @@ extern int  sched_dl_global_validate(void);
+ extern void sched_dl_do_global(void);
+ extern int  sched_dl_overflow(struct task_struct *p, int policy, const struct sched_attr *attr);
+ extern void __setparam_dl(struct task_struct *p, const struct sched_attr *attr);
++#ifdef CONFIG_RT_MUTEXES
++/*
++ * Make @pi_se the deadline donor of @dl_se. The caller holds a reference
++ * on the task of @pi_se, unless @pi_se is @dl_se. Put the reference on
++ * the old donor.
++ */
++static inline void dl_replace_donor(struct sched_dl_entity *dl_se,
++				    struct sched_dl_entity *pi_se)
++{
++	struct sched_dl_entity *old = dl_se->pi_se;
 +
- 	cpu = dl_task_admit_cpu(p);
- 	dl_b = dl_bw_of(cpu);
- 
-@@ -4966,7 +4987,6 @@ int sched_dl_overflow(struct task_struct *p, int policy,
- 		if (counted)
- 			__dl_sub(dl_b, p->dl.dl_bw, cpus);
- 		__dl_add(dl_b, new_bw, cpus);
--		dl_change_utilization(p, new_bw);
- 		err = 0;
- 	} else if (!dl_policy(policy) && task_has_dl_policy(p)) {
- 		/*
-@@ -5016,8 +5036,20 @@ int sched_dl_overflow(struct task_struct *p, int policy,
- void __setparam_dl(struct task_struct *p, const struct sched_attr *attr)
- {
- 	struct sched_dl_entity *dl_se = &p->dl;
-+	u64 period = attr->sched_period ?: attr->sched_deadline;
- 	bool held;
- 
-+	/*
-+	 * Change the bandwidth that the runqueue counts here, with the
-+	 * parameters. A task that priority inheritance boosted into the
-+	 * class is in it already, so switched_to_dl() does not run for it.
-+	 *
-+	 * A special entity has no bandwidth on a runqueue. Test the flags
-+	 * of the request, since those of the entity are still the old ones.
-+	 */
-+	if (!(attr->sched_flags & SCHED_FLAG_SUGOV))
-+		dl_change_utilization(p, to_ratio(period, attr->sched_runtime));
++	WRITE_ONCE(dl_se->pi_se, pi_se);
++	if (old != dl_se)
++		put_task_struct(container_of(old, struct task_struct, dl));
++}
 +
- 	held = dl_se_holds_bw(dl_se);
- 	dl_se->dl_runtime = attr->sched_runtime;
- 	dl_se->dl_deadline = attr->sched_deadline;
++/*
++ * Make the deadline donor of the waiter @pi_task the donor of @dl_se. A
++ * boosted entity holds a reference on the task of its donor. The donor
++ * is the deadline task at the head of the chain. It can stop waiting
++ * and exit before the chain walk reaches @dl_se: that walk can be
++ * preempted.
++ *
++ * The donor of @pi_task is read without the locks of @pi_task. Another
++ * CPU can change it meanwhile, and put the last reference on the old
++ * donor. That CPU stores the new donor first: read it again then. The
++ * old task_struct stays readable while the rq lock is held:
++ * put_task_struct() frees it through call_rcu(), and the rq lock holds
++ * off the grace period.
++ *
++ * The caller holds the rq lock and the pi_lock of the task of @dl_se.
++ */
++static inline void dl_set_donor(struct sched_dl_entity *dl_se,
++				struct task_struct *pi_task)
++{
++	struct sched_dl_entity *pi_se;
++
++	for (;;) {
++		pi_se = READ_ONCE(pi_task->dl.pi_se);
++		if (pi_se == dl_se->pi_se)
++			return;
++		if (pi_se == dl_se ||
++		    tryget_task_struct(container_of(pi_se, struct task_struct, dl)))
++			break;
++		/* Pairs with the ordering of refcount_dec_and_test(). */
++		smp_rmb();
++	}
++	dl_replace_donor(dl_se, pi_se);
++}
++
++/* Make @dl_se its own donor. The caller holds the rq lock of its task. */
++static inline void dl_clear_donor(struct sched_dl_entity *dl_se)
++{
++	dl_replace_donor(dl_se, dl_se);
++}
++#endif
+ extern void __getparam_dl(struct task_struct *p, struct sched_attr *attr, unsigned int flags);
+ extern bool __checkparam_dl(const struct sched_attr *attr);
+ extern bool dl_param_changed(struct task_struct *p, const struct sched_attr *attr);
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 2032c37d15e9..0343c7831101 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -300,7 +300,7 @@ static inline void __setscheduler_dl_pi(int newprio, int policy,
+ 		struct task_struct *pi_task = rt_mutex_get_top_task(p);
+ 
+ 		if (pi_task) {
+-			p->dl.pi_se = pi_task->dl.pi_se;
++			dl_set_donor(&p->dl, pi_task);
+ 			scope->flags |= ENQUEUE_REPLENISH;
+ 		}
+ 	}
+@@ -310,7 +310,7 @@ static inline void __setscheduler_dl_pi(int newprio, int policy,
+ 	 * the class. Drop its boost then, as rt_mutex_setprio() does.
+ 	 */
+ 	if (!dl_prio(newprio))
+-		p->dl.pi_se = &p->dl;
++		dl_clear_donor(&p->dl);
+ }
+ #else /* !CONFIG_RT_MUTEXES */
+ static inline void __setscheduler_dl_pi(int newprio, int policy,
 -- 
 2.47.3
 
