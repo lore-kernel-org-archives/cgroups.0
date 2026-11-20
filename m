@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795207365;
-	b=AlpPj/zCySGK0I1GunV6SXq7uBDgqhQ8nnqfsv3VtT5JLxDf+O9aHa6vJh5YBrP1ED4N
-	 hn+8/9C27DfjNKS0V52FyJtysUyrVBZ47IkWSHVLp1YL72WyNptAwXBvPFt+n/YDNzDNM
-	 SlZcS3Z39IVVZe0QX0I/ob3cLUkLJFWgJL6LHyaN0NA2REy41Gt0FpGt+oc4TeTC0o+Hq
-	 fjHmh5mI6Nm7iGLUhgUxItdtQCwOqkCNYM0kcJCyfd4tJnhMRLC8AregiGoj0jzfpCB4U
-	 bwylo8rxuk+5zKKY8z2CnVCPrHXGNqc4KCHuKZvkcd8Vf3+vD+m9Pim2PecqXTRAQNw==
+	t=1795207370;
+	b=xpCWYRXBGLs3ZJ9b5vmB6OYBmlBJ833+jHAenXEzXe3qaPJuHaK+FROqH8AzMFQ5YwVV
+	 Nnw+4S+gJuSdO0t6ZBgCsyzEi7XIl3QCDyC7IXD2KUfJuiP8PhxBZaY0dxL4UMdrr6HB1
+	 R23hrmqK8ySOpOTUAuGvFwa6JZh2L0neeACfnOgiCYAvEZzhMr7V4qPAawY0X4YEJnVjj
+	 pF0I4pwfKclQAK+bBP0WTjDE47PzkTPKYr2DPBCJqGfSuol7XqU+yJkV0ySMD9qKUYhyD
+	 x9782QHmqFsbvdtd5gzkT2bjVTVdx08w9LcbJQT1w4L9j34ok3KNiwBZCNtP9HZV4HQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795207365;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795207370;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=hnZN3YRZ98GVF++w/YTWvIy7nXP4wGKxJAAnzb2UsdA=;
-	b=Wuvfm+qrGYGL95taEqVmGX263WoidCkNkSm+E9opoGcZgH+XvwsKlwk2aVC96G1NEn8z
-	 b6YeFo+lstvAk/W+DDPmjDHUDFQew2fiVTukvTodSJObLzxPTOVSFeqJbfywW0eNG3dVc
-	 Gcs7M9kA1zjLjPPzMvwWVkeHjU2IysDb0wV40Jhlu5QwJXsBS+0yywKLl1ARYN/5uoFlY
-	 g2tkXfy9r+JWYooT9BiEg2OuPMpBPE+KtUycj/56IWDJ0B4SOuJRkYW0nfI/n42DUMPUP
-	 3vNM+KUQdncAwVCe99WnE324DBQk4BY6mD+Av62gNDFQXu11ve5gyaF07JYEp50ZZ9w==
+	bh=+8/V0kon/10TFFxOvqWNWP3LcaAkvDLKNqHNwCY9mgo=;
+	b=tyh2hfU+3jWfStQJUvtvB8Sg2hSFqCYRmReJNLzCi39rF4BrjPZhz2UMe0atDKmS2ojK
+	 rScYDuyjLCpVwb6GHyKTx4sA0W3b0DZBg+KGW8vHZwWCzDGMUODKZEAMGbCawXiaKtLZe
+	 ZsUYUetnsqY5/valSpzLSEVug/Ieb/VxOdRnfGUYw3DkfDT6pQuEZPFH76q90U7v6KGoX
+	 yEUGAYx3Ihk062nup7j+2QA3+3K7qgD982vdzF73nTDKWdn2KAGNw29F5Ea49FFehPVtC
+	 VJkz5xVon4hc08e+HtZiAMQfcBWHHvVHxYz9y7YYOHhtIn4G3cL1TJHqvr5aXZXDn4Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=RNtVmi56;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=re2fttis;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC7BE606A6C1;
-	Fri, 20 Nov 2026 20:42:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CC7BE606A6C1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B132160A3813;
+	Fri, 20 Nov 2026 20:42:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B132160A3813
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=RNtVmi56
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=re2fttis
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795207353;
-	bh=hnZN3YRZ98GVF++w/YTWvIy7nXP4wGKxJAAnzb2UsdA=;
+	s=smtpout1; t=1795207356;
+	bh=+8/V0kon/10TFFxOvqWNWP3LcaAkvDLKNqHNwCY9mgo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RNtVmi56Og6HpP1TaMO+H5Q4Kfe+Y9lITZVPTMt7v2o158KVhzsXHlSN7JeMMQr+n
-	 ymXgOQ95cCir7A3e6wrs249NSi1Iw0Ymm6asdvZqvmW1AtoVF9Va4e+QrTNwRC2Jz6
-	 XolxyzIHBfIOZGj5xa06hKpRDi6Uto+x7r1lW9fR1+URwp5Gb2q6z8Dc4PwnT5DxHu
-	 K/5rN29VQOHsOV0xIy/HG+oarkxYqt/v78r5lCIfphklKwQbygHMJpJ5M//+n61rov
-	 m8EC75C3nZKJiYO66TYRZYSBip4F+4gs6AG+fz1zKBLowEE8Zi4LRZLDvNmvJmlxxJ
-	 KF5j2yZmbkmKQ==
+	b=re2fttis0AlxeQq+QKB/0KrhFdK4j61pfFByoDzhAP70FxWuyd0uDwaTEULVmHx9x
+	 0OWeOAdbkfu79Jqab0G/P2DiAWAyHHc5XY4KS3TXjJQ48DpbG+voN0VXR33rXtDMUo
+	 RjufwDPgJv3548rlaC4VXeDuqVfjJpzgwJhoR5UHgIV5vb5MfzTQEbWfBwPwXt2t67
+	 /kPBoeot50Nh43SCofZL4ot27cEf50iWIS/zEtHczviLP5E12rA/KvkAGfFISDCHbQ
+	 VeLWbRhM3CA6WeAtAX3IYcpL1qeWjElg7/sagBDZRPHuudOBVPQRZzM06unqbLDj7L
+	 DUQllSyLF/khg==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2J4BmKzVBF;
-	Fri, 20 Nov 2026 15:42:32 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2N3d8wzVBH;
+	Fri, 20 Nov 2026 15:42:36 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v10 10/40] cgroup/cpuset: Give back the bandwidth an attach did not move
-Date: Fri, 20 Nov 2026 15:41:47 -0500
-Message-Id: <ef7bab599d38abb18f430bdab29cd3470a4b9b45.1795207232.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v10 25/40] sched/deadline: Reset the donor's runtime at a deboost in the class
+Date: Fri, 20 Nov 2026 15:42:02 -0500
+Message-Id: <a16410b68dd594967dd00f2b2bd03f1ac458c1a7.1795207232.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
@@ -97,193 +97,275 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach()
-fails") reserves the bandwidth of an attach as one sum.
-cpuset_can_attach() adds up the bandwidth of the deadline tasks it
-moves. Once all tasks pass their checks, it reserves the sum in the
-destination root domain. If another controller refuses the attach,
-cpuset_cancel_attach() frees the sum. If the attach goes through, the
-move of each task uses its part of the sum.
+A task boosted by a deadline waiter, its donor, runs on the donor's
+reservation. Commit 2d3d891d3344 ("sched/deadline: Add SCHED_DEADLINE
+inheritance logic") uses the waiter's parameters "during the whole
+period it holds the pi-lock".
 
-But a task can leave SCHED_DEADLINE between cpuset_can_attach() and
-cpuset_attach(). The previous patch makes sched_setattr() wait for the
-attach. sysrq-n does not wait: it cannot sleep. The task then moves no
-bandwidth. Its part of the reservation stays in the destination's
-total_bw, until the next rebuild of the accounting. The destination can
-then refuse deadline tasks that would fit.
+A boosted task that runs out of runtime is not throttled.
+replenish_dl_entity() refills it from the waiter's parameters: it adds
+the waiter's runtime, and moves the deadline by the waiter's period.
+From then on, the runtime and the deadline of the task are not those of
+its own reservation.
 
-Fix this by keeping the tally of what the attach moves, in
-sum_moved_dl_bw. Once the attach is through, give back what it did not
-move.
+A task that leaves the class at its deboost does not keep them.
+"sched/deadline: Reset the deadline and the runtime with the
+parameters", of the first series, resets them for a task with no
+parameters. For a task with parameters, they are cleared with the
+parameters at its 0-lag time.
 
-set_cpus_allowed_dl() decides the move under the runqueue lock.
-cpuset_attach_task() does not hold it. So the tally counts what
-set_cpus_allowed_dl() reports in the affinity context.
+But the boosted task can be a SCHED_DEADLINE task itself, when the
+waiter has an earlier deadline. It stays in the class at its deboost.
+rt_mutex_setprio() only resets dl.pi_se. enqueue_dl_entity() keeps a
+deadline that is ahead. So a task that was refilled keeps the waiter's
+runtime and deadline after the unlock. A task that sched_setattr() makes
+SCHED_DEADLINE while boosted ends its boost the same way.
 
-The random_mix case, added to deadline_bw_test later in this series,
-found the bug. It could no longer lower a fair server in a partition
-root with no room left.
+In one period, the task can run what the waiter left on top of its own
+runtime. Other deadline tasks can miss deadlines.
 
-The move_normalized case, added with that test, fires sysrq-n while a
-process with a sleeping deadline thread of 30% moves into a one-CPU
-partition root. Without this patch, the partition kept the 30% in 3
-guests of 3. It admitted 6 tasks of 10% where it had room for 9.
+Fix this by recording that refill in a new flag, dl_donor_refill. If
+the boost ends in the class with the flag set, start a new period at
+the deboost. The next enqueue is too late for a task blocked on another
+rt_mutex: the chain walk copies its deadline into its waiter first.
 
-Fixes: 2ef269ef1ac0 ("cgroup/cpuset: Free DL BW in case can_attach() fails")
+A task asleep since the refill has its inactive timer armed from the
+waiter's runtime and deadline. Its 0-lag time can then be up to the
+waiter's period ahead, and the task keeps counting in running_bw until
+then. If it leaves the class meanwhile, its bandwidth stays in total_bw
+until then too. So the deboost cancels that timer, and works out the
+0-lag time of the new period, which is now.
+
+The task can still hold a lock that another deadline task waits on. The
+new deadline can be later than that waiter's. rt_mutex_setprio() then
+boosts the task again.
+
+A task that was not refilled keeps its runtime and its deadline. They
+are those of its own reservation. A new period there would give it a
+full runtime at every contended unlock.
+
+The Sashiko AI review of this series found the sched_setattr() case
+and the inactive timer. These cases of deadline_bw_test test this fix:
+- deboost_blocked_keeps_order and deboost_keeps_own_runtime;
+- deboost_in_class_resets_period, deboost_after_donor_refill and
+  deboost_in_asleep_after_refill, added later in this series.
+
+A flag is needed: a test of the runtime against dl_runtime misses a
+refill that leaves less than dl_runtime. In deboost_after_donor_refill
+the owner runs past its own runtime with the lock, and the refill
+leaves it less than dl_runtime. With such a test, the owner had less
+than 1ms of its 5ms after the unlock, in every run. With the flag, it
+gets its own 5ms.
+
+Fixes: 2d3d891d3344 ("sched/deadline: Add SCHED_DEADLINE inheritance logic")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- include/linux/sched.h           |  3 ++-
- kernel/cgroup/cpuset-internal.h |  2 ++
- kernel/cgroup/cpuset.c          | 30 +++++++++++++++++++++++++-----
- kernel/sched/core.c             | 12 ++++++++----
- kernel/sched/deadline.c         |  4 ++++
- kernel/sched/sched.h            |  2 ++
- 6 files changed, 43 insertions(+), 10 deletions(-)
+ include/linux/sched.h   |  6 +++++
+ kernel/sched/core.c     | 16 +++++++++---
+ kernel/sched/deadline.c | 57 +++++++++++++++++++++++++++++++++++++++++
+ kernel/sched/sched.h    |  9 +++++++
+ kernel/sched/syscalls.c |  2 +-
+ 5 files changed, 86 insertions(+), 4 deletions(-)
 
 diff --git a/include/linux/sched.h b/include/linux/sched.h
-index e88616448b85..81a8d80a1aee 100644
+index 0c89263b1db9..cbd387993607 100644
 --- a/include/linux/sched.h
 +++ b/include/linux/sched.h
-@@ -1967,7 +1967,8 @@ extern void set_cpus_allowed_force(struct task_struct *p, const struct cpumask *
-  */
- extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
- extern int set_cpus_allowed_bw_reserved(struct task_struct *p,
--					const struct cpumask *new_mask);
-+					const struct cpumask *new_mask,
-+					u64 *moved);
- extern int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node);
- extern void release_user_cpus_ptr(struct task_struct *p);
- extern int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask);
-diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
-index bf847953c78d..93aa46d76b04 100644
---- a/kernel/cgroup/cpuset-internal.h
-+++ b/kernel/cgroup/cpuset-internal.h
-@@ -170,6 +170,8 @@ struct cpuset {
- 	int nr_migrate_dl_tasks;
- 	/* DL bandwidth that needs destination reservation for this attach. */
- 	u64 sum_migrate_dl_bw;
-+	/* The part of sum_migrate_dl_bw moved. The rest is given back. */
-+	u64 sum_moved_dl_bw;
- 	/*
- 	 * CPU used for temporary DL bandwidth allocation during attach;
- 	 * -1 if no DL bandwidth was allocated in the current attach.
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ce9c57617f49..2f39c3d12550 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3140,10 +3140,24 @@ static void clear_attach_data(struct llist_head *head, bool cancel)
- 	llist_for_each_entry_safe(cs, next, lnode, attach_node) {
- 		init_llist_node(&cs->attach_node);
- 		if (cs->nr_migrate_dl_tasks) {
--			if (cancel && cs->dl_bw_cpu >= 0)
--				dl_bw_free(cs->dl_bw_cpu, cs->sum_migrate_dl_bw);
-+			/*
-+			 * Give back the bandwidth the attach did not move.
-+			 * If the attach is cancelled, that is all of the
-+			 * reservation. Otherwise, it is what no move used,
-+			 * such as the part for a task that left
-+			 * SCHED_DEADLINE. The class it left releases its own
-+			 * bandwidth, from the root domain that counts it.
-+			 */
-+			if (cs->dl_bw_cpu >= 0) {
-+				u64 bw = cancel ? cs->sum_migrate_dl_bw :
-+					 cs->sum_migrate_dl_bw - cs->sum_moved_dl_bw;
-+
-+				if (bw)
-+					dl_bw_free(cs->dl_bw_cpu, bw);
-+			}
- 			cs->nr_migrate_dl_tasks = 0;
- 			cs->sum_migrate_dl_bw = 0;
-+			cs->sum_moved_dl_bw = 0;
- 			cs->dl_bw_cpu = -1;
- 		}
- 	}
-@@ -3303,10 +3317,16 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
- 	 * can_attach beforehand should guarantee that this doesn't
- 	 * fail.  TODO: have a better way to handle failure here
- 	 */
--	if (reserved)
--		WARN_ON_ONCE(set_cpus_allowed_bw_reserved(task, cpus_attach));
--	else
-+	if (reserved) {
-+		u64 moved;
-+
-+		/* Count what the move reports it moved. */
-+		WARN_ON_ONCE(set_cpus_allowed_bw_reserved(task, cpus_attach,
-+							  &moved));
-+		cs->sum_moved_dl_bw += moved;
-+	} else {
- 		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
-+	}
- 
- 	if (cpuset_v2() && !attach_ctx.mems_updated)
- 		return;
+@@ -683,6 +683,11 @@ struct sched_dl_entity {
+ 	 * @dl_overrun tells if the task asked to be informed about runtime
+ 	 * overruns.
+ 	 *
++	 * @dl_donor_refill tells if a boosted task had its runtime refilled
++	 * from the parameters of its donor. Its runtime and deadline are
++	 * then not those of its own reservation. The end of the boost
++	 * clears it.
++	 *
+ 	 * @dl_server tells if this is a server entity.
+ 	 *
+ 	 * @dl_server_active tells if the dlserver is active(started).
+@@ -715,6 +720,7 @@ struct sched_dl_entity {
+ 	unsigned int			dl_yielded        : 1;
+ 	unsigned int			dl_non_contending : 1;
+ 	unsigned int			dl_overrun	  : 1;
++	unsigned int			dl_donor_refill   : 1;
+ 	unsigned int			dl_server         : 1;
+ 	unsigned int			dl_server_active  : 1;
+ 	unsigned int			dl_defer	  : 1;
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index c0a714dde425..fff2725a4cd5 100644
+index 9831b4aa5235..94099ebb6246 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -3301,17 +3301,21 @@ EXPORT_SYMBOL_GPL(set_cpus_allowed_ptr);
- /*
-  * Like set_cpus_allowed_ptr(), for a caller that has made room for the
-  * deadline bandwidth of @p in the root domain of @new_mask. Move that
-- * bandwidth there with @p. Return 0 on success, or a negative error
-- * code.
-+ * bandwidth there with @p, and set @moved to the bandwidth moved, 0
-+ * if none. Return 0 on success, or a negative error code.
-  */
--int set_cpus_allowed_bw_reserved(struct task_struct *p, const struct cpumask *new_mask)
-+int set_cpus_allowed_bw_reserved(struct task_struct *p,
-+				 const struct cpumask *new_mask, u64 *moved)
- {
- 	struct affinity_context ac = {
- 		.new_mask  = new_mask,
- 		.flags     = SCA_DL_BW_RESERVED,
- 	};
-+	int ret;
- 
--	return __set_cpus_allowed_ptr(p, &ac);
-+	ret = __set_cpus_allowed_ptr(p, &ac);
-+	*moved = ac.dl_bw_moved;
-+	return ret;
- }
- 
- /*
+@@ -7972,16 +7972,26 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+ 				dl_set_donor(&p->dl, pi_task);
+ 				scope->flags |= ENQUEUE_REPLENISH;
+ 			} else {
+-				dl_clear_donor(&p->dl);
++				dl_deboost(&p->dl);
++				/*
++				 * dl_deboost() can start a new period. Its
++				 * deadline can then be after the top waiter's.
++				 * Boost the task again then.
++				 */
++				if (pi_task && dl_prio(pi_task->prio) &&
++				    dl_entity_preempt(&pi_task->dl, &p->dl)) {
++					dl_set_donor(&p->dl, pi_task);
++					scope->flags |= ENQUEUE_REPLENISH;
++				}
+ 			}
+ 		} else if (rt_prio(prio)) {
+ 			if (dl_prio(oldprio))
+-				dl_clear_donor(&p->dl);
++				dl_drop_boost(&p->dl);
+ 			if (oldprio < prio)
+ 				scope->flags |= ENQUEUE_HEAD;
+ 		} else {
+ 			if (dl_prio(oldprio))
+-				dl_clear_donor(&p->dl);
++				dl_drop_boost(&p->dl);
+ 			if (rt_prio(oldprio))
+ 				p->rt.timeout = 0;
+ 		}
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index e35d4c3045b3..a67a50ecd525 100644
+index a566e9252a41..2912d13b60d6 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -3672,6 +3672,9 @@ static void set_cpus_allowed_dl(struct task_struct *p,
- 	 * Otherwise, the bandwidth stays where it is counted, until the next
- 	 * rebuild of the accounting. Moving it without room would leave no
- 	 * root domain counting it.
-+	 *
-+	 * Report in @ctx the bandwidth moved. The caller made its own test
-+	 * without the runqueue lock, so it must count only what this reports.
- 	 */
- 	if ((ctx->flags & SCA_DL_BW_RESERVED) &&
- 	    dl_task_needs_bw_move(p, ctx->new_mask)) {
-@@ -3700,6 +3703,7 @@ static void set_cpus_allowed_dl(struct task_struct *p,
- 		cpu = cpumask_any_and(ctx->new_mask, cpu_active_mask);
- 		p->dl.dl_bw_cpu = cpu < nr_cpu_ids ? (int)cpu : -1;
- 		p->dl.dl_bw_gen = dl_bw_gen;
-+		ctx->dl_bw_moved = p->dl.dl_bw;
+@@ -93,12 +93,62 @@ static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
+ {
+ 	return pi_of(dl_se) != dl_se;
+ }
++
++/*
++ * Record that @dl_se had its runtime refilled from the parameters of its
++ * donor, if it is boosted.
++ */
++static inline void dl_note_donor_refill(struct sched_dl_entity *dl_se)
++{
++	if (is_dl_boosted(dl_se))
++		dl_se->dl_donor_refill = 1;
++}
++
++static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task);
++
++/*
++ * End the boost of @dl_se, whose task stays in the class. If the boost
++ * refilled its runtime from the donor's parameters, start a new period
++ * now. The next enqueue is too late for a task blocked on another
++ * rt_mutex: the chain walk copies its deadline into its waiter node
++ * first. Without a refill, the task keeps the runtime and the deadline
++ * of its own reservation.
++ *
++ * The caller holds the rq lock and the pi_lock of the task, and has
++ * updated the rq clock.
++ */
++void dl_deboost(struct sched_dl_entity *dl_se)
++{
++	struct rq *rq = rq_of_dl_se(dl_se);
++
++	if (dl_se->dl_donor_refill) {
++		dl_se->deadline = rq_clock(rq) + dl_se->dl_deadline;
++		dl_se->runtime = dl_se->dl_runtime;
++		/*
++		 * A task asleep since the refill has its inactive timer armed
++		 * from the donor's runtime and deadline. The 0-lag time of the
++		 * new period is now: stop counting the task in running_bw
++		 * now. If the timer handler is already running, it does that.
++		 */
++		if (dl_se->dl_non_contending &&
++		    hrtimer_try_to_cancel(&dl_se->inactive_timer) == 1) {
++			dl_se->dl_non_contending = 0;
++			put_task_struct(dl_task_of(dl_se));
++			task_non_contending(dl_se, true);
++		}
++	}
++	dl_drop_boost(dl_se);
++}
+ #else /* !CONFIG_RT_MUTEXES: */
+ static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
+ {
+ 	return dl_se;
+ }
+ 
++static inline void dl_note_donor_refill(struct sched_dl_entity *dl_se)
++{
++}
++
+ static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
+ {
+ 	return false;
+@@ -1106,6 +1156,7 @@ static inline void replenish_dl_new_period(struct sched_dl_entity *dl_se,
+ 	/* for non-boosted task, pi_of(dl_se) == dl_se */
+ 	dl_se->deadline = rq_clock(rq) + pi_of(dl_se)->dl_deadline;
+ 	dl_se->runtime = pi_of(dl_se)->dl_runtime;
++	dl_note_donor_refill(dl_se);
+ 
+ 	/*
+ 	 * If it is a deferred reservation, and the server
+@@ -1204,6 +1255,7 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
+ 		if (!dl_se->dl_deadline) {
+ 			dl_se->deadline = rq_clock(rq);
+ 			dl_se->runtime = 0;
++			dl_note_donor_refill(dl_se);
+ 		}
+ 		if (dl_se->runtime < 0 || dl_se->dl_yielded)
+ 			dl_se->runtime = 0;
+@@ -1226,11 +1278,15 @@ static void replenish_dl_entity(struct sched_dl_entity *dl_se)
+ 	    (dl_se->dl_defer_armed && dl_entity_overflow(dl_se, rq_clock(rq)))) {
+ 		dl_se->deadline = rq_clock(rq) + deadline;
+ 		dl_se->runtime = runtime;
++		dl_note_donor_refill(dl_se);
  	}
  
- 	set_cpus_allowed_common(p, ctx);
+ 	if (dl_se->dl_yielded && dl_se->runtime > 0)
+ 		dl_se->runtime = 0;
+ 
++	if (dl_se->runtime <= 0)
++		dl_note_donor_refill(dl_se);
++
+ 	/*
+ 	 * We keep moving the deadline away until we get some
+ 	 * available runtime for the entity. This ensures correct
+@@ -5075,6 +5131,7 @@ static void __dl_clear_params(struct sched_dl_entity *dl_se)
+ 	dl_se->dl_yielded		= 0;
+ 	dl_se->dl_non_contending	= 0;
+ 	dl_se->dl_overrun		= 0;
++	dl_se->dl_donor_refill		= 0;
+ 	dl_se->dl_server		= 0;
+ 	dl_se->dl_defer			= 0;
+ 	dl_se->dl_defer_running		= 0;
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index f4cd35811b96..65fc17909d56 100644
+index 859d782cc899..516a49370713 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2678,6 +2678,8 @@ extern const u32		sched_prio_to_wmult[40];
- struct affinity_context {
- 	const struct cpumask	*new_mask;
- 	struct cpumask		*user_mask;
-+	/* Out: the deadline bandwidth moved to the new root domain. */
-+	u64			dl_bw_moved;
- 	unsigned int		flags;
- };
- 
+@@ -411,6 +411,15 @@ static inline void dl_clear_donor(struct sched_dl_entity *dl_se)
+ {
+ 	dl_replace_donor(dl_se, dl_se);
+ }
++
++extern void dl_deboost(struct sched_dl_entity *dl_se);
++
++/* End the boost of @dl_se. The caller holds the rq lock of its task. */
++static inline void dl_drop_boost(struct sched_dl_entity *dl_se)
++{
++	dl_clear_donor(dl_se);
++	dl_se->dl_donor_refill = 0;
++}
+ #endif
+ extern void __getparam_dl(struct task_struct *p, struct sched_attr *attr, unsigned int flags);
+ extern bool __checkparam_dl(const struct sched_attr *attr);
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 0343c7831101..9884fa55538a 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -310,7 +310,7 @@ static inline void __setscheduler_dl_pi(int newprio, int policy,
+ 	 * the class. Drop its boost then, as rt_mutex_setprio() does.
+ 	 */
+ 	if (!dl_prio(newprio))
+-		dl_clear_donor(&p->dl);
++		dl_drop_boost(&p->dl);
+ }
+ #else /* !CONFIG_RT_MUTEXES */
+ static inline void __setscheduler_dl_pi(int newprio, int policy,
 -- 
 2.47.3
 
