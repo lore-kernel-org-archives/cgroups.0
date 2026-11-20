@@ -1,49 +1,53 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.112
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795141161;
-	b=PLNYdvZk2lm8R4tk6h0TVAqnyPpFXnXD5LAzyNhx0lL3+NooQ2Pz8Iymh5vQG9EWSw21
-	 fyaN52uOiIDPsLv9B9RBPFoKOlGNPxvJMd0OHpFmVNsC0AjHl05mu6j+uXf12//zaCXn+
-	 1CplPsd1vCjhHv/T2aX+/mC5hNX+l9yu6w+irVmDu3hM2Rojj9ZdkZvCdJn04/2GYY/vq
-	 ywlAulC/6CroXbg2bKYcWXqdvQOcRr2br1Fi3RSm9g/9QcZFHksM21dPZwvBk8SSVqDV8
-	 xaOwG4w9m8F6JCcYLqwWTuY1/9c4OcNFzb1OrveAvqaDQZYOMAlPbDk7eNY70TY4H/A==
+	t=1795157180;
+	b=rVxWv83A8aFFKw1KTFrKt+8mkRwVsle6WSsSabz0pedRJmbWwXwzCTvbPQRz6snW5Ftl
+	 gCAgh0XKUq7E9rzm6HQM5JmMnIw044Y+7dRb9jXMfk1Sx11CQyWC0GhejG4cf7Yk93NOT
+	 nfbVsbH56guPlefW2Zb3iOSbylOPxTsK0ij8XX7DrmzFFtyjSjAFm2hjrI8AVNZQkyekM
+	 j9QoUIZz1Ee7nuq+Kg5su2lIVu6qOcNv6kHKFP4pFkaD+NTVSudRiwI5i8hgnrfo420ru
+	 PF0AZwaJta2Ob/IDvp63Lk7kKic4nYXnEVmdQcQcaQygPR98sMM1opBFZ5Oh+GT9lZA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795141161;
-	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
-	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
-	bh=balcmbgSpngESIblTghqrlh1o6Z7H9I2czbvxRW+eu4=;
-	b=IcJsDI7zomXc8FYl/HFqnyN9jmE+PbLaiodSpzky5j4zQTtcjB3ZPr52lAk6Xa7b/rg3
-	 1SXbP2wuyBb46OX5NXIqrghDk6/hZUsZ1iNsXIfI7fRhd9/vcQKqDHtvPD3jalXH5vizH
-	 w/KxMIEGDLTH5xRhCOLeG4g98KiAubiwS7MyccbeMNy0fEqOQSbq5wRL+OF3ICL+7WRCP
-	 1dw1wJL6QFRta8t53U5LvVeD84cTtPmt3adAuwxhFwmXpizVesed3XQqSt9zVL6LmIkWJ
-	 HkcTlP5fSwvJxu7a35yVbKCOkTOL7Ue4a90AFbhizoqTA8jDoixVZ6MMp4Oth99MCbA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795157180;
+	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
+	 In-Reply-To:References:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=C/t50vXnTPfcyjVvUVpv2055G/DltYq6hFFmlA7ySbc=;
+	b=pIOohR6jhe/Xg06BgXKwnu1qZTTriQr6HmawcULR1hipl+zr2qEebj9i0C3dGSoe68XQ
+	 xx4zMkc71lecGnaL6p4Pc2zC3O629P96Rj5XQvp3g7fgOduF8DlQHdFKOc/QQUE88Gm1g
+	 bmNUYiD3GibC+6ePzGPaEVI5wPdBUofcGhwOSq+nMg3pvWd2Q0kiAUbgXecwyh0tcxXov
+	 o315Hh9MJ3pGfTklGDdrIeOpV+sTX12SWJWwGe1dthnqnsKYIpwpzoBaKmG5qCf0EdDxV
+	 J14nWaoy63E3tiL6fnu0EPbfYYy6ja8fwC9bhvdJp4qDRZJ5Rb0RkX1Y5eUmM1ezYLg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.alibaba.com;
-	spf=pass smtp.mailfrom=linux.alibaba.com;
-	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b="MR/dMGwa";
-	arc=none smtp.remote-ip=115.124.30.112
-Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RdY3EZd3;
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B64606A325;
-	Fri, 20 Nov 2026 02:19:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30B64606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64D2F606A325;
+	Fri, 20 Nov 2026 06:46:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=MR/dMGwa
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1795141151; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=balcmbgSpngESIblTghqrlh1o6Z7H9I2czbvxRW+eu4=;
-	b=MR/dMGwaCsgx+VVcAlok9BPme62AcQRT5o25JY6ClvhchH7KSo2JNXCuZ9mpO1dOj4JtPhwaMm41JHQBFEJhC2BUpqqs322lLmYazJSZHwNejaQQiklalesnMr3sFZCdBYja7NsMXl7N5mS4zNm7cGAmNhsFqITnh2D6z8pn+04=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0XF5-vtZ_1795141149;
-Received: from 30.178.67.37(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0XF5-vtZ_1795141149 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 20 Nov 2026 10:19:11 +0800
-Message-ID: <856407d2-db33-4c1d-a5c9-2ba7e0053ad4@linux.alibaba.com>
-Date: Fri, 20 Nov 2026 10:19:09 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RdY3EZd3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C489A1F000C6;
+	Fri, 20 Nov 2026 06:46:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795157179;
+	bh=C/t50vXnTPfcyjVvUVpv2055G/DltYq6hFFmlA7ySbc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=RdY3EZd3eBixZBOjQSIcYYlFegr5hMOULP/6FDQ1hHnHusCBQbJXagTizh1FMHYtU
+	 xnXrRKX1i/HGu159RWhHNjl7Wi+KyUEaQ3EbqVBvRwqk+nBDY2T4iu/4piIi1/RFZJ
+	 Q7x8V5TH195HtZkPRghW0Yi94iNJpdPrBwpq3Zjn0u5ip059Jh5Q7HxqASirmo7PoX
+	 l3CN8b6fWGEzB5BYwBTXq0DCwdN8Vj4grEuv1cN28xXGdCMT/Jiv4I1he5VeLOmL03
+	 3kv0MJGuvRWfszIceDyzYOC+pCh/rK5JWjGzGOgKRHB3luW4a6xVi9bs0Urbb2TlQA
+	 PEVm8nucWvKkA==
+Date: Thu, 19 Nov 2026 20:46:18 -1000
+Message-ID: <471bf8d446becabfca00041fb2a78067@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: luca abeni <luca.abeni@santannapisa.it>
+Cc: Yuri Andriaccio <yurand2000@gmail.com>, bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com, hannes@cmpxchg.org, juri.lelli@redhat.com, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org, mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com, peterz@infradead.org, rostedt@goodmis.org, vincent.guittot@linaro.org, vschneid@redhat.com, yuri.andriaccio@santannapisa.it
+Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
+In-Reply-To: <20261119151416.33f90a64@linux.fritz.box>
+References: <20261109163616.195264-1-yurand2000@gmail.com> <212c244d534ee1fdb0538a980789e16c@kernel.org> <20261111175657.250354-1-yurand2000@gmail.com> <58cb2cbaf82c0f671213eaca46465cd5@kernel.org> <20261119151416.33f90a64@linux.fritz.box>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -53,112 +57,63 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] block/blk-iolatency: fix always-zero cur_stat mean on
- non-SSD
-To: Tao Cui <cui.tao@linux.dev>, Jens Axboe <axboe@kernel.dk>,
- Tang Yizhou <tangyeechou@gmail.com>
-Cc: tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, cuitao@kylinos.cn
-References: <20260904065426.1281914-1-cui.tao@linux.dev>
-From: Guixin Liu <kanie@linux.alibaba.com>
-In-Reply-To: <20260904065426.1281914-1-cui.tao@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 
+Hello, Luca.
 
+I'm only thinking about this from the interface POV, so please read
+the following with that in mind.
 
-在 2026/9/4 14:54, Tao Cui 写道:
-> From: Tao Cui <cuitao@kylinos.cn>
->
-> iolatency_check_latencies() accumulates the per-window latency stat
-> into iolat->cur_stat via latency_stat_sum(), which for non-SSD devices
-> calls blk_rq_stat_sum().  But blk_rq_stat_sum() is contracted on a raw
-> per-cpu src: it folds src->batch into the new mean.  By the time the
-> per-window stat reaches cur_stat it is already aggregated, with batch
-> left at 0.  Each window therefore contributes zero latency to
-> cur_stat->mean, which on non-SSD devices stays at 0; the
-> latency_sum_ok(&cur_stat) check that gates scaling up is always true,
-> so the scale-up hysteresis never engages.  SSD devices use the
-> percentile path and are unaffected.
->
-> Add latency_stat_merge(), which merges two already-aggregated stats by
-> their reconstructed totals (mean * nr_samples) instead of src->batch,
-> and use it only for the cur_stat accumulation; the earlier per-cpu sum
-> keeps latency_stat_sum(), whose src is still raw.
->
-> Fixes: d70675121546 ("block: introduce blk-iolatency io controller")
-Ti Tao:
-  Would it be better to change the fix tag to "451bb7c33197 ("blk-iolatency: keep track of previous windows stats")"?
+On Thu, Nov 19, 2026 at 03:14:16PM +0100, luca abeni wrote:
+> ... We believe that mixing "max" cores and cores configured with
+> (runtime, period) in the same cgroup is problematic, for various
+> reason. From the theoretical point of view, this would mean that when
+> migrating between cores a task can "move" from one reservation to a
+> different one, creating issues for schedulability analysis.
+...
+> So, what about a different idea: a cgroup can be "max" or have
+> (runtime,period); when we set (runtime,period), this is set for all the
+> CPU cores, but then we can override (with runtime 0, or different
+> runtime/period) some cores (but we cannot override with "max").
 
-Best Regards,
-Guixin Liu
-> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
->
-> ---
-> Changes in v3:
-> - Rebase onto current linux-next head (no code change).
-> - Verified with a two-kernel QEMU run (virtio-blk forced rotational,
->   cgroup v2 io.latency target set below the achievable latency so the
->   scale path runs every window): on the unpatched kernel cur_stat->mean
->   stayed 0 across all windows while the per-window mean was 120-250us;
->   with this patch cur_stat->mean tracked the per-window mean.
->
-> Changes in v2:
-> - Move the fix from blk-stat.c (blk_rq_stat_sum) into blk-iolatency.c,
->   per Tang Yizhou's review: blk_rq_stat_sum() is contracted on a raw
->   per-cpu src, so the aggregated-stat merge belongs in the iolatency
->   caller, not the shared helper.
->
-> v1: https://lore.kernel.org/all/20260720133813.45150-1-cui.tao@linux.dev/
-> v2: https://lore.kernel.org/all/20260721030312.85655-1-cui.tao@linux.dev/
-> ---
->  block/blk-iolatency.c | 27 ++++++++++++++++++++++++++-
->  1 file changed, 26 insertions(+), 1 deletion(-)
->
-> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-> index 2caa79a008ad..853608a4f187 100644
-> --- a/block/blk-iolatency.c
-> +++ b/block/blk-iolatency.c
-> @@ -216,6 +216,31 @@ static inline void latency_stat_sum(struct iolatency_grp *iolat,
->  		blk_rq_stat_sum(&sum->rqs, &stat->rqs);
->  }
->  
-> +/*
-> + * Merge an already-aggregated @stat into @sum by reconstructed totals
-> + * (mean * nr_samples); blk_rq_stat_sum() reads src->batch, which is 0
-> + * here. The overflow check also rejects the 0 samples case.
-> + */
-> +static inline void latency_stat_merge(struct iolatency_grp *iolat,
-> +				      struct latency_stat *sum,
-> +				      struct latency_stat *stat)
-> +{
-> +	if (iolat->ssd) {
-> +		sum->ps.total += stat->ps.total;
-> +		sum->ps.missed += stat->ps.missed;
-> +	} else {
-> +		if (sum->rqs.nr_samples + stat->rqs.nr_samples <=
-> +		    sum->rqs.nr_samples)
-> +			return;
-> +		sum->rqs.mean = div_u64(sum->rqs.mean * sum->rqs.nr_samples +
-> +					stat->rqs.mean * stat->rqs.nr_samples,
-> +					sum->rqs.nr_samples + stat->rqs.nr_samples);
-> +		sum->rqs.min = min(sum->rqs.min, stat->rqs.min);
-> +		sum->rqs.max = max(sum->rqs.max, stat->rqs.max);
-> +		sum->rqs.nr_samples += stat->rqs.nr_samples;
-> +	}
-> +}
-> +
->  static inline void latency_stat_record_time(struct iolatency_grp *iolat,
->  					    u64 req_time)
->  {
-> @@ -547,7 +572,7 @@ static void iolatency_check_latencies(struct iolatency_grp *iolat, u64 now)
->  	/* Somebody beat us to the punch, just bail. */
->  	spin_lock_irqsave(&lat_info->lock, flags);
->  
-> -	latency_stat_sum(iolat, &iolat->cur_stat, &stat);
-> +	latency_stat_merge(iolat, &iolat->cur_stat, &stat);
->  	lat_info->nr_samples -= iolat->nr_samples;
->  	lat_info->nr_samples += latency_stat_samples(iolat, &iolat->cur_stat);
->  	iolat->nr_samples = latency_stat_samples(iolat, &iolat->cur_stat);
+If the interface is per-CPU, I think it should be per-CPU all the way.
+What a cgroup has on one CPU shouldn't say anything about what it has
+on another. That seems the most consistent in itself and with the
+other controllers.
 
+Take Juri's example of a top-level group which has an entry only for
+CPU0. Its tasks are limited on CPU0 and not on CPU1, which is what the
+config says. io.max works the same way. A limit on one device says
+nothing about the other devices, and a device without an entry is at
+"max". If the group shouldn't run RT tasks on CPU1, it can be given
+runtime=0 there.
+
+Tasks moving across CPUs doesn't change how the resources are
+allocated. A task consumes from whatever serves its cgroup on the CPU
+it's running on.
+
+I'm not too familiar with the schedulability analysis side, so please
+correct me if I'm missing something. Wouldn't it work if the setups
+which need the analysis configure the group on all CPUs? That seems
+like something which can be a convention in how groups are configured
+rather than forced through the interface, which looks like it'd get
+clunky whichever shape we pick.
+
+> We think 0 as a default would be problematic, as it means "no real-time
+> tasks", and 0 in the root means "no real-time tasks in all the
+> cgroups"... Or am I missing your point?
+
+Yeah, zero doesn't work there. How about defaulting the root to "max"
+like the other cgroups? "max" on the root would mean that nothing is
+set aside for cgroups. RT tasks which aren't under any entry run
+without a server as they do now, and the budgets of top-level cgroups
+are admitted against the DL bandwidth directly. An entry on the root
+would be the total that cgroup servers can reserve on that CPU, and
+writing one fails if what's already reserved doesn't fit. RT tasks in
+the root itself keep running without a server either way.
+
+Thanks.
+
+--
+tejun
