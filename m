@@ -1,122 +1,91 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795179924;
-	b=v/Q39Zbbp9NglYJHMKQ0pt8SamK0bsbGdSmXcM62Te7f/cftIOujCjy/pZa7apTvEnyU
-	 1GqNKwXSNGpZe37N2iv/1JB+GJA3ztvSPFertG0cDOeng7jZoxYNemAxK3l6awejxW1pf
-	 n9ZTQrZgkQYAK8t4lq+pCjQGHTkHhB1o2i74VRm+ZkVYkzWso57JPfDRoPLbCEeaApZW0
-	 49qYIcppWdmOTHlwuHthcP9jE47sG2MVyZI6LibKdvLPVO6R5ea42AgWgyFwGWDOM04MT
-	 8OcT7FKjmzzqZaGusJt1dTZvqbiH0/gMz0ckRtICQ7wUBCBZABxP70Uz5cNvC5RpNKA==
+	t=1795181615;
+	b=zZRhCqPtwmcb0EsuA/7YPqkDmgcQ7ani2pJd2SRaSaPpDqlSRUQRBHG5vwlyjLNMJvAm
+	 tGMA8PzLx33H2Z0p44STt3W6a0SnjblA9CMtbb05+6siSJJdby42vT4KFW3J7cGNaG8EP
+	 DQ0UAJO6a5HeCj5wZXA7D8KNtT2Eh/YUnBG1mJkwxjJF5uAxcpvMWx3D3P75ST1rSkROA
+	 gacdu0hnn8iqErOE3HEXnFV1nNh2wM+a5ZwMD9ZAgURv4tyZQmrzPMvfV6bz/u2GtohiB
+	 OorAVmggy1Q6lERNDFdJN5+Md56Vsl+aKIhxFmanEFm0Uo/DecOLUd8Zw6d8sPg04qw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795179924;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=P1l8hjvVS49GyIA6u6rGG13XCHYYHrZ9VUNaIusOyIk=;
-	b=ATZYh5o///xt+7THNO6fdOppp2T/8bKEeSQasSaSO3fzpJ3tsvow/MFwkDJMLsLccgfK
-	 a6NgLDEGnqOQt02RoqT6LOJq0lVl61r8iFehRD9RsGHXYG4X+00/uuoEMOR65zlrvnoUy
-	 67OM1oTfvxNFEJGrzY5cw9+FlAEHeAgUF7WN9NVqVHfmQyG3CqbEDyPY6fKJS6SUSqvTD
-	 As8NjoiIaiw+Jg1wDTVURsQyid1lIACIQsTksgVrFf2G2UtGSI1+Wgvf8MsqLZCQESaOz
-	 t51Pzh74BjigmwrfOW0+CfFZlXhbA0mkkD67UJSbUJt0aQX8aATJiJwV7Bwuk24zAtA==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795181615;
+	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
+	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding;
+	bh=ItqwSvSZ8iuWNx4RiptPGqq6vki5TsQPNC9NH0gHMis=;
+	b=jQZqlEpS2/GjOxW1nRxUu31OMpt4ZE6NbPiGG8aa7Bq8SMOQKaehxkmpftm8IpwK00Qh
+	 feLu2QZ1qs85ybfSALDFu3lWUMxGZkuYCQOl1BFpz2XzLzlkxi5/naGtCGO5l8RDAAv6T
+	 oCkGAUJCba7WoAub8nD+2hfT1+taMU+SFgJipFvqksnTkvhksZbcQF4vn6H+FZa05nlTK
+	 yzZ7u45tz66+9mi1x6YVaEJpfiUjFj5+m+bNOh9UtG7AAtBuGswMNrP6tMqbneOawC58U
+	 mD+mfNMlCII7w1otGf8e2gx5X/+YEu/9pheneKAAMZZOzgfEXqiJduMhypplTW/RgbA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=OhjTY5YT;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b="a7E5Q/at";
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	dmarc=pass header.from=efficios.com;
+	spf=pass smtp.mailfrom=efficios.com;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=kBxvEKJB;
+	arc=none smtp.remote-ip=158.69.130.18
+Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD0A606A326
-	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 13:05:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2FD0A606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90BF7606A326;
+	Fri, 20 Nov 2026 13:33:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 90BF7606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=OhjTY5YT;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=a7E5Q/at
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795179923;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P1l8hjvVS49GyIA6u6rGG13XCHYYHrZ9VUNaIusOyIk=;
-	b=OhjTY5YTcuoDbjWOWWYh62bB2E3Uh/h0WJ2tdy2TnyM6djSce7ywoWMkdtsKgguff975BL
-	A8EUfdT6oTlpJweZR+etDaniqErkkZl7rBsBkzzMa/1iOe6hrijS6yT6m646Sq0OFF/z4Q
-	tYqp7wRsS3gmSLEEFh7vWXVZSzebCLM=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-646-b1cJpt2zOdWfuyPSFRu7Bg-1; Fri, 20 Nov 2026 13:05:20 +0000
-X-MC-Unique: b1cJpt2zOdWfuyPSFRu7Bg-1
-X-Mimecast-MFC-AGG-ID: b1cJpt2zOdWfuyPSFRu7Bg_1795179920
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4bb64c99bb8so6554875e9.1
-        for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 05:05:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795179919; x=1795784719; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=P1l8hjvVS49GyIA6u6rGG13XCHYYHrZ9VUNaIusOyIk=;
-        b=a7E5Q/ataALL+4CgEZhd1/J5a6wtd4Qr7q0QjAm+vqgoEh1WazQWKqUvtZeABshdr5
-         BZ8w0ow4XI0vd6Aws7ckDJEyccq1QNcI6suKHQHvEEyvIjtiLTuCkowo8BpJyelOWYgy
-         /UOE2YHL2iWIVODyvLYMaEPe0ANXjRSe/Cfh8QFcyZY053+EzqA+hW36Ez418LE4lU2R
-         GzmNt8iAVXH5KSugNbLql1JDi1189UOHJ9DiE3xrrw4i5QCQEgMmNhL+m8oPavLfal/h
-         qNslfkxBK16Akwij5pxzwWlixaepoQY02h3PBfIvbW/Zcgbzk3v2zKinRBjyeev8MdbO
-         pUWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795179919; x=1795784719;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=P1l8hjvVS49GyIA6u6rGG13XCHYYHrZ9VUNaIusOyIk=;
-        b=o3qfcPRpcQEW0CQYEWEjPWMRYQDZlRS7kr206KkAgx1KrO7SSsJGqpueT91s0/slDJ
-         1Caz60pf8YiGBRi5DToIY1UaJdHhBNgAr4ab/c3ALJ3ZRBo8jcUHWvH+j/X0wCDnpSdc
-         fV7ZSriHcQBv+FHg5bXwibX/apU9Kk3ltbHZTnYoP9furmuY8Ghl9X1DYoY85sxQXOwV
-         q1da59nQk6Dku1X17W5HMljSCn9xbNVuxVFrRvxIe4QKQXm3MMcH6PUhEgXYBT2MTXZX
-         /jYXjD404EzCz3ei01BpJhHcMFFw14vPCmx9rS3oMNyO0iMnHErtAVfKszgczgKyrEIR
-         TVjg==
-X-Forwarded-Encrypted: i=1; AL+hErFEiYo+A3zKzJWVTl/25Q7s6IdkaYqt7UYbTFys1dEElimAlPIZlJOFr09Ls5ft/O54u4TKIb6X@vger.kernel.org
-X-Gm-Message-State: APuU4Z9Z+fJtc8LZupQ3I/kYX9fWs8NSzhWRcnpaJGOIFOffYIuEE4Aq
-	ARFT1q+b7AK0NdZSnC1HoS0/KWYDjs1S6Eaz5oMR7bbrcirumItIssJJdOaMK5v6IhG9K4ubWwT
-	szLvzBco2ek33WMjkemMfyjwbvfQ5ychT+2DSgP7EEP9HP+UVbBHo3ZPhrgk=
-X-Gm-Gg: AYBFou3TwSzSFA/7iujVjKRb1/I0m8jxoWqvh+bPGzaODEvOw1XWgSBtspHWPL9wxOJ
-	oTTipj4jVEYnBYT8AHVi6wvBu9dqGNlYFFRm4zsdvmIVHQry0Egt7QaMP8wsxBzEQ0OMFQM56fI
-	kl05VWuBzMaX/PMKNeLSaEo5TUvGsfPjTJSiX2fAPIGZvcvcFmETMFDp1nzFALDOCG012hVwuw6
-	SA5+pzFKnEWpLstymhHZJNcuF6Wu7TNzBkSz+yqVa7mEsUVZe2mJQkVBvJbz38pt+UHTxWz2eRU
-	L7fIOpxKcFhULPR230j7IQTgqY1jq59hGuSEa5UUgP/BPw+cZqXwuVl0Si4lKJhbt93hjTo9DD3
-	AyidX+Flg8foKoZ1MoWeYRh7ekKT808ygAS5VbqQbeX99AyEH2ZVPGtCJ0E1R2AiMDoQ1YhcOPO
-	HSEeM=
-X-Received: by 2002:a05:600c:820c:b0:4bb:6f6a:1976 with SMTP id 5b1f17b1804b1-4bb887c2923mr64603005e9.2.1795179919584;
-        Fri, 20 Nov 2026 05:05:19 -0800 (PST)
-X-Received: by 2002:a05:600c:820c:b0:4bb:6f6a:1976 with SMTP id 5b1f17b1804b1-4bb887c2923mr64602195e9.2.1795179919119;
-        Fri, 20 Nov 2026 05:05:19 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb8849247asm85099165e9.7.2026.11.20.05.05.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2026 05:05:18 -0800 (PST)
-Date: Fri, 20 Nov 2026 14:05:15 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: peterz@infradead.org, mingo@redhat.com, vincent.guittot@linaro.org,
-	tglx@kernel.org, will@kernel.org, boqun@kernel.org,
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
-	mgorman@suse.de, vschneid@redhat.com, kprateek.nayak@amd.com,
-	luca.abeni@santannapisa.it, mathieu.poirier@linaro.org,
-	longman@redhat.com, ridong.chen@linux.dev, tj@kernel.org,
-	hannes@cmpxchg.org, mkoutny@suse.com, shuah@kernel.org,
-	bigeasy@linutronix.de, clrkwllms@kernel.org, parri.andrea@gmail.com,
-	m.szyprowski@samsung.com, kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH v5 00/17] sched/deadline: first bandwidth accounting
- fixes and selftests
-Message-ID: <awBFi0bwFt5KoEq-@jlelli-thinkpadt14gen4.remote.csb>
-References: <cover.1795115075.git.mathieu.desnoyers@efficios.com>
+	dkim=pass (2048-bit key, unprotected) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=kBxvEKJB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+	s=smtpout1; t=1795181613;
+	bh=ItqwSvSZ8iuWNx4RiptPGqq6vki5TsQPNC9NH0gHMis=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=kBxvEKJBd215Yne/GG+BDazUWoNvyOJTQRRzE6NXw/fbnGTVMJczxeKSTyxT5q6ZG
+	 yhuGEDQQ1Vjn3E/oJeHTx0lNHDXJ5Az8KZSu9kx1oLSPRIYDFzQfzSv1meA5A51DyD
+	 8Nb/GjOEgejSvi0vQwAWcmAX7A76WVrS5nAAAwhF//a7MFzGPjZRktenUs96IrVJaz
+	 PAo4jZj++l0YD0B+Pe1G7+62UJrSiH4fRAMV8hoBjtANuPWDxUJNlN97y2rtrU4eus
+	 Y7a3SVAd0H/1jTucMFHlV/GydB24yBN5w6rPncTd7wEFXBAHS1opSWLou1fQJgC+8u
+	 38t/xQ7y1cinA==
+Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWGWK37H0zV0D;
+	Fri, 20 Nov 2026 08:33:33 -0500 (EST)
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+To: juri.lelli@redhat.com,
+	peterz@infradead.org,
+	mingo@redhat.com,
+	vincent.guittot@linaro.org
+Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	tglx@kernel.org,
+	will@kernel.org,
+	boqun@kernel.org,
+	dietmar.eggemann@arm.com,
+	rostedt@goodmis.org,
+	bsegall@google.com,
+	mgorman@suse.de,
+	vschneid@redhat.com,
+	kprateek.nayak@amd.com,
+	luca.abeni@santannapisa.it,
+	mathieu.poirier@linaro.org,
+	longman@redhat.com,
+	ridong.chen@linux.dev,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	shuah@kernel.org,
+	bigeasy@linutronix.de,
+	clrkwllms@kernel.org,
+	parri.andrea@gmail.com,
+	m.szyprowski@samsung.com,
+	kayracizmeci@gmail.com,
+	weihengqiuu@gmail.com,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH v5.1 10/17] sched/deadline: Fix an overflow of the 0-lag time with long periods
+Date: Fri, 20 Nov 2026 08:33:32 -0500
+Message-Id: <d975f317a4f9f79d2300b68ad76664755459ba36.1795181168.git.mathieu.desnoyers@efficios.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <awBEww33F6yn0MBO@jlelli-thinkpadt14gen4.remote.csb>
+References: <cover.1795115075.git.mathieu.desnoyers@efficios.com> <2be3813af9e997f5f7d9d3161d0b65b8d4ab917c.1795115075.git.mathieu.desnoyers@efficios.com> <awBEww33F6yn0MBO@jlelli-thinkpadt14gen4.remote.csb>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -126,32 +95,192 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1795115075.git.mathieu.desnoyers@efficios.com>
+Content-Transfer-Encoding: 8bit
 
-Hello,
+When a deadline task blocks, task_non_contending() computes its 0-lag
+time:
 
-On 19/11/26 14:06, Mathieu Desnoyers wrote:
-> Hi Ingo, Juri,
-> 
-> This series fixes 14 bugs of SCHED_DEADLINE. Then it shows the deadline
-> bandwidth of each runqueue in sched_debug, and adds two selftests. The
-> fixes come first, so that stable can take patches 1 to 14.
+  zerolag_time = deadline - runtime * dl_period / dl_runtime
 
-Thanks for the respin. v5 passes here: deadline_switch_test 5/5 and
-deadline_bw_test 46/47 (move_cancelled skips), also with scx_simple
-loaded (the server cases run on ext_server, hotplug_server skips). The
-sched_ext selftests pass 40/40, test_cpuset_prs.sh passes, and there are
-no splats with lockdep on. So you can drop "not tested with sched_ext"
-from the cover.
+A task that ran at its reserved bandwidth would use up its runtime left
+at that time. Until then, the task still counts in running_bw. A task
+that leaves SCHED_DEADLINE also keeps its bandwidth in total_bw until
+then. This comes from commit 209a0cbda7a0 ("sched/deadline: Improve the
+tracking of active utilization"), which adds the inactive timer of the
+GRUB algorithm.
 
-I replied to 10 separately, with a readability nit that is not a huge
-blocker.
+The product runtime * dl_period is computed on 64 bits, then divided as
+an s64 by div64_long(). With a period of 4s, it passes S64_MAX once the
+runtime left is above 2.3s. The default limit on the period is about
+4.2s, so no sysctl change is needed. The quotient is then negative, and
+the 0-lag time lands after the deadline.
 
-Peter, Ingo, I have the impression this is starting to look good, what
-do you think?
+On 32-bit, div64_long() also truncates dl_runtime to an s32. A
+dl_runtime above about 2.1s then gives a wrong 0-lag time too. If root
+raises the period limit, a dl_runtime that is a multiple of 2^32 ns
+would divide by zero. This was found by reading.
 
-Thanks!
-Juri
+The bandwidth is then released seconds late. Until then, the root domain
+refuses deadline tasks that would fit. In an x86-64 guest, a task took a
+reservation of 3.1s every 4s, then went back to SCHED_OTHER at once.
+Another task asking for the same reservation got EBUSY for 5.95s.
+
+Fix this by multiplying on 128 bits with mul_u64_u64_div_u64(). Its
+operands are unsigned. So take the magnitude of the runtime, which is
+negative after an overrun, and add or subtract the result. With the fix,
+the second task got its reservation at once.
+
+The quotient must still fit in 64 bits. On x86-64, mul_u64_u64_div_u64()
+traps with a divide error otherwise. After a change of parameters, the
+runtime and the deadline stay those of the old parameters until the
+next period. The 0-lag time uses the new dl_runtime and dl_period. So
+the runtime left can be far above dl_runtime. For example, root can
+raise the period limit and give a task 150s every 300s. The task can
+then shrink its runtime to 1024ns. Before the division, compare the
+runtime left with the runtime that the parameters give until the
+deadline. If it is larger, the 0-lag time has passed, and the bandwidth
+is released at once. Otherwise, the quotient is at most the time to the
+deadline.
+
+The new helper dl_time_to_zerolag() computes the 0-lag time, with one
+return per case.
+
+A negative runtime is an overrun. It lasts at most about a tick, unless
+the CPU stalls. A vCPU preempted on the host can stall for seconds. Say
+root raised the period limit to about an hour, and the task has a
+dl_runtime of 1024ns. A stall of a few seconds then pushes the quotient
+past S64_MAX. The 0-lag time would be centuries away. Release the
+bandwidth at once in that case. This was found by reading.
+
+The params_switched_asleep and params_shrunk_long_period cases of
+deadline_bw_test, added later in this series, test the check of the
+runtime left. No case tests the overrun, which needs a stall.
+
+Fixes: 209a0cbda7a0 ("sched/deadline: Improve the tracking of active utilization")
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Reviewed-by: Juri Lelli <juri.lelli@redhat.com>
+Cc: stable@vger.kernel.org
+---
+This updates patch 10 of v5 alone, as Juri suggested. Patches 11 to 17
+of v5 apply on top of it unchanged.
+
+Changes since v5:
+- Move the 0-lag computation into the helper dl_time_to_zerolag() that
+  Juri wrote, with one return per case. Fix a comma in its comment.
+- Add Juri's Reviewed-by.
+
+ kernel/sched/deadline.c | 80 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 71 insertions(+), 9 deletions(-)
+
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index d6d2657dcddd..a122b6ce1271 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -352,6 +352,76 @@ static void dl_change_utilization(struct task_struct *p, u64 new_bw)
+ 
+ static void __dl_clear_params(struct sched_dl_entity *dl_se);
+ 
++/*
++ * Return the time from now to the 0-lag time of @dl_se, or a negative
++ * value if the 0-lag time has passed.
++ *
++ * The 0-lag time is when a task running at its reserved bandwidth would
++ * use up the runtime it has left:
++ *
++ *   0-lag = deadline - runtime * dl_period / dl_runtime
++ *
++ * Example: 30ms every 100ms, blocking 10ms into its period with 20ms
++ * left. 0-lag = 100 - 20 * 100 / 30 = 33ms. From there to the deadline,
++ * 30% of the CPU is exactly the 20ms left.
++ *
++ * The product can overflow 64 bits, so mul_u64_u64_div_u64() multiplies
++ * on 128 bits. Its quotient must still fit: on x86-64 it traps
++ * otherwise. Usually |runtime| <= dl_runtime and the quotient is at most
++ * dl_period.
++ *
++ * Each check compares against the bound scaled by dl_runtime / dl_period.
++ * That quotient cannot overflow, as dl_runtime <= dl_period.
++ */
++static s64 dl_time_to_zerolag(struct sched_dl_entity *dl_se, struct rq *rq)
++{
++	/* Time to the deadline. Negative if the deadline has passed. */
++	s64 left = dl_se->deadline - rq_clock(rq);
++
++	if (dl_se->runtime < 0) {
++		/*
++		 * Overrun: the 0-lag time is after the deadline, by the time
++		 * needed to pay the overrun back at the reserved bandwidth.
++		 */
++		u64 overrun = -dl_se->runtime;
++		u64 room = S64_MAX - max(left, 0LL);
++
++		/*
++		 * overrun * dl_period / dl_runtime > room: the result would
++		 * overflow s64. The 0-lag time is centuries away, for a
++		 * negligible bandwidth. Release it now.
++		 */
++		if (overrun > mul_u64_u64_div_u64(room, dl_se->dl_runtime,
++						  dl_se->dl_period)) {
++			return -1;
++		}
++
++		return left + mul_u64_u64_div_u64(overrun, dl_se->dl_period,
++						  dl_se->dl_runtime);
++	}
++
++	/*
++	 * Runtime left: the 0-lag time is before the deadline. It has
++	 * passed if the deadline has.
++	 */
++	if (left < 0)
++		return -1;
++
++	/*
++	 * runtime * dl_period / dl_runtime > left: the 0-lag time has
++	 * passed. The runtime left is more than the bandwidth gives until
++	 * the deadline, as a wakeup would find with dl_entity_overflow().
++	 */
++	if (dl_se->runtime > mul_u64_u64_div_u64(left, dl_se->dl_runtime,
++						 dl_se->dl_period)) {
++		return -1;
++	}
++
++	/* The quotient is at most @left here. */
++	return left - mul_u64_u64_div_u64(dl_se->runtime, dl_se->dl_period,
++					  dl_se->dl_runtime);
++}
++
+ /*
+  * The utilization of a task cannot be immediately removed from
+  * the rq active utilization (running_bw) when the task blocks.
+@@ -425,15 +495,7 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
+ 
+ 	WARN_ON(dl_se->dl_non_contending);
+ 
+-	zerolag_time = dl_se->deadline -
+-		 div64_long((dl_se->runtime * dl_se->dl_period),
+-			dl_se->dl_runtime);
+-
+-	/*
+-	 * Using relative times instead of the absolute "0-lag time"
+-	 * allows to simplify the code
+-	 */
+-	zerolag_time -= rq_clock(rq);
++	zerolag_time = dl_time_to_zerolag(dl_se, rq);
+ 
+ 	/*
+ 	 * If the "0-lag time" already passed, decrease the active
+
+base-commit: ec6f6731538e0d45872eb279fdeb477bed152d6f
+prerequisite-patch-id: 5e2478ffdfb7583751bf44bdf87fb930bc23551b
+prerequisite-patch-id: d5e5ef986ff2d9bc39a87b56e96a2acbd3158687
+prerequisite-patch-id: 99e47f80396008ee2b2576157d37842481ce52d2
+prerequisite-patch-id: a10824f98c11a4c902dad55cab3ec03b3dbe2c8a
+prerequisite-patch-id: 8959e5a408641b4fa81bc79737cd17d5f1b03389
+prerequisite-patch-id: 16acf1d18f01d20310d6db767dfbec2f072e0372
+prerequisite-patch-id: e1946bb015a7b14ed4e2cd0421e5e30b0c7afdda
+prerequisite-patch-id: 4daf48a89779fbd8c8bc5fc1d7a7d6df9bca2d9d
+prerequisite-patch-id: f8b34127a06e7503c069fb08e275574569aa1663
+-- 
+2.47.3
 
