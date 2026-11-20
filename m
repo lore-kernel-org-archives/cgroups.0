@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198190;
-	b=GQxFnwhgH8lmT2Lh0o6+wqEMW8NhdpdpU4G3kdNhtPdh7pn0Gcigmq/6P7JxjCi5q1PT
-	 o+ziWWxHFpiAhupB4xwk8mbi07h7KwMWRgEZicSIwjtiDuusygXRBLHzuU18xf/jjbPxL
-	 OM4Tdug0jpF1S0SADtl8Chyrsjew1lHbT/UrjQQtL5vA4XIyIqwpKH7a0Cw/iDmjgsGnk
-	 8/odgd5GUaiAajFTsmwN/6vjYoyVn0I44Mg2LKIkfeE65MxR1XnLQT+9S/Ru8uspdr6MA
-	 qFtXkcxiLZYcjKsu8rsqN+PiPO6PJg6I6vriNbiOFggUwOX+C6Y6CaRBgicZ3Q6k89Q==
+	t=1795198185;
+	b=Q8vycmeUjyTJH2gbIhK5n0xTkZv+FyX+XpsRQ+ROBgpDlqUtrxgwfuCsaG41ca1IEhLP
+	 eEunytUyboUmTYSar9RwSP7sQPw82Fz4Jk76Mw2mA4nQfzaRNr/dlJ+eUCMFzSpN9Pk1d
+	 htDwKyyJq3Ny71t1Kvuito3MkDYv+HqyhwbkdkVHMvN1Mebies2Wuu/YfqneXppBQy6yp
+	 B4Z8/+nEaGEaBsCdu4tyqYDMZF7io8544CD5G9lte3UL+r4LyRByYingw7JD/Nk8dFdIf
+	 jPG2PqmeWrm2Ltjso6iHDkSf4szEhIN+hokEv9mw8wUQdnXKWERxtHvdRaNzdreYOug==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198190;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198185;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=09bgEhSy3QiJXmk+xsvyg2Evx8mn/TJLK5Z3TiEB/ao=;
-	b=anApJoI25o8kJOfMKtB9V/q3tNRvU1Rgf6waJMNHNjaWSxAoimEhTRHV6qCWqMK89hp7
-	 Xsu2smCcrzEyja34v16Kv2FLu6j1zUevpG8rdhZIB+UTnbfGnURfbD/iJXX2Uqe5thxMH
-	 uKWErBWDY1ZqjBes1YAlZ4B8JWeUP7PbA70BoPsxVbYM3160GeuByVt8nbg2OqkclDr0F
-	 2i/Wl90B//Z3YJPMyEAY3OS3AiAqAI2QZOBz0xuI2p/9GYUUP3zgUYVVdn/zKd4yiSKDp
-	 kxYlGYsgJFMW//TkNaCZiEEhUjmlLM6onozCpkPT3JPr2wT5+ZfBdfhJsHlaj7DLSDQ==
+	bh=zjE3RPeHs8dyfLzrDcCaKSay9Q5D+YG1hmYrydQv15g=;
+	b=A+QW7YcEokBXHXsYSybN3Ap9XHuoegMEN1NX1SBqj3/0jilWh5yA0Qu2Nd3fLisdd3yi
+	 G/IVmcCEKbwCkpbd8ffNLP+SigBJa7k3RMiWgE2F9TTM2qEdrI91nXFOtGSr0SXvA3opD
+	 dde6NbcuxH71fC6pwpP8weH/IZe4gQDLy8MTRlIL2IJjzKNY23IEgQfLLDQhdIgVPX1dz
+	 AMF4ap9fZ6iS4j0MtZ14MMtr/y+saIg4xkZJhUM3TxF1Eoqy2WSyV8b+g28ufoP+dHDzB
+	 9II10CvGyiyzeQakwgLTgWQiG+MX6VmtGDqEiLdqWKpJ9Rgv+HtIX2zzd85VgEhsbBA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SsV6KZZ1;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GRAIa4Ol;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54E2A606A8B2;
-	Fri, 20 Nov 2026 18:09:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E17460A2638;
+	Fri, 20 Nov 2026 18:09:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SsV6KZZ1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=GRAIa4Ol
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198190;
-	b=N+Qy+T2bdr5PAHxPEbCgApcfVSg97siwTSdi+Lcldk0UQBW00ZzGzwoDLf7aoXCbAM6W
-	 quDHQts8hwe1Lf1OAlCMRXkokvcqlFtNBi+AknhurhC6EsdikHvp+bRQutJMsPR6bS0ca
-	 W9Ju0iUP/EhQLEAruXJnnvqQcbKc8pST+Jq1LPqJp8sorjmN6y73zkhtBUxc7CUAdeQ2l
-	 Ibgl3syrg0tphnypKVwuJqjZuPQMN51kLmrdwzT2YWSNUapbWm/KcCNm6/biT4d5XUem3
-	 lkvMbQA4kfY5K1jihPG/oj3pXBVJODWMtGa6AZ15GmUMehXqJUA/Q94FhAI8h5nKMZQ==
+	t=1795198184;
+	b=jK3LkGVFA2RmXXX0J/DPifTlZhIqARmBhfMC+h07BjCf07TQcbjPVlOxD5nB93EDJk5d
+	 0NN4doSNK4f+1NT6GsjqtzZAZ19Xsxzb0jWLj3YJqBs9MBTJRthT9TGWBViD7MGcHCE+4
+	 ootinPbrRWPwtchOCrMPbSt/4dXjGDdzjMdp9rW4lXJ1+/0H9vGP/hJ92zCzfSokOb0mh
+	 AicFU4ggqR9Pal2JBpbn6aoTBAEXBR9f2u0244hT7x/RuPUSmx2RXvp2o/fmc1BXur2Sn
+	 CM95Puu5eKdq5G62ce/Ie76OuPWBRnKVo2DY1E77bbCMBaMCgPWX808Yuvllai5UA0Q==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198190;
+	c=relaxed/relaxed; t=1795198184;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=09bgEhSy3QiJXmk+xsvyg2Evx8mn/TJLK5Z3TiEB/ao=;
-	b=iPvH0lpTiKTsBUb+nUpV0mJTvnd2bRTphH2Q4OCjLCjzwwo2z/qBtikV9bHX971B3jEQ
-	 EryojyDmGqlYh7Qd8pXWnlo2336zIn3GH/6SRsS+BiHrddwWetALyoYBBGqLgOjR6LcOz
-	 wl1FmbmZt9X/kAQTt+RAtO/69hRHCXC3WcvjmHP6TyUmLiNFIra3e/DqnJCzAngpZybOl
-	 omfHuxaDlkTt1pPU86T4jek4MOdnFun7gNnrRYp4rtBgfXb/Dt1Ii3x4pLQWi+86Y4yQ/
-	 3RTD3CPfm4vXyLn7usTW8dWcHp/SwlzK/jMk5UlkGTqgolept8TgXwjaJCxNStQFMFg==
+	bh=zjE3RPeHs8dyfLzrDcCaKSay9Q5D+YG1hmYrydQv15g=;
+	b=DP4HuYekXMeNzKye58fgRH/Y17e6RGfy3/pxwvUN9Muu+rx4H5LXgtiSMSk7h6f2QedX
+	 f/aovpuQWIqmemdEkam3HNuHYOZUTYRCxpu8bKABlg5ZwNfKCkQPoQNQDDa3NFgfSd9/T
+	 /Adly8bk6rj5QATRDfmFwGLNQj5JeXU4rRenEwc86zKVV/t7zc42STGCMuInzjRIxC24D
+	 K7TBa7TnJSWaq8IcTqppogqMjy5/tSDpv8eB6F3XiP9cSdZSnY+nednbUOJpOeDmkjV/3
+	 CJSmRbfXSXKuHGS1FY3Gbg0NPp0l4uwu1dkG0HS/boQCzrNiST9s1cfS41G1paMnrPA==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 88A0B1F000E6;
-	Fri, 20 Nov 2026 18:09:37 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id BEE921F000C0;
+	Fri, 20 Nov 2026 18:09:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198190;
-	bh=09bgEhSy3QiJXmk+xsvyg2Evx8mn/TJLK5Z3TiEB/ao=;
+	s=k20260515; t=1795198184;
+	bh=zjE3RPeHs8dyfLzrDcCaKSay9Q5D+YG1hmYrydQv15g=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=SsV6KZZ1j1ga9KNSpYagswfdV2/hI3yyH/oqQMAES7hrnb0NkcoAXuP9+ootTF0mU
-	 CtCQXgus7oIdwHKUqloWKcOUu2X4gqMSciZ9wNUFsHxteRQcKr0TPVtgHGWyabOj9x
-	 FnLApsBTSer+K7B42c4SKLo8q5GWcvhdFHzYpe2ZocCOrw2pE+foGzNjvv9KEsQBqd
-	 Hx5Cj2YHHn86b4dpe2ZTqFQTIQYeu/P+6PL49Rzxs2Dd6SZNTvbpRn0RxpU9RwciWq
-	 Q4LT4pRcVhZzJEGmZ0c3rtyCgtT8FW30LvswTu9hLn4msOr9QxP7QKaIm7iuCY2mJs
-	 i3Z9xciE7VtOw==
+	b=GRAIa4OlNMIpN5B9CNuVwnnyb2CQm0GTAHyT1tzl02V9LmO783SQnP8+eOkI0CIII
+	 NJueXpJ20aevpi6BskxLQsy+UdlRE/zlgsCKXwe0ya8/CljT9OuyNMZknUV5xPUcgl
+	 rDfyYKdA+0Rv4fNq+eWVFpMuGI8txU3H+SvcWraG0wtgX6QwCxqEl0DPhSXGFmZznj
+	 PScUYXLeaSvn/ES010Oez/bE6sJIaqY4ARBBUP4p7TcQ1vZDu4dhSrHckipK0goZlz
+	 i+DkKbii224Tanh4igYLNBI3fw2BgCE6CSHpVMrtC5MPAFoXcwhkJN+U7uB+V8FbQ+
+	 Y6T5GKBpI8Hug==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id EDA364B8E1;
+	by lkml.kernel.org (Postfix) with ESMTP id B46A04B8D9;
 	Fri, 20 Nov 2026 18:09:17 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:08:59 -0500
-Subject: [PATCH 08/60] mm/migrate: reject move_pages() destinations outside
- common memory
+Date: Fri, 20 Nov 2026 13:08:57 -0500
+Subject: [PATCH 06/60] mm/memory_hotplug: migrate offlined pages to common
+ memory
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-8-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-6-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -141,11 +141,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=835;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=2066;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=pP22b8YF19lh+xtqINC6tvfU3jfkWVAhKO3xXxkME4Q=;
- b=zIyXXPWBVmQkXDlYvC5h4ZDvLmW7Fv9UoBLS9vJ/Pz9f2a+rQQr2z64NdVHxlPNBrL4P3HD5y
- CL9ctZIadC8AcBeiIq1b1GZsIOfZ0Hg0mQWqGbUkGaNZffKMPxNdRDC
+ bh=y+LG+FO6STODgbMk2P9Neg6dWT2V0RZ4aCGZDdcA1iI=;
+ b=rF4QRfdnyeirN8cavwU1rBXmaiGs7/MuKraaTxIZF6cFZOTMnmNLGqUa7ewdFKbgEAKZSsWhS
+ Nj0dPmjAPUKA3opSJvkIGXOZYeu3uu/WCfCgJJA/K1WyJMnnUOPr45Y
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -156,30 +156,55 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-move_pages(2) places user memory on a node the caller picks. As with
-memory policies, the destination should be general purpose memory.
+do_migrate_range() / alloc_migration_target() is only capable of
+allocating memory on N_MEMORY_COMMON nodes. The destination nodemask
+presently starts with N_MEMORY and removes the source-node.
 
-Reject a destination outside N_MEMORY_COMMON with -ENODEV, exactly
-the same as a node without memory is rejected today.
+In the current code, if the destination mask becomes empty, the source
+node is restored to allow migration during partial offlining.
+
+Consider this configuration:
+  Node0 = N_MEMORY_COMMON
+  Node1 = N_MEMORY, not N_MEMORY_COMMON
+
+Node 1 keeps the destination mask non-empty, despite being unreachable.
+This leaves migration with no usable destination because the source
+node is not an eligible allocation target.
+
+Restrict the hot-unplug migration target-list to N_MEMORY_COMMON so it
+reflects the nodes the allocator can reach.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- mm/migrate.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/memory_hotplug.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 65869b8acec5..208788b130fa 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -2411,7 +2411,7 @@ static int do_pages_move(struct mm_struct *mm, nodemask_t task_nodes,
- 		err = -ENODEV;
- 		if (node < 0 || node >= MAX_NUMNODES)
- 			goto out_flush;
--		if (!node_state(node, N_MEMORY))
-+		if (!node_state(node, N_MEMORY_COMMON))
- 			goto out_flush;
+diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
+index e5cb770e4b09..1d3d1792074c 100644
+--- a/mm/memory_hotplug.c
++++ b/mm/memory_hotplug.c
+@@ -1926,7 +1926,7 @@ static void do_migrate_range(unsigned long start_pfn, unsigned long end_pfn)
+ 		folio_put(folio);
+ 	}
+ 	if (!list_empty(&source)) {
+-		nodemask_t nmask = node_states[N_MEMORY];
++		nodemask_t nmask = node_states[N_MEMORY_COMMON];
+ 		struct migration_target_control mtc = {
+ 			.nmask = &nmask,
+ 			.gfp_mask = GFP_KERNEL | __GFP_MOVABLE | __GFP_RETRY_MAYFAIL,
+@@ -1941,9 +1941,9 @@ static void do_migrate_range(unsigned long start_pfn, unsigned long end_pfn)
+ 		mtc.nid = folio_nid(list_first_entry(&source, struct folio, lru));
  
- 		err = -EACCES;
+ 		/*
+-		 * try to allocate from a different node but reuse this node
+-		 * if there are no other online nodes to be used (e.g. we are
+-		 * offlining a part of the only existing node)
++		 * try to allocate from a different common node but reuse this
++		 * node if there are no other common nodes to be used (e.g. we
++		 * are offlining a part of the only common node)
+ 		 */
+ 		node_clear(mtc.nid, nmask);
+ 		if (nodes_empty(nmask))
 
 -- 
 2.56.1
