@@ -1,78 +1,78 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=100.103.45.18
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
-	t=1795198280;
-	b=mfIzIC9GVIBuZwEwildqR1uTLorLc64EWp9h/+QkpFrJduIquCkgHRHp/5NYLZdJs+Vn
-	 SPD9wpvdDPgWQeVR27bi3pXNvDXKKbqV6uTmVJXzosHU6wP4W+jydjiY/4hadkcrV1Z1h
-	 G+wnOO2QKMFxvlKMjLXSEXBx55JmH9GL+Lwv99TKtmp2sGfCU7jRfMK3BsL6VB6x//mr/
-	 biqSJzEFHOIMMZETjNwhdQlqO97MnIFD/U3tRRaC++1hmCXB6Yxp8Qi/zsa2TMvzKVPVX
-	 3rAvCFn/Z5XNWlV2/ARdH/1+v3gP2XkUgtQGTahZD0AgBOnxTVQlnt4MCJcyfVnv+Gw==
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795198299;
+	b=Sn4TRNln28eUG88Awd1WdBIm0FGAhhY4DdcpQ9cs7J+ee7VIoAHapvI8PgU+0dnRmhEv
+	 q09ERuJGn1MPZM2D/HRemtYBU160olUABKgMQs5BawKbPyT+MVKSshgMWHneFGSUqGrvZ
+	 hO0u6oo82QCYP7EVRD73EslZPvtPutgIb3w4QqANnHhHnfLIETdO1e9zJ9Lyb0gEfXCm+
+	 nYyarwAqZOYA+HE3bmdaF4Od2KFbMGzKYgqzdyG8p+rz3egaEdUH3YD/EZjYJ0gfCbPpS
+	 AAv6RGUSEFYqpbAe2KDlTTgtT0zgwxXqHNnbMcvicfr19aFTq9Y3T3GvEAh/LLHAQeA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198280;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198299;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=KbXqo0otTzp6KrXr3a6CWvy6rduI8+vwsObH5S7PopY=;
-	b=LIrGSOpbY96G9zQlCVNbT61ks7ojBAdo+E4JTyQCiGloAgROxj1VAUGNEC/QZO6OOyoD
-	 lrM3tGpsaI1aAw0ZGR0U85i81QmeWmc1XyCTJc4nK0jFuKCa8c/DyZOhzcd2rurSMYBnC
-	 rCp7gsIDgIxzoBFqoNIatJxNvvCyco6/WAdwU9gnBWpEAALvkkFV9GrOYxnh9jlQAV5AG
-	 3H4ngALO7jPHxpaXXZ/DwzwQqr3W8EQOEh6r/bQbFM4LFg0DijwX7SqbqJFO5ceM9g6fb
-	 qJ7SQuyajzUvsJlN20nBockyAgrZ9Ju8oQoirJ4mQYouaOwabhe8zQDFpwnukQPMy5A==
+	bh=ucJJo35EhYc8uBblcAl6XMSIzkyavztIGCd0YleD0jU=;
+	b=gi2AiNuJxhH13MtBP+2NYUcp/2zgerGtrUnc1jO5t1PXi4AY6Z6cRUaNemf7ERS70hB3
+	 mHm9DlFQF+9Lyq2d0bgqyo87GFhYhhIXUeyDGqV5rhSeOxG/sCbxEQlWjVEofVqGBcBL4
+	 TkM8P5GcG4SJon4VxMWHnxgFxVDu2Cq05CE+QvW+tnysq0JK2GXLM9QXSSRr/M9FYydK+
+	 dQY4rn5o8LjPdlPHCKK+Nr7kB6i/3KRKAbGrdKnUq756c1EqTkuUFh6zpF1E+vrUYMB0x
+	 RttUHfb2uyjD8LAsLNU0nyNDp7adjElQiJZ0PDOgTW0WVN86fZweQwy0YsVS7ZmIaKQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iAKbpry+;
-	arc=fail smtp.remote-ip=100.103.45.18
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mNnqvyQ2;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67D9D606B99A;
-	Fri, 20 Nov 2026 18:11:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F777607AB60;
+	Fri, 20 Nov 2026 18:11:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iAKbpry+
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mNnqvyQ2
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198280;
-	b=CfHr7EvM5dWXpJueZhswo4TF9IdYBivBI7meVvVTXUBd2k1pWarqefB6n/I5s/ZTvk/H
-	 jnr1mKwGh41nSmtKXSsO69AE5RlSGhFWRle53gP88LycbLjy8B9iCQlk29ZXUeh+yoFT5
-	 kfB5PGgZGRRvwPIgZ2QeXLK+SLs8zASKR4mh0LvNGl6PGzO+cChfbw0hQ+NaMzj9hpPpS
-	 cDurydC8XSyD09bgNSDR+3eQPgbQNLiC0ZrP8KqrFpV5RXWS5I8opv5azlr5PbawYf7So
-	 0fDyt0w/970JTmpXfQd5OeUasLiF1T4hradp64Xzi3sVwAlTXDi+MbeOE9MUiNprIiQ==
+	t=1795198298;
+	b=HlWepT8N/RcO2s/f52O1bBRbe0iOHUMPaPhR87xFs9tXetsWsOyy0xjWxpodNqsUUhUi
+	 hL/BYTSSDXGYthe5iyihrD00g7DeHSknGuL5gtJYVkw8g0RsuP/fBdFmIlQJSxTS36niK
+	 jFN8iwpToh3ykHu3hMKlhLz4QcbjFH18N5x1pgNmqXPJq6aSMQ/S0bFGWhPyIs9Merwnj
+	 xvcjY332d7H+BMAmXUsalrPv1KARYJGy9wbdD+M9CHhIKX6HHpw0fmcovuqRRAYpHupeO
+	 ly+B18ry6T6nhOesYjS/feLBdyiJBwVKHYjtl2NQTrj1Eoy5jyV6iz+9e94fr750xMQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198280;
+	c=relaxed/relaxed; t=1795198298;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=KbXqo0otTzp6KrXr3a6CWvy6rduI8+vwsObH5S7PopY=;
-	b=uwBvHrAxH1vanYrOGqBupe8ux25epMpsaA3tnTB/WF8J3BxNANfV2V6xFQ+b1cfL4X3n
-	 4G+Po/d0lrEwcpCs+rqKw/9lZ3WsHgQcNxmt/TDeImxLxKRLkmhsELp17D2imNQdLUTws
-	 O0KktfvGELRnpo8IeEAWb3zTjWZy5cGOYBUKF2dSI3NKh9fyrQrN+kyE6hpC9dsCNHGXQ
-	 XhrW2wyJS4mcns4H2wW83UupaF++VLtJ6dRBK9mIJji8IBSWGpg7wmIaDP9c8EiAS+bYK
-	 rnfodjUBHfoG9jb/9M1Z6pJSfNT6Shri+pnr/ujlYy6/GO39ZRZmb48/v55jDwG2h1w==
+	bh=ucJJo35EhYc8uBblcAl6XMSIzkyavztIGCd0YleD0jU=;
+	b=qwok757q/8PPHCg1OCK4PIvyTBUXJFw/zbbxwpt80Sd5HHp1kfGPy4GH8KJeqkMZ9Vz8
+	 rEyd3Tf/jLapKhFXxJZMCn7jmRMVPM2IULIputNpijTXiJxgvNpjSmSKnmQ2kFBZOgdNt
+	 6xzPoS6HB5j+mlzpVuDhBauXjnQxAhEEv7w/2ZqatQlckTz40zPxTmDhDwNiE17WjPVBn
+	 ijG+s/VKyGyM3CMd1xqNVvTPGy9CUCq8bdtNX2v+thMksqvM8P+s8yxAqfVgsv1n1Ivu8
+	 Sb6iFLVDNIvVRkV0KH7AyM38e/GPo+3ptajIxr2YPfo1L9FaiSCwkGwHMB97z+M7Qow==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id A54781F01565;
-	Fri, 20 Nov 2026 18:10:58 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 797A21F01808;
+	Fri, 20 Nov 2026 18:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198280;
-	bh=KbXqo0otTzp6KrXr3a6CWvy6rduI8+vwsObH5S7PopY=;
+	s=k20260515; t=1795198298;
+	bh=ucJJo35EhYc8uBblcAl6XMSIzkyavztIGCd0YleD0jU=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=iAKbpry+EnUyYxSjPnFlOEdZ7YylYf3N1VUXwxGS0JS7ZAh2BxN0exdT+TyJ6dVxn
-	 6W1n4NmyVIhOH012iboXAKUO1f0SnLoTorvPmFhsS+X2FCpNb7ZrfB30J7X9rMt5va
-	 zst3Q1Lzg5xdaAU9rdj8XMh5vVx3KOAKhJJ/CHXk9Uj1Y3ElDlooFTl/WM9w50lcNY
-	 NvqyT+Tr6eYOCm2Ch+1O2CmQ2DuOOSO6MPCvWACS8jXViasMm2XSzGF0mKp6r1A1T3
-	 S7k+0cxVzcv3SUxawrfl15RFLnu/nersNj0Z/d1BiiCGcq250PmNe0nO/4+hJaAFFr
-	 yny4/kiVqgUXA==
+	b=mNnqvyQ2S/y5CQ3mA5UeNg8lnQsxvgEbK0ggeNADbf2ogUHqJSfhZ3ENv/Vg2GWC1
+	 Wb7mlVDUg4pb40GH/JQifTMpHDe76E6vaoT3/lMl4/KNJsfSm/JF+vTSfrFFLSn7yd
+	 AJ0eGUuryC6mV4lNFEupta1pomX90P7oS1wEoPqVP6D9ZObc9sZk5qcn0IGCvqH8tL
+	 I5/RpB3ClDRRGgk8r6EK8V6lw8/Fv2girBsKMVnOj4yXl2gu0kY92UPW0d7GOFtOA8
+	 U8k9bctBc1HARihAhDOScJXhd0vCwRnCWri9+aKuSwlkMUDGPkyp4Uqbd0rinLZ1Dy
+	 e5NY8tLWjxr9w==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id F107B4B984;
-	Fri, 20 Nov 2026 18:09:22 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id D3BA84B9A0;
+	Fri, 20 Nov 2026 18:09:23 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:40 -0500
-Subject: [PATCH 49/60] mm/vmscan: reclaim private nodes for memcg
+Date: Fri, 20 Nov 2026 13:09:47 -0500
+Subject: [PATCH 56/60] dax/kmem: add a private memory mode
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -83,7 +83,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-49-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-56-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -140,11 +140,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=4186;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198154; l=5242;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=gf0+A4YMX7aNzEjLzoppxY9C0nz/hDCzkhh7ctvqKwQ=;
- b=PXI/X13XAoa7r+jmzPre0N2z+VrJATpuAV7CpwhBQAVTEngszA2E6bmutkAMGbnv2eUsyGVrn
- +kF2GDAg++lDYHrIPmvec6YTNf5pZ5MjEHc8/slSYzQiq7FbbeI35Jq
+ bh=zrM1qpXNDU0W3OEbrrofBX3aJ+CtXsUD9H1wIf9M9+I=;
+ b=R6sNzzY6t+TWBdJe7KJBQcoH3BsMwxDWl4rWxlfetNYs3LP+oZXkDWdpnsHICyDBXQ4HWIrdL
+ DUshXIHhLEGAEndhFx3dYv0seeaJh6E4Ar1fYAuHjKqy+U87r8NL2cs
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -155,121 +155,157 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-Memcg reclaim does not serve one allocation, so it should cover every
-node that permits reclaim. It walks the current node's fallback
-zonelist, which holds no private node, so a private node that permits
-reclaim is never scanned for a cgroup over its limit.
+Add a `private` boolean sysfs attribute, defaulting to false and
+changeable only while memory is unplugged.
 
-After the zonelist, visit the nodes that permit reclaim and that the
-zonelist did not cover, and give them the same refault snapshot and
-congestion reset. The zonelist keeps setting the order, which matters
-because memcg reclaim stops once it has freed enough.
+When true, dax/kmem onlines the node as private memory with
+NODE_MEMORY_FEAT_MEMPOLICY, NODE_MEMORY_FEAT_RECLAIM and
+NODE_MEMORY_FEAT_COMPACTION.
 
-Direct reclaim for an allocation still walks only that allocation's
-zonelist. A private allocation's zonelist covers its own node, and
-reclaiming private memory cannot satisfy a common allocation.
+Userspace targets private capacity via single-node MPOL_F_PRIVATE_NODES
+bindings on anonymous and shmem-backed mappings. Reclaim and compaction
+manage the memory, and the system does not otherwise use it.
 
-Without private nodes the zonelist covers every node that permits
-reclaim, so behavior is unchanged.
-
-Another way to do this would be to implement a reclaim zonelist that
-only reclaim uses, but this implementation does not carry the static
-per-node size overhead that adding another zonelist does.
+The attribute is hidden without CONFIG_NUMA or CONFIG_MEMORY_HOTREMOVE,
+since selecting private mode requires unplugging the memory first, and
+the default behavior of dax/kmem probe creates the memory blocks (an
+unfortunately backward compatibility wart).
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- mm/vmscan.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 42 insertions(+), 1 deletion(-)
+ Documentation/ABI/testing/sysfs-bus-dax | 19 ++++++++++++
+ drivers/dax/kmem.c                      | 55 +++++++++++++++++++++++++++++++--
+ 2 files changed, 72 insertions(+), 2 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 03d0919d11be..49ec85ed00e0 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -6636,6 +6636,21 @@ static void consider_reclaim_throttle(pg_data_t *pgdat, struct scan_control *sc)
- 		reclaim_throttle(pgdat, VMSCAN_THROTTLE_NOPROGRESS);
+diff --git a/Documentation/ABI/testing/sysfs-bus-dax b/Documentation/ABI/testing/sysfs-bus-dax
+index 60703fffa99e..d024cf8e5ae0 100644
+--- a/Documentation/ABI/testing/sysfs-bus-dax
++++ b/Documentation/ABI/testing/sysfs-bus-dax
+@@ -175,3 +175,22 @@ Description:
+ 		A device can only be onlined from the "unplugged" state, so a
+ 		device must be returned to "unplugged" before it can be onlined
+ 		into a different state.
++
++What:		/sys/bus/dax/devices/daxX.Y/private
++Date:		October, 2026
++Contact:	nvdimm@lists.linux.dev
++Description:
++		(RW) Select private memory when a device is bound to kmem.
++		Accepts boolean values and defaults to 0. The value can only
++		change while state is "unplugged", before memory blocks exist.
++		The attribute is hidden without CONFIG_NUMA or
++		CONFIG_MEMORY_HOTREMOVE.
++
++		With private=1, the next online enables userspace NUMA
++		placement, together with the reclaim and compaction it
++		requires. The memory is excluded from ordinary allocations
++		and from other memory management services.
++
++		Userspace can bind anonymous and shmem-backed mappings to it
++		with a single-node mbind() policy using
++		(MPOL_BIND | MPOL_F_PRIVATE_NODES).
+diff --git a/drivers/dax/kmem.c b/drivers/dax/kmem.c
+index 5ec653bc88f0..2954f22ececf 100644
+--- a/drivers/dax/kmem.c
++++ b/drivers/dax/kmem.c
+@@ -46,6 +46,7 @@ struct dax_kmem_data {
+ 	const char *res_name;
+ 	int mgid;
+ 	int state;
++	bool private;
+ 	struct mutex lock; /* protects hotplug state transitions */
+ 	struct resource *res[];
+ };
+@@ -89,9 +90,15 @@ static int dax_kmem_do_hotplug(struct dev_dax *dev_dax,
+ 			       int online_type)
+ {
+ 	struct device *dev = &dev_dax->dev;
++	unsigned long features;
+ 	int i, rc, added = 0;
+ 	mhp_t mhp_flags;
+ 
++	features = data->private ? NODE_MEMORY_FEAT_MEMPOLICY |
++				   NODE_MEMORY_FEAT_RECLAIM |
++				   NODE_MEMORY_FEAT_COMPACTION :
++				   NODE_MEMORY_FEAT_ALL;
++
+ 	if (dax_kmem_state_is_online(data->state))
+ 		return -EINVAL;
+ 
+@@ -126,7 +133,7 @@ static int dax_kmem_do_hotplug(struct dev_dax *dev_dax,
+ 		 */
+ 		rc = __add_memory_driver_managed(data->mgid, range.start,
+ 				range_len(&range), kmem_name, mhp_flags,
+-				online_type, NODE_MEMORY_FEAT_ALL);
++				online_type, features);
+ 
+ 		if (rc) {
+ 			dev_warn(dev, "mapping%d: %#llx-%#llx memory add failed\n",
+@@ -380,6 +387,33 @@ static ssize_t state_store(struct device *dev, struct device_attribute *attr,
+ 	return len;
  }
  
-+/* Whether shrink_zones() reaches @nid through @zonelist. */
-+static bool zonelist_reaches_node(struct zonelist *zonelist, int nid,
-+				  struct scan_control *sc)
++static ssize_t private_show(struct device *dev,
++			    struct device_attribute *attr, char *buf)
 +{
-+	struct zoneref *z;
-+	struct zone *zone;
++	struct dax_kmem_data *data = dev_get_drvdata(dev);
 +
-+	for_each_zone_zonelist_nodemask(zone, z, zonelist, sc->reclaim_idx,
-+					sc->nodemask) {
-+		if (zone_to_nid(zone) == nid)
-+			return true;
-+	}
-+	return false;
++	guard(mutex)(&data->lock);
++	return sysfs_emit(buf, "%d\n", data->private);
 +}
 +
- /*
-  * This is the direct reclaim path, for page-allocating processes.  We only
-  * try to reclaim pages from zones which will satisfy the caller's allocation
-@@ -6651,6 +6666,7 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
- 	gfp_t orig_mask;
- 	pg_data_t *last_pgdat = NULL;
- 	pg_data_t *first_pgdat = NULL;
-+	int nid;
- 
- 	/*
- 	 * If the number of buffer_heads in the machine exceeds the maximum
-@@ -6706,6 +6722,14 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
- 		shrink_node(zone->zone_pgdat, sc);
- 	}
- 
-+	/* A cgroup's memory may be on nodes that are not on the zonelist. */
-+	if (cgroup_reclaim(sc)) {
-+		for_each_node_state(nid, N_MEMORY_RECLAIM) {
-+			if (!zonelist_reaches_node(zonelist, nid, sc))
-+				shrink_node(NODE_DATA(nid), sc);
-+		}
-+	}
++static ssize_t private_store(struct device *dev, struct device_attribute *attr,
++			     const char *buf, size_t len)
++{
++	struct dax_kmem_data *data = dev_get_drvdata(dev);
++	bool private;
++	int rc;
 +
- 	if (first_pgdat)
- 		consider_reclaim_throttle(first_pgdat, sc);
- 
-@@ -6754,6 +6778,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
- 	pg_data_t *last_pgdat;
- 	struct zoneref *z;
- 	struct zone *zone;
-+	int nid;
- retry:
- 	delayacct_freepages_start();
- 
-@@ -6792,6 +6817,21 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
- 		}
- 	}
- 
-+	/*
-+	 * Also cover the nodes shrink_zones() reclaimed beyond the zonelist.
-+	 * Finishing a zonelist node again is harmless.
-+	 */
-+	if (cgroup_reclaim(sc)) {
-+		for_each_node_state(nid, N_MEMORY_RECLAIM) {
-+			struct lruvec *lruvec;
++	rc = kstrtobool(buf, &private);
++	if (rc)
++		return rc;
 +
-+			snapshot_refaults(sc->target_mem_cgroup, NODE_DATA(nid));
-+			lruvec = mem_cgroup_lruvec(sc->target_mem_cgroup,
-+						   NODE_DATA(nid));
-+			clear_bit(LRUVEC_CGROUP_CONGESTED, &lruvec->flags);
-+		}
-+	}
++	guard(mutex)(&data->lock);
++	if (data->private != private && data->state != DAX_KMEM_UNPLUGGED)
++		return -EBUSY;
++	data->private = private;
++	return len;
++}
 +
- 	delayacct_freepages_end();
+ static int dev_dax_kmem_probe(struct dev_dax *dev_dax)
+ {
+ 	struct device *dev = &dev_dax->dev;
+@@ -560,12 +594,29 @@ static void dev_dax_kmem_remove(struct dev_dax *dev_dax)
+ #endif /* CONFIG_MEMORY_HOTREMOVE */
  
- 	if (sc->nr_reclaimed)
-@@ -7038,7 +7078,8 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 	/*
- 	 * Traverse the ZONELIST_FALLBACK zonelist of the current node to put
- 	 * equal pressure on all the nodes. This is based on the assumption that
--	 * the reclaim does not bail out early.
-+	 * the reclaim does not bail out early. shrink_zones() also visits the
-+	 * nodes that permit reclaim and are not on the zonelist.
- 	 */
- 	struct zonelist *zonelist = node_zonelist(numa_node_id(), sc.gfp_mask);
+ static DEVICE_ATTR_RW(state);
++static DEVICE_ATTR_RW(private);
  
+ static struct attribute *dev_dax_kmem_attrs[] = {
+ 	&dev_attr_state.attr,
++	&dev_attr_private.attr,
+ 	NULL,
+ };
+-ATTRIBUTE_GROUPS(dev_dax_kmem);
++
++static umode_t dev_dax_kmem_visible(struct kobject *kobj,
++				    struct attribute *attr, int n)
++{
++	/* Selecting private memory needs an unplug, which needs hot-remove. */
++	if (attr == &dev_attr_private.attr &&
++	    (!IS_ENABLED(CONFIG_NUMA) || !IS_ENABLED(CONFIG_MEMORY_HOTREMOVE)))
++		return 0;
++	return attr->mode;
++}
++
++static const struct attribute_group dev_dax_kmem_group = {
++	.attrs = dev_dax_kmem_attrs,
++	.is_visible = dev_dax_kmem_visible,
++};
++__ATTRIBUTE_GROUPS(dev_dax_kmem);
+ 
+ static struct dax_device_driver device_dax_kmem_driver = {
+ 	.probe = dev_dax_kmem_probe,
 
 -- 
 2.56.1
