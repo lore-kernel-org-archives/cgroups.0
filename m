@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198226;
-	b=3RLbdT2gX30GohmjADtLEe8Tmdf5MtoeDSNJkF8BPnm1Y4r7gmm0bc0vMnR+3i99EsHB
-	 jZ7MBcFy+HWIfJmpsifTWFhsGsNV5SoL7p0/dZXbpBdZBfcM2hw15f4GrdyFBUKOGL9dO
-	 ZtwZantb/lK84G2odpBsowhUMT+tHVYoEHLMvVF/yV5UN8KMibPiFvzFowQq15F5HeDar
-	 1/9IkA2sfcbgMzB2Xj2+nRaXF1qOCHQjSlYbQacr+osh1aBHPaXgDvhsDL8oUoojGmP78
-	 jM2sZVnFfzP2x7yVEe6hF/4BWd52qPgrT7r1cUNy+cFKRB+C3Mf3TzKBceIQs0sIkoA==
+	t=1795198238;
+	b=UihgF7Uzc+UOqZrQ8Gv2SAHk7SJ87BdCPHGfABR7J/0uEtjrDMt3Czs3JijIhchyJj+Z
+	 RefyRWVNaRlq8Cl/OmISEat1Ik9y7vaPsP5cZHhVlILIDCW6HYVEdZqsl2GMk5g6P3rzI
+	 0AwckLnzDukZbsVymIzK0rXq106XwqTcixiqVsroRBwF2CPEwEipxspx4Gu4XyWCZTSFe
+	 fGP+f4xgv7MAq/znbFDv4F9lyfiaBZStIRZcdXi3GDExAbOVBJPHoRsyn/5cluMQXxPRV
+	 RIepBv3np8VqjeX0DQhq9qb34FUq5Gth34JEBw/SE3piUGy6/XRj8ocB1oJGZdev8qA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198226;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198238;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=gyynVGeIcWRdH7dEMKcuI5jkcGEqh5D8H+zcb4PS70c=;
-	b=FHsVVjUblJeBgTqteJkI6LdnjQgXlmritrGSfASODHtSr9f7dhwD9qJAQy7pVuyLSC6o
-	 JYh/d/83oMmYNg3Z2rOwcChruZmMIpKten2jgrZHQnKxzQB1PTTLYpcdkciFjX1AS091H
-	 PxNg2kfVrYWgcSujTQ3KG/t9k+UjWH+houyjIpmGSqzgvxR07oMPF93jDcDJYFlvLDs4z
-	 8DRLX6RMghDfeZhuEzWqLDQFuJY/6IcvkMfMoId6v5cDTLClX93eokj4iaLvP/1/X9Hb6
-	 9M/PKJ3QFcrIAfllXofLUXe3QwtCA74MHX60C05WAadSxFC5AwvpvjpRqyMoUqF2L8w==
+	bh=ah7hRwVf6ds4TiFuASfnE4NQuTk/w//pBxssLX2GVTI=;
+	b=AB1giPFXTYBJTOgcfxuqolbJ6XDpEyVyr0hk62J5QjeZ/4U2YaXV3n4pmal2LKuo0LMx
+	 0irMSnKEWly3MAGzppbksxfuAtqQ31rmj0E2pxOfIS3o/TGUZLjc9TmHRyRKlB+qNDdYL
+	 l6Vi40idG+bOGCU4VAGJ4CGrRv8s9NTR/Fl2JqQTL3BUg4QYKpht1ZLenqyUBIIXq8tVd
+	 FakWrNmFWZFwUieeR+bnSUCCnsUTmusBWWB6ppoKnanuv+e1E0G2KfJQtucCisXmcjjA4
+	 lMmM31WXNo38q9R1Ur4efj8hclWi/j0K6Eqsw58RI1MJLMhnSIwS8CCtUv7KPctyx5Q==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mdt3DdVE;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R7RrdNXJ;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C112160A6F66;
-	Fri, 20 Nov 2026 18:10:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 421DB606A89D;
+	Fri, 20 Nov 2026 18:10:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=mdt3DdVE
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=R7RrdNXJ
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198226;
-	b=nP2xQorar+PU7FJ1JWjq+IYddD9f7mTKePbLa9Vt/uG9Lz8b4R0ntLXqYqT64PyoeX1Y
-	 O1Dvw+PfsUYBnFyrVkCF6cSkm2XsRQBfz/kL9Vtqv4nJRMt2rXg0WPV1Q/gsrRa2SS1Dm
-	 IsKDqf6FXO9GuMX8ytypJ02k3EMmFpuKTTkUN4qPleZpcrwMDZ5srXjOD7RgbPYhvcbiN
-	 fynoqbPDgGO9/FqOCXhEB54BsVnItJ/sYH3Eefu3zLEgCx+6aWoPo0nnK+iBzesp8FUKj
-	 FwnG19r0IMQw9X2BffgunfEZ8gVNE/P6ozx18AYRQPODVd09Cno+LkSDx7+NP/ljc6g==
+	t=1795198238;
+	b=x2c7EJYfG/GDmZ/Ad5E7CBibcB6m0Un8sAB+XSfzIcWmJ2+mgO7oxvKb79YS8UjWrvPV
+	 CBYPq8zIOd+hvPA1RrQA4Z+XVwLwfRBCm6UEZbMyAIQHOFfiyZGgYtLwSHOtYBJk+raXT
+	 UCGnOvNZ3hGhh2+FmDLRvVX8IOPXVHCnvRXlxmMJZ3T3los0649I2/sr1MXLc1oW5P2lI
+	 hOF07KGAMyvvkK0SwucMsmKqkPWra8bDc0HZZtfKn6+cyHKXBJQOxC5Q4ikYNNh7dbxgV
+	 SIYs2y6Xb0DEulveLjrXgKI42/gAYcPLvMLLGwiJ2J74sOsKbLPz8he/+qJ8LbO0WGQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198226;
+	c=relaxed/relaxed; t=1795198238;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=gyynVGeIcWRdH7dEMKcuI5jkcGEqh5D8H+zcb4PS70c=;
-	b=jRKkPkzQ0QGqz4/j/BWz0S+OokMJk9OAqvFVKlyF0Lw1xbsBPOZvi7rQkWFLUa8hvV0M
-	 liIaXgTd+OEGRXuDrYI6eAUNvnlf4tE3n3+ANGsGmovR0LUnrYavt+r/+1EkulGds9cGm
-	 uLKpsc1Zg47NAg5wSoEIzG1RC5n8e/uEB2PqFF3EgDFXkGMoxwx7XqLqZbEdk5D9jumD8
-	 OZvc9AlecQhF8XP7DKY6Pb02I7kA3Hrj8ouOkcJNS+RqahIKj7DOBlm9BqCRV5grkdrha
-	 mN6L730W2n3xxzF+HnVfVGJszKiJOgxo0D7swu/UXGoKaAcfTQatu1VDZwQZ23wfdGA==
+	bh=ah7hRwVf6ds4TiFuASfnE4NQuTk/w//pBxssLX2GVTI=;
+	b=JYonikjBlr3WpwgsS/STnW6LWY5A1T9SBK2rPueS7q2PXbb6U8HvpR8bX6v7yd62jUJy
+	 dhFVCSQA0EHse3e+VqmaiDEJGKArE/8PItb+eb6xJsHyVrD5b5g/5TVg8k1OQJhL6eBuf
+	 Fm0awUZMBknL4zKdxY3ddNdvHE9aRvE+MXMaRXdg3ozt9VkfE1GVvUcJK5mcCISPG5P6m
+	 PbIyehAyPjB7t4Jrd87QYcMCxVokHX40t996eepyVABGX0R8aPBDKiDMjVD3SO/LjxZRG
+	 RkYsL94XCGZ6shDHU1YDjveRmRk6Ji/QXC/vPccK2mvw+ZaJh3GTobgo21bfxfbPCgg==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 33D991F000C0;
-	Fri, 20 Nov 2026 18:10:04 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 35DCE1F0156C;
+	Fri, 20 Nov 2026 18:10:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198226;
-	bh=gyynVGeIcWRdH7dEMKcuI5jkcGEqh5D8H+zcb4PS70c=;
+	s=k20260515; t=1795198238;
+	bh=ah7hRwVf6ds4TiFuASfnE4NQuTk/w//pBxssLX2GVTI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=mdt3DdVECsAE6UC2Od0bqY75jbMaXlxESRSAF9lt9y1JXq+LgBDK41M9/zvzCGegW
-	 811vfCQbikg78hVn+Qwl3m3GfTFE9njYlB9DVz4mrFiG8KNqkDgAk04WnUTcTpg/6O
-	 OaTp58TCVY1SUiuAtWT7hh+rNuv/ps86OEgZfGR7o0b+KIB89AveFQUDMmnAzGsh6J
-	 OEF/uDG+3R8CPZjIfi5tcmHu/VyyMI88sperpG4N5QxAYUj7dfOiIVRxthy+0R38SZ
-	 ZP1YgfDlYvLE91crdG4YfYZZOvJPIEdEXfrNOHvNJTNdAI0ulCchyUzISA7vo2ZwR3
-	 znbKdKFVj4ZBA==
+	b=R7RrdNXJ+kgnDJVXq/jZRR823nNEWB+5pzX2p+2Adf20fkwctypDJ3LZ5+eHa025M
+	 UuRQtS3Do34w+fQex+9u83C3KjaS8RuRXyZLoBr1YHbujfBy9zqUlB0Vt24zzw5zbV
+	 3btZNj2oSBHHZqWuIv/X/cmlsoFjmdXOYXZTDL9vdqNZVkAKZ1akc+7SDJJokRirDf
+	 QmYzQkvJ3nMQ7MZwvfZoqwBiaN51mv7ZCbtlBvgWySYp2Rd/XInGDd2FL4l/4LS/gK
+	 3mtYh987/KRgusLHWn3q4XC27pEJx4UwdlxjOT1H3dRjEd3G3T7FbSgG/cy9yAiaZc
+	 wheS6CnN0ixzA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id A11FE4B919;
-	Fri, 20 Nov 2026 18:09:19 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 3D19F4B94D;
+	Fri, 20 Nov 2026 18:09:21 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:13 -0500
-Subject: [PATCH 22/60] mm/mempolicy: don't NUMA-hint folios outside common
- memory
+Date: Fri, 20 Nov 2026 13:09:26 -0500
+Subject: [PATCH 35/60] mm/mempolicy: keep private nodes out of
+ migrate_pages() destinations
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-22-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-35-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -141,11 +141,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=1010;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=1114;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=Rhr+Cx2NDBYMgcDa4ebUGsHqlXBNnSG2bWe3JHhepuQ=;
- b=ztKZ8u2V96CzaJYP7HKnggJC7tb4ZoFzeBT1/Q9GgCywxA/2Apy1CnRFyXdEQXCHyVKOHaZex
- T6+2pAVT40UB5Xf3cmWhN94+0VSejEoU51w1IEohEcPTRwSaWPP7iUa
+ bh=H9nkzUJ+W/B+CQbALDD5SyhxQlr5AVXp1jZnonCs+2k=;
+ b=qYt4WGgIFvq2RJT+D/LbNX9eFwn5eLa1APiNG0q/gFK7SazhE8Ij9A//vMkPQj7FL/v1ICdhS
+ jrfi9jSAKC+C0aiThj8fYRh2F/Gs/FtXJaqopNXu15BKaJfgfgG0QYs
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -156,34 +156,36 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-The NUMA balancing scanner installs PROT_NONE only on folios that
-balancing may migrate.
+migrate_pages(2) intersects its destination nodes with the caller's
+cpuset, which can include private nodes.
 
-folio_can_map_prot_numa() already skips ZONE_DEVICE folios. Skip folios
-outside the common memory pool (N_MEMORY_COMMON) as well. Do not inject
-hint faults on those folios or migrate them.
+A private destination gets mapped to some source node, and every page
+bound for it attempts a __GFP_THISNODE allocation. A private node is not
+on its own __GFP_THISNODE zonelist, so the call fails with -ENOMEM and
+logs an allocation failure.
 
-Convert the zone_device check to a common memory check (which includes
-the zone device check explicitly).
+Leave private nodes out of the destination mask, as move_pages(2)
+already rejects them. A mask that names only private nodes fails with
+-EINVAL.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- mm/mempolicy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/mempolicy.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index 806577e1d48b..07d577aca78c 100644
+index 81ccc481cea1..2bfe8b2b6287 100644
 --- a/mm/mempolicy.c
 +++ b/mm/mempolicy.c
-@@ -863,7 +863,7 @@ bool folio_can_map_prot_numa(struct folio *folio, struct vm_area_struct *vma,
- {
- 	int nid;
+@@ -1958,6 +1958,8 @@ static int kernel_migrate_pages(pid_t pid, unsigned long maxnode,
+ 	}
  
--	if (!folio || folio_is_zone_device(folio) || folio_test_ksm(folio))
-+	if (!folio || !folio_is_common_memory(folio) || folio_test_ksm(folio))
- 		return false;
+ 	task_nodes = cpuset_mems_allowed(current);
++	/* Private memory is not a migration destination. */
++	nodes_andnot(task_nodes, task_nodes, node_states[N_MEMORY_PRIVATE]);
+ 	if (!nodes_and(*new, *new, task_nodes))
+ 		goto out_put;
  
- 	/* Also skip shared copy-on-write folios */
 
 -- 
 2.56.1
