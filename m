@@ -1,101 +1,49 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.51
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795134806;
-	b=WJyyXjwu66HpnyUqDrzL6yB+yhogF0DB9TEsVs6nh4O5JiIhfhPhTkJ7WPp0JSX9EEkp
-	 uNerl97gMgy9BM2YcMzsnF5decE3q56QtYroCGafsdwcpGKWWZ5R06kpG0bq/LcpZ3V3w
-	 V4g4BfYtcmDr8XcLjvUYoulWTxsskcZet9Nsxf8t1TeeANaORd/E19DPABnBiN8YOGMwE
-	 uoqC6y+ADjEd777cI3/FADUVcafuBz4gC0TIkTtrq2JV9RlHmkUBsoR+eHEBSz1XNH31t
-	 WymAL7A5qwzrTh1xrcyAoh91jCYNmfIFfV+Jycyvufq6ClyvTpFwMF8W1Wxx1xm0f3w==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795134806;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=q5dwbG3U1cLtbFVF4+FubgVmvLvUVgq9jKjpGQEHC4c=;
-	b=Ak3Uf3y9u65DWX2TDNzTXWE+z+HpAgtH3Yf/uX4r+nzMhFB6bB3Yy/LpSKdrrQVDmL4v
-	 lr7DH790N9sDgDxRhIsN0N64d7Cind28ElEqXQNwa7HUhVWFB7CTp+0iCr+wlTnzpvKBc
-	 CpyLHNTwfsxlP4J6EN8mFHXMeJJtYHqXEZfCWqIuUcAwIpcdccrQr8xWSZOgFPoCPbrYw
-	 i5WfpUK0lMn+W4G4csHPTzXfj2hgP2WyxA8r3hBnQvOXBzQljMrMTPWpidvC/DZONhCEo
-	 htWwNBlJSVS8rvxRdbjDCHrw9uHKnpZpyHOuls44iSEzDbhaGufBQCHw+jXcNKZ1Tvw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0P87Qpzm;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.51
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=115.124.30.112
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795141161;
+	b=PLNYdvZk2lm8R4tk6h0TVAqnyPpFXnXD5LAzyNhx0lL3+NooQ2Pz8Iymh5vQG9EWSw21
+	 fyaN52uOiIDPsLv9B9RBPFoKOlGNPxvJMd0OHpFmVNsC0AjHl05mu6j+uXf12//zaCXn+
+	 1CplPsd1vCjhHv/T2aX+/mC5hNX+l9yu6w+irVmDu3hM2Rojj9ZdkZvCdJn04/2GYY/vq
+	 ywlAulC/6CroXbg2bKYcWXqdvQOcRr2br1Fi3RSm9g/9QcZFHksM21dPZwvBk8SSVqDV8
+	 xaOwG4w9m8F6JCcYLqwWTuY1/9c4OcNFzb1OrveAvqaDQZYOMAlPbDk7eNY70TY4H/A==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795141161;
+	h=DMARC-Filter:DKIM-Signature:X-Alimail-AntiSpam:Received:Message-ID:
+	 Date:MIME-Version:User-Agent:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type:Content-Transfer-Encoding;
+	bh=balcmbgSpngESIblTghqrlh1o6Z7H9I2czbvxRW+eu4=;
+	b=IcJsDI7zomXc8FYl/HFqnyN9jmE+PbLaiodSpzky5j4zQTtcjB3ZPr52lAk6Xa7b/rg3
+	 1SXbP2wuyBb46OX5NXIqrghDk6/hZUsZ1iNsXIfI7fRhd9/vcQKqDHtvPD3jalXH5vizH
+	 w/KxMIEGDLTH5xRhCOLeG4g98KiAubiwS7MyccbeMNy0fEqOQSbq5wRL+OF3ICL+7WRCP
+	 1dw1wJL6QFRta8t53U5LvVeD84cTtPmt3adAuwxhFwmXpizVesed3XQqSt9zVL6LmIkWJ
+	 HkcTlP5fSwvJxu7a35yVbKCOkTOL7Ue4a90AFbhizoqTA8jDoixVZ6MMp4Oth99MCbA==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=linux.alibaba.com;
+	spf=pass smtp.mailfrom=linux.alibaba.com;
+	dkim=pass header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b="MR/dMGwa";
+	arc=none smtp.remote-ip=115.124.30.112
+Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07755606A325
-	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 00:33:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 07755606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30B64606A325;
+	Fri, 20 Nov 2026 02:19:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 30B64606A325
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=0P87Qpzm
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-4a2f4ca0dcfso126407f8f.1
-        for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 16:33:25 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795134804; cv=none;
-        d=google.com; s=arc-20260327;
-        b=bF95ZLW6z6DCDQ6QZesxETY+wuipKvaoPSJJnzKDjKCBdaaaSxrAYWtxbLtkbdfG1Q
-         E0+OHiC8kstr90IeG6yE+scnRo1fFHHB7mOknKyfzopHWdPtL445o9s73VccdANlQb+G
-         RsKbQ08jB34mS5Qb+40cS+ppBZnKx5nSe3OKaX4YNeC0we9gYzVhBggD2pNh9I4DbilL
-         /NZe+z936hHTinIcQ2EI68+ll/gZ60ggr2oCVbwpoPW3lGsJNPPkBOESHg8IDzZZ1EEn
-         4yV9G+SqqzkHQX67tcdqJ2GyhVbkNeuFr0JYpndIJkqFriuSEpL2JLkxthUT1sE4qUE6
-         dgzA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=q5dwbG3U1cLtbFVF4+FubgVmvLvUVgq9jKjpGQEHC4c=;
-        fh=tnPGa0Z/0FivYnbr6uBhKeF00bSd3nZoyY0w6QVyGmY=;
-        b=gyZ9bs2cuYXq58BXpqz3vQcoaUBR5qWjK1M5lquW9WG84c5tNZcuxKB6SlVoykkT5N
-         roDz2Vf6JDx4GP9Vs08f6L8Jc2QqqkZ0AW5QyYbRalJ07bJlG6IbyfdYTFGp+Ihc6MM0
-         fmqoKu6CEYw3wEqP9VZu4gs4UaJG3CM3+Jfrq64+jZ4bK+zH/5Bvvmd6Q1aMB15sig1i
-         ZfnSqLTDmMIDGaUYEot+/4R4S0jjGjup6Yt8Kf9C10b+J8YalKEd4NBqYhCfD1cffCoY
-         bZUnaEjk6t2FCaEzYdVzb+SQmjgJAEPx8DjbOCH17GLDsvtOaY3ep7tBpUMBdAZTkBuZ
-         FHnA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795134804; x=1795739604; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=q5dwbG3U1cLtbFVF4+FubgVmvLvUVgq9jKjpGQEHC4c=;
-        b=0P87Qpzm1F20EuXWMACOdhy5E9bAKujy8FYcavA4eX9xIQj0BBxpR2ZuCa1TMmYCGl
-         ICqMarT5M66UDr4+WeuI0HdwqIlhI+cR5t1RkJzWkJL9VptAisydFK9srsrSZaLKMk59
-         f0IjGUgwHGuQBM4Vhj3VziGOzJIic0JBsgreoeqrs86LQ08C0qM1ckomcgsUG7Qg90u4
-         NAtB1v+0U56KVV/Jl+M17YQxgmPpTlLrFEHg22SByhkRcnyjdlQIRloC1mQyoippkIaN
-         QLjkSfFn8fn1R48NsvUn0dvk8lP0kyFPjSLVncBFpHNt+l1oB9dp/AJrpkhUP7iPwLHP
-         2EuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795134804; x=1795739604;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=q5dwbG3U1cLtbFVF4+FubgVmvLvUVgq9jKjpGQEHC4c=;
-        b=C5kHjZaS4Qsg4yw6btS5VOdP8/Gordjuzut1HC0JGMARAOGGDOG+tfihKcPAxUEF7W
-         fJTENWBJgdUmsRpr8Fm6E1PVwvNqQu0unsThbmaBp9pmC4VHzA/4ZRGz1+1xfuiIuKYv
-         z9fCGJNyPTtQaJhd3vZkqyiAEXE9M6PqyU42HBk+k8JCS/JXgvRwamX8JzNf1ZB0uYb3
-         kgsPv0z3/+VZXffroD4tMgvOlNpZJSWv6tweyZDPREaFVS2sP7d2EZae9+20Gp7YJ796
-         C7HJ9NUFVlW+kpic/LCVnFS4lnAD9grwHxBOxwuyQNmhQ/QnO6YiRg7uPIOe6iG73rZ3
-         9H0w==
-X-Forwarded-Encrypted: i=1; AL+hErHSAixXgyUQieAvqZcvoDqSzqBxmJMt94a0z+/Az+c6EBsfUi1O43mVi9nSkp04sO+3U7tL1iex@vger.kernel.org
-X-Gm-Message-State: APuU4Z82jeZyszksxLuDviUBAePPBj3InZt8sCtcCoMcUmt69cwHk8JZ
-	kQwH/8fdAXpmztgA85qv4qbuHuAn2oNqb7W5bu63g2d83cX4UIq1Fb/8zyxs5+SENpw+/1EN23O
-	7Za8+QbL8grao4guCCWeMA+2jCx/HBf4=
-X-Gm-Gg: AZFdTZdxrqihrQv7F9e7slR2jKyp65Snn5iJYMvt8VTj0OZ3s481YoY1/aYW8gD2uPj
-	kh7eYwSsfHW4lhudeOX5qZbeOkQ4ZCMDblxfI89hzUwJuaWFKvcK5HY/aLSBroFF9749eDjVjrj
-	r1cI4xGKFXu1zSKBY28IqvYqioCNePLOsBVm8b0LFlLIfhB9JBfhRIEIoo6HQIxdNmTyNZeH8l8
-	tm58yk1Y1eYAJXq1V9umrERg/WuMf5fYkDVP9VHq/z3c3d/fz5OsMQbrarWXhedp0WnraL7CUdk
-	k6AMDZW8Lqj+9xLXS8pkOzvzfgsaD/0x+njpcV38JD70iChlHNSCVN8B9yOldjV/dsOODc6MiIP
-	jYnTUp75e4BpWamft2W7DQEMQJ+sW88w/k6rc/EcpZzR3AwXxTcmxY2DXEyeFl4Q990BIsJaciZ
-	LaInDHjNtkLRNZoiOgJ+M=
-X-Received: by 2002:adf:e186:0:b0:48e:20ed:d5e7 with SMTP id
- ffacd0b85a97d-4abb3a4d37dmr2109434f8f.34.1795134804351; Thu, 19 Nov 2026
- 16:33:24 -0800 (PST)
+	dkim=pass (1024-bit key, unprotected) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.a=rsa-sha256 header.s=default header.b=MR/dMGwa
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1795141151; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
+	bh=balcmbgSpngESIblTghqrlh1o6Z7H9I2czbvxRW+eu4=;
+	b=MR/dMGwaCsgx+VVcAlok9BPme62AcQRT5o25JY6ClvhchH7KSo2JNXCuZ9mpO1dOj4JtPhwaMm41JHQBFEJhC2BUpqqs322lLmYazJSZHwNejaQQiklalesnMr3sFZCdBYja7NsMXl7N5mS4zNm7cGAmNhsFqITnh2D6z8pn+04=
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033032089153;MF=kanie@linux.alibaba.com;NM=1;PH=DS;RN=9;SR=0;TI=SMTPD_---0XF5-vtZ_1795141149;
+Received: from 30.178.67.37(mailfrom:kanie@linux.alibaba.com fp:SMTPD_---0XF5-vtZ_1795141149 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Fri, 20 Nov 2026 10:19:11 +0800
+Message-ID: <856407d2-db33-4c1d-a5c9-2ba7e0053ad4@linux.alibaba.com>
+Date: Fri, 20 Nov 2026 10:19:09 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -105,65 +53,112 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261114002822.1043378-1-joannelkoong@gmail.com>
- <20261114002822.1043378-4-joannelkoong@gmail.com> <avvhF41RlOQSYFq6@chrisdown.name>
-In-Reply-To: <avvhF41RlOQSYFq6@chrisdown.name>
-From: Joanne Koong <joannelkoong@gmail.com>
-Date: Thu, 19 Nov 2026 16:33:11 -0800
-X-Gm-Features: Aa3M54rY2agoJDn4R2X4j9vjOezNYoLRKUGxlNrKNsn9CzkEMvge175LEU0QmY8
-Message-ID: <CAJnrk1Y+QpbFhA7NZQYu_enEa9d_dp5ySL=oegeEn4SkkGE_HQ@mail.gmail.com>
-Subject: Re: [PATCH v3 3/4] mm: workingset: skip the root memcg flush in workingset_test_recent()
-To: Chris Down <chris@chrisdown.name>
-Cc: akpm@linux-foundation.org, david@kernel.org, yosry@kernel.org, 
-	mkoutny@suse.com, shakeel.butt@linux.dev, hannes@cmpxchg.org, 
-	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
-	nphamcs@gmail.com, chengming.zhou@linux.dev, sj@kernel.org, ljs@kernel.org, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org, damon@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] block/blk-iolatency: fix always-zero cur_stat mean on
+ non-SSD
+To: Tao Cui <cui.tao@linux.dev>, Jens Axboe <axboe@kernel.dk>,
+ Tang Yizhou <tangyeechou@gmail.com>
+Cc: tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, cuitao@kylinos.cn
+References: <20260904065426.1281914-1-cui.tao@linux.dev>
+From: Guixin Liu <kanie@linux.alibaba.com>
+In-Reply-To: <20260904065426.1281914-1-cui.tao@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Chris,
 
-On Mon, Nov 16, 2026 at 9:07=E2=80=AFPM Chris Down <chris@chrisdown.name> w=
-rote:
->
-> Hi Joanne,
->
-> Joanne Koong writes:
-> >-      if (flush)
-> >+      if (flush && !mem_cgroup_is_root(eviction_memcg))
-> >               mem_cgroup_flush_stats_ratelimited(eviction_memcg);
->
-> Not a big deal, but in the v2 thread you mentioned you would try a
-> mem_cgroup_flush_lru_stats_ratelimited() helper for this, per Michal's
-> suggestion. That still seems like a good idea given this skip and the one=
- in
-> DAMON rely on everything read after them staying in lruvec_use_node_stat(=
-),
-> and at least speaking for myself, keeping the root check close to the lis=
-t
-> in memcontrol.c makes that easier to see. It doesn't need
-> to hold this patch up though, and I've tested that refaults in the root
-> cgroup no longer flush, so either way:
 
-Thanks for reviewing and testing this series. When I was updating v2
--> v3, I tested out what adding the helper looks like, but found it a
-bit overkill. It adds two new api wrappers (one for ratelimited
-flushes for workingset, and one for non-ratelimited flushes for
-damon), each of which has only one callsite.
-
-Maybe it would be clearest to add a comment directly at the callsites
-and above lruvec_use_node_stat() to document the dependency? I'm happy
-to add this in, or if you and Michal prefer the helper still, I'm
-happy to add the helper APIs.
-
-Thanks,
-Joanne
-
+在 2026/9/4 14:54, Tao Cui 写道:
+> From: Tao Cui <cuitao@kylinos.cn>
 >
-> Reviewed-by: Chris Down <chris@chrisdown.name>
-> Tested-by: Chris Down <chris@chrisdown.name>
+> iolatency_check_latencies() accumulates the per-window latency stat
+> into iolat->cur_stat via latency_stat_sum(), which for non-SSD devices
+> calls blk_rq_stat_sum().  But blk_rq_stat_sum() is contracted on a raw
+> per-cpu src: it folds src->batch into the new mean.  By the time the
+> per-window stat reaches cur_stat it is already aggregated, with batch
+> left at 0.  Each window therefore contributes zero latency to
+> cur_stat->mean, which on non-SSD devices stays at 0; the
+> latency_sum_ok(&cur_stat) check that gates scaling up is always true,
+> so the scale-up hysteresis never engages.  SSD devices use the
+> percentile path and are unaffected.
 >
-> Thanks!
+> Add latency_stat_merge(), which merges two already-aggregated stats by
+> their reconstructed totals (mean * nr_samples) instead of src->batch,
+> and use it only for the cur_stat accumulation; the earlier per-cpu sum
+> keeps latency_stat_sum(), whose src is still raw.
 >
-> Chris
+> Fixes: d70675121546 ("block: introduce blk-iolatency io controller")
+Ti Tao:
+  Would it be better to change the fix tag to "451bb7c33197 ("blk-iolatency: keep track of previous windows stats")"?
+
+Best Regards,
+Guixin Liu
+> Signed-off-by: Tao Cui <cuitao@kylinos.cn>
+>
+> ---
+> Changes in v3:
+> - Rebase onto current linux-next head (no code change).
+> - Verified with a two-kernel QEMU run (virtio-blk forced rotational,
+>   cgroup v2 io.latency target set below the achievable latency so the
+>   scale path runs every window): on the unpatched kernel cur_stat->mean
+>   stayed 0 across all windows while the per-window mean was 120-250us;
+>   with this patch cur_stat->mean tracked the per-window mean.
+>
+> Changes in v2:
+> - Move the fix from blk-stat.c (blk_rq_stat_sum) into blk-iolatency.c,
+>   per Tang Yizhou's review: blk_rq_stat_sum() is contracted on a raw
+>   per-cpu src, so the aggregated-stat merge belongs in the iolatency
+>   caller, not the shared helper.
+>
+> v1: https://lore.kernel.org/all/20260720133813.45150-1-cui.tao@linux.dev/
+> v2: https://lore.kernel.org/all/20260721030312.85655-1-cui.tao@linux.dev/
+> ---
+>  block/blk-iolatency.c | 27 ++++++++++++++++++++++++++-
+>  1 file changed, 26 insertions(+), 1 deletion(-)
+>
+> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+> index 2caa79a008ad..853608a4f187 100644
+> --- a/block/blk-iolatency.c
+> +++ b/block/blk-iolatency.c
+> @@ -216,6 +216,31 @@ static inline void latency_stat_sum(struct iolatency_grp *iolat,
+>  		blk_rq_stat_sum(&sum->rqs, &stat->rqs);
+>  }
+>  
+> +/*
+> + * Merge an already-aggregated @stat into @sum by reconstructed totals
+> + * (mean * nr_samples); blk_rq_stat_sum() reads src->batch, which is 0
+> + * here. The overflow check also rejects the 0 samples case.
+> + */
+> +static inline void latency_stat_merge(struct iolatency_grp *iolat,
+> +				      struct latency_stat *sum,
+> +				      struct latency_stat *stat)
+> +{
+> +	if (iolat->ssd) {
+> +		sum->ps.total += stat->ps.total;
+> +		sum->ps.missed += stat->ps.missed;
+> +	} else {
+> +		if (sum->rqs.nr_samples + stat->rqs.nr_samples <=
+> +		    sum->rqs.nr_samples)
+> +			return;
+> +		sum->rqs.mean = div_u64(sum->rqs.mean * sum->rqs.nr_samples +
+> +					stat->rqs.mean * stat->rqs.nr_samples,
+> +					sum->rqs.nr_samples + stat->rqs.nr_samples);
+> +		sum->rqs.min = min(sum->rqs.min, stat->rqs.min);
+> +		sum->rqs.max = max(sum->rqs.max, stat->rqs.max);
+> +		sum->rqs.nr_samples += stat->rqs.nr_samples;
+> +	}
+> +}
+> +
+>  static inline void latency_stat_record_time(struct iolatency_grp *iolat,
+>  					    u64 req_time)
+>  {
+> @@ -547,7 +572,7 @@ static void iolatency_check_latencies(struct iolatency_grp *iolat, u64 now)
+>  	/* Somebody beat us to the punch, just bail. */
+>  	spin_lock_irqsave(&lat_info->lock, flags);
+>  
+> -	latency_stat_sum(iolat, &iolat->cur_stat, &stat);
+> +	latency_stat_merge(iolat, &iolat->cur_stat, &stat);
+>  	lat_info->nr_samples -= iolat->nr_samples;
+>  	lat_info->nr_samples += latency_stat_samples(iolat, &iolat->cur_stat);
+>  	iolat->nr_samples = latency_stat_samples(iolat, &iolat->cur_stat);
+
