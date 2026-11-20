@@ -1,78 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198258;
-	b=lZ3OAPyS1Bgb47kmNul/vNjkPDPz+wVDQDWc3EpRinFlBCjfbAz382DaII2HQXm7OLpw
-	 gZYyHV6Nhi+JkHkujfpMS3pvk5Prjs/NsMJn92HuG/+plkpLJEgcWu2bicED9s+iKHl2n
-	 Zm25E8tJlq8TNXQHzjqUWd9HT0geL/eSY3Ya4Pd80ehHi+bY+/4vo+sFGNaOG22QvJNgJ
-	 y2boYp1C8Hcu4XMWI/pBDf+csKiJV6v+UzCrKNbpjfrdIK8QhWR1hXewTV0WALgtnqLCE
-	 69IJpz9+LPbD1vAlrcDKtflStwaNimK9Rr/cOX5Jzqt/Avl6y3AOAiz2K8ZzbfriIDQ==
+	t=1795198279;
+	b=hFK/51bq5gPHRlkA4dix+wnrAjd+U4h5eoqZpXXQcBIXtXRNrVWHhdmM8vsIkL40PO4L
+	 WIbaT31iU5zV/Ft06ylxso5OMbTlSQOQY5Lm5uoaPJ2SqqvqskHVB3wtKssiDyavq2KxS
+	 CmeVZgHSHWJZUN/+XgysBBOU5pta4Ttw1COpHF7pCynmPT9sfL4gmtpvCQLe8KONwcMxu
+	 WPZTSgynGRk3frdcfz+tCko0QECge9tWKhm28lcidutfpKIHOE0PdXFo9SDOPH8+5g6eR
+	 jCSH8xja0xpnRixG/+TnDSNTDrX47O0KiJRIigxiMwTmszVeW0ec8Vi0qiYaiAliWhQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198258;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198279;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=lF7OwP7qMctjh4Bb/Y3A/pUbShZLcwfeP8EGSSilShE=;
-	b=yoxTN5eYo7hzSRNg8Q3q4QHjb8a2gZOOpoqhXRYbMV1MeoIlLmzmzyeKFP0BrT1JZt40
-	 q9O6+zCIypJyf9+zyUe8FxFSVEQnkt+ZEn4W5gTCmdnWtvIIGmCpugyEmJACcNtsSIsgv
-	 pc/sMy1iYZXBhW12PS8ztGwhhamRqQlBzLiLLLy2Mv+t8FoFi9b6Ho+eIHTUV51z9+9fm
-	 EQ2KHCqTnwZnnPtxDqoLe/JK78q0uBgTIxJsTSwuLHlLQxZH4mHFVfPj2altNVfq2BaGf
-	 sXAMtaHby6tdDEHvwbBNwg6THVC2i7YVDfZEx95qs2MUNHNhsxXd+6oADGmTRfwJwRw==
+	bh=RpcXK0l33o1Rh3w5xtzko7j4qpbLiqFRKXf73CE8MdQ=;
+	b=D7o4cGQMnacVpcVtEbKIa+RATyWXc4WXPZduAVi1e7Q6tOO8x5cPdEITSXn1rmLSy+wW
+	 rEXiD2ezcNEdnKVyj2ykZhK05JEsjzBu2zOjnVwoW/Ab56oUkjdm+nuyHB7yjRF/zFmLP
+	 AldygY+Tdg3279Cuv9f1tZ9zyuL4q50T1JhPArVJ86rJnM88OflRGxHpWWcN84kTpioTF
+	 Z2frbbYQGmEr8+aYYfyYnVwlgtvA5QbTybiNthLSiXuf62vPhm9PtZjvu3J7gDbTGaTcp
+	 pASO4m38YpIIrm48376GDvXBmPf/DefdpaMLoIhvrrbqpFx3bN6NJvCAiaLPX98kCIg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ifCOLUmo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fKuuGKty;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBB4160A5BC0;
-	Fri, 20 Nov 2026 18:10:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17BAC606B991;
+	Fri, 20 Nov 2026 18:11:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ifCOLUmo
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fKuuGKty
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198258;
-	b=c3Oik8dJymVtdT7unocgwRLlG8r1YnnQErsBHYn8RQksCO7G8PG2dZq2JyiKmDoJiv5p
-	 izkWcERRVYuaWYIHUvbiRcq91+S5/4fvsUtlDAqbD/jwnDpy+V1JPIHXi8mxEwnHaF4GK
-	 mN1Ki5sLqquWbZNaSiiVPXG0v4kVj0EjPY7XAiYt1Wd4lGQhUPP9d8aA1B07NxVz/6Upw
-	 87iDI/OqyDjsAQM4Dm0m9Qx25lENsYicdMYBT+1PFdRZNTzY0E4Uc/e1bmGO8m9OknM1D
-	 OikiwaI7HDasvEqprZfZ0qlzjzTVBqfikT1eQO9w88jy9UNGTyhU7pCCyCOFdlOqzEg==
+	t=1795198278;
+	b=JQmR934sO1V46SBOaUoAhgSHR2B853Mc6kRvowtIe9jkdAi0ZELfQ1AuU2OLQG2c3NDw
+	 8ItB5dJMjjShXu9FsI88RrNwlXB4zzjIs+8MBGgfFO34JEERbyqgN37/rKe40PlbkifF1
+	 mUl6ZHY6UeeUVKMPxqkc+CN4jqLHZGaur52O4zrkxjFfDoyW5LQP60SKFWPpueV85AB1D
+	 YdmmbKlhEHRR//2n95P1A8MYnpy5jEzIhiEn5j6H/ir56HUaMBvnnzaxFGpAyAnWqY+t1
+	 1vO0M7LNhGB2skd4Huk7vDXI0XaIpIrqTeoJ+ouajprEkzv2vKpcIJrbG3qQKw6gOzQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198258;
+	c=relaxed/relaxed; t=1795198278;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=lF7OwP7qMctjh4Bb/Y3A/pUbShZLcwfeP8EGSSilShE=;
-	b=xRcKL/Ld0UoPHEW90eds1BQEwklfdtKNrdiO3m7DM85UBLgyoEeSmBH8XeuCqaaiI+YY
-	 s1oJdh9DM/dR9Pek60J+adlNkhblWdbeajo2XP7osIlvvgknohx060MH2K2fD33k80l95
-	 Au1sPeKiQB/kxUMtCld7TqMxXCey/I7Zzgt1z75CJzyb848M3TzbCQV3BsrxGzG1mwNkP
-	 mNvGnYtIRz17Z0uGiE+XakyVf+8fj25zySUbnfcSjsISCktkLjX1QvY1GdNPuqUZXPXJL
-	 pSBTc1Af5gURNivbj/Q1ACa/jvohIAC1u3UbZrC9TCccxk8DsQatZDslrBlskM+RB8Q==
+	bh=RpcXK0l33o1Rh3w5xtzko7j4qpbLiqFRKXf73CE8MdQ=;
+	b=MYvQtnFW/mDUxT+abczLBucztkJwd2Lo3sVjBpkvJBxULg3Kbuv6i7NF54ItlEXnTt7i
+	 8DiH+tr4B8ZZt4gKBlm9QhgNgZpyjqZ/xDjSOyNSKLaTvuge5XIK8uNCxi4334P60vXTV
+	 14XTRktHo2vLLU7TruCb75ZWwtCxFMWAZcDYo/p5WFPQT7pNqkKafmw7UFByzaVqmICCK
+	 TFR7QDQxwPIhhfyiH3cH5exoxsttbONTouVLxdBMflO+b0c+dAyRX+ifxsyqVLGCKEa7X
+	 x19W1N5RMphS4KY5EA9p2sJuWAiNfAKYF6UOV1Pl6dR7oVNZSOMBhRJrxPtaync1luQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 3566E1F0156B;
-	Fri, 20 Nov 2026 18:10:32 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 94C981F000C4;
+	Fri, 20 Nov 2026 18:10:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198258;
-	bh=lF7OwP7qMctjh4Bb/Y3A/pUbShZLcwfeP8EGSSilShE=;
+	s=k20260515; t=1795198278;
+	bh=RpcXK0l33o1Rh3w5xtzko7j4qpbLiqFRKXf73CE8MdQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=ifCOLUmov8u7tApw218R6ThuN29QVicMopVGZVBYstFzmxHU5spmv1XX2nTwACAdX
-	 O/y929lQfIHHbnh0N1+Sktc+7dpdccKVYlce5eH1cOfGSFfBJyyhgwd1qtGWuTiB/q
-	 +UPbYLjUzn3tFInS4/XiGpnZZzhzd0M5WXYg/GNuN4ZJySc1O/78JoszES6m+jjTAO
-	 645ATe+fUWyXJ4w2QRmdwHNklcZ8VnKeiqUUrZxSOUeiujxrQIqSnvLKsDCRMAMORa
-	 6e2bDjjuOaYOaqZDIknk/xB++xACNoDMVdp1sNld4PS5JoA9eMyfqHYEnDb4C/ONMK
-	 5BPCfTmck2nEA==
+	b=fKuuGKtyxPknbbVz74SDlYqe8NpCSwrSdxokqvFDg/Hq6ii1GycNn0H/dzBbsxoz+
+	 dX68cSerLa9kDekAEFTpAvBvoU9C0GgI9s2Yy6tgqfJ7ak4KB1C8wVwBQJC+TjsF+L
+	 BglBAUrqngm4Cl54i4YKkuapiF0r5lIgBcYIkUdWzB5Ocrfl8OyYba4kCd3iEmW95P
+	 8iPHj0I9oEK5+f2RPjmniixq+cr5U8VFc9FjnvEhENmBGoPsgZgzSXkS98zaq9oI0I
+	 O1vQhnSky9mYVixuvbu1g92Lx+fzHn1tiacZv+ROWziop4CfV+r7KniA3E5YtDnClX
+	 MEN1F+F/gjKog==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id B84654B95D;
-	Fri, 20 Nov 2026 18:09:21 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id B479C4B97D;
+	Fri, 20 Nov 2026 18:09:22 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:30 -0500
-Subject: [PATCH 39/60] mm/page_alloc: add a private-node zonelist
+Date: Fri, 20 Nov 2026 13:09:38 -0500
+Subject: [PATCH 47/60] mm/vmscan: restrict reclaim to N_MEMORY_RECLAIM
+ instead of N_MEMORY_COMMON
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -83,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-39-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-47-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -140,11 +141,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=3134;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=6325;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=OqpMdBUt5im1cMgZFE5X+fZAbGJWYU6WcOHKkFwuS9o=;
- b=o/dYXsRSD+kDIMnUJjWNiDdysIiPZ9AEs4oJxtAad9XJMPtLlNyz+nTDlkBw/SrIIzFQ8NEmg
- Q5LoNu0vSTqCQh8ZHl/nPuFBHXZVGMqF4GQxX08YQa6pADhhTLCJq4v
+ bh=c7DgarKbPTh+6IzFAHFl6eKVTW2BJrYv3RKLDMceLJE=;
+ b=pJ9yiRLLHXGH+ah/OM4I5sNBVlA9ZiE7FmUiyed58jvCYoAInkb3gL9qE4qbzozo6/HQ/UBhm
+ +p2J5pp71F8BQDYiKB23kBhQW4ibDlwjd0+2F6Ea2rd3w38dcgQckEc
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -155,88 +156,174 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-A private node carries N_MEMORY without N_MEMORY_COMMON, so the FALLBACK
-and NOFALLBACK zonelists already exclude it. That leaves no zonelist
-that can reach it.
+kswapd and the reclaim interfaces currently serve only common memory. A
+private node that opts into reclaim should get them too.
 
-Add ZONELIST_PRIVATE, which holds a node's local zones only if the node
-is private. Common nodes have an empty private zonelist.
+Restrict reclaim to N_MEMORY_RECLAIM:
+  - start kswapd only on N_MEMORY_RECLAIM nodes.
+  - walk N_MEMORY_RECLAIM nodes in MGLRU's debugfs interface.
+  - reject nodeN/reclaim for nodes without N_MEMORY_RECLAIM.
 
-Like the existing zonelists, it is sized for every zone of every node.
-That adds a zoneref (16 bytes on 64-bit) per possible zone, MAX_NUMNODES
-* MAX_NR_ZONES, to each pgdat. A smaller local-only zonelist type can be
-a follow-up if this matters.
+Direct reclaim is unchanged: an allocation reclaims the zones on its
+zonelist, and a private node's zones are only on its private zonelist.
 
-When the zonelist becomes selectable, __GFP_THISNODE will still suppress
-OOM, while the page allocator selects the private zonelist instead of
-NOFALLBACK.
+Private nodes that permit reclaim get watermarks again (the capped
+minimum that highmem and movable zones get) and are boosted, since
+their kswapd restores both.
 
-If a user grows requiring fallback behavior to COMMON nodes when the
-private node is out of memory, we can consider adding a fallback
-variant - but for now private node allocations use a local-only
-zonelist to limit complexity.
+Private nodes without the state keep zero watermarks.
+
+The hopeless-kswapd recovery on page free exists because allocations
+that fall back to another node skip the direct reclaim that would clear
+the state. Only common memory offers that fallback, so apply the
+recovery only to common nodes now that private nodes run kswapd.
+
+Leave private zones out of si_mem_available()'s low watermark sum,
+which bounds the common page cache and slab that must stay.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- include/linux/mmzone.h | 5 +++--
- mm/mm_init.c           | 5 +++--
- mm/page_alloc.c        | 2 ++
- 3 files changed, 8 insertions(+), 4 deletions(-)
+ mm/memory_hotplug.c |  2 +-
+ mm/page_alloc.c     | 11 +++++++----
+ mm/show_mem.c       |  7 +++++--
+ mm/vmscan.c         | 14 +++++++-------
+ 4 files changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index d6c1a43c0bc8..05f212b56c9d 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -1402,10 +1402,11 @@ enum {
- 	ZONELIST_FALLBACK,	/* zonelist with fallback */
- #ifdef CONFIG_NUMA
- 	/*
--	 * The NUMA zonelists are doubled because we need zonelists that
--	 * restrict the allocations to a single node for __GFP_THISNODE.
-+	 * NUMA nodes also have local-only zonelists that restrict allocations
-+	 * to a single node, for __GFP_THISNODE and for private-node access.
- 	 */
- 	ZONELIST_NOFALLBACK,	/* zonelist without fallback (__GFP_THISNODE) */
-+	ZONELIST_PRIVATE,	/* local private-node access, no fallback */
- #endif
- 	MAX_ZONELISTS
- };
-diff --git a/mm/mm_init.c b/mm/mm_init.c
-index 99a45fd04ac5..a6ff49043b5c 100644
---- a/mm/mm_init.c
-+++ b/mm/mm_init.c
-@@ -99,7 +99,8 @@ void __init mminit_verify_zonelist(void)
+diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
+index 1cb10c88954e..8146f77919d5 100644
+--- a/mm/memory_hotplug.c
++++ b/mm/memory_hotplug.c
+@@ -1230,7 +1230,7 @@ int online_pages(unsigned long pfn, unsigned long nr_pages,
+ 	/* reinitialise watermarks and update pcp limits */
+ 	init_per_zone_wmark_min();
  
- 			/* Print information about the zonelist */
- 			printk(KERN_DEBUG "mminit::zonelist %s %d:%s = ",
--				listid > 0 ? "thisnode" : "general", nid,
-+				listid == 0 ? "general" :
-+				listid == 1 ? "thisnode" : "private", nid,
- 				zone->name);
- 
- 			/* Iterate the zonelist */
-@@ -2706,7 +2707,7 @@ void __init mm_core_init(void)
- 	init_zero_page_pfn();
- 
- 	/* Initializations relying on SMP setup */
--	BUILD_BUG_ON(MAX_ZONELISTS > 2);
-+	BUILD_BUG_ON(MAX_ZONELISTS > 3);
- 	build_all_zonelists(NULL);
- 	page_alloc_init_cpuhp();
- 	alloc_tag_sec_init();
+-	if (node_state(nid, N_MEMORY_COMMON))
++	if (node_state(nid, N_MEMORY_RECLAIM))
+ 		kswapd_run(nid);
+ 	if (node_state(nid, N_MEMORY_COMPACTION))
+ 		kcompactd_run(nid);
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 08e57f809a03..0bd21916cea1 100644
+index 864da908a59b..cc70e1b45322 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -6010,6 +6010,8 @@ static void build_zonelists(pg_data_t *pgdat)
- 			    ZONELIST_FALLBACK);
- 	build_local_zonelist(pgdat, ZONELIST_NOFALLBACK,
- 			     node_state(nid, N_MEMORY_COMMON));
-+	build_local_zonelist(pgdat, ZONELIST_PRIVATE,
-+			     node_state(nid, N_MEMORY_PRIVATE));
- }
+@@ -2972,6 +2972,7 @@ static bool free_frozen_page_commit(struct zone *zone,
+ 		 * kswapd work again by resetting kswapd_failures.
+ 		 */
+ 		if (kswapd_test_hopeless(pgdat) &&
++		    node_state(pgdat->node_id, N_MEMORY_COMMON) &&
+ 		    num_node_state(N_MEMORY_COMMON) > 1)
+ 			kswapd_clear_hopeless(pgdat, KSWAPD_CLEAR_HOPELESS_PCP);
+ 	}
+@@ -6814,8 +6815,8 @@ static void __setup_per_zone_wmarks(void)
+ 		u64 tmp;
  
- #ifdef CONFIG_HAVE_MEMORYLESS_NODES
+ 		spin_lock_irqsave(&zone->lock, flags);
+-		/* No kswapd runs for a private node to restore watermarks. */
+-		if (node_state(zone_to_nid(zone), N_MEMORY_PRIVATE)) {
++		/* Nodes that reclaim does not serve carry no watermarks. */
++		if (!node_state(zone_to_nid(zone), N_MEMORY_RECLAIM)) {
+ 			zone->_watermark[WMARK_MIN] = 0;
+ 			zone->_watermark[WMARK_LOW] = 0;
+ 			zone->_watermark[WMARK_HIGH] = 0;
+@@ -6826,11 +6827,13 @@ static void __setup_per_zone_wmarks(void)
+ 		}
+ 		tmp = (u64)pages_min * zone_managed_pages(zone);
+ 		tmp = div64_ul(tmp, lowmem_pages);
+-		if (is_highmem(zone) || zone_idx(zone) == ZONE_MOVABLE) {
++		if (is_highmem(zone) || zone_idx(zone) == ZONE_MOVABLE ||
++		    node_state(zone_to_nid(zone), N_MEMORY_PRIVATE)) {
+ 			/*
+ 			 * __GFP_HIGH and PF_MEMALLOC allocations usually don't
+ 			 * need highmem and movable zones pages, so cap pages_min
+-			 * to a small  value here.
++			 * to a small  value here. Private memory holds no system
++			 * reserve, only this small minimum.
+ 			 *
+ 			 * The WMARK_HIGH-WMARK_LOW and (WMARK_LOW-WMARK_MIN)
+ 			 * deltas control async page reclaim, and so should
+diff --git a/mm/show_mem.c b/mm/show_mem.c
+index b90fb5a0016b..24dd33ba783b 100644
+--- a/mm/show_mem.c
++++ b/mm/show_mem.c
+@@ -38,8 +38,11 @@ long si_mem_available(void)
+ 	unsigned long reclaimable;
+ 	struct zone *zone;
+ 
+-	for_each_zone(zone)
+-		wmark_low += low_wmark_pages(zone);
++	/* Only common zones bound the page cache and slab that must stay. */
++	for_each_zone(zone) {
++		if (!node_state(zone_to_nid(zone), N_MEMORY_PRIVATE))
++			wmark_low += low_wmark_pages(zone);
++	}
+ 
+ 	/*
+ 	 * Estimate the amount of memory available for userspace allocations,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 3e934135e805..03d0919d11be 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -5729,7 +5729,7 @@ static void *lru_gen_seq_start(struct seq_file *m, loff_t *pos)
+ 	do {
+ 		int nid;
+ 
+-		for_each_node_state(nid, N_MEMORY_COMMON) {
++		for_each_node_state(nid, N_MEMORY_RECLAIM) {
+ 			if (!nr_to_skip--)
+ 				return mem_cgroup_lruvec(memcg, NODE_DATA(nid));
+ 		}
+@@ -5754,13 +5754,13 @@ static void *lru_gen_seq_next(struct seq_file *m, void *v, loff_t *pos)
+ 
+ 	++*pos;
+ 
+-	nid = next_node_state(nid, N_MEMORY_COMMON);
++	nid = next_node_state(nid, N_MEMORY_RECLAIM);
+ 	if (nid == MAX_NUMNODES) {
+ 		memcg = mem_cgroup_iter(NULL, memcg, NULL);
+ 		if (!memcg)
+ 			return NULL;
+ 
+-		nid = first_node_state(N_MEMORY_COMMON);
++		nid = first_node_state(N_MEMORY_RECLAIM);
+ 	}
+ 
+ 	return mem_cgroup_lruvec(memcg, NODE_DATA(nid));
+@@ -5832,7 +5832,7 @@ static int lru_gen_seq_show(struct seq_file *m, void *v)
+ 	DEFINE_MAX_SEQ(lruvec);
+ 	DEFINE_MIN_SEQ(lruvec);
+ 
+-	if (nid == first_node_state(N_MEMORY_COMMON)) {
++	if (nid == first_node_state(N_MEMORY_RECLAIM)) {
+ 		const char *path = memcg ? m->private : "";
+ 
+ #ifdef CONFIG_MEMCG
+@@ -5935,7 +5935,7 @@ static int run_cmd(char cmd, u64 memcg_id, int nid, unsigned long seq,
+ 	int err = -EINVAL;
+ 	struct mem_cgroup *memcg = NULL;
+ 
+-	if (nid < 0 || nid >= MAX_NUMNODES || !node_state(nid, N_MEMORY_COMMON))
++	if (nid < 0 || nid >= MAX_NUMNODES || !node_state(nid, N_MEMORY_RECLAIM))
+ 		return -EINVAL;
+ 
+ 	if (!mem_cgroup_disabled()) {
+@@ -7907,7 +7907,7 @@ static int __init kswapd_init(void)
+ {
+ 	int nid;
+ 
+-	for_each_node_state(nid, N_MEMORY_COMMON)
++	for_each_node_state(nid, N_MEMORY_RECLAIM)
+  		kswapd_run(nid);
+ 	register_sysctl_init("vm", vmscan_sysctl_table);
+ 	return 0;
+@@ -8268,7 +8268,7 @@ static ssize_t reclaim_store(struct device *dev,
+ {
+ 	int ret, nid = dev->id;
+ 
+-	if (node_state(nid, N_MEMORY_PRIVATE))
++	if (node_state(nid, N_MEMORY) && !node_state(nid, N_MEMORY_RECLAIM))
+ 		return -EOPNOTSUPP;
+ 
+ 	ret = user_proactive_reclaim((char *)buf, NULL, NODE_DATA(nid));
 
 -- 
 2.56.1
