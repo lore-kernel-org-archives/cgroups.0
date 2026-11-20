@@ -1,79 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198258;
-	b=hIOaTSJ6aHT5ah9/XoohAgj6Kh991T2cImL4GZulvdD6dWSjwWnxWdMr56dU8ih+Bd/G
-	 qevUhNAD8WOyceh8Io+FHOiFNRSNstbTPq7J9wKwRFI37kvUPQJ4+oXlI67hvJfRdtUd7
-	 EE81obGyL8hZDnjTONEJtNyIGXiWJFBq7vPGlcE48aTUQ9KUKiw0Zg+g0zwf3qasvwKUE
-	 H2uhTsgqO27a/J+Ab2hGW0e80JipkAmv9FR9k9WgtsgtF73pCyx2fjuIMREm/E2N/8Xfi
-	 APszFGen/hwzcVbveFDHrquZ9yRLUG22gVAT7WLyD9SaxQbaR6zHpwirWmPOvK47HSA==
+	t=1795198259;
+	b=hz2KN1e1HU7XtFuliHWXOy5T9aFJ6Oaa3N6mrdsom+1oTz0TguzVbl/k8dV7bi3wHW2X
+	 sgauYyQbwNq3Q+NA7ZjjSk+rwoUagZVdBKS5IshaXARmsrFDca0EvbmtsqrFM+UO7iWOe
+	 r5RgF52eL54RfDN39iZrenWwuugqi1YXQbcrvn2BxvDfTS7hQuhjcVjcKXZUQe1gXSZ0K
+	 LhYYqrSuNBJcsKkPo/1goW0g8gXt0GBCB2mF0YYaYO0DIc5NCtdTZ4xFlKAcyv8xQmn+Q
+	 Z3PYY3KrQGXM+5mGcnkijEMpyhl7v9/ERiHwhGSTctFjid8Nbqr+Dnw47HFY7vdcYcQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198258;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198259;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=t9int1jy49B7hwGXzuzABb7Yf3ibBtagCxCa/Nz1EVw=;
-	b=JNhdWYUO3rKyqafkq+1hdfQK2Eymnz+d9bPjWpCfLXAGfdkuvR/lzn+XjVi4PRZivS/5
-	 lM+D4FgF+IbKW7Cewzp495PokumKYnccP+KmrHf12YGMwwoLZp5tLhosWaCQjlpclR/dZ
-	 FEJBMMYxnE1X/+5NjR7nXyoGv0qYHtnotJHtv8KZZjeLQJkFsZ6QdZ+w3GtqQIlsBNytA
-	 BxrjarBY/wUzF1pLjwQ5l8VNLUeMjWpWx1bvgKCSdXwPO8AF8OqgSIbutafLOH4xYZFai
-	 smwg4JPYE6mt0lLKym5IGQgMR/qtik5IZq+hqt6cu0X16ER8lFmtkue4Gt+EcDHG4kg==
+	bh=2pyhlHcAWcyHdhLLEt+5fKnMWs23Mnhr4T3LRfpUnXY=;
+	b=k/q8xCMKZDOer+rwngjq2MHMaA5ybu+H+9fHuwuJIpUrkLZl6dGPRqutCPvXOLqnjt/l
+	 kKLB0xAulagV1lItdDkh73CflAAvZzTTAarxn0SmLqkuALhO338tqTxzzJlyFZDHFrvGW
+	 GsezJqgrEo3weJwp4xQxsHTOr5Dc/X6gX1gHQ1Zn/k87XQnlSx7VufWY7vdvM5lWLbhry
+	 4wdiLO+6DZj0UV0qEKAwL08OTYtuBlK2FvM90j6l+JowcxQOHmntLty0F3itac96Xwm7p
+	 bi7qXvGGjob0DQTRoFsu4jHoXWJbAAKPnnrj7pUD6ncE/FxCFaL46Pv2yvW116/6mdA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IZWx6zKX;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DKRikqjp;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7C4B60A383B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E570607634A;
 	Fri, 20 Nov 2026 18:10:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IZWx6zKX
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=DKRikqjp
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
 	t=1795198258;
-	b=K+3Sphm/+Ihlwbw63MlZQiW2MDWuO3vCoH3mUAzibWuaLeMUJ74VeX5W/G6RDcwndDPN
-	 wRSI/bCa7MJI7tAR+pGQsl8qLyxzJZv9cy+yj7CMDiFscXVqsvthyAJ48lNewJMJ+CGG7
-	 ayiRySufvAs19sc0mct8w0CMkAGKCeWt2X9tp6/xqI+2lyV3akVv5Wj5exqLGdG6JJ21U
-	 8yHXq6zO9XHmNyytkRGhKiaFbK+cNaTBnAZLyPehogFu5BAnyaaSjhaBEtzq1j2p6CPOG
-	 4oYTgT0F5k/I6DUkcF48vDkehY1G4WssUih5KOK8t0FXj/n6xfuyl3M46z/kwxuA9wA==
+	b=pI6Ji73H2iArxOOKCvr/PNcCu57Pbb6hw6yHBJ0wBRdwuAyaHijWJu2vyHH7RGRbjIoO
+	 wBOZfEeEB7OInc3WhdM2GH+qcrD/2dQghgUpE7/4U0SZJQoODUWcKD7IT3QpMvcd5BsIH
+	 vtyt2XMfpqOdOcPX0X77tvLp98BBSg9/w5Jx+DNHUvUYpjg7QV/WHnS7/0r3ExQA5hxvZ
+	 vG5YWVZ4Z/c5OMysQaPFUTvcT28QT0LoKy6mMoGD68iZVGyY6K9EO7uIKCulbWFDmpkvO
+	 jI8b6H98TuXzh1npkN9FAUNKlG5goeBIUt/qeJIon9UA5WMMRw7V4010WRMT3qZqpzQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
 	c=relaxed/relaxed; t=1795198258;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=t9int1jy49B7hwGXzuzABb7Yf3ibBtagCxCa/Nz1EVw=;
-	b=rJVo8pSR6djvuibmFOxHS+E14uaT+CVZj/ULKspC3k4+xPMtxn7RDFgj9n0QTKTeWW0J
-	 tyLDpxb3UgmxxpcvFSjzTgxPtyjBf8upINta76Siz0QL7c1SrjilY5vX6XgxqY5tSdjqY
-	 VcZGbHw8ywI65mAy9ZRlJmmpAP4dNq9oGiTbzygzOgxIsphXsLJ9TyjDwO1/hXzRbg9tD
-	 sxoGsuQYngunsXAs3unoVFl50ULIhiKcS8xNPZI/xfjb/y0u+EJB1i48A9Lbh0r+84CrB
-	 57ZYoW4jfCXzy8vNDKFDvLlqKP9TmigaLBUuYrTZ6oRw2laGH5eMCuULyLDCWlSJ3uw==
+	bh=2pyhlHcAWcyHdhLLEt+5fKnMWs23Mnhr4T3LRfpUnXY=;
+	b=cTov5n1eweWw5sXaxWSrp33Q0OSOOjgVcoGYHf3FDPrUfX/LX7zWrWBwiLAIpFeBNH/X
+	 WZKnmg9Gq47UnP4qu7HRzUfzioCbMu9PF/9WeOq29s9ys/U248MpKoAjNh8hTX7bPgbnq
+	 wMqdkLwGtr21kB7Ol8ud9xqRRgOzAQRtot+ViY0XMtUd9Oy0zCvWsrLn4lLCbkeUT9oUg
+	 SacyYGhrDz6ZTs8vbrYnGu2JM34E0fI4HDvUXl5nN2AHjWI4alaPaj4IBoFebk9RGl1bx
+	 0VW7rKhvZWwceU2wni57yz4uY9291LZbYDDD+HnlPueZDHByzhueR7bby1Sj/mNmr+Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 0CE481F01561;
-	Fri, 20 Nov 2026 18:10:46 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 1E7061F01825;
+	Fri, 20 Nov 2026 18:10:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
 	s=k20260515; t=1795198258;
-	bh=t9int1jy49B7hwGXzuzABb7Yf3ibBtagCxCa/Nz1EVw=;
+	bh=2pyhlHcAWcyHdhLLEt+5fKnMWs23Mnhr4T3LRfpUnXY=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=IZWx6zKX2GJFsFpj9nPjSVwreu32F2qzBsNLO0BN7egLNjAwf94SC7bEx7mvfhf3Z
-	 ModgJOraBe+b6PstuGPyYbpO0zCye9q83WIb4nJQgAuG2RrRAOzWE4TWVszoM8R9EM
-	 Iv+g+ydFVduRfx95tmPhgsdJ0fMSRjWc+j+wMr9GedaRm3XHL5eYJZOOit4gMBhpEx
-	 O+tjTb6pSDQlYHgetvqytNBU1517jC+sINnUEfZaCVo+SlBQ/jfXaesayLgajiOf3i
-	 hBF4n/ZkpxP3vV3v/9K53gB93FPvCTmOq5WNdwx6QTi+keTxqEUH54HdBs13CX/Tu1
-	 3rGrEvxWMKE2w==
+	b=DKRikqjp8Dqe+AUzB6iz3/MV/MiW+KKIAz5bv4FQtT7WqfihsF0tnqmeGmwQLdRUs
+	 kR87nlYvVlf+AuK3K3GeFRttOnkhTprDrZhFrGZPfx3aje8x04pJ1jMvjmdLokXM1a
+	 ebrb8Z0A+FcLOKwkdNTAAUXFxU3m+DqAWoDjrH+/mxhhDxAxAGILiFko7N0K5sTAu4
+	 Atn4xU2sm9CGHqIj6+g4UailPdrJksTN1m3sZwf4v/YEtr6cqongGk83+UMZ/HDLGO
+	 VO8xkQ5ZCQxpznVF6Ex2AmdSe+nVtivrg1abp69SHBcCOdwF7vqnSOXGKAfrvVZiTp
+	 GyIhksGplaTLg==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 78A5D4B975;
+	by lkml.kernel.org (Postfix) with ESMTP id 967594B979;
 	Fri, 20 Nov 2026 18:09:22 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:36 -0500
-Subject: [PATCH 45/60] mm/compaction: restrict compaction to
- N_MEMORY_COMPACTION
+Date: Fri, 20 Nov 2026 13:09:37 -0500
+Subject: [PATCH 46/60] mm: add N_MEMORY_RECLAIM node state
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +83,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-45-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-46-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -141,11 +140,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=2489;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=4233;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=M6oyV+uEjYSavi/eHygS70B16tEpJIW4P5C3UsQGkVw=;
- b=i/PUXbQkpoN7NVE8RFc+oEQ2kDN3DCJbLPIIOQ1aa2JDj2LavBaQ5jxI9kU+y+KQpdfh6F4lB
- iarRB2RDZBvD/7ptCHks4k7qA+bRL3m/1zijoNFVJyaSj9mQYSEfV+o
+ bh=2Cu3isS44jPims+WvemrkSJ075FaNv3x27ntceES1eU=;
+ b=rCEvV4Vxm5Bay12IKWxYIL/HB0z/8bt8JJw96EnOqDCYmA4Tr8glUa/20lHdJNAS53zrMeueF
+ ad3F6711g+iAlRzLli3ssnKMTwH2aKtumPIHc/RU0a8x0zX/R0r+MAC
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -156,76 +155,109 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-Restrict compaction to N_MEMORY_COMPACTION instead of common memory:
-  - compact N_MEMORY_COMPACTION nodes for /proc/sys/vm/compact_memory.
-  - start kcompactd and trigger proactive compaction on those nodes.
+Add N_MEMORY_RECLAIM as an internal state for the nodes page reclaim
+may operate on, and NODE_MEMORY_FEAT_RECLAIM for memory providers to
+select it.
 
-Direct compaction is unchanged: an allocation compacts the zones on its
-zonelist, and a private node's zones are only on its private zonelist.
-
-nodeN/compact fails with -EOPNOTSUPP for private nodes without the
-state.
+Reclaim frees order-0 pages and leaves high-order requests to
+compaction, so a private node that permits reclaim must permit
+compaction too.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- mm/compaction.c     | 9 +++++----
- mm/memory_hotplug.c | 2 +-
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ Documentation/mm/physical_memory.rst |  4 ++++
+ include/linux/nodemask.h             | 11 +++++++++--
+ mm/page_alloc.c                      |  4 ++++
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/mm/compaction.c b/mm/compaction.c
-index 283d4d4e78c3..6835ddb91f29 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -2973,7 +2973,7 @@ static int compact_nodes(void)
- 	/* Flush pending updates to the LRU lists */
- 	lru_add_drain_all();
+diff --git a/Documentation/mm/physical_memory.rst b/Documentation/mm/physical_memory.rst
+index 5d0a69f6c23c..1bafe8c085a3 100644
+--- a/Documentation/mm/physical_memory.rst
++++ b/Documentation/mm/physical_memory.rst
+@@ -187,6 +187,9 @@ The following states are internal and not exported through sysfs:
+ ``N_MEMORY_COMPACTION``
+   The kernel compacts the node on its own initiative (kcompactd, proactive
+   and explicit compaction).
++``N_MEMORY_RECLAIM``
++  The kernel reclaims the node on its own initiative (kswapd, memcg and
++  explicit reclaim).
  
--	for_each_node_state(nid, N_MEMORY_COMMON) {
-+	for_each_node_state(nid, N_MEMORY_COMPACTION) {
- 		ret = compact_node(NODE_DATA(nid), false);
- 		if (ret)
- 			return ret;
-@@ -2992,7 +2992,7 @@ static int compaction_proactiveness_sysctl_handler(const struct ctl_table *table
- 		return rc;
+ For each node that has a property described above, the bit corresponding to the
+ node ID in the ``node_states[<property>]`` bitmask is set.
+@@ -201,6 +204,7 @@ For example, for node 2 with normal memory and CPUs, bit 2 will be set in ::
+   node_states[N_MEMORY_COMMON]
+   node_states[N_CPU]
+   node_states[N_MEMORY_COMPACTION]
++  node_states[N_MEMORY_RECLAIM]
  
- 	if (write && sysctl_compaction_proactiveness) {
--		for_each_node_state(nid, N_MEMORY_COMMON) {
-+		for_each_node_state(nid, N_MEMORY_COMPACTION) {
- 			pg_data_t *pgdat = NODE_DATA(nid);
+ For various operations possible with nodemasks please refer to
+ ``include/linux/nodemask.h``.
+diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
+index 2757acffff2b..be5edbee2b22 100644
+--- a/include/linux/nodemask.h
++++ b/include/linux/nodemask.h
+@@ -413,6 +413,7 @@ enum node_states {
+ 	N_GENERIC_INITIATOR,	/* The node has one or more Generic Initiators */
+ 	/* Internal states, not exported through sysfs */
+ 	N_MEMORY_COMPACTION,	/* mm compaction may operate on the node */
++	N_MEMORY_RECLAIM,	/* mm reclaim may operate on the node */
+ 	NR_NODE_STATES
+ };
  
- 			if (pgdat->proactive_compact_trigger)
-@@ -3038,7 +3038,8 @@ static ssize_t compact_store(struct device *dev,
- 	int nid = dev->id;
+@@ -550,12 +551,15 @@ static __always_inline int node_random(const nodemask_t *maskp)
+  */
+ #define NODE_MEMORY_FEAT_COMMON		BIT(0) /* add to fallback zonelist */
+ #define NODE_MEMORY_FEAT_COMPACTION	BIT(1) /* mm compaction */
++#define NODE_MEMORY_FEAT_RECLAIM	BIT(2) /* mm reclaim */
+ #define NODE_MEMORY_FEAT_ALL		(NODE_MEMORY_FEAT_COMMON | \
+-					 NODE_MEMORY_FEAT_COMPACTION)
++					 NODE_MEMORY_FEAT_COMPACTION | \
++					 NODE_MEMORY_FEAT_RECLAIM)
  
- 	if (nid >= 0 && nid < nr_node_ids && node_online(nid)) {
--		if (node_state(nid, N_MEMORY_PRIVATE))
-+		if (node_state(nid, N_MEMORY) &&
-+		    !node_state(nid, N_MEMORY_COMPACTION))
- 			return -EOPNOTSUPP;
- 
- 		/* Flush pending updates to the LRU lists */
-@@ -3369,7 +3370,7 @@ static int __init kcompactd_init(void)
+ /*
+  * Common memory carries every feature. Private memory needs NUMA: node 0
+- * holds all memory without it.
++ * holds all memory without it. Reclaim leaves high-order requests to
++ * compaction, so it requires compaction.
+  */
+ static inline bool node_memory_features_valid(unsigned long features)
  {
- 	int nid;
+@@ -563,6 +567,9 @@ static inline bool node_memory_features_valid(unsigned long features)
+ 		return false;
+ 	if (features & NODE_MEMORY_FEAT_COMMON)
+ 		return features == NODE_MEMORY_FEAT_ALL;
++	if ((features & NODE_MEMORY_FEAT_RECLAIM) &&
++	    !(features & NODE_MEMORY_FEAT_COMPACTION))
++		return false;
+ 	return IS_ENABLED(CONFIG_NUMA);
+ }
  
--	for_each_node_state(nid, N_MEMORY_COMMON)
-+	for_each_node_state(nid, N_MEMORY_COMPACTION)
- 		kcompactd_run(nid);
- 	register_sysctl_init("vm", vm_compaction);
- 	return 0;
-diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
-index d7ce60c6815f..1cb10c88954e 100644
---- a/mm/memory_hotplug.c
-+++ b/mm/memory_hotplug.c
-@@ -1232,7 +1232,7 @@ int online_pages(unsigned long pfn, unsigned long nr_pages,
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 335ce73e645e..864da908a59b 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -205,6 +205,7 @@ nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
+ 	[N_MEMORY] = { { [0] = 1UL } },
+ 	[N_MEMORY_COMMON] = { { [0] = 1UL } },
+ 	[N_MEMORY_COMPACTION] = { { [0] = 1UL } },
++	[N_MEMORY_RECLAIM] = { { [0] = 1UL } },
+ 	[N_CPU] = { { [0] = 1UL } },
+ #endif	/* NUMA */
+ };
+@@ -221,10 +222,13 @@ void __meminit node_set_memory_state(int nid, unsigned long features)
+ 		node_set_state(nid, N_MEMORY_PRIVATE);
+ 	if (features & NODE_MEMORY_FEAT_COMPACTION)
+ 		node_set_state(nid, N_MEMORY_COMPACTION);
++	if (features & NODE_MEMORY_FEAT_RECLAIM)
++		node_set_state(nid, N_MEMORY_RECLAIM);
+ }
  
- 	if (node_state(nid, N_MEMORY_COMMON))
- 		kswapd_run(nid);
--	if (node_state(nid, N_MEMORY_COMMON))
-+	if (node_state(nid, N_MEMORY_COMPACTION))
- 		kcompactd_run(nid);
- 
- 	if (node_arg.nid >= 0)
+ void __meminit node_clear_memory_state(int nid)
+ {
++	node_clear_state(nid, N_MEMORY_RECLAIM);
+ 	node_clear_state(nid, N_MEMORY_COMPACTION);
+ 	node_clear_state(nid, N_MEMORY_PRIVATE);
+ 	node_clear_state(nid, N_MEMORY_COMMON);
 
 -- 
 2.56.1
