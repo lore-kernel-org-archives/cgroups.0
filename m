@@ -1,79 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198264;
-	b=lzmE60AeXNWG8EPD/nrILE8Vu+7tVlRLIk4a7S2QOkgQmYrZAvAR4+f2XzyyopmjE2uo
-	 O1DAi6UqsQivqGiW6UxKurIzONEV4hvOfuBg+apcB9xRLOqYuFy5aG/TIWWnWwH6ui6XO
-	 dk6V2q6oLPqtG2GuodiWSNjfDjBj2KPIFS5aY6D/PB4S1gG9X1D/zuZGFoj+G6poeakp/
-	 KUhgIOG4Ym8nESWR4JP709dXeIzv/hHb7acXdnv6X77j3WIfNimq7HdTm2p70jyQBJNNA
-	 da8NTd59kBiDLFMtkn6TyhbQXmwwjzukS9VcwNggcV2VbfU60BUv2bBUZrvA1CrJsSQ==
+	t=1795198259;
+	b=VodSNF8P97riCwDKI/MDxYPFjjd54YiGXM7hlEdgclGImbFNg9xrAmjpIT1rzGOpHJzV
+	 qAiBPizSDhRZs5AUPLX1VN6icFNUPQYfoAk9GYTQANJmlz6HdjPbBGyr3663l/k2Pyqs7
+	 En1kAtpa159OiBgSqHaNZ7vw/AztMAZ0YVmZI0pU1JBXWs+oZkahCZ8om/I+CR7Z0bHRD
+	 1HzU88kIX/CVnguGaDxdLAlNggumB+bMiYzzjo2NOgkwtWDcLGVUU/DhhedNljcKKXGS6
+	 OBKG462fJXpmKp6YetjdQbUY3GocrkEOlJpHWReh257tg1oNsui/NFz42LFqK9azDmg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198264;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198259;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=N4LUHMZ9Zq2StHJtUd5qOtvoSX+upmsion4LtPce8LQ=;
-	b=GgUVdODfik0bntDwhWJ+iUos1sfRORJaGvWablOePuq/SAoMv3KOwj1OiMyVO8v7MYrs
-	 8ph1ewHcsDY4ZrzePmWlfNe6Ss6axyCZOVVOcps9uMFAwCv9z3K7+go8aYGhfdpLvXQJI
-	 rhH8YAEycBRMN3oUWCekSHLeHYA8yk6yMsObAVRDXIRri6np6OHVZ0qHbbiVmiRwdlCbH
-	 gpx0PoZM9sx/gmJ1IInrsOSK9JJ4QyJv8c92azvHXIddcLagzv1RR9Z3V6TIokgVvNWSE
-	 CYwMulZWXs7QTUKxUjuS2mzN+KDzsJu7tLvxqhEuVi7LnCA2zNmybCamvHbc8OghF0Q==
+	bh=X7OURSsmBiNAAKz0czFdC+E/6wbPVxqwq73TmOo8fvs=;
+	b=QrN3fIzr/xticzbQeT0uVVf5FOmb+rvmTGidST6jJcln2UX8zNnd9qO95+fEP/ME1JR2
+	 H4NLKNquvTg30nmowMs/dkldQ4Jn1rW7kvOOnpDlVNGlcm/CtuFtxVLoS/vHJBrJ9UfwC
+	 b9+NSDd9033CaymGBxkZGt80oWMWO/tOlpa/Ax8/tO5EJHMqqC3Jl5y4H3pN6I398Wtar
+	 +dRjbwrNLIou1BdSx+s1EGX1C0FY1wbsTfFl5aBQ8vWTnrfgBhngCldz3twR99aJNNtqA
+	 WBpZrvS8JCse7Ae92yV5zBpYIGTgKISqoD1Qs6dhdYT8FVpqiX9J4NIGO4qZrWXKeTQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NK3q7emV;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e7ZOw7PY;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B7846076C67;
-	Fri, 20 Nov 2026 18:11:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2E56076376;
+	Fri, 20 Nov 2026 18:10:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=NK3q7emV
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e7ZOw7PY
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198264;
-	b=k2/92vX07HrIW+S0URaAFdStkvHnitluAh0ydx/TLxefkGOBTjq5aCgfn9FT6WjZY63l
-	 mFPomJWb4/u+ZFe91AXioU8MsWtNz2Ummso/E6EUoTs6K65+dsPM1SeZNxcXDd6iyk0LN
-	 qP0RorSy+hLV3/3O73lYhuP3KK6txde6LqXfLa2Afmhw52CXcGEJASStLF7r9eZwMHz4l
-	 3UV8gt2hyyXkwICiGiW2h+eRjVmrlsPqm1iy5pQa90Y20U8sjUUtM/kiUuMul+rh9DSjR
-	 4zPhGYwLCe7QbYFF82+27PgMARfhxZoo3M6mPnoncEjn1V9t6o+k+tQ03F/t9dcN4fw==
+	t=1795198259;
+	b=NwAlmF9pACrVCD4aHvFPGK9DS7jIAl8ekQRMNwUNhqq5x+CQeX7+RsGvqFQnQ+MgnTyk
+	 Aygr4MMqADNYB+UiTE91OR+Q8Znuzj97tybHvYCdsKqtI7Vs7JdXpGFUbOakDw5YyW1NT
+	 KS0vjWZ/5QkA81mHnDpDQRLH7EFkIg3wOQ5EUjsPda29ODqs2QyMJEdZdBvaUT2cJSh7C
+	 fY+KRN27J88anhcROKT4icC5Q3a9Vwly/mWAWR1B0u/La9A98ZyJ+G4r0YvG+yjEVdR1T
+	 SGXUHEeXUoqe9o4ZVcpEuuKALhjCWmWPbQeT42PPLjmTbFx8cqO8rFvcoJWwfgS2YAQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198264;
+	c=relaxed/relaxed; t=1795198259;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=N4LUHMZ9Zq2StHJtUd5qOtvoSX+upmsion4LtPce8LQ=;
-	b=ZWrLhdoRxz6QVPz/RWIxtRUZXa7mjh5uavwQmWDvWdE50jotXGDhbU3p8smdiNVEZXvZ
-	 kEtUfdLUWXrEl62OJTA96upXau8wutdwolSMwNqkN4CpKnLtF3v5e9EUd7MsvFa7McXGL
-	 r5Cs3HUv9fqYKKLPnjWqXlMkVYHNwHL9zzcBzZn9KFTz1IzGPXM76Tx0YYdGgLsXsTpJg
-	 YIQ7ClzkiVJlcO4F41hSCUB5mJxuBrBGL8qdCi11aa/rAW+Sm4iWMy6D7yOVWaRRd8cOQ
-	 zqsCz+6L/5xg1mGyTgztKcuJ+uxihAKNNH6bk+2dgKlBCJvLxGE5WF2tXD7IfxXI1vQ==
+	bh=X7OURSsmBiNAAKz0czFdC+E/6wbPVxqwq73TmOo8fvs=;
+	b=QXIKlvrRDxczHLB4LeytQbJiSpBVfcGnYALKsca8ZZyCb/dn8CfRi31M5kH1NLUs8GQB
+	 0w2rU1ai3ZT9RqW5TnAt44gFvBkuayx7gGnAcLRFqkEEv23gN2vFwcoadNei5Syb6K8ZY
+	 UPuoav3zJ2z/ZSgjW+DFWgMFZiR25Kxm4gxcDKAVmVv2QDKPYUH4XPdS53BDD00hHH3Gi
+	 aTB4b8F8fZNmr8MC0fYBY1hn31XX6yIefi4RAvMCnLpgIPF2FForTStn9Xc+cUWk9Xehx
+	 0UPjn79kv3P8D+dlenlk8O0q5mAAT+vqE2Gcsh6UicQ51U5k5uXzbL1Szp7pEX/821Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 501181F01562;
-	Fri, 20 Nov 2026 18:10:38 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 8090A1F000E6;
+	Fri, 20 Nov 2026 18:10:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198264;
-	bh=N4LUHMZ9Zq2StHJtUd5qOtvoSX+upmsion4LtPce8LQ=;
+	s=k20260515; t=1795198259;
+	bh=X7OURSsmBiNAAKz0czFdC+E/6wbPVxqwq73TmOo8fvs=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=NK3q7emVbUik3L6Koi3qFVUpX2MwbLejtymVXVSP+6DGks5CPyStrENGI09OwxWZq
-	 zSNqW+cxqVfd4P/0ZaVYTOoRDtB/o4OkCuo2oG0JNcNfbopq7W+SDV76pZCm+ByX2H
-	 mpcYK1hDU4vQdgBpEMXZCNobPf78Tg4HTmYWJCSf7y9/Ulk1hXwZ/Q1uunpg3uWdQN
-	 go6IAT5N662I+k4F4ZhnXj7kIDRTOErJ6dvYzInI1mf/2XMq94C7Iu+JmGOLmJoH/h
-	 ekLz8mX5549K5raMvsP8yo6/Egd6d49U2BHkydpE6CX6OBVcVnxFkUhFz3cki/lu1C
-	 +crcMyjPzrnvQ==
+	b=e7ZOw7PYGCrROb8p+s8vsG92XEZ5rvBlh7ZFVv7vsfZdrS2/0bFgcA5l8mHdrFSxe
+	 yV4qm1anZ35/Q1tIoHFkFPLlbvZhywkdBD0TeIL5gWdFQ9zMP7iOVRXuf1/MBsD7xZ
+	 B8LJVj8ifJY4hggI7rXaSi4/rYkbPfYDv/cd320ulwnewHUjuMRxQn9e9UY3rZeb74
+	 gPbznMiP65LzE4CA6dOSKoXrP202wa8cS6briP4Y59YeIfZg8Bc1FIOtYTFOFhv3uy
+	 DPlkKvZy1P4l7uhFhKo63zZoQNWmhXbb7BIkw7mUbQp2IFhxh/OcSIdwZYaiAiTBeM
+	 fujGHFh9Cig/A==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 00C844B965;
+	by lkml.kernel.org (Postfix) with ESMTP id 5D47E4B971;
 	Fri, 20 Nov 2026 18:09:22 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:32 -0500
-Subject: [PATCH 41/60] mm/page_alloc: relax a private request whose node
- becomes ineligible
+Date: Fri, 20 Nov 2026 13:09:35 -0500
+Subject: [PATCH 44/60] mm: add N_MEMORY_COMPACTION node state
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +83,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-41-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-44-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -141,11 +140,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=6951;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=5165;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=C2lGBLJod3NcaBo85CjVEXWAAO0FPHUICJ5RG9BwKOc=;
- b=JDY7uV4eikBnxv6llFVY6VolS/1VlCkSAEYghL17DozTh0aYg9lRJWAk67Fn72xJYpFmyychC
- sazxiFhhQ+HCfqTJqkOEcFduj64EA2V+c1bfaDbrQNVpad7gQAyoF6H
+ bh=g7ydIdopU0v+cqoPiLJmqWYEIQ70E6DWexCPxxD4cU0=;
+ b=Ddw1phUFx8GRbqgTFY+sDiYn8K+6nhCoWRNObiJW/+7XlTHPwI01iZM9GC51adS8pYYGCvW+Y
+ J4qL4HCpvf6CbWfMf+rMSh6u7SUxavjyPEy7loBIXocrA9zjhLa1w2G
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -156,180 +155,135 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-A private request allocates only from its node's private zonelist. If
-the cpuset revokes the node, or memory hotplug removes it, the request
-has nowhere left to allocate, and a faulting task retries forever.
+Add N_MEMORY_COMPACTION for the nodes compaction may operate on, and
+NODE_MEMORY_FEAT_COMPACTION for memory providers to select it.
 
-An ordinary bind policy does not hit this. A cpuset change rebinds it,
-and check_retry_cpuset() drops a nodemask that no longer intersects the
-cpuset. A private binding is never rebound, and dropping its nodemask
-does not help, since the private zonelist still holds only its node.
+Common memory carries every feature, so a mask with
+NODE_MEMORY_FEAT_COMMON must now include compaction.
 
-Add relax_private_alloc() as the last of the slowpath retry checks.
-When no node in a private request's zonelist is in its nodemask and
-allowed by the cpuset, it drops ALLOC_ZONELIST_PRIVATE and the nodemask
-and switches to the common zonelist of the preferred node, which
-alloc_context now records. It runs after check_retry_cpuset() and
-check_retry_zonelist(), so a concurrent update retries with the original
-constraints instead.
-
-A node counts in any zone type, so a GFP zone restriction or an
-exhausted node never relaxes a request. A __GFP_THISNODE private request
-is never relaxed. check_retry_cpuset() leaves a private request's
-nodemask alone.
-
-The alloc_context comment now lists nodemask and alloc_flags among the
-fields the slowpath may change.
-
-Without private nodes, the slowpath retry checks are unchanged.
+The state is internal and has no sysfs file. Internal states follow
+N_GENERIC_INITIATOR, so check sysfs coverage only for the states up to
+it.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- mm/page_alloc.c | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
- mm/page_alloc.h |  7 ++++---
- 2 files changed, 60 insertions(+), 7 deletions(-)
+ Documentation/mm/physical_memory.rst |  7 +++++++
+ drivers/base/node.c                  |  5 +++--
+ include/linux/nodemask.h             | 20 ++++++++++++++++----
+ mm/page_alloc.c                      |  4 ++++
+ 4 files changed, 30 insertions(+), 6 deletions(-)
 
+diff --git a/Documentation/mm/physical_memory.rst b/Documentation/mm/physical_memory.rst
+index ddba7c890418..5d0a69f6c23c 100644
+--- a/Documentation/mm/physical_memory.rst
++++ b/Documentation/mm/physical_memory.rst
+@@ -182,6 +182,12 @@ nodes with particular properties as defined by ``enum node_states``:
+ ``N_GENERIC_INITIATOR``
+   The node has one or more Generic Initiators
+ 
++The following states are internal and not exported through sysfs:
++
++``N_MEMORY_COMPACTION``
++  The kernel compacts the node on its own initiative (kcompactd, proactive
++  and explicit compaction).
++
+ For each node that has a property described above, the bit corresponding to the
+ node ID in the ``node_states[<property>]`` bitmask is set.
+ 
+@@ -194,6 +200,7 @@ For example, for node 2 with normal memory and CPUs, bit 2 will be set in ::
+   node_states[N_MEMORY]
+   node_states[N_MEMORY_COMMON]
+   node_states[N_CPU]
++  node_states[N_MEMORY_COMPACTION]
+ 
+ For various operations possible with nodemasks please refer to
+ ``include/linux/nodemask.h``.
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index 56a1741a6a45..19f93cda90be 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -1000,8 +1000,9 @@ void __init node_dev_init(void)
+ {
+ 	int ret, i;
+ 
+- 	BUILD_BUG_ON(ARRAY_SIZE(node_state_attr) != NR_NODE_STATES);
+- 	BUILD_BUG_ON(ARRAY_SIZE(node_state_attrs)-1 != NR_NODE_STATES);
++	/* Node states after N_GENERIC_INITIATOR have no sysfs file. */
++	BUILD_BUG_ON(ARRAY_SIZE(node_state_attr) != N_GENERIC_INITIATOR + 1);
++	BUILD_BUG_ON(ARRAY_SIZE(node_state_attrs)-1 != N_GENERIC_INITIATOR + 1);
+ 
+ 	ret = subsys_system_register(&node_subsys, cpu_root_attr_groups);
+ 	if (ret)
+diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
+index 02908ef23a62..2757acffff2b 100644
+--- a/include/linux/nodemask.h
++++ b/include/linux/nodemask.h
+@@ -411,6 +411,8 @@ enum node_states {
+ 	N_MEMORY_PRIVATE,	/* memory outside the common pool */
+ 	N_CPU,		/* The node has one or more cpus */
+ 	N_GENERIC_INITIATOR,	/* The node has one or more Generic Initiators */
++	/* Internal states, not exported through sysfs */
++	N_MEMORY_COMPACTION,	/* mm compaction may operate on the node */
+ 	NR_NODE_STATES
+ };
+ 
+@@ -542,16 +544,26 @@ static __always_inline int node_random(const nodemask_t *maskp)
+ #define for_each_online_node(node) for_each_node_state(node, N_ONLINE)
+ #define for_each_node_with_cpus(node)	for_each_node_state(node, N_CPU)
+ 
+-/* Private nodes omit NODE_MEMORY_FEAT_COMMON. */
++/*
++ * Private nodes omit NODE_MEMORY_FEAT_COMMON. Their providers opt into
++ * individual MM services with the remaining bits.
++ */
+ #define NODE_MEMORY_FEAT_COMMON		BIT(0) /* add to fallback zonelist */
+-#define NODE_MEMORY_FEAT_ALL		NODE_MEMORY_FEAT_COMMON
++#define NODE_MEMORY_FEAT_COMPACTION	BIT(1) /* mm compaction */
++#define NODE_MEMORY_FEAT_ALL		(NODE_MEMORY_FEAT_COMMON | \
++					 NODE_MEMORY_FEAT_COMPACTION)
+ 
+-/* Private memory needs NUMA: node 0 holds all memory without it. */
++/*
++ * Common memory carries every feature. Private memory needs NUMA: node 0
++ * holds all memory without it.
++ */
+ static inline bool node_memory_features_valid(unsigned long features)
+ {
+ 	if (features & ~NODE_MEMORY_FEAT_ALL)
+ 		return false;
+-	return IS_ENABLED(CONFIG_NUMA) || (features & NODE_MEMORY_FEAT_COMMON);
++	if (features & NODE_MEMORY_FEAT_COMMON)
++		return features == NODE_MEMORY_FEAT_ALL;
++	return IS_ENABLED(CONFIG_NUMA);
+ }
+ 
+ /*
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index a219057931c3..63cc8729c41a 100644
+index b7339bc634d5..335ce73e645e 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -4078,6 +4078,35 @@ __alloc_pages_cpuset_fallback(gfp_t gfp_mask, unsigned int order,
- 	return page;
+@@ -204,6 +204,7 @@ nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
+ #endif
+ 	[N_MEMORY] = { { [0] = 1UL } },
+ 	[N_MEMORY_COMMON] = { { [0] = 1UL } },
++	[N_MEMORY_COMPACTION] = { { [0] = 1UL } },
+ 	[N_CPU] = { { [0] = 1UL } },
+ #endif	/* NUMA */
+ };
+@@ -218,10 +219,13 @@ void __meminit node_set_memory_state(int nid, unsigned long features)
+ 		node_set_state(nid, N_MEMORY_COMMON);
+ 	else
+ 		node_set_state(nid, N_MEMORY_PRIVATE);
++	if (features & NODE_MEMORY_FEAT_COMPACTION)
++		node_set_state(nid, N_MEMORY_COMPACTION);
  }
  
-+/* A request on the private zonelist. */
-+static bool alloc_is_private(const struct alloc_context *ac)
-+{
-+	return ac->alloc_flags & ALLOC_ZONELIST_PRIVATE;
-+}
-+
-+/*
-+ * Whether a private request can still allocate: some node in its zonelist is
-+ * in its nodemask and allowed by the cpuset. Any zone type counts, so neither a
-+ * GFP zone restriction nor an exhausted node makes the request unsatisfiable.
-+ */
-+static bool alloc_private_reachable(gfp_t gfp, const struct alloc_context *ac)
-+{
-+	struct zoneref *z;
-+	struct zone *zone;
-+
-+	/* A strict local private request keeps its allocation domain. */
-+	if (gfp & __GFP_THISNODE)
-+		return true;
-+
-+	for_each_zone_zonelist_nodemask(zone, z, ac->zonelist, MAX_NR_ZONES - 1,
-+					ac->nodemask) {
-+		if (!cpusets_enabled() ||
-+		    node_isset(zone_to_nid(zone), cpuset_current_mems_allowed))
-+			return true;
-+	}
-+	return false;
-+}
-+
- static inline struct page *
- __alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order,
- 	const struct alloc_context *ac, unsigned long *did_some_progress)
-@@ -4753,8 +4782,10 @@ check_retry_cpuset(int cpuset_mems_cookie, struct alloc_context *ac)
- 	 * from MPOL_BIND mempolicy (whose documented semantics is to be ignored
- 	 * when it does not intersect with the cpuset restrictions) or the
- 	 * caller can deal with a violated nodemask.
-+	 *
-+	 * relax_private_alloc() handles a private request instead.
- 	 */
--	if (cpusets_enabled() && ac->nodemask &&
-+	if (cpusets_enabled() && ac->nodemask && !alloc_is_private(ac) &&
- 			!cpuset_nodemask_valid_mems_allowed(ac->nodemask)) {
- 		ac->nodemask = NULL;
- 		return true;
-@@ -4773,6 +4804,23 @@ check_retry_cpuset(int cpuset_mems_cookie, struct alloc_context *ac)
- 	return false;
- }
- 
-+/*
-+ * Relax a private request that can no longer allocate, because the cpuset
-+ * revoked its node or memory hotplug removed it. Drop the nodemask and allocate
-+ * from the common zonelist of the preferred node. Called after
-+ * check_retry_cpuset() and check_retry_zonelist() found no concurrent update.
-+ */
-+static bool relax_private_alloc(gfp_t gfp, struct alloc_context *ac)
-+{
-+	if (!alloc_is_private(ac) || alloc_private_reachable(gfp, ac))
-+		return false;
-+
-+	ac->nodemask = NULL;
-+	ac->alloc_flags &= ~ALLOC_ZONELIST_PRIVATE;
-+	ac->zonelist = node_zonelist(ac->preferred_nid, gfp);
-+	return true;
-+}
-+
- static void check_alloc_stall_warn(gfp_t gfp_mask, const nodemask_t *nodemask,
- 				unsigned int order, unsigned long alloc_start_time)
+ void __meminit node_clear_memory_state(int nid)
  {
-@@ -5060,7 +5108,8 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 	 * unless it can execute just once.
- 	 */
- 	if (check_retry_cpuset(cpuset_mems_cookie, ac) ||
--	    check_retry_zonelist(zonelist_iter_cookie))
-+	    check_retry_zonelist(zonelist_iter_cookie) ||
-+	    relax_private_alloc(gfp_mask, ac))
- 		goto restart;
- 
- 	if (should_reclaim_retry(gfp_mask, order, ac, alloc_flags,
-@@ -5095,7 +5144,8 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 	 * a unnecessary OOM kill.
- 	 */
- 	if (check_retry_cpuset(cpuset_mems_cookie, ac) ||
--	    check_retry_zonelist(zonelist_iter_cookie))
-+	    check_retry_zonelist(zonelist_iter_cookie) ||
-+	    relax_private_alloc(gfp_mask, ac))
- 		goto restart;
- 
- 	/* Reclaim has failed us, start killing things */
-@@ -5121,7 +5171,8 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
- 	 * a unnecessary OOM kill.
- 	 */
- 	if (check_retry_cpuset(cpuset_mems_cookie, ac) ||
--	    check_retry_zonelist(zonelist_iter_cookie))
-+	    check_retry_zonelist(zonelist_iter_cookie) ||
-+	    relax_private_alloc(gfp_mask, ac))
- 		goto restart;
- 
- 	/*
-@@ -5172,6 +5223,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
- 		unsigned int *alloc_flags)
- {
- 	ac->highest_zoneidx = gfp_zone(gfp_mask);
-+	ac->preferred_nid = preferred_nid;
- 	ac->zonelist = select_zonelist(preferred_nid, gfp_mask, *alloc_flags);
- 	ac->nodemask = nodemask;
- 	ac->migratetype = gfp_migratetype(gfp_mask);
-diff --git a/mm/page_alloc.h b/mm/page_alloc.h
-index c0a0e6abe4cd..3dd73ce641b5 100644
---- a/mm/page_alloc.h
-+++ b/mm/page_alloc.h
-@@ -73,11 +73,11 @@
-  * between functions involved in allocations, including the alloc_pages*
-  * family of functions.
-  *
-- * nodemask, migratetype and highest_zoneidx are initialized only once in
-+ * migratetype, preferred_nid and highest_zoneidx are initialized only once in
-  * __alloc_pages() and then never change.
-  *
-- * zonelist, preferred_zone and highest_zoneidx are set first in
-- * __alloc_pages() for the fast path, and might be later changed
-+ * zonelist, nodemask, preferred_zone, highest_zoneidx and alloc_flags are set
-+ * first in __alloc_pages() for the fast path, and might be later changed
-  * in __alloc_pages_slowpath(). All other functions pass the whole structure
-  * by a const pointer.
-  */
-@@ -85,6 +85,7 @@ struct alloc_context {
- 	struct zonelist *zonelist;
- 	const nodemask_t *nodemask;
- 	struct zoneref *preferred_zoneref;
-+	int preferred_nid;
- 	int migratetype;
- 
- 	/*
++	node_clear_state(nid, N_MEMORY_COMPACTION);
+ 	node_clear_state(nid, N_MEMORY_PRIVATE);
+ 	node_clear_state(nid, N_MEMORY_COMMON);
+ 	node_clear_state(nid, N_MEMORY);
 
 -- 
 2.56.1
