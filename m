@@ -1,64 +1,101 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.227
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795199090;
-	b=R/1u6QIHMisikIE1PG3kKl5f/GNSXmv1MD9OS/Y+Traf3XDBJ9CszlBt+GvkbeE6n5Hk
-	 sEwRBxgzF+80fabx6TS3YTFshQh41KmAvRpuVo71TW/AiWCaDqp/NjFvGvdO0FCfgY5U8
-	 YrS9s7vQe8pIvigOoR2DUVpg3b+JM57fhZqA1+tcBwJ94mcMsr2yiixisP+wkc4lrBk3b
-	 V5JoGP9+BtlgYJq9ykHQJI/cc9oiB7nSMOzckFO+P+2SnkHPUedi6NULbwDAJd+R0D4O2
-	 2S4fxpnq79oyl5WY7v7sYtQc8NjEwuh6m8VmW20nDmr0E13SoH4SWZa9uQp2c7PkkxQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795199090;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=PIIDtE4edU/OQY26iA1OPctXW6xqxybU2sM7rsLpJco=;
-	b=EmegmwUSB2E5LCg9j9gduA0scw1NhlxWUq7z/inO+VN7Nyopn0gUnRnG+QYsCxqAjQFp
-	 rkBEqvFSrBDn+h7h2sSQMqq8RUqvTXdawmVmuLbx7xwEKx0vcEkR0f9N4v5O/aHHFdlAh
-	 5NjSqUzCxYHsnhbMQ41dQ4pc7iOWLcxh32hfmKGNzcERNMi5TX+EwGsFwoAs9mQhdU/sx
-	 Y5mkda2rrtZf6cLpniQ7PDsiLlLXsM+A44WmpI037TCb1PjWwkYL5CiZrn2JEKDANos36
-	 9BEZySIbwWlMozL+dMinn4dqajMhwWU/3TNVzjAg2ICW+h4H9UrKaHzQ5FdqX3j/4Hw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=jVhRnT7c;
-	arc=none smtp.remote-ip=95.215.58.227
-Received: from mta1.migadu.com (out-227.mta1.migadu.com [95.215.58.227])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.44
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795200818;
+	b=HUAYLQJ/YUYjWbOTOMoxOqYzruo+XuO5ptPqpawiB3ep0W/wjPzqYH3Gk36n9yDRNbxY
+	 6X7hiYbuvCGU9FJ5T+05ozk244qC1CQrXEJSDnwZV1V9fOlOPdx6UgrruPg1PsEyRgtVR
+	 gcoBSqKAku4QvHLsulcyO/tNgrQ2EA+eP/Vlmuw4Y7EIX60GyGekoDARGHNlR/YKjcgR7
+	 xSNQa+JvEbmc2xnHhBez/ilAswtB3J8NjBx36esN5B3nKuyMx+CMivdpNFt1A2jSpUt6t
+	 tvWJZ5nM1rxdinXqqgzIM3SrC75NTzOqcIHuWc8PCfVi5/SanLAGtvxkje0DaTAOTsg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795200818;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
+	b=K2Vc4n6jJEMHTxwID0WvpqcLrHkTcUpf3MHQ4rId4WRamqsBO61xwjt9yc25ON12ULol
+	 X6LrgI/VBgbovCDJhC66IRoMOQVa6IzHOomy7jdh/eGqG7BljLopn8CkpQdjKzn3PHHdw
+	 p+1bWfIdcFnKxqUf33LG62VzMiSCUcDkmINedn8MrgCIN0pMCDae1x9+MOsnQPqa5TrnU
+	 Jl0X6/Qf0HObBvQVVMDEBTuWkRZaBT36GdW74YwqsnMQ3G3acj1mSJHfYE/BDOIIjqL2A
+	 1/xiLux/F12bU9leW+5jd5NKEXD9I+Z2vV7kqPx1fYCoE+CyHGB0AumZuhbpX5qdNDA==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rw5csPJs;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.221.44
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 869B6606A33C
-	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 18:24:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 869B6606A33C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43430606A33B
+	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 18:53:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43430606A33B
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=jVhRnT7c
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=7bYe9wd7HhUkjg17+eOnOTO+gnBeFLd88cIA6k1y3Y8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795199087; v=1; x=1795803887;
- b=jVhRnT7cn5OhVwxLTsixFhnmLnXX317bGlMjMb5w2CP9Z4KQQGtg4t3yGoSIYhvdbnvYuKpa
- vlCi3X6tr4i0WPhuwegN/VAJ6Sf6ZPPuV+MjXOjay+BvNheV9AtAHDu9eGXCjYAUq30RRxz9znM
- 8Cmr2t45Iblw6NEXSpVK0bq0=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9d8f2b63d07da3cb;
-	Fri, 20 Nov 2026 18:24:47 +0000
-X-Mizu-Trace-ID: 9d8f2b63d07da3cb
-X-Migadu-Flow: FLOW_OUT
-Date: Fri, 20 Nov 2026 10:24:46 -0800
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Tejun Heo <tj@kernel.org>
-Cc: Christian Brauner <brauner@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jori Koolstra <jkoolstra@xs4all.nl>, 
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup: allocate the inode for cgroup_may_write() before
- cgroup_mutex
-Message-ID: <awCLBDApSWwDsBB_@linux.dev>
-References: <20261118230346.3700213-1-shakeel.butt@linux.dev>
- <b8b2c07c12f5a156e2d72ab4ee4444cc@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=rw5csPJs
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-4a9be758734so812503f8f.1
+        for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 10:53:38 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795200817; cv=none;
+        d=google.com; s=arc-20260327;
+        b=DV11swfnWzwl+9LrgyrUJfV3+lwv+n5YcKKA6a/OtZSVvU3v8ZMldRSTS21xEa+V5q
+         7i3YoXqoaznHSlQM01hYEyQtr2JZCR+310wSNRrxEcJZhOBxL4JhDct3YgouPfssv9Yt
+         CBQgkgFVYeE2J2BuktOrMh4oc2pgX8BAD1EgO5EnlCvnH2PgRS0z6Ogpit/bmx+PxkSE
+         wp/DgIOb+o97+Kx3vrPhHNo/lom24/Wf9V3HKFIafT7N7v8HkD5oiiYVIxn0FgDwEHUd
+         Dl2BH3lfTGq3HcMl/JpLz2EUWka5C0RayTqwo42fMdQivH1rHcdjh/02XIzsPgCYh4Pb
+         5MZw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
+        fh=Wd/U7gHJodHPJOZpGrDbFLHEzMva1wff8jlLucsQf84=;
+        b=SYLb3VTerh+Xqrc7sxEnSs9vcUFRxba8R3v3sHoTDwpRElqsVV9MbrqLm4oT9DS/2p
+         4uxcSQwM1VgNcAPSDB4f5fdUj69ZF1jdPld6SsIXUoZg9M6wcLub9RQPEBRA2OpcUNE6
+         zAiLV9ig0oa6+8Y65myTq+mXNnn/jvWb2cBL/UHgleUGTLOsTpYOU3/JBq/yUwBNrbt8
+         5/b9oo5jP1+vqpyAmc+V3OYbClNILHFKWVvy1gHlySpNsi0nD0NxizdR5WEaBRZ8Pqwr
+         p/eXLSzgb0sri8VoBL0BJt/bnj7/64PziyDxID+FwJ9U4KEDiPfViL8enHT1Xw3KMIi4
+         0e9w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795200817; x=1795805617; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
+        b=rw5csPJsy9Grjv/kuDIkQSXttCNYOg6+rxmUPkkASaR7hWAbzckAvDPMREyWl41Jpv
+         6Wm4HIb37WTD7f4yTaQh+u4hRgprD96xHlk/B2phHMxFlPNy08tezRtQWluJzIaEjUUT
+         PPuzW4vTJq86XyFDNlVSKVe5AIRdRzYZW/eO0yRqe8COET/d48wXeOwyg94GVNqvy748
+         FWFVvoQmBR+tm46nKnmocK2A8XvnLiQch6HurDhEHcRra4Q3yN8jMhVDEiN8bCaymXly
+         uXLs9MHrnh3ERbakZWvGtw9nV3LjfdNqtxGygeVv5OkZh3/K8meJgem6swkzw1Yaiaki
+         tePQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795200817; x=1795805617;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=9sT5pKOPeQasJwUhxA6x5muNzyWLPJdu9Xt2Zxrlxh4=;
+        b=lPuFPd94Ukk6+4CkvgyHyXr1whTVwwxiLRT5JvS041BRHSmHqhSF9K5nWzryxeea2W
+         isK5W2OP7xgEUXAO1eQ75gwLjj0r3gCigLhTSCtvBghbUDiuKPVMkExAuWTpXSsbNjzo
+         zBYVlBtTljeLngnPDdU9BTPZhDfto37q6ul992s3wy+8OIcAChDbxWqdzbhL4sbkh+Wk
+         InJHm0df/ds8ywUk+UdxKvoZEcuJnC+Ryj7DVjjs5LKjZvkxFLHXw3MsLN6OCCGvnWu9
+         LMp3Z07Id0U3B4jCnjT6IB+5Cok/Yn7T6xDAzqWekmMZ8+DWw1GBU9gvqEotvhjowynQ
+         2n6w==
+X-Forwarded-Encrypted: i=1; AL+hErFw9J7V308uYZkWr7JbM0pxGTt1CTtfzM2nS5pJCEJibHx7a2tfn9Scn5drk1WLUwCdIOikX22N@vger.kernel.org
+X-Gm-Message-State: APuU4Z8yLcCMzbas8xU4wiHY/Bxb+bpluIRDa38JEN1c9N1ZaWe8Xrmu
+	/Rsb57WQIHFzSoHZvRuw+LuZnGeOqX8eAJqpsqdbVq4pviNY163q15MGpJEDR9JWIfyYGcpXJ8M
+	ACa7m8a3qOaff5KqDDm2PB9WjK1L8Jog=
+X-Gm-Gg: AZFdTZdenwdnAQJctDX0i+xHLWhjpDqyfT5DOyMWmvFlTcTvz5qJ6lUkgw4/w4xIuqq
+	2eDltjVjvsYHWnI3Lq6YNsz0PSsOGtMG4NZZ1H2fbQpR1CVS180GfXJSCJyZOTnhHT337qvKGb+
+	7SaTTjWfvwhs1x0eIbAo56Q2RdmOWVN2PpQ3gMRqok/Yzmb0dyqvfi3KKtRfqk7AicDia0/XvTH
+	qw8a+vSj0hxbq8EqleLYoL5zTy/O9HO0WhbsNqh+MvzauWdvhU/S2GlHFG31Mf4luUTTIWSHVap
+	qu0kapQXxIBCsrIzCE1tIcbYvY/1OQqzfz95r4ySdmuOJQBOKw5sB1rIh0Bnkkcml0HEY0JOO7D
+	zDmK6cUDKOa+LVnarvJYu8bXRRvIO7eRh00yw2KM4JJis318XoPTm70SCgP7buBozhfVCZU3YNw
+	oMT2cY/l8C4WuKJxiTmLU=
+X-Received: by 2002:a05:6000:2883:b0:4a4:39bb:970d with SMTP id
+ ffacd0b85a97d-4abab02c469mr8089761f8f.2.1795200816511; Fri, 20 Nov 2026
+ 10:53:36 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -68,50 +105,78 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b8b2c07c12f5a156e2d72ab4ee4444cc@kernel.org>
+References: <20260817131843.45121-1-husong@kylinos.cn> <CAO9r8zPqJncFKQbF3tGe1d4sg-4dLQ3dQRGze_vab26wWrXTqA@mail.gmail.com>
+ <179438454803.6.16655549133383619919.zswap-rstat-counters@gmail.com>
+ <CAJnrk1YzYswBKv5F3=FF_o_4Pywgw0ifLq0tXYSWO7TARnFRJQ@mail.gmail.com> <CANGjgdnTjbou-XFqip7B_cGjrfZzZpan3dFuAk1-rU3bJOu8NA@mail.gmail.com>
+In-Reply-To: <CANGjgdnTjbou-XFqip7B_cGjrfZzZpan3dFuAk1-rU3bJOu8NA@mail.gmail.com>
+From: Joanne Koong <joannelkoong@gmail.com>
+Date: Fri, 20 Nov 2026 10:53:24 -0800
+X-Gm-Features: Aa3M54oX3M667iXU9--_PVn5exl7P5ruO3wAPnPpv8aIQlT07cgivJguladt78o
+Message-ID: <CAJnrk1YRBkoMppbn-GitdTXaNmpCf8kM2WHWvSfNPzNygoqw+g@mail.gmail.com>
+Subject: Re: [PATCH] mm: memcg: use ratelimited stats flush in obj_cgroup_may_zswap()
+To: Chengfeng Lin <lin2530632123@gmail.com>
+Cc: Yosry Ahmed <yosry@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Song Hu <husong@kylinos.cn>, 
+	Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Nhat Pham <nphamcs@gmail.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, yunzhao@cloudflare.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 20, 2026 at 01:24:18AM -1000, Tejun Heo wrote:
-> Hello, Shakeel.
-> 
-> On Wed, Nov 18, 2026 at 03:03:45PM -0800, Shakeel Butt wrote:
-> > +	dst_cgrp = cgroup_kn_break_active(of->kn);
-> >  	if (IS_ERR(dst_cgrp))
-> >  		return PTR_ERR(dst_cgrp);
-> > +	new = new_inode(of->file->f_path.dentry->d_sb);
-> > +	cgroup_lock();
-> 
-> I don't really like new_inode() being called on every write, and twice on
-> every clone3(CLONE_INTO_CGROUP). The inode is often not cached but not
-> mostly. It's not a lot of overhead, but doing it the right way isn't that
-> complicated either. How about peeking at the inode cache before taking the
-> locks, preallocating only when the peek misses, and then looking up again
-> under cgroup_mutex? If the peek turns out wrong, it can drop the locks,
-> allocate and retry, so that nothing is allocated under the lock.
+On Sun, Nov 15, 2026 at 5:38=E2=80=AFAM Chengfeng Lin <lin2530632123@gmail.=
+com> wrote:
+>
+> Hi Joanne,
+>
+> I tested the non-forced flush in our setup. It delivered PAGEOUT CPU
+> savings similar to those of the hierarchical per-CPU counter variant.
+>
+> The only change in the non-forced variant was:
+>
+>     __mem_cgroup_flush_stats(memcg, true);
+>     -> mem_cgroup_flush_stats(memcg);
+>
+> Both variants used the same MM base, 2967f3ccdb5f, and the unchanged
+> reproducers attached to my previous mail: 32 MiB with one worker, and
+> 256 MiB with eight workers. The finite memory.zswap.max remained 64 MiB;
+> compressed occupancy was about 18.75 MiB in the larger test, below the ca=
+p.
+> The hardware was the same i7-12700KF with microcode 0x3e.
+>
+> I ran five separate boots: baseline, non-forced, baseline, counters,
+> baseline. Each boot had two warmups and nine measured program runs per
+> condition, including an unlimited control. Reductions below are relative
+> to the mean of each variant's two adjacent baselines:
+>
+> Finite-limit PAGEOUT CPU   Non-forced             Counter variant
+> 1 worker / 32 MiB          12.640 ms (-45.72%)     13.276 ms (-43.04%)
+> 8 workers / 256 MiB       202.784 ms (-84.03%)    207.455 ms (-83.55%)
+>
+> These are summed worker CPU times, not elapsed times. Whole-program CPU
+> reductions (non-forced / counters) were 22.57% / 20.97% with one worker
+> and 61.82% / 59.97% with eight.
+> The counter variant is the same hierarchical per-CPU adaptation tested in
+> my previous mail; it retains the existing rstat updates.
+>
+> PAGEOUT CVs (non-forced / counters) were 4.65% / 4.33% with one worker
+> and 2.91% / 9.26% with eight. The maximum absolute PAGEOUT baseline drift
+> in these finite-limit comparisons was 1.69%. The small mean differences
+> do not establish that one variant is faster.
+>
+> Separate instrumented admission runs also confirmed that non-forced does
+> not mean no flush: the limit check performed 53 / 818 actual rstat flushe=
+s
+> for one / eight workers, versus 8192 / 65536 with forced flushing and zer=
+o
+> with counters, while successful stores remained 8192 / 65536.
+>
+> So the simpler change appears sufficient for the main benefit in this
+> below-cap workload.
+>
 
-Thanks for taking a look and yes, this makes sense.
+Thank you for your work with testing this, Chengfeng. When I come back
+from vacation in three weeks, I will submit this change as part of a
+larger series and I'll make sure your email is cc'ed on that.
 
-> Can we
-> apply the same shape in other places too?
-
-Yes, I agree, though I will do that in followup patches. More specifically I
-think I can do the same approach in __kernfs_fh_to_dentry() and
-kernfs_get_parent_dentry() for inode. For kernfs_setattr(), I think I can use
-the same approach for iattrs. Also I am working on allocating css for new cgroup
-before cgroup_mutex in mkdir wich will use similar approach.
-
-> 
-> > 	scoped_with_creds(of->file->f_cred)
-> > -		ret = cgroup_attach_permissions(src_cgrp, dst_cgrp,
-> > -						of->file->f_path.dentry->d_sb,
-> > +		ret = cgroup_attach_permissions(src_cgrp, dst_cgrp, &new,
-> > 						threadgroup, ctx->ns);
-> 
-> AFAICS, this changes behavior under Smack. Smack labels a new inode from the
-> allocating task's creds, and the allocation used to be inside
-> scoped_with_creds(). Now the inode gets the writer's label and the
-> permission check runs with the opener's creds, which can fail when the two
-> differ. Maybe the allocation can use the opener's creds too?
-
-Thanks for catching this. I will make sure this remain the same in the v2.
+Thanks,
+Joanne
