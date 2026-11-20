@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795207367;
-	b=Yn2Y6KsRA06Ihtr7gZx1XxyNYmi8nNUh0pOl8Oa5TKEO3Np7SI249o581qlCN0lOYKps
-	 K4kTja7lXXJPbRO5udGRDd+RYGnzQWiYgNHLzCSEIHyy8b6hZPMY/IbL1nMsD0cXK5DKH
-	 oqFN1IDQp8GDvJGL1C0nz3T5I5UKHeYlrDYrvXj5Yrc4Q7yMkkd5ucq7Jn9CfJ48/7myS
-	 E14JRw5H1cURW7neREb845hwugl1UYGtv0J1GK8tG8Z3G9OTgSxWYC1dWwh0Md0MXix2F
-	 PUJ+izGgVfEBfUn0pgHol4YgrJbTQUP7uGnQl0Dq/UIkVBvEYRqFdACAFAiyvSJJmhw==
+	b=iReuNlP0/AMRT6rHXMKzfeUDi/aZdhL6U9Gs4vAz5nCIgaCUkl1UkT+0Q18d7mopatWn
+	 lc5dqhwgMCmwAtzwakdPtIngQgo1Rin9e4FcJ6s8qvZnnrEO7VYdHoIFKENdVtRMBjPq0
+	 eyxVEcxC3pAhQulxOsx2NLZHAifpYROFDjV9C5MIw1lWjtpyLRA970PS2svEGLZdZkmlW
+	 2Y4VyYdlTIP3kfHqMjELk7kuJ0d/XUG3cifX+35wrTNcsgB6JbBsZN8jUtt5l8saIfIu8
+	 NmxI97YQ7haLN3nhwcUE0NMi7mktuRQYa/eBgF93FGJPH2yAGelB6rxkBHd2Vw73uyw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795207367;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=kKyiD7FHFgIYWRX4t4LiS2y4r69/huBh9nxHCzpiCvw=;
-	b=TCwuF9FDKhrVxJSwJa9SnFgbXDBVhW0wXS0M75MkzT1nXNFnP3FUP7WLTisE/o725AlS
-	 /GHk5FoH52rwHVStMcOr4Y2OpjvPDHvBpHy0KkBVOAw06/kXXI02t71PP2lQ2XLix7evT
-	 LxEKO3uhIi4/B7hI8F2hYcjEhj20dT2dWbvI2Su3C4H7Caf/NC2bDNLZCtGEd+G9G2/4m
-	 Tc4C8oBY42iDu+AP5EtR0+tdUCDdx+yssJrADRcON9IC6y6G6z1v18eZY2aUCQ81IUgYv
-	 EXFx4HQmGJaPiuWQ/UOlHoKiC12tenqC8Qe6M2hmsMaz4XiFBMaLTSv4ALhPSEJc/8g==
+	bh=9HHgPnngfANMXf/PtLeRb/ky94A+yHxsRFZy6YViF1s=;
+	b=MH8Mp9rz5vtZoILYXtLw4k3Z7c9Hl635rKCLuRlV3j/cFF4scGyYjvoL6jwletV3lIQ3
+	 Dya/39uFZRSGuwpMrF3SJK7fbO1rsYL35q4PfRurkGFb0593IzpxINELvjq6D2638rQuj
+	 Mbr1x02XQXL57m4W+VNipDbAI3WyxOauTgo8229qMR5xLtzF99lGm2Bg5RijsTVSu7ibS
+	 x2YP6uTorRWCaTq6KLkscQY5ZErc4BeMZCXPHgC53/8J6NZn3APKo6ZHvmVDvdYK+8rKS
+	 X2cAJ+jHHZtRwc/6JS1ZlCy3Bn2NCMwT7q5u/GK3v7MdmH1FW4+2hL5Yc5zfFpFBDMQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=xfRpkDyz;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=d4htThkj;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96E2760A3830;
-	Fri, 20 Nov 2026 20:42:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 96E2760A3830
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD07E60A2625;
+	Fri, 20 Nov 2026 20:42:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BD07E60A2625
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=xfRpkDyz
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=d4htThkj
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795207357;
-	bh=kKyiD7FHFgIYWRX4t4LiS2y4r69/huBh9nxHCzpiCvw=;
+	s=smtpout1; t=1795207355;
+	bh=9HHgPnngfANMXf/PtLeRb/ky94A+yHxsRFZy6YViF1s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=xfRpkDyzPsWtCwDNP3Akij33m+ZIDETsY4KAhkRdZpn0auk3TOPRklwlwEdQter51
-	 iAuyYV2S8lfqAhVt3KLvUHM6XswaiLQ1sLBGfW6ZoXEclMPvUkp27wvQysmToJV9r2
-	 xLX1qs7FELsq5I27zSpXGNcJOEwZb9mgtGkTEaYh18yuW+ciMbk7RYMCYKzh726aUR
-	 l+dme0kPAQvdnlkeok4cRxCc7X+cRNV4kGL9LR+Hm+uyd9vss8Vj5F+WrlwnMu/6JM
-	 BrPdJ6vIWAubRq6+Ic0WfgY7vO65gYWPBNMhcAEe1LyZzYvTmYE4YXnQ17UAC8uDUD
-	 hqaPYX8HZk4Zw==
+	b=d4htThkjFGl3lC6HPDFXDm++mXCW6kriJbhbV0YL30/EaPjvtZ9/lx9xMi5n491Qw
+	 jPMPKhRf4oKxEwwWxjld2drjQotDKZBvOv9c8znciXOXrKMkSUU1LzFxCg87+UKaFk
+	 dNd2yrgaq5iDqQwAcRDZaGeS5P8ASW2cEvUHMuMoWq/bsFKDHtQ23jLTQtO1yIsekp
+	 bynYSO4+/WaOloi/MnObChqr8UOhHCUH9kwic5tKKPfbuPwWopAn16jHExlzmOLFrK
+	 JyEYevfb3uVs/XsX2ZsUCUNo5zzQxKKHlkjcsypi0Poj1TCYn2dvfv81PY1iGgs8fp
+	 xoqWXoLIfkang==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2P47hQzTqh;
-	Fri, 20 Nov 2026 15:42:37 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2M4538zTqY;
+	Fri, 20 Nov 2026 15:42:35 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v10 30/40] sched/deadline: Start a period for a task requeued onto an rt_mutex
-Date: Fri, 20 Nov 2026 15:42:07 -0500
-Message-Id: <6c7be87e201d405bdf589989cb45afca9160c2e4.1795207232.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v10 20/40] sched/deadline: Do not truncate a bandwidth to 32 bits in __dl_add/sub()
+Date: Fri, 20 Nov 2026 15:41:57 -0500
+Message-Id: <9f123dcc2d5ccbb4c2e44cedd420a5c363e6ed0c.1795207232.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
@@ -97,107 +97,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The waiter node of an rt_mutex holds the deadline of its task, as a sort
-key. task_blocks_on_rt_mutex() copies it when the task blocks. A task
-that blocks by itself is running, so its deadline is a current one.
+__dl_add() and __dl_sub() spread a change of total_bw over the extra_bw
+of the active CPUs of the root domain. Commit daec57983670
+("sched/deadline: Reclaim bandwidth not used by dl tasks") added this,
+for the bandwidth of one task. That is at most 1 << 20, the bandwidth
+of one CPU.
 
-FUTEX_CMP_REQUEUE_PI is different. It makes a task that sleeps in
-FUTEX_WAIT_REQUEUE_PI wait on the rt_mutex of a PI futex, with
-rt_mutex_start_proxy_lock(). That task is not running. Its deadline can
-be one that it would never run with:
-- 0, if sched_setattr() made it SCHED_DEADLINE while it slept.
-  switched_to_dl() leaves its deadline to its next wakeup.
-- one that has passed, if it slept past it.
+But cpuset_can_attach() reserves the sum of the bandwidths of all the
+deadline tasks it moves, with dl_bw_alloc(). __dl_add() and __dl_sub()
+cast the bandwidth to s32 before the division. Past S32_MAX, more than
+2048 CPUs of deadline bandwidth, the cast flips its sign. The extra_bw
+of each CPU then moves the wrong way. GRUB lets reclaiming tasks run
+more than the free bandwidth, or less. This was found by reading. It
+needs a machine with more than 2048 CPUs, so no case tests it.
 
-The waiter then sorts before the waiters with a real deadline. At the
-unlock, it gets the lock before waiters with earlier deadlines. Its
-deadline also decides the boost of the owner.
+Fix this by dividing on 64 bits, with div_u64().
 
-Fix this in task_blocks_on_rt_mutex(): dl_proxy_block() starts a new
-period for such a task, as its wakeup would. A task past its
-deadline and before its next period keeps its deadline: its wakeup
-throttles it until that period.
+The Sashiko AI review of the first series found this.
 
-The Sashiko AI review of this series found this. The case
-requeue_pi_new_period of deadline_bw_test, added later in this series,
-tests the deadline of 0. It fails without this patch.
-
-Fixes: 2d3d891d3344 ("sched/deadline: Add SCHED_DEADLINE inheritance logic")
+Fixes: daec57983670 ("sched/deadline: Reclaim bandwidth not used by dl tasks")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- include/linux/sched/deadline.h |  1 +
- kernel/locking/rtmutex.c       |  3 +++
- kernel/sched/deadline.c        | 30 ++++++++++++++++++++++++++++++
- 3 files changed, 34 insertions(+)
+ kernel/sched/deadline.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
-index a2479c6ddbf0..377f00aec6d9 100644
---- a/include/linux/sched/deadline.h
-+++ b/include/linux/sched/deadline.h
-@@ -62,6 +62,7 @@ extern int dl_task_bw_reserve_cpu(struct task_struct *p,
- 				  const struct cpumask *new_mask);
- extern int dl_task_bw_reserved_cpu(struct task_struct *p);
- extern void dl_task_bw_unreserve(struct task_struct *p);
-+extern void dl_proxy_block(struct task_struct *p);
- extern bool dl_task_keeps_root_domain(struct task_struct *p,
- 				      const struct cpumask *new_mask,
- 				      const struct cpumask *pending);
-diff --git a/kernel/locking/rtmutex.c b/kernel/locking/rtmutex.c
-index b09816977d4e..5ff123d24b2a 100644
---- a/kernel/locking/rtmutex.c
-+++ b/kernel/locking/rtmutex.c
-@@ -1245,6 +1245,9 @@ static int __sched task_blocks_on_rt_mutex(struct rt_mutex_base *lock,
- 		return -EDEADLK;
- 
- 	raw_spin_lock(&task->pi_lock);
-+	/* A proxy lock: @task sleeps, and its deadline can be stale. */
-+	if (task != current)
-+		dl_proxy_block(task);
- 	waiter->task = task;
- 	waiter->lock = lock;
- 	waiter_update_prio(waiter, task);
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index b1346be9e81d..1c5888b1717d 100644
+index 9faaaf665459..cc5be00b2b0c 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -1573,6 +1573,36 @@ static inline u64 dl_next_period(struct sched_dl_entity *dl_se)
- 	return dl_se->deadline - dl_se->dl_deadline + dl_se->dl_period;
+@@ -205,7 +205,7 @@ void __dl_sub(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
+ {
+ 	dl_b->total_bw -= tsk_bw;
+ 	if (cpus)
+-		__dl_update(dl_b, (s32)tsk_bw / cpus);
++		__dl_update(dl_b, div_u64(tsk_bw, cpus));
  }
  
-+#ifdef CONFIG_RT_MUTEXES
-+/*
-+ * FUTEX_CMP_REQUEUE_PI makes @p wait on an rt_mutex while @p sleeps.
-+ * The waiter node of @p takes its deadline, before any wakeup. @p would
-+ * not run with a deadline of 0, which it has if it entered the class
-+ * asleep. Nor would it run with a deadline that has passed. Start a new
-+ * period then, as its wakeup would. Leave a task past its deadline and
-+ * before its next period: its wakeup throttles it until that period.
-+ *
-+ * The caller holds the pi_lock of @p.
-+ */
-+void dl_proxy_block(struct task_struct *p)
-+{
-+	struct sched_dl_entity *dl_se = &p->dl;
-+	struct rq_flags rf;
-+	struct rq *rq;
-+
-+	if (!dl_task(p) || is_dl_boosted(dl_se) || !dl_se->dl_runtime)
-+		return;
-+	rq = __task_rq_lock(p, &rf);
-+	update_rq_clock(rq);
-+	if (!task_on_rq_queued(p) && !dl_se->dl_throttled &&
-+	    dl_time_before(dl_se->deadline, rq_clock(rq)) &&
-+	    (dl_is_implicit(dl_se) ||
-+	     !dl_time_before(rq_clock(rq), dl_next_period(dl_se))))
-+		replenish_dl_new_period(dl_se, rq);
-+	__task_rq_unlock(rq, p, &rf);
-+}
-+#endif
-+
- /*
-  * If the entity depleted all its runtime, and if we want it to sleep
-  * while waiting for some new execution time to become available, we
+ static inline
+@@ -213,7 +213,7 @@ void __dl_add(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
+ {
+ 	dl_b->total_bw += tsk_bw;
+ 	if (cpus)
+-		__dl_update(dl_b, -((s32)tsk_bw / cpus));
++		__dl_update(dl_b, -(s64)div_u64(tsk_bw, cpus));
+ }
+ 
+ static inline bool
 -- 
 2.47.3
 
