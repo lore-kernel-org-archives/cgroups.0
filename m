@@ -1,79 +1,78 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198174;
-	b=oEGubPyZnGDeHRW3d7D6cLokjJV3w7K+MP6aNv5biRXGJCvsfBF69ell6eOXbmIsHyrF
-	 IafkkEnFTQ/RJu7stEzWojXP18HpO4G8uYPV/fMImUs10+8kyChssMJEGPo6Tur1N6yyI
-	 lpUg5BYD8NViLEabYmtaZ9l/hZ869N/kwuqzoGQOqbTcnw6A8GJ5Htuqelj7MZQBQxI6Z
-	 +58DcXIPesiW9yBpz6Ht6GKx3i3dBwlj3wZsV2+0gZ/OvkofB4R23ok6efOd72Atw8sPR
-	 Q1Lb7jG8JDbBVSwrBgtU1KNXpu3nV58a26HUix3Gg8xu8qvV7XeF0Js0LwfgJvegW9g==
+	t=1795198181;
+	b=YIp6t0DbV00bTrPWqT6I5TJyZvtycIOGHNGDma3wrCBDWvvV20jfmeRbqW8U3SNWa2wr
+	 8baYh3usFU5x4T8oSvsi5sqmNJlkmIYIb5tuO/45xaQMqyZbir+1Phqme+SQe0GQtxKNJ
+	 FggVVfa7nwGuD7RqCsMPS8pnzbhlrEgg9smAHxIbFjmWOSbndCOqFPY5hnwQa0/EBJ29N
+	 0bJRs8e6tNoRWYw67vBkDWLzE0r7q7ukGd149h5LdKtF77CEFzZd9ELrfFnf36UkZ5OTe
+	 +CTyprXDHFEwtFf4nPbT4py6Wol4vVxylQaBRoWRlOaAahi4p9Pfg9iGLuYSFLYxDgw==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198174;
-	h=Received:DKIM-Signature:Received:From:Subject:Date:Message-Id:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:X-B4-Tracking:
-	 X-Change-ID:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=gbSwCIivj68dbUMRNQL8lg/alysbe3NiLGAi5108xQ4=;
-	b=ZZfc1MmpbmRK/GHGy6K2JooT4yQHIdq5mADPBMUnPO5l+08YORo9DqH3zAaCHjP6eyNh
-	 GI3e9UiiRcFTVUlNI0xALWOm6uyVBnHGiy4n60wAZy9SleYq4NZzG/DnnM/ug4GmFEr99
-	 yCu6r8LtBhd9ORy3tDaj0PnfgDG7n/P6QpLnnDmprbqAJFr36B2vsFhoAva6cxAP+Ify6
-	 jT9A3RnvLDHvlda00kpqyI/r6FcxH9fFdaBWkeyfUOgkKT2MfOCm7wMYruNDvPxV0zOT6
-	 TC8echftuIJ/hLE6pXr4aaScYTMGRzn3916oPq7Rwt9hYTOOEK/0+xJg9VcOKosO8OQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198181;
+	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=1fr3kKexKN6/LyygAXFTIEKl3iK6RW/c/i9QMIazwjQ=;
+	b=upXSeXyqBFelDul301orJ/tpFRMS1psrJD2jFN6A53nAym3Z71UjzqPojyUybWDdhYHx
+	 UwXRNh+w7nGWrC1oruocckE1VHd6nEPb4dKg1WAztFwzCAMQXOKct3dk+GUlrRh1N+8Dj
+	 fUEycAzdgGAP5fRx08FNQiFNsq07VC9ZvS37vZHGg8oVlBh4q1D+Z2x+pyrBzAg+vLTon
+	 PKMpMP3krGy81IpJGrYEWrjTvekZoy2UukiKPyWSfYSezrcW3jkKTFNkffq8dJKPzhvWq
+	 qe/SDF4ZbXy3nKBvLx4F0ngL+wr8ijKbSiiPNblOrtAecZujmSJlFufu1xug2TnoQxw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RAK8VlUo;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="QQNLjO/A";
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E28E606A89A;
-	Fri, 20 Nov 2026 18:09:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF9B160A2623;
+	Fri, 20 Nov 2026 18:09:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=RAK8VlUo
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=QQNLjO/A
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198173;
-	b=rrc/BgasZIw/+PJPxj7TOm1gYalqUvpeXAM5jMPChl2QL/XuuIZDRkmmCosBWAf45btS
-	 amDD+ukAZn/Tt5qWspiy7veNo3DLcHT3utydhHUSu8K8dgWlUUIqa2mY8PPGqHfgjswtJ
-	 YjRXdrzxl15s+vkLmG4tacSKHqkPJmIiuIsB+PWbPYKLGoPUn5aMH5Lqtc0LHgwrALI7e
-	 e+WA670GbPJfejsoJJ3i+nq+aHvkqr3G9hKqddIRCVGuzMwd/YPZxmjspYZzuYMBoorU3
-	 YOgEadmeMhLQFB7h3z9kQMKBJnQ6VmfZYchEIHhta2IVUUEo2lH5KkDFj5lj7eqtJ9A==
+	t=1795198181;
+	b=tkiLDR64Na+wfBYnDDJfn/s65Xoq4YHJXxEtveXrL44aO389zZsTNok1N/T5436mVSEb
+	 bByGx6wIDb9CGV3/JSH+Wm1imk5zraEBJJ3N1yuOr8m7PC8znYXB0HoSSceV9miRHaqxs
+	 ouFl4IIBp/UnAJXocV/a+vUcobCMPAAbaB3yzbMBRrL+bDs3jYnHpMG83Gz8BK5ebEmdW
+	 mvzzykZWFNTWO/DF2e130R1RXtn19B4f9xNsx2HK7ZcGxuDdl19n240uFr44ZBsGjOIpP
+	 fcdwBf+jo3QtakTfrNAj2IqI1N09DEjzT7ZZlcFGz+HgRT89VKLs8sRqmrglBihTVQA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198173;
-	h=DKIM-Signature:Received:From:Subject:Date:Message-Id:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:X-B4-Tracking:X-Change-ID:To:
-	 Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=gbSwCIivj68dbUMRNQL8lg/alysbe3NiLGAi5108xQ4=;
-	b=meXXJCFjRPi5Ti9BpKEaynbLPICuTJnFmcWVkY2seaJv6nSpuf9pNZspO2kzP7eRFwq3
-	 yH3rKkZ7BM54QOKQCmxF97Ow96hcy2Hr0fB34HLHM93vozW231Lew8ZL/sGPSVSmumdWs
-	 6mG8yLKTIiZq4lyYW9m9s7TluahpZ7EWyDGJ/+v8M96uRiAwK3Wt441Ya+/7xqyGo2BuA
-	 9kt2HHFHwHpKLwn9pCBkQhAPDAAaGjnC7KInholpnvdIJLUwZBF24l89qVIe5FFHjBPT0
-	 AdlnklnlRM2t5NpFwJJHL0IWwWgOPLf6niOV2sModehLJDjZ9gcjBLATotX0MW4wiEw==
+	c=relaxed/relaxed; t=1795198181;
+	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=1fr3kKexKN6/LyygAXFTIEKl3iK6RW/c/i9QMIazwjQ=;
+	b=yJPlilkdB/Uj5DREtZqIp2hjevTLMFgw4oq7ikPSj8i5EwL4zksYFFJojvT+EPdqwwYp
+	 IppHn8JHeMS11QdAfFuneOzoWUYf6kVAWwCuLYvOS7UICk0mTqowAdg1vFSelayMo0DdD
+	 D5+pWM5+YUV8M3/ijc+9Ia18x7A5ygBjxTD/Op62zKwhn+75hmUn6EIgwl9xvi8hWVpze
+	 TPd18IJatsu8IYVR5nAYcQObokxpeYbztF8XWpIDJUtZETWAv9p4ZAfmaOIJTfp7xArgX
+	 baXo5mbCEOC+nxUjkdnTnIMz0f84iXiVdcKQjCC2FWigWidSPT6t/1/2is3HnvkK54Q==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 883EA1F000C4;
-	Fri, 20 Nov 2026 18:09:17 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id AE0CC1F000EB;
+	Fri, 20 Nov 2026 18:09:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198173;
-	bh=gbSwCIivj68dbUMRNQL8lg/alysbe3NiLGAi5108xQ4=;
-	h=From:Subject:Date:To:Cc:Reply-To;
-	b=RAK8VlUo6HtFKZ9Ca90tfP1syoZVpIE2PVI6eoejIwS4ecwOcKIqpBkWvfIguIL61
-	 /MiN5ugdipKNSauqwiRIOi4GL+3jqQPTfAmshTjqS/6Erutqgxsiqqq7fpVVZF3kc3
-	 HKWz0Mepnfq+bxG8YrShw0txMi3fSNXCMdFOzy1UFr8CJlaiDfXBxlgwxJQDC7Sa8f
-	 EIW71Pthem3/X1dEbuTJBx4//9Db2FsCezDLBqRBRP8DkzgQoqzJ3uNzs2n/bLlMJe
-	 jaFC6aVIQbnC+bFzInDqBRpCh8kBd5A0+waRM8c7qN8zxbP9gTor1M1JV3Wwvj1Iy7
-	 rmSr7sL8fnmsg==
+	s=k20260515; t=1795198181;
+	bh=1fr3kKexKN6/LyygAXFTIEKl3iK6RW/c/i9QMIazwjQ=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
+	b=QQNLjO/AGEsdVDWq/dxgiR6dej4HbQKtukVFuY5he60ufYSkQ1oWWGrbr1rhQU54D
+	 /775ZjzZXOCikDHf0Qn0ql775/A3AFaDGXWoutbch5nBfzJ9EIEB0YANrWDLwDgF8S
+	 ufK73d4VtcQElmApOr8vrZ0hi9k0iL1jk8BKWjSwYk0SQNL63IIbpyL5bhx1bp6/6L
+	 7+z4wghYetMtR9Iwg+jjugoUPGW5/mQCSY/+ez08D5sqhOY0EZiYyMDEQBptn3H3e/
+	 wb6hlndjcyVPT6dpGbnytedZGUR5LEhFo2eJndfduqG5SjE1DrZkOpPkmmnrnN1+jq
+	 aCg9VKf5kd2Ng==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id F3FD14B8B5;
-	Fri, 20 Nov 2026 18:09:16 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 7ECCF4B8D1;
+	Fri, 20 Nov 2026 18:09:17 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Subject: [PATCH 00/60] Private NUMA nodes
-Date: Fri, 20 Nov 2026 13:08:51 -0500
-Message-Id: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+Date: Fri, 20 Nov 2026 13:08:55 -0500
+Subject: [PATCH 04/60] mm/page_alloc: build zonelists from common memory
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,11 +83,9 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAAAAAAAC/x3MQQqAIBBA0avIrBNUbKCuEiGRU81GRUOC8O5Jy
- 7f4/4VCmanALF7IVLlwDB16ELBfWzhJsu8GowxqbZRMmet2kwvRU3EVJVqv7DghaYPQs5Tp4Od
- fLmtrH49vuY9iAAAA
-X-Change-ID: 20261120-private_nodes_v6-64d04596e126
+Message-Id: <20261120-private_nodes_v6-v1-4-74f5f9a115c2@gourry.net>
+References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
  Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
  David Hildenbrand <david@kernel.org>, 
@@ -143,433 +140,84 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=20500;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=2108;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=koro8IuxaQEZON0/edllVSo/B/v7PH8KlvEm2ShLdhs=;
- b=+yl6KxST6T3oBaKZoR63Cbav3cTZm3C6NgFTmmjOTlP1AYWELQZscAdeCzO+QOxqe2ynzx+ag
- AbFnVbyx6RCBjEP5xnJSLRISNJbILn7/jfAa6OxlhOWY4IBXbDvaFoT
+ bh=hYnZoxMJ3yP49nfY0PYkTWJ6krAi0Bs8xOcweeGlZSI=;
+ b=0+ENTTd09K3orEMzSi6wiR5qOFJD5dDrUYY3xdoPrBK5gY7zLwZQW1DS5dBPmSiXPxJfW0mkv
+ 12JJVCclp0MC6jQLSgCNEVIyNSUniufk9x/6ovTQjJziND5MyE5ogoK
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
  auth_id=1586
 X-Original-From: "Gregory Price (Meta)" <gourry@gourry.net>
 Reply-To: gourry@gourry.net
+Content-Transfer-Encoding: 7bit
 
-This is v6 of the Private NUMA node series. The series falls into four
-parts, each building on the one before:
+From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-   1-18  mm: introduce N_MEMORY_COMMON
-  19-26  restrict folio-walking MM services to common memory
-  27-44  N_MEMORY_PRIVATE, kept out of cpusets, mempolicy, accounting
-         and the page allocator's ordinary paths
-  45-61  private node features, memory hotplug of private memory,
-         dax/kmem private mode, selftests and documentation
+Zonelists decide which nodes an allocation can reach.
 
-Patches 1-26 change no behavior on any system and can be reviewed and
-merged on their own. Without private nodes, every path in patches 27-61
-behaves as before.
+The fallback lists hold every node in N_MEMORY, and a node's
+__GFP_THISNODE list holds its own zones whatever the node's state.
 
-The full stack is also available at:
-https://github.com/gourryinverse/linux/tree/scratch/gourry/managed_nodes/private_nodes_v6
+Ordinary allocations should reach only common (general purpose) memory.
 
-Motivation
-==========
+Build the fallback zonelists from N_MEMORY_COMMON, and __GFP_THISNODE
+zonelists only for a common node.
 
-Some memory should be visible as a NUMA node without becoming part of
-the general allocation pool: HBM, coherent GPU or accelerator memory,
-or device memory a driver hands out itself.
-
-Today such memory is either ordinary System RAM, where any allocation
-can fall back onto it and every MM service manages it, or ZONE_DEVICE,
-where the buddy allocator and the MM services are not available at all.
-
-Private nodes sit in between. Their memory is managed by the buddy
-allocator, but ordinary allocations never land on it, and generic MM
-services leave it alone unless the node opts back in.
-
-Model
-=====
-
-  N_MEMORY = N_MEMORY_COMMON + N_MEMORY_PRIVATE
-
-  - N_MEMORY keeps meaning "this node has memory".
-  - N_MEMORY_COMMON means ordinary allocations and kernel services
-    may use it.
-  - Allocation isolation comes from the zonelists: a private node is
-    on no fallback zonelist and has an empty __GFP_THISNODE zonelist.
-    It is reached only through its own private zonelist.
-  - Services that walk existing folios check folio_is_common_memory()
-    where they already skip ZONE_DEVICE.
-  - A private node can opt into compaction, reclaim and userspace
-    placement through per-node features. The services are written in
-    terms of their own node state (N_MEMORY_RECLAIM, ...), so services
-    don't need to be "aware" of anything but themselves.
-
-The node state use / filtering model goes as such:
-  1) If you're walking the normal zonelists, you're already filtered
-  2) If you're walking nodelists to touch memory, filter on
-     N_MEMORY_COMMON by default (replacing N_MEMORY).
-  3) If you're walking structures to operate on folios / pages,
-     check folio_is_common_memory() (replacing zone_device checks)
-  4) If the service allows private memory interactions, use the
-     N_MEMORY_<FEATURE> bit corresponding to the service.
-
-     e.g.: reclaim checks N_MEMORY_FEATURE when walking N_MEMORY
-     or when walking the private memory zonelist.
-
-N_MEMORY_COMMON (patches 1-18)
-==============================
-
-N_MEMORY has two meanings today:
-  1) this node has memory
-  2) ordinary allocations and MM services can use this node's memory
-
-The two are the same today. They stop being the same once a NUMA node
-with memory isn't part of the general allocation pool.
-
-N_MEMORY_COMMON takes the second meaning, and the N_MEMORY users that
-mean it are converted. N_MEMORY continues reporting memory topology.
-
-The rule for choosing between them:
-
-  N_MEMORY         the node has memory: topology, per-node metadata and
-                   statistics, cpuset.mems.
-  N_MEMORY_COMMON  ordinary allocations or a kernel service may use the
-                   node's memory: zonelists, allocation and migration
-                   targets, per-node service threads, and sizing or
-                   accounting meant for ordinary allocations.
-
-Code that walks the existing zonelist needs no check. The zonelists
-are built from N_MEMORY_COMMON, so they already hold only memory the
-allocation may use.
-
-Unless a system actually has a private node, N_MEMORY and
-N_MEMORY_COMMON are the same set, so behavior should be unchanged.
-
-  1-3   node-state helpers, N_MEMORY_COMMON itself, and the
-        `has_common_memory` sysfs ABI.
-  4     zonelists: the fallback lists hold common nodes, and a node's
-        __GFP_THISNODE list is built only for a common node
-  5-11  allocation and migration targets
-  12-13 kswapd and kcompactd
-  14-18 sizing and accounting meant for ordinary allocations
-
-has_common_memory lists the same nodes as has_memory until memory
-outside N_MEMORY_COMMON exists. It is added now so that userspace, such
-as libnuma, can start choosing allocation targets from it, and so that
-the meaning is fixed before anything makes the two lists differ.
-
-Folio-walking MM services (patches 19-26)
-=========================================
-
-Patches 1-18 decide where memory comes from: zonelists, allocation
-targets and per-node services follow N_MEMORY_COMMON. Some MM services
-instead reach folios that already exist, wherever they are: through
-page tables (KSM, khugepaged, NUMA hinting, madvise, mbind() and
-migrate_pages(), move_pages()) or through physical addresses (DAMON).
-
-These services skip ZONE_DEVICE folios with folio_is_zone_device() and
-page_is_zone_device().
-
-Patch 19 generalizes those checks into folio_is_common_memory() and
-page_is_common_memory(), which reject ZONE_DEVICE folios and folios
-on a node outside N_MEMORY_COMMON.
-
-The rule: a service that walks folios checks folio_is_common_memory()
-where it would otherwise check folio_is_zone_device().
-
-Rather than add new hooks to page-table and pfn walkers, this reuses the
-places that already opt ZONE_DEVICE memory out.
-
-  19    folio_is_common_memory() and page_is_common_memory()
-  20-26 ZONE_DEVICE checks in folio-walking services become
-        page/folio_is_common_memory(). One component per patch.
-
-N_MEMORY_PRIVATE (patches 27-44)
-================================
-
-Patches 27-44 add the memory that makes N_MEMORY and N_MEMORY_COMMON
-differ. A private node has online System RAM that ordinary allocations
-do not use and MM services leave alone, so neither an allocation that
-names no node nor a node-local kernel allocation can land on it.
-
-Most of these patches add the explicit opt-outs that the N_MEMORY ->
-N_MEMORY_COMMON conversion did not cover, largely concentrated in
-cpuset, mempolicy and migration.
-
-In the page allocator, each node gets a private zonelist holding its
-own zones only if it is private. MM code reaches private memory only
-through that zonelist (ALLOC_ZONELIST_PRIVATE plus a nodemask).
-
-A private request whose node becomes ineligible relaxes onto common
-memory, and exhausting private memory fails the allocation (SIGBUS on
-fault) instead of invoking the OOM killer (this can change in the
-future with additional work).
-
-Nothing in patches 27-44 creates private memory. Memory hotplug of
-private memory, with dax/kmem as its first user, comes in patches
-56-57, after the feature bits that let a private node opt into
-reclaim, compaction and userspace placement.
-
-  27-28 N_MEMORY_PRIVATE, exported as has_private_memory.
-        A per-node feature mask on the pgdat.
-  29-30 accounting: MemTotal/MemFree/other limits ignore private mem.
-        the auto-movable online policy ignores private memory
-  31-35 cpusets and mempolicy: private nodes are inherited only on
-        request, never rebound onto, never spread over, and never
-        migrate_pages() destinations
-  36    explicit reclaim and compaction requests refuse private nodes
-  37-44 page allocator:
-        37-38 the reserves and watermarks, and contiguous allocation,
-              skip/refuse private memory
-        39-40 the private zonelist and its selection by MM callers
-        41    a private request whose node becomes ineligible relaxes
-              onto common memory to ensure forward progress
-        42    exhausting private memory fails with SIGBUS, like an
-              exhausted HugeTLB pool
-        43    an alloc_flags-aware folio allocator (Brendan Jackman)
-        44    a bind policy whose nodes became private falls back to
-              common memory
-
-Private node features and providers (patches 45-61)
-===================================================
-
-Patches 1-44 keep every generic MM service off private memory.
-
-Some private memory wants a few of them back: HBM or coherent GPU
-memory that userspace manages with mbind() and migrate_pages() needs
-reclaim and compaction, while staying out of incidental allocation
-(no fallback onto it, only explicit placement).
-
-Patches 45-55 add three opt-in feature bits and corresponding node
-states:
-
-  N_MEMORY_COMPACTION   kcompactd, proactive and explicit compaction
-  N_MEMORY_RECLAIM      kswapd, memcg and explicit reclaim
-  N_MEMORY_MEMPOLICY    mbind() and explicit migration may target it
-
-The states cover what the kernel does on its own initiative. Direct
-reclaim and compaction serve an allocation within its own zonelist, so
-an allocation from a private node may reclaim and compact it either way.
-
-RECLAIM requires COMPACTION, and MEMPOLICY requires both. Userspace
-control (mbind, migration) generates fragmentation, and as a result
-private allocations would fail unpredictably without reclaim/compaction.
-
-Relcaim and compaction are required by mempolicy because otherwise
-order-N allocations cause unpredictable out of memory conditions due
-to fragmentation.
-
-Demotion and NUMA balancing support are deferred to a later series
-but can be trivially support to allow demotions from HBM to DRAM
-as a way of cheap tiering.
-
-Every common node carries all three, so the existing N_MEMORY_COMMON
-users that mean "reclaim" or "compaction" move to the new states.
-
-Service support:
-
-  45-46 N_MEMORY_COMPACTION, and compaction switched to it
-  47-48 N_MEMORY_RECLAIM, and reclaim switched to it
-  49    madvise reclaim advice only for reclaim-capable memory
-  50    memcg reclaim also visits private nodes that permit reclaim
-  51    N_MEMORY_MEMPOLICY
-  52    explicit migration acts on N_MEMORY_MEMPOLICY memory
-  53    N_MEMORY_MEMPOLICY memory counts as general-purpose.
-        MemAvailable (free and file pages) and dirty limits count
-	only common memory.
-  54    MPOL_F_PRIVATE_NODES: mbind() flag that binds a mapping to
-        one private node.
-  55    migrate_pages() support for N_MEMORY_MEMPOLICY nodes
-
-Creating a private node
-
-  56    memory hotplug of private memory, with a feature mask
-  57    dax/kmem private mode
-
-Testing and Documentation:
-
-  58-60 selftests: private kmem devices and services, memory policy
-        bindings, migration and exhaustion, and cpuset interaction
-  61    Documentation/mm/numa_private_nodes.rst
-
-MPOL_F_PRIVATE_NODES is new uapi. Without it, private nodes in an
-mbind() mask are ignored, similar to nodes outside the cpuset.
-
-libnuma and numactl need a matching change to reach private nodes.
-
-There is no sysfs list of the nodes that accept private bindings.
-userspace can probe with MPOL_F_PRIVATE_NODES.  Otherwise - we can
-discuss how service support should be discoverable to userspace.
-
-Memory hotplug is the only source of private memory right now.
-
-All System RAM on a node shares one configuration: hotplug with a
-different one fails with -EBUSY.
-
-Costs and known limits
-======================
-
-  - ZONELIST_PRIVATE is a third zonelist per pgdat; with NODES_SHIFT=10
-    that is about 80KB per possible node, though a private zonelist
-    holds at most one node's zones.
-
-    local-only zonelists can be space-optimized if this matters.
-
-  - Free page reporting reports free private pages like any others.
-
-  - Tasks are OOM-scored by all of their resident memory,
-    private pages included.
-
-Changes since v5 ("Private Memory NUMA Nodes")
-==============================================
-
-  - Reordered so the N_MEMORY audit (patches 1-26) comes first and can
-    be reviewed (and merged) on its own if desired.
-  - Capabilities became memory features with node states, so a service
-    can be written in terms of itself: reclaim walks N_MEMORY_RECLAIM,
-    compaction N_MEMORY_COMPACTION.
-  - The capability set is pared down to COMPACTION, RECLAIM and
-    MEMPOLICY for the first run.  DEMOTION, NUMA_BALANCING, and
-    compressed RAM support are deferred.
-  - The private zonelist is now local-only. A fallback variant can be
-    added if a use case needs one.
-  - cpuset and OOM semantics are worked out:
-      - cpuset.mems governs private nodes
-      - private-only request inherits the parent's common nodes.
-  - Private bindings are an explicit uapi flag, MPOL_F_PRIVATE_NODES,
-    rather than inferred from the nodemask.
-  - Exhausting private placement fails the fault with SIGBUS, as an
-    exhausted HugeTLB pool does, instead of invoking the OOM killer.
-    OOM support can be added later, but this keeps initial support
-    reasonable simple.
+The build_local_zonelist() refactor lets us reuse the code to build
+a local-only zonelist for nodes outside the N_MEMORY_COMMON set later.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
-Gregory Price (Meta) (60):
-      nodemask: add node-state iterators
-      mm: publish and clear node memory states via helpers
-      mm: introduce the common-memory node state
-      mm/page_alloc: build zonelists from common memory
-      mm/mempolicy: keep interleave and tmpfs mount policies on common memory
-      mm/memory_hotplug: migrate offlined pages to common memory
-      mm/memory-tiers: restrict demotion topology to common memory
-      mm/migrate: reject move_pages() destinations outside common memory
-      mm/damon: reject migration destinations outside common memory
-      sched/numa: restrict NUMA migration targets to common memory
-      fork: check cached stack locality only on common memory nodes
-      mm/vmscan: restrict reclaim to common memory
-      mm/compaction: restrict compaction to common memory
-      mm: base hash distribution on common memory nodes
-      mm/page_alloc: count common memory nodes for kswapd recovery
-      mm/oom_kill: compare OOM constraints against common memory
-      PM: hibernate: size the image from common memory
-      mm/khugepaged: base the recommended min_free_kbytes on common memory
-      mm: add folio_is_common_memory() and page_is_common_memory()
-      mm/ksm: restrict merging to common memory
-      mm/khugepaged: restrict collapse to common memory
-      mm/mempolicy: don't NUMA-hint folios outside common memory
-      mm/damon: restrict DAMON-native folio operations to common memory
-      mm/madvise: restrict reclaim advice to common memory
-      mm/mempolicy: queue only common memory for mbind() and migrate_pages()
-      mm/migrate: leave pages outside common memory in move_pages()
-      mm: add the private-memory node state
-      mm: select memory features per node
-      mm: keep private memory out of the system memory totals
-      mm/memory_hotplug: keep private memory out of the auto-movable ratio
-      cgroup/cpuset: inherit common memory when a nodemask is private only
-      cgroup/cpuset: keep spread page cache off private nodes
-      cgroup/cpuset: ignore private nodes when matching OOM victims
-      mm/mempolicy: don't rebind policies onto private nodes
-      mm/mempolicy: keep private nodes out of migrate_pages() destinations
-      mm: refuse explicit reclaim and compaction of private nodes
-      mm/page_alloc: keep private memory out of reclaim reserves
-      mm/page_alloc: refuse contiguous allocation from private memory
-      mm/page_alloc: add a private-node zonelist
-      mm/page_alloc: let MM callers select the local private zonelist
-      mm/page_alloc: relax a private request whose node becomes ineligible
-      mm: fail private placement on exhaustion instead of OOM killing
-      mm/page_alloc: fall back when a bind policy's nodes become private
-      mm: add N_MEMORY_COMPACTION node state
-      mm/compaction: restrict compaction to N_MEMORY_COMPACTION
-      mm: add N_MEMORY_RECLAIM node state
-      mm/vmscan: restrict reclaim to N_MEMORY_RECLAIM instead of N_MEMORY_COMMON
-      mm/madvise: restrict reclaim advice to reclaim-capable memory
-      mm/vmscan: reclaim private nodes for memcg
-      mm: add N_MEMORY_MEMPOLICY node state
-      mm: restrict explicit migration to N_MEMORY_MEMPOLICY
-      mm: count memory with userspace placement as general purpose
-      mm/mempolicy: add MPOL_F_PRIVATE_NODES for private node bindings
-      mm/migrate: route explicit NUMA migration to private nodes
-      mm/memory_hotplug: online and offline private memory nodes
-      dax/kmem: add a private memory mode
-      selftests/dax: test private kmem devices and services
-      selftests/dax: test memory policy on private nodes
-      selftests/dax: test cpuset interaction with private nodes
-      Documentation/mm: describe private memory nodes
+ mm/page_alloc.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
- Documentation/ABI/stable/sysfs-devices-node        |  27 +
- Documentation/ABI/testing/sysfs-bus-dax            |  19 +
- Documentation/admin-guide/cgroup-v1/cpusets.rst    |   7 +
- Documentation/admin-guide/cgroup-v2.rst            |  13 +-
- .../admin-guide/mm/numa_memory_policy.rst          |  22 +
- Documentation/mm/index.rst                         |   1 +
- Documentation/mm/numa_private_nodes.rst            | 223 ++++++++
- Documentation/mm/physical_memory.rst               |  25 +-
- drivers/base/node.c                                |   9 +-
- drivers/dax/kmem.c                                 |  55 +-
- include/linux/memory_hotplug.h                     |   2 +-
- include/linux/mmzone.h                             |   6 +-
- include/linux/nodemask.h                           |  74 ++-
- include/linux/sched.h                              |   2 +
- include/linux/swap.h                               |   4 +-
- include/uapi/linux/mempolicy.h                     |   4 +-
- kernel/cgroup/cpuset.c                             |  85 ++-
- kernel/fork.c                                      |   2 +-
- kernel/power/snapshot.c                            |  15 +-
- kernel/sched/fair.c                                |   2 +-
- mm/compaction.c                                    |  10 +-
- mm/damon/core.c                                    |   5 +-
- mm/damon/ops-common.c                              |   7 +-
- mm/damon/vaddr.c                                   |   2 +-
- mm/huge_memory.c                                   |   2 +-
- mm/internal.h                                      |  71 +++
- mm/khugepaged.c                                    |  20 +-
- mm/ksm.c                                           |   8 +-
- mm/madvise.c                                       |   6 +-
- mm/memory-tiers.c                                  |  23 +-
- mm/memory.c                                        |   5 +
- mm/memory_hotplug.c                                | 120 ++--
- mm/mempolicy.c                                     | 165 ++++--
- mm/migrate.c                                       |  15 +-
- mm/mm_init.c                                       |  20 +-
- mm/mmap.c                                          |   6 +-
- mm/nommu.c                                         |   4 +-
- mm/oom_kill.c                                      |   7 +-
- mm/page-writeback.c                                |   7 +-
- mm/page_alloc.c                                    | 199 ++++++-
- mm/page_alloc.h                                    |  22 +-
- mm/show_mem.c                                      |  49 +-
- mm/vmscan.c                                        |  58 +-
- tools/testing/selftests/dax/.gitignore             |   3 +
- tools/testing/selftests/dax/Makefile               |  10 +
- tools/testing/selftests/dax/config                 |   6 +
- tools/testing/selftests/dax/kmem_private.sh        |  94 ++++
- tools/testing/selftests/dax/kmem_private_cpuset.sh |  70 +++
- tools/testing/selftests/dax/kmem_private_policy.sh |  58 ++
- .../selftests/dax/kmem_private_policy_tool.c       | 620 +++++++++++++++++++++
- tools/testing/selftests/dax/kmem_private_rebind.sh | 301 ++++++++++
- .../selftests/dax/kmem_private_rebind_tool.c       | 495 ++++++++++++++++
- .../testing/selftests/dax/kmem_private_services.sh |  97 ++++
- tools/testing/selftests/dax/private_node_common.sh | 268 +++++++++
- tools/testing/selftests/dax/settings               |   2 +-
- 55 files changed, 3249 insertions(+), 203 deletions(-)
----
-base-commit: 15f114dac9a7bde1796f0e54e22726fd31cfa8a5
-change-id: 20261120-private_nodes_v6-64d04596e126
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index ddb04b72a160..0448d04e048a 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -5947,17 +5947,14 @@ int find_next_best_node_in(int node, nodemask_t *used_node_mask,
+ }
+ 
+ 
+-/*
+- * Build __GFP_THISNODE zonelists
+- */
+-static void build_thisnode_zonelists(pg_data_t *pgdat)
++/* Build a local-only zonelist when this node is eligible. */
++static void build_local_zonelist(pg_data_t *pgdat, int zlidx, bool eligible)
+ {
+-	struct zoneref *zonerefs;
+-	int nr_zones;
++	struct zoneref *zonerefs =
++		pgdat->node_zonelists[zlidx]._zonerefs;
+ 
+-	zonerefs = pgdat->node_zonelists[ZONELIST_NOFALLBACK]._zonerefs;
+-	nr_zones = build_zonerefs_node(pgdat, zonerefs);
+-	zonerefs += nr_zones;
++	if (eligible)
++		zonerefs += build_zonerefs_node(pgdat, zonerefs);
+ 	zonerefs->zone = NULL;
+ 	zonerefs->zone_idx = 0;
+ }
+@@ -6001,8 +5998,12 @@ static void build_node_zonelist(pg_data_t *pgdat, const nodemask_t *candidates,
+ 
+ static void build_zonelists(pg_data_t *pgdat)
+ {
+-	build_node_zonelist(pgdat, &node_states[N_MEMORY], ZONELIST_FALLBACK);
+-	build_thisnode_zonelists(pgdat);
++	int nid = pgdat->node_id;
++
++	build_node_zonelist(pgdat, &node_states[N_MEMORY_COMMON],
++			    ZONELIST_FALLBACK);
++	build_local_zonelist(pgdat, ZONELIST_NOFALLBACK,
++			     node_state(nid, N_MEMORY_COMMON));
+ }
+ 
+ #ifdef CONFIG_HAVE_MEMORYLESS_NODES
 
-Best regards,
 -- 
-~Gregory
+2.56.1
 
 
