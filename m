@@ -1,100 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.53
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.46
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795157212;
-	b=PCKEY8SuMDcZwafg+fymGOEGwFvlaV73hBlhsjAJWH0AWuu4B5V6OBfpP2bgRCrwEXbJ
-	 dWXV2J3uWtLUB05Vs37kVaaX29a7KtPLr3ZP1VY5B0bMXQL5rR2Ecdik9f7IeKmNn2F7c
-	 dkebJTG/UZh+hom9PkuFvVSQOduiyyFWFz5+tnU6RRzpnDsozujxRq4VvF6jUuIuq91wS
-	 SD69MVXbzTQhcwbgb+v2qEWOMmiFdN1pDHB6ekNeuJJKLee7e8c8WbATnisis8yZ3bbzg
-	 Sqm8p85PdEnQngNh9Mu0zpxS2k2SfuM4TePpKfNAkzt6Tzu8BrTeLvMyX20Tm1ksrJg==
+	t=1795157343;
+	b=tQX5MjlUz1K2azBmKQsXWgSWRGmicIT1syXml6AKWQkv+4dZvfXxOjhiHLLcSnjf3NTs
+	 Ouy0MSC7w7K52jcy5S62meO2ZSpGwAO9fdqgMf20mLg1oHoPL40rJpAbi/7PQGUeaOblO
+	 cFSo/vKAMCT+Cz0ZzDI/fozeCuPfpY0BxUj5Jkgup3Cci+7klrmS2IsULS+YL0R5foT5Y
+	 CuZ/e+YNIAo8Mu735dOeGeq445WNJIVeznwH+GCEbGGa57sfIYF16U+wu0x/6bYB00zLG
+	 gsaNigGdXIXuRkMUq4urdy5NAATp3pdfqNAZjt9Ph3GPoDM9hpDXW+a6sHpbcCH70tQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795157212;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795157343;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
 	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
 	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=yh5Pw6Ns7Cwi6C95SoPvU5P8PiEbr6Awtt6kTXpPyU8=;
-	b=bq7hAfAPZ71uDQ8euSBpmEdJaP0sjiBgzojuuxN4ujPaV+3ICxaF6shkBDczYj7/84Z0
-	 PrnXBxXF3g9Z/WZTug+qGaHLHi/TSbP5Cb0KADfStC/pb/hp5IowfASRhyLhiTKXG5AuY
-	 n5fAP3D4mT4EJiBGbeAWR331iFR4xofuBU+bWFJu0YdzOhB8IfeH8ZdOOqM0NQvbsodOC
-	 nGNrAq8B5VAHcpUM6f0I+Kuvsbv9NhfhXXE3OGMrLJvaM6J6C0ku9GdIwBYLt7Duk60Eg
-	 RMpVgHX5FtJbenmiVBGnFKfg7z6q3N6ODOMmKZ+xVyPCbgUyKDqLxbVfNoja0Zt/Pbw==
+	bh=n+lyQHOp4KoneVTmx0lXKvEiHfZq/Kgi2CNuQIZ6Z14=;
+	b=nujokC4v1tDWUgxHG+GoTKFpAeHPtdsCx0gNrUlBUtR5md0wtv9R5lCLGz1arwadZJ5F
+	 Vw/c/K+tLTNmiAhGblI9bQweZsu8P4PIDuwFSDWfQRrQRUZGqMgIQj8VqKQ/rqbXbZ72d
+	 cpzZ8Rzr7Di/bRyeEbex3znTCaZ3jrtYslVhxmEhfXwTnN4NCb4h3C6hX0Djm7UheC9Ch
+	 B4XMUeybtI6ev34rUiMUQJ40uGX3zt10KNai7tnEZRQLgWU7NzSXB/mtUYfgSOlP9KNtk
+	 kzZWN3D+/jyaBYs7559k68Exn4W/NC710tTkwKoEtmZC1qnkCsTrJdHHQpBLk95pPCQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=zivbYnhf;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.53
-Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=iK4tFHA5;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.46
+Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09E1C606A332
-	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 06:46:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 09E1C606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 541DE606A320
+	for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 06:49:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 541DE606A320
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=zivbYnhf
-Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4bb61185057so3727925e9.1
-        for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 22:46:51 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795157210; cv=none;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=iK4tFHA5
+Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4a1fbd52ab6so3576955e9.0
+        for <cgroups@vger.kernel.org>; Thu, 19 Nov 2026 22:49:03 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795157342; cv=none;
         d=google.com; s=arc-20260327;
-        b=EeoAo1MtLrZrGcsEH+iGREEVYIIr264h7QnFa244ZWcCo7s+MjEJjU0uJ244QeeU+1
-         k6Lv7OjHd3Y8InH5l1MnVhrEfSZ15tbJQ0X6t5kXEAu07fRTiT7RQBvCRcRbf14tEH4i
-         w5FuHRjMaRKDCheuC0roUGPWyf6S/htfkKq+wYyOW10sSoaGji7u4EjJVdsfVOAxAajP
-         i0dmMvuKq4dHe2snfvPWGBzwuydlM/jiwMyT0/Wt/U8T2U68NDoWfhGzQJ2DtZ2tnd1V
-         imjen48wQCNBGrQIvvb0RKRBTUqa4HVDUeqUIKw5tHE4qCs3B7WBEWhgd1QRKEypbP5G
-         9zhQ==
+        b=BycZjXxlXHt86rfv5QN4wY4cA2AO2H7z1gPM9m/BG1uTGDxUI8NhrksgWDg+sAisTL
+         LX95nqtJdT8MlPaG849VvJYu0mUocnenxO7mzVijdlfqGarviaRAW+0lWoITR1D7nzZ9
+         0wx45PYP/1u8Eh86Txhj2j0QvLKpAuD/D9pJclClbygctNVgkOhjPkC3kl4pmyjs8e1+
+         jLnENNdmR4LiKxoi/WUaDUr7AILe3z3axFLhTaLMJ9LXVRpN4+u50Q+CFsVYujTe/X22
+         gqwMEnNqoFmuT/SXWUgGv+5mMPJaCWggcfinjVR05LYvtOv12sLqkPAdyUmDThS9ZeBp
+         FArw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:dkim-signature;
-        bh=yh5Pw6Ns7Cwi6C95SoPvU5P8PiEbr6Awtt6kTXpPyU8=;
-        fh=utx2N16ws8NUvsnadVxtzP9SbC9qlpVfScOew5Pffy4=;
-        b=L3KQVC9RrEHxO0ssq+VIhtXIuyJj8PDArb9FGXW3qA5VSkwDl+IjTidks2nwKmWW2z
-         arpcempOeq4ania/0TK5FhzWDggN5KYwyFxu4WQ6lHZYNktATjt2taldv8w21QHaYXR8
-         3KCzV3Nc7Ad7bpjVqtGB1UHFyVgw9xMgTWEqW+ASdzFXofhHjJTdGrs48wlsIeHDmTH1
-         durmkU/+Ca7Xc6/VyvnGjrMaD3GAaWcT/1bSYgB1nvEVdIbYdcbyOGj3iAevfysRoFe9
-         RgLtr9Hyvb2Hb+gqEdxuKZFb7s0oOueSvIg2ZxlpI27uFx91rogJks471/xs+dkXDcUs
-         kxYQ==;
+        bh=n+lyQHOp4KoneVTmx0lXKvEiHfZq/Kgi2CNuQIZ6Z14=;
+        fh=NJ5v0gvGx9pPaUWYNyCnDwyH+RdtsKcA+Qc8E+s5YH4=;
+        b=dxN3OmOQx7tvhon1Qpwl40WLvNNPo1t572kYw50QH62Q0mVUUIGOIM9YKbAdNPmgdj
+         AgQ1qCknseVGYHe/gUxX3HW2zBHRF6RWZ07PeM0eYRblMrRHbkbnNhj98qzqxxC30wHM
+         E/fMVh/H8UBt4HBJjDnr0WB97iBvPvGV0FdZUyIqrEa+jKDE/sfpLnV1ICUtQCESt1Wj
+         t5Qw3TC8okYobJkI2rDGpn9Bsb8+N7rwVSuSkwfVkcAVHhorthlBSDabfRUJpRmpuKPP
+         vfZztMKOi3BitUuCNkmNIUPQ5z8VFwep0oE2xfvesE7vPMQkTfA9oW9h/Eg5XzPDjUcf
+         imoA==;
         darn=vger.kernel.org
 ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795157210; x=1795762010; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795157342; x=1795762142; darn=vger.kernel.org;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=yh5Pw6Ns7Cwi6C95SoPvU5P8PiEbr6Awtt6kTXpPyU8=;
-        b=zivbYnhf7owyhLTE/5r/3aaw/bfE0rS6phVAheDTlD1J2Z6uqpq4g6KsP58ymMF2Zj
-         TIXryv4Hy4jvD3EM5bKVHmeE60oQ0ynXdNGs9wSf7TZz2xm/1scPEl2sByeUr1TASlkt
-         rhAD14HyjDHTkyeO5pjjVRBjaqf0aHqRUIXqoRdhsioFM8Emw6BpunKijQDt/PlCA8nM
-         22W6PdeMWclJF1fChbGE/+yGZMH/Tu/NB/Ivty4T020IcszE7Gp7BRCMbWGz4ra9kqdX
-         DK9xzcXlSv65x+g/bA97b7VzBTFz909LQr2+v/uTns0prBkmHAmY++7fqhmk0ihKVXWa
-         4l9Q==
+        bh=n+lyQHOp4KoneVTmx0lXKvEiHfZq/Kgi2CNuQIZ6Z14=;
+        b=iK4tFHA5Xdp7Y2lQSfMCqU2KYcvTQK8+4Nu0s87bvt85pOPJAJ1ILVdumwjVy3US9y
+         5k8cHgJbnumhHajKfHN8yy2wxq9buial9Vcjv+L0RYe4JZMGUF7CE4IhZ7C7Le48HAEN
+         5FOgUILuwNCW1Zqq2XE7uCM3HiYbLzO5MerQGNQUC0JL43nF3slvmscLkGTpe+dBbruu
+         ONyOBu1c+VKr7wAO8Fc8ET7vtMmJm8+qbDCJjUVygKDhiyFPwsW3gYgKZEuoS9l7TxfR
+         nwIH0oQhf9FNUl73+I5hxBJWeVDH+yyuRqnwRSOeh+iXizrQniF116r6vMtC8K91hcB+
+         /91Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795157210; x=1795762010;
+        d=1e100.net; s=20260707; t=1795157342; x=1795762142;
         h=content-transfer-encoding:content-type:cc:to:subject:message-id
          :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=yh5Pw6Ns7Cwi6C95SoPvU5P8PiEbr6Awtt6kTXpPyU8=;
-        b=RF4VhsBMN7ASbPy29ZggUyURAIVwTjipqIr+IslzdTeYfRA+cU7wOSMjLy5Le0ABSN
-         BjZW28LmoM1Y5SbXju9GOpiGrmM4tXdy6FodUnOMg0KpJMBbLl8d7i9biCAh44Zk5FA3
-         LWTAgRJrGFnv8YUlcuRXlfHNUp1lW3BVldlr2qumjnVhgU+1zwKs7vgpcRNu2Hl3hy2r
-         47S7ROS81H7MW8LvLCCyYdKfGOxmGrw72fC/G4+Js8ETJw8R12mWR/bXliBbdw68tqBQ
-         NsTUY0V1JvH7QkH5HHGSJymO39irLVR11RhUgLCZpcQ0GU7I+rM4rpeWSxD5cr6FD+Dd
-         y1sA==
-X-Forwarded-Encrypted: i=1; AL+hErF9kgvRd9yFaX7W/qacAvHtTxfx/dkiyc6PLbc8W4d4MBxx4OhNNPWqP6udhuKxC2mHPCZKVOpf@vger.kernel.org
-X-Gm-Message-State: APuU4Z/K+C6TfpXZTh5iWP8zE4h9lTl8D5ZLgX0IORnaiCezZzxUP6B6
-	qCrHaSAPW4NP8p+Hs3vIq/f/wkf1OYUyAz6XyQpBDZyKzkuBdnrH1wAAtIp3IsayQ/Tl9kL5/Cf
-	+phctQKcMwvyLLiKlj57TtWwPX+rTGRE=
-X-Gm-Gg: AYBFou3ZwHc/6cNjsZ0mt5zMo+TipTJ/LRLNqWLd0CuP8IikQGoFUA9f8g7WQUUkzp8
-	txk3Ao1vcGqZNXZK7BBHL//wwiEU5jkY8khxkAaDatRtZZ97rRfFJm+uCug5y0dcuAAOHSalVKT
-	axF+ABkKhVUwdpvUHoORpS1rNUpfPfQhmKjnUSi4httUhJpUbrdqExAnsARR4gv7o9O19M3rk+B
-	zXeL0VbHcMlNIC9NYOilHJF1uDO4P3mTQqFD1pAEhcvY4irXxxNlkJ4a8XyhANzHzhLU7LHC/VZ
-	i6fYQ1OUeWqNtcEeNYy9A5JcC1gesJDBHTYMXuzc3lgD1PWNNYu9uLfVDcQNibIe1vJHMY1btG+
-	OIDzSE0oAXJrmKfKKVVCRnLE9qkNJ2TULMT1PQp/ar0slZpa/IPQNXZh+eOSMB/GK
-X-Received: by 2002:a05:600c:1c08:b0:4bb:7757:fe6d with SMTP id
- 5b1f17b1804b1-4bb88804c5fmr50882955e9.11.1795157209745; Thu, 19 Nov 2026
- 22:46:49 -0800 (PST)
+        bh=n+lyQHOp4KoneVTmx0lXKvEiHfZq/Kgi2CNuQIZ6Z14=;
+        b=OoKhyX/n/+Jw3ngBuCj6olfACCGizz2qvHhkpTphV61K4s/tvylyIIgclVW1ohVoW/
+         YLvCEqrSMXtSzaQsEdvOlL4M3t7NEMwNdcKTbiEolUKj8uzoUjJ2xqho9kTt4a2XlPLs
+         5DmUFCe4XJZVTw4NZGTgefzqpxQHJH3zSsQ9N4pvraArFuaqOkcHkn6eqmWpQ0kS3UqF
+         gKW/USv6Jg5qci9TqfFDyFv19ngEwB4Z4W0wbebRXZnNQGeILdF7gkBVQ05XWEjhG4IL
+         uVqWcFea1nUF6/UVklh5aPgL9iOkDHTzvnidePvQN+Y6bIw7H8c9DkAVuKY5sz3cY3ny
+         Eokg==
+X-Forwarded-Encrypted: i=1; AL+hErFhK6pxhy/utuLmrAcYwiZN3tT34xxLKhcaOie99TtKA84RC14W35Wsyq22XyscOFfinGKP7Mbe@vger.kernel.org
+X-Gm-Message-State: APuU4Z/1NIbPjiiNhgGElQcM7Ecq6O2plqdRa9oyXnWHpQC1mwotY15s
+	UHrwjEJhGezuYLWNw6ZnRdG1AHt19Gj4tnAJc57iraBF5vCfI1uWyCPzzZ1fDaHd0S2uPB3BNxp
+	4YPga4phY43OThRNON4H26R3Sf+Nx8IQ=
+X-Gm-Gg: AYBFou0ovBTkaduN6FmJjOPg6t4w0A+EYRTEwgZZnDwcBjYm05CnimZWEO/9t4pI4zR
+	2OUynEgWsLoNyeEWRatsLVp60cn6zl95g2eDwwSL1DZqNkClyH2buYRTktl3SWInTmz149eSjVq
+	ETg7QpXuh7Km1iVt3Z1rrgMfD5S1ONfEzFYabolzQj15W1rSYP41me03fSEgl/dUJw5Jl7EJJUM
+	YRRR/3ykE+811u/+TKw5nesS+pJpD2i+2aEJW5TZxGa7DQT5IMAg/fGgmbKEzUZ8pxzTwXyO5D9
+	XdWONnRYWnhKPn5koNjVRSUFh86Lom08UHA6WQbkjbFcCKfFBM0zMr1K9Jy+GhXUD1pjNzOoX42
+	yoHjWVIzxqY6lEwHTrtEtDggOYjSS7e3iWu40zuQigswobU7G7SeB3WBWEJUHPXTNfw==
+X-Received: by 2002:a05:600c:3d05:b0:4b8:d17e:da27 with SMTP id
+ 5b1f17b1804b1-4bb88930872mr41310625e9.27.1795157341259; Thu, 19 Nov 2026
+ 22:49:01 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,13 +104,14 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com> <20261119-mglru-fg-v5-1-9eee2fe97a2d@tencent.com>
-In-Reply-To: <20261119-mglru-fg-v5-1-9eee2fe97a2d@tencent.com>
+References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com> <20261119-mglru-fg-v5-2-9eee2fe97a2d@tencent.com>
+In-Reply-To: <20261119-mglru-fg-v5-2-9eee2fe97a2d@tencent.com>
 From: KunWu Chan <kunwu.chan@gmail.com>
-Date: Fri, 20 Nov 2026 14:46:37 +0800
-X-Gm-Features: Aa3M54q6diJBPt5X49YJ4xjQARO39_f1G-0YmFpyFCjvJebbL7DyzQ2TCjNUNR8
-Message-ID: <CAN_Opa9Gu56Tdx2WVrYZU95BrHdGg0+gf2mpv25gM7WCRULJ0g@mail.gmail.com>
-Subject: Re: [PATCH v5 01/17] mm/mglru: rename the generation offset in lru_gen_folio_seq()
+Date: Fri, 20 Nov 2026 14:48:47 +0800
+X-Gm-Features: AclHuK_tpistnJ8n9EgGJGhoSv7JK71sLxGmAZ5e78h-Lbf9KixLF9WGl76rLxw
+Message-ID: <CAN_Opa-7j854ph6e7Ckmq6UgmmQerxF8V-ikSr9JNyTAHZCxdw@mail.gmail.com>
+Subject: Re: [PATCH v5 02/17] mm/memcontrol: allow update of LRU statistic
+ without holding LRU lock
 To: kasong@tencent.com
 Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
 	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
@@ -146,71 +147,38 @@ Kunwu
 On Thu, Nov 19, 2026 at 5:03=E2=80=AFAM Kairui Song via B4 Relay
 <devnull+kasong.tencent.com@kernel.org> wrote:
 >
-> From: Ridong Chen <chenridong@xiaomi.com>
+> From: Kairui Song <kasong@tencent.com>
 >
-> lru_gen_folio_seq() computes how many generations below max_seq a folio
-> should be added to, but stores it in a variable named "gen". Elsewhere in
-> MGLRU "gen" means an index into lrugen->folios[], i.e. seq % MAX_NR_GENS,
-> so reusing the name for a relative offset is confusing.
+> To enable moving file pages in folio_mark_accessed directly and lazily
+> for MGLRU, allow updating the LRU statistic atomically without holding a
+> lock. It may cause temporary counter underflow, which should be fine as
+> the counter is eventually consistent and only serves as an estimate.
 >
-> Rename it to "age", which matches what the value means: the newest
-> generation is age 1, and a larger age is an older generation.
->
-> No functional change.
->
-> [kasong: dropped the comment table part, the series rewrites it]
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
->  include/linux/mm_inline.h | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+>  include/linux/mm_inline.h | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 >
 > diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-> index f6f4bc9a704f..2395ca8ee305 100644
+> index 2395ca8ee305..2edb9beef6d3 100644
 > --- a/include/linux/mm_inline.h
 > +++ b/include/linux/mm_inline.h
-> @@ -302,7 +302,7 @@ static inline unsigned long lru_gen_folio_seq(const s=
-truct lruvec *lruvec,
->                                               const struct folio *folio,
->                                               bool reclaiming)
+> @@ -47,12 +47,11 @@ static __always_inline void __update_lru_size(struct =
+lruvec *lruvec,
 >  {
-> -       int gen;
-> +       int age;
->         int type =3D folio_is_file_lru(folio);
->         const struct lru_gen_folio *lrugen =3D &lruvec->lrugen;
+>         struct pglist_data *pgdat =3D lruvec_pgdat(lruvec);
 >
-> @@ -319,17 +319,17 @@ static inline unsigned long lru_gen_folio_seq(const=
- struct lruvec *lruvec,
->          * |<---------------------------- MAX_NR_GENS -------------------=
---------->|
->          */
->         if (folio_test_active(folio))
-> -               gen =3D MIN_NR_GENS - folio_test_workingset(folio);
-> +               age =3D MIN_NR_GENS - folio_test_workingset(folio);
->         else if (reclaiming)
-> -               gen =3D MAX_NR_GENS;
-> +               age =3D MAX_NR_GENS;
->         else if ((!folio_is_file_lru(folio) && !folio_test_swapcache(foli=
-o)) ||
->                  (folio_test_reclaim(folio) &&
->                   (folio_test_dirty(folio) || folio_test_writeback(folio)=
-)))
-> -               gen =3D MIN_NR_GENS;
-> +               age =3D MIN_NR_GENS;
->         else
-> -               gen =3D MAX_NR_GENS - (folio_test_workingset(folio) || fo=
-lio_test_referenced(folio));
-> +               age =3D MAX_NR_GENS - (folio_test_workingset(folio) || fo=
-lio_test_referenced(folio));
+> -       lockdep_assert_held(&lruvec->lru_lock);
+>         WARN_ON_ONCE(nr_pages !=3D (int)nr_pages);
 >
-> -       return max(READ_ONCE(lrugen->max_seq) - gen + 1, READ_ONCE(lrugen=
-->min_seq[type]));
-> +       return max(READ_ONCE(lrugen->max_seq) - age + 1, READ_ONCE(lrugen=
-->min_seq[type]));
+>         mod_lruvec_state(lruvec, NR_LRU_BASE + lru, nr_pages);
+> -       __mod_zone_page_state(&pgdat->node_zones[zid],
+> -                               NR_ZONE_LRU_BASE + lru, nr_pages);
+> +       mod_zone_page_state(&pgdat->node_zones[zid],
+> +                           NR_ZONE_LRU_BASE + lru, nr_pages);
 >  }
 >
->  static inline bool __lru_gen_add_folio(struct lruvec *lruvec, struct fol=
-io *folio,
+>  static __always_inline void update_lru_size(struct lruvec *lruvec,
 >
 > --
 > 2.56.1
