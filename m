@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795207380;
-	b=wCu+UUM1Fp8whbKnC+xn2tYZwrZAU5Fw9lU1PYPKHmM8hzWdJbfjXCt8ombPqv+Xm22m
-	 tYcknBiCjA76ff+oMoJ9oYs9tdKUhFr8neQS6h6A7UsxZDhArHBQ8DMQGefb8oXJnS7lx
-	 wrkNYbKVGnZ7bpFdxn21F3jrTCVrqW3G0xGBooCfwnEAjyJZfAeubmNAVCDroaZp+CndC
-	 ZMGE66uFFtR6Qgu0W0fIkAewRKg2KkjoGKi/HaHbWQDD4d7tzvYknVZ0TEXn9O7T2dL41
-	 sy1RHscYToT/m2XenHRqM4lhOrv3FdIxcRQAdJ0P10sGt/WL04ZHfpXIT7HgNpUz8mQ==
+	t=1795207376;
+	b=w/w3HcvUbFIW08/J7L+TWAWtJU4y9ZvO20eP4MkOQut7JAYUDKxBUV+zJc3c5nSlw/Oo
+	 u4fKfEe3inEmXSw/ZuDXU+EqnlHzSL37f4VcXmdUnVbBshy+SmTNK4tHJUVzcT/g+yh5Q
+	 gu0lCAeIDtUm0F1yY/vFmk2mvd5+C4Jd5iBxa8trOOtYboazwcGkbwqNQZYZXfMfNgTlD
+	 hITeI9MgEV7t3Rx0vGFcGoB9ohEX7Uh8nUhEUHQJEXkKG/lFiHMG4lba6c+TmdjZUIing
+	 oG5jmgCw1NT6+fz0uXM3XPw0j4p39gmpWTsEnSjye9Vm5dyCL//1o+kQYYRvhAy4Eww==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795207380;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795207376;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=N9AFqlIsubfpiJU+ECUmSG600WpCP3iDHPL5wV10F9I=;
-	b=1Ngxfj0QwGZMmbG7hjnE8g8NRYMsoSbuMLtfuH64SRfcICZSCtxUy3P9pF4BMeVYQb0y
-	 WIyK1Qmwmws+/4ntH3J66Z/taA0ADQg1Y8o6HeySr7WkBz5360tjIz/S10a7MKamPGCFp
-	 cVxRjEdtCV5LEPo1uQ9M+JsoVKKJSobV9fvyYivai8BMrYEHsLGCbFOVL0b0lcgU3cITf
-	 axtKDl/6KCA318erkv9uitTcQ+qffCDWVfmeWKcP1Dn+Nz0WDABzBGluFGd9AuplWUxFm
-	 2lHHkAZlXMgLjdCZaUnt/lxn08EZFw/DopIHSzDBLUNlnYyhtpNNJtm/t8iBUXkdIfw==
+	bh=L7CY1AiM6Bl47j/TqIU6+buC9sJguo7v9T9/RAWf5lg=;
+	b=l9Avu9THWHmnhH4yTuoKG0Dv8oMV6a4EmLdaHGISyK8vvtvxVFA9/IsmB7WijN2I15XO
+	 K/D3y5RcDxqinNFb2tDldXvspq+mufW8xucqDuBSmku7txX3WFlHaXlXgsTwbf+FXCiau
+	 ufChOU+/n8RADV7XxHms1FUDfbeoGlJa44IddkHHZFWDkfXBPxWDjRwdp5VlibZJJHUmr
+	 SnK+VYyS2sNhmc7YVSS4m+fPimjGEuXPEkbx1+SJPLi5DwC9LUzLxlz2WceXueBQ+Sun+
+	 7SistfODtq88GPzoFLVtPEvXxx3seGHpSMfGjsh4tVqQBlQhrJgMdzpn4OUHTNLNNZg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=X3K+W153;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=GGWo+5va;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74F36606A8F5;
-	Fri, 20 Nov 2026 20:42:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 74F36606A8F5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C8E60A5BCF;
+	Fri, 20 Nov 2026 20:42:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 29C8E60A5BCF
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=X3K+W153
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=GGWo+5va
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795207354;
-	bh=N9AFqlIsubfpiJU+ECUmSG600WpCP3iDHPL5wV10F9I=;
+	s=smtpout1; t=1795207360;
+	bh=L7CY1AiM6Bl47j/TqIU6+buC9sJguo7v9T9/RAWf5lg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=X3K+W153AcgwGFNAJTAtHwF/TDpJVXl6HlMOGquUY3Quk56OZTtURK7QOJqSh3UDh
-	 0Yvofa1RDWfCpXj9R0r9JX1UKHKzEOfhEgafPF8CAaaNFHyeKpEJtix0KlsaE2zvNd
-	 w2fDVvSeDs+kxJLEfqHDWOABbaqdscvmOozUa7CVf9Vd/8mceRtqUCrtZiAy0C52wc
-	 xoq+JgRUhEl8Cp6TKzkI6mGRyh+nZ/bjjDSt1z7NKyTkfWRa5xObHRB4LEOhpMMPeq
-	 1BBT4QvfOD8GadJ/xO7qZZKgkBKKQB3JS92vkTEg0BCUmq7h0oNIk6gaUBkmdUHyH7
-	 9ZiZZk+cJRcrw==
+	b=GGWo+5vaGGoA55LjNHU+aUeIIKqSNRowV4QlSNs3W1YsGjiHjlt0YvS6+fnBI8uMl
+	 LdG4x4n1WGDLopG3fzTVe/uvssGDOQGkIzJdG4e5/oUOPSlFxWDxPD6QKBKBNkWwKA
+	 jm+zh+cmhFMeLVrgCC1atiFoDyWW7RUK96tQi4aDtQsA6hSpvwhP8HB6zd7wMr6QkL
+	 hHXJksseYY9uASnKTtUPzwiZbK8SJv+6j3/v3+fwfrASYY4eV0iJ6gLAuhmthRPtlk
+	 TqRY5MY1o+ywqjuDeYPR0tuMxLvzkOuQ5MesfGVPHlBeo5ETvbWDT1NMR1G4hHuElc
+	 B7mxp9gV593Qg==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2L5s5wzVCn;
-	Fri, 20 Nov 2026 15:42:34 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2R5vpzzSTZ;
+	Fri, 20 Nov 2026 15:42:39 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v10 16/40] sched/deadline: Keep the last CPU a task has in its root domain
-Date: Fri, 20 Nov 2026 15:41:53 -0500
-Message-Id: <efba6f58f1e0ef5cea319448374083b8149f26da.1795207232.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v10 35/40] sched/deadline: Check the runtime of a task whose parameters change
+Date: Fri, 20 Nov 2026 15:42:12 -0500
+Message-Id: <f0f5e657ac6bccc75297da3739df812adda360b2.1795207233.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
@@ -97,524 +97,337 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-dl_bw_deactivate() refuses to take a CPU offline when the rest of its
-root domain cannot hold the deadline bandwidth counted there. It also
-keeps the last CPU of a root domain that counts a deadline task. That
-test comes from commit d4742f6ed7ea ("sched/deadline: Correctly account
-for allocated bandwidth during hotplug").
+Commit 40767b0dc768 ("sched/deadline: Fix deadline parameter
+modification handling") lets new parameters take effect at the next
+period. So sched_setattr() cannot give a task a fresh runtime.
 
-That test looks at the root domain, not at the mask of each task. With
-isolcpus="domain", a cpuset that is not a partition root can hold one
-housekeeping CPU and some isolated CPUs. A deadline task in it can be
-counted in the housekeeping root domain. When that housekeeping CPU
-goes offline, the root domain keeps its other CPUs, so the offline is
-accepted. But the task has only isolated CPUs left. It runs in the
-default root domain, which did not admit it. Its bandwidth follows with
-no admission test, and the default root domain can exceed its limit.
+But admission control counts the new bandwidth at once. When a task
+shrinks its reservation, the runtime left from the old one is not
+checked against the new one. A comment in sched_dl_overflow() names
+the gap: the old bandwidth should stay counted until the 0-lag time.
 
-Refuse the offline with EBUSY in that case. Walk the deadline tasks
-counted in the root domain of the CPU. Refuse if one of them has CPUs
-left to run on, but none in that root domain. Skip the walk if no task
-holds a bandwidth. A task whose mask holds no other CPU gets the CPUs
-its cpuset has after the offline. With no CPU left in a cpuset, cgroup
-v2 gives it the CPUs of its parent, worked out from the top down. A
-partition root that holds a task and has no CPU of its own left takes
-the CPUs of a child partition instead. cgroup v1 moves its tasks to the
-nearest ancestor with CPUs. Add cpuset_cpus_allowed_without(), which
-works out the CPUs the same way. Like __set_cpus_allowed_ptr(), it keeps
-them within the affinity set by the user, if they intersect. If the
-cpuset gives no CPU the task can run on, select_fallback_rq() picks one.
-The previous patch makes it keep a deadline task in its root domain when
-it can. Skip a dead task: it runs no more.
+So a running task can shrink its reservation, and still run on the old
+one. Other tasks can meanwhile be admitted into the bandwidth it gave
+back. On v7.4-rc2, a task of 50ms every 100ms changed to 10ms every
+100ms. It ran 39ms of the next 100ms.
 
-When a partition root takes the CPUs of a child partition, cpuset makes
-that child invalid, with its own child partitions. Their CPUs then join
-the root domain of the parent, with their tasks. So a deadline task can
-change root domain even when it is counted in a root domain other than
-that of the CPU going offline. The walk above does not see it. In
-testing without this check, an offline put three deadline tasks of 40%
-in a root domain of one CPU. That is over its limit. Refuse the offline
-if one of these cpusets holds a deadline task. Add
-cpuset_offline_moves_dl() for this.
+Fix this by applying the wakeup rule after a change of parameters, as
+the previous patch does for a task that enters the class.
+__setparam_dl() marks a change of the runtime, the deadline or the
+period in dl_new_params. The next enqueue then calls update_dl_entity().
+It starts a new period, or reduces the runtime of a constrained task,
+if the runtime left does not fit. The task gets no more than a wakeup
+would give it. A larger reservation still takes effect at the next
+period.
 
-cpuset also makes invalid a partition left with tasks and no CPU of its
-own. Its tasks then count in its parent. The parent can then take the
-CPUs of a child partition that cpuset visits after it.
-cpuset_cpus_allowed_without() and cpuset_offline_moves_dl() follow
-this.
+The enqueue flags cannot tell a change of parameters: a cgroup move
+also uses ENQUEUE_MOVE. Without the mark, a task that waited behind
+others could fail the check, and get a later deadline for no reason.
 
-The offline is accepted when the CPUs keep their root domain:
-- the parent and the child partition are both isolated: the CPUs stay
-  in the default root domain.
-- neither is isolated, and the parent takes all the CPUs of the child:
-  its root domain then spans the same CPUs.
+A boosted task runs on the parameters of its donor. So it keeps the mark
+until its deboost. dl_deboost() checks it there, before
+rt_mutex_setprio() compares the task with its top waiter. Until then,
+the task has the deadline of its old parameters. So rt_mutex_setprio()
+deboosts a marked task first, even if its top waiter has the earlier
+deadline. It then compares the waiter with the deadline from the check,
+and boosts the task again if needed.
 
-When the last
-CPU left to the top cpuset goes offline, cpuset makes every partition
-invalid. Refuse that offline if a partition holds a deadline task.
+dl_deboost() leaves the check to the next enqueue in two cases:
+- a constrained task past its deadline and before its next period: the
+  enqueue throttles it first.
+- a task asleep on anything but an rt_mutex: a period started at the
+  deboost would run while it sleeps.
 
-Do not refuse during a suspend. It takes the CPUs offline with the
-tasks frozen, and the resume puts them back. Do not refuse without
-admission control either: there is no limit to exceed.
+A task blocked on an rt_mutex is not enqueued before its wakeup, but its
+waiter node holds its deadline. So sched_setattr() checks the runtime of
+such a task at once, in dl_check_blocked_params(), also when the task
+comes back to the class. rt_mutex_adjust_pi() then requeues its waiter.
+prio_changed_dl() does not check it: a cgroup move or an affinity change
+gets there too, and does not requeue the waiter.
 
-An administrator who needs the CPU offline can first give the cpuset of
-the task another CPU of that root domain. The offline is then accepted,
-and the task wakes up on that CPU: the hotplug_keeps_root_domain case
-tests this. The administrator can also turn admission control off, by
-writing -1 to /proc/sys/kernel/sched_rt_runtime_us.
+Until the check, the 0-lag time of a task that blocks mixes its old
+runtime and deadline with its new parameters. When the runtime left
+does not fit them, that 0-lag time has passed. The bandwidth is then
+released at once, as the check would do. A comment in
+dl_time_to_zerolag() now says so.
 
-The walk cannot miss a task. sched_setattr() refuses the deadline policy
-to a task whose mask does not hold its whole root domain.
-sched_setaffinity() only gives a deadline task such a mask. A mask also
-gets smaller by a cpuset change or a cpuset move, and both exclude CPU
-hotplug.
+The change_running_new_params case, added to deadline_bw_test later in
+this series, tests this. change_boosted_new_params tests a task that
+changes its parameters while boosted. Both fail on v7.4-rc2 and pass
+with this patch. deboost_new_params_reboost and boost_new_params_stale
+test the check at the deboost. setattr_blocked_new_period tests a task
+blocked on an rt_mutex. Without dl_check_blocked_params(), it took the
+lock after a waiter with a later deadline, in every run.
 
-For user-space, the refused offline is a write of 0 to
-/sys/devices/system/cpu/cpuN/online that fails with EBUSY. An offline
-that leaves each deadline task a CPU in its root domain is accepted as
-before.
-
-The case hotplug_last_refused, added to deadline_bw_test later in this
-series, tests this. Without this patch the offline is accepted. These
-cases test the other paths:
-- hotplug_user_mask_refused: the affinity set by the user.
-- hotplug_nested_refused: nested cpusets.
-- hotplug_dead_accepted: a dead task.
-- hotplug_child_partition_kept and hotplug_partition_invalid_refused: a
-  child partition made invalid.
-- hotplug_sibling_partition_refused: a sibling partition that the
-  offline makes invalid.
-- hotplug_top_last_refused: the last CPU of the top cpuset.
-
-Fixes: d4742f6ed7ea ("sched/deadline: Correctly account for allocated bandwidth during hotplug")
+Fixes: 40767b0dc768 ("sched/deadline: Fix deadline parameter modification handling")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- include/linux/cpuset.h  |  17 +++
- kernel/cgroup/cpuset.c  | 275 ++++++++++++++++++++++++++++++++++++++++
- kernel/sched/deadline.c |  72 ++++++++++-
- 3 files changed, 363 insertions(+), 1 deletion(-)
+ include/linux/sched.h   |   5 ++
+ kernel/sched/core.c     |   6 +++
+ kernel/sched/deadline.c | 106 ++++++++++++++++++++++++++++++++++++----
+ kernel/sched/sched.h    |   1 +
+ kernel/sched/syscalls.c |   3 ++
+ 5 files changed, 112 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index 5d0c01a25354..d3fceb919c46 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -16,6 +16,7 @@
- #include <linux/nodemask.h>
- #include <linux/mm.h>
- #include <linux/mmu_context.h>
-+#include <linux/sched/isolation.h>
- #include <linux/jump_label.h>
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index cbd387993607..491ddeea7d65 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -715,6 +715,10 @@ struct sched_dl_entity {
+ 	 * @dl_bw_oncpu tells if the this_bw of a runqueue counts the task's
+ 	 * @dl_bw: add_rq_bw() and sub_rq_bw() set and clear it, under that
+ 	 * runqueue's lock. Not for servers, which keep @dl_bw_attached.
++	 *
++	 * @dl_new_params tells if sched_setattr() changed the runtime, the
++	 * deadline or the period. The next enqueue that is not boosted, or
++	 * the deboost, checks the runtime left against them, and clears it.
+ 	 */
+ 	unsigned int			dl_throttled      : 1;
+ 	unsigned int			dl_yielded        : 1;
+@@ -729,6 +733,7 @@ struct sched_dl_entity {
+ 	unsigned int			dl_defer_idle     : 1;
+ 	unsigned int			dl_bw_attached    : 1;
+ 	unsigned int			dl_bw_oncpu       : 1;
++	unsigned int			dl_new_params     : 1;
  
- extern bool lockdep_is_cpuset_held(void);
-@@ -79,6 +80,9 @@ extern void lockdep_assert_cpuset_lock_held(void);
- extern void cpuset_cpus_allowed_locked(struct task_struct *p, struct cpumask *mask);
- extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
- extern bool cpuset_cpus_allowed_fallback(struct task_struct *p);
-+extern bool cpuset_cpus_allowed_without(struct task_struct *p, int cpu,
-+					struct cpumask *mask);
-+extern bool cpuset_offline_moves_dl(int cpu);
- extern int cpuset_num_cpus(struct cgroup *cgroup);
- extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
- #define cpuset_current_mems_allowed (current->mems_allowed)
-@@ -214,6 +218,19 @@ static inline bool cpuset_cpus_allowed_fallback(struct task_struct *p)
- 	return false;
- }
+ 	/*
+ 	 * Bandwidth enforcement timer. Each -deadline task has its
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 75bfde7046fb..0dce129b4146 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7966,8 +7966,14 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+ 		 *          running task
+ 		 */
+ 		if (dl_prio(prio)) {
++			/*
++			 * A boosted task that changed its parameters still has
++			 * the deadline of its old ones. Deboost it first, so
++			 * that its top waiter is compared with its new one.
++			 */
+ 			if (!dl_prio(p->normal_prio) ||
+ 			    (pi_task && dl_prio(pi_task->prio) &&
++			     !(p->dl.dl_new_params && p->dl.pi_se != &p->dl) &&
+ 			     dl_entity_preempt(&pi_task->dl, &p->dl))) {
+ 				struct sched_dl_entity *old_donor = p->dl.pi_se;
  
-+static inline bool cpuset_cpus_allowed_without(struct task_struct *p, int cpu,
-+					       struct cpumask *mask)
-+{
-+	cpumask_and(mask, task_cpu_fallback_mask(p), cpu_active_mask);
-+	cpumask_clear_cpu(cpu, mask);
-+	return false;
-+}
-+
-+static inline bool cpuset_offline_moves_dl(int cpu)
-+{
-+	return false;
-+}
-+
- static inline int cpuset_num_cpus(struct cgroup *cgroup)
- {
- 	return num_online_cpus();
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7bdb9e21a7ed..e3c42c63844b 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1126,6 +1126,28 @@ static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
- 		cpuset_force_rebuild();
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 83aefe5ab671..fe48137509ad 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -93,6 +93,19 @@ static inline void dl_start_own_period(struct sched_dl_entity *dl_se)
+ 	dl_se->runtime = dl_se->dl_runtime;
  }
  
 +/*
-+ * Set @new_cpus to the effective CPUs that @cp gets. On entry, @new_cpus
-+ * holds those that @from gets. @from is @cp or one of its ancestors. Work
-+ * down from the child of @from to @cp, as compute_effective_cpumask() does
-+ * for a cpuset that is not a valid partition root.
++ * Return true if @dl_se has a constrained deadline, and the rq clock is
++ * past its deadline and before its next period. An enqueue then throttles
++ * it until that period.
 + */
-+static void effective_cpus_below(struct cpuset *cp, struct cpuset *from,
-+				 struct cpumask *new_cpus)
++static inline bool dl_in_constrained_gap(struct sched_dl_entity *dl_se)
 +{
-+	struct cpuset *a;
-+	int depth = 0, i;
++	u64 now = rq_clock(rq_of_dl_se(dl_se));
 +
-+	for (a = cp; a != from; a = parent_cs(a))
-+		depth++;
-+	while (depth--) {
-+		for (a = cp, i = 0; i < depth; i++)
-+			a = parent_cs(a);
-+		if (cpumask_intersects(new_cpus, a->cpus_allowed) || !is_in_v2_mode())
-+			cpumask_and(new_cpus, new_cpus, a->cpus_allowed);
-+	}
++	return !dl_is_implicit(dl_se) && dl_time_before(dl_se->deadline, now) &&
++	       dl_time_before(now, dl_se->deadline - dl_se->dl_deadline + dl_se->dl_period);
++}
++
+ #ifdef CONFIG_RT_MUTEXES
+ static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
+ {
+@@ -116,6 +129,14 @@ static inline void dl_note_donor_refill(struct sched_dl_entity *dl_se)
+ 
+ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task);
+ 
++static void update_dl_entity(struct sched_dl_entity *dl_se);
++
++/* Return true if @p waits on an rt_mutex. The caller holds its pi_lock. */
++static inline bool dl_task_pi_blocked(struct task_struct *p)
++{
++	return p->pi_blocked_on;
 +}
 +
  /*
-  * tasks_nocpu_error - Return true if tasks will have no effective_cpus
+  * End the boost of @dl_se, whose task stays in the class. If the boost
+  * refilled its runtime from the donor's parameters, start a new period
+@@ -124,11 +145,22 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task);
+  * first. Without a refill, the task keeps the runtime and the deadline
+  * of its own reservation.
+  *
++ * If sched_setattr() changed the parameters during the boost, check the
++ * runtime left against them now, for the same reason. rt_mutex_setprio()
++ * then compares the result with the top waiter. Leave that check to the
++ * next enqueue for a task with a constrained deadline, past its deadline
++ * and before its next period. The enqueue first throttles it until that
++ * period: see dl_check_constrained_dl(). Leave it to the wakeup too, for
++ * a task asleep on anything but an rt_mutex: a period started now would
++ * run while it sleeps.
++ *
+  * The caller holds the rq lock and the pi_lock of the task, and has
+  * updated the rq clock.
   */
-@@ -4312,6 +4334,259 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
- 	spin_unlock_irqrestore(&callback_lock, flags);
- }
- 
-+/*
-+ * Return true if @cs holds a task, or one of its cpusets that is not a
-+ * valid partition root does. This is partition_is_populated() for the
-+ * offline path, which holds the CPU hotplug lock for writing instead of
-+ * cpuset_mutex. That lock keeps tasks from moving to another cgroup:
-+ * cgroup_attach_lock() takes it. The caller holds rcu_read_lock().
-+ */
-+static bool partition_populated_offline(struct cpuset *cs)
-+{
-+	struct cgroup_subsys_state *pos_css;
-+	struct cpuset *cp;
-+
-+	if (cgroup_has_tasks(cs->css.cgroup))
-+		return true;
-+	cpuset_for_each_descendant_pre(cp, pos_css, cs) {
-+		if (cp == cs)
-+			continue;
-+		if (is_partition_valid(cp)) {
-+			pos_css = css_rightmost_descendant(pos_css);
-+			continue;
-+		}
-+		if (cgroup_is_populated(cp->css.cgroup))
-+			return true;
-+	}
-+	return false;
-+}
-+
-+/*
-+ * Return the child partition of the valid partition root @p that the
-+ * offline of @cpu makes invalid, or NULL. Set @new_cpus to the active CPUs
-+ * that @p then has. This follows compute_partition_effective_cpumask().
-+ * The offline can leave a populated @p no CPU of its own. The child
-+ * partition that holds the last CPUs left then becomes invalid, and @p
-+ * takes its CPUs. The caller holds rcu_read_lock().
-+ *
-+ * @gone is NULL, or a child partition of @p that the offline leaves with
-+ * tasks and no CPU. It becomes invalid, and its tasks count in @p. The
-+ * hotplug walk visits the children in order, so @p counts as populated
-+ * for the children after @gone.
-+ */
-+static struct cpuset *partition_child_lost(struct cpuset *p, int cpu,
-+					   struct cpumask *new_cpus,
-+					   struct cpuset *gone)
-+{
-+	bool populated = partition_populated_offline(p);
-+	struct cgroup_subsys_state *css;
-+	struct cpuset *child, *lost = NULL;
-+
-+	cpumask_and(new_cpus, p->effective_xcpus, cpu_active_mask);
-+	cpumask_clear_cpu(cpu, new_cpus);
-+	if (cpumask_empty(new_cpus))
-+		return NULL;
-+	cpuset_for_each_child(child, css, p) {
-+		if (child == gone) {
-+			populated = true;
-+			continue;
-+		}
-+		if (!is_partition_valid(child))
-+			continue;
-+		if (populated && cpumask_subset(new_cpus, child->effective_xcpus)) {
-+			lost = child;
-+			continue;
-+		}
-+		cpumask_andnot(new_cpus, new_cpus, child->effective_xcpus);
-+	}
-+	return lost;
-+}
-+
-+/*
-+ * Set @pmask to the active CPUs that the cpuset of @tsk gives it once @cpu
-+ * is offline. Keep the CPUs possible for @tsk, as
-+ * cpuset_update_tasks_cpumask() does. As __set_cpus_allowed_ptr() does,
-+ * keep those of the affinity the user set, if one is left. Return true.
-+ *
-+ * If no CPU possible for @tsk is left, the cpuset cannot set the mask of
-+ * @tsk. select_fallback_rq() then picks the CPU. It widens the mask to
-+ * cpuset.cpus first, on cgroup v2, then to task_cpu_fallback_mask(): the
-+ * housekeeping CPUs. It drops the affinity the user set. Give the active
-+ * CPUs of that wider mask, and return false. For a deadline task,
-+ * select_fallback_rq() may then pick a CPU of its root domain instead.
-+ * The caller checks for that.
-+ *
-+ * The caller holds the CPU hotplug lock for writing, which keeps the
-+ * cpusets and their tasks as they are. It does not keep the housekeeping
-+ * CPUs: housekeeping_update() does not take that lock. The caller holds
-+ * the pi_lock of @tsk, which keeps its user affinity.
-+ */
-+bool cpuset_cpus_allowed_without(struct task_struct *tsk, int cpu,
-+				 struct cpumask *pmask)
-+{
-+	const struct cpumask *possible = task_cpu_possible_mask(tsk);
-+	struct cpuset *cs = task_cs(tsk), *from, *gone = NULL;
-+
-+	guard(rcu)();
-+	if (!is_in_v2_mode()) {
-+		/*
-+		 * cgroup v1 moves the tasks of a cpuset left with no CPU to
-+		 * the nearest ancestor that keeps one.
-+		 */
-+		for (from = cs; from; from = parent_cs(from)) {
-+			cpumask_and(pmask, from->effective_cpus, cpu_active_mask);
-+			cpumask_clear_cpu(cpu, pmask);
-+			if (cpumask_intersects(pmask, possible))
-+				break;
-+		}
-+	} else {
-+		/*
-+		 * cgroup v2 works out the CPUs of each cpuset from the top
-+		 * down. A cpuset keeps those of its parent that cpuset.cpus
-+		 * holds, or takes all of them if there are none. Start from
-+		 * the nearest partition root that keeps an active CPU, or from
-+		 * the top cpuset. A partition root left with no CPU of its own
-+		 * can take those of a child partition. One left with tasks and
-+		 * no CPU becomes invalid, and its tasks count in its parent.
-+		 */
-+		for (from = cs; ; from = parent_cs(from)) {
-+			if (from != &top_cpuset && !is_partition_valid(from))
-+				continue;
-+			cpumask_and(pmask, from->effective_cpus, cpu_active_mask);
-+			cpumask_clear_cpu(cpu, pmask);
-+			if (cpumask_empty(pmask) && from != &top_cpuset &&
-+			    !partition_child_lost(from, cpu, pmask, gone))
-+				cpumask_clear(pmask);
-+			if (!cpumask_empty(pmask) || from == &top_cpuset)
-+				break;
-+			gone = gone || partition_populated_offline(from) ? from : NULL;
-+		}
-+		effective_cpus_below(cs, from, pmask);
-+	}
-+	if (!cpumask_and(pmask, pmask, possible)) {
-+		if (is_in_v2_mode() && cpumask_subset(cs->cpus_allowed, possible)) {
-+			cpumask_and(pmask, cs->cpus_allowed, cpu_active_mask);
-+			cpumask_clear_cpu(cpu, pmask);
-+			if (!cpumask_empty(pmask))
-+				return false;
-+		}
-+		cpumask_and(pmask, task_cpu_fallback_mask(tsk), cpu_active_mask);
-+		cpumask_clear_cpu(cpu, pmask);
-+		return false;
-+	}
-+	if (tsk->user_cpus_ptr && cpumask_intersects(pmask, tsk->user_cpus_ptr))
-+		cpumask_and(pmask, pmask, tsk->user_cpus_ptr);
-+	return true;
-+}
-+
-+/*
-+ * Scratch mask of cpuset_offline_moves_dl(). The CPU hotplug lock
-+ * protects it.
-+ */
-+static cpumask_t dl_offline_cpus;
-+
-+/*
-+ * Return true if a task of @cs has the deadline policy. A dead task does
-+ * not count: it runs no more.
-+ */
-+static bool dl_task_in_cpuset(struct cpuset *cs)
-+{
-+	struct css_task_iter it;
-+	struct task_struct *task;
-+	bool found = false;
-+
-+	css_task_iter_start(&cs->css, 0, &it);
-+	while (!found && (task = css_task_iter_next(&it)))
-+		found = task->policy == SCHED_DEADLINE &&
-+			READ_ONCE(task->__state) != TASK_DEAD;
-+	css_task_iter_end(&it);
-+	return found;
-+}
-+
-+/*
-+ * Return true if the offline of @cpu makes a partition invalid, and a
-+ * deadline task of its cpusets then runs in another root domain. That root
-+ * domain did not admit the task.
-+ *
-+ * The partition root @p that holds @cpu can be left with no CPU of its
-+ * own. It then takes the CPUs of a child partition, which becomes invalid
-+ * with its own child partitions. A task of these cpusets keeps its root
-+ * domain in two cases only. Its partition is isolated, and so is @p: the
-+ * CPUs stay in the default root domain. Or its partition is the child
-+ * whose CPUs @p takes, and neither is isolated. The root domain of @p
-+ * then spans the same CPUs. If @cpu is the last CPU left to the top
-+ * cpuset, every partition becomes invalid. The top cpuset takes their
-+ * CPUs, and every deadline task changes root domain, those of the top
-+ * cpuset too.
-+ *
-+ * The caller holds the CPU hotplug lock for writing, which keeps the
-+ * cpusets and their tasks as they are.
-+ */
-+bool cpuset_offline_moves_dl(int cpu)
-+{
-+	struct cgroup_subsys_state *pos_css;
-+	struct cpuset *cp, *a, *p = &top_cpuset, *lost = NULL;
-+	bool found = false;
-+
-+	if (!is_in_v2_mode())
-+		return false;
-+	rcu_read_lock();
-+	cpuset_for_each_descendant_pre(cp, pos_css, &top_cpuset) {
-+		if (cp != &top_cpuset && is_partition_valid(cp) &&
-+		    cpumask_test_cpu(cpu, cp->effective_cpus)) {
-+			p = cp;
-+			break;
-+		}
-+	}
-+	if (p != &top_cpuset) {
-+		struct cpuset *gone = NULL;
-+
-+		/*
-+		 * A partition left with tasks and no CPU becomes invalid. Its
-+		 * tasks then count in its parent, which can take the CPUs of a
-+		 * later child partition. The parent is then the one that takes
-+		 * CPUs.
-+		 */
-+		while (!(lost = partition_child_lost(p, cpu, &dl_offline_cpus, gone)) &&
-+		       cpumask_empty(&dl_offline_cpus) &&
-+		       (gone || partition_populated_offline(p)) &&
-+		       parent_cs(p) != &top_cpuset && is_partition_valid(parent_cs(p))) {
-+			gone = p;
-+			p = parent_cs(p);
-+		}
-+	} else {
-+		cpumask_and(&dl_offline_cpus, top_cpuset.effective_cpus, cpu_active_mask);
-+		cpumask_clear_cpu(cpu, &dl_offline_cpus);
-+		if (cpumask_empty(&dl_offline_cpus) && !cpumask_empty(subpartitions_cpus))
-+			lost = &top_cpuset;
-+	}
-+	if (!lost) {
-+		rcu_read_unlock();
-+		return false;
-+	}
-+	cpuset_for_each_descendant_pre(cp, pos_css, lost) {
-+		/* The partition that gives @cp its CPUs. */
-+		for (a = cp; a != lost && !is_partition_valid(a); a = parent_cs(a))
-+			;
-+		if (lost != &top_cpuset &&
-+		    ((a->partition_root_state == PRS_ISOLATED &&
-+		      p->partition_root_state == PRS_ISOLATED) ||
-+		     (a == lost && a->partition_root_state != PRS_ISOLATED &&
-+		      p->partition_root_state != PRS_ISOLATED)))
-+			continue;
-+		if (!css_tryget_online(&cp->css))
-+			continue;
-+		rcu_read_unlock();
-+		found = dl_task_in_cpuset(cp);
-+		rcu_read_lock();
-+		css_put(&cp->css);
-+		if (found)
-+			break;
-+	}
-+	rcu_read_unlock();
-+	return found;
-+}
-+
- /**
-  * cpuset_cpus_allowed_fallback - final fallback before complete catastrophe.
-  * @tsk: pointer to task_struct with which the scheduler is struggling
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 86a437e8dc09..604b10567210 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -5212,9 +5212,79 @@ static int dl_bw_manage(enum dl_bw_request req, int cpu, u64 dl_bw)
- 	return overflow ? -EBUSY : 0;
- }
- 
-+/*
-+ * Return true if @p has CPUs to run on once @cpu is offline, but none in
-+ * the root domain of @cpu, which counts its bandwidth. A dead task runs no
-+ * more. It can wait for its 0-lag time, or for its parent to reap it.
-+ * Return false for it.
-+ */
-+static bool dl_task_leaves_span(struct task_struct *p, int cpu,
-+				const struct cpumask *span)
-+{
-+	struct cpumask *msk;
-+
-+	guard(raw_spinlock_irqsave)(&p->pi_lock);
-+	if (READ_ONCE(p->__state) == TASK_DEAD || dl_task_bw_span(p) != span)
-+		return false;
-+	msk = this_cpu_cpumask_var_ptr(local_cpu_mask_dl);
-+	/* A task in a migrate_disable() section has a cpus_ptr of one CPU. */
-+	cpumask_and(msk, &p->cpus_mask, cpu_active_mask);
-+	cpumask_clear_cpu(cpu, msk);
-+	/* With no CPU left, ask which CPUs the cpuset gives @p. */
-+	if (cpumask_empty(msk) && !cpuset_cpus_allowed_without(p, cpu, msk)) {
-+		/*
-+		 * select_fallback_rq() picks the CPU. It gives @p the CPUs of
-+		 * @span if one of them is active and @p can run on all of them.
-+		 */
-+		if (cpumask_any_and_but(span, cpu_active_mask, cpu) < nr_cpu_ids &&
-+		    cpumask_subset(span, task_cpu_possible_mask(p)))
-+			return false;
-+	}
-+	return !cpumask_empty(msk) && !cpumask_intersects(msk, span);
-+}
-+
-+/*
-+ * Return true if @cpu is the last CPU that a deadline task can run on in
-+ * the root domain that counts its bandwidth. With @cpu offline, the task
-+ * would run in another root domain, which did not admit it. The mask of
-+ * a task can hold CPUs of two root domains: with isolcpus="domain", or on
-+ * cgroup v1 with sched_load_balance off.
-+ *
-+ * Also return true if the offline makes a cpuset partition invalid, and a
-+ * deadline task then runs in another root domain.
-+ *
-+ * A suspend takes the CPUs offline with the tasks frozen, and the resume
-+ * puts them back. Without admission control, there is no limit to exceed.
-+ * Return false in both cases.
-+ */
-+static bool dl_cpu_last_of_task(int cpu)
-+{
-+	const struct cpumask *span;
-+	struct task_struct *g, *p;
-+
-+	if (cpuhp_tasks_frozen || !dl_bandwidth_enabled())
-+		return false;
-+	/* No task holds a bandwidth: do not walk the task list. */
-+	if (!atomic_read(&dl_nr_bw_tasks))
-+		return false;
-+	if (cpuset_offline_moves_dl(cpu))
-+		return true;
-+	guard(rcu)();
-+	span = cpu_rq(cpu)->rd->span;
-+	for_each_process_thread(g, p) {
-+		if (task_has_dl_policy(p) && dl_task_leaves_span(p, cpu, span))
-+			return true;
-+	}
-+	return false;
-+}
-+
- int dl_bw_deactivate(int cpu)
+ void dl_deboost(struct sched_dl_entity *dl_se)
  {
--	return dl_bw_manage(dl_bw_req_deactivate, cpu, 0);
-+	int ret = dl_bw_manage(dl_bw_req_deactivate, cpu, 0);
++	struct task_struct *p = dl_task_of(dl_se);
 +
-+	if (!ret && dl_cpu_last_of_task(cpu))
-+		ret = -EBUSY;
-+	return ret;
+ 	if (dl_se->dl_donor_refill) {
+ 		dl_start_own_period(dl_se);
+ 		/*
+@@ -145,12 +177,41 @@ void dl_deboost(struct sched_dl_entity *dl_se)
+ 		}
+ 	}
+ 	dl_drop_boost(dl_se);
++
++	if (!task_on_rq_queued(p) && !dl_task_pi_blocked(p))
++		return;
++	if (dl_se->dl_new_params && !dl_se->dl_throttled && dl_in_constrained_gap(dl_se))
++		return;
++	if (dl_se->dl_new_params) {
++		dl_se->dl_new_params = 0;
++		if (!dl_se->dl_throttled)
++			update_dl_entity(dl_se);
++	}
  }
  
- int dl_bw_alloc(int cpu, u64 dl_bw)
+-/* Return true if @p waits on an rt_mutex. The caller holds its pi_lock. */
+-static inline bool dl_task_pi_blocked(struct task_struct *p)
++/*
++ * Check the runtime of @p against the parameters that sched_setattr() just
++ * gave it, if @p waits on an rt_mutex. Before any wakeup, its waiter node
++ * holds its deadline. The caller then calls rt_mutex_adjust_pi(), which
++ * requeues the waiter with the result. Other changes of @p, such as a
++ * cgroup move, do not requeue it: leave the check to sched_setattr().
++ *
++ * A boosted task, a throttled one, or one past its deadline and before
++ * its next period keeps the mark. Its deboost or its wakeup checks it.
++ * The caller holds the rq lock and the pi_lock of @p, and has updated the
++ * rq clock.
++ */
++void dl_check_blocked_params(struct task_struct *p)
+ {
+-	return p->pi_blocked_on;
++	struct sched_dl_entity *dl_se = &p->dl;
++
++	if (!dl_task(p) || task_on_rq_queued(p) || !dl_task_pi_blocked(p))
++		return;
++	if (dl_se->dl_new_params && !is_dl_boosted(dl_se) &&
++	    !dl_se->dl_throttled && !dl_in_constrained_gap(dl_se)) {
++		dl_se->dl_new_params = 0;
++		update_dl_entity(dl_se);
++	}
+ }
+ #else /* !CONFIG_RT_MUTEXES: */
+ static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
+@@ -707,6 +768,15 @@ static unsigned int dl_task_root_domain_cpu(struct task_struct *p);
+  *
+  * Each check compares against the bound scaled by dl_runtime / dl_period.
+  * That quotient cannot overflow, as dl_runtime <= dl_period.
++ *
++ * After sched_setattr(), the runtime and the deadline can still be those
++ * of the old parameters: a boosted task, or one past its deadline and
++ * before its next period, keeps them until its deboost or its enqueue.
++ * The 0-lag time then mixes them with the new dl_runtime and dl_period.
++ * If the runtime left does not fit the new parameters, the 0-lag time
++ * has passed, and the bandwidth is released at once. The check of the
++ * runtime would start a new period there, with a 0-lag time of now or
++ * before.
+  */
+ static s64 dl_time_to_zerolag(struct sched_dl_entity *dl_se, struct rq *rq)
+ {
+@@ -2965,7 +3035,16 @@ static void __dequeue_dl_entity(struct sched_dl_entity *dl_se)
+ static void
+ enqueue_dl_entity(struct sched_dl_entity *dl_se, int flags)
+ {
++	bool new_params = dl_se->dl_new_params;
++
+ 	WARN_ON_ONCE(on_dl_rq(dl_se));
++	/*
++	 * A boosted task is refilled from its donor. Keep the mark until the
++	 * runtime is checked against its own parameters. dl_deboost() checks
++	 * it at the deboost, and an enqueue that is not boosted checks it.
++	 */
++	if (!is_dl_boosted(dl_se))
++		dl_se->dl_new_params = 0;
+ 
+ 	update_stats_enqueue_dl(dl_rq_of_se(dl_se), dl_se, flags);
+ 
+@@ -3014,12 +3093,13 @@ enqueue_dl_entity(struct sched_dl_entity *dl_se, int flags)
+ 		update_dl_entity(dl_se);
+ 	} else if (flags & ENQUEUE_REPLENISH) {
+ 		replenish_dl_entity(dl_se);
+-	} else if ((flags & ENQUEUE_CLASS) && !is_dl_boosted(dl_se)) {
++	} else if (((flags & ENQUEUE_CLASS) || new_params) &&
++		   !is_dl_boosted(dl_se)) {
+ 		/*
+-		 * The task enters the class runnable. It may come back before
+-		 * its deadline, with the runtime left from older parameters.
+-		 * Check that runtime against the new parameters, as a wakeup
+-		 * does.
++		 * The task enters the class, or its parameters change, while
++		 * it is runnable. It may have runtime left from older
++		 * parameters. Check that runtime against the new parameters,
++		 * as a wakeup does.
+ 		 */
+ 		update_dl_entity(dl_se);
+ 	} else if ((flags & ENQUEUE_MOVE) &&
+@@ -4859,7 +4939,9 @@ static void switched_to_dl(struct rq *rq, struct task_struct *p)
+ 		 * The chain walk sorts its waiter by its deadline first. A task
+ 		 * new to the class has a deadline of 0, which goes before every
+ 		 * real one. Start a new period now, as setup_new_dl_entity()
+-		 * does at an enqueue.
++		 * does at an enqueue. dl_check_blocked_params() has checked the
++		 * runtime of a task that sched_setattr() brings back before its
++		 * 0-lag time.
+ 		 */
+ 		if (dl_task_pi_blocked(p) && !p->dl.dl_throttled &&
+ 		    dl_time_before(p->dl.deadline, rq_clock(rq)))
+@@ -5179,6 +5261,11 @@ void __setparam_dl(struct task_struct *p, const struct sched_attr *attr)
+ 	u64 period = attr->sched_period ?: attr->sched_deadline;
+ 	bool held;
+ 
++	if (attr->sched_runtime != dl_se->dl_runtime ||
++	    attr->sched_deadline != dl_se->dl_deadline ||
++	    period != dl_se->dl_period)
++		dl_se->dl_new_params = 1;
++
+ 	/*
+ 	 * Change the bandwidth that the runqueue counts here, with the
+ 	 * parameters. A task that priority inheritance boosted into the
+@@ -5312,6 +5399,7 @@ static void __dl_clear_params(struct sched_dl_entity *dl_se)
+ 	dl_se->dl_defer_running		= 0;
+ 	dl_se->dl_defer_armed		= 0;
+ 	dl_se->dl_bw_oncpu		= 0;
++	dl_se->dl_new_params		= 0;
+ }
+ 
+ void init_dl_entity(struct sched_dl_entity *dl_se)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index e512091ce5ed..4151364ca4ff 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -414,6 +414,7 @@ static inline void dl_clear_donor(struct sched_dl_entity *dl_se)
+ 
+ extern void dl_deboost(struct sched_dl_entity *dl_se);
+ extern void dl_boost_blocked(struct task_struct *p);
++extern void dl_check_blocked_params(struct task_struct *p);
+ 
+ /* End the boost of @dl_se. The caller holds the rq lock of its task. */
+ static inline void dl_drop_boost(struct sched_dl_entity *dl_se)
+diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
+index 9884fa55538a..b25504e8748b 100644
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -311,6 +311,9 @@ static inline void __setscheduler_dl_pi(int newprio, int policy,
+ 	 */
+ 	if (!dl_prio(newprio))
+ 		dl_drop_boost(&p->dl);
++
++	/* rt_mutex_adjust_pi() then requeues the waiter of a blocked task. */
++	dl_check_blocked_params(p);
+ }
+ #else /* !CONFIG_RT_MUTEXES */
+ static inline void __setscheduler_dl_pi(int newprio, int policy,
 -- 
 2.47.3
 
