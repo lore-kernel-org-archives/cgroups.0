@@ -1,78 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198207;
-	b=1GHEJ4hQqKJdKOHMRcDJpGA/gVRMcSQhRHYpyFawb8XXGr49ho9llw7immgWMQvkOwSJ
-	 8eBuEaJ9HUYlBO2niFA5UrTk6A6gGceWpbFlhv+gBXxYhrczDgvUTPn7YExp3wcZoJi5r
-	 CDii91sbQ1JF5iFYU6irwVfQQnZSAZ7JLEktoxV3gmiOqQGej9cS9U4ZfUz3VdEu9v4tq
-	 3++Tm6OipEoBpDSv1ETByb4sSRfwuyrg1s98C4AjVf1Xhc4oEMqQ2zthmiIASOVRTt+6j
-	 tR/8RL1fG4582sfGJ1QkAa2wt/9lO2+U8H6lZS/q+W6Z7b1bc+Sqr5GI998vH+my1+g==
+	t=1795198220;
+	b=i9IwQnLWKz/5dRoz6TKY8eNs2SQfcsJeZDCUc7GbZtejQiPWuULZv4YIqQNax7Hq22Q0
+	 s4aNODaKNmnwJL19y95FTPpfCPRIz/2RiSfptplBvRBkGVJH06fQZcnLCpLM/6pEQGREr
+	 gyCKT7U2k0TAbsR5vZVfkkrz8MJO9BQDgX5vi8P1Jt/foR5vITb0/6uNvMDi0kHO/+kH9
+	 cg240ptdaldajwOnHnQa025n0vYzctbK9Zwvd8IIpHkKfxLYTCO1kfyFUaYZL74s/apiR
+	 zrLOZkZwI2K+zLlREx9Pk+c8qI1nXdF4UIzB+yrgii2MtArENy+E78uMArKKfFPnRtA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198207;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198220;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=kS8ULtElOh9VKJauHuptEbqEopupzknKORQFIhtAO3g=;
-	b=kQbd4ARPjRe1t49+jizBvT0KeQjT/k4jkNWNhzkGSlEWMpBK/nUCCbVlOl3WbX9miOtG
-	 2RidvX8ck+/OlL7/Es3QbHuzpX+2x/IdE9UGnU8rVSSKmwnwULPrm5wyQikh+2t59e6KS
-	 A5f8uOJKL3Mfv+KNjF7rs9QPKPeOwhtik6pw9liDb1cfBfBqBeSHp6juXv91gheJI/RQQ
-	 /R+xy6YGQrixfO4iA05LXK0m1sbSmsHv9i1nlLVz+pkRvOSPsWamCJ81s9LiET8994J4y
-	 jP0dARAGJn3uzDy2XH7TivEebfGysJ2/Wd4tJU7S6xD3z13sHLp4crI6FrqEAm1x0wA==
+	bh=avxZ8VwluYTpGbEPJyzSvO3syrnk95XEoYzgDY1xt9U=;
+	b=i57j5iedCPruat0S8OquOmp1pEiv93NfMAiMHCNX30a8acpuf5aECQVzaQ6T2HvFqlxs
+	 fRfyCC4ZvNU328xUEAPLop8GEEGezO3mJmn1M5I3IibNuX2izQL2c2FmHUZUz02xubYUN
+	 Cnt5PEBuu+cI9VWz+Albsd7a+iHeBqhiuWvZp6lHedTtonkdzLIIvPw8FCKls66uYMnIT
+	 FmpmIkNW+aT+XGOvUgc8MxgWDipDKomBhaWsx0kMSAsiHAGpMkMioNFt1tgd9VdVmjBFL
+	 16J/vu99z8isdOvfNBTrnUpL8+5ekRvLz7yBvjyBOJjh6WyiALSh6wkYzNrWD8eLmVQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nmpGkOHM;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="D2aB/uXS";
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598B5606B239;
-	Fri, 20 Nov 2026 18:10:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACECA606B239;
+	Fri, 20 Nov 2026 18:10:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=nmpGkOHM
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D2aB/uXS
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198207;
-	b=rhbLIWnoeah4+Pg0Bh25heTkgOMOwy8+kdjSX6dpFpVb8OixjXxxR95U9dR2wI5IxlXn
-	 hwkW8d931TpcbBzuE5fKsCen0ke0i3Kdw3wTsGw9NtK6hI7CshwJ57NK72FM7Gp14Bc+l
-	 gcP905DGfxPrbr+g1w5N75T8+WC8NZcZbl6S1+MGIwwB1a+ZX7uSjWnGd+eJm/yr75+ab
-	 0Tu0fZBTo2802TK/HDcSDS+SNNDIuqtM4upfp/0L56qA200Hhc5z4CATuVfOl9Yqo23Gl
-	 MvPR44qcZxwszArywPCArxBPPcAR1H4P+FlNEgWFIFYYD7i3LQ9I8UnT0baRglfIj7Q==
+	t=1795198220;
+	b=hD1Eu1zCTZJzGAMX9OA6xikeSL52yggJ37jm2EYpBuaGOhdfZXw55CyIhtqsUP29YUGh
+	 EWTCpkz/Sd1vrp8axQzfTKfVgTEpcOm1Ci0BShxe7IJZ70+dOOnlMt+SQGeHxNj2xHz3v
+	 WvTJZiJ9wNNyU4aimqHyxu7l/PopctV+XgykyT0RBfVoksi/+GOopwgIllXDEjih6pUvb
+	 7uGZ+rCj9TlkHUSiDdaEAyKYSWC2TdH1iECj26w27DOqAPEQp1VSuHSDGdagK3bYn5ZHl
+	 ggClgkgHroWUU1yAfhBIIS4CxJziq9xMuwhkegBvrAM2JgV6w39DI8+uZ8C4YgAmEtA==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198207;
+	c=relaxed/relaxed; t=1795198220;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=kS8ULtElOh9VKJauHuptEbqEopupzknKORQFIhtAO3g=;
-	b=gafFd1hFivTR1EnDOfgQ5BjbkW8P6m1oL7wpJXNKKjcfqGppKImYACtnCEPlmynLPYvz
-	 oQ9IMkSPpjsQfEb+Mcm/cRoEtIPn09CvJ7F6Xwo0L6MQ1WEbiFB0vsRmIluvr/EINDgX7
-	 xgsKzjZ6CZOTtixOBRY3bj5VSD3Aph9iRCEWW19H8cyxfXWuofTZAuf8TExSJh5AgeF/7
-	 ASbM3fHNlNhcIQSZLO1w6AbOUN5di9HdwAvKiMygca1CpxfECPKpubRiRjr9/pASY8+Qx
-	 sqaWAmKWr85nhRl1F3qIiF1uxrCrO61gDbMB8RTBY8S5AnDxHdOeswDbufVP/FZzQbw==
+	bh=avxZ8VwluYTpGbEPJyzSvO3syrnk95XEoYzgDY1xt9U=;
+	b=VigLLr8CtfG2WY1NXMikKD8NyPk+2di5QNnERM4PBQz27KdqyyX9wT8cZqYxvzHg2DKZ
+	 /lAyrmVP8+ElBMeoVnS9DWzOLEQfGE1jv7CqhJrg80uVDMCghsd+7A5FFRBWXJ21fRmmj
+	 L1sBFRbtLcNQ4LIgv6fPvBxkhzm36TXEWvKRwFbb9j6gw7EMh2nY+xUHo4fXKx4QPY5iO
+	 VFhC6kM+hie7DXQ7mnnHuCPp/EqXLrNd8hEr/FuIVQ0EIt0xUsSMJbGi2TmqrwMnz9VwF
+	 mRMnNezUMhsFqwgG9YIPSxNQn1DvlWVfJiSJ/10jep5Z7Dq2UdAvehWznE5E4QGnLMw==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id E2E2A1F01561;
-	Fri, 20 Nov 2026 18:09:42 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id 3E5F11F031C6;
+	Fri, 20 Nov 2026 18:09:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198207;
-	bh=kS8ULtElOh9VKJauHuptEbqEopupzknKORQFIhtAO3g=;
+	s=k20260515; t=1795198220;
+	bh=avxZ8VwluYTpGbEPJyzSvO3syrnk95XEoYzgDY1xt9U=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=nmpGkOHMHeAt0ferEtV3OfGvY9ht35A2lBRivtOZfW6DchavZvY1MEc9wOHH4KgJh
-	 3FNJkN1c/Kiu16ckro4mMzkhdziUVKNKQX6Gmk0JEBqGpokOV2haZJrspUFat7mBeB
-	 HH5+vYdvYwCekMxWdEP2xGa4Ng/zgoq6AdBDI+NWB88V1pPgbTesGccZ13Z2UzTg9R
-	 qE0ThmvM13ojxHh2voH566stwnq+0S2AW8EaUBvEYdbXv8PBcZQTSmWEYcmLS2UjaC
-	 yTXorXrS7TgUBgui17Zzn1rViYo1JKs5dEEPl7G4gBQV++ys+GLPbF9ujfOhdUylo3
-	 EokS1f9cvxgCQ==
+	b=D2aB/uXSvCFHiP5MSqQ3LZnJkITZcMGDq9nlw8XDyl7R0wLzvvL0gpUPejD7rOw73
+	 KqIuQkUVFAaU/1QkUwYP9VoCEE5cg186rfXhIDtu23Z/7E2kKg8o3de/KyO8nsXgSR
+	 s2fxikGluaHtaPUHaWaeYEeqUjk8FAx0aNjS9UrgwLVAwYbqXgzgoagKZDxW2YMvnl
+	 VZuIPB4gJxHyo60jwPfAKR5VLHo649hf6jnxSz5oo9KX7b1acCZ1taVesnO2jPYdHY
+	 W5HDJMe0NZDHyNqykQWchLkIrLWNQTTIfmwCZLlnIg3Pk7XGfpqSka4CISOm4SWD6E
+	 2bsuCz3XmEFMA==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id A2E054B8F9;
-	Fri, 20 Nov 2026 18:09:18 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 26CD74B909;
+	Fri, 20 Nov 2026 18:09:19 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:05 -0500
-Subject: [PATCH 14/60] mm: base hash distribution on common memory nodes
+Date: Fri, 20 Nov 2026 13:09:09 -0500
+Subject: [PATCH 18/60] mm/khugepaged: base the recommended min_free_kbytes
+ on common memory
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -83,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-14-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-18-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -140,11 +141,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=752;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198152; l=820;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=kzu60kHcR4jg5+83pzySdZg/16HqDs5ZJU+b16doVWE=;
- b=748lnM0UAIWYIikKEzoqzk1NLfEf9UkP/kYV8mG5fcRoZKQ2waLuxmbZewbEadsHLukTRzV3V
- r9lLSXCux+nBTwzYAwYPzqHH+pyb+k2EBGnYxU14R5HCUN2/FGpt/7x
+ bh=JCSrPzqa2r6D3icJs5AIufuY11hG988pPEZwgCCKHVU=;
+ b=f3X9GhfZRr3Y70akJ+5LQMJEYnQw87oEwJYni6EhKNTNghWitJzBda24ENsNg3gaswvLxfzcA
+ QCSxARUrbOQAlPm+bIz7doFjfAUsXQ0DXnPHQw+oYeT5ibepz98hWgq
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -155,30 +156,30 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-hashdist is useful when large kernel hash tables can be allocated across
-multiple NUMA nodes. The tables come from ordinary allocations, which
-only N_MEMORY_COMMON nodes serve.
-
-Count N_MEMORY_COMMON nodes when applying the single-node optimization.
+set_recommended_min_free_kbytes() reserves two pageblocks per populated
+zone to help THP allocations avoid fragmentation. The reserve serves
+ordinary allocations, which use only common memory, so count only the
+zones on N_MEMORY_COMMON nodes.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- mm/mm_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/khugepaged.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/mm/mm_init.c b/mm/mm_init.c
-index 46fe9a274a7a..f21b3dbcc92a 100644
---- a/mm/mm_init.c
-+++ b/mm/mm_init.c
-@@ -685,7 +685,7 @@ __setup("hashdist=", set_hashdist);
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 2dc4245814df..a930d99f89da 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -3151,6 +3151,9 @@ void set_recommended_min_free_kbytes(void)
+ 	}
  
- static inline void fixup_hashdist(void)
- {
--	if (num_node_state(N_MEMORY) == 1)
-+	if (num_node_state(N_MEMORY_COMMON) == 1)
- 		hashdist = false;
- }
- #else
+ 	for_each_populated_zone(zone) {
++		if (!node_state(zone_to_nid(zone), N_MEMORY_COMMON))
++			continue;
++
+ 		/*
+ 		 * We don't need to worry about fragmentation of
+ 		 * ZONE_MOVABLE since it only has movable pages.
 
 -- 
 2.56.1
