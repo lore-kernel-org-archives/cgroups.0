@@ -1,53 +1,53 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795173859;
-	b=47CUD/61xq8mQiAkrEf9dS/hOmNH0M/5Y7HflHkac6S9fVG8qneny9Cc9DNEGuraSQ7Q
-	 Iz43cZ3VNlmGj19e3behs22zhP8wvPbbuuLrYN/2T69R4P0QxfZbntJJ3pWfOOYw+TpdS
-	 tSLMW4fufI1B3N94AhVQsG12SV1otOScwvSpWqR2wm/Vq0tRg+6IvburBGGfVRnogJ6BJ
-	 MqlSgYEOkeTLwqmXdU0op5hhJPApt/dStIQsSRcDX29yFWPOkg/Xr004/p5EmOA6DiXhy
-	 jsCJ/m8MzWa9pGnSLlZNLDZH796GneGUVamua9js0jPoCDgf6pZ9zTBPig5ln99kzmw==
+	t=1795175732;
+	b=VjGlIq9m7tc/eAAzYki8JNyyu68tgoTvVPcfaeeTDNdhkWhXKc0bvoMthSUmailXp2bI
+	 2Sx/rr1FOtLqoAl3Pq8i0R+K439/AqDoomm2LwDXuYd8KwUG5SA6krkNeWpZxKyykuncr
+	 PTlJNjQ+uuivEPGWxelR2mHIzbLok5P8CY6e7SIVhiFAilWe3h3Ycnd0aejnPaB/mBxk5
+	 t0jW/yYg7mQ0uB1U/oSWMHFKj5+kaTxRgJcovvlwFiiO5K/stuuFvb5PfiLk0EgaH2Eiv
+	 RO16Dsb9A4uKk3YVz0sBETcxsQrv9/nNlyTvVZ+eotG6SmPmLCAREntxdMPz2m/1X9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795173859;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795175732;
 	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
 	 In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=tueNy5jtfjpCu3mVXyg5MVYuIQ7eQt/pI0gIOgQ2c5I=;
-	b=0nHmQN9eyfKWVttyBRezSxcSquPBivuvg6VdqY4eTMIeY+pYIsAAM89Ab42eUVMrtNd/
-	 +v+oWjChcHfLmkwGKcj+z1Xw5hJuizZfWbeC9pO3xNghh/Y17pQe27jRIA8yJTuyH8EQt
-	 p21i+kOyGtw0CYpL1/KKyau3QJRDoN8brSkXsPLaS4/CfY3HELPhQyFJJtqO+D9L96UDb
-	 jsHya4Dec+tPYDsdcbrw/2jheeS8aWjbildgj8AZQ3236IVxQP+H+lSunpmmzNGQ3iTkd
-	 hxU+dmpnDjnua4j+ax015F2BYFt8eGgMl4YeZFm5r20jB+iLeqTO5ovDufaEhlKzfTw==
+	bh=gXZGtUUKJlB0JAEvQjueae9grBIYVg16MV9B05CzPJI=;
+	b=wOlQxEX4X1f2eisUcEgc1vfcNPeqfgMZGVesTKuFPboL0wPutyaiBdNcsbykB/Zdyt55
+	 ekgxm+4+7gku410ifbXNB0XaorWyc1E6ScHZu8p1P53upM7t2vwsnuA1SutwNbKLQVFh6
+	 Itm4kHPhNa2rhq4OvHoqXTSjhn6cc/Q0kiiBhWT7nxFk9tyynSEzX7D6mCA6UX5OIAkLd
+	 usZbk2Qvk5EPS362O+p1rdcMlSnM+NmIyf7w5iCed9jMkuGTW9u2r7tpRa7PRA+IK5cq6
+	 9qig7WrcMYUwwBP3tHC9o9KPuWALTnGl3AN7bpwT6ewV23T8L1VnaN+BSro72xyeV9A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CZ7KvW1B;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fDTnja3x;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E72606A32A;
-	Fri, 20 Nov 2026 11:24:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9D08606A326;
+	Fri, 20 Nov 2026 11:55:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=CZ7KvW1B
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 088D51F000E1;
-	Fri, 20 Nov 2026 11:24:18 +0000 (UTC)
+	dkim=pass (2048-bit key, unprotected) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=fDTnja3x
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC63C1F000C6;
+	Fri, 20 Nov 2026 11:55:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795173859;
-	bh=tueNy5jtfjpCu3mVXyg5MVYuIQ7eQt/pI0gIOgQ2c5I=;
+	s=k20260515; t=1795175732;
+	bh=gXZGtUUKJlB0JAEvQjueae9grBIYVg16MV9B05CzPJI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=CZ7KvW1BG87WZmC5zsowuF6jgMpGqlxCtm6y7gTt+yMoM4R3KFzlxxZOI4UTEAaFZ
-	 Qp1yXKmJ/rrSaFE9GVSbI9uOmYo3ibatrg5ttCMkS7JmGy03N3g86ryI2sBybCjIpC
-	 5FUOmVnLI8m2AImW+U8YOjP86QlB70lE53JdW76BUIwRFnd7SiXrikxlofHnqjSSir
-	 Jcewz4Y4FwxTOlJTFRjHiMml4SfPSv2yk8j7x7Jd8Qfl0JgLPM/Cmia2yWhKB4kdLN
-	 tOP9B61FiZN6GW4hr6/ysZVL0T9YKAyjaidNzJ5TaIevZcbqXbz4tFrN43COFnJxVJ
-	 VQPmxvwZb5Lzw==
-Date: Fri, 20 Nov 2026 01:24:18 -1000
-Message-ID: <b8b2c07c12f5a156e2d72ab4ee4444cc@kernel.org>
+	b=fDTnja3xaysTL7sjgCdcE04GjF+K6DYVz/01WtDrfaXMpW1L2MtviUern5vw9RHhn
+	 cFyFl2qswrSfsj8qgZ69JsSdEx7Ecv4XQZL4Pu4owytw0CZ28BfkUTjBqPv1WWqa3G
+	 WO48Ze3W8KBpTYXSl79Zg2khrMASjuhq4u7JvIjDVJ7Hi2amH0Sq1O50jbDj6FriUG
+	 F9vxn2Wy1CTg3f5GQz8xRtYX//HKR9ryfK2huhfvOFSzEt/h3g7UO00ND5zePQK2R8
+	 2NIbckPUnN+VWRLPu0iA3cwo1PPVaukNVr02c8Jzt4J+VQ/H9zTFbmRO/csK/27s/l
+	 me50+TD3yzlsg==
+Date: Fri, 20 Nov 2026 01:55:31 -1000
+Message-ID: <6fef47e08a37079c08806b3c57994778@kernel.org>
 From: Tejun Heo <tj@kernel.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Christian Brauner <brauner@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jori Koolstra <jkoolstra@xs4all.nl>, Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, driver-core@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup: allocate the inode for cgroup_may_write() before cgroup_mutex
-In-Reply-To: <20261118230346.3700213-1-shakeel.butt@linux.dev>
-References: <20261118230346.3700213-1-shakeel.butt@linux.dev>
+To: luca abeni <luca.abeni@santannapisa.it>
+Cc: Yuri Andriaccio <yurand2000@gmail.com>, bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com, hannes@cmpxchg.org, juri.lelli@redhat.com, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org, mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com, peterz@infradead.org, rostedt@goodmis.org, vincent.guittot@linaro.org, vschneid@redhat.com, yuri.andriaccio@santannapisa.it
+Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
+In-Reply-To: <20261120120659.2e902463@linux.fritz.box>
+References: <20261109163616.195264-1-yurand2000@gmail.com> <212c244d534ee1fdb0538a980789e16c@kernel.org> <20261111175657.250354-1-yurand2000@gmail.com> <58cb2cbaf82c0f671213eaca46465cd5@kernel.org> <20261119151416.33f90a64@linux.fritz.box> <471bf8d446becabfca00041fb2a78067@kernel.org> <20261120120659.2e902463@linux.fritz.box>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -60,35 +60,44 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-Hello, Shakeel.
+Hello, Luca.
 
-On Wed, Nov 18, 2026 at 03:03:45PM -0800, Shakeel Butt wrote:
-> +	dst_cgrp = cgroup_kn_break_active(of->kn);
->  	if (IS_ERR(dst_cgrp))
->  		return PTR_ERR(dst_cgrp);
-> +	new = new_inode(of->file->f_path.dentry->d_sb);
-> +	cgroup_lock();
+On Fri, Nov 20, 2026 at 12:06:59PM +0100, luca abeni wrote:
+> In other words, if tasks can migrate between cores, performance
+> guarantees should be "per-cgroup", not per-CPU, which makes it
+> difficult to mix "(runtime, period)" and "max" in the same cgroup.
 
-I don't really like new_inode() being called on every write, and twice on
-every clone3(CLONE_INTO_CGROUP). The inode is often not cached but not
-mostly. It's not a lot of overhead, but doing it the right way isn't that
-complicated either. How about peeking at the inode cache before taking the
-locks, preallocating only when the peek misses, and then looking up again
-under cgroup_mutex? If the peek turns out wrong, it can drop the locks,
-allocate and retry, so that nothing is allocated under the lock. Can we
-apply the same shape in other places too?
+Thanks for the example. I can see that the mixed config is difficult
+to analyze. What I don't follow is why the kernel has to enforce it.
+Again, this is purely from the interface POV, but wouldn't it be
+enough for the kernel to provide the mechanism and leave what gets
+built on top of it to the users?
 
-> 	scoped_with_creds(of->file->f_cred)
-> -		ret = cgroup_attach_permissions(src_cgrp, dst_cgrp,
-> -						of->file->f_path.dentry->d_sb,
-> +		ret = cgroup_attach_permissions(src_cgrp, dst_cgrp, &new,
-> 						threadgroup, ctx->ns);
+> I do not know much about IO device and io.max, sorry... But maybe the
+> difference is that tasks do not "migrate" between different devices?
 
-AFAICS, this changes behavior under Smack. Smack labels a new inode from the
-allocating task's creds, and the allocation used to be inside
-scoped_with_creds(). Now the inode gets the writer's label and the
-permission check runs with the opener's creds, which can fail when the two
-differ. Maybe the allocation can use the opener's creds too?
+Yeah, that's different, so the analogy isn't perfect. The allocation
+side isn't different tho. One can construct an analogous, if
+contorted, case with block devices. e.g. Imagine multiple disks
+serving an identical read-only data set, with io.max used for
+bandwidth and performance isolation. A workload which moves across
+the disks would be essentially the same model as threads moving
+across CPUs.
+
+> I also fear this kind of solution can increase the probability of
+> misconfiguring the system (ending up with the feature not being used).
+
+I'm not sure baking the constraint into the interface would make
+people use it more.
+
+> Yes, I think this is OK. It means that hierarchical scheduling is
+> disabled by default, and the administrator has to write something in
+> the root cgroup to enable it.
+
+That's not what I meant. With the root at "max", nothing has to be
+written to the root. A cgroup can be given a budget right away and
+the budget is admitted against the DL bandwidth directly. An entry on
+the root is only needed to set aside bandwidth for cgroups up front.
 
 Thanks.
 
