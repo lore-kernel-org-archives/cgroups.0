@@ -1,78 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795198259;
-	b=VodSNF8P97riCwDKI/MDxYPFjjd54YiGXM7hlEdgclGImbFNg9xrAmjpIT1rzGOpHJzV
-	 qAiBPizSDhRZs5AUPLX1VN6icFNUPQYfoAk9GYTQANJmlz6HdjPbBGyr3663l/k2Pyqs7
-	 En1kAtpa159OiBgSqHaNZ7vw/AztMAZ0YVmZI0pU1JBXWs+oZkahCZ8om/I+CR7Z0bHRD
-	 1HzU88kIX/CVnguGaDxdLAlNggumB+bMiYzzjo2NOgkwtWDcLGVUU/DhhedNljcKKXGS6
-	 OBKG462fJXpmKp6YetjdQbUY3GocrkEOlJpHWReh257tg1oNsui/NFz42LFqK9azDmg==
+	t=1795198265;
+	b=vdN4RGs0iQF3/hO2bXu1a+3Oi7p4WQyMnt1yuD92O0xpXSjXtNtJAbgKxicPNJ7CO4qL
+	 +bPmuOFC37l4vrIh8NY1sYDttaqOeVTa5d9QOWKNXJKVfYTMCf29v9bVYp9sExlS4nTe/
+	 NRmfCqId74OpEY4MNEjTDN0khVMgKvZYFWA5LZASfHSwbaHVAUr+38dG2YCM3MT1KA/mi
+	 vZYyPhjFpLWyPD9OqLnQTNWcwiluhGKx/9cm7lCi3uAFPePp8enEplCtVUDofUxgXllod
+	 OmqqbcVzjnU4bO+WPMreQ0Rml6p8Jq3BYLUU20aHFSjQ8NmO/uwhZi/HBvwqkh5vYpQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795198259;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795198265;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=X7OURSsmBiNAAKz0czFdC+E/6wbPVxqwq73TmOo8fvs=;
-	b=QrN3fIzr/xticzbQeT0uVVf5FOmb+rvmTGidST6jJcln2UX8zNnd9qO95+fEP/ME1JR2
-	 H4NLKNquvTg30nmowMs/dkldQ4Jn1rW7kvOOnpDlVNGlcm/CtuFtxVLoS/vHJBrJ9UfwC
-	 b9+NSDd9033CaymGBxkZGt80oWMWO/tOlpa/Ax8/tO5EJHMqqC3Jl5y4H3pN6I398Wtar
-	 +dRjbwrNLIou1BdSx+s1EGX1C0FY1wbsTfFl5aBQ8vWTnrfgBhngCldz3twR99aJNNtqA
-	 WBpZrvS8JCse7Ae92yV5zBpYIGTgKISqoD1Qs6dhdYT8FVpqiX9J4NIGO4qZrWXKeTQ==
+	bh=SDxj2h8LUz/yKelW0hpXFzxdAGDfTr2wWvPbhGHboyw=;
+	b=E2Vk2Rv2FNCrm45+Omk2ZVagZ3ET7ukOJL2RHt2B21QfJXkD45o4wBjUN0ZdS03xMy0J
+	 06QwzQcY0Hrhsztwif05ds+lfJYonKfniaIZ0uV7kOFzUZLjGXHXLV8n1OEkNu75NuSrE
+	 3Tha0HYbE9UiOB4SQQR7lRXAUX7u7TIcB56Y2y+iilW7HnYJl3iPa4/Dc7Y46VS1/Sybb
+	 FP6iz5UZaf3mLQLkIpzUNHon/sJFe8f3dMWQVM6eZkcWHki6tT7sKdROUHTM8yd6A8Vsb
+	 wwcwLMifIfenxUd5VRqTfv3EPeyMRI81m/ToPU/EcfYcLvpOlSAir/XoQ26MEZ9WaQA==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e7ZOw7PY;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K7wL3Pl5;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2E56076376;
-	Fri, 20 Nov 2026 18:10:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F133606B44A;
+	Fri, 20 Nov 2026 18:11:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=e7ZOw7PY
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=K7wL3Pl5
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795198259;
-	b=NwAlmF9pACrVCD4aHvFPGK9DS7jIAl8ekQRMNwUNhqq5x+CQeX7+RsGvqFQnQ+MgnTyk
-	 Aygr4MMqADNYB+UiTE91OR+Q8Znuzj97tybHvYCdsKqtI7Vs7JdXpGFUbOakDw5YyW1NT
-	 KS0vjWZ/5QkA81mHnDpDQRLH7EFkIg3wOQ5EUjsPda29ODqs2QyMJEdZdBvaUT2cJSh7C
-	 fY+KRN27J88anhcROKT4icC5Q3a9Vwly/mWAWR1B0u/La9A98ZyJ+G4r0YvG+yjEVdR1T
-	 SGXUHEeXUoqe9o4ZVcpEuuKALhjCWmWPbQeT42PPLjmTbFx8cqO8rFvcoJWwfgS2YAQ==
+	t=1795198264;
+	b=kE0AhTAjt5mvEomE/RIe4XLX4Hs2ipvGMh0A39Gte3At61QLY3YKijQYtPfmLTu0cvOn
+	 2G5RexrBMAmASK+T0PHWMxP1tockKYsktieMqq2ylad8C408CeJvqBSD+qR4uIHzvlVA/
+	 8iyviVJfOQKQXAR7Z9L/hZBcAIVr1O5P6081d2jPsmRSGzLQSp8V+5dR0vi50Hiwvo1ku
+	 RILztZiGyaELi7K3FGx1xNrZdUp5hxcqi0ah8qqqQbE9LgVeVjJDxHLp6PG1p4tkF97we
+	 soDLFree2320Fy9NDAF/9mtOALb0Qyi4AnFPocjLG6TzfVopq8B3nL7H8sDj0uGoI7Q==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795198259;
+	c=relaxed/relaxed; t=1795198264;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=X7OURSsmBiNAAKz0czFdC+E/6wbPVxqwq73TmOo8fvs=;
-	b=QXIKlvrRDxczHLB4LeytQbJiSpBVfcGnYALKsca8ZZyCb/dn8CfRi31M5kH1NLUs8GQB
-	 0w2rU1ai3ZT9RqW5TnAt44gFvBkuayx7gGnAcLRFqkEEv23gN2vFwcoadNei5Syb6K8ZY
-	 UPuoav3zJ2z/ZSgjW+DFWgMFZiR25Kxm4gxcDKAVmVv2QDKPYUH4XPdS53BDD00hHH3Gi
-	 aTB4b8F8fZNmr8MC0fYBY1hn31XX6yIefi4RAvMCnLpgIPF2FForTStn9Xc+cUWk9Xehx
-	 0UPjn79kv3P8D+dlenlk8O0q5mAAT+vqE2Gcsh6UicQ51U5k5uXzbL1Szp7pEX/821Q==
+	bh=SDxj2h8LUz/yKelW0hpXFzxdAGDfTr2wWvPbhGHboyw=;
+	b=wRB7iNq2zmkQkjDdbza26hhQjBigLAjR1kMtCXtf+GIKUOZiSo+IL/oF3gJT3i2WFwBT
+	 7jl7GuqyrLroFzr+uqmwn5D+QPqo5DMZlS+5LexuSyn8YdebRKRD4myPFx4gPnntuq3Un
+	 ljL8hIRxZbSiM//AT7dpwBnYtFQHxAzNPyv5BBVC1qWOLhT0ljKJQtf6IqGvj8R2lTpqQ
+	 5rmnq6Ts2xsJQwKycqgevOqIvf6vo56IUnd2v1gq1FIGmdvmTcMrPZVEuDOOc2IZErjjq
+	 1cJ1+f/Ojy4pRZKZ7Zl27JC3bEA78PGp4/I9JNQHGAWWY1BlhhuhfLd4FBmZYSMA86A==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 8090A1F000E6;
-	Fri, 20 Nov 2026 18:10:43 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id A237D1F00ADF;
+	Fri, 20 Nov 2026 18:10:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795198259;
-	bh=X7OURSsmBiNAAKz0czFdC+E/6wbPVxqwq73TmOo8fvs=;
+	s=k20260515; t=1795198264;
+	bh=SDxj2h8LUz/yKelW0hpXFzxdAGDfTr2wWvPbhGHboyw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=e7ZOw7PYGCrROb8p+s8vsG92XEZ5rvBlh7ZFVv7vsfZdrS2/0bFgcA5l8mHdrFSxe
-	 yV4qm1anZ35/Q1tIoHFkFPLlbvZhywkdBD0TeIL5gWdFQ9zMP7iOVRXuf1/MBsD7xZ
-	 B8LJVj8ifJY4hggI7rXaSi4/rYkbPfYDv/cd320ulwnewHUjuMRxQn9e9UY3rZeb74
-	 gPbznMiP65LzE4CA6dOSKoXrP202wa8cS6briP4Y59YeIfZg8Bc1FIOtYTFOFhv3uy
-	 DPlkKvZy1P4l7uhFhKo63zZoQNWmhXbb7BIkw7mUbQp2IFhxh/OcSIdwZYaiAiTBeM
-	 fujGHFh9Cig/A==
+	b=K7wL3Pl51LKxnGHBdlAfvvRb3zx0G66FKkg2Bk9pnCrUpi0EZWpAc3i3mKVijKO+1
+	 gk92KS4/xtldhh5+fZmphZMHXuR88Ba5MWhELHAEJBcstzv9ZD03CiMskChzCin+mS
+	 SErYPhg0XAZ+ESZUpSS0Chrr00UQSAT/TAiivIAB2oBadcTsH6+FFSNbVOtUETNY4W
+	 6qipPQWvN/58Cy+XDAsMTE0sXGXqp2JYllhF8hDMy3sEF2WyIMwfOTFZch2HkNRsCl
+	 LU7gP8sH2rNAIDKCqNR3V/QaSbefxiPNdOQitIeIQJIlNIA62N7R+Vc8+thL45zOk+
+	 NJojqlBCUiZhg==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 5D47E4B971;
+	by lkml.kernel.org (Postfix) with ESMTP id 1E32C4B969;
 	Fri, 20 Nov 2026 18:09:22 +0000 (UTC)
 From: Gregory Price via B4 Relay <devnull+gourry.gourry.net@kernel.org>
-Date: Fri, 20 Nov 2026 13:09:35 -0500
-Subject: [PATCH 44/60] mm: add N_MEMORY_COMPACTION node state
+Date: Fri, 20 Nov 2026 13:09:33 -0500
+Subject: [PATCH 42/60] mm: fail private placement on exhaustion instead of
+ OOM killing
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -83,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261120-private_nodes_v6-v1-44-74f5f9a115c2@gourry.net>
+Message-Id: <20261120-private_nodes_v6-v1-42-74f5f9a115c2@gourry.net>
 References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 In-Reply-To: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
 To: Yury Norov <yury.norov@gmail.com>, 
@@ -140,11 +141,11 @@ Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org,
  cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
  linux-kselftest@vger.kernel.org, "Gregory Price (Meta)" <gourry@gourry.net>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=5165;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795198153; l=3361;
  i=gourry@gourry.net; s=20261120; h=from:subject:message-id;
- bh=g7ydIdopU0v+cqoPiLJmqWYEIQ70E6DWexCPxxD4cU0=;
- b=Ddw1phUFx8GRbqgTFY+sDiYn8K+6nhCoWRNObiJW/+7XlTHPwI01iZM9GC51adS8pYYGCvW+Y
- J4qL4HCpvf6CbWfMf+rMSh6u7SUxavjyPEy7loBIXocrA9zjhLa1w2G
+ bh=TbRq76F0ctxLdrc4ZvqTJEioaj0puOvUL1bbmmWV60Y=;
+ b=4TuCqLi3E6og3lhWPEnbx57vqhH0UZ+xHpnIJwJApHy8FsrwbpMCJEhWBmQF1kacYofzGuQUk
+ MJg+9HMhsJnCGqIcMdsQtmg/Q+w3B05gKy4AO+RBfvyb9bK7v/Vtefk
 X-Developer-Key: i=gourry@gourry.net; a=ed25519;
  pk=BZWDlx4htkR5KcvGjGtSDfx1tM0E5dlyBR43FEhjWVc=
 X-Endpoint-Received: by B4 Relay for gourry@gourry.net/20261120 with
@@ -155,135 +156,91 @@ Content-Transfer-Encoding: 7bit
 
 From: "Gregory Price (Meta)" <gourry@gourry.net>
 
-Add N_MEMORY_COMPACTION for the nodes compaction may operate on, and
-NODE_MEMORY_FEAT_COMPACTION for memory providers to select it.
+Private memory belongs to a device or specialized service and is a fixed
+pool, like the HugeTLB pool. The OOM killer has no good answer for it:
+the task that faults the last page may not be the one that filled the
+node, a remote accessor or another mapper of a shared object would be
+blamed, and killing a task does not free shared private pages.
 
-Common memory carries every feature, so a mask with
-NODE_MEMORY_FEAT_COMMON must now include compaction.
+When reclaim cannot satisfy an allocation from a private zonelist, fail
+it instead of OOMing.
+  - __alloc_pages_may_oom() does not select a victim for a private
+    request, and marks the task.
+  - handle_mm_fault() turns VM_FAULT_OOM from such a failure into
+    VM_FAULT_SIGBUS. GUP and remote access see -EFAULT, and other
+    callers see the allocation failure, e.g. -ENOMEM from write(2).
 
-The state is internal and has no sysfs file. Internal states follow
-N_GENERIC_INITIATOR, so check sysfs coverage only for the states up to
-it.
+A request that became ineligible since the last retry check is not
+exhausted. Report progress so the slowpath retries and relaxes it.
 
 Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
 ---
- Documentation/mm/physical_memory.rst |  7 +++++++
- drivers/base/node.c                  |  5 +++--
- include/linux/nodemask.h             | 20 ++++++++++++++++----
- mm/page_alloc.c                      |  4 ++++
- 4 files changed, 30 insertions(+), 6 deletions(-)
+ include/linux/sched.h |  2 ++
+ mm/memory.c           |  5 +++++
+ mm/page_alloc.c       | 14 ++++++++++++++
+ 3 files changed, 21 insertions(+)
 
-diff --git a/Documentation/mm/physical_memory.rst b/Documentation/mm/physical_memory.rst
-index ddba7c890418..5d0a69f6c23c 100644
---- a/Documentation/mm/physical_memory.rst
-+++ b/Documentation/mm/physical_memory.rst
-@@ -182,6 +182,12 @@ nodes with particular properties as defined by ``enum node_states``:
- ``N_GENERIC_INITIATOR``
-   The node has one or more Generic Initiators
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index e4f6323d7855..8a2e37475e5d 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1038,6 +1038,8 @@ struct task_struct {
+ 	/* whether the LRU algorithm may apply to this access */
+ 	unsigned			in_lru_fault:1;
+ #endif
++	/* A private memory allocation failed; a fault reports SIGBUS. */
++	unsigned			private_alloc_failed:1;
+ #ifdef CONFIG_COMPAT_BRK
+ 	unsigned			brk_randomized:1;
+ #endif
+diff --git a/mm/memory.c b/mm/memory.c
+index 282266dd5e5d..4a8a08df28ff 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -7003,6 +7003,7 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
+ 	}
  
-+The following states are internal and not exported through sysfs:
+ 	is_droppable = !!(vma->vm_flags & VM_DROPPABLE);
++	current->private_alloc_failed = 0;
+ 
+ 	/*
+ 	 * Enable the memcg OOM handling for faults triggered in user
+@@ -7034,6 +7035,10 @@ vm_fault_t handle_mm_fault(struct vm_area_struct *vma, unsigned long address,
+ 	if (is_droppable && (flags & FAULT_FLAG_USER))
+ 		ret &= ~VM_FAULT_OOM;
+ 
++	/* Exhausted private memory fails like an empty HugeTLB pool. */
++	if (unlikely(current->private_alloc_failed) && (ret & VM_FAULT_OOM))
++		ret = (ret & ~VM_FAULT_OOM) | VM_FAULT_SIGBUS;
 +
-+``N_MEMORY_COMPACTION``
-+  The kernel compacts the node on its own initiative (kcompactd, proactive
-+  and explicit compaction).
-+
- For each node that has a property described above, the bit corresponding to the
- node ID in the ``node_states[<property>]`` bitmask is set.
- 
-@@ -194,6 +200,7 @@ For example, for node 2 with normal memory and CPUs, bit 2 will be set in ::
-   node_states[N_MEMORY]
-   node_states[N_MEMORY_COMMON]
-   node_states[N_CPU]
-+  node_states[N_MEMORY_COMPACTION]
- 
- For various operations possible with nodemasks please refer to
- ``include/linux/nodemask.h``.
-diff --git a/drivers/base/node.c b/drivers/base/node.c
-index 56a1741a6a45..19f93cda90be 100644
---- a/drivers/base/node.c
-+++ b/drivers/base/node.c
-@@ -1000,8 +1000,9 @@ void __init node_dev_init(void)
- {
- 	int ret, i;
- 
-- 	BUILD_BUG_ON(ARRAY_SIZE(node_state_attr) != NR_NODE_STATES);
-- 	BUILD_BUG_ON(ARRAY_SIZE(node_state_attrs)-1 != NR_NODE_STATES);
-+	/* Node states after N_GENERIC_INITIATOR have no sysfs file. */
-+	BUILD_BUG_ON(ARRAY_SIZE(node_state_attr) != N_GENERIC_INITIATOR + 1);
-+	BUILD_BUG_ON(ARRAY_SIZE(node_state_attrs)-1 != N_GENERIC_INITIATOR + 1);
- 
- 	ret = subsys_system_register(&node_subsys, cpu_root_attr_groups);
- 	if (ret)
-diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
-index 02908ef23a62..2757acffff2b 100644
---- a/include/linux/nodemask.h
-+++ b/include/linux/nodemask.h
-@@ -411,6 +411,8 @@ enum node_states {
- 	N_MEMORY_PRIVATE,	/* memory outside the common pool */
- 	N_CPU,		/* The node has one or more cpus */
- 	N_GENERIC_INITIATOR,	/* The node has one or more Generic Initiators */
-+	/* Internal states, not exported through sysfs */
-+	N_MEMORY_COMPACTION,	/* mm compaction may operate on the node */
- 	NR_NODE_STATES
- };
- 
-@@ -542,16 +544,26 @@ static __always_inline int node_random(const nodemask_t *maskp)
- #define for_each_online_node(node) for_each_node_state(node, N_ONLINE)
- #define for_each_node_with_cpus(node)	for_each_node_state(node, N_CPU)
- 
--/* Private nodes omit NODE_MEMORY_FEAT_COMMON. */
-+/*
-+ * Private nodes omit NODE_MEMORY_FEAT_COMMON. Their providers opt into
-+ * individual MM services with the remaining bits.
-+ */
- #define NODE_MEMORY_FEAT_COMMON		BIT(0) /* add to fallback zonelist */
--#define NODE_MEMORY_FEAT_ALL		NODE_MEMORY_FEAT_COMMON
-+#define NODE_MEMORY_FEAT_COMPACTION	BIT(1) /* mm compaction */
-+#define NODE_MEMORY_FEAT_ALL		(NODE_MEMORY_FEAT_COMMON | \
-+					 NODE_MEMORY_FEAT_COMPACTION)
- 
--/* Private memory needs NUMA: node 0 holds all memory without it. */
-+/*
-+ * Common memory carries every feature. Private memory needs NUMA: node 0
-+ * holds all memory without it.
-+ */
- static inline bool node_memory_features_valid(unsigned long features)
- {
- 	if (features & ~NODE_MEMORY_FEAT_ALL)
- 		return false;
--	return IS_ENABLED(CONFIG_NUMA) || (features & NODE_MEMORY_FEAT_COMMON);
-+	if (features & NODE_MEMORY_FEAT_COMMON)
-+		return features == NODE_MEMORY_FEAT_ALL;
-+	return IS_ENABLED(CONFIG_NUMA);
- }
- 
- /*
+ 	if (flags & FAULT_FLAG_USER) {
+ 		mem_cgroup_exit_user_fault();
+ 		/*
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index b7339bc634d5..335ce73e645e 100644
+index 63cc8729c41a..ea48991ef589 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -204,6 +204,7 @@ nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
- #endif
- 	[N_MEMORY] = { { [0] = 1UL } },
- 	[N_MEMORY_COMMON] = { { [0] = 1UL } },
-+	[N_MEMORY_COMPACTION] = { { [0] = 1UL } },
- 	[N_CPU] = { { [0] = 1UL } },
- #endif	/* NUMA */
- };
-@@ -218,10 +219,13 @@ void __meminit node_set_memory_state(int nid, unsigned long features)
- 		node_set_state(nid, N_MEMORY_COMMON);
- 	else
- 		node_set_state(nid, N_MEMORY_PRIVATE);
-+	if (features & NODE_MEMORY_FEAT_COMPACTION)
-+		node_set_state(nid, N_MEMORY_COMPACTION);
- }
+@@ -4176,6 +4176,20 @@ __alloc_pages_may_oom(gfp_t gfp_mask, unsigned int order,
+ 	 * failures more gracefully we should just bail out here.
+ 	 */
  
- void __meminit node_clear_memory_state(int nid)
- {
-+	node_clear_state(nid, N_MEMORY_COMPACTION);
- 	node_clear_state(nid, N_MEMORY_PRIVATE);
- 	node_clear_state(nid, N_MEMORY_COMMON);
- 	node_clear_state(nid, N_MEMORY);
++	/*
++	 * Private memory is a fixed pool, exhausting it fails the allocation
++	 * rather than selecting an OOM victim. Otherwise, if there is some
++	 * indication of progress because of a revoked request, just report
++	 * some progress so the slowpath retries and relaxes it.
++	 */
++	if (ac->alloc_flags & ALLOC_ZONELIST_PRIVATE) {
++		if (!alloc_private_reachable(gfp_mask, ac))
++			*did_some_progress = 1;
++		else
++			current->private_alloc_failed = 1;
++		goto out;
++	}
++
+ 	/* Exhausted what can be done so it's blame time */
+ 	if (out_of_memory(&oc) ||
+ 	    WARN_ON_ONCE_GFP(gfp_mask & __GFP_NOFAIL, gfp_mask)) {
 
 -- 
 2.56.1
