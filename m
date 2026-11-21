@@ -1,95 +1,116 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.100.97
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795290430;
-	b=V6BQk0rOnjx4TzDIx56qBV6m9oo+9Et6ToXzRg2RAwDHWzL+u+Dw6J/3WCcoztzqonSU
-	 mBDCt1kP3r8he7HGIperlm+UrQ8gDkGm9zaYMELwe6Y/Rh8QEICDGE7vKTiU7I3yUf9VY
-	 wLZn/J3uJuu4e534Jp+fN7HXLsuKGJVQRSuJCv8yvXDGcplu5D426dKsOZczNsRVpY0/U
-	 oVqahNMSxHQV5wualiI+srdqB2fg1/hLDb0+gy8Ff5saTEW9eNub28bxC+R8V/QQc2J9z
-	 GKDxncGD1UeClXeIyCNr0k25oL3MsyOVp0UU7H2uiOIqSv8YMZvEjA6NSHsvzMBdj0g==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795290430;
-	h=DMARC-Filter:Received:Received:Date:From:To:Cc:Subject:Message-ID:
-	 References:Content-Type:Content-Disposition:In-Reply-To:
-	 X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
-	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
-	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
-	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
-	 X-Forefront-Antispam-Report:
-	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
-	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
-	 X-MS-Exchange-CrossTenant-Network-Message-Id:
-	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
-	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
-	 X-MS-Exchange-CrossTenant-FromEntityHeader:
-	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
-	 X-MS-Exchange-CrossTenant-UserPrincipalName:
-	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=lQ2kfgj2cqEW41SjRFJ8z3F2mWTze5/8rB7va5fc+to=;
-	b=sXKt01JLruVDqVp5bFLgqrFcftoJuIkAt4x4N57Cua7fwL4oEnUFuINyEHnqsVLdQZuK
-	 l2qIOoTag4T2l0JQ0X0Qy/DRhzxTohmjF9vcAzZg8v/Ng5Bqme7PoWyarfuLkfRTybSjD
-	 XEBufls8USLxts9NoCUGnTIXau5W3pPIZKPElWkPZuyWqs89Dy6D1itlrjtK3a2GCCbIH
-	 GawSUeKhYfPlq150QLpSmyQ5PNGfZTiaKHPpA2rpVMqhg6cVsVH1ZUwcuOJ2sM0fHoCIQ
-	 PqCdK1Ygo1Erbc5K5xweBTeThas8XBbxsLi4b/FWHRiMvH4JAVc3nuyhl39/1inZhvw==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=none header.from=atomlin.com;
-	spf=pass smtp.mailfrom=atomlin.com;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.100.97
-Received: from CWXP265CU009.outbound.protection.outlook.com (mail-ukwestazon11021097.outbound.protection.outlook.com [52.101.100.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.48
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795292018;
+	b=cYbAKnOXNoiye1xguiwjays0+IpxU7t5vCxl+2ppFVWks0c/otavZc3H0R7URjWyu/Ec
+	 wADOgL9fALWyAgj7rw2EuxD8AXDb4IRDHXGYjoV5UT7A+eOoUSRR/CzpUW4X6VkIDd5rf
+	 6UpS6wAbnXLQ9F8wTgMErPAU3Ns3Y0fi4SYoDzONGbJmXUj5voSfQmGCwiO1jrZKk6oe3
+	 cZQOdfO6EJ5C/qlHHoxjT8hhAJ5tTMnihtKFXJ36NokOYe4yxHEve95dAasEjzkjUJhOZ
+	 AsXgTd5dwr88UaWV0Q0Uy/X4N5ZM9IBp68oibO3394xmCTN7jAQQKf3V/l/WCPCALIw==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795292018;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:Content-Transfer-Encoding:
+	 In-Reply-To;
+	bh=LtZDpCvLJ0VvtED3yvRJczLNhRGhJEw9NB2kLqULBmg=;
+	b=fEDAAzYem8RCyiOVUv4b+hT/i6JbyqTPMbdSRJ0annFa57y5OONriUyJZinp9M6cfJjO
+	 6W4eMSC4246kuZYJzLBXhZdLJoO9I9Uh5dYZa6yVo0bLaUCPyipDI0czVDuc7MDNkJwQZ
+	 kWOsxvhOw6hLHMEqjUn90cDfvxP/yQ4Rtb94Q7MUcLE/foQRZp369V/3HS8LycKmyrK1F
+	 3JSfUcZV40Qk4CsipKwKg2Gs//ynSKSr60UC7je3qXoiJNTaTHW1oHX92oYCBtk5dx+6T
+	 wnPDyMq6A+fm9h6FralK3qerBbeGA8OgrEXV9GmA81eV0AqgZO1s/u+r1FsNqZ0MvIw==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=SyKoletg;
+	arc=none smtp.remote-ip=209.85.216.48
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28083606A320;
-	Sat, 21 Nov 2026 19:47:09 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 28083606A320
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CUR82kiE51EzdwzXV1viFNrcmpuaoIxtRhRBGE9F+aAcciiLgIVCw+RWDUrq4jFI6YzqA//pfUdmUXLUyXK58EzH0rtKxS+v61beZlUA4/VSItsWmV3DoBei/60+oLRPniV0Dgbc6gjfIoz+aGrRFl/wmHTmzN+jrUwxCrALbSjGDOlPdUaJqh7CD/hwP3BFUrkQbn0xgZyMIQrzNKYlQxXIcrdwUtL+LzQwMJoHGV3QPTKhuTN2VxztSE+5/dy/bZaMPmUsvSEFNoTohDuPaq1ShMGVVvXDWeXlm1WaxixgCtE29V8odJ7V+t/5400z2M7KTR0SrUr4BfGrQMEc3Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001; h=From:Date:Subject:Message-ID:MIME-Version;
- bh=lQ2kfgj2cqEW41SjRFJ8z3F2mWTze5/8rB7va5fc+to=;
- b=qP83j0FyqOfR4gMnZZcPrieItft9zGZZ1QH7vp5cglETqbiRmfrs8d0uwyeHXUppB8aSk0aeYqlEKwfk44j+zqD9fIn3nmYOBHuO5ZWpRMGpz/Kbnfj8jpu1fx1OdMKEm9r2Xo1iBCn2SUVkitjpvs7cPttgWFkmuXylzmKTU771bab9Gpkb50I+bIiplNA5FAci7kj9GbdTr2QM+Wr3DHaejEDogxQWr1IjKjkynVoXSZQtTEgiuF2C+jGZi+PTyTxg/tKeHSmUg5g7OdSVlGU03zplf4Bqo4b7aOytXFnaU/GAPt6v8p2ZMO+V8dx/JP7z9sWDF9+G9GhiV3hxCw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
- dkim=pass header.d=atomlin.com; arc=none
-Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=atomlin.com;
-Received: from LO2P123MB4190.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:163::8)
- by LO6P123MB6456.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:2a6::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Sat, 21 Nov
- 2026 19:47:05 +0000
-Received: from LO2P123MB4190.GBRP123.PROD.OUTLOOK.COM
- ([fe80::f71f:a9f:c4de:687a]) by LO2P123MB4190.GBRP123.PROD.OUTLOOK.COM
- ([fe80::f71f:a9f:c4de:687a%5]) with mapi id 15.21.0639.012; Sat, 21 Nov 2026
- 19:47:05 +0000
-Date: Sat, 21 Nov 2026 14:47:01 -0500
-From: Aaron Tomlin <atomlin@atomlin.com>
-To: tsbogend@alpha.franken.de, paul@paul-moore.com, jmorris@namei.org, 
-	serge@hallyn.com, andrii@kernel.org, ast@kernel.org, daniel@iogearbox.net, 
-	eddyz87@gmail.com, memxor@gmail.com, mingo@redhat.com, peterz@infradead.org, 
-	juri.lelli@redhat.com, vincent.guittot@linaro.org, stephen.smalley.work@gmail.com, 
-	casey@schaufler-ca.com, longman@redhat.com, tj@kernel.org, hannes@cmpxchg.org, 
-	mkoutny@suse.com
-Cc: ihor.solodrai@linux.dev, martin.lau@linux.dev, song@kernel.org, 
-	yonghong.song@linux.dev, jolsa@kernel.org, emil@etsalapatis.com, 
-	chenridong@huaweicloud.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, 
-	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, kprateek.nayak@amd.com, 
-	omosnace@redhat.com, kees@kernel.org, kpsingh@kernel.org, matt@bobrowski.net, 
-	chris@chrisdown.name, neelx@suse.com, sean@ashe.io, chjohnst@gmail.com, steve@abita.co, 
-	mproche@gmail.com, nick.lange@gmail.com, cgroups@vger.kernel.org, 
-	linux-mips@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
-	linux-security-module@vger.kernel.org, selinux@vger.kernel.org, bpf@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 0/2] security: Expand task_setscheduler LSM hook
-Message-ID: <oa7e3wzdkq6vvdgast5eohbrvtcvfz4mhqexisdxztq3g3l2ys@pxii4gqdgozp>
-References: <20261119040705.684987-1-atomlin@atomlin.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261119040705.684987-1-atomlin@atomlin.com>
-X-ClientProxiedBy: BN9P220CA0018.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:408:13e::23) To LO2P123MB4190.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:600:163::8)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE90C606A32C
+	for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 20:13:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DE90C606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=SyKoletg
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-3b0ae87069dso870673a91.2
+        for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 12:13:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795292017; x=1795896817; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=LtZDpCvLJ0VvtED3yvRJczLNhRGhJEw9NB2kLqULBmg=;
+        b=SyKoletgjjjVyRpNHJLuOuD8rrmsr9nr1u7FImFvA5DOj1lcPvFvf69t0GFBFO3hRM
+         46mdUjMj12QED3jxWtJpi6B3ZkzvpJMphpSUIyKzHpa3JeL+zLXbyvXFH7Hs9hNjYVlk
+         1OUEm0zVKxhQqNfzQkl8AI86DwEUNyKQiTluOoV7Op/03AJwPI/5lNarL38hIgI3Qj4a
+         OIbYGkYqRZy6Be07EdbGcqJVHJGCz5LOPzcO7t7VQ64slFU71TGbC2Ha/j+TVYguQts7
+         hgCX8vwQkL9KdSsbozdSKtVGQtH2JOC+m3uK1bTL5U4sRcP3wqNufrGAJZeqaHCm3jYI
+         8L1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795292017; x=1795896817;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :content-type:mime-version:references:message-id:subject:cc:to:from
+         :date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=LtZDpCvLJ0VvtED3yvRJczLNhRGhJEw9NB2kLqULBmg=;
+        b=vvAiaKdJ80I7coq6EVKs3wW+3RYPEYInR4jgtdUwtJR9FLln2aM4v/LM/lOT7bikVp
+         qw4w1Tz9mt7aavsgOuT2KIz3KYIz1PXgkJKiBJvuXv7nL8IqzmsBiKEIL3Rty/rrlWIK
+         shbU9ti2CcEyTgXQcYt9Gmp8bUmiUnDORQaHk1aUEQ87KPYeHoGwOnppt5FYCeV6kWf8
+         9nQ+kh9yxUdiwaAtBPGb1uL89KUsKfr2fUkrTZ5XFzOpV/+T5QCFnWQVtNasv0YMtbgV
+         S75Y3bOqngO4p5njbm/9AM9r6sB7MoGCwxjBCtk+FDNnyO+mAA/Vg7PQ73PUCML7cyYm
+         B0mw==
+X-Forwarded-Encrypted: i=1; AL+hErFpfUvizp/b2JBoLB6tmzKAc9uIGkhWabBFty0hQbwvfaYGU7w0bRWqxUL5pdOxIGAntKxmtUep@vger.kernel.org
+X-Gm-Message-State: APuU4Z/do2TbvPWiyCKujnxV+FN1v+D9rROQSLp1+NCLTstZjJ/Gy6Nl
+	3KaKptK9l2SdtIKu8QU5kWFJa1jSdLavU/dFfdZbXTqE62KturIzYOZU
+X-Gm-Gg: AZFdTZfSkM8ygc5AmF0Ocz/A5uUUqCXo3cQwqUHMw7hTnW/QhntI2wgV1Jr9ykM+uML
+	E2GnibhMwEOeKxtIyM6QskXrzjgZ4xy+B7tC3iWoe0uniflfb+9guaAikFo4/QZPmg/gy7RC6rv
+	sf3i59ABre169NMm3hNEjMTixY+M+d/05AOGz+WqKVYAyHTUJPqI/N8LQeSDsgUqyFBQky1R2MF
+	4pRdfLwI9TqmGq4AusUP2EqdJRkmSHjMpFMyCDJfJO0Pp4YseirKSGhvq8zNSWG5nP5G4E1xBQQ
+	7KBuRWpXhNHuQRocRB7O/cflem9wYcegvjGwYIraL8ltKcV5WuMnC1CFcSGcouKnRCh3AFaVUyA
+	82s+RO/H3rVtizAwJa6UYGoLa9COLBJI2umytegRkRHw8uhvx6TukEXoTJKrv7HoLO1l1EnmXpj
+	TUJ7MeyXPv8Gq28y6REkmG3BGSl6wKovT3284Py4lt6dtxE2M1M04OReuEwg4MUZSDqXZFG3qY7
+	FbCmQz33LX6eeG7hJ+5poFd9ILtZRDeQqJqQ/A85agf9ESU2h/nXH4BOUej+ItsAqFhmyMppjXX
+	IvL48+YEP3S0stBoCPwW5ZPZFh59167KVzCr2MSEX2IgjBEf6Paus6+x45u0+jdfXX4sGw==
+X-Received: by 2002:a17:90b:5346:b0:3b0:9976:c1c6 with SMTP id 98e67ed59e1d1-3b41c9bbe00mr6148779a91.66.1795292017156;
+        Sat, 21 Nov 2026 12:13:37 -0800 (PST)
+Received: from KASONG-MC4 ([101.32.222.185])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b44b6fc28asm2771809a91.1.2026.11.21.12.13.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 21 Nov 2026 12:13:35 -0800 (PST)
+Date: Sun, 22 Nov 2026 04:13:19 +0800
+From: Kairui Song <ryncsn@gmail.com>
+To: KunWu Chan <kunwu.chan@gmail.com>
+Cc: kasong@tencent.com, linux-mm@kvack.org, 
+	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
+	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
+	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>, 
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
+	Hugh Dickins <hughd@google.com>, SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, 
+	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
+	Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>, 
+	Tal Zussman <tz2294@columbia.edu>, Xiang Liu <liuxiang.277@bytedance.com>, 
+	Ehab Ababneh <ehab.ababneh@intel.com>, Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, 
+	Lian Wang <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>, 
+	Hui Zhu <hui.zhu@linux.dev>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	damon@lists.linux.dev, linux-doc@vger.kernel.org
+Subject: Re: [PATCH v5 17/17] mm/mglru: make folio_test_workingset() work
+ based on folio LRU refs
+Message-ID: <awFbU_VGf0hotbyR@KASONG-MC4>
+References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com>
+ <20261119-mglru-fg-v5-17-9eee2fe97a2d@tencent.com>
+ <CAN_Opa9APLNic4cnohrtZ4-HcdoNvSFvnAKiC6nn+C=thbTAAA@mail.gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -99,94 +120,118 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LO2P123MB4190:EE_|LO6P123MB6456:EE_
-X-MS-Office365-Filtering-Correlation-Id: 78d79859-b496-449d-09f8-08df48083864
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|23010399003|6133799003|18002099003|22082099003|261009223027099003|261021121427099003|261022105027099003|261022075727099003|921020|261028144727099003|261022113327099003|261026140227099003|261026121527099003|56012099006|10067099003|261102125427099003|261102123227099003;
-X-Microsoft-Antispam-Message-Info:
-	McI+X4GoyEQib46nSsEWZ4HrRHq7BVf1imMA20bfdtFZt3rQybjXqTDZ5ubjNnmDvujrJBDs0L1tEUcRca1JuGHldPIQZ0u19tbyCd24rs4aAEs77Jj2MzgCTCOG3w41bBCJs79DhNnj3C+YZJ8o4/8tQrqDwsr4MiFymo98GytVDL7MbysweXdwSXJq1/U/DtPya+SN5gfk3NJut08pm4XKSNQiwtYcEqjgg17fe4jixmyOmpfNqpwH7Bbzkt9Z0wpqGO9f6WJYw3S+/8MruK/PJlUmLGjlJdWfcw+LySHXZaCvQ1jogoa2YTQOX7kZayiwlnGkEifwnSYAcvT3DU0bd79N2kIrS9M5j24wpBah3PKzIRpDICzt0QvQbYiqoFAZhYmIhW2n0+/xe3h6fH8qYqLqB7nquXVY6/BF3+Jif6JX9koNFC8Yi3zW1y+DfqyU8rO/dm3GGW7Cahl8nuJ4GovYgFaXyhUub3Ia9ELTWDf4OMspLOKXn3iscn38r/9ENULnmNKVB6flgGr+ihyGLPJfzXoTbZtXPaoZR2Xy4TPOp8eTr1XMHQEGSXBr5vHG4ZvFaPGR094XkZeZ0SyZVUHMXmLV+heYJa4R5McXXYQw23sOhDikh2/LA1gEHrdQpexP7jnaVcL7Jwkwd52fGUpMYvei+TRMGE/EuhWfptc668ATSOqGS3ClcTNXVhSlygOHQF7QrbDi4iHgZg==
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LO2P123MB4190.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(23010399003)(6133799003)(18002099003)(22082099003)(261009223027099003)(261021121427099003)(261022105027099003)(261022075727099003)(921020)(261028144727099003)(261022113327099003)(261026140227099003)(261026121527099003)(56012099006)(10067099003)(261102125427099003)(261102123227099003);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?UDU5aHptNjcyTi9TMGZabVdNL0l1VGNkeVBvWmI0MDFyN0MvNXdWdEx5NFpm?=
- =?utf-8?B?NkVRdk1pMjUxQW9oQkxOMFpTTllGVTRjRUpvUmQzbTZzQnJQbVU3MWtmYS8x?=
- =?utf-8?B?aXVvMnd6ekxaMlIwNkNJWDIzOXROS2tJQVlHRGlKYTFkNDJ4ZzVNVytPcDcz?=
- =?utf-8?B?RUpHaUxnSlFpZ3BjQWxuaGg5d1U1SFlIUW1jZk5rUFRaTzEzODhPa0hYb0Nt?=
- =?utf-8?B?eXZHODlVWUtXNzI5WTU3Yk9zamN0RndFclhxcEJtejFyZHJyYWJlYjh4RWVG?=
- =?utf-8?B?TzE2cklJbXhCR2x1UksvSFNYazh1M0RONHpXY0QwWkk0NEtDcU1GMVpOaktQ?=
- =?utf-8?B?SDRoenZ1enNWczhIN0FjMGZXWWFQazMxcll3U1o1TzZHM2x4d2R0Q2ZVNzF0?=
- =?utf-8?B?MzF1VzRBUnhQNk9lZUVUYWMzQndKd2xrcmxkSnBkSXczUVYzaUtiVVNVMk8x?=
- =?utf-8?B?b2poa24xRkNUa3l3RmZnZ0FGVTFZWktkNWxTcmdPTVNIQkU0b1dOZTFXMEVH?=
- =?utf-8?B?aVBqUTU3dFhLQWE0enNnY3U4OFZmZ0dJTWNiNndtcEltZWlhSldIQ3JkZVRM?=
- =?utf-8?B?ajZPa0NScTNXM3U3dExLTGJQQXh0eTY4QkZESWlSdndtQkRkeEtZbmhGcGlJ?=
- =?utf-8?B?TFl4TGdHVU9HVVV1KzdCMEl1Um1sTkZEUjBWNmt5SE1jajN1N2lkMDBCeisv?=
- =?utf-8?B?VzhJSzl4ZC92YmJXdE54dDQrendpS2dqRHRVY3lEa3dOcEJMMFFpazkvSjVF?=
- =?utf-8?B?Y0wzWmpLSjZiRVVBalZvWXpGTnJncVMvUDBWcGs5eEoxazhaUndmak9GZjh3?=
- =?utf-8?B?b2R6YnhGdnpybGpaUjBYdG5NT0I2TWlRSlQrcHVyVStGTXhvbVpvbEg0b21M?=
- =?utf-8?B?cktiUU1wYTNRVHlpSWRCMFk5Z2trRFVlVnhGeXlpZktBODVmYktTcE1sOXhz?=
- =?utf-8?B?YkRxUDd2OWd2cSszeG1uSmtrOU13cHMwRmZKMjBkdkp0emF2TWIybU5OU2ZU?=
- =?utf-8?B?ek45cmVPVkdSZGlwdjBZTjRyRWF5eXhkRDVKTnZScWl0MEZuY3pmdklPakpJ?=
- =?utf-8?B?MDJhUlIyT2RLYnlWTFNRUENVWDA2Sk5qOHlUSE4vZ3NLN3Z2SkRsSTJTcW9S?=
- =?utf-8?B?eGlRcldSRXRmTTVwcFJCSDlRcnlWN0pFazY2QjRFVitoaVp5andXcmh2SzQz?=
- =?utf-8?B?M2xUQWRvUkhpSGEzMkNjODlZVTRjQU9VTzlWcXlPWmQ0NzR2R3JRaklhSW5S?=
- =?utf-8?B?WW8vMUc0eHZneC8rWjUraWRlY1Z0ZFNTaXZtUEFlVHNLL3ZCMUl4Wm53dVdi?=
- =?utf-8?B?QWpVZllYaWx3T0xXVDd4Z0hIQnpDU3hBYjMwRjBxVWxOdllyM3dTeHl2MkRN?=
- =?utf-8?B?Qjk3NWVmd1plaCtMM0RuRFYwUU9kM051eDNsNmpaMVl3Z05zaU83ZXQ4WUFm?=
- =?utf-8?B?Z0h6NUlBdTVOYlJ2bUdEdkFkZUZyR3I1NXdSa1lEZ2E1LzhFM2RGcThSWUYz?=
- =?utf-8?B?R1VZZDBhTDIxd24yUS9ic25XOVlnWnUzL0N5NkdCSmVxS2wvRDJKZWpMWXJ5?=
- =?utf-8?B?RmtmSHBWZmdPZzh1YTZ3L0FpK0lqVHo0SHFIcllCT0lGdWRlMXdpWXRpOFh1?=
- =?utf-8?B?OVc4VkNWQkR2UmpDem9ZYWFqMFM0U1B2UWZ2c0Fmc2dyT3p5UUdqanRkZktU?=
- =?utf-8?B?cU9yUFBpWGwwWjZKbkE2UW13SDNiK0UzdGpUZjZueUt5ZjBwamJzbk1FYWh5?=
- =?utf-8?B?M0dnNVE5ZUtMUmtFbmd5YU56WHl4b09ESHF6V2d3WURad3hmV3VrZmVBRHNZ?=
- =?utf-8?B?T1hZRjVDWkNaTHNkL2RLRTRGZVk0VnN0TStKd1kzT2VZb3FpRU9kb09CUlh3?=
- =?utf-8?B?bk5lbWpKMW5XTVNkd0JvUEo0cmhpUlpyTUhSRlhWZC9GdDVpQ01xNXNJeGhI?=
- =?utf-8?B?ME55ekpjelhocGhjVWo5R1BWRVBBazErNTY1ZTFBQWw5UGJjRXpUQWwxVHR0?=
- =?utf-8?B?bFBiZGU5WExhdU43VWMxWHBqUS9OS1lHRmE4OFREcGtad2s5QjBvclFUa2tK?=
- =?utf-8?B?TTNOL28rMUxJaThzUHRraWdUNlRHZzdtU2dxZnIwZC9hRFFyODNuTFBna1VI?=
- =?utf-8?B?ZkdsMURHNnZuRHFzWlJqLytyRjYzem5RaHVBNjJiYXM0S0oyM1JyM3psYnpS?=
- =?utf-8?B?ZVZzeTg5alo4TDNJUkl6eFdROWZLU1ZLdVJxWmsxZTFBTTNTZ1daRTRCSlFi?=
- =?utf-8?B?aUhGNE9Dd3kxK0xyOXBCbDIyWUxiSGwxaTBuS0FPcU1pZVV5bm42eU83WnFI?=
- =?utf-8?B?MHl1Szl4WXpwbk4yTFczNjR5S3FlRFhOcXl5cjZrUUFINUtPQkY2UT09?=
-X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78d79859-b496-449d-09f8-08df48083864
-X-MS-Exchange-CrossTenant-AuthSource: LO2P123MB4190.GBRP123.PROD.OUTLOOK.COM
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Nov 2026 19:47:05.4456
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 5zYUVIqSSNZdp/htLIxtgBS9nfKMuWt1KybSl5WnjQzZphWOa7SVDEtixf0Zpt0buzu7C1YlnjlpKKj5Nd8ElA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO6P123MB6456
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAN_Opa9APLNic4cnohrtZ4-HcdoNvSFvnAKiC6nn+C=thbTAAA@mail.gmail.com>
 
-On Wed, Nov 18, 2026 at 11:07:03PM -0500, Aaron Tomlin wrote:
-> This series expands the task_setscheduler LSM hook to accept nullable
-> pointers to the requested sched_attr and cpumask alongside the target
-> task_struct. For sched_setaffinity(), passing the raw user-supplied
-> affinity mask allows LSMs such as the BPF LSM to audit or filter the
-> mask as requested by userspace before __sched_setaffinity() intersects
-> it with the task's allowed cpuset CPUs, which seccomp filters cannot
-> inspect behind user pointers and scheduler tracepoints only observe
-> post-intersection. Similarly, __sched_setscheduler() passes a local
-> sched_attr populated with the resolved scheduling policy and effective
-> SCHED_FLAG_RESET_ON_FORK state so parameter-only updates expose the
-> effective values rather than internal sentinels or caller defaults, and
-> cpuset task migrations and CLONE_INTO_CGROUP pass the destination
-> cpuset's effective_cpus mask (note that direct writes to cpuset.cpus
-> update task affinity via cpuset_update_tasks_cpumask() without invoking
-> this hook).
+On Fri, Nov 20, 2026 at 05:53:36PM +0800, KunWu Chan wrote:
+> On Thu, Nov 19, 2026 at 5:04 AM Kairui Song via B4 Relay
+> <devnull+kasong.tencent.com@kernel.org> wrote:
+> >
+> > From: Kairui Song <kasong@tencent.com>
+> >
+> > folio_test_workingset() currently tests the PG_workingset bit, which
+> > is only the second lowest access bit of the folio LRU refs count now.
+> > Folios with refs 4 or 5 carry it in the LRU_REFS_MASK field
+> > and no longer have PG_workingset set, so the bit test misses them.
+> >
+> > folio_set_workingset() currently sets the PG_workingset bit with a
+> > plain set_bit(), which also over-promotes folios at a higher refs
+> > count: e.g. a folio at refs 4 is bumped to refs 6, advancing it
+> > toward LRU_REFS_MAX and an earlier generation promotion.
+> >
+> > Move the test into mm_inline.h as an inline helper based on
+> > folio_lru_refs(), checking refs >= LRU_REFS_WORKINGSET.  The set
+> > stays a plain PG_workingset bit operation reserved for the
+> > classical LRU: under MGLRU the refs count is maintained by
+> > folio_inc_lru_refs(), and now triggers a debug WARN when called
+> > while MGLRU is fully on (the switching window is exempt, as the
+> > classical paths legitimately run alongside MGLRU then).  The one
+> > PageWorkingset() user in erofs is converted to the folio helper.
+> >
+> > Under the classical LRU the refs count is not maintained, so the
+> > test is equivalent to the PG_workingset bit test, which is the old
+> > behavior.
+> >
+> > Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > ---
 
-Adding KP Singh, Matt Bobrowski, and Chris Down to Cc.
+...
 
-KP, Matt: I would particularly appreciate your thoughts from the BPF LSM
-side on expanding task_setscheduler (which shifts the trailing ret context
-slot from slot 1 to slot 3 for existing two-argument lsm/task_setscheduler
-programs).
+> > +/*
+> > + * For the classical LRU only: with MGLRU the PG_workingset bit is
+> > + * part of the folio refs count maintained by folio_inc_lru_refs(),
+> > + * and a raw set would corrupt it.  The switching window is exempt
+> > + * because the classical paths legitimately run alongside MGLRU then.
+> > + */
+> > +static __always_inline void folio_set_workingset(struct folio *folio)
+> > +{
+> > +       VM_WARN_ON_ONCE(lru_gen_enabled() && !lru_gen_switching());
+> 
+> Could shrink_active_list() still hit this WARN after the switch
+> to MGLRU completes? It can reschedule after isolating folios and
+> reach this setter after lru_switch is cleared.
 
-Kind regards,
--- 
-Aaron Tomlin
+Hi Kunwu, thanks for the very careful review!
+
+Right I thought a lot about it after your reply, first your concern
+is right, thanks! I should just remove and replace this WARN with
+something else.
+
+And in theory, we should only call this for isolated folio (for CLRU
+it means a folio moving out of active workingset, isolation is always
+the first step), so this helper is fine - except, for the MADV cold
+case, it will call it on for a on-list folio, and will could skew
+the counter and if it raced with switching. Switching is so painful
+I hope we can get rid of it soon :/
+
+But, good thing is it's easy to fix, we just need (part of this belong
+to another patch, a trimmed diff just for reference):
+
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 4f65867446dc..c936d1fadfbd 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -261,8 +262,9 @@ static inline void __folio_set_lru_refs(struct folio *folio, unsigned int refs)
+ 
+ 	do {
+ 		new_flags = old_flags;
+-		VM_WARN_ON_ONCE(lru_get_gen_flags(old_flags) != -1);
+ 		lru_set_refs_flags(&new_flags, refs);
++		if (lru_get_gen_flags(old_flags) != -1)
++			break;
+ 		if (new_flags == old_flags)
+ 			break;
+ 	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+@@ -569,16 +571,16 @@ static inline void folio_clear_lru_refs(struct folio *folio)
+  */
+ static __always_inline void folio_set_workingset(struct folio *folio)
+ {
+-	VM_WARN_ON_ONCE(lru_gen_enabled() && !lru_gen_switching());
+-	set_bit(PG_workingset, folio_flags(folio, FOLIO_HEAD_PAGE));
++	unsigned long flags;
++
++	flags = set_mask_bits(folio_flags(folio, 0), BIT(PG_workingset),
++			      BIT(PG_workingset));
++	VM_WARN_ON_ONCE(lru_get_gen_flags(flags) != -1);
+ }
+ 
+ static __always_inline
+diff --git a/mm/madvise.c b/mm/madvise.c
+index bbbb729ed647..a73d89a2ecca 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -374,11 +374,12 @@ static void madvise_cold_prep_folio(struct folio *folio)
+ 	 * as a workingset refault, and the referenced bit always needs to
+ 	 * be cleared even for inactive folios. For MGLRU, MADV_COLD clears
+ 	 * refs in folio_deactivate(); MADV_PAGEOUT handles refs after isolation.
+ 	 */
+ 	if (!lru_gen_enabled()) {
+ 		folio_clear_lru_refs(folio);
+ 		if (folio_test_active(folio))
+-			folio_set_workingset(folio);
++			__folio_set_lru_refs(folio, LRU_REFS_WORKINGSET);
+ 	}
+ }
