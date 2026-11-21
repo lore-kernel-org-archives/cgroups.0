@@ -1,65 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795230856;
-	b=hNr+JcH/8mnwkyyV7gZZpfUfNaRLW7CMOzLJRoXRXWPwCzx5rSm7L/gwT+qOiwRCGHK3
-	 /TYGo86IbdEa0vJYMmFlktZYVlU7+Ca4KOO2hl8vipF1+8KScnRldsBcSH1wvVb4LCzHk
-	 pSWIHR2WUgM1WqERiehenUfEO8bTliv3CFQ51l796RvkR7mr5pN2QzdBU1+l71tlMRbYj
-	 fIkzgKcJV7q4Ab2nXd3kmR40doc8aBoDetCPCrO9Br6LdmNk4dKu4hxOvpGSwWGbUpjj+
-	 J0BKaJyMeCxcPvB4OlV63ecCl2Zrt8vL3gpTB3+vwLxg3o2NSmBJ42pm7fTgj170DLg==
+	t=1795230864;
+	b=wgPEMC33o4iWlu/VPOYnNDppGqRWAPsCWJuVkdQvWFOysOlpBXY+10BwbsagT3Rp60T9
+	 eWhSJmyucQ//I70LVtcHi/IT0GxbABbC1lCV/2PN4B2c6x9Izs/YWIHeBCGbezvZjkEWv
+	 qnYDF57/3P5I6ezlAvIeSUo9Jow3FdecBmbM3FTynwD72RT+8rMZ9hV2Jwtk+Z4w1DHXB
+	 7pI1+4gqIQbj5MpxZZHtJuKu7oimlND3VxO162xEfVEdkIn1t1F5JsGkhB8XooR+LIlPp
+	 Pfdif/geptIv952HgddIEje+49laLjHq3vN+qap/Jk3jJCYzMjV/jA5Ey0wK/UKd+Hw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795230856;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795230864;
 	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
 	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=mRRUy+sJAurb8e7tBGiIHZ6mni03s6qtHfmTBQfhVKU=;
-	b=CUPn1TaTQE6m8zYFgAiTrqwg6jtmDXhzVDw0H3mkbOzw0vvJMbQWvNFTjlaZ0aypEDjB
-	 8eQLWlDnzT2qcmPXf1siN72x0MLTJPmx5DzJjCDzJmH75QzJV1uCrc+bYnSKIBmin5xxg
-	 qEnMpch+iOBIyJ53SxLEfJA+T+uZlZPGbWxd8gzLjiutsBdTuXmQDNFLNtG23KptErFXQ
-	 +VswalKM/tNir5owWoT29UYELU8BEBwRWfvMVvqb2GSQdsjiBf9VoIR2lVVX0d+kqzb4k
-	 haujFfVDnnXHjMNZJ1fBSrTTj+90Vv1Ljyy/CV7WnZfIxQqn1kQJ+Ylmuvu7rUU458w==
+	bh=Sr6Rs7BiVm3iRcZw5WL7frN+bAW/6De8CnaYgLnn05o=;
+	b=f73vtdQqN7ivZcqa1Bx+fyi6bQRT0C6CHhOpwiFUKnk7LVWmmhN9pFGxL9dVCSxY9sVt
+	 g0mjGEGQV7ry/qgBdRckWThUmbAdiptOOjT2LHe1EgxjAKWCEp2C6pxGOUZNIowzCSOy4
+	 9X3DpSIFBTUrDHFZR6RSlietR8PGiZwnte3FEH2iRwZ83Skd2gkS+88WFNGGaRaKEUPGg
+	 5a7Xjz9DGU03FB39+VHPP+p+dRwvevn5T4izSYJwdycP0/vjf3k+mbZWa+65ALQ/lC3Hf
+	 BPLBUEb0L5lBl2mYJdSizfePcs9PNEmbXDQBTzN8LXNOrNdzNKfu5ZYyD4Nr7vkHtPA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=redhat.com;
 	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=hNEKbSui;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=jInxqCmV;
+	arc=none smtp.remote-ip=170.10.133.124
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9763606A686
-	for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 03:14:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B9763606A686
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DF42606A69B
+	for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 03:14:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6DF42606A69B
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=hNEKbSui
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=jInxqCmV
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795230852;
+	s=mimecast20190719; t=1795230860;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=mRRUy+sJAurb8e7tBGiIHZ6mni03s6qtHfmTBQfhVKU=;
-	b=hNEKbSuiwc37tVKAW2r8aijLX6TaXUzDrd9RYBvKDI7Pi01llNAW2VaRRSXKSeu2oBVPWk
-	fYZmU/RZOORLzIfxsKL1ooTOuMmgvdQQ0jV5EXOxFKf6MdWq78EgpfO1XdsnlSBD5Oz7Dp
-	ewVZ7rHu2hOfjSUEGbHqR6UauzGC5wE=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=Sr6Rs7BiVm3iRcZw5WL7frN+bAW/6De8CnaYgLnn05o=;
+	b=jInxqCmVJOkMVvKFRQ0+RVWS2kN5K31m4T/Ki4m5HXyRFEx114BVtpRMNviQBphiha+exV
+	dYquZJjQFxwtJjV/pNcfqRUUNm3H+an5sDS66cgyBDQkwuvUONTaBlNfIDtivtkbq8vwKf
+	goJWkuKsJ/58fW+44dTeyTUVSyDnzi0=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-587-eAv4RbTSMGWfj6uhat66mA-1; Sat,
- 21 Nov 2026 03:14:10 +0000
-X-MC-Unique: eAv4RbTSMGWfj6uhat66mA-1
-X-Mimecast-MFC-AGG-ID: eAv4RbTSMGWfj6uhat66mA_1795230847
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-554-P5HoySzzOeC7tXhP7yM_gw-1; Sat,
+ 21 Nov 2026 03:14:15 +0000
+X-MC-Unique: P5HoySzzOeC7tXhP7yM_gw-1
+X-Mimecast-MFC-AGG-ID: P5HoySzzOeC7tXhP7yM_gw_1795230852
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 784A71956094;
-	Sat, 21 Nov 2026 03:14:06 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9373A18004F9;
+	Sat, 21 Nov 2026 03:14:11 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A4AE0195B3C0;
-	Sat, 21 Nov 2026 03:14:01 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AF82C1956087;
+	Sat, 21 Nov 2026 03:14:06 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -88,9 +88,9 @@ Cc: cgroups@vger.kernel.org,
 	Guopeng Zhang <guopeng.zhang@linux.dev>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next 1/3] tick/sched: Make tick_nohz_full_mask and HK_TYPE_KERNEL_NOISE cpumask consistent
-Date: Fri, 20 Nov 2026 22:13:27 -0500
-Message-ID: <20261121031329.240177-2-longman@redhat.com>
+Subject: [PATCH-next 2/3] sched/isolation: Forbid the boot CPU from being isolated
+Date: Fri, 20 Nov 2026 22:13:28 -0500
+Message-ID: <20261121031329.240177-3-longman@redhat.com>
 In-Reply-To: <20261121031329.240177-1-longman@redhat.com>
 References: <20261121031329.240177-1-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -105,133 +105,99 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-When the nohz_full boot parameter is first set, the cpu list parameter is
-passed directly to tick_nohz_full_setup() to set up tick_nohz_full_mask
-cpumask. Then the HK_TYPE_KERNEL_NOISE cpumask will be set up as the
-inverse of given cpu list parameter. Some of the timer code and RCU
-uses tick_nohz_full_mask directly while other timer code, scheduler
-and other subsystems use the HK_TYPE_KERNEL_NOISE cpumask.
+It is reported that with CONFIG_CPUSETS=n, a kernel booted with
+isolcpus=domain,0 hits the BUG() in select_fallback_rq() during boot
+[1]. At boot time, cpu 0 is the only CPU online and an unbound kworker
+cannot be run on a domain isolated CPU causing kernel panic.
 
-There are two problems that can cause inconsistency between
-tick_nohz_full_mask and HK_TYPE_KERNEL_NOISE cpumask. First of all,
-if there are more than one nohz_full boot parameters in the boot
-command line, only the first one is passed to tick_nohz_full_setup()
-while the setting of HK_TYPE_KERNEL_NOISE cpumask is controlled by
-the last nohz_full parameter.
+Sashiko also reports that domain isolating the boot CPU can break system
+suspend and trigger a BUG_ON() [2]. So it is problematic if the boot CPU
+is domain isolated.
 
-Secondly, with CONFIG_PM_SLEEP_SMP && !CONFIG_PM_SLEEP_SMP_NONZERO_CPU
-config options, the boot CPU will be cleared from tick_nohz_full_mask if
-set while the corresponding HK_TYPE_KERNEL_NOISE cpumask isn't touched.
-The nohz_full entry in kernel-parameters.txt does state that the boot
-CPU will be forced outside the range to maintain the timekeeping. So it
-makes sense that the HK_TYPE_KERNEL_NOISE should be modified accordingly.
+There may be other kernel subsystems that have problem if the boot CPU
+is domain isolated as most of them won't take into account the fact
+that boot CPU is currently allowed to be domain isolated. The current
+housekeeping code enforces the rule that if both isolcpus and nohz_full
+boot parameters are set, they should match each other. Given the fact
+that the boot CPU is likely to be disallowed from the nohz_full list,
+it makes sense that we should not allow the boot CPU from being set
+in the isolcpus boot parameter as well. This will also avoid the above
+problems due to boot CPU being domain isolated.
 
-PM_SLEEP_SMP_NONZERO_CPU depends on ARCH_SUSPEND_NONZERO_CPU which can
-only be set for the PowerPC architecture. Moreover CONFIG_PM_SLEEP_SMP is
-on by default, it means most kernels will not allow CPU 0 to be set in
-the tick_nohz_full_mask and hence should be set in HK_TYPE_KERNEL_NOISE
-cpumask.
+Do that by clearing the boot CPU from the isolcpus range when it is
+specified in the boot command line. A warning will also be printed when
+that happens.
 
-The first inconsistency problem is fixed by calling tick_nohz_full_setup()
-every time a nohz_full parameter is hit with tick_nohz_full_setup()
-modified to allow multiple calls. The second problem is fixed by adding
-a new cpumask_set_cpu() init function to be called by tick_nohz_init()
-when the boot CPU is cleared from tick_nohz_full_mask.
+This is indeed a change in behavior which is customer visible. So the
+kernel-paremeters.txt is updated to mention the fact that boot CPU
+cannot be isolated.
 
-Fixes: 6010d245ddc9 ("sched/isolation: Consolidate housekeeping cpumasks that are always identical")
-Fixes: 6f1982fedd59 ("sched/isolation: Handle the nohz_full= parameter")
+[1] https://lore.kernel.org/lkml/20261117144817.265109-1-mathieu.desnoyers@efficios.com
+[2] https://sashiko.dev/#/patchset/20261108180849.1268263-1-longman%40redhat.com
+
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- include/linux/sched/isolation.h |  2 ++
- kernel/sched/isolation.c        | 14 +++++++++++++-
- kernel/time/tick-sched.c        |  8 ++++++--
- 3 files changed, 21 insertions(+), 3 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt |  7 ++++---
+ kernel/sched/isolation.c                        | 16 ++++++++++++----
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
-index cf0fd03dd7a2..ae5109450ac9 100644
---- a/include/linux/sched/isolation.h
-+++ b/include/linux/sched/isolation.h
-@@ -44,6 +44,7 @@ extern bool housekeeping_enabled(enum hk_type type);
- extern void housekeeping_affine(struct task_struct *t, enum hk_type type);
- extern bool housekeeping_test_cpu(int cpu, enum hk_type type);
- extern int housekeeping_update(struct cpumask *isol_mask);
-+extern void __init housekeeping_set_cpu(int cpu, enum hk_type type);
- extern void __init housekeeping_init(void);
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 930cee4de79a..1c8bf3583b0b 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2954,11 +2954,12 @@ Kernel parameters
  
- #else
-@@ -72,6 +73,7 @@ static inline bool housekeeping_test_cpu(int cpu, enum hk_type type)
- }
+ 			  You can move a process onto or off an "isolated" CPU via
+ 			  the CPU affinity syscalls or cpuset.
+-			  <cpu number> begins at 0 and the maximum value is
+-			  "number of CPUs in system - 1".
++			  <cpu number> begins at 0 and the maximum value
++			  is "number of CPUs in system - 1". However boot
++			  CPU (cpu 0) cannot be domain isolated as it
++			  may cause problem with some kernel subsystems.
  
- static inline int housekeeping_update(struct cpumask *isol_mask) { return 0; }
-+static inline void housekeeping_set_cpu(int cpu, enum hk_type type) { }
- static inline void housekeeping_init(void) { }
- #endif /* CONFIG_CPU_ISOLATION */
- 
+ 			managed_irq
+-
+ 			  Isolate from being targeted by managed interrupts
+ 			  which have an interrupt mask containing isolated
+ 			  CPUs. The affinity of managed interrupts is
 diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
-index 156025ef81b7..18b50c0d807a 100644
+index 18b50c0d807a..ef4aa5126dc5 100644
 --- a/kernel/sched/isolation.c
 +++ b/kernel/sched/isolation.c
-@@ -120,6 +120,18 @@ bool housekeeping_test_cpu(int cpu, enum hk_type type)
- }
- EXPORT_SYMBOL_GPL(housekeeping_test_cpu);
- 
-+void __init housekeeping_set_cpu(int cpu, enum hk_type type)
-+{
-+	/* Only CPU setting of HK_TYPE_KERNEL_NOISE is currently supported */
-+	if (type != HK_TYPE_KERNEL_NOISE)
-+		return;
-+
-+	if (static_branch_unlikely(&housekeeping_overridden) &&
-+	    READ_ONCE(housekeeping.flags) & BIT(type))
-+		cpumask_set_cpu(cpu, housekeeping.cpumasks[type]);
-+}
-+EXPORT_SYMBOL_GPL(housekeeping_set_cpu);
-+
- int housekeeping_update(struct cpumask *isol_mask)
+@@ -232,6 +232,7 @@ static int __init housekeeping_setup(char *str, unsigned long flags)
  {
- 	struct cpumask *trial, *old = NULL;
-@@ -301,7 +313,7 @@ static int __init housekeeping_setup(char *str, unsigned long flags)
- 			housekeeping_setup_type(type, housekeeping_staging);
- 	}
+ 	cpumask_var_t non_housekeeping_mask, housekeeping_staging;
+ 	unsigned int first_cpu;
++	int boot_cpu = smp_processor_id();
+ 	int err = 0;
  
--	if ((flags & HK_FLAG_KERNEL_NOISE) && !(housekeeping.flags & HK_FLAG_KERNEL_NOISE))
-+	if (flags & HK_FLAG_KERNEL_NOISE)
- 		tick_nohz_full_setup(non_housekeeping_mask);
+ 	if ((flags & HK_FLAG_KERNEL_NOISE) && !(housekeeping.flags & HK_FLAG_KERNEL_NOISE)) {
+@@ -254,14 +255,21 @@ static int __init housekeeping_setup(char *str, unsigned long flags)
  
- 	housekeeping.flags |= flags;
-diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
-index 255488366d7c..a4dbb154242f 100644
---- a/kernel/time/tick-sched.c
-+++ b/kernel/time/tick-sched.c
-@@ -22,6 +22,7 @@
- #include <linux/sched/stat.h>
- #include <linux/sched/nohz.h>
- #include <linux/sched/loadavg.h>
-+#include <linux/sched/isolation.h>
- #include <linux/module.h>
- #include <linux/irq_work.h>
- #include <linux/posix-timers.h>
-@@ -634,9 +635,11 @@ void __tick_nohz_task_switch(void)
- /* Get the boot-time nohz CPU list from the kernel parameters. */
- void __init tick_nohz_full_setup(cpumask_var_t cpumask)
- {
--	alloc_bootmem_cpumask_var(&tick_nohz_full_mask);
-+	if (!tick_nohz_full_running) {
-+		alloc_bootmem_cpumask_var(&tick_nohz_full_mask);
-+		tick_nohz_full_running = true;
-+	}
- 	cpumask_copy(tick_nohz_full_mask, cpumask);
--	tick_nohz_full_running = true;
- }
- 
- bool tick_nohz_cpu_hotpluggable(unsigned int cpu)
-@@ -683,6 +686,7 @@ void __init tick_nohz_init(void)
- 			pr_warn("NO_HZ: Clearing %d from nohz_full range "
- 				"for timekeeping\n", cpu);
- 			cpumask_clear_cpu(cpu, tick_nohz_full_mask);
-+			housekeeping_set_cpu(cpu, HK_TYPE_KERNEL_NOISE);
+ 	first_cpu = cpumask_first_and(cpu_present_mask, housekeeping_staging);
+ 	if (first_cpu >= nr_cpu_ids || first_cpu >= setup_max_cpus) {
+-		__cpumask_set_cpu(smp_processor_id(), housekeeping_staging);
+-		__cpumask_clear_cpu(smp_processor_id(), non_housekeeping_mask);
++		__cpumask_set_cpu(boot_cpu, housekeeping_staging);
++		__cpumask_clear_cpu(boot_cpu, non_housekeeping_mask);
+ 		if (!housekeeping.flags) {
+-			pr_warn("Housekeeping: must include one present CPU, "
+-				"using boot CPU:%d\n", smp_processor_id());
++			pr_warn("Housekeeping: must include one present CPU, using boot CPU:%d\n",
++				boot_cpu);
  		}
  	}
+ 
++	if ((flags & HK_FLAG_DOMAIN) && cpumask_test_cpu(boot_cpu, non_housekeeping_mask)) {
++		pr_warn("Housekeeping: Boot CPU must not be isolated, clearing %d from isolcpus range\n",
++			 boot_cpu);
++		__cpumask_set_cpu(boot_cpu, housekeeping_staging);
++		__cpumask_clear_cpu(boot_cpu, non_housekeeping_mask);
++	}
++
+ 	if (cpumask_empty(non_housekeeping_mask))
+ 		goto free_housekeeping_staging;
  
 -- 
 2.56.1
