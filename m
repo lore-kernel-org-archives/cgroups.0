@@ -1,91 +1,60 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795207378;
-	b=zyEQAXpoT3MBeuIH5iqmUMd9Fa0oK0HtRx2T6EZaohCaxcoEFBKXxv4ub/b3ypP9iGDm
-	 tDkK/NbDmG07GUl3udVHZ8vBzozQjm5QagY5yUbNuuZyjk32uMz7CEq8uGk2MjZzVw1Bw
-	 LQ6jwSF0iPieiUhVHmyGD4EOJcKhkcs0nKhuCh/Odau/CB4q4gdxK0uaZaa13noN6ntOx
-	 9clOae3GPq4Nv2AyGajVUyLLHfvJAYo2chk0L+w6u9y/2zQ6RItxkIsZSwvd1rGRpGxLi
-	 nn/H/U159kZWmMzcRgPcJypHUKnO0mi+tnbbQLzD6pJfFq0GNYfYFMVfQswTB1EcUbg==
+	t=1795230684;
+	b=Vdy5zTxkhfFa1Gn5gEXY6gszVJCBDISTaNd93labMUQlLsTRGgFZcL9pLc6ljt5Hjoa/
+	 lieJO5InvRAEMOLfIT4RgwN2SUVwgvrYckKg6hE0yJy4T3EXJnLeTPlbJZWSrz1qQeQ05
+	 3NG/UZFlVwdTQzZ9bSpXpv4B+8Ph2vpeqnXjRoaKxXiFb16ckr0yrW5qeqA2yUuqkHYyl
+	 6VIZL7gxeLlwLZve1LkKykdt612JJie/22mb6mLN1gRf2EtsvCJ8R8R14lKfpQzbjn1xr
+	 b/Y6plvFoDnZCM9qcL3I+eajoZPakF8ZEVOGJdJdhCpLxK38kDjE3fkxJJdqMPL0RDw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795207378;
-	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
-	 Message-Id:X-Mailer:In-Reply-To:References:MIME-Version:
+	a=rsa-sha256; c=relaxed/relaxed; t=1795230684;
+	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-Id:
+	 In-Reply-To:References:X-Mailer:Mime-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=/WfV8vGSyqQt7k7lOokOJoO6ZkJTLOy+uFOX22pJNBY=;
-	b=1fo/1IB36aW+F7Z0SydHhqwaRzbrXgTXbiifw/r3cuPyz4SLVIkmIrUdsbKpOEtDfxWx
-	 Z1Zg9J2OonSRwye6Y1aLRMFvE6MjCWOs6PKQq/gf8Tbbuwz2aN/QKRLmPN+NdtdE7xBVa
-	 ExueHJabpruwEy6MzMaZrdrYct7vvHCFGqnq1ZiiFYTqzoq/nMSyD77CyOT2OpUYv8riU
-	 F0/HdKcn7EG4S3Zaioowa3ql+7XB2GjWO4psKnCG9SjdwYht5hWV1KJB32TUD4qUlt6wH
-	 K+nUuts8HGBOTDaN9i9dmYLclbGDe8m4OIBHN0ZUmpPThH4GeyXSaxNyKWCvVhnq5Dw==
+	bh=r1VxHdvjTAQqwIi48lBUjfmQrAuXiHwG2H/BM8QNl/s=;
+	b=ftWeFuLES/7ijOvTt2Za0qGNV0oWJm7btZ1tpX3P3usgah0Sj2E5VeZHmaLJ5O+JIJdQ
+	 gdsgKuZIOmgIa9vBWM98Q1xdpTDsM/M+sjXjlKjaDjpcqCpWpyB5Uu3ubszBgaYpvvjEi
+	 nsO6Jdjq24H61Hw2XdqFdmOi1oq4/lJCCIK6h2YUD65cOTPLJe5ArXsPvy+2LDR1rGOlM
+	 +qs8/C7zmQWd8NFIuLKpOQYSzmy7jTwvWHsH97PCpJLI7pprWVz8LGDNBGP9xKjlFfTsb
+	 wfXrgy0N0GPWZpgG4xS/x1UhsOCmNIJLLlwRgCS7enGTo7XpHZ5Qtt16rvEFkZcysaw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=efficios.com;
-	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=nQW4xbIx;
-	arc=none smtp.remote-ip=158.69.130.18
-Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
+	dkim=pass header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b="BS/bHeTg";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE5C360A2620;
-	Fri, 20 Nov 2026 20:42:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EE5C360A2620
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E854606A69F;
+	Sat, 21 Nov 2026 03:11:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=nQW4xbIx
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795207357;
-	bh=/WfV8vGSyqQt7k7lOokOJoO6ZkJTLOy+uFOX22pJNBY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=nQW4xbIxUPHnGpgDojDFsc+h/50MQMrO40ygmLz8bMvrfA5slRsoXyzx9zCEr23VN
-	 urGJBrp5bbs3xsfMdWSZuGiY1e732O7PvuceCgRaSRggcgEaYcfu1KbJXhshqbC/NQ
-	 fw30J5fSy3k/suROMDeAdE6gTbH7i+gVQeze9wlmZTPfkTlkj7ChrS1cfoFz0lcOzr
-	 YhHSfz6g4isHK1BIJivdws4D0WEQpRQQ55/Jqd9dGX55MvBQqLvPpNRX9vq7Ae6SQ+
-	 PZHIQADaQTB+yHomzP5huZXfLaAGk82fQbROgwMMvRvECZIApryMdrJo/zA9l3z7vu
-	 9U9P6RojCr3gQ==
-Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jWS2P0KB1zTqf;
-	Fri, 20 Nov 2026 15:42:37 -0500 (EST)
-From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-To: juri.lelli@redhat.com,
-	peterz@infradead.org,
-	mingo@redhat.com,
-	vincent.guittot@linaro.org
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	tglx@kernel.org,
-	will@kernel.org,
-	boqun@kernel.org,
-	dietmar.eggemann@arm.com,
-	rostedt@goodmis.org,
-	bsegall@google.com,
-	mgorman@suse.de,
-	vschneid@redhat.com,
-	kprateek.nayak@amd.com,
-	luca.abeni@santannapisa.it,
-	mathieu.poirier@linaro.org,
-	longman@redhat.com,
-	ridong.chen@linux.dev,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	shuah@kernel.org,
-	bigeasy@linutronix.de,
-	clrkwllms@kernel.org,
-	parri.andrea@gmail.com,
-	m.szyprowski@samsung.com,
-	kayracizmeci@gmail.com,
-	weihengqiuu@gmail.com,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev,
-	stable@vger.kernel.org
-Subject: [PATCH v10 28/40] sched/deadline: Start a period for a task that enters the class blocked
-Date: Fri, 20 Nov 2026 15:42:05 -0500
-Message-Id: <0557a76f35a09f1caa281777e3926d3446a7c74e.1795207232.git.mathieu.desnoyers@efficios.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
-References: <cover.1795207232.git.mathieu.desnoyers@efficios.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux-foundation.org header.i=@linux-foundation.org header.a=rsa-sha256 header.s=korg header.b=BS/bHeTg
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 367791F000D3;
+	Sat, 21 Nov 2026 03:11:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux-foundation.org; s=korg; t=1795230683;
+	bh=r1VxHdvjTAQqwIi48lBUjfmQrAuXiHwG2H/BM8QNl/s=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References;
+	b=BS/bHeTg3i9yU0iRDPP1R3YfsQF2x6YPJyg+rvwjV5aN7f+0+yUx8P8u9mlS80Oo3
+	 BPCIXLXGgacppWIdgofzZFrDrkTqR4JQQFDYA5YxFgLRH4arI9Fwo+StBe/bXn2zuW
+	 l+TWeOp7WX0bejBF9sukOBw4cN+yK2Evl673poBs=
+Date: Fri, 20 Nov 2026 19:11:22 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Qinyun Tan <qinyuntan@linux.alibaba.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
+ shakeel.butt@linux.dev, muchun.song@linux.dev, mkoutny@suse.com,
+ david@kernel.org, ziy@nvidia.com, baolin.wang@linux.alibaba.com,
+ usama.arif@linux.dev, david@fromorbit.com, qi.zheng@linux.dev,
+ yosry@kernel.org, nphamcs@gmail.com, chengming.zhou@linux.dev,
+ xlpang@linux.alibaba.com, ryncsn@gmail.com, gourry@gourry.net,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 RESEND 0/5] mm: restore per-memcg reclaim for NONSLAB
+ shrinkers under nokmem
+Message-Id: <20261120191122.f31167fc1c987196e5a0b86b@linux-foundation.org>
+In-Reply-To: <565e4075-2788-4310-8309-7739b9ee94ed@linux.alibaba.com>
+References: <20261105092233.3558950-1-qinyuntan@linux.alibaba.com>
+	<20261109215053.85df5685da951ab47ef858f1@linux-foundation.org>
+	<565e4075-2788-4310-8309-7739b9ee94ed@linux.alibaba.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -94,157 +63,60 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Commit fb00aca47440 ("rtmutex: Turn the plist into an rb-tree") sorts
-the waiters of an rt_mutex by priority. For deadline tasks, "the one
-with the earliest deadline wins". A waiter takes the deadline of its
-task.
+On Fri, 20 Nov 2026 15:04:37 +0800 Qinyun Tan <qinyuntan@linux.alibaba.com> wrote:
 
-A task can enter the class while it waits on an rt_mutex.
-sched_setattr() can make it SCHED_DEADLINE. A priority inheritance
-boost can also put it in the class, if it owns another rt_mutex.
-switched_to_dl() does not set up a task that is not queued. Its wakeup
-does. But the chain walk reads the deadline before that wakeup, and
-copies it into the waiter. A task new to the class has a deadline of 0.
+> 
+> >> objects of all cgroups share one list per node: the per-memcg
+> >> shrinker bit is only set for whichever memcg happens to repopulate
+> >> the empty list, so pressure in other cgroups may not even trigger
+> >> the scan, and when it does, the scan walks everyone's objects.
+> > 
+> > Thanks.  Sashiko still has significant-sounding things to say:
+> > 
+> > 	https://sashiko.dev/#/patchset/20261105092233.3558950-1-qinyuntan@linux.alibaba.com
+> > 
+> > It also says "failed" for reasons I don't understand and it doesn't
+> > seem to have emailed anyone.  Please check it out?
+> 
+> 
+> Hi Andrew,
+> 
+> Sorry it's taken me this long to get back to you. I've had a very busy
+> couple of weeks.
+> 
+> Thanks for pointing me to the report. I looked into the two issues
+> Sashiko flagged in patch 2/5.
+> 
+> Sashiko pointed out that mem_cgroup_id() identifies the cgroup
+> directory. We reproduced the ID collision on v4: after disabling and
+> re-enabling the memory controller on the same cgroup, the old and new
+> memcgs had the same mem_cgroup_id(). Once the new memcg has its own
+> LRU list, a lookup for the old memcg can therefore find the new list.
+> 
+> I think memcg->css.id would be a better fit for the list_lru index.
+> Each per-memcg list belongs to a particular memory CSS, and its ID can
+> only be reused after the last reference to that CSS is dropped and an
+> RCU grace period has elapsed. That keeps the indices distinct for as
+> long as the old CSS can still be accessed.
 
-So the waiter goes before every other deadline waiter. It takes the
-rt_mutex first, whatever their deadlines. Those waiters can then miss
-their deadlines. It also boosts a deadline owner whose own deadline is
-earlier.
+Yes, it sounds like ->css.id better matches the lifetime needs.  And
+the root memcg list_lru retains index=0?
 
-Fix this by starting a new period in switched_to_dl() for a task that
-waits on an rt_mutex, if its deadline has passed. The period uses the
-reservation the task runs on: its own, or the copy a boost made. This
-is what setup_new_dl_entity() does at an enqueue. At the wakeup,
-update_dl_entity() then checks that period as for any wakeup.
+> The second finding is the same race that Shakeel's patch [1] addresses.
+> It predates this series: a folio can move to the root memcg between
+> the two lookups in folio_memcg_list_lru_alloc(). Shakeel's patch
+> rechecks whether allocation is needed after taking the memcg reference.
+> That also prevents the unnecessary allocation at index 0 that Sashiko
+> flagged in v4.
+> 
+> Does using the CSS ID for the list_lru index sound reasonable? I'd be
+> happy to incorporate any suggestions and send a v5.
 
-A new donor of a task with no parameters of its own needs the same. For
-a queued task, the enqueue of the boost starts a period from the new
-donor. For a blocked task, dl_boost_blocked() starts it at the boost.
-
-The setattr_blocked_keeps_order and boost_blocked_keeps_order cases,
-added to deadline_bw_test later in this series, test this. Both fail on
-v7.4-rc2 and on the series without this patch. The triage of the Sashiko
-AI review of this series found the bug.
-
-Fixes: fb00aca47440 ("rtmutex: Turn the plist into an rb-tree")
-Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: stable@vger.kernel.org
----
- kernel/sched/core.c     |  4 ++++
- kernel/sched/deadline.c | 46 +++++++++++++++++++++++++++++++++++++++++
- kernel/sched/sched.h    |  1 +
- 3 files changed, 51 insertions(+)
-
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 94099ebb6246..75bfde7046fb 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -7969,8 +7969,12 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
- 			if (!dl_prio(p->normal_prio) ||
- 			    (pi_task && dl_prio(pi_task->prio) &&
- 			     dl_entity_preempt(&pi_task->dl, &p->dl))) {
-+				struct sched_dl_entity *old_donor = p->dl.pi_se;
-+
- 				dl_set_donor(&p->dl, pi_task);
- 				scope->flags |= ENQUEUE_REPLENISH;
-+				if (!scope->queued && p->dl.pi_se != old_donor)
-+					dl_boost_blocked(p);
- 			} else {
- 				dl_deboost(&p->dl);
- 				/*
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index aa12908aeaea..ee3a08ff3345 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -139,6 +139,12 @@ void dl_deboost(struct sched_dl_entity *dl_se)
- 	}
- 	dl_drop_boost(dl_se);
- }
-+
-+/* Return true if @p waits on an rt_mutex. The caller holds its pi_lock. */
-+static inline bool dl_task_pi_blocked(struct task_struct *p)
-+{
-+	return p->pi_blocked_on;
-+}
- #else /* !CONFIG_RT_MUTEXES: */
- static inline struct sched_dl_entity *pi_of(struct sched_dl_entity *dl_se)
- {
-@@ -153,6 +159,11 @@ static inline bool is_dl_boosted(struct sched_dl_entity *dl_se)
- {
- 	return false;
- }
-+
-+static inline bool dl_task_pi_blocked(struct task_struct *p)
-+{
-+	return false;
-+}
- #endif /* !CONFIG_RT_MUTEXES */
- 
- static inline u8 dl_get_type(struct sched_dl_entity *dl_se, struct rq *rq)
-@@ -1184,6 +1195,30 @@ static inline void replenish_dl_new_period(struct sched_dl_entity *dl_se,
- 	trace_sched_dl_replenish_tp(dl_se, cpu_of(rq), dl_get_type(dl_se, rq));
- }
- 
-+#ifdef CONFIG_RT_MUTEXES
-+/*
-+ * Start a period from the new donor of @p, if @p has no reservation of its
-+ * own and waits on an rt_mutex. The enqueue does this for a queued task, in
-+ * replenish_dl_entity(). A blocked task is not enqueued, but the chain walk
-+ * copies its deadline into its waiter.
-+ *
-+ * The caller calls it only when the donor changes. A new period changes the
-+ * deadline, so the chain walk finds the waiter out of date and goes on. In a
-+ * ww_mutex cycle, a new period at each step would never let the walk stop.
-+ *
-+ * The caller holds the rq lock and the pi_lock of @p, and has updated the
-+ * rq clock.
-+ */
-+void dl_boost_blocked(struct task_struct *p)
-+{
-+	struct sched_dl_entity *dl_se = &p->dl;
-+
-+	if (!dl_se->dl_deadline && !dl_se->dl_throttled &&
-+	    dl_task_pi_blocked(p))
-+		replenish_dl_new_period(dl_se, task_rq(p));
-+}
-+#endif
-+
- /*
-  * We are being explicitly informed that a new instance is starting,
-  * and this means that:
-@@ -4725,6 +4760,17 @@ static void switched_to_dl(struct rq *rq, struct task_struct *p)
- 	if (!task_on_rq_queued(p)) {
- 		add_rq_bw(&p->dl, &rq->dl);
- 
-+		/*
-+		 * A task that waits on an rt_mutex cannot wait for its wakeup.
-+		 * The chain walk sorts its waiter by its deadline first. A task
-+		 * new to the class has a deadline of 0, which goes before every
-+		 * real one. Start a new period now, as setup_new_dl_entity()
-+		 * does at an enqueue.
-+		 */
-+		if (dl_task_pi_blocked(p) && !p->dl.dl_throttled &&
-+		    dl_time_before(p->dl.deadline, rq_clock(rq)))
-+			replenish_dl_new_period(&p->dl, rq);
-+
- 		return;
- 	}
- 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 516a49370713..e512091ce5ed 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -413,6 +413,7 @@ static inline void dl_clear_donor(struct sched_dl_entity *dl_se)
- }
- 
- extern void dl_deboost(struct sched_dl_entity *dl_se);
-+extern void dl_boost_blocked(struct task_struct *p);
- 
- /* End the boost of @dl_se. The caller holds the rq lock of its task. */
- static inline void dl_drop_boost(struct sched_dl_entity *dl_se)
--- 
-2.47.3
-
+Shakeel has a couple of related fixes in mm-usable ("mm: list_lru: fix
+NULL deref when a folio moves to the root memcg" and "mm: list_lru:
+don't use a new memcg's lists for an offline memcg") so please base on
+that.
