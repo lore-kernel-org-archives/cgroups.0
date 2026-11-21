@@ -1,103 +1,114 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.50
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795246350;
-	b=OIUqFsaSyZ9Iwdc+BrbW7A+h/Gu7nAyNxEnwQoMVZirtKkFkPwbSPTirx1U7vbiKuMET
-	 /dDS4PCk5h1DmaSZ0UApnewwd4bjOKRS4k8KMkxj39QfPL4rWnmiWPRlg0OX5x4YbL+C/
-	 KJ7bZ+PUVS3pTxli3C/VSkSFvSwv4mir17pGrhoh8deOJSX5N3mQRVZ4yjJAjdLSl1omx
-	 LWFj6edW4O8Sux/dnNMzpY4hugbhtsY3uDmjfHzW3Yi219IDtveGbm9YFyyNZmkCQgTvp
-	 Z5p9SLSWpDyhM4s5q7JvB39KPMKXIeUwfHGDP/+3eAI2fmjWG0SY+H6QGCHAkM0V9jw==
+	t=1795249735;
+	b=tQ1NacpaFBOBtjDJ0iBXWKrwBr10Paq4zgyE5IJ/k0LLw9CXmPSvg4yUtSuviSBK2ala
+	 mVyvMqf1mhwE+Z4ozzp+cU4tJdN7HWk9LVjLWeRQ9jzcsxvAi/uLLZ9Q7nElyYtOG32Qg
+	 wKo/toqju4AaNe57w30b8kl+b0rdiHZF1+gN6NYIyeB7zDHTxX7wqHBsbdj7DPY3uk31Y
+	 P6e8jAHMrIzmqUq2Q/Jh4eAeNwlkokmANkkmzfrBeR1POLTAOx6geAaFLTKR4BLJnimCx
+	 /9X13vKqWi9QhCYNkjylydRg4d7lMMvgt4JUw34P99vGK81G7g8aKoXKjf6M0EWesgg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795246350;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795249735;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=vZXEIX5bRG+X47GzywXngypFAMMr6NGpMI+nKBGpwCc=;
-	b=ycZKPAZiAvpBm8z+ExegPQtxffiDrKSoyEmX8wmu4hjy/Xc7wLaXNhno76DKhVdBe0In
-	 aHLwUcUHLmsn5i3pihz+XcVbsmbacqfzy21TWiiW9xqn8uOk1v6aLjO30ZifdJ1lvQGYC
-	 9k0dWhJex5CubRBnV+YwaCwYhHcyXL+BeYiwY5pb8QmFTvVsY4q43Zy+t5yAwNmc43fS3
-	 PNXe20I+yWlN15ylwnfep7u3/AirwhOMsEr5Q3JiP+HBf7w7d9kPyvAJpxxAFEnmlzyBu
-	 JPjaA+LYGI6n9hlxpz0pKO9lmlv/qZ9dk1sPPhZ1obHOWWV578x+vDOAa1t5kstnVsA==
+	bh=vA0VgrN/AJbvlL7DFILZtRf61HlqOG1LXfr01uh4umc=;
+	b=WlUPtz99PDnXxL9yp9Skgp74gH5YqnVPvdBkurWBcLKd2KZtySc+hrjLhpfUaVoMyJaG
+	 boeA+Dl8rr/ryQY7KaeO+TiLtmKH0Q7KqpKxT645ECkYVMhVJDSYkKPKt0u+qdk40neCq
+	 3elPfjZdWNXp5HXPQyzM+ufD99UJx9fzzJQmBkR7YCwKxtGu3ZqqAbePd3dVDr+TtrOdt
+	 srt44aEPNguv6yJpHQukduidoUcQIvjh9S6hGZdEdWbPJiP/uKdGOvdnyo+OvUKSaF4lN
+	 RfdTnVvbfChoskJOtIvsSgAZ1noNK3oox4zwLPxq4iO4lrxNk8jIcIStm2EruUMw4Cg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qI5s+qRP;
-	arc=none smtp.remote-ip=209.85.214.172
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JWTvHv2M;
+	arc=none smtp.remote-ip=209.85.221.50
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FABB606A32A
-	for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 07:32:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6FABB606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86562606A325
+	for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 08:28:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86562606A325
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=qI5s+qRP
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2e9e53d011eso13617145ad.1
-        for <cgroups@vger.kernel.org>; Fri, 20 Nov 2026 23:32:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JWTvHv2M
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-491846221ffso1310746f8f.3
+        for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 00:28:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795246350; x=1795851150; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795249733; x=1795854533; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vZXEIX5bRG+X47GzywXngypFAMMr6NGpMI+nKBGpwCc=;
-        b=qI5s+qRPc8lOrId2pgvo/2iBSN/HidJP3kKtKe5Ref0DOKJB8y9o6Sl6ruSIUVdTxu
-         luFddQp1/bbZokmYJs5Y4+QmshC+0KoM4JuTA/6kZ+qDbBUm5jLZlgeEJ71FuwES4Nre
-         bCnX1om5e4PhAUnuMy8IzexWQej5EpbWDk2rjFiMVnRsoKqQghq7LIPSG3QAW5t6SILv
-         cPTTgx8pC1Opcp2W4FJQbsFgdYRaB4I6nv8FwC1NPsKsy7SDwIiVTVISZRFpRzNJqBRl
-         fCfFi8vA55yD8RrU4uEeMRWOANIWukzcbubMKu9nKBFhAavfQH8i18W5yICVfo/PZwcV
-         91Dg==
+        bh=vA0VgrN/AJbvlL7DFILZtRf61HlqOG1LXfr01uh4umc=;
+        b=JWTvHv2MoSyG38P2ut6CGuOo+RMs6DecQiq+J9y9TQm+XNetpG7gWzCduF+1Dq+EcA
+         Y3FOLIeetVe7r6I7AkfF3FK/laIIZPksmjpIosdGBa3KNHqZUb+OZKE+yM+md43V29w2
+         sovrWZbaKaw9XEZHUAgcsp3KxNw5lz/6bbZZEGeXpRPcTr8OJMWGps9G3UBVpq/fZnXf
+         Els2ob3iY6686NjEuUwxO4w+d3OEy5z9s2KtJHmHa57HDi3rGQggnI0NaEjh365jLsnZ
+         V1namk7Gmdj0DXYajWjOCesPRxk5t7JckHbva5Y3AzE/T0AJmDsb7dApwqBH9cY66ciZ
+         rdzQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795246350; x=1795851150;
+        d=1e100.net; s=20260707; t=1795249733; x=1795854533;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=vZXEIX5bRG+X47GzywXngypFAMMr6NGpMI+nKBGpwCc=;
-        b=GEalH5E78dybdK5JN7KaBTiuEav1O12QGUhpociTrOZyj69nQhCGTLudlNben8y1uS
-         1b+gP6HzZZ0g+03D501lGwEF0m0MDA2zB3GUv489057CakygVNk9Fs7Xq0fHbESecExF
-         PjaCwCvJyNsZxOhaKft1Q+ksEnQ4rWAckenKDVOTTid91Q5GB4B9JvMz6sCnPPvER9ee
-         NGWBxE/znx30j7V7CMz0Fc7s2SPd3sk1Mu6RD/9YnPYjCurG6sykzzC5+vOZe3sOOX3h
-         wA196axYtNGmPAnAvZJtV6oke7K8j6OwBup8QFKQReM1LC+3sfLq1WDNcuyMvx5KF8Oo
-         Qg7g==
-X-Forwarded-Encrypted: i=1; AL+hErFYMAUI8g+LqkZLJVEzogQLxZKU8RJfqfxql1fCi0TUnEnBFHdv8ahu2M++c8Q8V/BssF9VEAZj@vger.kernel.org
-X-Gm-Message-State: APuU4Z+SZikI2Cd6ycmDgHoWO8DF/LL3+VGG+gqsA3+DnsdeSY5JhDyi
-	rSyyAYvLRdzA6fPBEhiLqVL1ps4VvNJYJd6B+leUffmYJH/0e5zylmYX
-X-Gm-Gg: AZFdTZcrqI6nDLs6YcVg6CPy052T/bTShr/G0GrLYulyR/8/2XWIMYQDZ1qT/Q7120h
-	MGtxBeU12kTysEfjyxNYjr2O2Sv2ybY3NwhHQVeg/W+NdAs1/xDScptSUD2nyTJ45CwwfU+eQLC
-	5s6vKlF50neRTdPelLkX4snrmSNOhpn6GzFNlPdTp6+EeE+F2kE18p1D/LRCu7K3638ZqHbAOyO
-	DZozyNlfmmY2K1G/AzoD2PfKumuLUjqb8Jft7+A5h6HoztPeqdLmMtXyv6sWffKveS+mhvUH4/F
-	exJH+oohCxvXppBdr8QN3lW2FVbpHnSZfMO3mKpXHBPA94RPtNcVhWYYlQC3kwKemq4a3tPV9Pg
-	E4rFooBCX6cndnab0z4qEGi0ifbG2mXJiMv1rxkWwC+tyK6ph2nFjS3vlC21PQeUiddVh+y4LHa
-	mCqyZRL9p3hroLSytic6sZrR6jisNloNiFZguPHL9hGgRxg+6P9wszyjF7U3qbYhqw9u6y5GIYR
-	LfBHDsg+2gnt5n5aldnxowBL0N1W5nuMwmd9qcKSUO9fLAi6bLkqZoonJvmuErlOrTJ7YyJm7ZR
-	F0bsUKp0M7gpsunCuXWnPYDNoVyWekhp3dE7s8hEFJbFEw==
-X-Received: by 2002:a17:902:dacc:b0:2ef:d54b:fb64 with SMTP id d9443c01a7336-2f03f16ca9amr57805835ad.47.1795246349410;
-        Fri, 20 Nov 2026 23:32:29 -0800 (PST)
-Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f0ddf40sm23423465ad.37.2026.11.20.23.32.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2026 23:32:28 -0800 (PST)
-From: Zhan Xusheng <zhanxusheng1024@gmail.com>
-To: akpm@linux-foundation.org
-Cc: hannes@cmpxchg.org,
-	mhocko@suse.com,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	penguin-kernel@i-love.sakura.ne.jp,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	chris@chrisdown.name,
-	cui.tao@linux.dev,
+        bh=vA0VgrN/AJbvlL7DFILZtRf61HlqOG1LXfr01uh4umc=;
+        b=hWSo3A3mN3gW48MQh40yU0TM4KJUITPOWyc1M+1Txo0BVnWxf63CgmN41c8ngmJGpv
+         pmOlnSMApsuy34CaM9MgrSL6HlroAxb5FH5F3Xz43ZfuRUOdfDTJ0mMaHbFQVVlKI6Np
+         hdCMuLdiE2BPfDMHeghUQ4hWb1BDiik8iN01nLijdwk/Z0CJO9Pcj+TrNL8JMpaBpt4C
+         DkoLjufYcKaebBBCRc/vkszEMKKzo7TWsbR9yBTmxk+Wk1st5ywXAZEqZAK4cQljBhGs
+         bNHxOTv8YkMOpESFbc4g75OU7GjSndLGx3kIAKeuAGAqW5IAPI0LnKpmwrFYepqlMDrk
+         GZqQ==
+X-Forwarded-Encrypted: i=1; AL+hErEV5Ly3a7kuhZ0DS/+pMuubID4jbxRrDX8nd2Bksvsj9LdQ5iUuR07pgM39T/cJTLdWBOd6iBf4@vger.kernel.org
+X-Gm-Message-State: APuU4Z86DPsYbA4AoWPXAZiTaP4de4z5qLi/Q/AtRcYWxf2tgyoCRyRr
+	vk4GfcNssveEHPpRofSMpCZ+O0Lr+SRl3b/74WIV5lUo4/hrHSElaA9B
+X-Gm-Gg: AZFdTZdMoH1YQPPIASac3v+8kZTBmRnbcpOWPF8iTRg0W49qWOd0pepLL14ygJZe5aw
+	qm5lrHfTiXm75QK4LZjqBTrk1eBnYVTfg4eT/sCtVbAcFgMdVBogo6uwN+qDW+f3suvpB5bNpUP
+	afy0GzH+hyXFQKXWlZFE+heHiC5sL7lH48+bzCsEB75fEo8yr8H1bvlUotv8hJfLVKPDAOLtMbM
+	vncSJCHC+3K/1f0z9gwT1r1Y6UidMmsXKARRklNlJozUTJQyp06tANydFPVWvzf9KNS+NyHWvgi
+	OytQHryJ7Xjs3pQoPgm+yhGzKqmKHLZW9uwIUf7+9s3lE6lsGGiFr5XTVMBlN6foHPuBr9V5mgJ
+	HygaSsHq+pIyUpOH9+S9/n90hvV0aK8dclnCAvySamHp0yah0VeaWUlm1jz/u1MUt7THSfZgv8g
+	T4MBbtY/Tvnpki47VwhFgpXf1Fw4JaUJabTav4RrjCcoN2TCnWi6A0lykhKbYJiVA/i0KwieCrr
+	AqMlu+CRbL8Wy4bTc6BGcEXzWO2Ti2cyNAfRxJTvXr5Aja1Pc+e7WGI/4CQ1qQKXiUXT9LVzzPq
+	4D/cmoUZww8zyX5WnitdabOLh1sLjQwc5KAt5C7WXwAR6kiYtRy0GuGsgt+ti2rzfc0XjQmmlvA
+	2NJlYYpqdRCo0+uFx3Qx/v2PrFznIgMYeQUwj6fripQgC38+Vr+ZFqXDjtEmR7czELRGVgOxomi
+	jBnBa/04wAFBDWUknHKPWHK2loBgtgm8yn
+X-Received: by 2002:a5d:59c9:0:b0:4ab:f5b0:a7fa with SMTP id ffacd0b85a97d-4abf5b0a975mr10806542f8f.33.1795249732684;
+        Sat, 21 Nov 2026 00:28:52 -0800 (PST)
+Received: from localhost.localdomain (dynamic-2a02-3100-aeb0-6801-ad74-bca0-dc5f-7242.310.pool.telefonica.de. [2a02:3100:aeb0:6801:ad74:bca0:dc5f:7242])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab65cb4341sm10892378f8f.4.2026.11.21.00.28.51
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Sat, 21 Nov 2026 00:28:52 -0800 (PST)
+From: Karl Mehltretter <kmehltretter@gmail.com>
+To: bpf@vger.kernel.org
+Cc: Karl Mehltretter <kmehltretter@gmail.com>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Andrii Nakryiko <andrii@kernel.org>,
+	Martin KaFai Lau <martin.lau@linux.dev>,
+	Eduard Zingerman <eddyz87@gmail.com>,
+	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+	Song Liu <song@kernel.org>,
+	Yonghong Song <yonghong.song@linux.dev>,
+	Jiri Olsa <jolsa@kernel.org>,
+	Emil Tsalapatis <emil@etsalapatis.com>,
+	Ihor Solodrai <ihor.solodrai@linux.dev>,
+	Shuah Khan <shuah@kernel.org>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Waiman Long <longman@redhat.com>,
+	Jiayuan Chen <jiayuan.chen@linux.dev>,
+	Puranjay Mohan <puranjay@kernel.org>,
 	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org,
-	zhanxusheng@xiaomi.com
-Subject: [PATCH v3] mm: memcontrol: don't miss processes whose leader has exited in OOM scans
-Date: Sat, 21 Nov 2026 15:32:22 +0800
-Message-ID: <20261121073222.834282-1-zhanxusheng1024@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	linux-kselftest@vger.kernel.org,
+	linux-rt-devel@lists.linux.dev
+Subject: [PATCH bpf-next] selftests/bpf: Disable preemption around css_rstat_updated()
+Date: Sat, 21 Nov 2026 09:28:43 +0100
+Message-Id: <20261121082843.44614-1-kmehltretter@gmail.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -109,130 +120,58 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Zhan Xusheng <zhanxusheng@xiaomi.com>
+cgroup_hierarchical_stats triggers a lockdep warning in
+__css_rstat_updated() on PREEMPT_RT. The counter runs at the
+cgroup_attach_task tracepoint under spin_lock_irqsave() on
+trace_cgroup_path_lock. On PREEMPT_RT this leaves preemption and
+interrupts enabled. On non-RT it masks interrupts, satisfying the
+assertion.
 
-mem_cgroup_scan_tasks() walks with CSS_TASK_ITER_PROCS, so it sees only
-thread group leaders, plus a dying leader that still has live threads.
-Moving a process whose leader has exited, by writing its PID to
-cgroup.procs, moves the live threads but leaves the leader behind, as
-cgroup_migrate_add_task() skips exiting tasks.
+Disable preemption around css_rstat_updated() so the updater can queue
+the update without being preempted.
 
-The destination's OOM killer then cannot see the process.  If it is
-alone there, every attempt ends with "Out of memory and no killable
-processes..." and the charge is retried indefinitely, and
-memory.oom.group kills nothing; otherwise another process is killed in
-its place.  The source's OOM killer still finds the leader, reaches the
-moved threads' mm through find_lock_task_mm(), and kills a process that
-has left the memcg.
-
-Walk all tasks and let one task of each thread group in the memcg stand
-for it: the first one that is not exiting, the first one that has not
-exited yet once the whole group is exiting, or the leader once every
-thread has exited, so that an OOM victim stays visible until it is gone,
-as the leader does today.  Exiting threads left behind do not count
-while the group has live threads elsewhere.
-
-Tested in a VM with memory.max=64M: in each case above the process using
-the memory is now killed, and a process whose exited leader was not
-moved, or whose leader is alive, is killed as before, with and without
-memory.oom.group.
-
-Fixes: f168a9a54ec3 ("mm: memcontrol: use CSS_TASK_ITER_PROCS at mem_cgroup_scan_tasks()")
-Cc: stable@vger.kernel.org
-Signed-off-by: Zhan Xusheng <zhanxusheng@xiaomi.com>
+Fixes: 36df6e3dbd7e ("cgroup: make css_rstat_updated nmi safe")
+Reported-by: Jiayuan Chen <jiayuan.chen@linux.dev>
+Closes: https://lore.kernel.org/r/20251119111402.153727-1-jiayuan.chen@linux.dev/
+Link: https://lore.kernel.org/r/fmey2ektwdk7l5aktjz3xb24x3pk3lxy3gfld7reazal6xa6u2@tmryedehqhql/
+Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
 ---
-v3:
- - Rebase on "mm: memcontrol: don't lose track of exiting OOM victims"
-   in mm-hotfixes-unstable and keep CSS_TASK_ITER_WITH_DEAD
- - Let the leader stand for the group once every thread has exited, so
-   such a victim stays visible as it does with that patch alone
+Assisted by an LLM.
 
-Moving the exited leader along with its threads came up on v1, and
-there has been no answer from the cgroup side.  cgroup.kill had the
-same case: da13e0e72a73 ("cgroup: fix cgroup.kill for exited thread
-group leader") walks all threads instead of the leaders, and
-5f4a3f743acc ("cgroup: don't kill migrated processes through their
-exiting threads") then had to keep an exiting thread left behind from
-standing for a process that has moved out.  This patch does the same
-for the memcg scan; the second case is what the live_elsewhere check
-covers.
+Ran test_progs -t cgroup_hierarchical_stats on bpf-next 9867c61abbd4 in
+x86-64 KVM guests with lockdep. The test passed on all eight boots.
 
-Retested on mm-hotfixes-unstable 2ba4d2c9ae3c: the cases in the
-changelog behave as described, and with the reproducer from the review
-of Chris's patch, memory.max=400M, 10 runs, oom_kill is 1 in every run
-with and without this patch.
+  Boots with an rstat warning   Before   After
+  PREEMPT_RT                       2/2     0/2
+  PREEMPT (!RT)                    0/2     0/2
 
-v2: https://lore.kernel.org/all/20261027144016.2582880-1-zhanxusheng1024@gmail.com/
-v1: https://lore.kernel.org/all/20261026120248.2188024-1-zhanxusheng1024@gmail.com/
+ tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
- mm/memcontrol.c | 44 +++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 41 insertions(+), 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index afbb638e7e1c..3355341666db 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1426,6 +1426,44 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
- 						dead_memcg);
+diff --git a/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c b/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+index 8fc38592a..d4babda81 100644
+--- a/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
++++ b/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+@@ -6,6 +6,7 @@
+ #include <bpf/bpf_helpers.h>
+ #include <bpf/bpf_tracing.h>
+ #include <bpf/bpf_core_read.h>
++#include "bpf_experimental.h"
+ 
+ char _license[] SEC("license") = "GPL";
+ 
+@@ -76,7 +77,9 @@ int BPF_PROG(counter, struct cgroup *dst_cgrp, const char *path,
+ 	else if (create_percpu_attach_counter(cg_id, 1))
+ 		return 0;
+ 
++	bpf_preempt_disable();
+ 	css_rstat_updated(&dst_cgrp->self, bpf_get_smp_processor_id());
++	bpf_preempt_enable();
+ 	return 0;
  }
  
-+/*
-+ * Let one task of each thread group in @memcg stand for the group: the
-+ * first one that is not exiting, or, once the whole group is exiting, the
-+ * first one that has not exited yet, so that an OOM victim stays visible.
-+ * The leader is not enough: a group whose leader has exited can be moved
-+ * without it.  Exiting threads left behind in @memcg do not count while the
-+ * group has live threads elsewhere.
-+ */
-+static bool mem_cgroup_scan_skip(struct mem_cgroup *memcg,
-+				 struct task_struct *task)
-+{
-+	struct task_struct *t, *dying = NULL;
-+	bool live_elsewhere = false;
-+
-+	guard(rcu)();
-+	__for_each_thread(task->signal, t) {
-+		bool here;
-+
-+		if (READ_ONCE(t->exit_state))
-+			continue;
-+		here = mem_cgroup_from_task(t) == memcg;
-+		if (!(READ_ONCE(t->flags) & PF_EXITING)) {
-+			if (here)
-+				return t != task;
-+			live_elsewhere = true;
-+		} else if (here && !dying) {
-+			dying = t;
-+		}
-+	}
-+	/*
-+	 * Once every thread has exited, the leader stands for the group until
-+	 * it is gone, as with CSS_TASK_ITER_PROCS.
-+	 */
-+	if (!dying)
-+		return live_elsewhere || !thread_group_leader(task);
-+	return live_elsewhere || dying != task;
-+}
-+
- /**
-  * mem_cgroup_scan_tasks - iterate over tasks of a memory cgroup hierarchy
-  * @memcg: hierarchy root
-@@ -1456,10 +1494,10 @@ void mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
- 		 * torn down. Keep it visible so oom_evaluate_task() can
- 		 * back off while there's still memory to free.
- 		 */
--		css_task_iter_start(&iter->css, CSS_TASK_ITER_PROCS |
--				    CSS_TASK_ITER_WITH_DEAD, &it);
-+		css_task_iter_start(&iter->css, CSS_TASK_ITER_WITH_DEAD, &it);
- 		while (!ret && (task = css_task_iter_next(&it))) {
--			ret = fn(task, arg);
-+			if (!mem_cgroup_scan_skip(iter, task))
-+				ret = fn(task, arg);
- 			/* Avoid potential softlockup warning */
- 			cond_resched();
- 		}
 
-base-commit: 2ba4d2c9ae3cfdad96ee925c92b14d7acd886954
+base-commit: 9867c61abbd44f7053a871566b3d982f62c6d8dc
 -- 
 2.43.0
 
