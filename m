@@ -1,114 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=192.198.163.9
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795249735;
-	b=tQ1NacpaFBOBtjDJ0iBXWKrwBr10Paq4zgyE5IJ/k0LLw9CXmPSvg4yUtSuviSBK2ala
-	 mVyvMqf1mhwE+Z4ozzp+cU4tJdN7HWk9LVjLWeRQ9jzcsxvAi/uLLZ9Q7nElyYtOG32Qg
-	 wKo/toqju4AaNe57w30b8kl+b0rdiHZF1+gN6NYIyeB7zDHTxX7wqHBsbdj7DPY3uk31Y
-	 P6e8jAHMrIzmqUq2Q/Jh4eAeNwlkokmANkkmzfrBeR1POLTAOx6geAaFLTKR4BLJnimCx
-	 /9X13vKqWi9QhCYNkjylydRg4d7lMMvgt4JUw34P99vGK81G7g8aKoXKjf6M0EWesgg==
+	t=1795255312;
+	b=x05gtMO8ldEF2C+xFoXzD6fq+1f/yCAhcPuhzfswFi3H3dKRhZQ4+FscmoSCWXLzg8Wq
+	 5CJKcNh3lShjxke4PgxnZc8XFL21w8uA4KhbmICTihXLiFAxDLz2lO7pqeh/YHwGD3Zzw
+	 7GbGh9H9iQkdrPaQGA0abzVJwwo/wcSNrkg1UITN67xtyOW2mEbS8vhYqlzlT9qWyiXK5
+	 PH+KZUZIFCGZ6eAaE5/LcPUdW3q9rHAbVRr4VV7J50fbJxQSxsSbi/27YsaZFFK+fxXd0
+	 vI/5dOd7ugyUf7VKjf/QoCzS3UntLpHulcAitQE/pF872ElGOjZcUlpEeTtQk1SSxyQ==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795249735;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 From:To:Cc:Subject:Date:Message-Id:X-Mailer:MIME-Version:
-	 Content-Transfer-Encoding;
-	bh=vA0VgrN/AJbvlL7DFILZtRf61HlqOG1LXfr01uh4umc=;
-	b=WlUPtz99PDnXxL9yp9Skgp74gH5YqnVPvdBkurWBcLKd2KZtySc+hrjLhpfUaVoMyJaG
-	 boeA+Dl8rr/ryQY7KaeO+TiLtmKH0Q7KqpKxT645ECkYVMhVJDSYkKPKt0u+qdk40neCq
-	 3elPfjZdWNXp5HXPQyzM+ufD99UJx9fzzJQmBkR7YCwKxtGu3ZqqAbePd3dVDr+TtrOdt
-	 srt44aEPNguv6yJpHQukduidoUcQIvjh9S6hGZdEdWbPJiP/uKdGOvdnyo+OvUKSaF4lN
-	 RfdTnVvbfChoskJOtIvsSgAZ1noNK3oox4zwLPxq4iO4lrxNk8jIcIStm2EruUMw4Cg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795255312;
+	h=DMARC-Filter:DKIM-Signature:X-CSE-ConnectionGUID:X-CSE-MsgGUID:
+	 X-IronPort-AV:X-IronPort-AV:Received:X-CSE-ConnectionGUID:
+	 X-CSE-MsgGUID:X-ExtLoop1:X-IronPort-AV:Received:Received:Date:From:To:
+	 Cc:Subject:Message-ID:References:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To;
+	bh=0iLrgKiBXYhJ0kV7UEcjVMICphmvwPVOu/R+vQ1ryRw=;
+	b=fGUKAmtQ0JtrCDrH+PHDQGfY8+gFhEWBnbdiBcrbznVK6zR7yrzXtaGiHqUyN9QdZ/EJ
+	 Myt/XjOp/68YpaGlhPwkFHgxGvRPzb3zgBnU0SCHzP+g+8f6dvvl2pMTfrjKn1gzjGGzL
+	 eCjH6C4knGwI9fpuuBYRVbI4DV1JmugCsqnCy5WJFQQyq4/V/6W8Z3chXBuuhDI60xMKh
+	 aV2ySEKd3nP4yy+aKqqJ1x7fLX3w+9Hd15s36sfJfO+Rq8l1hZreN4hXEzbgRxvPP/j9B
+	 ZMXG7qctMaZ9h6Axe1fmD6ZrIUUn9QmGYdBOO8yt2mUrCsmOK8Ssh8K5bNYQwk1aC2Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JWTvHv2M;
-	arc=none smtp.remote-ip=209.85.221.50
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=intel.com;
+	spf=pass smtp.mailfrom=intel.com;
+	dkim=pass header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=k9f1iayA;
+	arc=none smtp.remote-ip=192.198.163.9
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86562606A325
-	for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 08:28:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 86562606A325
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C247606A680;
+	Sat, 21 Nov 2026 10:01:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2C247606A680
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=JWTvHv2M
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-491846221ffso1310746f8f.3
-        for <cgroups@vger.kernel.org>; Sat, 21 Nov 2026 00:28:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795249733; x=1795854533; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=vA0VgrN/AJbvlL7DFILZtRf61HlqOG1LXfr01uh4umc=;
-        b=JWTvHv2MoSyG38P2ut6CGuOo+RMs6DecQiq+J9y9TQm+XNetpG7gWzCduF+1Dq+EcA
-         Y3FOLIeetVe7r6I7AkfF3FK/laIIZPksmjpIosdGBa3KNHqZUb+OZKE+yM+md43V29w2
-         sovrWZbaKaw9XEZHUAgcsp3KxNw5lz/6bbZZEGeXpRPcTr8OJMWGps9G3UBVpq/fZnXf
-         Els2ob3iY6686NjEuUwxO4w+d3OEy5z9s2KtJHmHa57HDi3rGQggnI0NaEjh365jLsnZ
-         V1namk7Gmdj0DXYajWjOCesPRxk5t7JckHbva5Y3AzE/T0AJmDsb7dApwqBH9cY66ciZ
-         rdzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795249733; x=1795854533;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=vA0VgrN/AJbvlL7DFILZtRf61HlqOG1LXfr01uh4umc=;
-        b=hWSo3A3mN3gW48MQh40yU0TM4KJUITPOWyc1M+1Txo0BVnWxf63CgmN41c8ngmJGpv
-         pmOlnSMApsuy34CaM9MgrSL6HlroAxb5FH5F3Xz43ZfuRUOdfDTJ0mMaHbFQVVlKI6Np
-         hdCMuLdiE2BPfDMHeghUQ4hWb1BDiik8iN01nLijdwk/Z0CJO9Pcj+TrNL8JMpaBpt4C
-         DkoLjufYcKaebBBCRc/vkszEMKKzo7TWsbR9yBTmxk+Wk1st5ywXAZEqZAK4cQljBhGs
-         bNHxOTv8YkMOpESFbc4g75OU7GjSndLGx3kIAKeuAGAqW5IAPI0LnKpmwrFYepqlMDrk
-         GZqQ==
-X-Forwarded-Encrypted: i=1; AL+hErEV5Ly3a7kuhZ0DS/+pMuubID4jbxRrDX8nd2Bksvsj9LdQ5iUuR07pgM39T/cJTLdWBOd6iBf4@vger.kernel.org
-X-Gm-Message-State: APuU4Z86DPsYbA4AoWPXAZiTaP4de4z5qLi/Q/AtRcYWxf2tgyoCRyRr
-	vk4GfcNssveEHPpRofSMpCZ+O0Lr+SRl3b/74WIV5lUo4/hrHSElaA9B
-X-Gm-Gg: AZFdTZdMoH1YQPPIASac3v+8kZTBmRnbcpOWPF8iTRg0W49qWOd0pepLL14ygJZe5aw
-	qm5lrHfTiXm75QK4LZjqBTrk1eBnYVTfg4eT/sCtVbAcFgMdVBogo6uwN+qDW+f3suvpB5bNpUP
-	afy0GzH+hyXFQKXWlZFE+heHiC5sL7lH48+bzCsEB75fEo8yr8H1bvlUotv8hJfLVKPDAOLtMbM
-	vncSJCHC+3K/1f0z9gwT1r1Y6UidMmsXKARRklNlJozUTJQyp06tANydFPVWvzf9KNS+NyHWvgi
-	OytQHryJ7Xjs3pQoPgm+yhGzKqmKHLZW9uwIUf7+9s3lE6lsGGiFr5XTVMBlN6foHPuBr9V5mgJ
-	HygaSsHq+pIyUpOH9+S9/n90hvV0aK8dclnCAvySamHp0yah0VeaWUlm1jz/u1MUt7THSfZgv8g
-	T4MBbtY/Tvnpki47VwhFgpXf1Fw4JaUJabTav4RrjCcoN2TCnWi6A0lykhKbYJiVA/i0KwieCrr
-	AqMlu+CRbL8Wy4bTc6BGcEXzWO2Ti2cyNAfRxJTvXr5Aja1Pc+e7WGI/4CQ1qQKXiUXT9LVzzPq
-	4D/cmoUZww8zyX5WnitdabOLh1sLjQwc5KAt5C7WXwAR6kiYtRy0GuGsgt+ti2rzfc0XjQmmlvA
-	2NJlYYpqdRCo0+uFx3Qx/v2PrFznIgMYeQUwj6fripQgC38+Vr+ZFqXDjtEmR7czELRGVgOxomi
-	jBnBa/04wAFBDWUknHKPWHK2loBgtgm8yn
-X-Received: by 2002:a5d:59c9:0:b0:4ab:f5b0:a7fa with SMTP id ffacd0b85a97d-4abf5b0a975mr10806542f8f.33.1795249732684;
-        Sat, 21 Nov 2026 00:28:52 -0800 (PST)
-Received: from localhost.localdomain (dynamic-2a02-3100-aeb0-6801-ad74-bca0-dc5f-7242.310.pool.telefonica.de. [2a02:3100:aeb0:6801:ad74:bca0:dc5f:7242])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab65cb4341sm10892378f8f.4.2026.11.21.00.28.51
-        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Sat, 21 Nov 2026 00:28:52 -0800 (PST)
-From: Karl Mehltretter <kmehltretter@gmail.com>
-To: bpf@vger.kernel.org
-Cc: Karl Mehltretter <kmehltretter@gmail.com>,
-	Alexei Starovoitov <ast@kernel.org>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Martin KaFai Lau <martin.lau@linux.dev>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Song Liu <song@kernel.org>,
-	Yonghong Song <yonghong.song@linux.dev>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Ihor Solodrai <ihor.solodrai@linux.dev>,
-	Shuah Khan <shuah@kernel.org>,
-	Tejun Heo <tj@kernel.org>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.a=rsa-sha256 header.s=Intel header.b=k9f1iayA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1795255312; x=1826791312;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=qoUwdqVJuskEKxFdpm9I3StToR1r1PnxXAishHwsR+0=;
+  b=k9f1iayAQpPZOnH+1V4iEbUHkBCI+VXH1xkBtmPrGo2v1p8j0Rj3AhOF
+   bc5brAa6yU+H+b9/U32/Oqij71Sq5TKXMl/MBi6B9w9/LiIbuGIk9JJ8d
+   z3pHXaFM9SibDCfzSVcCyrPGlw+rXdf2stntPhkL4f0C2Zx8Y1zwRcp2L
+   m8ZqGzWZhdMf8+t7wEha8dRaUuH8bZZ6NMs5sO+fqUAOCppj0CoFr5ka/
+   /CnZ06yozczv0YxApFL5r5qKU5W53KYBFcb/xgSEVvkG6jQY7YRGuyO7i
+   c5ssuOMeQbxxwqbi3nLNB9R5LkV1+9MBetoalj/ocEudsap/B6mIEJQ3w
+   w==;
+X-CSE-ConnectionGUID: KDT8Wo5GRUyULMRG7BKxuw==
+X-CSE-MsgGUID: Io1J+KlSSFGTigrcb9SKuw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11972"; a="4011156"
+X-IronPort-AV: E=Sophos;i="6.27,224,1787036400"; 
+   d="scan'208";a="4011156"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2026 02:01:51 -0800
+X-CSE-ConnectionGUID: eQ+V7i+5Tga8Bp3IPgcd0A==
+X-CSE-MsgGUID: F2pB6URmS36jLm6RP/ridw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.27,224,1787036400"; 
+   d="scan'208";a="11161179"
+Received: from lkp-server01.sh.intel.com (HELO 0caa9d2d175c) ([10.239.97.150])
+  by fmviesa008.fm.intel.com with ESMTP; 21 Nov 2026 02:01:44 -0800
+Received: from kbuild by 0caa9d2d175c with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1xUhue-00000001JsJ-2qXj;
+	Sat, 21 Nov 2026 10:01:40 +0000
+Date: Sat, 21 Nov 2026 18:01:33 +0800
+From: kernel test robot <lkp@intel.com>
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Waiman Long <longman@redhat.com>,
-	Jiayuan Chen <jiayuan.chen@linux.dev>,
-	Puranjay Mohan <puranjay@kernel.org>,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: [PATCH bpf-next] selftests/bpf: Disable preemption around css_rstat_updated()
-Date: Sat, 21 Nov 2026 09:28:43 +0100
-Message-Id: <20261121082843.44614-1-kmehltretter@gmail.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Ridong Chen <ridong.chen@linux.dev>, Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Anna-Maria Behnsen <anna-maria@linutronix.de>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Thomas Gleixner <tglx@kernel.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	Guopeng Zhang <guopeng.zhang@linux.dev>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH-next 1/3] tick/sched: Make tick_nohz_full_mask and
+ HK_TYPE_KERNEL_NOISE cpumask consistent
+Message-ID: <202611211717.qIDq0wIX-lkp@intel.com>
+References: <20261121031329.240177-2-longman@redhat.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -118,60 +104,37 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261121031329.240177-2-longman@redhat.com>
 
-cgroup_hierarchical_stats triggers a lockdep warning in
-__css_rstat_updated() on PREEMPT_RT. The counter runs at the
-cgroup_attach_task tracepoint under spin_lock_irqsave() on
-trace_cgroup_path_lock. On PREEMPT_RT this leaves preemption and
-interrupts enabled. On non-RT it masks interrupts, satisfying the
-assertion.
+Hi Waiman,
 
-Disable preemption around css_rstat_updated() so the updater can queue
-the update without being preempted.
+kernel test robot noticed the following build warnings:
 
-Fixes: 36df6e3dbd7e ("cgroup: make css_rstat_updated nmi safe")
-Reported-by: Jiayuan Chen <jiayuan.chen@linux.dev>
-Closes: https://lore.kernel.org/r/20251119111402.153727-1-jiayuan.chen@linux.dev/
-Link: https://lore.kernel.org/r/fmey2ektwdk7l5aktjz3xb24x3pk3lxy3gfld7reazal6xa6u2@tmryedehqhql/
-Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
----
-Assisted by an LLM.
+[auto build test WARNING on tj-cgroup/for-next]
+[also build test WARNING on tip/sched/core tip/timers/nohz linus/master v7.4-rc3 next-20261119]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Ran test_progs -t cgroup_hierarchical_stats on bpf-next 9867c61abbd4 in
-x86-64 KVM guests with lockdep. The test passed on all eight boots.
+url:    https://github.com/intel-lab-lkp/linux/commits/Waiman-Long/tick-sched-Make-tick_nohz_full_mask-and-HK_TYPE_KERNEL_NOISE-cpumask-consistent/20261120-221327
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+patch link:    https://lore.kernel.org/r/20261121031329.240177-2-longman%40redhat.com
+patch subject: [PATCH-next 1/3] tick/sched: Make tick_nohz_full_mask and HK_TYPE_KERNEL_NOISE cpumask consistent
+config: powerpc-akebono_defconfig (https://download.01.org/0day-ci/archive/20261121/202611211717.qIDq0wIX-lkp@intel.com/config)
+compiler: clang version 24.0.0git (https://github.com/llvm/llvm-project 3b14d7c370558b46e5f0c6494a05c492e59bf32c)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20261121/202611211717.qIDq0wIX-lkp@intel.com/reproduce)
 
-  Boots with an rstat warning   Before   After
-  PREEMPT_RT                       2/2     0/2
-  PREEMPT (!RT)                    0/2     0/2
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202611211717.qIDq0wIX-lkp@intel.com/
 
- tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c | 3 +++
- 1 file changed, 3 insertions(+)
+All warnings (new ones prefixed by >>, old ones prefixed by <<):
 
-diff --git a/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c b/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
-index 8fc38592a..d4babda81 100644
---- a/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
-+++ b/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
-@@ -6,6 +6,7 @@
- #include <bpf/bpf_helpers.h>
- #include <bpf/bpf_tracing.h>
- #include <bpf/bpf_core_read.h>
-+#include "bpf_experimental.h"
- 
- char _license[] SEC("license") = "GPL";
- 
-@@ -76,7 +77,9 @@ int BPF_PROG(counter, struct cgroup *dst_cgrp, const char *path,
- 	else if (create_percpu_attach_counter(cg_id, 1))
- 		return 0;
- 
-+	bpf_preempt_disable();
- 	css_rstat_updated(&dst_cgrp->self, bpf_get_smp_processor_id());
-+	bpf_preempt_enable();
- 	return 0;
- }
- 
+>> WARNING: modpost: vmlinux: EXPORT_SYMBOL used for init symbol 'housekeeping_set_cpu'. Remove __init or EXPORT_SYMBOL.
 
-base-commit: 9867c61abbd44f7053a871566b3d982f62c6d8dc
 -- 
-2.43.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
