@@ -1,56 +1,81 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.231
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.127
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795313014;
-	b=nbfK4iJIMuwLWP7kkRaSuLUNHnUn1m6zFJMoaVg6oJreeveeJEXvc5+1i9xO5wzUguQX
-	 zJHPD6UmO5pWmHQnCPWPajf00YFIWqPUrw108ZPUCEimlUrAQ0TzZRrjObFwLsQtEU2mQ
-	 7nI0+jo6Q4N6T05GJkwrAlZt67Z22KVQiccJ/pma9HYF7hwAW1rjVIM8p2jh8wJL9KqBD
-	 6sMmM8tk+ib0OednGGKRrFBXCCtyaJOgLlt7NIFuZMjH31ekETmhXQXu1BOrsQxXzcSJ2
-	 +lMNkXlNsXl/qe3lHVQ3XPVaoXmSWT0fIPnOImnDJuv4+9JSx7QhP0RW+7zM/vspmoA==
+	t=1795315673;
+	b=1SB1Dr+4cbxUDGeJDXQ33B1SKoRDJjU+Iqsm2x7XJvMRzhaNT6P3O+Cec3Jv41R/pOLn
+	 zdCd5M4Zma6yILcnSIQkK28mcdjq7v6+7jyz8qYWDaIRV/pKNioAUdUv+p9ZUgUz0yvHZ
+	 vHW27mdDVYTzXd9mSUd93EXB3xu3CrZg1U3FrC9kScWc3ofiHl6d2p9lDOXMXgR1Cxzqw
+	 Ew3y/8lTZR8HOQqEm0X7/dG0B5I21Xmhvvsy5TuP1SoGxXY/+D5TVYpSh1Lay9vb4Alnc
+	 5fzsjeq18LE/aPA3no1romCvPp1pBN/9xGz2odTVjOdgDy4KRIpfayqIciQVp/eP88Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795313014;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795315673;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:X-B4-Tracking:To:Cc:
-	 X-Mailer;
-	bh=JmQdp4UGb+4XNZjBkF8MFhkAgJLRWXap7M+W5jPNqT8=;
-	b=SWiYPG7845mPnKUBJ0YxUvZ9Ykkz0x73weH1cVZ10sBWxdRXoITAye7LJCA3zmpuTN+A
-	 93m7Gmu435qfF7vFSbkbXHfTWaYGDhzMCG41UyykS/TlxGjNHqCHgO/7DV+yJGR0UalMm
-	 GSUwL94ebKujiNOEjyaFqHCrkIKgmxBF4ItOx5evahPzDhS6bwhkdNlXGOBdlKH7pBFQY
-	 CAHM0lf/lMGWa/AXDiJpZGUrbNBfBzBbm2lj1mwTbjW326IxBcRF1Cfb8Gaort1ckkxtt
-	 l1MABXReVcdH9+mtCkxnVW8cUszIwPBcfo7PtR8TJFYBi2/t6VxeV1jpIACXxM1Rrfw==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=bOrv+xLYUsaUyXaSe+BARibazXC+W+FOt8ErwK+aCss=;
+	b=adTD2wb79l7BR9YbebBGrQAHtbloj2Abav5PIh3A5WrLapgLwyr650o3yI2p5PWZvCz5
+	 O91GG85Ebj1u/wLjiuck1fclzy8UjtUO8AC+SNFLClgS7dnUETl9IWu/khO4dljAvcemA
+	 CHTRaGvPnStBSzCEPVwVlfcI1Pvkva0fgLg2cGMLOmBrWOiL1yg1sZySk0jPqF1x9o/Up
+	 5hs5+D45R0v+1GEApWaloir2IMr1ta+xy8fL9ldcD3qAJDjmDyRRlCMsA1lfEcUe8afQa
+	 wdPTjTD14J2Uym8ybSD/fM+aCcF/CuuuWV1w2NIXd909Ub2uzH6uHLJqq4qidfcfQ6A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=RQ0ccTkP;
-	arc=none smtp.remote-ip=91.218.175.231
-Received: from mta0.migadu.com (out-231.mta0.migadu.com [91.218.175.231])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=GvsIzOyn;
+	arc=none smtp.remote-ip=95.215.58.127
+Received: from mta1.migadu.com (out-127.mta1.migadu.com [95.215.58.127])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61A0D606A32C
-	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 02:03:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 61A0D606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF0AE606A68C
+	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 02:47:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AF0AE606A68C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=RQ0ccTkP
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=GvsIzOyn
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=QHMV94eY1Lw126QXv9qve/RmD9iTfi2UbMdXPwF6mRY=;
+DKIM-Signature: a=rsa-sha256; bh=rzojMZvLtM9+3SwUWO3HxhYcavbGDeGlgbRtLOpYVG4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795313011; v=1; x=1795917811;
- b=RQ0ccTkPmPlzWaaDJexHzOjTps52REn53hrZn7YZ2FbgDinXIxkQFhzppU+BtsWf9nP8Y0J6
- LyyYWtKTR3pnBLkOjIOLVnid550tY9j3Ll/D6wAaeXESMK6S+JpKM9LmBsPzymw7oYw570lHB7a
- bF/NXk3kuQjerLgrNBB2v/7k=
+ t=1795315670; v=1; x=1795920470;
+ b=GvsIzOyniRqJWLrSd29NQaoEIkIBRxfPl1mYz3guSdKs+KeehSOg3M+BN50opEeuSqRggTiN
+ CrDymRoMXbaBZOcBSu1ZvDpQZo+XbrlbHRZH2prtGrrSy/q2pdLsCv2fj5vqqm0m0DMxFHjbCmv
+ Q1sqNC33JjQdqb18hpwpuG/8=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 55510332c1b80ae4;
-	Sun, 22 Nov 2026 02:03:31 +0000
-X-Mizu-Trace-ID: 55510332c1b80ae4
+Received: by smtp.migadu.com with ESMTPS id 313eb3f773ebefb2;
+	Sun, 22 Nov 2026 02:47:49 +0000
+X-Mizu-Trace-ID: 313eb3f773ebefb2
 X-Migadu-Flow: FLOW_OUT
-From: Qiliang Yuan <qiliang.yuan@linux.dev>
-Date: Sat, 21 Nov 2026 21:03:24 -0500
-Subject: [PATCH] perf/core: Skip cgroup attach IPIs while perf_sched_events
- is disabled
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Tejun Heo <tj@kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>,
+	Christian Brauner <brauner@kernel.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Jan Kara <jack@suse.cz>,
+	Matthew Wilcox <willy@infradead.org>,
+	David Hildenbrand <david@kernel.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Zi Yan <ziy@nvidia.com>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Nico Pache <nico.pache@linux.dev>,
+	Usama Arif <usama.arif@linux.dev>,
+	Kiryl Shutsemau <kas@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Meta kernel team <kernel-team@meta.com>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-btrfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC PATCH 0/7] memcg: effective high limit that avoids isolation issues
+Date: Sat, 21 Nov 2026 18:47:30 -0800
+Message-ID: <20261122024737.2741569-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -60,95 +85,189 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261121-feat-perf-cgroup-attach-ipi-v1-1-a0e6d3cce8d1@linux.dev>
-X-B4-Tracking: v=1; b=H4sIAGtNAmsC/x3MSwqEMAwA0KtI1gZs/M14FXFR2lSz0ZJ2BkG8u
- 8Xl27wLEqtwgqm6QPkvSY69wNQVuM3uK6P4YqCGBmOowcA2Y2QN6FY9fhFtztZtKFGQPtS1Y+8
- 7/22hDFE5yPnu83LfD5HJGQVtAAAA
-To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, 
- Arnaldo Carvalho de Melo <acme@kernel.org>, 
- Namhyung Kim <namhyung@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
- Alexander Shishkin <alexander.shishkin@linux.intel.com>, 
- Jiri Olsa <jolsa@kernel.org>, Ian Rogers <irogers@google.com>, 
- Adrian Hunter <adrian.hunter@intel.com>, 
- James Clark <james.clark@linaro.org>
-Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, 
- linux-perf-users@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Qiliang Yuan <qiliang.yuan@linux.dev>
-X-Mailer: b4 0.13.0
+Content-Transfer-Encoding: 8bit
 
-The perf_event controller is implicitly enabled on cgroup v2, so moving
-tasks to another cgroup calls perf_cgroup_attach(). For every migrated
-thread, it calls task_function_call(), which sends a synchronous IPI to
-the CPU the thread last ran on, so that a CPU counting cgroup events
-switches to the new cgroup if the thread is running there.
+(My initial plan [1, 2] was to track kernel lock holders, let them
+bypass memcg limits and throttle them on unlock or on return to
+userspace. I was asked to look for alternative solutions, and this
+series is one.)
 
-Without cgroup events, no CPU tracks a cgroup and perf_cgroup_switch()
-returns right away, yet every thread still costs an IPI. Moving a
-process with hundreds of threads, such as an inference server, then
-takes milliseconds, all with cgroup_threadgroup_rwsem held for writing,
-which blocks fork() and exit() on the whole system.
+memcg limits can cause isolation problems. A task stuck in limit
+enforcement in the charge path keeps holding its locks, and tasks in
+other cgroups that need them wait for a limit that has nothing to do
+with them. btrfs, for example, charges its tree blocks to the root
+cgroup for this reason [3].
 
-Return early when perf_sched_events is disabled. A cgroup event enables
-it and waits for a grace period before it is installed. With a full
-barrier before the key check, the grace period orders the cgroup changes
-of the migrated tasks before the installation, so the event picks up the
-new cgroup of the task running on its CPU.
+We see this in Meta's fleet. Over 28 days, on several tens of
+thousands of unique hosts, a bpftrace script [4] recorded sleeping
+locks held in memcg reclaim while another task waited for them. Most
+belong to the reclaiming workload, like its mmap_lock (680,579
+times, up to 4.7s), but some are shared by the whole machine or a
+whole filesystem:
 
-Moving a process with sleeping threads between two cgroups 100 times,
-20 ms apart, while another process forks and reaps children in a loop,
-base and patched kernels alternating over 2 rounds of 3 runs, median of
-the 6 runs and range in parentheses. Each move also waits about 7 ms for
-a grace period to take cgroup_threadgroup_rwsem. Median time per move:
+- cgroup_mutex, used by every cgroup change. mkdir charges the new
+  memcg to the parent while holding it, and reclaims if the parent is
+  at its limit: 350 times, up to 2.5s.
+- kernfs_rwsem, used by cgroupfs lookups. The kernfs notification
+  worker held it while queueing inotify events charged to the
+  watcher's cgroup: 2,324 times, up to 3.3s.
+- btrfs tree locks, used by every b-tree search and change. On kernels
+  with [3], the XArray nodes that index tree blocks are still charged
+  to the task, so tasks reclaimed with tree locks held 2,853 times,
+  850 of them with a root node locked, up to 2.6s.
 
-  threads        before (ms)       after (ms)   change
-        1      7.8 (7.3-7.9)    7.9 (7.8-7.9)      +1%
-       16      8.8 (8.6-9.1)    7.9 (7.8-7.9)     -11%
-      128   14.0 (13.7-14.7)    7.9 (7.8-8.0)     -44%
-      512   25.1 (24.5-26.1)   9.9 (9.8-10.0)     -61%
+Hung-task reports show worse cases. A container's systemd created a
+cgroup while its own cgroup was over memory.high, and mkdir ran
+memory.high reclaim with cgroup_mutex and the parent directory's lock
+held for over 30 minutes. The host's systemd, tasks forking into
+cgroups, oomd and a monitoring agent all waited, so the userspace OOM
+killer could not even read the cgroup tree.
 
-99th percentile of fork() and waitpid() in the other process:
+memory.max is a hard limit, so this series does not change it.
+memory.high doesn't have to be enforced in the charge path: since
+commit b23afb93d317 ("memcg: punt high overage reclaim to
+return-to-userland path"), the charge only records the overage (usage
+above the limit), and the task reclaims and is throttled on return to
+userspace, where it holds no locks. Avoiding this priority inversion
+was one of the reasons for that commit.
 
-  threads        before (ms)      after (ms)   change
-        1      3.8 (3.5-5.3)   3.6 (3.5-3.7)      -5%
-       16      4.1 (3.8-5.0)   3.7 (3.6-3.8)     -11%
-      128     9.8 (9.5-10.1)   3.7 (3.6-3.8)     -63%
-      512   21.6 (20.8-22.7)   4.8 (4.7-4.9)     -78%
+But return to userspace is too late when one system call charges a
+lot, like mlock() of a large range. So commit c9afe31ec443 ("memcg:
+synchronously enforce memory.high for large overcharges") handles the
+overage in the charge itself when the charge can block and more than
+a batch is pending. That brought the problem back: the task reclaims
+and sleeps, up to 2s per call, under whatever locks it holds. It also
+misses THP charges outside MADV_HUGEPAGE ranges, which can't block
+under the default defrag setting. RESULTS shows both problems.
 
-Signed-off-by: Qiliang Yuan <qiliang.yuan@linux.dev>
----
- kernel/events/core.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+This series is a first step in rethinking the memcg high limit around
+isolation. It makes memory.high enforcement asynchronous (to
+allocation and charging) again and keeps it effective for large calls.
+The task handles the overage on return to userspace, and also inside
+the operations that can charge a lot in one call, where it holds no
+locks or only the locks of the file it works on:
 
-diff --git a/kernel/events/core.c b/kernel/events/core.c
-index e870f12c3ad81..a5a9161bab31c 100644
---- a/kernel/events/core.c
-+++ b/kernel/events/core.c
-@@ -15617,6 +15617,17 @@ static void perf_cgroup_attach(struct cgroup_taskset *tset)
- 	struct task_struct *task;
- 	struct cgroup_subsys_state *css;
- 
-+	/*
-+	 * A cgroup event enables perf_sched_events and waits for a grace
-+	 * period in account_event() before it is installed, so with the key
-+	 * disabled no CPU tracks a cgroup yet. Order the cgroup changes of the
-+	 * migrated tasks before the key check, pairing with that grace period,
-+	 * so that the event picks up the new cgroup of the running task.
-+	 */
-+	smp_mb();
-+	if (!static_branch_unlikely(&perf_sched_events))
-+		return;
-+
- 	cgroup_taskset_for_each(task, css, tset)
- 		task_function_call(task, __perf_cgroup_move, task);
- }
+- Populating memory (mlock, mlockall, MAP_POPULATE, MAP_LOCKED,
+  MADV_POPULATE_*): 2M at a time, with mmap_lock dropped in between.
+- tmpfs fallocate, buffered writes (generic_perform_write(), iomap,
+  btrfs) and reads into user memory (filemap_read(), shmem): once per
+  folio or range.
+- MADV_COLLAPSE: after each collapse, with mmap_lock dropped.
 
----
-base-commit: 5f22fb20497f4983094131f00a734362300d22d2
-change-id: 20261120-feat-perf-cgroup-attach-ipi-2824375d4d93
+These points also throttle THP charges, which the synchronous step
+skips. A file's lock only blocks tasks using that file. Two cases hold
+more: splice() from a pipe also holds the pipe's lock, and gfs2 holds
+its allocation glocks in writes that allocate. The synchronous step
+sleeps with these locks today too.
 
-Best regards,
+Why not keep the synchronous step, with a higher threshold, without
+its sleep, or only outside these operations? It would still reclaim or
+sleep under locks, like mmap_lock in THP faults and invalidate_lock in
+readahead, and it would not close the THP gap.
+
+This also lets users drop memory.max, which still reclaims in the
+charge path and can stall lock holders as above. They can set only
+memory.high and let a userspace OOM killer like oomd [5], or a future
+BPF OOM policy [6], decide when to kill. Meta plans to do this.
+
+The last two patches remove the synchronous step, update the
+memory.high documentation and fix test_memcg_high_sync, which missed
+the THP gap.
+
+RESULTS
+
+Tests run in a VM with 4 CPUs and THP on for anonymous memory and
+shmem (enabled=always, shmem_enabled=always, tmpfs huge=always, the
+default defrag=madvise), in a cgroup with memory.high=64M. Reads go
+into an untouched buffer. "No hooks" is the base plus only the patch
+that removes the synchronous step. Usage 18s into a 512M operation,
+without swap:
+
+  test                                    base  series  no hooks
+  mlock, mlockall, MAP_POPULATE,      513-514M     84M  513-514M
+    MADV_POPULATE_WRITE
+  tmpfs fallocate and write           512-513M     84M  512-513M
+  reads of a tmpfs file                   513M  84-85M      513M
+  MADV_COLLAPSE of a sparse range          96M     98M      514M
+    (one VMA, or one VMA per PMD)
+  reads of /dev/zero or /dev/urandom      513M    513M      513M
+    (known gaps)
+
+Usage grows by one 2M folio per throttle, so it is 84-85M after 18s.
+On ext4, XFS and btrfs, 256M writes stay at 64-67M on both kernels
+(257-264M with no hooks), and reads with a cold page cache at 70-73M.
+Reads with a warm page cache, where only the buffer is charged, reach
+257M on base and stay at 84-85M with the series.
+
+With swap, the MAP_POPULATE, MADV_POPULATE_WRITE and tmpfs write tests
+finish in under 2s at 65-66M with the series (base: 157-169M, no hooks:
+513M). tmpfs fallocate is throttled with or without swap. With swap,
+base fails it with -ENOMEM for small pages.
+
+During mlock() of an 80M MADV_HUGEPAGE range, a task in another cgroup
+that reads the process's /proc/<pid>/cmdline every 10ms waits up to
+15.3s on base and under 1ms with the series. Populating 2G with no
+limit takes the same time on both kernels.
+
+All patches build with gcc and clang (W=1), with CONFIG_MEMCG=n and
+with btrfs as a module. A lockdep kernel showed no warnings. The
+memcontrol selftests pass, and the fixed test_memcg_high_sync fails on
+base.
+
+KNOWN GAPS
+
+Other paths that charge a lot in one call are now throttled only on
+return to userspace, and memory.max still limits them. Most can get a
+throttle point later, some after dropping a lock:
+
+- /dev/zero and /dev/urandom reads, getrandom(), sendfile() to a
+  socket, io_uring submissions, netfs and FUSE write-through writes
+- MADV_WILLNEED, UFFDIO_COPY, KSM unmerge, mprotect() of mlocked
+  mappings
+- FIDEDUPERANGE, FS_IOC_ENABLE_VERITY, KVM_PRE_FAULT_MEMORY,
+  guest_memfd fallocate, KVM page splitting
+
+Rarer ones, like sendmmsg(), btrfs send and FITRIM, can wait. Memory
+pinning (VFIO, iommufd, RDMA, io_uring buffers, direct I/O and
+others), fork() and single large allocations (BPF maps and others)
+hold a lock for the whole call or can't be split, so they stay as they
+are.
+
+[1] https://lore.kernel.org/20260924155025.949998-1-shakeel.butt@linux.dev/
+[2] https://lore.kernel.org/20260921192559.2619635-1-shakeel.butt@linux.dev/
+[3] commit cf1dec76ba8a ("mm/filemap: add AS_KERNEL_FILE")
+[4] https://github.com/bpftrace/user-tools/tree/master/reclaimlockmonitor
+[5] https://github.com/facebookincubator/oomd
+[6] https://lore.kernel.org/20260127024421.494929-1-roman.gushchin@linux.dev
+
+Based on mm-everything-2026-11-20-06-34.
+
+Shakeel Butt (7):
+  memcg: add helpers to handle memory.high overage in long operations
+  mm/gup: handle memory.high overage while populating
+  mm, fs: handle memory.high overage in buffered reads and writes
+  mm/shmem: handle memory.high overage in fallocate and reads
+  mm/khugepaged: handle memory.high overage in MADV_COLLAPSE
+  memcg: remove synchronous memory.high enforcement
+  selftests/cgroup: make test_memcg_high_sync check that throttling
+    holds
+
+ Documentation/admin-guide/cgroup-v2.rst       | 12 +++++-
+ fs/btrfs/file.c                               |  9 +++++
+ fs/iomap/buffered-io.c                        |  9 +++++
+ include/linux/memcontrol.h                    | 34 ++++++++++++++++
+ mm/filemap.c                                  | 31 +++++++++++++++
+ mm/gup.c                                      |  9 ++++-
+ mm/internal.h                                 | 27 +++++++++++++
+ mm/khugepaged.c                               |  8 ++++
+ mm/madvise.c                                  | 11 +++++-
+ mm/memcontrol.c                               | 21 ++++------
+ mm/shmem.c                                    | 37 ++++++++++++++++--
+ .../selftests/cgroup/test_memcontrol.c        | 39 +++++++++++++++----
+ 12 files changed, 217 insertions(+), 30 deletions(-)
+
+
+base-commit: b298839c2f77b60eea645a68d2245aa088463955
 -- 
-Qiliang Yuan <qiliang.yuan@linux.dev>
+2.53.1-Meta
 
