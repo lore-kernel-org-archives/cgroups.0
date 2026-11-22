@@ -1,84 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.231
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.174
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795315695;
-	b=EJfI87Cg+lEcm0nT/0rbIUOTjQeg+eccCxEiDPt/63RnJEjeEsYaZZ58ACkvqecovjEM
-	 bUbLK70blEIfUMFK/3+Ic3g2ETQIatDRxPIe2EuqU3Sa8ymxbLrBtpaOuJMjwgd7yAPEO
-	 TWL7x1i9rAEiGUPWl14UiKZ/BBRPLCDqueFpTxLD8tr5CXFEfr7YX9wyC2I9cvevIQyq8
-	 DQBmhKvAUn+J24uwYqSubp91lCAO62FA986ATbOaMn6pD1iotvtwCPbIrRG9AD9f7qzjh
-	 zutL2A2sGueL9iaR8epVT3/zzf/wGNIGw4GmUbm1tP6dAur8eFz6Cy3eKFzyb0IixGA==
+	t=1795332643;
+	b=GQJJU/69/D8Ll1a5jM1/Kb4V1D8UmHbq3BRqgO4xb3XKnZhvq90HQuVkzqNyufN0qe9J
+	 4vk95QRboBApcyv+HBfIlQzPa/FtKLW3ieM0njHFzWbxNJLwRVIv4hGNfrWdHEIJKqd5V
+	 qKOlaXfbCpHouP5AB4atFx4XvwqruPSt5cMLlbWHYBL0TuBm0RBR8pyd5XHRjsIRtaf5S
+	 g4ouKTJIvoZ5Q0y/qQ0VfpWyse8PRwZnv5/kN2NqE/5SNSthi1JC9AafpHcn2qngCGbIQ
+	 WeoZZfyfxg5XnqJVKHCjZPKXrY/U6tvGB/I5E79UO4nCBOp0koSVDwmfTNyVudZA7mw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795315695;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795332643;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
-	 X-Mailer:In-Reply-To:References:MIME-Version:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=E9PD9aOANTvQHboEG3uZgcAavMQLIgieVrLH9GH/oL0=;
-	b=RBzJR1Nc05GI7dvWMQWm6r8vhfm2zypqQ5RxqUzkjoLp6M5Rf3t2SRfp5CGJ51D/DYtz
-	 m1QcSrwg+jpw6O/iNfu82zx92eNd2CgW0I56FsG1mfKyXsL1QyP3WE1HVQikz5MD4yemw
-	 JbiIOSy+kjQ4VJ+qRjxj8BeGid0t8Oh2MJoiXUZutCGBdT0g3boo/Fos+hpGsroavjUGo
-	 7XwMrq9mj67QBN8PD1Et4QgZX8AGcW9uWqe7DAfjsMdiNZ6kqvNZf5MwraWYVXK2w7Pyu
-	 YLpbWarlmY0pPFgg8HleiTAAgn4EYQfYx3s8SA8+k6MR4GYN/Fj/MI+CYnSD8GfhF6w==
+	bh=H02gl3A8lED/orev+VVlUTCHLPwpp1eOdDDA4V8ytIA=;
+	b=PnBPWqeziPS8aIx2smFWqmxC6/e9aVpCmA4Nl2QQh5TowIW79PK4SGoijDxIaYWpvJWm
+	 /Eydvi/dQn+m9ygf0R8W/X90e6QzlsjQutUXx/7SuGlWlK9CFebxbTrZXL22c/3ZXamaI
+	 SYfGFrjAJSRxxjn8ruLAfvd4EGEB1MWGcBKBu6Pgk9HFfm7BmXKofgwhiiwwjuphB1HSV
+	 q2McamwKgQra3UgSOqx7md5/vX1T2V+GmhbCsbPf710P1pbl2wAynfWhK5B8/NhXhiSJ4
+	 /e/zmIVJneUSIA+gK+tMBCvh8EmCShgxRMF6S+NF6S6fOMipROd7/1U6I2sy2mvQlkw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vh6p6hz+;
-	arc=none smtp.remote-ip=91.218.175.231
-Received: from mta0.migadu.com (out-231.mta0.migadu.com [91.218.175.231])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=M8jygr5a;
+	arc=none smtp.remote-ip=95.215.58.174
+Received: from mta1.migadu.com (out-174.mta1.migadu.com [95.215.58.174])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46C60606A32C
-	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 02:48:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 46C60606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8883F606A32C
+	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 07:30:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8883F606A32C
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=vh6p6hz+
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=M8jygr5a
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=gqIN7txgscTN3NZxToZ9cIdy5PReEg1UWTFzKR5TdBc=;
+DKIM-Signature: a=rsa-sha256; bh=NLC7oANZwCfL7depjHfIzJ4jloTo6BAzdIgGpvntEFI=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795315693; v=1; x=1795920493;
- b=vh6p6hz+QC7kt4cKEXLjj/gDKNipkYbr+4+Smh8XNRgxwXfkPvvgmAmYgsYyhz7R3RLxeIlk
- B20/wOUqhg7oiduHUlwUtd4lygNKMBS7yp9kJ1W+dnc3n3HQtO+zLT6doeOM2m411cPwI4y8EYI
- V8IdtCGBZ6JBhugZbTcZLmXg=
+ t=1795332639; v=1; x=1795937439;
+ b=M8jygr5aBCWN7dK64eSo5G8nBVNnH0PVvZJGbiNzj+/iqwBKnRyiMpIwEeajBT8v9Zwurfdb
+ 4WVj/0p+Z8kpL94Zyzs+pjbbbZTWMJqOsf4W2KJXbOfLfrnI7egNG+fFRkVEV1nxoKF3B1VtJq1
+ 8pUyTesQeNgTH7mUVdlBe9BM=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 943718c149af7563;
-	Sun, 22 Nov 2026 02:48:13 +0000
-X-Mizu-Trace-ID: 943718c149af7563
+Received: by smtp.migadu.com with ESMTPS id b98bde626d255cef;
+	Sun, 22 Nov 2026 07:30:38 +0000
+X-Mizu-Trace-ID: b98bde626d255cef
 X-Migadu-Flow: FLOW_OUT
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Tejun Heo <tj@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Koutny <mkoutny@suse.com>,
-	Christian Brauner <brauner@kernel.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Jan Kara <jack@suse.cz>,
-	Matthew Wilcox <willy@infradead.org>,
-	David Hildenbrand <david@kernel.org>,
-	Vlastimil Babka <vbabka@kernel.org>,
-	Zi Yan <ziy@nvidia.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Nico Pache <nico.pache@linux.dev>,
-	Usama Arif <usama.arif@linux.dev>,
-	Kiryl Shutsemau <kas@kernel.org>,
-	Lorenzo Stoakes <ljs@kernel.org>,
-	Suren Baghdasaryan <surenb@google.com>,
-	Meta kernel team <kernel-team@meta.com>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-btrfs@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH 7/7] selftests/cgroup: make test_memcg_high_sync check that throttling holds
-Date: Sat, 21 Nov 2026 18:47:37 -0800
-Message-ID: <20261122024737.2741569-8-shakeel.butt@linux.dev>
-X-Mailer: git-send-email 2.53.1
-In-Reply-To: <20261122024737.2741569-1-shakeel.butt@linux.dev>
-References: <20261122024737.2741569-1-shakeel.butt@linux.dev>
+Message-ID: <3af03366-784b-48bb-a807-9ccea92e39ca@linux.dev>
+Date: Sun, 22 Nov 2026 15:30:25 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -88,99 +58,83 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 04/17] mm/memcg: add folio-based lruvec live helper
+To: kasong@tencent.com, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
+ Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>,
+ Baoquan He <baoquan.he@linux.dev>, Nico Pache <nico.pache@linux.dev>,
+ Usama Arif <usama.arif@linux.dev>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>,
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
+ Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>,
+ Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>,
+ Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+ Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
+ SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
+ Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
+ Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>,
+ Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>,
+ Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh
+ <ehab.ababneh@intel.com>, Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>,
+ Lian Wang <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>,
+ Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>,
+ linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ damon@lists.linux.dev, linux-doc@vger.kernel.org
+References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com>
+ <20261119-mglru-fg-v5-4-9eee2fe97a2d@tencent.com>
+From: Qi Zheng <qi.zheng@linux.dev>
+In-Reply-To: <20261119-mglru-fg-v5-4-9eee2fe97a2d@tencent.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-test_memcg_high_sync mlock()s 200M with memory.high=30M and
-memory.max=140M, and expects memory.high to throttle the call before it
-reaches memory.max. But it checked memory.events right after the first
-high event, so it passed as soon as the handler ran once, even if the
-rest of the call was not throttled.
 
-That hid a real gap: with THP=always and the default defrag=madvise,
-THP charges skipped the synchronous handler, and only a few page table
-charges ran it. In a VM, usage reached 85M within 115ms and memory.max
-about 2s later.
 
-After the first event, check for 5 seconds that no max event shows up
-and the child is still running, then that memory.current went up.
-Counting high events isn't enough: one handler call can log many while
-it retries reclaim. Also kill and reap the child, which may still be
-throttled.
+On 11/19/26 5:03 AM, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> Add a helper that resolves a live lruvec for a folio under RCU
+> without taking the lruvec lock.  It takes a folio directly so the
+> lruvec lookup happens inside the RCU read-side critical section,
+> which a lruvec-based interface cannot guarantee.  The first user is
+> the lockless folio_inc_lru_refs() path later in the series.
+> 
+> Factor the ancestor walk out of lruvec_live_lock_irq() into
+> __lruvec_get_live(), so that both entry points share it, and spell
+> out why the walk is enough while only the RCU read lock is held:
+> reparenting of a memcg that starts dying waits for a grace period,
+> so it cannot race with the caller until the lock is released.
 
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
----
- .../selftests/cgroup/test_memcontrol.c        | 39 +++++++++++++++----
- 1 file changed, 32 insertions(+), 7 deletions(-)
+Right, that's the ordering: CSS_DYING is set before the reparenting in
+the RCU work, so testing for a dying memcg under `rcu_read_lock()` fully
+covers the race.
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index bb673012dcf0..1af984761a02 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -771,14 +771,16 @@ static int alloc_anon_mlock(const char *cgroup, void *arg)
- 
- /*
-  * This test checks that memory.high is able to throttle big single shot
-- * allocation i.e. large allocation within one kernel entry.
-+ * allocation i.e. large allocation within one kernel entry. The name is
-+ * from when this was done synchronously in the charge path.
-  */
- static int test_memcg_high_sync(const char *root)
- {
--	int ret = KSFT_FAIL, pid, fd = -1;
-+	int ret = KSFT_FAIL, pid = -1, fd = -1, i;
- 	char *memcg;
- 	long pre_high, pre_max;
--	long post_high, post_max;
-+	long first_high, first_current;
-+	long post_max, post_current;
- 
- 	memcg = cg_name(root, "memcg_test");
- 	if (!memcg)
-@@ -811,17 +813,40 @@ static int test_memcg_high_sync(const char *root)
- 
- 	cg_wait_for(fd);
- 
--	post_high = cg_read_key_long(memcg, "memory.events", "high ");
--	post_max = cg_read_key_long(memcg, "memory.events", "max ");
--	if (post_high < 0 || post_max < 0)
-+	/*
-+	 * The first event only shows that throttling started. For 5 seconds,
-+	 * check that the child is still running and doesn't reach memory.max,
-+	 * then that memory.current went up, so it is throttled, not stuck.
-+	 * High events don't show progress: one handler call can log many.
-+	 */
-+	first_high = cg_read_key_long(memcg, "memory.events", "high ");
-+	first_current = cg_read_long(memcg, "memory.current");
-+	if (first_high < 0 || first_high == pre_high || first_current < 0)
- 		goto cleanup;
- 
--	if (pre_high == post_high || pre_max != post_max)
-+	for (i = 0; i < 50; i++) {
-+		usleep(100000);
-+		post_max = cg_read_key_long(memcg, "memory.events", "max ");
-+		if (post_max < 0 || post_max != pre_max)
-+			goto cleanup;
-+		if (waitpid(pid, NULL, WNOHANG) == pid) {
-+			pid = -1;
-+			goto cleanup;
-+		}
-+	}
-+
-+	post_current = cg_read_long(memcg, "memory.current");
-+	if (post_current <= first_current)
- 		goto cleanup;
- 
- 	ret = KSFT_PASS;
- 
- cleanup:
-+	if (pid > 0) {
-+		kill(pid, SIGKILL);
-+		while (waitpid(pid, NULL, 0) < 0 && errno == EINTR)
-+			;
-+	}
- 	if (fd >= 0)
- 		close(fd);
- 	cg_destroy(memcg);
--- 
-2.53.1-Meta
+> 
+> Move memcg_is_dying() up in memcontrol.h, next to the other memcg state
+> predicates, and use it for the walk rather than repeating the open coded
+> css_is_dying() test a few definitions away from where it is explained.
+> 
+> No functional change for existing callers.
+> 
+> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>   include/linux/memcontrol.h | 71 ++++++++++++++++++++++++++++++++++++----------
+>   1 file changed, 56 insertions(+), 15 deletions(-)
+> 
+
+LGTM, so:
+
+Reviewed-by: Qi Zheng <qi.zheng@linux.dev>
+
+Thanks,
+Qi
+
 
