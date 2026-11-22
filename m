@@ -1,100 +1,156 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.49
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.11
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795361523;
-	b=0zGjgDweZMj1YF2VWo+hWEZ8/D4oRrO8L5lCo9W6XdZY5YrZBBzCF9HiAeuX/fpVRaq8
-	 LkMZDiUuGtH3HdoTDlMV/mwexa8LoGkEqSdbs98wtpQVx+xLe6EfZUuCVEPspkNgSfyyD
-	 NNct8zoBL3YfqdeFetMt343hVaSLtDgHob5jeGeicAOYLsP3maVzpjyOdBOfve30xlkIQ
-	 5TKb7W0UuxZy1rxbg4YSRnauPjPjV5H30MzqHuBwSQ6aoG1kSNVe2TWxi6iFe4ESdwOqV
-	 4t+m+bbhwXF/3wmh11BIGCnmgD6wgiBObm2d6uF3hPjWEMFlY2sqr2hgiGiuYc3pTEw==
+	t=1795361541;
+	b=y6RzJUFhrsV9/0f752v5tyckupzuu8OltnWpmDVSwGsn87+P7uuHEeQdQ05Dn+UWqtrq
+	 PGvmZg4xq/MMWgVGbAYsyjdq8cEtFw2dBavOsA3MORhjz7Im589FaFRccnPdJ3ixwnXGd
+	 wTyTymqjBxQQNztZGiNKg3qoPDNxo0eXYY/nTDK4GKQmV4H/dvK9fvQ277WlqFkuUQzns
+	 YWGCj24Mw8PutQ58+TosKaKLnfQIp83Gj+pfTPEp6HKA7CmuaL3XprOA2QT36xBJtrzT0
+	 jbBweC0YILqt5vY9ctk//G7C+VmHSlLj8pykiBd8FI1KqgL1zARkJwXIXrudi+A3hHQ==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795361523;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Content-Type:Content-Transfer-Encoding;
-	bh=NYFpjmsPtm5tW7G6832pWObwECaMPmu2sWxAUpoI3jk=;
-	b=RKLd2k5AKbZP3Ml/QY9b8fp0jhC3Em+QeR9e+NJoRWny6SJqRLvdGFl1gFwsrQS9d6XA
-	 RXJa+exi1rYNU2I5vNxeYH/q++K3yOZ+74EEaWIVbtsHes3RTga9Bli+F6WABmZ4IqPxG
-	 dgay0F9HWF684ee+e/6fHyje0naAmth16VuVxXzQYxoQNn+FDYaQiyZ0M/qjdHjvYSjWI
-	 a+xV9Pf4Wczx8kUjbBAUBq7jU2o89r9d42wHx6jGT/AG2tQZC88KG+TJ5IzPjeoRmhSAT
-	 omoTeijsR10UA8pb1nzZMwRdegRl2XGCtE8alTEvNZY2rZzU1lS+aRtQcfu/vmcqe4A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795361541;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:References:Content-Type:Content-Disposition:
+	 In-Reply-To:X-ClientProxiedBy:MIME-Version:X-MS-PublicTrafficType:
+	 X-MS-TrafficTypeDiagnostic:X-MS-Office365-Filtering-Correlation-Id:
+	 X-MS-Exchange-SenderADCheck:X-MS-Exchange-AntiSpam-Relay:
+	 X-Microsoft-Antispam:X-Microsoft-Antispam-Message-Info:
+	 X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=WhMslJCGDuB5xV6P/V/CS6QxivMchvG1o2S2D3SeU7Y=;
+	b=g5rTTZD/UMz/eBGAgwTs+qSLcv9lhLGejKj9tjczgku48ZPM21AB5+RV2yLSy5Ykil5Q
+	 VR95AtgVYsOS9RNtC8i9KCgA5raXoaDe2wY9Bpdb8Ouh1J7RyKAI5gNopcVJJRTjD451Y
+	 2LefiCzHQgWnUABl/SfvCilkw2SBYtDRJcKCO+jeiE0o0Ej3kiX3apNA2I8d8QQoLS/Gu
+	 wEl/E1g/U0cyDVt8MazT39a1hNcDu/UQlApa4QPghttQf3d/WaxRjFG2IK/9bnKVTlBaj
+	 75/G5zkzYIXDkNILHaoAPcM22G+6aRZpqPdL+Icqhu+GOjPBUuUFxbZ7O2JnHlIpfEQ==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GDgqyqH0;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.128.49
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=nvidia.com;
+	spf=fail smtp.mailfrom=nvidia.com;
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=cr8yLoOX;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.48.11
+Received: from MW6PR02CU001.outbound.protection.outlook.com (mail-westus2azon11012011.outbound.protection.outlook.com [52.101.48.11])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B94A8606A32A
-	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 15:32:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B94A8606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE8B8606A32C;
+	Sun, 22 Nov 2026 15:32:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CE8B8606A32C
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=GDgqyqH0
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4bb6c7b6dbdso22510105e9.0
-        for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 07:32:02 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795361521; cv=none;
-        d=google.com; s=arc-20260327;
-        b=laGVJXSPmpUpNqCVmOvO/jcfON7eZsYY82jQnfzSwsAui6K/Z6nVtMPF0B7tcmkGuY
-         LrTWYawVS4S45QuDLsc1Us0lhCQ6c7xH+JWnwEFNqG1VkaOeAq8UHbISBnJvMT4kKaAc
-         LB2KvEe5zmZh/HZTpONjXMIOvaph9YwnnudNRacdUyNELOoV7I+WAplyyOA8lVkap5Rv
-         i2TS7HGUifOsyL1RaehEyTvjNJviYaF4PmuDAvRkmQf9AqBZQ+T0a39ZG25U8jZU6V9m
-         eRXeirDVIEXy6ywypKi3cIgbf2+MHzP/bi0TqUMvC8HzkzxkB+3g+1MhML1uJUCD1eT6
-         M3HA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=NYFpjmsPtm5tW7G6832pWObwECaMPmu2sWxAUpoI3jk=;
-        fh=Cys0oxxb7a2wCFgF7wg3MTB6/0wgZ6oCjjwKiNrgD6Y=;
-        b=ik7L+vFvz9Fzuco0sHR4FVqWjNwFUqIKPYrWysptpMaZ+PCXQEwNQJDUklSbvH1WhW
-         Hw8rK9Do1IVf2LZ0XReEkTFB2729Ilm9BTv70mOPCXD75CzPbp/uGVCTnQnEAjkWN0Xf
-         oygE5xrQpXOcnUj/bkhZp3cV/BLc4fxOs1cvNiiMyKgQtbJFfMXPEyVQGLqsM6hfhxPc
-         LXU+JHOT3XUEWIbf64MoZj1IE/DdTyWRjgrRywTTOTWXqNyO+lg2H13GbCOMIT9i12iN
-         0eTl32rf8r6ImNgxMIUVRkSTCj9oYxiAwegsnqVXrJGOz3pGuYbbBxEf5yNbPiyanIYF
-         XgVA==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795361521; x=1795966321; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:to:subject:message-id:date
-         :from:in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to:content-type;
-        bh=NYFpjmsPtm5tW7G6832pWObwECaMPmu2sWxAUpoI3jk=;
-        b=GDgqyqH09Skisb0RcI0q/2Ph5kOcC9liZDmq8v+txYgdch2/nXsG3HAHDqpAVz1dln
-         nhlTn+MskzGW7ddHZEYCSTLSGjYpThPI6ZEqtODp3dkhEOdUB1HogKff6nf1Yi7hrVLg
-         wSkTRLhkKlJ68RLwcmpUN6JQZa1dyjgpMdBxhM7bXOO++rGgxCTeSGSyDkyysr2cP0hk
-         zROFRmQaNyrzcGXrJ7wtBvrT5rgbg8NYjB3J8EP3garr0p8zRbTvnTHZfROpRvmdihzZ
-         n82OVN9msNlamWkZWRQm6XaGuJeXIKo1knCakO79lN/LfUBB4cWM/hyoTlCNVohpOc4N
-         FY1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795361521; x=1795966321;
-        h=content-transfer-encoding:content-type:to:subject:message-id:date
-         :from:in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to:content-type;
-        bh=NYFpjmsPtm5tW7G6832pWObwECaMPmu2sWxAUpoI3jk=;
-        b=bKeuPIwEaOu6Jwz8oeFFYqcvpJUinDT8Ve3alBzLnVaYPSVqV40I4sqI2Dya6Rz2ig
-         UroAZg5G3Qf7hd+1OBCh7xnM5o4TJxD6q/4I3VW/6KREhGxQfo4N2hF71djjwNaac9QB
-         s8fQHjSG/a/fJ43rXhSeWNRU0BBi1ukNI9OnPU6N6jc2cEAnKO9S6YUyRPgHKzIabdjC
-         bDAF8b/gDbiOAEFgwkEfbznk9Z0r/hRXjBueWET9ZBryiezFZ9Eq+zWbio8QuY4LJ8UA
-         4DagOuQ6MSaF8ZVPkEd/R6t7ywkztevWP3WICYpOLHr5C+hABUG1kxj6wHEIZfGGLB0j
-         A8xw==
-X-Forwarded-Encrypted: i=1; AL+hErGfZw6dI7ouC6eu51+91rZh9MAjftfENxrCKnETvKrTqpaPi3kagHyLbnnEXqLg00VqAICuIJus@vger.kernel.org
-X-Gm-Message-State: APuU4Z9rb4u4cJOn2eU03H7tQqOsjI8585ojbbKrUGO8HK4qnN+BKPnA
-	ZEddWN4NfytZcnqoKPlXSLwwN12+ZdCkcYactNlFg4cNuxsFAFKsaETSnRFMGufB8UJbIHIYtCJ
-	shSPS8JR+a+/A6d5OtHQlLKwJ/pfCOKQ=
-X-Gm-Gg: AZFdTZdBetdXr4ok6yvXbFfuATKfpQvz9vaeogBLzyxyBctebm9oBGq9JGqVSF4Kz1P
-	vafoMRB2cCDh2ZgCZQa1ELlRlzYAdgSc8YaXwPmBpu5AWr75c3ErZtIG0DJcrI82aHNEeQlrZ34
-	PsbHCnXckuvP1CaCYLGYyRLjmVjdhm2yM6/WlYJC3eEYkmTLfs/eiYlMwFJ3b6zrVd00rKvSXkZ
-	fot/kbRcdvPztAYWI050r5hwGoY9tkq1V9aODlkFH6zdN9aPc0yNyYLv3FdkZNwfTAvXWfYjJdr
-	vTSHWOldx6fsmFFbFzpjyz1+bZEndo4n7MLPCAwoOo51t8k8leRsBk1WIrpnj4w16/zLHTKPFLp
-	ynbhR+PUW36RLrf6UtqQVwEvP6JeyfAxhBKdOIhFILpywXaNj7knCTPMwSdGhpF7nMzNQE/95+D
-	zReBKJVDsuxOCEYSxpPFfyNvlTgLxjK/6TisoofOwHWPwcWje9a8a4
-X-Received: by 2002:a05:600c:3511:b0:4ba:73f:ef5 with SMTP id
- 5b1f17b1804b1-4bb88828304mr192354365e9.34.1795361520883; Sun, 22 Nov 2026
- 07:32:00 -0800 (PST)
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=cr8yLoOX
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=EHDbKitQys4tuIJDtOY5hUPO4Aj3x5WFLIkuQAlApmE2Q4b3YqB9ZH0lsXrMWpNWZv4NiqHhOCcsrGr1WeDorLAYdBe1EzhEuzo2hwf3RVevCgsz1wlZEVWlQABbgcVrtJ8r1wQqeHnlPLJd2OdiWxyCZjL9Go+lUtuOSoVTC0G5YC0SI4AJiCrgdjAPFdMQHWKwcwbNF9OnQ5yHFjl2oO8pdHHQMvJl7Ia5UdOGppFcn48kN6aHfWbXqupCUbc1C7Fv8api71Og+633PRFwVKA1tguNsATBHjC3/Jq9NMFwtyQX7ElH6E9N1POgmukkKV0hqNphXQmGmk0auArSCA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=WhMslJCGDuB5xV6P/V/CS6QxivMchvG1o2S2D3SeU7Y=;
+ b=G5n5JBi3HZk5TpGj4hj4HR3PdWpu1EqeSUnhBqlDdM8kTUi8QzX+4jKpS5z3HihfW7cgxr9rTFIcU/mtuF7qo8JX4b5ixE3Y796dIzL/qDhx3kXMeZHAltsyrGLj4c/1zvnrE2YhlSjtq9bDac67FJJi1D0XOakMJdgW87uYiH2xI3NAvHVuTZpZnMABCBW/QcUyisX6Tko9D2YkmOt3rOk2oWeLUiSpJZY/LWNCCGy+XABBr6SAiD8/gz+eVZgL496UwaGRxc9KVynJchUZ6Tu/tZMIR5hYe5X6v4Hh9MZzuWijV4SRMj8oNUq5A/Dt+/niX22GJOel+IJ81JH/OA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=WhMslJCGDuB5xV6P/V/CS6QxivMchvG1o2S2D3SeU7Y=;
+ b=cr8yLoOXqwaA1c+Xblj201hZ1aXiuuG6UWySgT+ibVPblnFFwvfbrVnxM7sGd3KkhRmA2335SaSiM8fZqoNrGRi2RbSq/mgJHcohbQinfFYLUSw6O2nnFuWCqXKi8ZTDrSJLjpTIwmTLeeXEt3xlYsnRA9PfhT2aQyHh2pjEInlpjG1OQhcURJAY26uUDk94yMcwxH9cHtKmDxRRVRXiurMMIfz34Ge7WZvlu4M9eBLogajqQTY9a1QHUrmdfgVKr3OLxPARno8sqbFL3EjM7/qRiuhvjoB8FqpCZKWwBzJIqxACXORlL9mu+pndzSpz3bgdplgOAMfYw18VkOyLxw==
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV3PR12MB9356.namprd12.prod.outlook.com (2603:10b6:408:20c::21)
+ by CH3PR12MB9284.namprd12.prod.outlook.com (2603:10b6:610:1c7::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.14; Sun, 22 Nov
+ 2026 15:32:07 +0000
+Received: from LV3PR12MB9356.namprd12.prod.outlook.com
+ ([fe80::1c36:31b4:c420:6286]) by LV3PR12MB9356.namprd12.prod.outlook.com
+ ([fe80::1c36:31b4:c420:6286%4]) with mapi id 15.21.0639.012; Sun, 22 Nov 2026
+ 15:32:07 +0000
+Date: Sun, 22 Nov 2026 10:32:05 -0500
+From: Yury Norov <ynorov@nvidia.com>
+To: gourry@gourry.net
+Cc: Yury Norov <yury.norov@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	David Hildenbrand <david@kernel.org>,
+	"Liam R. Howlett" <liam@infradead.org>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Oscar Salvador <osalvador@suse.de>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Brendan Jackman <brendan.jackman@linux.dev>,
+	Zi Yan <ziy@nvidia.com>, Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>, Johan Hovold <johan@kernel.org>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>, Rakie Kim <rakie.kim@sk.com>,
+	Ying Huang <ying.huang@linux.alibaba.com>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Byungchul Park <byungchul@sk.com>,
+	Alistair Popple <apopple@nvidia.com>, SJ Park <sj@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	Kees Cook <kees@kernel.org>, Kairui Song <kasong@tencent.com>,
+	Barry Song <baohua@kernel.org>, Qi Zheng <qi.zheng@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Baoquan He <baoquan.he@linux.dev>,
+	Baolin Wang <baolin.wang@linux.alibaba.com>,
+	Michal Hocko <mhocko@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
+	Nico Pache <nico.pache@linux.dev>,
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+	Lance Yang <lance.yang@linux.dev>,
+	Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>,
+	Xu Xin <xu.xin@linux.dev>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	Lorenzo Stoakes <ljs@kernel.org>, Pedro Falcato <pfalcato@suse.de>,
+	Jann Horn <jannh@google.com>, Chris Li <chrisl@kernel.org>,
+	Kemeng Shi <shikemeng@huaweicloud.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Youngjun Park <youngjun.park@lge.com>,
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
+	Jan Kara <jack@suse.cz>, Waiman Long <longman@redhat.com>,
+	Ridong Chen <ridong.chen@linux.dev>, Tejun Heo <tj@kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Dan Williams <djbw@kernel.org>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org, linux-cxl@vger.kernel.org,
+	linux-doc@vger.kernel.org, driver-core@lists.linux.dev,
+	damon@lists.linux.dev, linux-pm@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org,
+	nvdimm@lists.linux.dev, linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH 01/60] nodemask: add node-state iterators
+Message-ID: <awMK9V6TbU9Xtzn9@yury>
+References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+ <20261120-private_nodes_v6-v1-1-74f5f9a115c2@gourry.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261120-private_nodes_v6-v1-1-74f5f9a115c2@gourry.net>
+X-ClientProxiedBy: BN9PR03CA0336.namprd03.prod.outlook.com
+ (2603:10b6:408:f6::11) To LV3PR12MB9356.namprd12.prod.outlook.com
+ (2603:10b6:408:20c::21)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,123 +160,133 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <CAKEwX=NXSwSiuY65EV5nqFocMLd6-afsiJfgy_ahB2v_MDmcng@mail.gmail.com>
-In-Reply-To: <CAKEwX=NXSwSiuY65EV5nqFocMLd6-afsiJfgy_ahB2v_MDmcng@mail.gmail.com>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Sun, 22 Nov 2026 08:31:49 -0700
-X-Gm-Features: Aa3M54oFs-onXEgzFSCUJR6noxWe_j7pdReKnjl-3Np_FarnqLTrTWVKv1OO0fE
-Message-ID: <CAKEwX=O2McF-gyqJT2a8R5q79+QABCPjULrcjC2CC0v8TnXxJw@mail.gmail.com>
-Subject: Re: Virtual Swap Sync
-To: "David Hildenbrand (Arm)" <david@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>, 
-	Baoquan He <baoquan.he@linux.dev>, Kairui Song <ryncsn@gmail.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Kemeng Shi <shikemeng@huaweicloud.com>, Barry Song <baohua@kernel.org>, 
-	YoungJun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
-	=?UTF-8?Q?Suren_Baghdasaryan=EF=BF=BC?= <surenb@google.com>, 
-	Qi Zheng <qi.zheng@linux.dev>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Gregory Price <gourry@gourry.net>, 
-	Wenchao Hao <haowenchao22@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Shuah Khan <skhan@linuxfoundation.org>, Kunwu Chan <kunwu.chan@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, Linux Memory Management List <linux-mm@kvack.org>, 
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, 
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Joshua Hahn <joshua.hahnjy@gmail.com>, Rik van Riel <riel@surriel.com>, Wei Xu <weixugc@google.com>, 
-	Yosry Ahmed <yosry@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV3PR12MB9356:EE_|CH3PR12MB9284:EE_
+X-MS-Office365-Filtering-Correlation-Id: c6485a54-1825-442f-628f-08df48adc424
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|366016|10070799003|1800799024|7416014|376014|10067099003|56012099006|11063799006|4143699003|261021121427099003|261102123227099003|261009223027099003|18002099003|22082099003|6133799003;
+X-Microsoft-Antispam-Message-Info:
+	LadQk4uEsSebAaX36T2UMlD0k4aavvFJnGPyxq+sADDdoHz7h1S6cTm+9lwN2JuY+RhbZsAgBtH6HMrwaEs/1qoNwhCMXCD2HnT3piotu6CJhWi/zGa/x2kT3WvqgBYvrCRtXMV5byjJlFSa1Jfz2Z8Es8KqjJ/gP6DZ2VArDv3yVj5pPa+ZBvrppiFRCswwB+ZHiGKW9YWzBKGuNP+swVrsTET4lfSO/bT6JGwcEJAk4oAymrrQuP4kHwUsgRG0ONuqW69rZz34qgY2VzJiBrdY0IloGE1UIWWnNTM49Lemtc0UUlQ1LWF+KQtBZLWotV+9HucWijaFAQeLEouCDhaBiHWDCbkPaIYs1ijCLrdLfbpQWCHOIeZDVBboKpLNdpwAH5yTbh9XuDiHQjnOa52O8UH8hVIkGKvO4rmzHkJ4zuxhAeJV5BVjZs1dnRrbf+Zr2yALfauusWyHdhBvzh8mpkvQhguRY1p1v7/SaRa0p2DHBXmd805eyd7d+XI/367SUORKBEhSqopdRKVQQ+s3kmJ5FGjbepuputL8d/8bDEKKf4r1mwN+speML64l5Uja4AhFfhfUX2fQ9bcmlGAVrQbpl3yTTwZajpRZ59PJG/gbGGmT9vfmPokHenri9636b4Tgb3WBRlCk3okioAUGEdJsQCDwDgsbtAGC2bA=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV3PR12MB9356.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(10070799003)(1800799024)(7416014)(376014)(10067099003)(56012099006)(11063799006)(4143699003)(261021121427099003)(261102123227099003)(261009223027099003)(18002099003)(22082099003)(6133799003);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?0878Rh0OU0ASRuFo6sTdoF3SxBqX7ikevLQHYzhknEeGzOQ2B2i3oyhkWmcB?=
+ =?us-ascii?Q?vdC0RV17nq5Ut/rsXr2QZcjCnVcWfnPDwx4CE/S/3ITrkFrSxtRIVb57b5TE?=
+ =?us-ascii?Q?12ScIl2aqKaC61hbvkut8h1CScZIOXaKEOSAPZQlVJeBESw1+J54nNhRYJpj?=
+ =?us-ascii?Q?q+N7YQPfjLLtxxFDpFRzb7RZaMPPwn+ImCVVh3yYk0zz1skuph4r4OrNDGtl?=
+ =?us-ascii?Q?qkoqiahw6e2odkS6anbXxrt2Om8f/9pUD9dTILttqGt9LbpROxJ2/A+rs8qB?=
+ =?us-ascii?Q?skcevIIA70HVfuwop8HFzHVfAmhOJh4uX008ShwOtG0uBJHCj0LkE1B75U4A?=
+ =?us-ascii?Q?ebER04WVfRArUCB8JwqdTJcNJXiX9d1MAOsYaEIbQts0iZodjls9ft6wDHFH?=
+ =?us-ascii?Q?r6P+wOoklKSj/vKZOZpZu8J9O6dY9tbmeo5yYfLC2K4WRf53iCXXF23bfd+9?=
+ =?us-ascii?Q?tIFtYp/soKOKQydkgswzkr+ZfFk5L8KWagu2ysOvEfxlM3ztcxZDMt9wPV/a?=
+ =?us-ascii?Q?kD1BPzvOZDDVr8SZPmJ3hEMWqLo5Hwe/zE+iBtxu2MWiZs7YFKFntevkZ/A9?=
+ =?us-ascii?Q?p7RCcL9+gTx8Y3GetF7l+gaEZUFd3mgEyTRwUdkMKMy1AXmt7471f8TFYrAE?=
+ =?us-ascii?Q?ppqEIDUMRaQinZdGh1ahBy2iFSvmNh5qX064NaVJo2nh3I66QQmSzAVKzYHC?=
+ =?us-ascii?Q?h1h2//nE+Ngekq3CW/h9KEsqk+iIvzl5cLCZ42JTQsbpDBnI72HIChThNP8q?=
+ =?us-ascii?Q?7rczyuAAqbWQo/bNvfd3slvoGpWdsjtQBfjyXmHha7ZSsdmPnqhO70FlNKLo?=
+ =?us-ascii?Q?DxPExNWZL3O7MPko9uFk2GpM8EsiD/kdfJtC1ofMNInyivne/bbGTSmeeiif?=
+ =?us-ascii?Q?6Gg7r5MtxZ8tjLyV0WuNqgoEHbohtKw+hpHTortmoZmsTVnhcjvbg7Lm9HL/?=
+ =?us-ascii?Q?dFVu0Pdgj+HSAbUj6Y9zY1DBu0lAdO16r94YDlXyd4TiPnHhK3QOMiMNJZuO?=
+ =?us-ascii?Q?icAU7Udp7fOt7HjE2sFh1hVsMbLTRoANkXvwWs6QKFecXZO7DSJ3eT490eHY?=
+ =?us-ascii?Q?QDnjQ5uCNL+Ao8ZIXN1qwATdl6d4j6vswBAHClf5u5W1wcyA2dCm7+/mXrDe?=
+ =?us-ascii?Q?8l4RUOVPDgu3N28TZqS83YQ27xcjHf2Yb+ijh2PMGCtZpD+WX6XdNwP/1Dve?=
+ =?us-ascii?Q?JgXMO5RnzA8CcoCenR6pxc06iEAxz71/MjWF3b0oXzaMKWDblsxxvi0qL6wk?=
+ =?us-ascii?Q?suYN7jZCmtP8qRBLGWqXe53Ug4Cib3eRbS/Ta4K5zjwgSbKzRZM6axMETgM2?=
+ =?us-ascii?Q?cPDKiMuak1fpXPue32bB10pQn7QbxG8x4LKK3mUC011F2mau0n0MMV2OehIN?=
+ =?us-ascii?Q?pal+m9ZylTSgCp9ICXUOUiMgAjacNp1DuAL5iwETjyo7fiCsC/qbCN9T/wpV?=
+ =?us-ascii?Q?g1qHrtgXxOuaHmAXoVHC4sSB7hGeNfd0gDvODHF17K0jBEWnNdqzAEO/5ZWO?=
+ =?us-ascii?Q?PguKAGxJWxeP2VTmK69UWOvI7hIWQQSbh6PAjuWtGlMY/JQy/91+7SGAHJnf?=
+ =?us-ascii?Q?vjvkTx0LQVwjsvvg2B5FKpNt+c9DmlMgWm79kZ/gKUY3O+/EdnWTD1Pgp4Gq?=
+ =?us-ascii?Q?pjLJ4vb+cGoeqVvNk+Eg72QSgLlZSW0TCWAeyVkAxZnoExgRM3QCTiOyGXdo?=
+ =?us-ascii?Q?jYlbLkU89rqfHTdlofrWERfbLIhveKByfPLzZ3P/Og8PCd8Y5LTrHWML7ZH1?=
+ =?us-ascii?Q?F2/DTg4BcCxL1MBVmHECkDpT6XYb12pDshSJ+5onFzgnC8b4MOgR?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c6485a54-1825-442f-628f-08df48adc424
+X-MS-Exchange-CrossTenant-AuthSource: LV3PR12MB9356.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Nov 2026 15:32:07.0533
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: rew2IPNPi3eMjUW2rOx/D54VR1hE34BYSZEp/L4/4gyRLjUNdp187rMrRSfQ73nncADw0FzzNhR/N3gz2QevhA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB9284
 
-On Thu, Nov 5, 2026 at 2:06=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> wrote:
->
-> Hi folks,
->
+On Fri, Nov 20, 2026 at 01:08:52PM -0500, Gregory Price via B4 Relay wrote:
+> From: "Gregory Price (Meta)" <gourry@gourry.net>
+> 
+> Add first_node_state() and next_node_state(), so callers can walk any
+> node state the way first_memory_node and next_memory_node walk N_MEMORY.
+> 
+> Add for_each_node_mask_state(), which iterates a nodemask intersected
+> with a node state using the bitmap intersection helpers, without a
+> temporary nodemask.
+> 
+> Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
+> ---
+>  include/linux/nodemask.h | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
+> index 607373bd83ee..90bdcffa42ea 100644
+> --- a/include/linux/nodemask.h
+> +++ b/include/linux/nodemask.h
+> @@ -411,6 +411,11 @@ enum node_states {
+>  
+>  extern nodemask_t node_states[NR_NODE_STATES];
+>  
+> +/* Iterate the nodes in a mask that also belong to the specified state. */
+> +#define for_each_node_mask_state(node, mask, state)			\
 
-Hi folks - thanks everyone for attending. :)
+for_each_node_state_and? We've got for_each_node(), and we've got
+for_each_node_state(), so let's figure out consistent naming.
 
-I summarized the points we discussed below - please let me know if I
-missed anything or misunderstood a point.
+Did you check the codebase for exsisting candidates for this helper?
 
-* Control interface: Google is interested in a knob to cease zswapping
-(which already exists and will still work in vswap world). Kairui has
-a use case for remapping all swapped-out pages.
+> +	for_each_and_bit(node, nodes_addr(mask),			\
+> +			 nodes_addr(node_states[state]), MAX_NUMNODES)
+> +
 
-Vswap currently bypassed when zswap is off; per-cgroup selection could
-be added as concrete use case arises (for e.g migration/compaction).
+Please use nr_node_ids instead of MAX_NUMNODES.
 
-David objected that a virtual swap abstraction should not carry a
-swapoff interface per se. Folks also asked whether making vswap a
-mandatory layer would make the implementation cleaner (Nhat will
-explore this direction and follow up on this).
+>  #if MAX_NUMNODES > 1
+>  static __always_inline int node_state(int node, enum node_states state)
+>  {
+> @@ -435,6 +440,12 @@ static __always_inline int num_node_state(enum node_states state)
+>  #define for_each_node_state(__node, __state) \
+>  	for_each_node_mask((__node), node_states[__state])
+>  
+> +#define first_node_state(state)	first_node(node_states[state])
+> +static __always_inline unsigned int next_node_state(int nid, enum node_states state)
+> +{
+> +	return next_node(nid, node_states[state]);
+> +}
 
-* Virtual space sizing: We discussed using vm.overcommit_ratio and
-vm.overcommit_memory to limit the host's logical memory footprint. The
-exact sizing formula is still unclear - Nhat will follow up with
-Kairui on whether it is acceptable.
+At least the following {first,next}_{online,memory}_node must be
+switched to the new helpers. Can you check through the rest of the
+kernel to make sure all candidates of the proposed helpers are
+converted?
 
-(Kairui, if possible, can you respond here for your exact use case? Do
-you want to limit physical memory usage, or virtual? My understanding
-is you want to gate physical + swap, which would be closer to the
-latter).
-
-* Priority and multiple swapfiles: should not be added for now.
-  No good use case for swap priority was identified.
-  Multiple swapfiles were used in the past to work around swapfile
-lock contention, but it is unclear whether they are still needed with
-Kairui's new cluster-based allocator. If contention remains a problem,
-we should fix it in the kernel before putting that burden on
-userspace.
-
-* Proposed phase split and charging (from Nhat):
-
-  - Phase 1 - initial foundation:
-    - Decoupled zswap: Let zswap operate without reserving disk swap
-for every virtual entry.
-    - Physical backing and writeback: Keep disk swap available as a
-backend, including when zswap cannot store a page or an entry needs
-writeback.
-    - Charging: Retain memsw charging for virtual entries; keep
-virtual-slot usage out of memory.swap.max. Actual physical swap usage
-keeps its resource charging.
-    - Usage counter: Expose vswap usage so users can monitor
-virtual-space consumption separately from physical swap usage.
-Essentially this gives you a method to estimate the logical footprint
-(memory.current - swapcached + vswap).
-
-  - Subsequent phase(s) - further support and controls:
-    - VM_SPARSE: Add VM_SPARSE as an optimization after the
-first-phase foundation.
-    - Runtime controls (added as use cases arise):
-      - Host-wide runtime disablement knob (and remapping of swapped out da=
-ta).
-      - Per-cgroup vswap control (for e.g, if some cgroups want
-migrations/physical swapfile compaction).
-
-  - Orthogonal use cases and concerns:
-    - Cgroup-level logical memory limits in cgroupv2 (memsw?) - swap
-developers will follow up with memcg maintainers.
-    - Static sizing: Define the host-sizing formula and decide whether
-another interface is needed.
-    - Swap tiering for cgroups: Explore backend selection when a
-concrete workload needs it.
-
-Folks, please comment on the summary and proposal.
-
-Let us keep the communication line open and coordinate on the next
-steps. I will schedule something again.
-
-Also taking a step back - once we reach a consensus on vswap, maybe we
-can repurpose this series of meeting for general swap alignment? There
-are other swap/compressed swap developments right now (looking at the
-orthogonal use cases list above for e.g), so maybe we can do this once
-or twice a month. My experience in the past year or so has shown that
-we clearly need better alignment :)
-
-I will reach out to set up another round of meeting. I'm hoping we can
-do it one more time in December, but I understand that holiday season
-is coming :)
-
-For folks in the U.S, I wish you all a merry and festive Thanksgiving.
+>  #define first_online_node	first_node(node_states[N_ONLINE])
+>  #define first_memory_node	first_node(node_states[N_MEMORY])
+>  static __always_inline unsigned int next_online_node(int nid)
+> @@ -481,6 +492,12 @@ static __always_inline int num_node_state(enum node_states state)
+>  #define for_each_node_state(node, __state) \
+>  	for ( (node) = 0; (node) == 0; (node) = 1)
+>  
+> +#define first_node_state(state)	0
+> +static __always_inline unsigned int next_node_state(int nid, enum node_states state)
+> +{
+> +	return MAX_NUMNODES;
+> +}
+> +
+>  #define first_online_node	0
+>  #define first_memory_node	0
+>  #define next_online_node(nid)	(MAX_NUMNODES)
+> 
+> -- 
+> 2.56.1
+> 
