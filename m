@@ -1,113 +1,86 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.180
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.222.175
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795367030;
-	b=zBeGaR9E7iMgl6Cwexo94f437UXezYu4GOLHU5XHl961bADVBkeLi/Hu4owaepxJj9JV
-	 GdrVDEJdSpr8GxVk9UZoE8WCdvPPxwwOOcg/KODF0U1htz0DfGDgqOqUf+kUJI++hmSfz
-	 7EfoJbR0Gq3ldoRCwHaLqw/iFaQWA6hPVJYR1xJf/laCldAZ2QkHrmNcq1y2b+l87/kd6
-	 jbAmcbntavweg69os0qpc47LvKZv9UGa8Kv4BzMdkXNrojiTV+aJPwcsI2GIy0UbGY1/q
-	 PsDdBQGGDcCCg3SVbXjOa+k0qtB68P6Yjo+1pnEzoG0v//qrKByMnKHIw/qju9nLkTA==
+	t=1795374696;
+	b=pTpPLmBmUXhAvpJnFH81Zhepfe8uf9vsVK+PlHmU0NquZKbMLgRCh4o4/D7yOV6BF7Td
+	 Dw2cckY2Gep32nwLQ1M7xMLip2eYHSJ59zTuYsjhZaWv2JARqpRqtXOwIvzsgysl5iDH9
+	 299Zy5pHEFtWDNMmxzu4LyQLf/XXYxBfWUSXcK8yJ6rZXGPqf6RRCfrH3zf9Kl+9r6WIv
+	 giqeQEM99LVp79SCgCKXyOH52gQ81t3pEvqbuleV8+9wDKK8hqikeSpfLJx5xaKf5dcxj
+	 Ow9+IlxMhOmvSQqvpn6EcTUcyyBpbzfOvi4J7xe5X5JnkBofl668WyEC3BBT8aRIhug==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795367030;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795374696;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=pmTrwXa44wNwYeC7jaSDYKhs1kagM9vZS4uaKGYPdVA=;
-	b=DJq5wdOx5Gnaaf+TfjzN3kO3rdtar5QKnDOCGyOLjdrKEwg0MJVt+0IM/jbh27OBajti
-	 w3/7RsHz1j/hqTQD+z1TE0zkCqoW+qr4KHcwlkXSd1XNpxgX/jnuhyxOhhmy5Y5nOHxPv
-	 YQ6aDxZwQJV1g2XTFENGX7YZWDi8EZ79jH/0asGBJaAKXrZxLLe9UJwXcZTs6HOZMAiJ3
-	 0K2P8CqSwHCX0RWq1eY+Zc+qqAryEHdB9jJxIt3CcCIjeXYi82zsD17bBI4A6skSqpf0F
-	 PpnBz4wztUfKVAtOpcBqN6PtBrodw1prbnCbZDC6AnUoGY+zrCbk9vKUMr5wKzlo3cA==
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:From:To:
+	 Cc:In-Reply-To:References:Date:Message-Id:X-Mailer;
+	bh=oGsMa7wmHQHTRJX2QekmD3Y6Ja6uGmq6iEm7evLlQd4=;
+	b=soOwVhpPXfDCjWOJHFDLf/bHJuurp6e6qPBkGB2r6iqWu06MKp56HRf43pz/P4u/Qk5u
+	 r+jlcoeWLiE0/PttOvjqrl1IwHTRut9qx+HwYAZ/hfej9Gn6nR3V3slxpTYKWyuOZ4GaS
+	 aHvgDUVK0rChtFvVkNwo6wcA1cXyoNVKiBG93Fjp9Qtv3iMrgTTvaEHs4YXqja2ojsqRL
+	 p+kpXV+BKxHWUvJiVyCdDttLEFqzqgxKT8klvgidmDxOwlevurfR2JWYKilJBOR9T8zUH
+	 zUNssuELttwAwfv6Uxek6knB/jxiadO85jtibCh4sRLe9mZZvZVjvC649wwr8AIRgoA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=S+EDjXl5;
-	arc=none smtp.remote-ip=209.85.214.180
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=TPI3MTe1;
+	arc=none smtp.remote-ip=209.85.222.175
+Received: from mail-qk1-f175.google.com (mail-qk1-f175.google.com [209.85.222.175])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6B5606A32A
-	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 17:03:49 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E6B5606A32A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1D7606A339
+	for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 19:11:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CA1D7606A339
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=S+EDjXl5
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-2f04ad2c46dso11935505ad.2
-        for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 09:03:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=TPI3MTe1
+Received: by mail-qk1-f175.google.com with SMTP id af79cd13be357-949680e6d82so320848085a.2
+        for <cgroups@vger.kernel.org>; Sun, 22 Nov 2026 11:11:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795367029; x=1795971829; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=pmTrwXa44wNwYeC7jaSDYKhs1kagM9vZS4uaKGYPdVA=;
-        b=S+EDjXl5x9/onQ9QBL2h4s608i+Iv1fYa3RapZ2gSXWpIlrZy/Cjig6y47F/NkAT/F
-         UFOT1MiPKDDEizIXETtlSq0L//tRVBWAtaaeqLzq4IhwfG6Lf2DdZDzge/Yy33Tf8/2f
-         aXG1MnXwawTJJuz1LTesilgK68UdB+CM4IgERtzl7I1UwxBJHaKE8DGRXb+r77ohEKSU
-         cvOiDvu+4clRldEoMQ+AWbw4WWcBNgCIg5g38OsyLtWym3aBZcvbAbuWYdwFU3D2TrsZ
-         Bnqw5O1UKyFJ97iUdWK1zVB1bkcuYJgmfL1w2F3Ayfs3N4454b44TjyNfp231GIPb4Vh
-         TuhA==
+        d=gourry.net; s=google; t=1795374695; x=1795979495; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=oGsMa7wmHQHTRJX2QekmD3Y6Ja6uGmq6iEm7evLlQd4=;
+        b=TPI3MTe1RlG4SmZzzoCpRdy2QVmmqnbO/w6aR5KNMokJV/Ej+uAFQG7yAYqk56hfkq
+         LZC9wKLhxk3NMVRMaR1VvWVuCxA6GsIEcwsr6le7u6bdoCGonrAZjK3eTkxOT3nRTyMs
+         kLr2KYSGk0Kdl3U1jn7zVe/GjwSTB8XynoaJu+1hSecxlfaiVnqBhg9qfE6UcOdBFpU7
+         K6+K542N8Cf/GVSasbtS0zq1zF4T0u1FTMwtPGg2hgdtwvyFLiHHyHTH+dkRxgJO3IEQ
+         VpIReU6i3uKk4uALa/TFB/P/g7vgcldffZQ51PdHza/mx09Vr+vtrjEp2lxRt4rjm1dE
+         cSLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795367029; x=1795971829;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1795374695; x=1795979495;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=pmTrwXa44wNwYeC7jaSDYKhs1kagM9vZS4uaKGYPdVA=;
-        b=ij3A16lRfXcRF6pZIexwp8S9tytrB/tpr24iH2lNnrsqPdzfLtV3cKLo8emck8PcJm
-         iGTfFnAkARWz8wRjpq4jH2LOSuoWEZlSlipRosCq3l48WHBsjW8m4D1Rz5Y3gK2HPXll
-         56ti/vHEcEejMe8xMk5M8GZDoRDyYTnvBuN3ADt1Z+9i1mp2MHJye8SP0G/r9XQGdAVD
-         1LgQ5xyOLzW4dc+pr3Ucg/EFYwDLLGNLWWcRStG/w61iBHQZJ9N2CAwAM3aJjGLzdPKc
-         0ex9YYjihVmvEbXLHuOmpjd9KpaybK/hNH2eVfyWJEFsuUVsXQRw02Ezu8XO1TWQ60Uy
-         0/UA==
-X-Forwarded-Encrypted: i=1; AL+hErFHFG8/03yTEUAxin358V0XPlgC0/Z/1JosPvd/SiLMq5oN4lXcxtuPw6g+uRbkLLU06FdMJLR0@vger.kernel.org
-X-Gm-Message-State: APuU4Z8cpvyWLTok8IRBlfJa1rMo2zzbllqtNqnuw7nr8Bhrfm1zU5RH
-	7XKkY7JpanThpJMfYsXqUWFAqbhiGPImwkhn28WT+MfXEqEMr6o0QUbb
-X-Gm-Gg: AZFdTZe/aES6EJB5wOgLHKQV3Lc6++jvSNocUPYVpOSW2XK7ymg7cfUNXqPOVw42/ko
-	JIE71d4rg9oRInCWa/b+b7nrbKRmVjDpESUUxt1qm53SIYWyl1n2th/jrfdiWMO/YHuJKtsmiK8
-	9R88MQ1AffBtvRC/Qgc5y6jqVTeNTPv/QDHTdnChfCjT/WvkEKhneK/ccwNunD0kSF+KHM1HS1k
-	woBAwEv7x3i/06aPqOoet07V41nh6PIQ+8XTlZ/pUCs+wOO7kenfvSCPT7+DnspSM824XLkVNDF
-	1Iiq9P9ev5F6iwFsUc7aW1Ulg8NV52wGw/o7plOcHpHfFNbsiJR2FKq1z6ODgUeo3WMNg5ewpJW
-	TXZMhvycQAkGRLGS54pZfm3NgyLUHt67iEjM0uCuhpx1hTI4pq2+gTad4xfBMgMWZ2/bLefBqif
-	s08epsoBRtecmoD1XsK04LgKnIUXO4WPsBBGRll8KKOtYXbqQgiw+z9k79+vnJvprTJm447LiOz
-	mnR/VIgDeuGRGRM3wTGfaPSPDW8FC3ofeJFkmoORfU3N0r5XphjNG8XGlnxANHVXzPt/HCCPOT7
-	f386B2Jy8FumrYdTNYN49+vciUFe2GoDUSj3M667QYDfEgq2CJD6hQTA5sVqW++yMkgSjI4=
-X-Received: by 2002:a17:903:41cd:b0:2e9:8bd4:577d with SMTP id d9443c01a7336-2f03f1bfa6fmr95419565ad.37.1795367028759;
-        Sun, 22 Nov 2026 09:03:48 -0800 (PST)
-Received: from KASONG-MC4 ([101.32.222.185])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f0c42b1sm39111735ad.17.2026.11.22.09.03.37
+        bh=oGsMa7wmHQHTRJX2QekmD3Y6Ja6uGmq6iEm7evLlQd4=;
+        b=0r4J/68X5/ReGil46XuIGLHF5TNlZ5/0hZv0oznoOG97Ji2zN8aNjejbWredtuz7yS
+         ViPPK9+0xrKNIjCdy+5+dWEP5k5PXvItzirIftlffVfIBDSSHIifG2hg5SRFnVxOL1kO
+         iCNN9vpy3VIQ6c14Gfplk1UVhROLE8dd858iznfAdYdVYCnvay5InVIGQ5vz6ZXurwBR
+         DaJDuxFyHj8PozI0G6tQir6HNH/+xK8HWsfzssfKoIYKn7x04d80HzoNJtAiD+2cDFp0
+         +jmEwraPJNoOtyB7SodNz6d3kZ7eyTyZ2xuXqq99T6yprjFE5oXgBQxpukBOy2YhTZza
+         B2Gg==
+X-Forwarded-Encrypted: i=1; AL+hErENK9CbgEVfPk3uWMDFNKBsVkIx4EvwOkzaWa5o1lxMAOLVy/U0s2Y6Rn2IJv6cEmoJXGc9fK/Y@vger.kernel.org
+X-Gm-Message-State: APuU4Z+fWSZSpNE65S2dOApTzge3c2lHrsEXn885hG2SUbUwdAUEXSYi
+	l5A6QKqkSY2mP/TwX2mTshg63jtA0yJvRp97wfdfB4Ik9uWQByO154+JpDToT4Qp9ieiWA+XTiC
+	NVy6+
+X-Gm-Gg: AZFdTZcAzCkkyqZxv67eDgR34Nb8jJoCe/vUm8wq21QVyY6jmGGCdJDI6DrIg7Ghmfx
+	PUF8lNRGIaPr88liMxN+p1HOFRpBGU5UEiuxDg1TRswArLYgN5p8qE/x8F8uIUIfYGVXWgQ4RRY
+	9zlST/MejBCkVKn1baR2LI1BEfME8Qy5fj20CW+mz3PNCYOPuPhT2Lt14hj37dQNbnTHOi1D0VO
+	FpU+3ydHX+YFI9GcwYrz8V6yWVIg6oBN+0c27JE3bwgldWv+ep9w6/9qXR/MN7hg8XRBC0M2Uvz
+	gs1du7sxnO/I3SJBg8ch4U4KVZOqxKwaUJzjCsxfHYUCuEyayg6e6B+tW/dwdbiIt8JQ+7Zn7e9
+	7s37cyTPvbo9Ux8S5VEWVpGMtplaPMAIW5/tzUhJo0n1mEEmHlqC1THqUOY1HN+N/0GcUTDP3RF
+	BqI/XsJ8wM3YhZfegOkhSUpJXY9J2h7SOKqoEjkQ0nzah8TmM0OZOEReRmfH0or4oM9k9lmeg76
+	u6Ec3e9chH6bZwo+lwn583BKbBlZ60Pt5OlUi3W0EZgao9UFoH7MpdXce+KMtHCvEB9vS/5z7vY
+	OvOu8lanJdYrPkiUPMdLr211wVpjzlvjnrWuult/9Dai1cAZ6S2HILpps2iaoHW64IwwF933EMx
+	JMf422Yg=
+X-Received: by 2002:a05:620a:4727:b0:949:326f:bd2b with SMTP id af79cd13be357-949ba9aa37amr1639379885a.43.1795374694656;
+        Sun, 22 Nov 2026 11:11:34 -0800 (PST)
+Received: from [192.168.50.231] (pool-71-191-145-202.washdc.fios.verizon.net. [71.191.145.202])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-949bb38c903sm651828485a.19.2026.11.22.11.11.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 Nov 2026 09:03:48 -0800 (PST)
-Date: Mon, 23 Nov 2026 01:03:34 +0800
-From: Kairui Song <ryncsn@gmail.com>
-To: Muchun Song <muchun.song@linux.dev>
-Cc: kasong@tencent.com, Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Qi Zheng <qi.zheng@linux.dev>, 
-	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
-	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
-	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, linux-mm@kvack.org, Nhat Pham <nphamcs@gmail.com>, 
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
-	Hugh Dickins <hughd@google.com>, SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, 
-	Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
-	Zicheng Wang <wangzicheng@honor.com>, Chen Ridong <chenridong@xiaomi.com>, 
-	Tal Zussman <tz2294@columbia.edu>, Xiang Liu <liuxiang.277@bytedance.com>, 
-	Ehab Ababneh <ehab.ababneh@intel.com>, Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, 
-	Lian Wang <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>, 
-	Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org
-Subject: Re: [PATCH v5 04/17] mm/memcg: add folio-based lruvec live helper
-Message-ID: <awMX9W-Ykjw4maRg@KASONG-MC4>
-References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com>
- <20261119-mglru-fg-v5-4-9eee2fe97a2d@tencent.com>
- <42207e26-ba7f-4df5-8c80-71fa1b84d26e@linux.dev>
+        Sun, 22 Nov 2026 11:11:34 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -117,96 +90,88 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <42207e26-ba7f-4df5-8c80-71fa1b84d26e@linux.dev>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 00/60] Private NUMA nodes
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: Yury Norov <ynorov@nvidia.com>
+Cc: gourry@gourry.net, Yury Norov <yury.norov@gmail.com>, 
+ Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
+ David Hildenbrand <david@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Oscar Salvador <osalvador@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Suren Baghdasaryan <surenb@google.com>, 
+ Brendan Jackman <brendan.jackman@linux.dev>, Zi Yan <ziy@nvidia.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+ Randy Dunlap <rdunlap@infradead.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ Johan Hovold <johan@kernel.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
+ Rakie Kim <rakie.kim@sk.com>, Ying Huang <ying.huang@linux.alibaba.com>, 
+ Matthew Brost <matthew.brost@intel.com>, Byungchul Park <byungchul@sk.com>, 
+ Alistair Popple <apopple@nvidia.com>, SJ Park <sj@kernel.org>, 
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Vincent Guittot <vincent.guittot@linaro.org>, 
+ Dietmar Eggemann <dietmar.eggemann@arm.com>, 
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, 
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>, 
+ K Prateek Nayak <kprateek.nayak@amd.com>, Kees Cook <kees@kernel.org>, 
+ Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
+ Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>, 
+ Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+ Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
+ Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
+ Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
+ Xu Xin <xu.xin@linux.dev>, Chengming Zhou <chengming.zhou@linux.dev>, 
+ Lorenzo Stoakes <ljs@kernel.org>, Pedro Falcato <pfalcato@suse.de>, 
+ Jann Horn <jannh@google.com>, Chris Li <chrisl@kernel.org>, 
+ Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+ Youngjun Park <youngjun.park@lge.com>, 
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+ Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>, 
+ Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>, 
+ Dave Jiang <dave.jiang@intel.com>, 
+ Alison Schofield <alison.schofield@intel.com>, 
+ Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, 
+ linux-mm@kvack.org, linux-cxl@vger.kernel.org, linux-doc@vger.kernel.org, 
+ driver-core@lists.linux.dev, damon@lists.linux.dev, 
+ linux-pm@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
+ linux-kselftest@vger.kernel.org
+In-Reply-To: <awMdeK8O-5mffg2m@yury>
+References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+ <awMdeK8O-5mffg2m@yury>
+Date: Sun, 22 Nov 2026 14:11:31 -0500
+Message-Id: <179537469194.412063.13456998694958645706.b4-reply@b4>
+X-Mailer: b4 0.17-dev
 
-On Sun, Nov 22, 2026 at 03:53:44PM +0800, Muchun Song wrote:
-> 
-> 
-> On 2026/11/19 05:03, Kairui Song via B4 Relay wrote:
-> > From: Kairui Song <kasong@tencent.com>
+On 2026-11-22 11:51 -0500, Yury Norov wrote:
+> On Fri, Nov 20, 2026 at 01:08:51PM -0500, Gregory Price via B4 Relay wrote:
+> > This is v6 of the Private NUMA node series. The series falls into four
+> > parts, each building on the one before:
 > > 
-> > Add a helper that resolves a live lruvec for a folio under RCU
-> > without taking the lruvec lock.  It takes a folio directly so the
-> > lruvec lookup happens inside the RCU read-side critical section,
-> > which a lruvec-based interface cannot guarantee.  The first user is
-> > the lockless folio_inc_lru_refs() path later in the series.
-> > 
-> > Factor the ancestor walk out of lruvec_live_lock_irq() into
-> > __lruvec_get_live(), so that both entry points share it, and spell
-> > out why the walk is enough while only the RCU read lock is held:
-> > reparenting of a memcg that starts dying waits for a grace period,
-> > so it cannot race with the caller until the lock is released.
-> > 
-> > Move memcg_is_dying() up in memcontrol.h, next to the other memcg state
-> > predicates, and use it for the walk rather than repeating the open coded
-> > css_is_dying() test a few definitions away from where it is explained.
-> > 
-> > No functional change for existing callers.
-> > 
-> > Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
-> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> >    1-18  mm: introduce N_MEMORY_COMMON
 > 
-> Reviewed-by: Muchun Song (ByteDance) <muchun.song@linux.dev>
+> I walked through this part, mostly. It looks like you can substantially
+> decrease the patch count if you keep N_MEMORY meaning unchanged, and
+> add another type, like N_MEMORY_NOALLOC.
 > 
-> Some nits bellow:
-> 
-> > ---
-> >   include/linux/memcontrol.h | 71 ++++++++++++++++++++++++++++++++++++----------
-> >   1 file changed, 56 insertions(+), 15 deletions(-)
-> > 
-> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > index 980358bc6f49..441a5d57e723 100644
-> > --- a/include/linux/memcontrol.h
-> > +++ b/include/linux/memcontrol.h
-> > @@ -571,6 +571,11 @@ static inline bool mem_cgroup_disabled(void)
-> >   	return !cgroup_subsys_enabled(memory_cgrp_subsys);
-> >   }
-> > +static inline bool memcg_is_dying(struct mem_cgroup *memcg)
-> 
-> Let's make it const for @memcg along the way.
 
-Good idea, but css_is_dying isn't constified, maybe we can do it later I think.
+I don't see how this would reduce the patch count substatially, you
+still need to convert existing N_MEMORY users and need to differentiate
+between general purpose memory nodes and private memory nodes.
 
-> > @@ -1510,28 +1520,41 @@ static inline void lruvec_lock_irq(struct lruvec *lruvec)
-> >   	spin_lock_irq(&lruvec->lru_lock);
-> >   }
-> > -static inline struct lruvec *lruvec_live_lock_irq(struct lruvec *lruvec)
-> > +/*
-> > + * Reparenting moves a dying memcg's LRU state to its parent at any time,
-> > + * so anything added to that LRU afterwards would be lost.  This helper
-> > + * walks up to the nearest live ancestor while the caller must hold the
-> > + * RCU read lock: reparenting of a memcg that starts dying waits for a
-> > + * grace period, so it cannot race with the caller until the lock is
-> > + * released.
-> > + */
-> > +static inline struct lruvec *__lruvec_get_live(struct lruvec *lruvec)
-> 
-> Cound @lruvec be const as well?
+And N_MEMORY_NOALLOC is not a good name.
 
-The argument is fine, but tricky for the return value: when nothing is dying it
-hands back @lruvec unchanged, so a const argument means a const return (which
-isn't right) or a cast dropping it again.
+-- 
+~Gregory
 
-> > @@ -1561,6 +1584,34 @@ static inline bool folio_matches_lruvec(const struct folio *folio,
-> >   	       lruvec_memcg(lruvec) == folio_memcg(folio);
-> >   }
-> > +/**
-> > + * folio_lruvec_live_get - get a live lruvec for a folio under RCU
-> > + * @folio: the folio
-> > + *
-> > + * Same as folio_lruvec(), except that a folio whose memcg is dying is
-> > + * accounted to the nearest live ancestor, which is where reparenting
-> > + * would put it anyway.
-> > + *
-> > + * Return: the live lruvec, with rcu_read_lock() held.  Pair it with
-> > + * folio_lruvec_live_put().
-> > + */
-> > +static inline struct lruvec *folio_lruvec_live_get(struct folio *folio)
-> 
-> const folio?
-
-This is doable, will do!
-
-Thanks for the review!
