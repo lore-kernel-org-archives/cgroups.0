@@ -1,13 +1,13 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.45
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.70
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795463607;
-	b=rbqVD4ICf6xfeS5fwjFnolPGrjgWuwaOHko+o6457fwCHUf4Btdx7uFixEH2t/lP6qfn
-	 pd6oyM71oMhpv8z30wn+R2ft7nYsiVs5UbEh1uF+Dtr/SaIkKg2C000bBhT+O1M2Hqkk/
-	 9Zo85VjWyqV+91v0OOwGcJLnPDGZzPrJxv335vHLnnD/uuPjli0vp3hbrEtfmbNH27uMP
-	 s1Vtu0EdCbzkK2keIlQ+g1nJgpoc1MqwLMarzA9JDMdbHdBO751Yv84R24ngWmP7DKNmf
-	 VyE3jCVgjn3f5t4MS/MnjqDMEdlb8q0H4BdkDkbFf0buQh+rkTW9htXBm2nYLM0SSmA==
+	t=1795465055;
+	b=eTAQDDwoYPpLSF5SDxKArUEbM4tM12mf+XWQlUfjnW5JLEbjBcL500LqwB72nGlHk/0q
+	 WYYR51eIEbg4CY+iZCln3t4w6RALFe5UQfbIHs4UYououS8RPFP5UvOhZOpncvjvTauDV
+	 2UDwVViW9X7ztQ2UzgYVsGbQaTYwOLiEvpTZ8ahcd1GopvcuUZY+TMSzW5OSgPN1H9H+g
+	 lSxe+kZ2Fr3ZAQMa5ics0LnIdtpGDo3iWEUlQWpaMlX6Oz4GNm0vIsTS+EorTg6VgqIF3
+	 EdIzrQ0mt7jfDH4+6aw7i9lBpT9licB+iEF8t1bvaweQXqoUsIzD9hwUR7z2FljXnGA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795463607;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795465055;
 	h=DMARC-Filter:DKIM-Signature:Received:Received:
 	 Content-Transfer-Encoding:Content-Type:Date:Message-Id:To:From:
 	 Subject:Cc:X-Mailer:References:In-Reply-To:X-ClientProxiedBy:
@@ -24,62 +24,62 @@ ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
 	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
 	 X-MS-Exchange-CrossTenant-UserPrincipalName:
 	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
-	bh=eafpaXZOlM+WAFUdROfBe23EdE4ybfiTgf1A3lleGbI=;
-	b=zENxwNo+tKSLuirvL4IMzl+7WxJx0eWy2EWOVol3CJ5V44+gwUii93eWHsgBj9vBW7Fz
-	 NkQCIHgqqDBhFk3cLtmeW4z/iPR2CJWj2VwA2feCC3e98n41PfNT0Z2F1MacF0fmzoA/F
-	 18TFdU+9+hfwoFk1SXFasFwBYhRpHBkssAW/QpPv0vFAICUZvzcNq9X2cH6LuierrEOWk
-	 4IZ47sdr/Zi3xzJr5QFOkiUy5pvutDsNo3bjkis4DGCYgWJ51/w7hPs8o+XTPWGD1Y/+3
-	 bmHbND1Ych/wO88IxpQjMLmSrb1STm/EZKMgVxsOlZn0mKxD0esUutsrOomqHGz+gSA==
+	bh=Eoa156C/ExCR/OJ9hg5I/bUi8aicbJCrUtqcCscc/SU=;
+	b=dwNUqh6lEzysk57sDraavvgQis5tvOkzmwatEWd7FrNBsMMWT8ovcsw3s/3myR9TOapE
+	 hMOtzn2fiEyM6dYeeJ9+U5DpcDHvhmnLBWoUyJ+RIiCl4XmFnv9bNdv+8EvbETRCJO06S
+	 F3sgSOb09K4/zswrvKHcfRcUBckeMV9LdqC0vmkMLt7Aeke3tjZLj9eWGtKFDnuOyQJEJ
+	 f/3FlTj+hIPgPs1SazePTC97j5e/O0YZfBb6bi+fqFfi72NITdy8NdPm002xy+UkuuDlD
+	 JwiAE03hR7QXDWSVdpUXHeVu5/NptvQS638SC9yNgtCxPHvEOt50F/F//Kd7xCqv96g==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=nvidia.com;
 	spf=fail smtp.mailfrom=nvidia.com;
-	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=s3wP9tfT;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=40.93.196.45
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazon11013045.outbound.protection.outlook.com [40.93.196.45])
+	dkim=pass header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=iq0Bu1Kb;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.61.70
+Received: from DM1PR04CU001.outbound.protection.outlook.com (mail-centralusazon11010070.outbound.protection.outlook.com [52.101.61.70])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 441C0606A31A;
-	Mon, 23 Nov 2026 19:53:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 441C0606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC2D8606A31E;
+	Mon, 23 Nov 2026 20:17:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AC2D8606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=s3wP9tfT
+	dkim=pass (2048-bit key, unprotected) header.d=Nvidia.com header.i=@Nvidia.com header.a=rsa-sha256 header.s=selector2 header.b=iq0Bu1Kb
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=o/Xsb/Fn9Sft3MjG8tGbx+BRpKezCXDuB6IbByG3lYnnPJXb5Xg6YPAOXdBWyQ0O2qAmodm5Ot/lduBW4YO5Q8vNeYg127ppAaWAQu/4lfNJcULkbPADg2BRTb1v+y3OsL2egIqJp+/hOJnbClLM0/Vl68R5Hd2/3f02vNtJaGipt+AHhn+ANuAFn0rjFVwpCgdR67vSTVEyG3Vd7wPgv+YzpKUJJLZmf9PwwtEg0SJCSrEorcTdI7tIbSRCXH9eGptqkzAoWF3y6w64Y+TTMSLCGG6Nn8z8bAQZ5MraSc30zNKGqt09YV5b7bW94gRdM2nIsow+vpmyMB+N/BYHAQ==
+ b=LAP373qsuyhEgdLX2LjxVxhRo5apETlpl3PkXfFiuoGe8CcqgMPJ2l6KnMDbWNtzojYDqV/VsIOaJrVyTEamAJVGoYAv6L2m+oXSdk2+lCrCwABE3zOFaIskPpZXKlFiPqygXfveTajBxzveM4W6fF12dKIPC3r5mZcjrLmYc0T0mKlMwBDMRWALhoI+VRyamihZ8zTGd6hhJQ1OdwsxX1qtdrj6wMbAJ4lKOzhObKKFWv2S0aHBolv2lu//4lMFc762h1R9Ogv2NNsYZ9pTetB6IsqLe8hJxYqddoYWpfoST3oCO1+GS1g0Cbg4lWBRO7U/Kkl8KzoekkPiJF4UMA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=eafpaXZOlM+WAFUdROfBe23EdE4ybfiTgf1A3lleGbI=;
- b=DPxeFgz3h5ecpl40A7LVD4pLaZxohPYeRvQxLDtDJRrfJPeYOakOx5EgI4x/8Mbdafc/bd/eLISRlQtdH8BNAwb/CrT/PO3YHQhJa8VgSdfrFP4mbBxjWr+JludWGKd7vKMDawfLXEJDqWzMT0HmeewXgoW4dk5Z6EGGydM0mnFfF3APTI/0JaO/3WLMvRd2Ybn8MvuEuCZo1ulfdzqzcFuFdsQKr+D/yZ452NbvrT40doWGtrm/1ydgQS+qAgojn0/Ao8K8U9JtQaxAdryvPFsTS6dVGs8aNF+whMhr1NV8dkBdrAV1J8t4nNTJOtM0UJflfIPLIdPA+oUxhbQ7Mw==
+ bh=Eoa156C/ExCR/OJ9hg5I/bUi8aicbJCrUtqcCscc/SU=;
+ b=xUbInM7mvDPCL2rUVckDn2otiVDtFvRFO5ZP3/OF8G/YBH7W53bbSic/GcHWsSdphPkbogSpvzod868F2kh7V5dZiJ0/J9RYmPZzjU3cLQ2FHXvgoh5+Svq4eASiTAeJVa9K6omzlG8iX6tMKRGKoRSxs6iB6gLsqwLrMDNiD+QTLklZ/C42YkUMOgWf0f1718AdfhNTXxt8Li77iPqJrYylWkVV142UH2wW55IeOqBIf+VViF4u4KeMkAgKkFNmx2sgdo57mNW3WbxK9efV5rCW59vclxXrqzIjToEy/6G+ffgZVCSWJgzWwrcZg7n27AwbA35Ga9VyuJooD3SQNQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eafpaXZOlM+WAFUdROfBe23EdE4ybfiTgf1A3lleGbI=;
- b=s3wP9tfTpxisLqIaI+nEo8f7wtGfurSadIrIb0lNRVKeZATLUM1JEGt/Wnb7jPS4JlN4BDXlUwS0uX5Q90L51htsyn6jpERL23oKJbL4+84j8N0H+M1oqxifyltXJScUTDK4csK49gSK1/lt1nYoJfD+iNxcjV+JCMAJIe869PmonPuaY1WQ3apIStSE4YvCI8ERygJl8cIdYfwI0zG/Y7dLpkxSgFfNLK8ZRQo8u+qRw+f3KxbCoECFfR7rTHvM+kBCJqzWuWJ9o2cyrbPoPM9dmpErSDuvwgMBBUZVGIwR6uhUMxxg9oFEIjNPhqyGfvmMD35Ie9B1Mh6lpOXFJw==
+ bh=Eoa156C/ExCR/OJ9hg5I/bUi8aicbJCrUtqcCscc/SU=;
+ b=iq0Bu1Kb+6g29U4SGskIdw146Ky2M99b+5+Ytd0zquT2PyoHE/csXCoQeMrxK+D1/RQx//6Megz///3sBPSeC18WhRLsdlrgdWrRLi5HHZCxiigVXSeSFKKLTGSY9q1lT+XU6enn3puDgepYRD42bI56UeULKjqumgrna209ZtZNk2Elr9OjHvj+uhrqv4But+MqZ32iREBkHZ3pau3eho0TjNAk7Sfdk9UdZJFUalKGytxVtXYaGWEDyUtzqHBNxQlpMBqu12kVBOSxmOcNeybV/fnRykV/Y7DntI9x14jlSdm6jaRCnw4vz0ODBLpLG5V7B4MXklQR3JODSfW0IQ==
 Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from IA0PR12MB8374.namprd12.prod.outlook.com (2603:10b6:208:40e::7)
- by MN0PR12MB5836.namprd12.prod.outlook.com (2603:10b6:208:37b::14) with
+ by PH7PR12MB6668.namprd12.prod.outlook.com (2603:10b6:510:1aa::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.615.14; Mon, 23 Nov
- 2026 19:52:57 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.10; Mon, 23 Nov
+ 2026 20:17:08 +0000
 Received: from IA0PR12MB8374.namprd12.prod.outlook.com
  ([fe80::d85f:4c87:ae84:3f16]) by IA0PR12MB8374.namprd12.prod.outlook.com
  ([fe80::d85f:4c87:ae84:3f16%6]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
- 19:52:57 +0000
+ 20:17:07 +0000
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Date: Mon, 23 Nov 2026 14:52:55 -0500
-Message-Id: <DN2UPVW6W83J.I1S5XXQ2DPLV@nvidia.com>
+Date: Mon, 23 Nov 2026 15:17:05 -0500
+Message-Id: <DN2V8E26C4EL.2TU52TEVLUFA@nvidia.com>
 To: <kasong@tencent.com>, <linux-mm@kvack.org>
 From: "Zi Yan" <ziy@nvidia.com>
-Subject: Re: [PATCH v6 11/18] mm/mglru, smaps: convert to LRU refs based
- operations for MGLRU
+Subject: Re: [PATCH v6 15/18] mm/huge_memory: mark folio as accessed more
+ accurately on split
 Cc: "Andrew Morton" <akpm@linux-foundation.org>, "Johannes Weiner"
  <hannes@cmpxchg.org>, "Muchun Song" <muchun.song@linux.dev>, "Qi Zheng"
  <qi.zheng@linux.dev>, "Ying Huang" <ying.huang@linux.alibaba.com>, "Chris
@@ -110,10 +110,10 @@ Cc: "Andrew Morton" <akpm@linux-foundation.org>, "Johannes Weiner"
  <hi@tychen.cc>, "Ridong Chen" <ridong.chen@linux.dev>
 X-Mailer: aerc 0.22.0
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-11-8ffea39934a6@tencent.com>
-In-Reply-To: <20261124-mglru-fg-v6-11-8ffea39934a6@tencent.com>
-X-ClientProxiedBy: BL1PR13CA0163.namprd13.prod.outlook.com
- (2603:10b6:208:2bd::18) To IA0PR12MB8374.namprd12.prod.outlook.com
+ <20261124-mglru-fg-v6-15-8ffea39934a6@tencent.com>
+In-Reply-To: <20261124-mglru-fg-v6-15-8ffea39934a6@tencent.com>
+X-ClientProxiedBy: MN0P220CA0013.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:208:52e::28) To IA0PR12MB8374.namprd12.prod.outlook.com
  (2603:10b6:208:40e::7)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -125,146 +125,127 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: IA0PR12MB8374:EE_|MN0PR12MB5836:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4ef7a86c-72b0-4024-0af3-08df499b5f2d
+X-MS-TrafficTypeDiagnostic: IA0PR12MB8374:EE_|PH7PR12MB6668:EE_
+X-MS-Office365-Filtering-Correlation-Id: 1b619d27-ea4d-4fa1-d684-08df499ebf5e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|23010399003|366016|1800799024|376014|7416014|10067099003|18002099003|6133799003|261009223027099003|22082099003|4143699003|56012099006|11063799006|261102123227099003|261028144727099003|261021123027099003|261022105027099003|261021121427099003|261026140227099003;
+	BCL:0;ARA:13230040|1800799024|7416014|23010399003|376014|366016|22082099003|6133799003|18002099003|11063799006|56012099006|261026140227099003|261028144727099003|4143699003|261021121427099003|261102123227099003|261022105027099003|261021123027099003|10067099003;
 X-Microsoft-Antispam-Message-Info:
-	gT30D4ntIw6TkIsYZGSxITi8fhXPY3TodR2n0XGpZ03B+WJteqW1Iv6Id+PtMbY6bHLDFkL4+H0jd7yWaXeA1La5Run203yJ5NuQ/GXuwOJmrPHEQrrLWJM4Cjoi6rCZgIMsNAYKNQMeHvEsiavFmBQIVkjxQzYCr4dAAcBFDets0bfIChi3zzI/xPqNiwD/z4tXXSrohay2PR6YzcQilJJwF9Fi+s+yHtG+uJksv7l4HefIKSbGMbN1unKJ0nKByYXIRV8FrznHly06GgZnE+JLg08eYQjVP0G/evC7c96XuTcbtyxBLwmxPPbMdkrwy8Dgcofde/Bm7Vr0t8/ckZo745SqqSUbWP1kUEOplh9S0TkzkRn+cjqwBUMaZ0T+yOxYFeeNMFrRSkORU7NkcCHzoNRpiTD/i7gHsPtp/3o9YmRMqjgco2JJdDFLBekeysc7wlxCTAUXk2RuxGTQ5rDBOEHPJmTabTWQ+mtgrJ4XlW40SJua+Yfb7GlaeYURwmxUtBeHoRmrZfJ93j+BZBEZTwHXQa1BUnHSGQ+CF+PAnPHLzpL7vLg7Uv3jJr1E43JklCEsZdXrGjxSVsQxo9vKDcKUY7AZyBvIUdZQeqam0IAISGNv+ZBIsFtWft55VByrEl0kvabPl/kMMV3gtxEo+vhVvY0fJT0e9nlk2h0=
+	5wRZGc5T/wKdtsBQT/wXVuO/6kY+7qmVrLaUfBFKaYaegZJI0fzznJhq/BGH4d/qM+YCGyCMnClDEXBOT5JDJ4YI3BzoM5t00OmtxfopE5h9Ykh9QHDC+AMvWRjkSzZ5yhcBTWFAp0HuodUToDdidaNWnM//MpM9L9k4LkM9QAVHh7b4ZK+WE3Aja4o8b1Ye3vl6JDeg8Qyl78FGQQjNzUlC2oa4g8hUCUGDuoeQMygKNXdBqAUXosBWxlghhUAo5Jnh6QuegtPtyVczEHTlrwU6gToCaGUYLpiSq01NFHKJbBTNKd7SB285UZHVjPShvIOuZs1WbISnWfYdA/zIiyTYp0Npx1Qck3HOGYI3yOsIFKBYIrU+rBszjMeVaqTF2zVmGI0izEgiIpY0qm1NlrlrAubh58wv58LVEER2NXoANJ1lYHa6Niv5+QEM9GG7gLPrJMj071LKBr/Pkh+vrxsrLByKIvQnIUNMCiWkcB+Nl/qgUKjfj3YLbZXxiMIx0ZfAhM8XMJk5T4uYwpmZl5tOq7oEe54jr2mQ1U6wgMhOhidDTEUtXFz9Ib5cvxFjIn375K2swzbijXe/lG9JAdqN3DvUS5OEHOx+iBHWlD/EbTJe/ic0ucSoErVcTfLhItAUmCLZFDiOlsP2ZTZRaLxc08oV5yytiAW+B9H2KzU=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(366016)(1800799024)(376014)(7416014)(10067099003)(18002099003)(6133799003)(261009223027099003)(22082099003)(4143699003)(56012099006)(11063799006)(261102123227099003)(261028144727099003)(261021123027099003)(261022105027099003)(261021121427099003)(261026140227099003);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:IA0PR12MB8374.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(23010399003)(376014)(366016)(22082099003)(6133799003)(18002099003)(11063799006)(56012099006)(261026140227099003)(261028144727099003)(4143699003)(261021121427099003)(261102123227099003)(261022105027099003)(261021123027099003)(10067099003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?dW55RVU2a2lzcnpHU0QyajlvN1dtOExYcE50ajZzd1VWTWd4SkVvTUU0eGls?=
- =?utf-8?B?MGtWYlVPZzU1TUs4R21FMlhHK3dDU1FISnEzZkdJV1RUM2trVzV2MkFlMXRo?=
- =?utf-8?B?aWcvOElYU1NaVVFjQWFLMGxWWjluajlsWDZUTEcvdm02RVBCQzBQVGwvWStk?=
- =?utf-8?B?MGRuampiUTlSTlhZZzduMThkejQyNVllTlMzRmprcmp4UFA4elAwdExaU3ZQ?=
- =?utf-8?B?aU9JeUpwSklraWlDRkxyYmRuMjlKMTZRcXVCSzZqOVFoNm5PR05UR1dpSXla?=
- =?utf-8?B?UkV2SFU2ZkJOMERkbXpaTExYbEpjcUJPb0d0ZE9xRXNiQ0hNNE5LSkV5cFVq?=
- =?utf-8?B?czc5WkN1NEF2dEhVYmtlTzQwdnJPaUNla0QxMUgyQkxWNFJGemlxV0hGeUxm?=
- =?utf-8?B?WHhWUm1rM2h6anhkQVNLcSt0VW1IeTQyMmd5TnhPRFZsSUNBNkx1MjdFN1lI?=
- =?utf-8?B?VWdYN05kWldCb09NdEVYaTE4cW5LVDgwcEt1WTZrLzB0RVZIZU1sN0lXb1dp?=
- =?utf-8?B?dnFJZ2xHditqQ2NlTVJkelNhZnNBbWRQV21uT3dJdGRSRXlJZTd1UHdlVFY5?=
- =?utf-8?B?eEtkWUtmcHY2WUJtLzFHTFJmZ1BxVUZVTWZjcVZvS3VYenNZVU16NEJTVUhz?=
- =?utf-8?B?eWxUSTJHemhjSEVaMmZzZThaTmJ3eTl3OUtoTkVGOXZEa1FueTZidis5Rm15?=
- =?utf-8?B?MmszakdrK3BTM3VNUHg4b1gwbmhWd3VQak4rSHo2K2p3WlFrRjAwQ1NMME0x?=
- =?utf-8?B?b1Yva1lvZWtXNTFsbUhPRW9zZ0hCdmtKOW43bkVnRXZiV1FKM0cxVE9ZeUY5?=
- =?utf-8?B?S1ZQUTZvQXJKOGNGd0VRREp0SGZYSzZJMkNFcWhFQVdBSlMydS8xQy9SQ2I2?=
- =?utf-8?B?RUxnMzZhcmhRYW00SDkyN0JEMW4wTWlTbXpwOFNaRDdBUTM0dXBVTXdnTnpV?=
- =?utf-8?B?NW9kMXZiWkF1cmx6d1k3WkpQak5BSEtvUDZ4UVc4WDEzNHR5OWdndkRwWXFE?=
- =?utf-8?B?NFRoaVN4UHhkWDFaczV1ODhvWjNPbThLRjlYZkVaNUljS09jWUtwc1ZYTmZI?=
- =?utf-8?B?dVRQQ0M5eSsrYS9MdmxoQ3hpWDBVeHRNNWFhZkNlbDhEbVNHYkRyNHNESmx0?=
- =?utf-8?B?emduWEtmeUNsa2ludjIxeWJraHdRdStGZGsvWDk3aEpjSDRLTmNRWkEwd3BU?=
- =?utf-8?B?MGQySTdaZ1d4Tm5FTTd6MllCemFDSktLYkVvYjR3TTgyVlhOTzVCbkVaWCtu?=
- =?utf-8?B?OUZQUU9GRmkzS2lma1ZSNWE0cmxQMVIzeWloY0w5b3g1NGF5TVBxcmdJNGF1?=
- =?utf-8?B?dlNMbmlxdVpFOGJkSzBQSUt5NWZuck5xWlAzRHAxV3FRN1pSVTc1ZWU4Y3ZW?=
- =?utf-8?B?WkFzSDJmSVVjYTAzQ2RsWnRMS29tdTArZXplK29TZkMxb29xMm80RGtSb01q?=
- =?utf-8?B?WlZqOGdNNCtUWE8vVDNuWXlYSXpGNktvVGFVYkpTTzFLVmhUTVlSTllmTDdV?=
- =?utf-8?B?OU5udVhjYXppQ1k4c1BQdWtzYzdoY0dZSEY0dTZUZEtjd1FXZlMwMm9HU0U0?=
- =?utf-8?B?RW10aTAxcmlVMEtCSXN3eXB6a3dLZ1p6bnZpRkNsWVZZYXIrMENtN01kTGdj?=
- =?utf-8?B?SVdLamtpM3o5TGFUc1ViN2hLNU9TcDduc01GNU5qZVA5YUcwTmVLcFMrejVz?=
- =?utf-8?B?WmxEbUxjeENHa0VZaTlCR0tPMnVveDY2R25reDdHYTk3aWt0b1VMZVdTbFRp?=
- =?utf-8?B?cTJ4UFRESUh3YmJEcHlSVWJxemxNaVJqcGtmN0plS2Q4Q0gyWGkzdkFlT05v?=
- =?utf-8?B?TlhySjhuOFFRQUtid1ExUVArRE9zWW1tMnl3d1VUejZxaFBQK0hYeVlUbkR6?=
- =?utf-8?B?ZnBtTURHOXF6NWpIV2ZCSzhDc2phTFNiaGlTL0R4VGpYaytsTGtHUFdjSy84?=
- =?utf-8?B?QTA2NzByd1pSc1BTU0RQOXk5cENRS3hoRDlYSlNqN2prZUhVeWcrUzNQK0hh?=
- =?utf-8?B?b0pkKzdpZHFoWkRPa01NUW9TNGVrdUIwRVh6bU9Gek5SdjBlOHFqT2JIRGZF?=
- =?utf-8?B?R3lkNnJISGRGN1NGbUdicmpTSEZBMWdBT0RLdU1hZjRXeHdBRzFCbENSemUx?=
- =?utf-8?B?STc0enhsT285VWRjZ2JUaDF5YmJZWEdsT0dFUXVlWWJUYk5MV2c5NW5kQlFL?=
- =?utf-8?B?Y0NrMGVXVlFZaDZ1emg2QU5FRi9PWkt0c3JtU3VCdUZ5SEV4Y3pmZDlXcHdX?=
- =?utf-8?B?Unc3L1diT0d5U3FDUjNwSkU0OThzTzR1WVRoRlllNHduRWR0d2JLTmpjWDZi?=
- =?utf-8?Q?8DQDPAEPIVIeTGKSSM?=
+	=?utf-8?B?M1NNbThLeE9HUDVRWDdEZVhhZHdGK0dVZmd4a0J1OWxzeUhtYUF3b21XbHZk?=
+ =?utf-8?B?TmF6Sk5wcXhtVXlueFR4NGZGblowRm9iNmRKS1RNRzE0ZkNDWXZoQUFHV2RE?=
+ =?utf-8?B?TW52OGgvUTYxQ1RqbU13a2xsRGhsM0hORGk2OUpGM3FZRWczOFZwb2Y1cXdi?=
+ =?utf-8?B?empFUS9MVnhFdXFyV3liMUJpNmNLOWpCSml1RFRKaFg0bGVleHQ5V29NYUpU?=
+ =?utf-8?B?UTlMc3g2QnY5MENJQ0RSOWhhYlp4Z3U2TzhoTGJEbW9qZDhjZTlnRDhOc2hZ?=
+ =?utf-8?B?U05FRTd1YXQwc3NXUGxCcHVvc2xwZ3puaUppVEFBV2JhWktMaUdtSk5CcThD?=
+ =?utf-8?B?SkpkWWlzL29RcmM2UndmWUJ5SWttaEpwTFpYZFh2a3FxZ295UENhV3dIbzZu?=
+ =?utf-8?B?dVowQW8rd0FsQVJ0WDJRYmxBQ0JPNzR1ZUZQMEJMTS9PcTBSSVVzQ1dvejNF?=
+ =?utf-8?B?SDd6YmZPR2dLb1AvWXUxV2toaHZVQUNadGRmc0FCWm5uZ3JnanpPbHJKUlNO?=
+ =?utf-8?B?WGtmWGhpZHNnS243Q0JsZUVYWG5BdHpJUnZ4SVBYaUJNQlA0cGdKbXBsV29y?=
+ =?utf-8?B?QWY3Vjg3NFUrTzJ4QitrQ29PNW5lWkd0MWJ3bVMrQUNWejdPa2F5S3V2dnM1?=
+ =?utf-8?B?UmtJSnVMNUVIMHVtWE9MRTJJT3ExS3FIblBDamluNDIzNTdQY1p1di9SVkk5?=
+ =?utf-8?B?V2JaUGt0QXlvMjhWTmdMZmNucG5QeGNET011M1JkWENUNVRweG8zeVdpOHRE?=
+ =?utf-8?B?WGlnODNFUlc3ZFJodld2T28rRGZ4ZU11V1owUjJGKzcvN244VHN6ckNVb2Fz?=
+ =?utf-8?B?N0tESyswMjNmS1NheW1aRDJMYVBrUlRjZEdzNkZ1Ly9EUXovS2NyTkgvQXhw?=
+ =?utf-8?B?TzFSUmw2N0trbmNYVXh2K01sYUZ3STNNQ08xdCtTRnRGRHhPQmlsQjhjVnJt?=
+ =?utf-8?B?WSttN2JqVVNueFMrb3N3ditUSk9oQis2cnpEM2lMNDU5TnplNldqMXFLaFhX?=
+ =?utf-8?B?OW50VzFlN1BkRDdxd1FOMGZ6bTZDcyt4N1B6WUJnU3RYRmRWTzYvcnFuL3Yw?=
+ =?utf-8?B?bmNKRnFqa2NqaTV6eHlTdGgrY0VTZVBEa0RYUUNBRWYrMndwcXg1eno3T1pk?=
+ =?utf-8?B?dWlDc1FyUUlNajdGOURjeE9tR2ZOTXJsdnBYcVlvRTdFTUZrSEtmQ01pUFRT?=
+ =?utf-8?B?NloydmkxVUwydG4vdTNxc3BlYVRGaSt2aWxMR0pqV0lFY1hzUis4b0sydUhC?=
+ =?utf-8?B?ZlRwSHNFcU9FMXZqUnUvK0Q3Z21BRlIvRWlWOGNlRUJJalg4NzcxQkZpRnM2?=
+ =?utf-8?B?NWE0cTJVYk5jNncvWnBNUWgxaE52VUJscFJpR1UyREpIOTdIYmFNdmhHN2JJ?=
+ =?utf-8?B?enhtRUhscGY2K0I1aUtDdnU1RzlPenJyRXhyaWJPZ2Ztdi9FUXpPZk9mbFR3?=
+ =?utf-8?B?aDR1ZzhwVFhHNytTdXN1UUtHWVI5OHVCK2lTQVVGYmFQdEk1OVFFTUtIR3g5?=
+ =?utf-8?B?cW1RODVvWGcycnE3a0dLOFRhMkVpRlEzWVloTDF4STlJWjdUeGR2dnllQmJn?=
+ =?utf-8?B?ampZN1hSZ2lWUmJKT3IzbnBwMzVrNlRtOUc2SVpmSHEyeW5HSURyaUpzb3NG?=
+ =?utf-8?B?TnliS2RsNldsL1dLZTBhQW94TE5zNUU0ZUMrWE51TWR3czFJT1dSYmdKZnpT?=
+ =?utf-8?B?UUowb2ViZkJoYUJCOUNWQXE3dlQrcGJxZ2Z4WHFndkhoVTFVOFl5TC8rNFdG?=
+ =?utf-8?B?Z2FlYjkvSlI1TkI4dE8rN3VQdDNuVHg1ZWhXUlFZUmxWeEN2TlRzSVVWNGZt?=
+ =?utf-8?B?WHI0aDg5YWhxaC8xYUFaMnhNWDgyb2R1WXhmYlU4b1lpWEdVSW1nTlZXWFQ0?=
+ =?utf-8?B?V0F2VVd5VUNmaFVkV3gvVFdRYmxTQmpPbWthcDE3cS9aajVCMkpjMFFtcEcw?=
+ =?utf-8?B?RVVFbll3QkNsNVNZZ0tyWkZTYS9qRnZKS0FjTHQyZkVRUE5mdFRrRmZzWVBK?=
+ =?utf-8?B?Q1gxUDVkTkk5RHptZ0M0R2VrNDN3eG16WGtFU1p2cmNnRGwwZktvZC9Cbnhn?=
+ =?utf-8?B?N0dXTVpUSFBTNnp6V21xaGpjczJXS0RpVElMZGhpdCtZYlhod1NEeTJkS3dq?=
+ =?utf-8?B?dmM5RVU5dDA5STlNcElXR1I0bDZaSHJoTWdIKzM5a0VyNEQ3d3YwTXdnL1M1?=
+ =?utf-8?B?VjlHa0g3Z1ZDRWlzdWpnUjFLMXQySTFOeEJFdVNrUnlpcUFEWkZOdlR1bTlt?=
+ =?utf-8?B?VTc3MWhwbTY0dkszcG1TOFNRWEpKd0luWmNkQXRTak1wc0NnY0RybGVWZDhH?=
+ =?utf-8?Q?DErc+v/oWUEp7nJ9M4?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4ef7a86c-72b0-4024-0af3-08df499b5f2d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1b619d27-ea4d-4fa1-d684-08df499ebf5e
 X-MS-Exchange-CrossTenant-AuthSource: IA0PR12MB8374.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 19:52:57.7390
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 20:17:07.5575
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: usCjLyyWxoDeH+/ESjkPz5atv4veQKM74Qqutf7qM3l87POAqFixo2NpW9LJMu8f
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB5836
+X-MS-Exchange-CrossTenant-UserPrincipalName: Ta7jsfzqdBKPqK2+fTzVIttY3FyD/72HVQ8y0kGZstXd4AcN4CU7C1FNi5O7/mqt
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB6668
 
 On Mon Nov 23, 2026 at 1:53 PM EST, Kairui Song via B4 Relay wrote:
 > From: Kairui Song <kasong@tencent.com>
 >
-> PG_referenced is only the lowest bit of the folio LRU refs count
-> (LRU_REFS_FLAGS) now, and MGLRU never kept it stable: promotion used to
-> clear it, and now it toggles as the count grows. But with the LRU
-> referenced count as a stable API now, we can use two helpers to provide
-> in-kernel users a stable and sane reading of the referenced status of
-> an LRU managed folio.
+> The behavior of updating the folio's access info isn't consistent for
+> huge mapping splitting or ordinary unmapping. The page table's young
+> flag has to be translated into folio's access info.
 >
-> Add folio_check_lru_refs() and folio_clear_lru_refs(), which use the refs
-> count when MGLRU is enabled and PG_referenced otherwise, and switch the
-> smaps paths over to them. The lru_gen_enabled() test stays inside the
-> helpers, so its static key is not splattered over the few call sites.
+> Right now it only checks and sets the folio's referenced flag, which isn'=
+t
+> enough since folio flag updates on access have their own rules. Ordinary
+> unmapping (zapping) calls folio_mark_accessed(), and it also checks
+> if the VMA has recency to avoid false updates.
+
+Can you elaborate on why vma_has_recency() should be used? "false updates"
+might be too vague.
+
 >
-> Convert smaps as the first user of them. MGLRU now reports every folio
-> with a nonzero count, so the reading no longer flickers and clearing no
-> longer results in an ambiguous status.
+> So first just use the right helper here to be more consistent. Keep
+> accounting the young PTE as a cache access, sticking to the current
+> behavior.
 >
-> The classical LRU case is unchanged.
->
+> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
 > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
 > Tested-by: Andrew Morton <akpm@linux-foundation.org>
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
->  fs/proc/task_mmu.c        |  6 +++---
->  include/linux/mm_inline.h | 31 +++++++++++++++++++++++++++++++
->  2 files changed, 34 insertions(+), 3 deletions(-)
+>  mm/huge_memory.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 >
+> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> index 75e8641bf9ff..fa9f6d21e786 100644
+> --- a/mm/huge_memory.c
+> +++ b/mm/huge_memory.c
+> @@ -3122,8 +3122,8 @@ static void __split_huge_pud_locked(struct vm_area_=
+struct *vma, pud_t *pud,
+> =20
+>  	if (!folio_test_dirty(folio) && pud_dirty(old_pud))
+>  		folio_mark_dirty(folio);
+> -	if (!folio_test_referenced(folio) && pud_young(old_pud))
+> -		folio_set_referenced(folio);
+> +	if (pud_young(old_pud) && vma_has_recency(vma))
+> +		folio_mark_accessed(folio);
+>  	folio_remove_rmap_pud(folio, page, vma);
+>  	add_mm_counter(vma->vm_mm, mm_counter_file(folio),
+>  		-HPAGE_PUD_NR);
+> @@ -3245,8 +3245,8 @@ static void __split_huge_pmd_locked(struct vm_area_=
+struct *vma, pmd_t *pmd,
+>  			folio =3D page_folio(page);
+>  			if (!folio_test_dirty(folio) && pmd_dirty(old_pmd))
+>  				folio_mark_dirty(folio);
+> -			if (!folio_test_referenced(folio) && pmd_young(old_pmd))
+> -				folio_set_referenced(folio);
+> +			if (pmd_young(old_pmd) && vma_has_recency(vma))
+> +				folio_mark_accessed(folio);
+>  			folio_remove_rmap_pmd(folio, page, vma);
+>  			add_mm_counter(mm, mm_counter_file(folio), -HPAGE_PMD_NR);
+>  			folio_put(folio);
 
-<snip>
-
-> +/**
-> + * folio_check_lru_refs - Test if an LRU managed folio has been referenc=
-ed.
-> + * @folio: The folio to test.
-> + *
-> + * Returns true if the MGLRU refs count is nonzero, or PG_referenced is =
-set,
-> + * which is also correct for the non-MGLRU case. Kept as a separate help=
-er,
-> + * to avoid splattering the lru_gen_enabled() static key.
-> + */
-> +static inline bool folio_check_lru_refs(const struct folio *folio)
-> +{
-> +	if (lru_gen_enabled())
-> +		return folio_lru_refs(folio) > 0;
-> +	return folio_test_referenced(folio);
-> +}
-> +
-> +/**
-> + * folio_clear_lru_refs - Clear the referenced state of an LRU managed f=
-olio.
-> + * @folio: The folio to clear.
-> + *
-> + * Reset the MGLRU refs count to zero, or clear PG_referenced, leaving
-> + * PG_workingset alone for the non-MGLRU case. Kept as a separate helper
-> + * just like folio_check_lru_refs().
-> + */
-> +static inline void folio_clear_lru_refs(struct folio *folio)
-> +{
-> +	if (lru_gen_enabled())
-> +		folio_set_lru_refs(folio, 0);
-> +	else
-> +		folio_clear_referenced(folio);
-> +}
-> +
->  static __always_inline
->  void lruvec_add_folio(struct lruvec *lruvec, struct folio *folio)
->  {
-
-I assume this mean people should stop use folio_*_referenced() directly.
-Are you planning to remove PG_referenced helpers to achieve that?
-
-Other than that, LGTM.
-
-Acked-by: Zi Yan <ziy@nvidia.com>
 
 
 
