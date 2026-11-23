@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795460025;
-	b=OpHWn+c94K8hje0+s2IYcD5FxDaUDzy4kfqQl0EhZT6BaiId9Mt+/BxUQi6M9gltftwq
-	 mReIz6QxmVrQJv7FD6lZIUOrXKB40/JV7A5dQo+ghNjL8WSalhmmj3l/zgUh53C7Skro5
-	 8K2pFkWzqwnyqQ47Jw3q0mpCrcyCeDu5RdlT0dNmoXpNR/+wc9mwGkNQyKFx0pae4zAEp
-	 AjVgAwRWhBU3j8A7sSYherOWIrYqWsiGSFgSGslOiGzZbKgl+buR3uMUSkwCA/X/9psAW
-	 2YFSkFGNa3PbpLyJLXlR4c01sLtrtvnSbHb7eR8Hc72VVPSEN9KFs7IiHaO3tbO8p1w==
+	t=1795460028;
+	b=t9WlI/WRgvBcCPal/jdpUZE/nO1PdGryXr/BRB6mOWe7NrOF+pLKS87NPIkTTiN6JEE0
+	 3uJ25IgbI3aEmCDSmWV0GlJxzaWNr8m4+y+eysuPfPkTOkoAFGsk3c0dYFGwjGeOoUdbi
+	 fOrOi8UjtbC7/uLY8dgiJZs3E2PPjVD8qzpqajsAzfhTWzIrdMIfIsm8FKWHZQbwg33W4
+	 m5Wq/Fhpfyryq1jYsSnmnm+ClaRgMXypVhcxp4VxOCusb79xR1fb1LwaMcjl3A/oXK/xG
+	 TBD8hrl1l9z8UF/IvAshG51YmZ5Ks/LNv2bq3Td3AVA54d79RvncWOnLNGKbHgt41Zg==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795460025;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795460028;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
 	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=S0g05G9qZGx4poDmgO7lZ71KlplbuRcjeb30J2se0iw=;
-	b=ZRfcf2q1Q+wuI4hCHzWqq9x/PlmTsDFyd5enLrlL7ppKMah7fthjdKHYiigI81VCH+Gb
-	 lIqc52sIIfB1ZcWeidn0YoDBy4Reck+g3cPSfVX8TV2QH3uGpRoVDsAu7NZRFU890UPkG
-	 LGkHuNzlyjyUqix2NupD5jkpo78IypjEoGHnK7yJpz/+3gMWEx9wtVhR2OkPOuonCZq5g
-	 qRrEGGwRTXBU46A+KtZlBVudl+M0TcwBI3s0myatIPafkptNzoYDs/lAeM/w+ndtZdeDC
-	 EAIXP/9aRvzQEr5YRA1sOA11xX7KVhvurOIGddxq5/Qf8Kt2t71cD6dqu53VmxauSgQ==
+	bh=HW3m15cwOhOmCQi5QS7IBcTVWDziQbgROwHGLA00qiA=;
+	b=kVk6uwIofZcyZPDZEKmVvQb3XALCD0dWyfqhV6558/UdjOlnwnwLlEiuc3jADalgmK5N
+	 Let8gy+vOH/FoBjO/Qs1qvCx7A2ex8fdr8g8UyhJLxZceXR8cYpIYY4yOJbIfDm+NvtxB
+	 lSkJI0tOr2rMa9ZwZ8++KoZ1VFzsRNQPa8YC2ysJG1VoCStPf8aV0Nv7qkGMDz5QWTK3B
+	 +OmcAPwp5WClysW1PyyLyFrg7qj2o3uqruxaqIREcUann9D9f30nBJY14DbSZcDao2Sbp
+	 6LHjGIGve7S2ZGaHCfYAMduo2f7/GEhPGg7JF+koRNmaOhqUtyzwGVeY5251HHqLopw==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ic4UV9yU;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W+cWUfD+;
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0078606A688;
-	Mon, 23 Nov 2026 18:53:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C93A606A31A;
+	Mon, 23 Nov 2026 18:53:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=ic4UV9yU
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=W+cWUfD+
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795460025;
-	b=2hVQywA1agQxG0dEmU0KZ2ymnjnbKFAAGdu6xNGnT4JvVK2oSgi//uIrV4qmLrFmf6zS
-	 YEl39KOl4oWkFKot+Yy9J+hXvpA7b3IMpimJSs6CCJZEtpoI2rPuAi5vv35DPGaVjXiFy
-	 dtnRDlOKzkKllmwRIUz2PgIWnU5ivSAWgKo8Aab+VnCn9LSNyPzVfe1Huz0lFW/QMLLvY
-	 U+caSwIAzGQVcT8LLUnrG7POlz5bRN42uD05PSsoAlo7fKlalzJ0aP1jymgS31JWxZ22A
-	 zDaip5eRZuZNGvO/1Ux1YVmlDI1u5+5XJlh70OzDBAgfwXeYIuXmpVoHesLURW72bhQ==
+	t=1795460028;
+	b=LVKkst8/8RbCJcBLVShOCW3aBlTfnAd4hc96P/GIpd8uElPc05bMXlaANMxJGgXGAWht
+	 ETuD5k5CoNso83EZ9WNrMfuJkQToLkw4X3dbRB9aSVQhoomCHkszai9l5lsXv0EC1g3H8
+	 I7ZCp6xqVclPXVtPHNcLRrQGm1EjHT7bjLb1n+g+oS6SvurOVkguDWTMcZJ6UBKgiG9FR
+	 q0VyhMAzy6XTqT0pi4W3HqpaJujBw2QGYYGjxjyzFwU5KiOOgaMzsm35eB/xIjvsGFGYR
+	 hS8sTRT2ddDxtKAzqkg9lYRfXUu2c981Abkb9lINEhFTrKyZjjJguckhoVxkWdAwMRQ==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795460025;
+	c=relaxed/relaxed; t=1795460028;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
 	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
 	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
 	 X-Original-From:Reply-To:Content-Transfer-Encoding;
-	bh=S0g05G9qZGx4poDmgO7lZ71KlplbuRcjeb30J2se0iw=;
-	b=f4Gl74scEwgguJWfuT5Rq/VeNez08ryCTsQD/fVwoxIt+ve7T5Nik7xIHKxEouLeZ+pA
-	 2lgSUOWs8ngGJAq8MnZKrtweHZEHYstEdFLOTy1VcwdOJdjtqgppqDj8kcsLMAAgOq9Bc
-	 9QejczBBMJ9Q4D8kNlojQW4Ua9Iw6NMHERe7qbwJ11UWwMmdkhP0hzZCc3Jcj7mURM1/M
-	 Imuk5doQvlU30duGA1LwnaLOKkC4aC3vWZ8VEF/C8b5KjJ6K0OlrGWC92HeDTJVl2QmIk
-	 ww19jS+iW+Q77D+dMibTJYXQoZ+w5mIHgEKWlsGLJObO8e+bp8aaV3w1M9h6P2gs+SQ==
+	bh=HW3m15cwOhOmCQi5QS7IBcTVWDziQbgROwHGLA00qiA=;
+	b=xbICeuFIOKvxVm/brVqwFuv3wFDuZiXB4Pkigo+6qCW8NnKfxouniyjHOWVc/WLYr4w7
+	 A4SR6NKbI4YVrxoK/xtGOO2ynnGLPIHflAixvKgF3bVf5yBczT8cl3OL5jl8e0OkaZKPy
+	 dGq5Y3vBtuT2E6OR5yDLYF6/CsF/qRTCjcQevUZW9aR/qHQX9XHZVZGwWzdeczkdlP6jt
+	 rMA3CcU9+bbT5xL2UnpzjXe/ZHP3JrH3iREqdFGJEKyCZ+pxYspEGY8qkwBt83FBTTdF/
+	 PeTkzOQrgazHLY8TWLp3ChjOl0f2hLvSBIK6zQbAop0jqYOxuvKwGle2l/n2LMxrzNQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 0E59D1F00A3D;
+	by smtp.kernel.org (Postfix) with ESMTPS id C19BF1F000EE;
 	Mon, 23 Nov 2026 18:53:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795460025;
-	bh=S0g05G9qZGx4poDmgO7lZ71KlplbuRcjeb30J2se0iw=;
+	s=k20260515; t=1795460028;
+	bh=HW3m15cwOhOmCQi5QS7IBcTVWDziQbgROwHGLA00qiA=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=ic4UV9yU19MeLMIiiMuY6S798cUREJRPPSFF4KS0TTw9oD0KaRico3mAsQU2BjTPu
-	 LP8bkcWRVM7zsGaQzV9mCay09xkmh2t6/AkhUm/wqvc/OQQhhBjiuw4Jb35rCOeJ5M
-	 1xGYJFa0bgtm1gS/hA+02aYR7zJ9mpVxVo4EVdmi1Z2XAj2r6tNBG9xBPJwpUTTl1N
-	 1VBqnpvMOa5qstAnO6qfesIxSetuILWmDF6wWDZAew8csQ7yVbQxxBWnpY5/3b0mM+
-	 Ky7Q7jwCk+CDVVFpccmj2m299B5jtzTevNvdx3pq7Yr1Tm3OS4mAqZNwlq4RfAPrtf
-	 ZFHINYD7H92YQ==
+	b=W+cWUfD+EV2139/AlMMM4kwHz10da/jilCMVMAEUXVfMtK2sUOxlDhGNwduDAWYT2
+	 HUCPX+QZJDtSntZC4tbVt6P51m7/gw/tdd6ZWousNV/T/VwhfqfFt2JDIrZXNuSClR
+	 wSSV8FgRMcXM+regetFS3wcP5IPS13HUN8dFEB0WZ0Lb4YB7SXfkiTD+vMt0AowxZs
+	 9/ymI9ZhYu40lvEf5b0mLyN5M6ZVTD+60F097qdf7KNofx7gkLT393sYmfoEytb31c
+	 rAcX+J4F4CqvQw1eTSKkYf4sgY6qACE8Yt1Uyp02feCtWlM1Qsr4YOZqTkp2D2OMp+
+	 MZsJYZG0uPFkQ==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 9B9F14C65D;
-	Mon, 23 Nov 2026 18:53:01 +0000 (UTC)
+	by lkml.kernel.org (Postfix) with ESMTP id 0038E4C669;
+	Mon, 23 Nov 2026 18:53:02 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 24 Nov 2026 02:53:05 +0800
-Subject: [PATCH v6 13/18] mm/khugepaged: convert to LRU refs based
- operations for MGLRU
+Date: Tue, 24 Nov 2026 02:53:08 +0800
+Subject: [PATCH v6 16/18] mm/mglru: make PG_workingset helpers work based
+ on folio LRU refs
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,7 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <20261124-mglru-fg-v6-13-8ffea39934a6@tencent.com>
+Message-Id: <20261124-mglru-fg-v6-16-8ffea39934a6@tencent.com>
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
 In-Reply-To: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
 To: linux-mm@kvack.org
@@ -118,11 +118,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Tianyi Chen <hi@tychen.cc>, Kairui Song <kasong@tencent.com>, 
  Ridong Chen <ridong.chen@linux.dev>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795459977; l=1410;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795459977; l=6298;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=ylGSrEczLifu/DdmhwMoGhk6njBmtr2EJO7xuMx10kQ=;
- b=pXXLUep3I/vltYX0L1UH0GTTRjdiy0b3iBc9jWcCRdtT3cKw00OaEvGBk3uaweRY+TaoRFVrh
- ZG6rFxHmKKzBv05zdRFuW60YLUnIX7HDic9FG8ptG6NTl5y6QM0dqWa
+ bh=FeZ1X36y0gjLoNuGBhnIl7GXAntfQovoxU409olinNk=;
+ b=1VQ9pndS33m4Kvn5Bxu4wL7Vfltv3HU9XfA3NipSyzY8gijlcuTI7FnfCR5lNBgS/0H+Szg78
+ zZU1/x1iy0HCGin+8N0ZqTISRFUtg1fGvsKT9WkEUVt/8aQ4GtDYp8c
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -133,38 +133,178 @@ Content-Transfer-Encoding: 7bit
 
 From: Kairui Song <kasong@tencent.com>
 
-For MGLRU, PG_referenced is only the lowest bit of the folio LRU refs
-count, so folios with nonzero even refs no longer have the bit set.
-folio_pte_referenced() testing the raw bit misses hot folios at
-refs 2, 4 or 6, under-counting the referenced folios of a candidate range
-and aborting otherwise good collapses with SCAN_LACK_REFERENCED_PAGE.
+folio_test_workingset() currently tests the PG_workingset bit, which
+is only the second lowest access bit of the folio LRU refs count now.
+Folios with refs 4 or 5 carry it in the LRU_REFS_MASK field
+and no longer have PG_workingset set, so the bit test misses them.
 
-Test the refs count directly when MGLRU is enabled, mirroring the
-smaps conversion.  The classical LRU keeps the plain bit test.
+folio_set_workingset() currently sets the PG_workingset bit with a
+plain set_bit(), which also over-promotes folios at a higher refs
+count: e.g. a folio at refs 4 is bumped to refs 6, advancing it
+toward LRU_REFS_MAX and an earlier generation promotion.
+
+Move both helpers into mm_inline.h, the test as an inline helper based
+on folio_lru_refs(), checking refs >= LRU_REFS_WORKINGSET.
+
+The set stays reserved for the classical LRU, as under MGLRU the refs
+count is maintained by folio_inc_lru_refs(): it now warns when the folio
+is on a gen list, where the raw bit would corrupt its refs count.
+
+MADV_COLD, the one caller that runs on an on-list folio, sets the
+count with folio_set_lru_refs() instead. The one PageWorkingset() user
+in erofs is converted to the folio helper.
+
+There is no behavior change for the classical LRU: it does not maintain
+the refs count, so for a folio that was never on a gen list the test is
+equivalent to the PG_workingset bit test.
+
+This prepares the convention for follow up MGLRU change.
 
 Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
 Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
 Tested-by: Andrew Morton <akpm@linux-foundation.org>
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- mm/khugepaged.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ fs/btrfs/compression.c     |  1 +
+ fs/erofs/zdata.c           |  3 ++-
+ include/linux/mm_inline.h  | 30 ++++++++++++++++++++++++++++++
+ include/linux/page-flags.h |  2 --
+ mm/filemap.c               |  1 +
+ mm/madvise.c               |  2 +-
+ mm/page_io.c               |  1 +
+ 7 files changed, 36 insertions(+), 4 deletions(-)
 
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index 2dc4245814df..5e768481ac22 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -579,7 +579,9 @@ static bool folio_pte_referenced(struct folio *folio,
- 		struct vm_area_struct *vma, unsigned long addr, pte_t pteval)
+diff --git a/fs/btrfs/compression.c b/fs/btrfs/compression.c
+index ad90e14032db..127c5ee38979 100644
+--- a/fs/btrfs/compression.c
++++ b/fs/btrfs/compression.c
+@@ -8,6 +8,7 @@
+ #include <linux/file.h>
+ #include <linux/fs.h>
+ #include <linux/pagemap.h>
++#include <linux/mm_inline.h>
+ #include <linux/folio_batch.h>
+ #include <linux/highmem.h>
+ #include <linux/kthread.h>
+diff --git a/fs/erofs/zdata.c b/fs/erofs/zdata.c
+index e981e371d6c2..34ee41e1ccdc 100644
+--- a/fs/erofs/zdata.c
++++ b/fs/erofs/zdata.c
+@@ -6,6 +6,7 @@
+  */
+ #include "compress.h"
+ #include <linux/psi.h>
++#include <linux/mm_inline.h>
+ #include <linux/cpuhotplug.h>
+ #include <trace/events/erofs.h>
+ 
+@@ -1713,7 +1714,7 @@ static void z_erofs_submit_queue(struct z_erofs_frontend *f,
+ 				DBG_BUGON(bvec.bv_len < sb->s_blocksize);
+ 			}
+ 
+-			if (unlikely(PageWorkingset(bvec.bv_page)) &&
++			if (unlikely(folio_test_workingset(page_folio(bvec.bv_page))) &&
+ 			    !memstall) {
+ 				psi_memstall_enter(&pflags);
+ 				memstall = 1;
+diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+index 0f470ddf5c48..a4daf366e6aa 100644
+--- a/include/linux/mm_inline.h
++++ b/include/linux/mm_inline.h
+@@ -283,6 +283,21 @@ static inline void folio_migrate_lru_refs(struct folio *new, const struct folio
+ 	folio_set_lru_refs(new, folio_lru_refs(old));
+ }
+ 
++/**
++ * folio_test_workingset - Test if a folio is in the workingset.
++ * @folio: the folio
++ *
++ * A folio is workingset when its LRU refs count reaches
++ * LRU_REFS_WORKINGSET. Under the classical LRU flag encoding,
++ * this is just testing the PG_workingset bit.
++ *
++ * Return: true if the folio is workingset.
++ */
++static __always_inline bool folio_test_workingset(const struct folio *folio)
++{
++	return lru_refs_is_workingset(folio_lru_refs(folio));
++}
++
+ #ifdef CONFIG_LRU_GEN
+ static inline bool lru_gen_is_old(struct lruvec *lruvec, int type, int gen)
  {
- 	/* The folio was referenced previously ... */
--	if (folio_test_young(folio) || folio_test_referenced(folio))
-+	if (folio_test_young(folio))
-+		return true;
-+	if (folio_check_lru_refs(folio))
- 		return true;
- 	/* ... or the PTE mapping was recently used */
- 	return pte_young(pteval) || mmu_notifier_test_young(vma->vm_mm, addr);
+@@ -544,6 +559,21 @@ static inline void folio_clear_lru_refs(struct folio *folio)
+ 		folio_clear_referenced(folio);
+ }
+ 
++/*
++ * For the classical LRU or isolated folios only: with MGLRU the PG_workingset
++ * bit is part of the folio refs count maintained by folio_inc_lru_refs(),
++ * a raw set would corrupt it.  The warning below catches folios still on a
++ * gen list, the classical paths in the switching window only see off-list ones.
++ */
++static __always_inline void folio_set_workingset(struct folio *folio)
++{
++	unsigned long flags;
++
++	flags = set_mask_bits(folio_flags(folio, 0), BIT(PG_workingset),
++			      BIT(PG_workingset));
++	VM_WARN_ON_ONCE(lru_get_gen_flags(flags) != -1);
++}
++
+ static __always_inline
+ void lruvec_add_folio(struct lruvec *lruvec, struct folio *folio)
+ {
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index b0ddc652e76c..f6625dc042da 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -549,8 +549,6 @@ PAGEFLAG(LRU, lru, PF_HEAD) __CLEARPAGEFLAG(LRU, lru, PF_HEAD)
+ FOLIO_FLAG(active, FOLIO_HEAD_PAGE)
+ 	__FOLIO_CLEAR_FLAG(active, FOLIO_HEAD_PAGE)
+ 	FOLIO_TEST_CLEAR_FLAG(active, FOLIO_HEAD_PAGE)
+-PAGEFLAG(Workingset, workingset, PF_HEAD)
+-	TESTCLEARFLAG(Workingset, workingset, PF_HEAD)
+ PAGEFLAG(Checked, checked, PF_NO_COMPOUND)	   /* Used by some filesystems */
+ 
+ /* Xen */
+diff --git a/mm/filemap.c b/mm/filemap.c
+index dc0ceaa58a0f..acf5e562b732 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -21,6 +21,7 @@
+ #include <linux/gfp.h>
+ #include <linux/mm.h>
+ #include <linux/swap.h>
++#include <linux/mm_inline.h>
+ #include <linux/leafops.h>
+ #include <linux/syscalls.h>
+ #include <linux/mman.h>
+diff --git a/mm/madvise.c b/mm/madvise.c
+index 7e562e78d52a..e138082c518a 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -378,7 +378,7 @@ static void madvise_cold_prep_folio(struct folio *folio)
+ 	if (!lru_gen_enabled()) {
+ 		folio_clear_lru_refs(folio);
+ 		if (folio_test_active(folio))
+-			folio_set_workingset(folio);
++			folio_set_lru_refs(folio, LRU_REFS_WORKINGSET);
+ 	}
+ }
+ 
+diff --git a/mm/page_io.c b/mm/page_io.c
+index a57cdcf2892d..12deab296718 100644
+--- a/mm/page_io.c
++++ b/mm/page_io.c
+@@ -16,6 +16,7 @@
+ #include <linux/gfp.h>
+ #include <linux/pagemap.h>
+ #include <linux/swap.h>
++#include <linux/mm_inline.h>
+ #include <linux/bio.h>
+ #include <linux/swapops.h>
+ #include <linux/writeback.h>
 
 -- 
 2.56.1
