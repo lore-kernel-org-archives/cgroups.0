@@ -1,51 +1,51 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.198
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.235
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795436576;
-	b=rPTafAHGUKUhyGJgtwL8AF3mJh4gTfUyNWVGx0cT0EpgdIMlxkt4Ck6KYSwyVRqiHJ2H
-	 KEjQWn8EMhrLvzk5vPZLbMv1lUM1lgZ6U8NJjwqyR/+UEPh2iQcdHkmMR3qPTrVCdxP6H
-	 8DZvzLnk0wZ7qQzVuwn3YYf76dvNk5HDz7QrOeeHkAuWelLhCOwiq5GKkyMqdiZQ5VD/P
-	 WxU6CgW4jYDrtCF6UvQv4FhQ3sxpkiosuzLM/GVrwcd217eGJuKgr83HrzgmLmGFkpXLG
-	 WCwOf5mf74Xrw3NOEcVZr3A3QfmFEGhh25oMRJMJCMkWHwv3OQCDvQqbpFC/3IZ+uyA==
+	t=1795436657;
+	b=fGOy/Sj9HQ3OFy2aLwIHni6YPg0jCgzDDzTg2AqWX8vkm5h8+VOFXK3q+wwPs0GJ5CzB
+	 cfSAKg1ljDswCao3n6bGJmMNcFbbyeQbpoZk1fzV6C2Sk3SEnzXs//cTKEN+JqQ+vie8+
+	 AMP3mul7K0zi0fCWjzmGmLe5HmsFvnmNZTs1j2CW20GH+37bnHSo74AGi1It1X/WOZi8+
+	 u6WUaP8aOpChPP61/ksT5K25LMNh4wWRsHK/bc0BmyHvKYkfE+etpnO42RZANtFPedEsG
+	 lv8z4MinxsLIiB5YMMAMFc3l4fiOt0MKSD4KLYKXMZ7+qy3wJg9QDFBXgSuW38WdiLA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795436576;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795436657;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
 	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
 	 To:X-Mailer;
-	bh=GUmWSh6uTeixFFkyYnWFbJ+QiEm7Y6IWZTbXXFJX8T4=;
-	b=O59FyMCx3LpNaoqfNMSyPApP8i2zCPYEufNF1dCe2b3Gnhx0E1k0ptVDaE/noil/J/fW
-	 DQUA6oUMKwYq7RSNVVR8dDe1WVGP+6+Ftard3NFjnXi+wF9j8YdWajQeQdJcPRTkzd/2O
-	 hJk74g91RdZiSJHFma12biGv5Y5z0VynzY5gCFTo4Px8kPcJzFghHI3Va7X6PbssvDOPL
-	 EzMGKwgBYetIYy3kBY7zQk6CIgQSkFqoQH2t1EQboFsLctQmaYMZkhnUngGV6SuJjQCD+
-	 WaAaVpwiOfweyoBORGF3bBhZm1qWEiX46yFHGH0gMEoMqnDfBE6xWmcxSi6mzyHRgeA==
+	bh=C2y8a/aJsfWDdsgIUvnM1WLiUvisiUU/U1gufkqx14Q=;
+	b=kG2jnFUmpXPCn2LhOLB5KSvuzgWOjJhSh7iZ9au/uJ1Hd8Xym9HNYWxnnF5Ooq5cIESb
+	 38jn4cjg+P+Ott/RNQaRHVI49DPN50pAzIWh5XG/iTOM0LrtKig9+BsJiuWEUap9huhED
+	 vvIbDbPxrA4H7PHoVCHMfMAxlcQQSY10sKL528b9C/6gbZHobdZ+bVUXILCaR38PFPlHN
+	 f3j1Tkr4Jyr0VYw3zulicdp1hQMmY6r5Vhqcwf/vyf3irdbhcyvWZBfMiNOUNU4T1CObo
+	 XIZ5v3Ku3Go/uyLZXV/6aJyw2KQwsc4pG43G5NA+t+tbOVc/HzZzCgF+bAiBbQJxevA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=oal93E9h;
-	arc=none smtp.remote-ip=91.218.175.198
-Received: from mta0.migadu.com (out-198.mta0.migadu.com [91.218.175.198])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=iBLogXYw;
+	arc=none smtp.remote-ip=91.218.175.235
+Received: from mta0.migadu.com (out-235.mta0.migadu.com [91.218.175.235])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596E0606A330
-	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 12:22:55 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 596E0606A330
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3443606A327
+	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 12:24:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D3443606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=oal93E9h
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=iBLogXYw
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=HBiS2kYF8PVr+vkQZ7k/tuC2TvlwZKRHilWszpQnZcg=;
+DKIM-Signature: a=rsa-sha256; bh=ckKSZhwUn7LT+lpCjWursw7EjXIKhQt9XVV2CuTg7pQ=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795436573; v=1; x=1796041373;
- b=oal93E9hrbrvToGf8btCaPuf8tsAauiJkAeAIN4xbW6hAPzHSIlO7tyEFJJJINeBwKyjUuzR
- Pj7j4x0zUY5oCYaN74tJN48MqYohM1lea8nWqb4tcWkksmqQMQ7uP3rGWN30XWtk4BrxD23iMvo
- Re/LM53lMMy229SlyvQKYDcw=
+ t=1795436654; v=1; x=1796041454;
+ b=iBLogXYweSyIf7ypQdnNycaGhQkgtwLwNEhirezZkoJD2DDj8FBIWjc4SCMhjXQqf/iMhgWT
+ kCgkOtMBsLdRO8AiXqmuZffu4GjR/QZiehGNXgTlkybdY3H6LqI4OeqpB8X7rAAgWmkBExs0AUu
+ 56zBGNpGcBEC9RdhtCwWsupw=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 7dd95ba535c2c3e9;
-	Mon, 23 Nov 2026 12:22:53 +0000
-X-Mizu-Trace-ID: 7dd95ba535c2c3e9
+Received: by smtp.migadu.com with ESMTPS id 9061a3063b574a26;
+	Mon, 23 Nov 2026 12:24:13 +0000
+X-Mizu-Trace-ID: 9061a3063b574a26
 X-Migadu-Flow: FLOW_OUT
 Content-Type: text/plain;
 	charset=us-ascii
@@ -58,11 +58,11 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.200.71.1.16\))
-Subject: Re: [PATCH v5 1/4] mm: list_lru: index per-memcg lists by memory CSS
- ID
+Subject: Re: [PATCH v5 2/4] mm: list_lru: keep per-memcg lists with nokmem for
+ NONSLAB-backed lrus
 From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <20261123105334.2524066-2-qinyuntan@linux.alibaba.com>
-Date: Mon, 23 Nov 2026 20:22:36 +0800
+In-Reply-To: <20261123105334.2524066-3-qinyuntan@linux.alibaba.com>
+Date: Mon, 23 Nov 2026 20:23:54 +0800
 Cc: Muchun Song <muchun.song@linux.dev>,
  akpm@linux-foundation.org,
  Johannes Weiner <hannes@cmpxchg.org>,
@@ -86,9 +86,9 @@ Cc: Muchun Song <muchun.song@linux.dev>,
  linux-mm@kvack.org,
  linux-kernel@vger.kernel.org
 Content-Transfer-Encoding: 7bit
-Message-Id: <4520D630-10BD-4D66-9FDF-279A07F5A4C0@linux.dev>
+Message-Id: <4AA82151-066C-48E4-BFD2-99F03F043BC9@linux.dev>
 References: <20261123105334.2524066-1-qinyuntan@linux.alibaba.com>
- <20261123105334.2524066-2-qinyuntan@linux.alibaba.com>
+ <20261123105334.2524066-3-qinyuntan@linux.alibaba.com>
 To: Qinyun Tan <qinyuntan@linux.alibaba.com>
 X-Mailer: Apple Mail (2.3901.200.71.1.16)
 
@@ -96,30 +96,26 @@ X-Mailer: Apple Mail (2.3901.200.71.1.16)
 
 > On Nov 23, 2026, at 18:53, Qinyun Tan <qinyuntan@linux.alibaba.com> wrote:
 > 
-> list_lru uses kmemcg_id, a copy of the private memcg ID, to index its
-> per-memcg lists. kmemcg_id is only set when kmem accounting is enabled.
-> Non-slab shrinkers need an index that also works with cgroup.memory=nokmem.
+> With cgroup.memory=nokmem, __list_lru_init() collapses every list_lru
+> into per-node lists.  That is fine for slab objects, which are not
+> charged per memcg without kmem accounting.  But a lru backed by a
+> SHRINKER_NONSLAB shrinker, e.g. the THP deferred split queue or the
+> zswap entries, holds user memory, which is charged regardless of
+> nokmem.  Collapsing such an lru loses the per-memcg view of its
+> objects.  Reclaim can no longer target just the cgroup under pressure.
 > 
-> Use memcg->css.id for non-root lists. The ID stays allocated until the
-> CSS is freed, so disabling and re-enabling the memory controller on the
-> same cgroup gives the new CSS a distinct index while the old CSS is
-> still referenced. Reserve index zero for the root, which uses the
-> per-node list directly.
+> Keep such lrus memcg aware under nokmem when their backing shrinker is
+> registered SHRINKER_NONSLAB.
 > 
-> In list_lru_walk_node(), hold the RCU read lock across both lookups so
-> the CSS ID cannot be reused between them. css_from_id() can see a CSS
-> before its online callback succeeds, so check that the CSS is online
-> before taking a reference. Drop the RCU read lock for the walk and
-> keep the reference across restarts to recheck the same owner.
+> This leaves the savings of nokmem intact: slab-backed lrus (e.g. the
+> superblock dentry/inode lrus) still fall back to the per-node lists,
+> and the per-memcg lists are allocated only when a memcg actually holds
+> such objects.
 > 
-> Remove kmemcg_id and reparent the lists before the objcgs on memcg
-> offline, including when kmem accounting is disabled.
-> 
+> Fixes: fafaeceb89a5 ("mm: switch deferred split shrinker to list_lru")
 > Signed-off-by: Qinyun Tan <qinyuntan@linux.alibaba.com>
-
-Nice cleanup.
+> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
 
 Acked-by: Muchun Song (ByteDance) <muchun.song@linux.dev>
 
-Thanks.
 
