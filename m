@@ -1,104 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.160.180
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795441281;
-	b=V30NJGEniMWPMfBw70jZmou0jz6kftCvgMjyVIxgolQWtUyPYINh584EtTA+W8zqwn0+
-	 fLExI0FjPpiUfuin5ayBaVkbtQBNwEVIqaPpdlCB9v3GSCZGCEqkYjlBmhHBoSEGWWIYW
-	 UehqNb0HvELcgO8BaSGd1x636xsCPaV8VNl6/XyIKSYASR/UQphLoDUyoiheVpT4jJBMm
-	 vr2gVh5+c1Vg2EvcMkO00VrTcscadjDn8P+oJM2AdaHn3bTOwapDsgIqj3fR+y7UTfzut
-	 XufqL5qB+tgEbkBu4lkivi9PBPGteEHwXLFwyhvYg5/AIaWY6Y26ge4y5+GsUG5Lu2Q==
+	t=1795442486;
+	b=EnSaCy6+DAnlI9mCWUzof2EmQDJ5kdGo3vgfpYOP51r2aqSkvDz161mwPXa634RYLToK
+	 1x6D2qOB5KgAR8Jgctjy2g9OUTfauTYwNf4TuXU3rZejSbHbItIXR1EiCi9Jh0bEvVW3v
+	 6OAyYsTQr6Ux+Vdsn81jBsIqVen/9Jj6Ckw8s9eRD1828UwIB/3hrtmASznN888C5eDYq
+	 C75DGX6pr0TfakoCKkifl7dZDGIzxwQ3ZiJyzKAjzS5QY8OLLsZ5BWxmt1t3hl1HBVvAt
+	 e/z6S416SUXXref9/C2t0fhzHArtfLozRfLefWMzCTmcVGhj01fXev76hnsX8crQsog==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795441281;
-	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=qXEviCNNm3Wk7uhp6pzpAJzifpuXgS2QBwatR2ePNBM=;
-	b=jb7drLjQtLkjvSkuFK1HtceExEBBY13yw6G9BHBroX+Qdu/7p0PwCGRz5whMH5ncRciP
-	 0H93bsOjh4RNf9Loh++2fnKq8/cB4+lrLfs4WjCvvSWfoinxfVnEy56SLkBEyor2qT6kH
-	 tbUxpSRnqx3DpUzuBfyFZqsHNdLzFLFL3H47iUkZjFE7cRdupQNzsqTM8lWxJ1YmdUAxU
-	 KM2uj9ZRdbcLE2BR+EE+bszzPjtK9cO5Sr5rI6YVbIu3kXHrh8GXaIKM64zxgsalq6yyM
-	 Si3mXNwOeVDLAyIrJ36depjy7xEOjbkmeoyCPVLuI5pFKQjp1k7CUuHI5rOw/5Mz0tg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795442486;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 MIME-Version:Content-Type:Content-Transfer-Encoding:Subject:From:To:
+	 Cc:In-Reply-To:References:Date:Message-Id:X-Mailer;
+	bh=vG8DGIHiY7DMGeo+eA0u14jrv8r12vq2uH5/qp0e+4w=;
+	b=1W7S+niMl4FpuN7o39AUnWpIX6+tV6b1eiarghwtaxAF3xKm5Xbh7TNm1xpKwatJcDKD
+	 bZEDQFbzFr7zFIvq3v/5xwexnc0QVPESQB9TjN1X8+RL/lqZYhDidkF4wpR1oe/bunoyy
+	 ASPDgcD0kryc1t30bgr93Ixv8vhhrfSLLwpoz1tIl2ZdLTj5mqc6weoHcxY/3lZ4g82hU
+	 m3Pzo9UqM1G2HOrltNWFRrWkbo7b4TYsOROAH2OrJMo3MBdGL59X4LMWQUxpNL0hn5QOO
+	 2XkOVPSjxjHYe3K3+V+SGrylwdeX9+R9PSp9aaMN/kuYu1mnrDs+yBO9C5JKtuNURnw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=Ue+I4C8J;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=F3GI4z+V;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=none header.from=gourry.net;
+	spf=pass smtp.mailfrom=gourry.net;
+	dkim=pass header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=HvoqpFfv;
+	arc=none smtp.remote-ip=209.85.160.180
+Received: from mail-qt1-f180.google.com (mail-qt1-f180.google.com [209.85.160.180])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C87606A321;
-	Mon, 23 Nov 2026 13:41:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 85C87606A321
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB03A606A31A
+	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 14:01:25 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EB03A606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=Ue+I4C8J;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=F3GI4z+V
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1795441278;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qXEviCNNm3Wk7uhp6pzpAJzifpuXgS2QBwatR2ePNBM=;
-	b=Ue+I4C8JfKGwdTjbY7G4gRbyD6fBLNcmC+lBI92G/nha7xwpRR+o7VADLoFojO3+Fuahgx
-	433iqHfFL6iMUvItr24a85LsOO8v96hzDQGhKrgYTSIgty8NsLPvPn5df1otgHyY+9GM1F
-	Gxw43lUsPmSBSAEQd68XpK1hVrJPv57hCI2Bjc3HFJO4IIwhvXurl5jXul1ACXVSBeN35z
-	CbkF22uTTGcMhdWGyk3OHakE5G1z+CxzrWMlIeImwKTjp/NxZduUIVwVU4tSNrbXeKSjbj
-	UX0tRoJaEyGCHOLujTYNck91deTA1PoiE4OZIhZXcmWGmCwooIVb3wJ4d9N6+w==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1795441278;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=qXEviCNNm3Wk7uhp6pzpAJzifpuXgS2QBwatR2ePNBM=;
-	b=F3GI4z+VPWOU45X1sbVYFH5Pkp9KXn3nd14WsyHQYSZ6HGId24BaGyioQ9ICkg1eR48eCB
-	jA3q1+nhNXldD+AQ==
-To: linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	rcu@vger.kernel.org,
-	linux-doc@vger.kernel.org
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>,
-	Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>,
-	Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>,
-	John Ogness <john.ogness@linutronix.de>
-Subject: [PATCH v4 1/6] sched: Mark RT_GROUP_SCHED broken
-Date: Mon, 23 Nov 2026 14:41:07 +0100
-Message-ID: <20261123-sched_dl-v4-1-d523e4d960d3@linutronix.de>
-In-Reply-To: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
-References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.a=rsa-sha256 header.s=google header.b=HvoqpFfv
+Received: by mail-qt1-f180.google.com with SMTP id d75a77b69052e-5495d549924so38072241cf.1
+        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 06:01:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1795442485; x=1796047285; darn=vger.kernel.org;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=vG8DGIHiY7DMGeo+eA0u14jrv8r12vq2uH5/qp0e+4w=;
+        b=HvoqpFfvQJEyD7yCLKdxLSgIAzaLXp3MuIOJlQD/xTNp3eiDg6Ra/gTk2UwtMg8a7r
+         51Fdi8rwbAEzrbgpfyQRcX6ocwx3JbZqs3lMtg+oSCOxztbX4sMSEqwzwBMMXIZhbH2z
+         +cWKiZlrDbUnOjK2Dc/xmxc6lhEP7P0zCv9fK8Q6R+LbGf8sSkVAJ3VI047utN/3Xvv4
+         E+aRxCbXLC4Q26EJEfMDphlos6jB6B2Elx2CW7JhFNTETwNm4m8/cfY28pwtDbaTGmPb
+         vBtJ7fUBmY372UX/XLhDP7oxTPwPWEyn4GbQKKsOdOJ00EB3fq5g2EwkvonKgUxXTVD5
+         DPmw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795442485; x=1796047285;
+        h=message-id:date:references:in-reply-to:cc:to:from:subject
+         :content-transfer-encoding:content-type:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=vG8DGIHiY7DMGeo+eA0u14jrv8r12vq2uH5/qp0e+4w=;
+        b=Xz/6Pfmwl7DP5/ly9Tr84WZbqVnV1/FDTcvnvfB1iE4uOgcpfmkdYkO4csjcu5gdDV
+         TgYuyIA+3zBV7g8zrM31beI2WcTVRFk8uQnbXnhP8G5rVuctdqCo2zzC3TVjYeg/ttia
+         nB6unX5uZBzXCXRriJfLiaOSFN8lVgsoDmp6d1KKer9OFAVMsJkX9EtgjBjFQ+4WX2TN
+         Np6D2XG21pjl6spzgXUhIM6UawnBuGdcQoZ5iqSH5+ZkvxA1Ob9QCIQWCd3oCJ49CSJA
+         fLjhq78uQoHXObO6stN01g0Mo7kZzf+Qqoc3KkmCKBDkmGAk/hv2kWGqg8GpBNOTQUYB
+         /77Q==
+X-Forwarded-Encrypted: i=1; AL+hErEbaZYzYP+daatJB2LZYVVtjlr3OlI649qYOnECThMjP96n9Z+i8qy7JRO3sU4TyXebejkOEfkz@vger.kernel.org
+X-Gm-Message-State: APuU4Z/gKPUkZqX5j9Dfc7jZLAp6pDgMM+7LOt6eECWQIl4wkuoJpCXd
+	JrmefnyJgNh+1xWuL7nL+LjL7dK83mzCAcKaFzfx2HIxe+PxMMf5xhEMI5hBa/FBu40=
+X-Gm-Gg: AZFdTZcvAC5nJaHFhiwkJji6cuWx76iJVDDVP9qiVgu6jzugPRzbFZsdR139GNmnlQu
+	MbPwOp9HFjgWwFCNPbvXCCyR76WadgTwV5i0fHq6CjcWYsmf8lx1knb+HQFeXaOUuf6Sv5+LVGT
+	lDE8/cU8/YV0/fKHJuqZeJWEAJm7D1PD14wblP9HUY00BnakHLaBGVzPBSJVwFnLhkjvs88s2/b
+	7VP3KdL84XUIHjp0bBE8lBGKHRsi02vIcFTtmbtFYinoqj0GZn2fNWhBYgpBK7EpjFDtc3sauVc
+	Id6f8C7JJBNM5nHboqOCSM/JUCSwHUuK7kZEezN4BWmsfs8WqE0VuoLm7BFj+8oAN9RrBmoUoSP
+	xigxIoLlyoN82iwjJ18zkA/VloWZMQOIYUlNPOKM0Ks8xcU91z/h9X7zDJhKC5RLWtjT6facXl3
+	doOKjl+TTiFigbTRh9mVWqGxVijaplnWQLg993EjDEjEYBne0/azGW6/B6wy6CfbfRQXQjRlAo4
+	5PIT0Zxf4iAELQBQ0dzG93M3oJFswFYLg0wJh7G9/YPGSK5DfPUw3CwN+aZZvGYd5daqJRIAiqt
+	8QIlRiVg7Hzi6u8mV1XIgn73VnxHzy9uNH7lY5xaK6DcxvjaSKeJDkYpn4TdWmxjjmqn9DSF4pI
+	jW6gEbKk=
+X-Received: by 2002:a05:622a:8413:10b0:55d:8475:aafb with SMTP id d75a77b69052e-55d8475ad43mr113506371cf.71.1795442484804;
+        Mon, 23 Nov 2026 06:01:24 -0800 (PST)
+Received: from [192.168.50.231] (pool-71-191-145-202.washdc.fios.verizon.net. [71.191.145.202])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-55d788074desm99999281cf.7.2026.11.23.06.01.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Nov 2026 06:01:24 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -109,190 +90,141 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 01/60] nodemask: add node-state iterators
+From: "Gregory Price (Meta)" <gourry@gourry.net>
+To: Yury Norov <ynorov@nvidia.com>
+Cc: gourry@gourry.net, Yury Norov <yury.norov@gmail.com>, 
+ Rasmus Villemoes <linux@rasmusvillemoes.dk>, 
+ David Hildenbrand <david@kernel.org>, 
+ "Liam R. Howlett" <liam@infradead.org>, Vlastimil Babka <vbabka@kernel.org>, 
+ Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
+ Andrew Morton <akpm@linux-foundation.org>, 
+ Oscar Salvador <osalvador@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, 
+ Suren Baghdasaryan <surenb@google.com>, 
+ Brendan Jackman <brendan.jackman@linux.dev>, Zi Yan <ziy@nvidia.com>, 
+ Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
+ Randy Dunlap <rdunlap@infradead.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ Johan Hovold <johan@kernel.org>, Joshua Hahn <joshua.hahnjy@gmail.com>, 
+ Rakie Kim <rakie.kim@sk.com>, Ying Huang <ying.huang@linux.alibaba.com>, 
+ Matthew Brost <matthew.brost@intel.com>, Byungchul Park <byungchul@sk.com>, 
+ Alistair Popple <apopple@nvidia.com>, SJ Park <sj@kernel.org>, 
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
+ Juri Lelli <juri.lelli@redhat.com>, 
+ Vincent Guittot <vincent.guittot@linaro.org>, 
+ Dietmar Eggemann <dietmar.eggemann@arm.com>, 
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, 
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>, 
+ K Prateek Nayak <kprateek.nayak@amd.com>, Kees Cook <kees@kernel.org>, 
+ Kairui Song <kasong@tencent.com>, Barry Song <baohua@kernel.org>, 
+ Qi Zheng <qi.zheng@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+ Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+ Wei Xu <weixugc@google.com>, Baoquan He <baoquan.he@linux.dev>, 
+ Baolin Wang <baolin.wang@linux.alibaba.com>, 
+ Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>, 
+ Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+ Nico Pache <nico.pache@linux.dev>, Ryan Roberts <ryan.roberts@arm.com>, 
+ Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
+ Usama Arif <usama.arif@linux.dev>, Kiryl Shutsemau <kas@kernel.org>, 
+ Xu Xin <xu.xin@linux.dev>, Chengming Zhou <chengming.zhou@linux.dev>, 
+ Lorenzo Stoakes <ljs@kernel.org>, Pedro Falcato <pfalcato@suse.de>, 
+ Jann Horn <jannh@google.com>, Chris Li <chrisl@kernel.org>, 
+ Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+ Youngjun Park <youngjun.park@lge.com>, 
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
+ Waiman Long <longman@redhat.com>, Ridong Chen <ridong.chen@linux.dev>, 
+ Tejun Heo <tj@kernel.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Dan Williams <djbw@kernel.org>, Vishal Verma <vishal.l.verma@intel.com>, 
+ Dave Jiang <dave.jiang@intel.com>, 
+ Alison Schofield <alison.schofield@intel.com>, 
+ Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, 
+ linux-mm@kvack.org, linux-cxl@vger.kernel.org, linux-doc@vger.kernel.org, 
+ driver-core@lists.linux.dev, damon@lists.linux.dev, 
+ linux-pm@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+ cgroups@vger.kernel.org, nvdimm@lists.linux.dev, 
+ linux-kselftest@vger.kernel.org
+In-Reply-To: <awMK9V6TbU9Xtzn9@yury>
+References: <20261120-private_nodes_v6-v1-0-74f5f9a115c2@gourry.net>
+ <20261120-private_nodes_v6-v1-1-74f5f9a115c2@gourry.net>
+ <awMK9V6TbU9Xtzn9@yury>
+Date: Mon, 23 Nov 2026 09:01:22 -0500
+Message-Id: <179544248227.412063.16491857533875192357.b4-reply@b4>
+X-Mailer: b4 0.17-dev
 
-The RT_GROUP_SCHED is broken beyond repair and it is best to not enable
-it during compile. If enabled it is recommended to disable it at boot
-time with the rt_group_sched=3D option.
-With it enabled it is not possible to set the policy of a task to
-SCHED_{FIFO|RR} because its cgroup has no runtime assigned. The runtime
-can not be assigned with cgroup v2. The root group has however all the
-runtime assigned meaning the global sysctl runtime parameter
-(sched_rt_runtime_us) can no be reduced because the new bandwidth will
-be less than what is current available.
-It is possible to schedule SCHED_DEADLINE tasks but the admission
-control is stuck can only be disabled via -1 (same sysctl parameter).
+On 2026-11-22 10:32 -0500, Yury Norov wrote:
+> On Fri, Nov 20, 2026 at 01:08:52PM -0500, Gregory Price via B4 Relay wrote:
+> > From: "Gregory Price (Meta)" <gourry@gourry.net>
+> > 
+> > Add first_node_state() and next_node_state(), so callers can walk any
+> > node state the way first_memory_node and next_memory_node walk N_MEMORY.
+> > 
+> > Add for_each_node_mask_state(), which iterates a nodemask intersected
+> > with a node state using the bitmap intersection helpers, without a
+> > temporary nodemask.
+> > 
+> > Signed-off-by: Gregory Price (Meta) <gourry@gourry.net>
+> > ---
+> >  include/linux/nodemask.h | 17 +++++++++++++++++
+> >  1 file changed, 17 insertions(+)
+> > 
+> > diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
+> > index 607373bd83ee..90bdcffa42ea 100644
+> > --- a/include/linux/nodemask.h
+> > +++ b/include/linux/nodemask.h
+> > @@ -411,6 +411,11 @@ enum node_states {
+> >  
+> >  extern nodemask_t node_states[NR_NODE_STATES];
+> >  
+> > +/* Iterate the nodes in a mask that also belong to the specified state. */
+> > +#define for_each_node_mask_state(node, mask, state)			\
+> 
+> for_each_node_state_and? We've got for_each_node(), and we've got
+> for_each_node_state(), so let's figure out consistent naming.
+> 
+> Did you check the codebase for exsisting candidates for this helper?
+> 
 
-As a result all major distors (Debian, Open Suse, Fedora, Archlinux)
-have it disabled.
+for_each_node_mask_and() would be more consistent, change just requires
+passing node_state[N_MEMORY_X] instead of just the node state bit.
 
-There is work on Hierarchical constant bandwidth server (HCBS) which aim
-to group multiple real-time tasks within one deadline configuration.
+> > +	for_each_and_bit(node, nodes_addr(mask),			\
+> > +			 nodes_addr(node_states[state]), MAX_NUMNODES)
+> > +
+> 
+> Please use nr_node_ids instead of MAX_NUMNODES.
+> 
 
-Mark CONFIG_RT_GROUP_SCHED broken. Move code which is not under
-RT_GROUP_SCHED but only used by it within its IFDEF section. This
-includes also RT_RUNTIME_SHARE.
-Update the documentation, to state that it is not related to real-time
-tasks in general but only to RT-group scheduling. While at it, also
-update the current defaults.
+I followed for_each_node_mask() which uses MAX_NUMANODES but let me
+look.
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- Documentation/scheduler/sched-rt-group.rst |  7 ++++++-
- init/Kconfig                               |  2 +-
- kernel/sched/features.h                    |  2 ++
- kernel/sched/rt.c                          |  6 ------
- kernel/sched/sched.h                       | 19 +++++++++++--------
- 5 files changed, 20 insertions(+), 16 deletions(-)
+> >  #if MAX_NUMNODES > 1
+> >  static __always_inline int node_state(int node, enum node_states state)
+> >  {
+> > @@ -435,6 +440,12 @@ static __always_inline int num_node_state(enum node_states state)
+> >  #define for_each_node_state(__node, __state) \
+> >  	for_each_node_mask((__node), node_states[__state])
+> >  
+> > +#define first_node_state(state)	first_node(node_states[state])
+> > +static __always_inline unsigned int next_node_state(int nid, enum node_states state)
+> > +{
+> > +	return next_node(nid, node_states[state]);
+> > +}
+> 
+> At least the following {first,next}_{online,memory}_node must be
+> switched to the new helpers. Can you check through the rest of the
+> kernel to make sure all candidates of the proposed helpers are
+> converted?
+> 
 
-diff --git a/Documentation/scheduler/sched-rt-group.rst b/Documentation/sch=
-eduler/sched-rt-group.rst
-index ab464335d3204..cd69c93baeb6a 100644
---- a/Documentation/scheduler/sched-rt-group.rst
-+++ b/Documentation/scheduler/sched-rt-group.rst
-@@ -18,6 +18,11 @@ Real-Time group scheduling
- 0. WARNING
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-=20
-+ This document applies to RT group scheduling provided by CONFIG_RT_GROUP_=
-SCHED.
-+ If you don't use RT-group scheduling, schedule real-time tasks and experi=
-ence
-+ throttling issues please look into Documentation/scheduler/sched-deadline=
-.rst
-+ for the fair_server.
-+
-  Fiddling with these settings can result in an unstable system, the knobs =
-are
-  root only and assumes root knows what he is doing.
-=20
-@@ -111,7 +116,7 @@ lack an EDF scheduler to make non-uniform periods usabl=
-e.
- ---------------------
-=20
- The default values for sched_rt_period_us (1000000 or 1s) and
--sched_rt_runtime_us (950000 or 0.95s).  This gives 0.05s to be used by
-+sched_rt_runtime_us (1000000 or 1s).  This gives 0s to be used by
- SCHED_OTHER (non-RT tasks). These defaults were chosen so that a run-away
- real-time tasks will not lock up the machine but leave a little time to re=
-cover
- it.  By setting runtime to -1 you'd get the old behaviour back.
-diff --git a/init/Kconfig b/init/Kconfig
-index c8a7cfa60a6ea..4c00c02aa1c14 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -981,7 +981,7 @@ config CFS_BANDWIDTH
-=20
- config RT_GROUP_SCHED
- 	bool "Group scheduling for SCHED_RR/FIFO"
--	depends on CGROUP_SCHED
-+	depends on CGROUP_SCHED && BROKEN
- 	default n
- 	help
- 	  This feature lets you explicitly allocate real CPU bandwidth
-diff --git a/kernel/sched/features.h b/kernel/sched/features.h
-index 8f0dee8fc4755..acc1c3fdfe2a2 100644
---- a/kernel/sched/features.h
-+++ b/kernel/sched/features.h
-@@ -122,7 +122,9 @@ SCHED_FEAT(RT_PUSH_IPI, false)
- # endif
- #endif
-=20
-+#ifdef CONFIG_RT_GROUP_SCHED
- SCHED_FEAT(RT_RUNTIME_SHARE, false)
-+#endif
- SCHED_FEAT(LB_MIN, false)
- SCHED_FEAT(ATTACH_AGE_LOAD, true)
-=20
-diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 1535046a23ffa..cdeddd3fc9af2 100644
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -944,12 +944,6 @@ static inline const struct cpumask *sched_rt_period_ma=
-sk(void)
- 	return cpu_online_mask;
- }
-=20
--static inline
--struct rt_rq *sched_rt_period_rt_rq(struct rt_bandwidth *rt_b, int cpu)
--{
--	return &cpu_rq(cpu)->rt;
--}
--
- static void __enable_runtime(struct rq *rq) { }
- static void __disable_runtime(struct rq *rq) { }
-=20
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index a4e6696e3a516..4d4128d5600f3 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -313,6 +313,7 @@ struct rt_prio_array {
- 	struct list_head queue[MAX_RT_PRIO];
- };
-=20
-+#ifdef CONFIG_RT_GROUP_SCHED
- struct rt_bandwidth {
- 	/* nests inside the rq lock: */
- 	raw_spinlock_t		rt_runtime_lock;
-@@ -321,6 +322,7 @@ struct rt_bandwidth {
- 	struct hrtimer		rt_period_timer;
- 	unsigned int		rt_period_active;
- };
-+#endif
-=20
- static inline int dl_bandwidth_enabled(void)
- {
-@@ -581,6 +583,7 @@ extern void start_cfs_bandwidth(struct cfs_bandwidth *c=
-fs_b);
- extern void unthrottle_cfs_rq(struct cfs_rq *cfs_rq);
- extern bool cfs_task_bw_constrained(struct task_struct *p);
-=20
-+#ifdef CONFIG_RT_GROUP_SCHED
- extern void init_tg_rt_entry(struct task_group *tg, struct rt_rq *rt_rq,
- 		struct sched_rt_entity *rt_se, int cpu,
- 		struct sched_rt_entity *parent);
-@@ -589,6 +592,14 @@ extern int sched_group_set_rt_period(struct task_group=
- *tg, u64 rt_period_us);
- extern long sched_group_rt_runtime(struct task_group *tg);
- extern long sched_group_rt_period(struct task_group *tg);
- extern int sched_rt_can_attach(struct task_group *tg, struct task_struct *=
-tsk);
-+extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 r=
-untime);
-+extern bool sched_rt_bandwidth_account(struct rt_rq *rt_rq);
-+
-+static inline int rt_bandwidth_enabled(void)
-+{
-+	return sysctl_sched_rt_runtime >=3D 0;
-+}
-+#endif
-=20
- extern struct task_group *sched_create_group(struct task_group *parent);
- extern void sched_online_group(struct task_group *tg,
-@@ -877,11 +888,6 @@ struct scx_rq {
- };
- #endif /* CONFIG_SCHED_CLASS_EXT */
-=20
--static inline int rt_bandwidth_enabled(void)
--{
--	return sysctl_sched_rt_runtime >=3D 0;
--}
--
- /* RT IPI pull logic requires IRQ_WORK */
- #if defined(CONFIG_IRQ_WORK) && defined(CONFIG_SMP)
- # define HAVE_RT_PUSH_IPI
-@@ -3076,9 +3082,6 @@ extern void resched_curr(struct rq *rq);
- extern void resched_curr_lazy(struct rq *rq);
- extern void resched_cpu(int cpu);
-=20
--extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 r=
-untime);
--extern bool sched_rt_bandwidth_account(struct rt_rq *rt_rq);
--
- extern void init_dl_entity(struct sched_dl_entity *dl_se);
-=20
- extern void init_cfs_throttle_work(struct task_struct *p);
+I originally intended to delete first/next_memory_node, to make
+usage of N_MEMORY a bit more obviously, but dropped it to save an
+extra patch or two.  I will probably add that back in.
 
---=20
-2.55.0
+But yeah i can update these otherwise.
+
+-- 
+~Gregory
 
