@@ -1,62 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795441284;
-	b=xE9cMf8wH1v11R1Q8DAqQLQ1RSRu8+6UP3XXJxVeVHaJlH13DHUV2rgt1kAf3iAcnXHv
-	 foPWJcesyrnnBcsWFz4NmawWAW3Vn+4qVEQ5n+Hgl49LdRcDz8d1QcJapJsRAlieI6JWD
-	 KM5C/asXHUBNYDqyrqtxYBxnO59YrBlPob9gTw22pglV4fx/vNH2jtD4SZ6kPT2YRVTB3
-	 K8E5SkK3kZ/0C0vYZhhmgygu6iFFm2OQnLSqLUBKNKVuz3y7IjYbin6gjEM4NIcoHu3V1
-	 /vUDt/7ovJ2+I2i4Hremy71B0WybW61alaDmFcxW0koCRDNu/1ogp9AW5aZxTIdg1OQ==
+	t=1795441285;
+	b=rgtASj3ffQZ4KgVnawag65xsXGbJpTsBa1cTpj4Z3/sH+nmoXzjrQTS0stCNHscVGkYT
+	 yo+t+PVmvBQIxPCmyRbRak2QHLcg6kpY8HzSM7fazpJ3m4epgpyNvwG+NqOmlITZs5jpt
+	 rgD7BINEcpAZKKf9nzbBqAAFoaBOYCOeHXMs7QWHzGGYl2asqWpU1kEWYBt8VZZaCYXYl
+	 lfmC3F657sZom2VolS05D3A7Bg7wBXlCcebbeYOxh0wqXMdRtZRRToE6xpjdtg5Wp2Wom
+	 +9oq5r1JKa+I7Ig4Zmra1K/KexHOMam0mW86idLRw+9rNYI490E23tZV8guvKF/weFg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795441284;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795441285;
 	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=G4f4khOqJyPAuwGJMhRWhrTJB44nQh+QIvpHf6ZOuyc=;
-	b=jgLyuPic1OC2NG1vmyflYWL0XZDLMsf5iqY9aRZU475hR0/mUmTshFvKRyyX8SXLDSwA
-	 9Na+r0AA6qlALm/jqf7P5hoZP03HCxUAuIqHAUWg+WuJfgap0S+YiPJLhoNgjA7534ObB
-	 f0Cf0Md73zCz4d3+lbtVWIlgZAWM+M0JoAL2kUhCG90htzjVdvpiP2dRekqBMjvmTZ2kX
-	 KCPd2QLNaxSPNsyEppua50nX/Nr+UihxtWIjO/9yDzRDXrITzY+vTr98PHql0AOVEQ01d
-	 yA185+M/6tHKTWFV+npRRnMEuvVOxJYEIAvdND/lJLxeCs43cY0s8yCJ4f67HnUdU2A==
+	bh=2C5LERpIR4RerF/oqQKKb980WkL3XrIcGTt7ILAE0M8=;
+	b=3gGAe7JyflUBTssGY8+aPSxah75HRkULA9wUkAvzc0c7bFzPxX1o6E9tzwr0fnEEmwzQ
+	 u/OaRSI4RobElmyhQ6hbUmxCJEOkPo2rF/+6j6QmGbp/7cstRU0lULXovRzJXJO0h9XfB
+	 SUkcm3T3Eh56RTjk2Ss1HyRsvTIrEdQkmNEerjCG4KZ9hX6N+PWWtvWLhFKpMtYXQGuhy
+	 1tQCzUC2QS6TcKc44TReD1sq0yaSgWj/6oALPJQGd+sHMFRDVqHtA/xdT0thnbx4JcXF2
+	 OfCEXRXOh+t52zRZIIgYCnYezvM5uybx/IW/FhiLrJMiVm8VepfMWfijhVVnPPBReGg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linutronix.de;
 	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b="p3bpX/Q8";
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=7RVlango;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=MnfTLWI5;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b="1+B/jNg3";
 	arc=none smtp.remote-ip=193.142.43.55
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 612C2606A682;
-	Mon, 23 Nov 2026 13:41:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 612C2606A682
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD96606A693;
+	Mon, 23 Nov 2026 13:41:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9BD96606A693
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=p3bpX/Q8;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=7RVlango
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=MnfTLWI5;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=1+B/jNg3
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1795441281;
+	s=2020; t=1795441282;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=G4f4khOqJyPAuwGJMhRWhrTJB44nQh+QIvpHf6ZOuyc=;
-	b=p3bpX/Q8phtlm1UV1Ncp7UTCdS6lV9qhKldBfuPRAGsXRN+yGBkhmONd5aJsnzmlHNfgDc
-	p0o3l6RitTpWeIGYUGmRG44Tf937DH/LWicLyWZq6XL5ORz4ZXHizf7ndv0sW3oNh0z5H2
-	e9+oGgJiiahD27+z6e9J0y5dhWYAc0MKwzTXc/oOQaWmYIbuzeHAoFpPdmoVWCXz1Lk/NH
-	BAFG6W15uHrJDEQKZAdv2jjw/Nd0PFDMkXC3dKYwxvB+ygVO+73NDDKGLy3iBFP/JrfCX1
-	9+XoLqI82p+qdbO5xm908q/m0qTAGN54irdcw6+2+uzd1oq1YlFe9Q2B9gcsfw==
+	bh=2C5LERpIR4RerF/oqQKKb980WkL3XrIcGTt7ILAE0M8=;
+	b=MnfTLWI5bPSoDROgNwQ4QweduyrCrgNv/9kr9vXAF2HiZNA/bi+OP1o32yM0VWw6r4KZbf
+	VXKfUrgTO5Pp/MCG1xq1VQZ4NAjVq8M4vqN+ZGc01DD6jvN8ONnYlvHXAighS9RQSGCXHK
+	ceFSWLlaWr0IyX/zCT23y97YBraJ2DAiwHtGK4n658vjQDOYEDkGn06Qr1y0jTYuczL4MI
+	dNoO6X6eQHWzGquiYIQt7tBCRBNZU1mswr0dFM6DTcjdRcsxACpG03q1ZvdXvWe60buenw
+	5CZ9mZKe0EwUw/ygvjMY7Pur0mY4moJ+XflMBYG3KXrd5U6mZuBQDqFhhxPqyA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1795441281;
+	s=2020e; t=1795441282;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=G4f4khOqJyPAuwGJMhRWhrTJB44nQh+QIvpHf6ZOuyc=;
-	b=7RVlangob+3BzLdmXEd0rTsc3FpVolIL01wTE7rq+NywSa+ruD+gDkj+yiH/PtItgac68I
-	PaNJS7W2ToKDP1DA==
+	bh=2C5LERpIR4RerF/oqQKKb980WkL3XrIcGTt7ILAE0M8=;
+	b=1+B/jNg3CkgWgxfm9fgcXhzQupBdQYnBqY6yUBEyiB9sYEGTXMNYGiyTo8jYRnNh1B24Qy
+	IoV6bMmLCBKJ2+Dw==
 To: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	rcu@vger.kernel.org,
@@ -94,9 +94,9 @@ Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
 	Qais Yousef <qyousef@layalina.io>,
 	John Ogness <john.ogness@linutronix.de>
-Subject: [PATCH v4 3/6] sched: Add sysfs files for the per-CPU fair_server knobs
-Date: Mon, 23 Nov 2026 14:41:09 +0100
-Message-ID: <20261123-sched_dl-v4-3-d523e4d960d3@linutronix.de>
+Subject: [PATCH v4 4/6] sched: Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED
+Date: Mon, 23 Nov 2026 14:41:10 +0100
+Message-ID: <20261123-sched_dl-v4-4-d523e4d960d3@linutronix.de>
 In-Reply-To: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
 References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -111,328 +111,71 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-The fair_server exposes the runtime and period knobs per-CPU in the
-debugfs folder. The debugfs interface is not a stable ABI.
-Make the /sys/kernel/debug/sched/fair_server/cpu*/{period|runtime} knobs
-available as /sys/kernel/sched/cpuX/{fair_server_period|fair_server_runtime=
-}.
+The admission control for SCHED_DL has been moved to sysfs and RT
+throttling has been moved (long ago) to the fair_server and its debugfs
+interface.
 
-It adds a struct kobject to the rq and exposes only those two. The
-per-runqueue folder is named `cpu' rather than `rq' since it might be
-more intuitive to the user than `rq' or `runqueue'.
+This file remains to have an impact only on RT_GROUP_SCHED. Keeping it
+for ABI/ compatibility reasons makes no sense because its original
+purpose (RT throttling) is no longer served. Anyone changing this file
+and hoping to change the throttling behaviour will be surprised.
 
-The set logic is pulled from the debugfs folder but it is still shared.
-That debugfs logic could be removed (after providing the same for
-ext-server) or symlinked for a while.
+Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED so everyone
+using this outdated file is aware.
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- kernel/sched/deadline.c | 152 ++++++++++++++++++++++++++++++++++++++++++++=
-+++-
- kernel/sched/debug.c    |  56 ++----------------
- kernel/sched/sched.h    |   8 +++
- 3 files changed, 163 insertions(+), 53 deletions(-)
+ kernel/sched/rt.c    | 8 ++++++++
+ kernel/sched/sched.h | 5 +++--
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 49ab477bb9bd1..64e20e281b016 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -4106,6 +4106,59 @@ void print_dl_stats(struct seq_file *m, int cpu)
- 	print_dl_rq(m, cpu, &cpu_rq(cpu)->dl);
- }
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index bd37dbf2bebbe..258b187459bb9 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -2877,6 +2877,14 @@ static int sched_rt_handler(const struct ctl_table *=
+table, int write, void *buff
+ 	ret =3D proc_dointvec_minmax(table, write, buffer, lenp, ppos);
 =20
-+static unsigned long dl_server_period_max =3D (1UL << 22) * NSEC_PER_USEC;=
- /* ~4 seconds */
-+static unsigned long dl_server_period_min =3D (100) * NSEC_PER_USEC;     /=
-* 100 us */
+ 	if (!ret && write) {
++		if (!IS_ENABLED(CONFIG_RT_GROUP_SCHED)) {
++			const char *msg =3D
++			"Please note that DL admission control (via sched_rt_period_us, sched_r=
+t_runtime_us) moved to sysfs.\n"
++			"This update will be mirrored. Controls for RT throttling moved to the =
+fair_server.\n"
++			"This will not be mirrored. The fair_server settings are under /sys/ker=
+nel/sched/cpuX/.\n";
 +
-+int __sched_server_write_common(enum dl_param param, u64 value, struct rq =
-*rq,
-+				struct sched_dl_entity *dl_se, const char *sname)
-+{
-+	u64 old_runtime, runtime, period;
-+	int retval =3D 0;
-+
-+	scoped_guard (rq_lock_irqsave, rq) {
-+		old_runtime =3D runtime =3D dl_se->dl_runtime;
-+		period =3D dl_se->dl_period;
-+
-+		switch (param) {
-+		case DL_RUNTIME:
-+			if (runtime =3D=3D value)
-+				break;
-+			runtime =3D value;
-+			break;
-+		case DL_PERIOD:
-+			if (value =3D=3D period)
-+				break;
-+			period =3D value;
-+			break;
++			pr_warn_once("%s", msg);
 +		}
-+
-+		if (runtime > period ||
-+		    period > dl_server_period_max ||
-+		    period < dl_server_period_min) {
-+			return  -EINVAL;
-+		}
-+
-+		if (!cpu_online(cpu_of(rq)))
-+			return -EBUSY;
-+
-+		update_rq_clock(rq);
-+		dl_server_stop(dl_se);
-+		retval =3D dl_server_apply_params(dl_se, runtime, period, 0);
-+		dl_server_start(dl_se);
-+
-+		if (retval < 0)
-+			return retval;
-+	}
-+	if (!!old_runtime ^ !!runtime) {
-+		pr_info("%s server %sabled on CPU %d%s.\n",
-+			sname,
-+			runtime ? "en" : "dis",
-+			cpu_of(rq),
-+			runtime ? "" : ", system may malfunction due to starvation");
-+	}
-+	return 0;
-+}
-+
- #define SCHED_ATTR(_name)					\
- 	static struct kobj_attribute sched_attr_## _name =3D	\
- 	__ATTR(_name, 0644, sched_attr_##_name##_show, sched_attr_##_name##_store)
-@@ -4227,13 +4280,110 @@ static const struct attribute_group sched_global_a=
-ttrs_group =3D {
- 	.attrs =3D sched_global_attrs,
- };
-=20
-+/* RQ */
-+#define RQ_ATTR(_name)						\
-+	static struct kobj_attribute rq_## _name =3D	\
-+	__ATTR(_name, 0644, rq_##_name##_show, rq_##_name##_store)
-+
-+#define kobj_to_rq(__kobj) container_of(__kobj, struct rq, rq_kobj)
-+
-+static ssize_t rq_fair_server_runtime_show(struct kobject *kobj, struct ko=
-bj_attribute *attr,
-+					   char *buf)
-+{
-+	struct rq *rq =3D kobj_to_rq(kobj);
-+	struct sched_dl_entity *dl_se;
-+
-+	dl_se =3D &rq->fair_server;
-+
-+	return sysfs_emit(buf, "%llu\n", dl_se->dl_runtime);
-+}
-+
-+static ssize_t rq_fair_server_runtime_store(struct kobject *kobj, struct k=
-obj_attribute *attr,
-+					    const char *buf, size_t count)
-+{
-+	struct rq *rq =3D kobj_to_rq(kobj);
-+	u64 val;
-+	int ret;
-+
-+	ret =3D kstrtoull(buf, 10, &val);
-+	if (ret)
-+		return ret;
-+
-+	ret =3D  __sched_server_write_common(DL_RUNTIME, val, rq, &rq->fair_serve=
-r, "Fair");
-+	if (ret)
-+		return ret;
-+	return count;
-+}
-+RQ_ATTR(fair_server_runtime);
-+
-+static ssize_t rq_fair_server_period_show(struct kobject *kobj, struct kob=
-j_attribute *attr,
-+					  char *buf)
-+{
-+	struct rq *rq =3D kobj_to_rq(kobj);
-+	struct sched_dl_entity *dl_se;
-+
-+	dl_se =3D &rq->fair_server;
-+
-+	return sysfs_emit(buf, "%llu\n", dl_se->dl_period);
-+}
-+
-+static ssize_t rq_fair_server_period_store(struct kobject *kobj, struct ko=
-bj_attribute *attr,
-+					   const char *buf, size_t count)
-+{
-+	struct rq *rq =3D kobj_to_rq(kobj);
-+	u64 val;
-+	int ret;
-+
-+	ret =3D kstrtoull(buf, 10, &val);
-+	if (ret)
-+		return ret;
-+
-+	ret =3D  __sched_server_write_common(DL_PERIOD, val, rq, &rq->fair_server=
-, "Fair");
-+	if (ret)
-+		return ret;
-+	return count;
-+}
-+RQ_ATTR(fair_server_period);
-+
-+static struct attribute *rq_attrs[] =3D {
-+	&rq_fair_server_runtime.attr,
-+	&rq_fair_server_period.attr,
-+	NULL
-+};
-+ATTRIBUTE_GROUPS(rq);
-+
-+static const struct kobj_type rq_ktype =3D {
-+	.sysfs_ops      =3D &kobj_sysfs_ops,
-+	.default_groups =3D rq_groups,
-+};
-+
-+static int sched_create_rq_sysfs(struct kobject *sched_kobj)
-+{
-+	unsigned int cpu;
-+	int ret;
-+
-+	for_each_possible_cpu(cpu) {
-+		struct rq *rq =3D cpu_rq(cpu);
-+
-+		ret =3D kobject_init_and_add(&rq->rq_kobj, &rq_ktype, sched_kobj,
-+					   "cpu%d", cpu);
-+		if (ret)
-+			return ret;
-+	}
-+	return 0;
-+}
-+
- static int __init sched_dl_init(void)
- {
- 	struct kobject *sched_kobj;
-+	int ret;
-=20
- 	sched_kobj =3D kobject_create_and_add("sched", kernel_kobj);
- 	if (!sched_kobj)
- 		return -ENOMEM;
--	return sysfs_create_group(sched_kobj, &sched_global_attrs_group);
-+	ret =3D sysfs_create_group(sched_kobj, &sched_global_attrs_group);
-+	if (ret)
-+		return ret;
-+	return sched_create_rq_sysfs(sched_kobj);
- }
- late_initcall(sched_dl_init);
-diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index dcf9b1daf3d06..e533cd0e085ca 100644
---- a/kernel/sched/debug.c
-+++ b/kernel/sched/debug.c
-@@ -363,23 +363,13 @@ static const struct file_operations sched_debug_fops =
-=3D {
- 	.release	=3D seq_release,
- };
-=20
--enum dl_param {
--	DL_RUNTIME =3D 0,
--	DL_PERIOD,
--};
--
--static unsigned long dl_server_period_max =3D (1UL << 22) * NSEC_PER_USEC;=
- /* ~4 seconds */
--static unsigned long dl_server_period_min =3D (100) * NSEC_PER_USEC;     /=
-* 100 us */
--
- static ssize_t sched_server_write_common(struct file *filp, const char __u=
-ser *ubuf,
- 					 size_t cnt, loff_t *ppos, enum dl_param param,
- 					 void *server)
- {
- 	long cpu =3D (long) ((struct seq_file *) filp->private_data)->private;
- 	struct sched_dl_entity *dl_se =3D (struct sched_dl_entity *)server;
--	u64 old_runtime, runtime, period;
- 	struct rq *rq =3D cpu_rq(cpu);
--	int retval =3D 0;
- 	size_t err;
- 	u64 value;
-=20
-@@ -387,48 +377,10 @@ static ssize_t sched_server_write_common(struct file =
-*filp, const char __user *u
- 	if (err)
- 		return err;
-=20
--	scoped_guard (rq_lock_irqsave, rq) {
--		old_runtime =3D runtime =3D dl_se->dl_runtime;
--		period =3D dl_se->dl_period;
--
--		switch (param) {
--		case DL_RUNTIME:
--			if (runtime =3D=3D value)
--				break;
--			runtime =3D value;
--			break;
--		case DL_PERIOD:
--			if (value =3D=3D period)
--				break;
--			period =3D value;
--			break;
--		}
--
--		if (runtime > period ||
--		    period > dl_server_period_max ||
--		    period < dl_server_period_min) {
--			return  -EINVAL;
--		}
--
--		if (!cpu_online(cpu_of(rq)))
--			return -EBUSY;
--
--		update_rq_clock(rq);
--		dl_server_stop(dl_se);
--		retval =3D dl_server_apply_params(dl_se, runtime, period, 0);
--		dl_server_start(dl_se);
--
--		if (retval < 0)
--			return retval;
--	}
--
--	if (!!old_runtime ^ !!runtime) {
--		pr_info("%s server %sabled on CPU %d%s.\n",
--			server =3D=3D &rq->fair_server ? "Fair" : "Ext",
--			runtime ? "en" : "dis",
--			cpu_of(rq),
--			runtime ? "" : ", system may malfunction due to starvation");
--	}
-+	err =3D __sched_server_write_common(param, value, rq, dl_se,
-+					  server =3D=3D &rq->fair_server ? "Fair" : "Ext");
-+	if (err)
-+		return err;
-=20
- 	*ppos +=3D cnt;
- 	return cnt;
+ 		ret =3D sched_rt_global_validate();
+ 		if (ret)
+ 			goto undo;
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index e755572f1cbb1..eb215e3ac1260 100644
+index eb215e3ac1260..922708b6aad65 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -1443,6 +1443,7 @@ struct rq {
- #endif
+@@ -110,8 +110,6 @@ extern long calc_load_fold_active(struct rq *this_rq, l=
+ong adjust);
+ extern void call_trace_sched_update_nr_running(struct rq *rq, int count);
 =20
- 	atomic_t		nr_iowait;
-+	struct kobject		rq_kobj;
- } __no_randomize_layout;
+ extern u64 sysfs_dl_runtime;
+-extern int sysctl_sched_rt_period;
+-extern int sysctl_sched_rt_runtime;
+ extern int sched_rr_timeslice;
 =20
- #ifdef CONFIG_FAIR_GROUP_SCHED
-@@ -3537,6 +3538,13 @@ extern void print_cfs_rq(struct seq_file *m, int cpu=
-, struct cfs_rq *cfs_rq);
- extern void print_rt_rq(struct seq_file *m, int cpu, struct rt_rq *rt_rq);
- extern void print_dl_rq(struct seq_file *m, int cpu, struct dl_rq *dl_rq);
+ /*
+@@ -585,6 +583,9 @@ extern void unthrottle_cfs_rq(struct cfs_rq *cfs_rq);
+ extern bool cfs_task_bw_constrained(struct task_struct *p);
 =20
-+enum dl_param {
-+	DL_RUNTIME =3D 0,
-+	DL_PERIOD,
-+};
-+extern int __sched_server_write_common(enum dl_param param, u64 value, str=
-uct rq *rq,
-+				       struct sched_dl_entity *dl_se, const char *sname);
+ #ifdef CONFIG_RT_GROUP_SCHED
++extern int sysctl_sched_rt_period;
++extern int sysctl_sched_rt_runtime;
 +
- extern void resched_latency_warn(int cpu, u64 latency);
-=20
- #ifdef CONFIG_NUMA_BALANCING
+ extern void init_tg_rt_entry(struct task_group *tg, struct rt_rq *rt_rq,
+ 		struct sched_rt_entity *rt_se, int cpu,
+ 		struct sched_rt_entity *parent);
 
 --=20
 2.55.0
