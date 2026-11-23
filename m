@@ -1,96 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795443467;
-	b=AKUrcuzMQASC8Pi/HQXqvqm0zMgWxxL+H29sYgGzol3LDO+6M8oNQ0cw0nDiiMp0zUcb
-	 FMaU8XhNjDXHJoLBUdcjtdteXaNAPccUET+U5qhL2KzvK7lj8z8T6TY2XpVySgu1MtgZy
-	 b9yXOy1A7Mt3oG8PdzrXHmmUCmzyek6ZVjiVQ8FZGzZKscQiI8JDFk4YVoXsEoY9emVaf
-	 Tw8TeJXQCnrrrjMzf9sABslKfgPlbNSepRg9feqGtjIWvuSm7dzypEE5xru9L8DuScBZV
-	 Fw09McvqSzRr4iUlO6jpXC5SxqDiYnetIiZt/r1/RDK6jYPRbbt3JSWc4ii/g1qdSKw==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795443467;
-	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=mmLjqOdC5jJ874kc/yb76i/bBMhfJA46OxJXhAdQn20=;
-	b=jqfmc66ooNu2AayGiUOR6KibXuQLtRfN/ls7kO0EPKpwMXO/2Joz0BWrFM1nEb2tIr/p
-	 mUj8gE6FGmYLqUmb775vdj9mWEENNFdmdG7PeEI+5O9BhWXgU1syJB2riq0+xbLJJ8BhM
-	 80kN8dEJ7u0wHq5TsFfWkOrM79hnik+BkZCgjjZLWIcLUgoZDJFs/A9DIYO9FIBiC1T+a
-	 pN0V5PWqXYUyYIyvGRo2TtRZcizmwh/iDpzxlf/xDbPFIaqHoMwdKD9g4sxwGTedz968d
-	 CRh+4XIjJBH4hnZDU4de404T387efZFLx1IcFg6NOVsbKwNtXesNu19PF+udewVxUFw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=OorltFdB;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=nLZ74Ce7;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.130.72
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795443543;
+	b=wobuxwrN95w1hpwevrjj6TOJB+fjSx3lbiLSP/WeE0uLDKglqWJTDurc9W7oqKmvCrtI
+	 OVu2170lveMqkrdIzJlBxnVK5SO3X1D4c0ZFJufRF8OsjuedRytwig5HHWVCS3NGe5zSl
+	 3SYrK+eCAZbpmSwp2vJ+MGsiP/Kxn/2HZuDlQcO9ybvPV2bLbPVcJi+mdnszqy5pDr3iG
+	 KsQdSAA2RCBMi5RW07gYpXmRsB281L2uDeTkrtDxQT3QxkQsmVp3xtpZLsJxPQMBnBdNW
+	 xOlMDb1eDo0NKLZnOQ+EzFZ8RXtO1kZ45zNS+i1ruKkoFlDTYPD/KyLdybJHzGTR2gw==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795443543;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:In-Reply-To:References:X-Mailer:Content-Type:
+	 Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:
+	 X-MS-Exchange-AntiSpam-MessageData-1:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=q34xX59zX1LaQiAeWW/cxKkFi9xJPHaqUREKMIKSeh0=;
+	b=NhYIM1aKrYxZCIvLhvJDBomNuqD8B0nqyIX6xX7RIhijzPwCZQuizrlq7egBdT76kxRG
+	 cfcIoXv7v3cydoi8WTbaNcQ5r59c0m7Kyc3Fq1nSklZznZR+SPjH1js55Vm1Q6iOPtMTD
+	 rSDS07CG10c1FyU1rRhyR5EPiQBOrRwe5CFEHRy7/GiIGr6jkg1dMCaZYA2DJ2s4K7rWT
+	 lj4pJnEiOHSkD6Sv7Nh6QNZM5y921Qx0veRykRd/xB6U2xJoEYbzxCUYqLQN7bRHQ/6IH
+	 o9zYnz2DvVOSFQx3rgOw+sNmrmQbidLOvTphrt+W+VvYUWjJIINsigNmb4+lmN3EgQw==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=santannapisa.it;
+	spf=pass smtp.mailfrom=santannapisa.it;
+	dkim=pass header.d=santannapisa.it header.i=@santannapisa.it header.a=rsa-sha256 header.s=selector1 header.b=0AJbl+fq;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=40.107.130.72
+Received: from MRWPR03CU001.outbound.protection.outlook.com (mail-francesouthazon11021072.outbound.protection.outlook.com [40.107.130.72])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0C7606A31A;
-	Mon, 23 Nov 2026 14:17:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 1C0C7606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D750606A689;
+	Mon, 23 Nov 2026 14:19:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D750606A689
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=santannapisa.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=santannapisa.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=OorltFdB;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=nLZ74Ce7
-Date: Mon, 23 Nov 2026 15:17:42 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1795443464;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mmLjqOdC5jJ874kc/yb76i/bBMhfJA46OxJXhAdQn20=;
-	b=OorltFdBfCkP24O9uW0zSrkwtk574JG7H+C8zI/UM1VNLbcE/V5vrVq2kT9gEqPWDPBXBX
-	Gz48GTq0k58gXeh7+772U7s0MIsNiStSewIzNbIbBWnsrDKvLvoqtginYW6134ZYjJIYTe
-	yD25lXj+qPgV5beRtqMqyr6KVHuYjuXUUzmZ+QqHqOzd5yx37QxzjEEKKS7MSGvNIOC8ze
-	rSYB+d+L1LR0ofGdCcHoagG7FAk0GNzkQD1yeTkLsAe1+yK4CPrI6V0MuPXtPLp8YT5HAj
-	zhF4h0r+KOigYisKZv46FMF0dwnnVamsaru1PP1blbk841EqYiNiGyF0d4S9/g==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1795443464;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mmLjqOdC5jJ874kc/yb76i/bBMhfJA46OxJXhAdQn20=;
-	b=nLZ74Ce7CELGWuJsSJUHvoyvsj43rjgPnaHCF/WKXBOLnW039ahlTOaccw8RWUL4iP38cp
-	vfJNmgOjs/iAh+BQ==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rcu@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>,
-	John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v4 5/6] Documentation/sched: Drop the section enumeration
- in sched-deadline
-Message-ID: <20261123141742.Cdq5EAtX@linutronix.de>
-References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
- <20261123-sched_dl-v4-5-d523e4d960d3@linutronix.de>
+	dkim=pass (1024-bit key, unprotected) header.d=santannapisa.it header.i=@santannapisa.it header.a=rsa-sha256 header.s=selector1 header.b=0AJbl+fq
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ItnoK8AHhwC4/JRr/N5wdra/wfojF1WVGocF2JgVubQOv1NAV6c7umRz1VBTwWTBfCnSu1TteSi9uphGptEsz9bKGS5AhZCGJH8gtBf6K9mdk4SUi9fy3AiTHPDtSFelF2uL7k9b6SWSPjTodPx7PcoSB5f08tq/UxfriRyBiSVi2hoULUVXwJY762lX1GhuB0NmdfPsXkjqWXufBTqORD4vsGPbACw3ZlJE/dUND2nalrN8/7TS7ExuZXcmQTl5HaSXs1RHK7J/Xf/TPBZ/SSy4Vb9Gv+2lXVD5pzKAjTjLzEze9pXYDp3MerhGIFCtfBcmpajYTUV6mb/Secja8g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=q34xX59zX1LaQiAeWW/cxKkFi9xJPHaqUREKMIKSeh0=;
+ b=m6cdc02wk6jL0dAU0GxcB+aSq6ldbp0o5Nh/spFVfR8ttsbuw/gRxojA5Qa7HkdCtzm1P+HjEVPMxFr0iiSophd0FwJ41dQIVNDki+TwIks3rxByCMKCKaneMvDZJxmnZmZXKAhupSj94DMSvz6tRy/6ZqGAe3Tl0tR3YLVaz2n4fWCScFBZ/9IrCA8Ch8wJqjYfCxReL9t2/Xp5lSpeoKEzlzeZ3aUt0elkGa056L1XJk73wuZgNBQm9VpvGwM/cQEP71VBmOTFq1ekqr7ldMvOcNWcQDHSGMijZPTPMZWlqnG5L48bzx5oLVZgfFWolfbGD8w0QOdtHUHSWYNqHg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=santannapisa.it; dmarc=pass action=none
+ header.from=santannapisa.it; dkim=pass header.d=santannapisa.it; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=santannapisa.it;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q34xX59zX1LaQiAeWW/cxKkFi9xJPHaqUREKMIKSeh0=;
+ b=0AJbl+fqVdaisrt/lQBhYGE4Kgb4UotASFvcGqKm8r0P6gFigpPp3THzv7vmYZm2+f2fuVVoUIZNda27OtY8g1NnwYzb6omSpUtPkgSkNl4jOT9q4o8xsbuZ+zAz3bm3K0JCgOCn0hqIQHXUYngc4HcO+XPDD0pTmZpaB616Sa8=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=santannapisa.it;
+Received: from DU0PR03MB8960.eurprd03.prod.outlook.com (2603:10a6:10:477::11)
+ by AS2PR03MB9073.eurprd03.prod.outlook.com (2603:10a6:20b:5f8::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.639.12; Mon, 23 Nov
+ 2026 14:18:51 +0000
+Received: from DU0PR03MB8960.eurprd03.prod.outlook.com
+ ([fe80::ffcf:20ef:45eb:6668]) by DU0PR03MB8960.eurprd03.prod.outlook.com
+ ([fe80::ffcf:20ef:45eb:6668%5]) with mapi id 15.21.0639.012; Mon, 23 Nov 2026
+ 14:18:51 +0000
+Date: Mon, 23 Nov 2026 15:18:46 +0100
+From: luca abeni <luca.abeni@santannapisa.it>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Yuri Andriaccio <yurand2000@gmail.com>,
+ bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com,
+ hannes@cmpxchg.org, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org,
+ mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com, peterz@infradead.org,
+ rostedt@goodmis.org, vincent.guittot@linaro.org, vschneid@redhat.com,
+ yuri.andriaccio@santannapisa.it
+Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
+Message-ID: <20261123151846.3fdcbf4e@linux.fritz.box>
+In-Reply-To: <awQTy09VbrDn9RpA@jlelli-thinkpadt14gen4.remote.csb>
+References: <212c244d534ee1fdb0538a980789e16c@kernel.org>
+	<20261111175657.250354-1-yurand2000@gmail.com>
+	<58cb2cbaf82c0f671213eaca46465cd5@kernel.org>
+	<20261119151416.33f90a64@linux.fritz.box>
+	<471bf8d446becabfca00041fb2a78067@kernel.org>
+	<20261120120659.2e902463@linux.fritz.box>
+	<6fef47e08a37079c08806b3c57994778@kernel.org>
+	<20261120212418.10221f2e@linux.fritz.box>
+	<06f4c157677f99fc5386dba4c9d68cd2@kernel.org>
+	<20261123084345.4e24e3ca@luca64>
+	<awQTy09VbrDn9RpA@jlelli-thinkpadt14gen4.remote.csb>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.53; x86_64-suse-linux-gnu)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: MI3PEPF00008C05.ITAP293.PROD.OUTLOOK.COM
+ (2603:10a6:298:1::467) To DU0PR03MB8960.eurprd03.prod.outlook.com
+ (2603:10a6:10:477::11)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -100,347 +111,154 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20261123-sched_dl-v4-5-d523e4d960d3@linutronix.de>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DU0PR03MB8960:EE_|AS2PR03MB9073:EE_
+X-MS-Office365-Filtering-Correlation-Id: d3665c22-74dd-4816-2b7a-08df496cb25f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|23010399003|10070799003|1800799024|7416014|786006|376014|366016|261026121527099003|261026140227099003|261022075727099003|261022105027099003|261028144727099003|261021121427099003|261102123227099003|11063799006|5023799004|4143699003|56012099006|10067099003|18002099003|22082099003|3023799007;
+X-Microsoft-Antispam-Message-Info:
+	io5U3xHAqisc/JRmtboqpJZY6lR+cx8OLNdWntQpynF6I3FR+CDIlvUWR21G4srrbhkaMSmmppUrNFqzzoccb5pnoKG7+KnNCBRPe/bG4f0cQW6KZnihFbAPtW01zChe+zkN8/Xdy83wBDxltxvnEaWcMo18/nZgduMbfboJohkc2DJnqQTAQu/X4pP4sbVuQjzdfoIkZP+LFW05RvcoFpp8xaQvvrm5IUTxdPgucaOCnffJZbXFLX+RcjuHEjd6tWYBckmKWPt9mAve83gI6YHQ5/QTIM1jSD2Q/QCe2UAA33pIpBgoxKxjQXXUfG4LAw/VzPY9U1p+dVnm5Ruyjz4FonjKxNO3xn9rwouSD9gpY5+IrCxZeSX2th8oIfksS+MRkcUJ4lpcngET66XjX0FC/A+2kwzN0abtlu3OjdYOP0Z5CR2rQ5EKt195HwLlW84xy5mojHjRU06WPlFyDn+X5tC7D4WyxSaYSk8QmnywwQ1B4EzZLzIuJvWEI1n8iZG3AVmNMuf+wXKPCKcrRC0waqgw/Eeeg01oAOVc2gE+swYLKffUXwd0Wvf1reMiONsVcmpJAI1H5Y46IDMGFlxow0d2fY0zntXufdtT1xhnPdS9G9sy0a3ZNj/Tj+V6
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU0PR03MB8960.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(23010399003)(10070799003)(1800799024)(7416014)(786006)(376014)(366016)(261026121527099003)(261026140227099003)(261022075727099003)(261022105027099003)(261028144727099003)(261021121427099003)(261102123227099003)(11063799006)(5023799004)(4143699003)(56012099006)(10067099003)(18002099003)(22082099003)(3023799007);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?SeAaKM8wytAp9pDrR3JQExofTJL4Q+cRzL4ln/xeuw7rtZBdpP44b3U8B1vj?=
+ =?us-ascii?Q?GClzbYN1ka6vndKCB2vHzdFk7ILyLn6fd2aNcipt55G5xEl1BLXdj5XV7HQ7?=
+ =?us-ascii?Q?lK+diEC7um43uUGN+sGMow5b4lQedIm/zWtwBzSjSTNUdt8tKNoumFGT2DXn?=
+ =?us-ascii?Q?BF8GHU6saH8rH5CS+1Wvjq2HKvYIgcLUDqCFuiEYiOqN/VDAc2IkIw0XXQMS?=
+ =?us-ascii?Q?aHkEVxR6ooJ26I6dZpiLMZS/feLS9nSW1kcIB9oWrl7i7ZgCswYsSeTgaeNJ?=
+ =?us-ascii?Q?QBrLlfiYi1y4K8ZBGaG60a3V0nrUdlfvK6SnMpz3Raoor6OY4ZZKojGhvbhl?=
+ =?us-ascii?Q?Xa6QaoxYSdGRCj8OlvSBU7KYfWDypMnfVFsdWcd6/qQKp7hBOnba+9IuGyxc?=
+ =?us-ascii?Q?osKChJ4wXkn/iprJfepjqdziNf/FlGm0ReFjjTwI6Gqhjt5YSRSmPM6moWes?=
+ =?us-ascii?Q?L0wUskpw42xSLN1t+WmL3qrQc6iYzbrohPwWFUwwHcOoo+4a0rSY5ZUs0E07?=
+ =?us-ascii?Q?8fy8atkjx5dHwALjItUhHfbgM1WqLimjja//8pfoAqa+8HWuzBIgInpuKeDk?=
+ =?us-ascii?Q?3aopAAmWWIm45Fb56/ngGpAIaRIffpab3MElWZLsuT9mWtbnjvnGDbz+mNUD?=
+ =?us-ascii?Q?dcC5bzTCUj01cx9GIKPWVcFGslGNRiL0fbVkzothepKpYU9wd4o/FSm2QIE+?=
+ =?us-ascii?Q?Gk93mORqxWGu8LsvqHvI54un1uAvorOiV1MO3yJxogyCbUaiHYZlnSc3N/Py?=
+ =?us-ascii?Q?1QBLX83h8ZUu3sE6iTZvo+V+aeUEolbA9O8jtuLXG6IGXbTiPUgYHGLpWX+U?=
+ =?us-ascii?Q?EuydAyv4wMdXNetaA9rhT2CKjufqXrraDoAgj/AtAVTgGGaltL8Xw8iVTTKJ?=
+ =?us-ascii?Q?fOPhWohqPz/sHQdJTTXzJOl/OCZMLwLqL6zYhT1W4eBYCPHt3ZDcL2zCoT4O?=
+ =?us-ascii?Q?PEJbeBHKCgk23gPxsnXBWSkEleKjJ+44TZN7YQRC8PN0p9ZA9WEJOY5ruQKg?=
+ =?us-ascii?Q?6nTIPHYIYEnx26p1mDIaHdBvH3uJ22tuXDwi8i6qGLF5fOnqGcETeO+as2qe?=
+ =?us-ascii?Q?/+m3CfkxN/8oTLs4lbBA2nC2gmxJzweAYRppVAnfhi2T3SltDmLkPA4hLmGA?=
+ =?us-ascii?Q?guGKRJ16Yh/AdmeGkFYXdHBVaM2N6NBfqp0xeWKlMq4Ax6dobfhvdH337BWO?=
+ =?us-ascii?Q?ARk/3MR0bXuBD+S48UPipJVAOvDoFpOsXNkfxKG8JZVv7EGXN1xJP8FbRhsv?=
+ =?us-ascii?Q?vmMXqaKvgCLCdvqaWK2oDxBUsustbB8EAqvR7+DXFQK8FBqj95UXi3k9DZve?=
+ =?us-ascii?Q?nsnKhgQbhNxT+MFX8PUJpx1/os10uUHfq4yiM0qwpgdC4LljKUbXMqyDM2X5?=
+ =?us-ascii?Q?aOK488aJem3chKNc4zr3lIAfQTdwA++CqUt4mabjred1M+68GWOvCM2JCove?=
+ =?us-ascii?Q?Y62XKiy4JbIvEdC5b0vQc/bbTVr8zxoR/8EpiBoCNHFzMuGAvU9tYUtMoeeY?=
+ =?us-ascii?Q?LCISfdjMXw4ALxQgU3v61OnEfGe5OlD0GCyugXKwv4aSeEvsfGmFHx5C4GSq?=
+ =?us-ascii?Q?F18CrzkB5EFuDPSv/lR0sot1JDNWDZzWybxuEJpfv/iRsAYGk4QtUadQyDFP?=
+ =?us-ascii?Q?5fvXtgg/QRgKA3k4WrkycmxkU2GAxSf83m2NeG16LTqslUS8OLyyRGH0VmfR?=
+ =?us-ascii?Q?YcAi41RtaOw2y+l8ugle+/bOz2ehHeO8wdgzsdCohQTK7zIX3PJS+79MO8vF?=
+ =?us-ascii?Q?RGJo+ZZGx9CwAbmh8yyXH1UDXTj9rn8oK4JtwM9sASRYWei41j2zz26mTbqq?=
+X-MS-Exchange-AntiSpam-MessageData-1: UWZRba12Xzt7Eg==
+X-OriginatorOrg: santannapisa.it
+X-MS-Exchange-CrossTenant-Network-Message-Id: d3665c22-74dd-4816-2b7a-08df496cb25f
+X-MS-Exchange-CrossTenant-AuthSource: DU0PR03MB8960.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Nov 2026 14:18:51.4555
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: d97360e3-138d-4b5f-956f-a646c364a01e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: ESNGOkpvXfGO+HpKSrzLpxsUNRfDZf5dhVRwDy0dGro98QIHuxGzbjb+YsJGMvw3MnKHlta+Ob5DeZReMb8TwIEaRG5WxO8g2vxWYkXguO0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS2PR03MB9073
 
-On 2026-11-23 14:41:11 [+0100], To linux-kernel@vger.kernel.org wrote:
-> Each headline within the document has a manual numbering. If a new
-> section is added in the middle of the document then one has to renumber
-> the sections that follow plus update the maunal TOC at the top of the
-> document.
+On Mon, 23 Nov 2026 11:22:03 +0100
+Juri Lelli <juri.lelli@redhat.com> wrote:
+
+> Hello!
 > 
-> Remove the manual created TOC and the numbers before the section. The
-> rendered HTML has a TOC.
+> Me again interjecting, please bear with me, but I think we want to get
+> this as right as we can. :)
+> 
+> On 23/11/26 08:43, luca abeni wrote:
+> > Hi Tejun,
+> > 
+> > On Sat, 21 Nov 2026 07:24:36 -1000
+> > Tejun Heo <tj@kernel.org> wrote:
+> >   
+> > > Hello, Luca.
+> > > 
+> > > On Fri, Nov 20, 2026 at 09:24:18PM +0100, luca abeni wrote:  
+> > > > But the deadline entities serving the real-time tasks in a
+> > > > cgroup are pinned to cores (one dl entity serves the cgroup's
+> > > > RT rq for a core). So, they cannot just be added to the sum
+> > > > mentioned above (which works for dl entities which are free to
+> > > > migrate). This issue was solved by reserving a fraction of the
+> > > > CPU time (and the root cgroup parameters indicated this
+> > > > fraction) to RT cgropus, so that the SCHED_DEADLINE admission
+> > > > control is still the same (we just decrease "limit" by the
+> > > > fraction reserved to RT cgroups).    
+> > > 
+> > > I see. Can the fraction be the maximum across the CPUs then? With
+> > > the root at "max", the kernel knows how much the cgroup servers
+> > > have reserved on each CPU. If "limit" is decreased by the largest
+> > > of those on all CPUs, every CPU has at least what its servers
+> > > need set aside and the admission control for tasks stays the same.
+> > > 
+> > > I'm not familiar with the admission test, so I may be missing
+> > > something.  
+> > 
+> > Uhm... I think this can increase the code complexity, but yes, I
+> > guess it can work.  
+> 
+> What about a slightly different approach? Instead of reserving a
+> fraction up front (or the max across CPUs), cgroup servers could be
+> accounted like fair/ext servers already are: each server adds its
+> bandwidth to total_bw of its root domain, and on top of the global
+> test we check, per CPU, that pinned bandwidth (cgroup servers plus
+> fair/ext servers) stays within the limit.
 
-sashiko complained that the that the references within the document
-(such ass "see 5.") are now broken.
-
-This should deal with it:
-
---- a/Documentation/scheduler/sched-deadline.rst
-+++ b/Documentation/scheduler/sched-deadline.rst
-@@ -2,53 +2,29 @@
- Deadline Task Scheduling
- ========================
- 
--.. CONTENTS
--
--    0. WARNING
--    1. Overview
--    2. Scheduling algorithm
--      2.1 Main algorithm
--      2.2 Bandwidth reclaiming
--    3. Scheduling Real-Time Tasks
--      3.1 Definitions
--      3.2 Schedulability Analysis for Uniprocessor Systems
--      3.3 Schedulability Analysis for Multiprocessor Systems
--      3.4 Relationship with SCHED_DEADLINE Parameters
--    4. Bandwidth management
--      4.1 System-wide settings
--      4.2 Task interface
--      4.3 Default behavior
--      4.4 Behavior of sched_yield()
--    5. Tasks CPU affinity
--      5.1 Using cgroup v1 cpuset controller
--      5.2 Using cgroup v2 cpuset controller
--    6. Future plans
--    A. Test suite
--    B. Minimal main()
--
--
--0. WARNING
--==========
-+WARNING
-+=======
- 
-  Fiddling with these settings can result in an unpredictable or even unstable
-  system behavior. As for -rt (group) scheduling, it is assumed that root users
-  know what they're doing.
- 
- 
--1. Overview
--===========
-+Overview
-+========
- 
-  The SCHED_DEADLINE policy contained inside the sched_dl scheduling class is
-  basically an implementation of the Earliest Deadline First (EDF) scheduling
-  algorithm, augmented with a mechanism (called Constant Bandwidth Server, CBS)
-  that makes it possible to isolate the behavior of tasks between each other.
- 
-+.. _scheduling_algorithm:
- 
--2. Scheduling algorithm
--=======================
-+Scheduling algorithm
-+====================
- 
--2.1 Main algorithm
--------------------
-+Main algorithm
-+--------------
- 
-  SCHED_DEADLINE [18] uses three parameters, named "runtime", "period", and
-  "deadline", to schedule tasks. A SCHED_DEADLINE task should receive
-@@ -60,7 +36,7 @@ Deadline Task Scheduling
-  scheduled using EDF[1] on these scheduling deadlines (the task with the
-  earliest scheduling deadline is selected for execution). Notice that the
-  task actually receives "runtime" time units within "deadline" if a proper
-- "admission control" strategy (see Section "4. Bandwidth management") is used
-+ "admission control" strategy (see :ref:`bandwidth_management`) is used
-  (clearly, if the system is overloaded this guarantee cannot be respected).
- 
-  Summing up, the CBS[2,3] algorithm assigns scheduling deadlines to tasks so
-@@ -68,8 +44,8 @@ Deadline Task Scheduling
-  interference between different tasks (bandwidth isolation), while the EDF[1]
-  algorithm selects the task with the earliest scheduling deadline as the one
-  to be executed next. Thanks to this feature, tasks that do not strictly comply
-- with the "traditional" real-time task model (see Section 3) can effectively
-- use the new policy.
-+ with the "traditional" real-time task model (see :ref:`scheduling_real_time_tasks`)
-+ can effectively use the new policy.
- 
-  In more details, the CBS algorithm assigns scheduling deadlines to
-  tasks in the following way:
-@@ -123,8 +99,8 @@ Deadline Task Scheduling
-  signals.
- 
- 
--2.2 Bandwidth reclaiming
--------------------------
-+Bandwidth reclaiming
-+--------------------
- 
-  Bandwidth reclaiming for deadline tasks is based on the GRUB (Greedy
-  Reclamation of Unused Bandwidth) algorithm [15, 16, 17] and it is enabled
-@@ -287,8 +263,8 @@ Deadline Task Scheduling
-     running_bw is incremented.
- 
- 
--2.3 Energy-aware scheduling
-----------------------------
-+Energy-aware scheduling
-+-----------------------
- 
-  When cpufreq's schedutil governor is selected, SCHED_DEADLINE implements the
-  GRUB-PA [19] algorithm, reducing the CPU operating frequency to the minimum
-@@ -299,9 +275,10 @@ Deadline Task Scheduling
-  is of the same order of magnitude of the reservation period. In such cases,
-  setting a fixed CPU frequency results in a lower amount of deadline misses.
- 
-+.. _scheduling_real_time_tasks:
- 
--3. Scheduling Real-Time Tasks
--=============================
-+Scheduling Real-Time Tasks
-+==========================
- 
- 
- 
-@@ -311,7 +288,7 @@ Deadline Task Scheduling
- 
-    This section contains a (not-thorough) summary on classical deadline
-    scheduling theory, and how it applies to SCHED_DEADLINE.
--   The reader can "safely" skip to Section 4 if only interested in seeing
-+   The reader can "safely" skip to :ref:`bandwidth_management` if only interested in seeing
-    how the scheduling policy can be used. Anyway, we strongly recommend
-    to come back here and continue reading (once the urge for testing is
-    satisfied :P) to be sure of fully understanding all technical details.
-@@ -323,8 +300,8 @@ Deadline Task Scheduling
-  suited for periodic or sporadic real-time tasks that need guarantees on their
-  timing behavior, e.g., multimedia, streaming, control applications, etc.
- 
--3.1 Definitions
--------------------------
-+Definitions
-+-----------
- 
-  A typical real-time task is composed of a repetition of computation phases
-  (task instances, or jobs) which are activated on a periodic or sporadic
-@@ -369,8 +346,8 @@ Deadline Task Scheduling
-  is the minimum WCET, and U_max = max{WCET_i/P_i} is the maximum
-  utilization[12].
- 
--3.2 Schedulability Analysis for Uniprocessor Systems
------------------------------------------------------
-+Schedulability Analysis for Uniprocessor Systems
-+------------------------------------------------
- 
-  If M=1 (uniprocessor system), or in case of partitioned scheduling (each
-  real-time task is statically assigned to one and only one CPU), it is
-@@ -411,11 +388,12 @@ Deadline Task Scheduling
-  between 0 and a maximum value L. The cited papers contain all of the
-  mathematical details and explain how to compute h(t) and L.
-  In any case, this kind of analysis is too complex as well as too
-- time-consuming to be performed on-line. Hence, as explained in Section
-- 4 Linux uses an admission test based on the tasks' utilizations.
-+ time-consuming to be performed on-line. Hence, as explained in
-+ :ref:`bandwidth_management`
-+ Linux uses an admission test based on the tasks' utilizations.
- 
--3.3 Schedulability Analysis for Multiprocessor Systems
--------------------------------------------------------
-+Schedulability Analysis for Multiprocessor Systems
-+--------------------------------------------------
- 
-  On multiprocessor systems with global EDF scheduling (non partitioned
-  systems), a sufficient test for schedulability can not be based on the
-@@ -464,16 +442,17 @@ Deadline Task Scheduling
-  the total utilization is smaller or equal than M then the response times of
-  the tasks are limited.
- 
--3.4 Relationship with SCHED_DEADLINE Parameters
-------------------------------------------------
-+Relationship with SCHED_DEADLINE Parameters
-+-------------------------------------------
- 
-  Finally, it is important to understand the relationship between the
-- SCHED_DEADLINE scheduling parameters described in Section 2 (runtime,
-+ SCHED_DEADLINE scheduling parameters described in
-+ :ref:`scheduling_algorithm` (runtime,
-  deadline and period) and the real-time task parameters (WCET, D, P)
-  described in this section. Note that the tasks' temporal constraints are
-  represented by its absolute deadlines d_j = r_j + D described above, while
-  SCHED_DEADLINE schedules the tasks according to scheduling deadlines (see
-- Section 2).
-+ :ref:`scheduling_algorithm`).
-  If an admission test is used to guarantee that the scheduling deadlines
-  are respected, then SCHED_DEADLINE can be used to schedule real-time tasks
-  guaranteeing that all the jobs' deadlines of a task are respected.
-@@ -549,8 +528,10 @@ Deadline Task Scheduling
-        2018), Pau, France, April 2018.
- 
- 
--4. Bandwidth management
--=======================
-+.. _bandwidth_management:
-+
-+Bandwidth management
-+====================
- 
-  As previously mentioned, in order for -deadline scheduling to be
-  effective and useful (that is, to be able to provide "runtime" time units
-@@ -559,7 +540,8 @@ Deadline Task Scheduling
-  This is usually called "admission control" and if it is not performed, then
-  no guarantee can be given on the actual scheduling of the -deadline tasks.
- 
-- As already stated in Section 3, a necessary condition to be respected to
-+ As already stated in :ref:`scheduling_real_time_tasks`,
-+ a necessary condition to be respected to
-  correctly schedule a set of real-time tasks is that the total utilization
-  is smaller than M. When talking about -deadline tasks, this requires that
-  the sum of the ratio between runtime and period for all tasks is smaller
-@@ -587,13 +569,13 @@ Deadline Task Scheduling
-  interface we can put a cap on total utilization of -deadline tasks (i.e.,
-  \Sum (runtime_i / period_i) < global_dl_utilization_cap).
- 
--4.1 System wide settings
--------------------------
-+System wide settings
-+--------------------
- 
-  The system wide settings are configured under /sys/kernel/sched.
- 
-- The ideal situation (see 5.) is to run -rt tasks from a -deadline server; in
-- which case the -rt bandwidth is a direct subset of dl_bw.
-+ The ideal situation (see ref:`tasks_cpu_affinity`) is to run -rt tasks from a
-+ -deadline server; in which case the -rt bandwidth is a direct subset of dl_bw.
- 
-  This means that, for a root_domain comprising M CPUs, -deadline tasks
-  can be created while the sum of their bandwidths stays below:
-@@ -604,9 +586,8 @@ Deadline Task Scheduling
-  be thus free of oversubscribing the system up to any arbitrary level.
-  This is done by writing -1 in /sys/kernel/sched/dl_runtime_us.
- 
--
--4.2 Task interface
--------------------
-+Task interface
-+--------------
- 
-  Specifying a periodic/sporadic task that executes for a given amount of
-  runtime at each instance, and that is scheduled according to the urgency of
-@@ -640,8 +621,8 @@ Deadline Task Scheduling
-  reference, that is not directly usable from user-space.
- 
- 
--4.3 Default behavior
-----------------------
-+Default behavior
-+----------------
- 
-  The default value for SCHED_DEADLINE bandwidth is to have dl_runtime_us equal to
-  1000000. With rt_period equal to 1000000, by default, it means that -deadline
-@@ -651,7 +632,8 @@ Deadline Task Scheduling
-  and that -deadline tasks will receive their runtime with a guaranteed
-  worst-case delay respect to the "deadline" parameter. If "deadline" = "period"
-  and the cpuset mechanism is used to implement partitioned scheduling (see
-- Section 5), then this simple setting of the bandwidth management is able to
-+ :ref:`tasks_cpu_affinity`),
-+ then this simple setting of the bandwidth management is able to
-  deterministically guarantee that -deadline tasks will receive their runtime
-  in a period.
- 
-@@ -659,8 +641,8 @@ Deadline Task Scheduling
-  -deadline task cannot fork.
- 
- 
--4.4 Behavior of sched_yield()
-------------------------------
-+Behavior of sched_yield()
-+-------------------------
- 
-  When a SCHED_DEADLINE task calls sched_yield(), it gives up its
-  remaining runtime and is immediately throttled, until the next
-@@ -674,9 +656,10 @@ Deadline Task Scheduling
-  make the leftoever runtime available for reclamation by other
-  SCHED_DEADLINE tasks.
- 
-+.. _tasks_cpu_affinity:
- 
--5. Tasks CPU affinity
--=====================
-+Tasks CPU affinity
-+==================
- 
-  Deadline tasks cannot have a cpu affinity mask smaller than the root domain they
-  are created on. So, using ``sched_setaffinity(2)`` won't work. Instead, the
-@@ -685,8 +668,8 @@ Deadline Task Scheduling
-  See :ref:`Documentation/admin-guide/cgroup-v1/cpusets.rst <cpusets>` and
-  :ref:`Documentation/admin-guide/cgroup-v2.rst <cgroup-v2>` for more information.
- 
--5.1 Using cgroup v1 cpuset controller
---------------------------------------
-+Using cgroup v1 cpuset controller
-+---------------------------------
- 
-  An example of a simple configuration (pin a -deadline task to CPU0) follows::
- 
-@@ -703,8 +686,8 @@ Deadline Task Scheduling
-    echo $$ > cpu0/tasks
-    chrt --sched-runtime 100000 --sched-period 200000 --deadline 0 yes > /dev/null
- 
--5.2 Using cgroup v2 cpuset controller
---------------------------------------
-+Using cgroup v2 cpuset controller
-+---------------------------------
- 
-  Assuming the cgroup v2 root is mounted at ``/sys/fs/cgroup``, an example of a
-  simple configuration (pin a -deadline task to CPU0) follows::
-@@ -717,8 +700,8 @@ Deadline Task Scheduling
-    echo $$ > deadline_group/cgroup.procs
-    chrt --sched-runtime 100000 --sched-period 200000 --deadline 0 yes > /dev/null
- 
--6. Future plans
--===============
-+Future plans
-+============
- 
-  Still missing:
- 
--- 
-2.55.0
+I am not sure about the SP theory, but if this solution is fine with
+kernel maintainers, I think this will work, too (it is even better, as
+it reduces work for Yuri :)
 
 
-Sebastian
+
+				Luca
+
+
+> 
+> IIUC reading your RTNS'21 paper with Stephen and Jim [1] right, those
+> are its conditions (1) and (2) for semi-partitioned systems, and
+> together they keep the system feasible. Did I get that right? The
+> catch is that the paper also needs changes to the migration logic (no
+> throttle bypass for tardy tasks, and the pushed task not counted in
+> cpudl when looking for a target) for tardiness to stay bounded, and
+> AFAIK we don't yet have that in mainline.
+> 
+> So today's DL isn't "pinned aware", but we already live with that:
+> fair/ext servers are pinned and simply added to total_bw. I don't
+> think this series should fix that too. What I'd suggest instead is:
+> 
+>  1. keep the interface per-CPU as Tejun proposed, and do admission as
+>     above (sum into total_bw plus per-CPU check). When a config is
+>     symmetric across the CPUs of a root domain, this is the same as
+>     today's uniform reservation, so it works with the current DL
+>     implementation with the same guarantees we have now;
+> 
+>  2. accept asymmetric configs too, but document that, until DL becomes
+>     aware of pinned bandwidth, they come with no tardiness guarantees
+>     for DL tasks (as with non-default fair server settings today).
+>     Once the migration side is fixed (the paper's changes, or
+>     something similar), they get the guarantees without any interface
+>     change.
+> 
+> This also avoids the cost of the max approach, where 50% on one CPU
+> takes 50% of DL capacity on all CPUs of the root domain, and it should
+> be less code, since cgroup servers would just follow the dl_server
+> accounting paths (dl_server_apply_params(), dl_server_add_bw() on
+> root domain rebuilds), but Yuri should keep me honest here. :)
+> 
+> The root entry would then just limit what cgroups can reserve per CPU,
+> on top of the above, which I think is what Tejun described.
+> 
+> Thoughts?
+> 
+> 1 - https://www.cs.unc.edu/~anderson/papers/rtns21a.pdf
+> 
+
