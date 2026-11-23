@@ -1,79 +1,79 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795459993;
-	b=2mPffEmPGTrv1ZmYvz9CRsLiFAZbRt5mmGlsVfaBgetYO/0S3yWoOfjO5MXZnZy8/Jjk
-	 6YpiHQs6QvIakgPGsJHT4io+DdP9+9ntF7Y61bij/WODFuhFXSzEDxVBR53c/zQXXIpQo
-	 Qblpe19sWgtec4dih9lfZ0OCXTASXA5G5BqUVkQ6lmMi7sMH1t/lowW7YOhsINAANDRJ2
-	 FN86S5Z+wDq3u3MMSlOA4clsCJ5dCdZCxpcnki6GIvV6RgnHlALXvNYCe1Vj4LvOX6zEC
-	 JWHNLCTW38ru4E6SZjfctQ612LBcNM4UV34TmhzhwGvJ768CFdhUFumXfsZzND9XzFQ==
+	t=1795460003;
+	b=uG+arzzinqUBYv7UfwWHxX1vYxsJ/Nd+iNBRuGvMbS5PsWDFo4TNmAHkJdtX3orL4T7w
+	 Eq52dyK4SaBPKtTipLDzNt2dWELrvSG0aOS1UW4OGGGf67P5zB/dqOjxZlTTUi1bfyTjf
+	 rL9FCCNgL3km1TfOFs5oa5nWHRoi/rL9x6CL1R1UbkmcFwzO+8r7Si2m+OegGrjEuZeaG
+	 54XQsQ1rcKVRFk1JeCf5XapN95Y76sS+kFdKnTjUaiiJMRb+xtAUz48wJISUv9SwpRNBA
+	 2W6zBkSzVeoolD/HXTDpE0Q+oXhmcoBqErIZ30O3tyvZx7GjHkqnmBsYvkzLVNOpzaA==
 ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795459993;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795460003;
 	h=Received:DKIM-Signature:Received:From:Date:Subject:MIME-Version:
-	 Content-Type:Content-Transfer-Encoding:Message-Id:References:
-	 In-Reply-To:To:Cc:X-Mailer:X-Developer-Signature:X-Developer-Key:
-	 X-Endpoint-Received:X-Original-From:Reply-To;
-	bh=1rCE3K77C597tnpDa8DpHCzRg0yY18+BUyGptbSaO8M=;
-	b=CeEx6NvagnKY4ElUH/EHG8jzXwj70iwvWB3oyIHQs61Z1T7YR58fFnaZBH5qgxmNY+w7
-	 IsXt4v2pJcd3b6IbHfoYPaNE33tdCE54IHZ1A1CRuyMFiU1W80T35IWzN1NW3QchPAnyT
-	 iGHIww0LhBLpOhNkOK5jQjK/lgLqOnDZ+9to8uKTJ6N7et/bb+rFCGaqlI3OB+XidhEIp
-	 GSZw4SXsOss1tqMM0vs7mKjtAC4vcNvPchuOvERm10CjPe5w0zncqQFWq+Ado4PbiQZ2z
-	 TSUAMoZj8ZYXnrcv3wlLk8E8oMeD1ax31hFLHVRTYJwAapGysrDW9P9SRxuLHwsMJUg==
+	 Content-Type:Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=+wxKwr0AUBQ7HPKVFsvVRhysvOdPNYac/4XTxhyTbxM=;
+	b=HXHsqtc2dqyBFZGEgzRdPPmF1XvnPOaG5PzSEnm9j8uF+46uHTOeNOIk7VKONFvwMcX0
+	 EsSFuvQojt3PtX2QW9Z6QOgQfwGZ1q+3iwFcz/iGpEEb5HelLPCtBOFn7JZoLz41W6bc9
+	 HyDbD4M73obVv2jk/3ve+K8ltl2pFCDK9tQAYtaoM7u8QvIW6T/Qo9hIJiDKXVgeKnepB
+	 BNWwMPWsttXXPncIMjH9OybG2f6SMiGCef9ONK7r5j7S6dCe1lQvp8Htt7+dVXLreoTmp
+	 YvOYdDdwFvjiqeduc1tQcUVRNUv4kypNr5XxO8VXFK0rTOmpKmgCP7KMmYPvJkW7mvg==
 ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SoqzW3ro;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="hZm4Gy/C";
 	arc=pass header.oldest-pass=0 smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9890606A32D;
-	Mon, 23 Nov 2026 18:53:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1318C606A31E;
+	Mon, 23 Nov 2026 18:53:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=SoqzW3ro
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=hZm4Gy/C
 Authentication-Results: smtp.kernel.org; arc=none smtp.remote-ip=100.80.115.77
 ARC-Seal: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256; cv=none;
-	t=1795459993;
-	b=bqhDcFLRttrhaMfzhfYIqqYHF5vH8qS8rizifTObbzmnr8Twidvfh+9RKu8JGW1GidIJ
-	 cN3OYmTWCmlIEbx2kYwS6cq4tr9kc7lHt6u8UZQEIChcXPBjR7txPL9gpV7onNF+QmkBK
-	 TKu6wpppshW/Rv0pOxCP4t4YeWf0un3HmZ3VRG+1ZtfnmTj3ubVNkm7MvSeSMD9oCwgzl
-	 tt+fGQlP3zdaAuzlGimbkjkGuvq6UgRAPLlhEnL0h7O3kQpuBXiFL/weCzLVWh3Xz7MOl
-	 qKxp/hFU/rPl4n8T9b4X/5+RS/EyqxVYCuTF8WmveDMemvFogIcuZ4p/cO5fuEUx5Lw==
+	t=1795460002;
+	b=jbE5KYlXo3tTDI82I9lCHbVI432dR433YtiHse6vLoCtf42Ydr6n3VMFlLdeO6PFLJen
+	 aJpbu9/XGFAjM2aI3v3fFiDr8rS89gumGpv1smBjYblPeI3bAy1JoraiRBP46zgOw1KBd
+	 p1TxLc9/HovtirSL/RuhIHMbn5kuRxAKOHpmWkA3/UEFswB6b1EX7KrtKrmxzzL32fG9j
+	 gVZnFY9yeKfkxl4auCg1ddRQ3/mqvAnbDMVv3V/l2HTN/OVfqvLwTqHhVezIKinfnvxBd
+	 8S9psTh+o1foVRVWqHrpCMa9/jbGPWVddakS3ZpAz1QojvoAIO0aIJvrT8aV9T+DWbg==
 ARC-Message-Signature: i=1; d=kernel.org; s=arc20260519; a=rsa-sha256;
-	c=relaxed/relaxed; t=1795459993;
+	c=relaxed/relaxed; t=1795460002;
 	h=DKIM-Signature:Received:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer:X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
-	 X-Original-From:Reply-To;
-	bh=1rCE3K77C597tnpDa8DpHCzRg0yY18+BUyGptbSaO8M=;
-	b=Kl1dxIjc2Rb7fApi7pkPOXKg2BpbGwenatCX5e1jveIyRQUiiRaOytM2mn+C0ct6Mept
-	 S9Yi1/HEth80DAZi3Xw8R7pzKuGEDE3xUuMF8jSqqB/MCj+BRbR1btD3M+V+nuBST8AUp
-	 QLvv+AauNXKF/NNfEENQWdpUkofnGliwE/2Gacm3ds2bTQ/FndEwOGZpikCOiPwHyPke+
-	 gQ+sFYEKUUqK+SoOEfcJrD6I+ZgvTXYrtXMZj5+zIhNeSnmVb0zJRdwouTUaEtQ7f03Lu
-	 9rmsQGVv5/+Px8J6XjqptZoy8AoBKkB6mNDSfDdKZht6/uq9V8rBpdfkwO3kcSuQJaw==
+	 Message-Id:References:In-Reply-To:To:Cc:X-Mailer:
+	 X-Developer-Signature:X-Developer-Key:X-Endpoint-Received:
+	 X-Original-From:Reply-To:Content-Transfer-Encoding;
+	bh=+wxKwr0AUBQ7HPKVFsvVRhysvOdPNYac/4XTxhyTbxM=;
+	b=29BVlU2JunP+b+3Jzgz6CPAEXzXJwaDGBRUIbLUx7fCc07yh4Y1zwBH5ITp/7gt3/FC/
+	 22qfW2kT8SvtmcTM7FSFtfJxjEfm15X/uyt5TTYnrDyhX1NbSmXLjDKotCA8t8Fd3DCb6
+	 iTA8oV/27VWWlavp7EhYYLWG2YFbdhOI8fPpZO6a7DZ1GRMhkLgx9OttajYsR2I6vDJ08
+	 +VSf2EXkAszsCkxz/SbQ0JHHW5he8kt45xof9/vngY+TsFkHAptlX7/MqqfbNh5k3ddgy
+	 aUCKgO+FMWP7GHrJVh9RhkjVNzdwDltKgPqzFwjEKLzxo3NK2YgUFytWQbs5G395iAQ==
 ARC-Authentication-Results: i=1; smtp.kernel.org; 
 	arc=none smtp.remote-ip=100.80.115.77
 Received: from lkml.kernel.org (nexus.subspace.kernel.org [100.80.115.77])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.kernel.org (Postfix) with ESMTPS id 933801F000E1;
-	Mon, 23 Nov 2026 18:53:00 +0000 (UTC)
+	by smtp.kernel.org (Postfix) with ESMTPS id D22FE1F000ED;
+	Mon, 23 Nov 2026 18:53:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795459993;
-	bh=1rCE3K77C597tnpDa8DpHCzRg0yY18+BUyGptbSaO8M=;
+	s=k20260515; t=1795460002;
+	bh=+wxKwr0AUBQ7HPKVFsvVRhysvOdPNYac/4XTxhyTbxM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To;
-	b=SoqzW3roBfAZ3tFOA8zhqdBmWzG3eJAbx5u8uC2YIErbKuw1WXJ/ttU+Qbm834M4d
-	 ZKeKcQo9nFKaXf4YJiqWwZ/tAx/WQxJ/VNNXNVOA4HWlAh788Hw/6pzYGUEIj276ND
-	 uzEGNMsf4058YXwvP8xPwoYiVKahcOGk5QpAIEVXeuBzcScj4qxM3Gbej3sdnz5Pdq
-	 OmFeDhgkJ6ANMmp1zAk0agWA8XEm4E4fch6F4sgt30qzHgbACgq2l043J2ZSPj0wcG
-	 TNjqyegDb3374F+bSHabFNNzzXSkUR50z1THb5LZNSwi4165e4eg/vFeQFkCI8pZEM
-	 ke0l6ojUH+zhQ==
+	b=hZm4Gy/ClI8J1x6AEuTLrcVAreI8T2KcHDqTKwIGHndDRltgDm57JjzZxk4UvcdSw
+	 WoW0rm86cKCHZ6ibPv/C4efJcuE0h4zLTWTrL6xIGvOdM+w2UUCkCizFkzXRWiRc/D
+	 YZrWalR1/bey0p1noYwS/U0Nv0diHeYjPJ8EIUKUTHrJKkKpB2RP/r4oElr8FqJGvg
+	 uz6zFjIUqUYR3vqlU2rQvKOGqqc8G7zLvpl8Qc2m4pAbeOA/8inbLHJtcHVdIxMo6A
+	 bRMLMvZP5Rz6HOfI/8XDJvVPwpsirk9Vv3zOXN09mK4Br/Uw/sA+TOVoInugWJaYYb
+	 PvF/kMHeAVZow==
 Received: from nexus.subspace.kernel.org (localhost [IPv6:::1])
-	by lkml.kernel.org (Postfix) with ESMTP id 19F304C61E;
+	by lkml.kernel.org (Postfix) with ESMTP id 5A4E44C635;
 	Mon, 23 Nov 2026 18:53:00 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Tue, 24 Nov 2026 02:52:53 +0800
-Subject: [PATCH v6 01/18] mm/mglru: rename the generation offset in
- lru_gen_folio_seq()
+Date: Tue, 24 Nov 2026 02:52:55 +0800
+Subject: [PATCH v6 03/18] mm/memcontrol: avoid potential counter leak when
+ reparenting local stats
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -84,8 +84,7 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261124-mglru-fg-v6-1-8ffea39934a6@tencent.com>
+Message-Id: <20261124-mglru-fg-v6-3-8ffea39934a6@tencent.com>
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
 In-Reply-To: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
 To: linux-mm@kvack.org
@@ -119,77 +118,103 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Tianyi Chen <hi@tychen.cc>, Kairui Song <kasong@tencent.com>, 
  Ridong Chen <ridong.chen@linux.dev>
 X-Mailer: b4 0.16.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1795459977; l=2457;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1795459977; l=3407;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=on9PEefPrnrWULo5N6A+huTmLVTp8DOK4KQGDrtfCuk=;
- b=k5w2EsjoX/bzOEsAS9dWQMREbqipjNq4MTFKSvXR62sapovupL7OAfzxXHx/FEdKFSDvVsq/m
- LPR3LW9KAAICkw7ayuMLIbGlQoHMlZd+Jb96r6pjoa0gTwy/SGGSIPh
+ bh=DITLxusEF3jFekXchW/A6iHzf//ot6gPbXly+2fd+cQ=;
+ b=oQEvwa9i+84qyXpmUPi7pXNiCe/5dSBG7wL+wB1oC2sXK73KSejhjUMAwogTXAJ3+Pcs3FOdO
+ fyAevJbJU6HADPweDl0ahO3Xr133F1H4Ez41aJ+ynn60czLlmD8SsmG
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
  with auth_id=562
 X-Original-From: Kairui Song <kasong@tencent.com>
 Reply-To: kasong@tencent.com
+Content-Transfer-Encoding: 7bit
 
-From: Ridong Chen <chenridong@xiaomi.com>
+From: Kairui Song <kasong@tencent.com>
 
-lru_gen_folio_seq() computes how many generations below max_seq a folio
-should be added to, but stores it in a variable named "gen". Elsewhere in
-MGLRU "gen" means an index into lrugen->folios[], i.e. seq % MAX_NR_GENS,
-so reusing the name for a relative offset is confusing.
+lruvec_page_state_local() clamps negative values to zero on SMP.  That
+is right for readers reporting page counts, but can be wrong for
+reparenting once MGLRU updates the counters without the lruvec lock.
 
-Rename it to "age", which matches what the value means: the newest
-generation is age 1, and a larger age is an older generation.
+Reparenting runs after the forced stats flush, so a negative is a real
+balance that has to move to the parent, not be discarded. We will
+introduce lockless MGLRU promotion which may cause following problem:
 
-No functional change.
+ 1. A refs CAS on a folio on the child's lruvec moves it from
+    inactive to active, and its active/inactive counter update follows
+    as a separate step.
 
-Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-[kasong: dropped the comment table part, the series rewrites it]
-Reviewed-by: Barry Song <baohua@kernel.org>
-Reviewed-by: Lian Wang <lianux.mm@gmail.com>
-Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
-Tested-by: Andrew Morton <akpm@linux-foundation.org>
+ 2. A concurrent isolation of the folio reads the folio as active,
+    debits the child's NR_ACTIVE_* by delta before CSS_DYING is visible
+    to it.
+
+ 3. The child is killed, and the two __update_lru_size() calls from
+    step 1 land on the parent: NR_INACTIVE_* -delta, then NR_ACTIVE_*
+    +delta.
+
+The child is left with NR_ACTIVE_* -delta while the parent holds the
+matching +delta, and reparenting the child's raw value is what cancels
+the parent's credit.  However, if the child happens to hold few enough
+folios for that counter to be negative, lruvec_page_state_local() clamps
+the child's negative to zero, which drops the debit instead, so the
+parent keeps NR_ACTIVE_* overcounted by delta, and its active + inactive
+total overcounted as well, permanently: the child's local counters are
+gone once reparenting is done.
+
+So use a raw signed helper and reparent with that.  Ordinary readers
+still keep the clamp.
+
+Reported-by: Kunwu Chan <kunwu.chan@gmail.com>
+Closes: https://lore.kernel.org/linux-mm/CAN_Opa-+nb0vxQ+HsENCG2fEEMZoxG9Sy_DBC4CLkWjNLzDWKw@mail.gmail.com/
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- include/linux/mm_inline.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ mm/memcontrol.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index f6f4bc9a704f..2395ca8ee305 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -302,7 +302,7 @@ static inline unsigned long lru_gen_folio_seq(const struct lruvec *lruvec,
- 					      const struct folio *folio,
- 					      bool reclaiming)
- {
--	int gen;
-+	int age;
- 	int type = folio_is_file_lru(folio);
- 	const struct lru_gen_folio *lrugen = &lruvec->lrugen;
- 
-@@ -319,17 +319,17 @@ static inline unsigned long lru_gen_folio_seq(const struct lruvec *lruvec,
- 	 * |<---------------------------- MAX_NR_GENS ---------------------------->|
- 	 */
- 	if (folio_test_active(folio))
--		gen = MIN_NR_GENS - folio_test_workingset(folio);
-+		age = MIN_NR_GENS - folio_test_workingset(folio);
- 	else if (reclaiming)
--		gen = MAX_NR_GENS;
-+		age = MAX_NR_GENS;
- 	else if ((!folio_is_file_lru(folio) && !folio_test_swapcache(folio)) ||
- 		 (folio_test_reclaim(folio) &&
- 		  (folio_test_dirty(folio) || folio_test_writeback(folio))))
--		gen = MIN_NR_GENS;
-+		age = MIN_NR_GENS;
- 	else
--		gen = MAX_NR_GENS - (folio_test_workingset(folio) || folio_test_referenced(folio));
-+		age = MAX_NR_GENS - (folio_test_workingset(folio) || folio_test_referenced(folio));
- 
--	return max(READ_ONCE(lrugen->max_seq) - gen + 1, READ_ONCE(lrugen->min_seq[type]));
-+	return max(READ_ONCE(lrugen->max_seq) - age + 1, READ_ONCE(lrugen->min_seq[type]));
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 091401cecf39..3f551e2e3206 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -562,11 +562,10 @@ unsigned long lruvec_page_state_monotonic(const struct lruvec *lruvec,
+ 	return (unsigned long)READ_ONCE(pn->lruvec_stats->state[i]);
  }
  
- static inline bool __lru_gen_add_folio(struct lruvec *lruvec, struct folio *folio,
+-unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
++static long __lruvec_page_state_local(const struct lruvec *lruvec,
+ 				      enum node_stat_item idx)
+ {
+ 	const struct mem_cgroup_per_node *pn;
+-	long x;
+ 	int i;
+ 
+ 	if (mem_cgroup_disabled())
+@@ -577,7 +576,14 @@ unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
+ 		return 0;
+ 
+ 	pn = container_of_const(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = READ_ONCE(pn->lruvec_stats->state_local[i]);
++	return READ_ONCE(pn->lruvec_stats->state_local[i]);
++}
++
++unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
++				      enum node_stat_item idx)
++{
++	long x = __lruvec_page_state_local(lruvec, idx);
++
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -595,7 +601,8 @@ void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
+ 
+ 	for_each_node(nid) {
+ 		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
+-		unsigned long value = lruvec_page_state_local(lruvec, idx);
++		/* Reparent the raw value: the clamp drops the child's debit. */
++		long value = __lruvec_page_state_local(lruvec, idx);
+ 
+ 		__mod_memcg_lruvec_state(memcg, nid, idx, -value);
+ 		__mod_memcg_lruvec_state(parent, nid, idx, value);
 
 -- 
 2.56.1
