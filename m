@@ -1,98 +1,59 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=203.254.224.33
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795407166;
-	b=IvJ18ikJ3JTZJn4jkpQ+YSyZHCJx2NTRBlQuX8vX0GB0JpNjlQMwtPUU7+M9AtdJDGWm
-	 byNw8iBren4J5fiuUmSRKfrRNQjNPNcaFCxpOR1g9CznNUUg8NOerqyYUEpMSv+4wcFOP
-	 jd8NvOzikjUxx3jG1WQVVjH7EvyY6Sn23sLX4div5u6jKL98hll/YbibGhA2Vsoe632uO
-	 IRBXVGsNKI4Pp4+gZqOzYREkGjlfx8O6vukHZqwkRc5lKR8b+m6rKB+60P6wjHFw3eb0d
-	 rDlp3d7q3pMWF/AGHl03v/bA1cQbYHSMyPZvKoPqZceeoIyA8ccygL329lrylfGtvuQ==
+	t=1795410433;
+	b=oj3RrLhQ5UlbvK9fQF/CxU9mJrQWKnvWSgeBj9uDp6UqoChSGaw3M56l23b5Jg6k4J/K
+	 b/+rGOe87iv/ykTeWAVgJAxJ4ndGVnhZKHXRGkFDjOC9PFGn1pfR+psmlzN/9zKDIcKnS
+	 PmdEKmeKUz6Abr4RMbnFAPC9WYXcfvWbZOasJZF12cahpyMDEvNUiO6gv8vSMUUXg4VFi
+	 RiVESCdwVDbVam567tl7rs0VkCzNjzVSrJ+Ko82iZ2YNG1WeJKrnBXETOckHbXvKvY8AU
+	 3FutVoxOMdcTwLJy6j3BzjeLTGp+jmNHFgqHv1cfnfSg9AzwjOt2RAktuacq2lHnOuw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795407166;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:Received:From:To:Cc:Subject:Date:
-	 Message-ID:In-Reply-To:References:MIME-Version:
-	 Content-Transfer-Encoding:X-Scanned-By;
-	bh=gGVEv4HX0Le+utsN8NAO83xugM8SRSg80zPFc4WXX0w=;
-	b=CpcE6Rx7kebSw/O68GxBciqWNnPXu5ydT/XoQ9ALR/qXwdDa3+7zQ7qxqwA9HjmlmCId
-	 QpSm3TtIczP3jTg1J/ju/QEyKcF1ZJduJA/cD7YKs0AKhXwiBJIHMtGSZxnHpvGmbp93K
-	 eQM/d1ChSy2NbJ1j+WDz5nRAe5ITjV3Mj3sGgCsNECG9U4PrCh+3d6xlEPPvO2NrLgHSi
-	 y2OUBdBejvswCgfpn5GCNct7eig2QOTIc1luGUn7BUbEwHZGjWc5EwFUhlqct09sdFR0/
-	 e3LCDxDsC2W6SoLtrDutQxnr7hLOGe5nX5WW69UVe8slOZVFhfZ7mDfVk2lx5uOJ3Sg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795410433;
+	h=DMARC-Filter:Received:DKIM-Filter:DKIM-Signature:Received:Received:
+	 Mime-Version:Subject:Reply-To:Sender:From:To:CC:X-Priority:
+	 X-Content-Kind-Code:X-CPGS-Detection:X-Drm-Type:X-Msg-Generator:
+	 X-Msg-Type:X-Reply-Demand:Message-ID:Date:X-CMS-MailID:
+	 Content-Transfer-Encoding:Content-Type:X-Sendblock-Type:CMS-TYPE:
+	 X-CPGSPASS:X-CPGSPASS:cpgsPolicy:X-CFilter-Loop:X-CMS-RootMailID:
+	 References;
+	bh=Cd6iHPL7zgNWtBUtUa4Lg14WBOVuuUn85F3LluQ9xdQ=;
+	b=Bvr2b4pd48UcBSqaoDwa/SD7OxmCW1HM3guZomjBdzSnuM91Cz3/y1jforsBcs5r/RCx
+	 t7Qf/uOcR8ne3SYpSaelmEhoOLeRPcSO6xE5hgkGLrwBeyQlPn41DhIwXgZLk2fpc5Rzw
+	 Ys1Es+2GmRM9PbqbBUQYDnT+jM7XivGbvXT6PkePavR7JNJf9IuCNApzqpNvCT/W91KGO
+	 cdDjHHj7A2gnPnRMeJK24MvgvijbhP9F3Q6qKpwSQ/RpKt0RP46U2CqeGnBRCbDDR/HGW
+	 XwdcRz8DlriGXY+gEXXEvLAxgQgqb1fO3KH6DMBR6/svbqiUEs8LuxdzbPyfxHLjpJA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b="gZz2Zt/e";
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	dmarc=pass header.from=samsung.com;
+	spf=pass smtp.mailfrom=samsung.com;
+	dkim=pass header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b="JK/CA5RF";
+	arc=none smtp.remote-ip=203.254.224.33
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-ECDSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06A4F606A31A
-	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 04:12:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06A4F606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 330AD606A31A
+	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 05:07:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 330AD606A31A
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=gZz2Zt/e
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795407165;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=gGVEv4HX0Le+utsN8NAO83xugM8SRSg80zPFc4WXX0w=;
-	b=gZz2Zt/ere5agEtkE6T0F29uLDxWaw+OtxYrMZe2P/UCWAj3hQLXRxh+SY/J1a9O3Tb1Hn
-	HvCksJYUy0hREVwYe+Sjd3odsfNQnrk8sHRGuWaJF7n1bxtkhnesVuasMpg+odv22wqUhw
-	kr26b3ErrphNkpDSxB64hcLIo4eVnWg=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-401-kgJcui0QMLGVWzRo8rNHUw-1; Mon,
- 23 Nov 2026 04:12:41 +0000
-X-MC-Unique: kgJcui0QMLGVWzRo8rNHUw-1
-X-Mimecast-MFC-AGG-ID: kgJcui0QMLGVWzRo8rNHUw_1795407158
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1CBB618005B3;
-	Mon, 23 Nov 2026 04:12:38 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.redhat.corp (headnet04.pony-001.prod.iad2.dc.redhat.com [10.2.32.116])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 60FEF18004FE;
-	Mon, 23 Nov 2026 04:12:33 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ridong Chen <ridong.chen@linux.dev>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Anna-Maria Behnsen <anna-maria@linutronix.de>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Thomas Gleixner <tglx@kernel.org>
-Cc: cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH-next v2 3/3] cgroup/cpuset: Disallow CPU 0 from being used in isolated partition
-Date: Sun, 22 Nov 2026 23:12:09 -0500
-Message-ID: <20261123041209.382726-4-longman@redhat.com>
-In-Reply-To: <20261123041209.382726-1-longman@redhat.com>
-References: <20261123041209.382726-1-longman@redhat.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.a=rsa-sha256 header.s=mail20170921 header.b=JK/CA5RF
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20261123050709epoutp03336151e747868e383a9683a9b638ee2a~qlEXyW5UV1018210182epoutp03S
+	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 05:07:09 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20261123050709epoutp03336151e747868e383a9683a9b638ee2a~qlEXyW5UV1018210182epoutp03S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1795410429;
+	bh=Cd6iHPL7zgNWtBUtUa4Lg14WBOVuuUn85F3LluQ9xdQ=;
+	h=Subject:Reply-To:From:To:CC:Date:References:From;
+	b=JK/CA5RFIUxMigklVPEChG6FnqttLpYm5TtU9IPXMWnFnQN4QQpznr4djUWqX+Bmo
+	 1V/Lkokh4g9i245kgAXJW7Avz8m+2EAcl1K8HqBbP+9Bnv0h4XXch/oX2IAw96wGhN
+	 lfhujWJdEyvpO35jEaXNQY0/HK9OtoG9Amx0P+EY=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
+	20261123050709epcas2p2757ff5f18749871f30c2f80973c0c6ca~qlEXPgCa92179421794epcas2p2C;
+	Mon, 23 Nov 2026 05:07:09 +0000 (GMT)
+Received: from epcas2p3.samsung.com (unknown [182.195.38.206]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4jXv7c4wcRz6B9mF; Mon, 23 Nov
+	2026 05:07:08 +0000 (GMT)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -101,392 +62,192 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+Mime-Version: 1.0
+Subject: [RFC PATCH 0/3] block: cgroup-based and explicit write stream
+ placement for NVMe FDP
+Reply-To: suho.son@samsung.com
+Sender: Suho Son <suho.son@samsung.com>
+From: Suho Son <suho.son@samsung.com>
+To: "axboe@kernel.dk" <axboe@kernel.dk>, "linux-block@vger.kernel.org"
+	<linux-block@vger.kernel.org>
+CC: "tj@kernel.org" <tj@kernel.org>, "hannes@cmpxchg.org"
+	<hannes@cmpxchg.org>, "mkoutny@suse.com" <mkoutny@suse.com>,
+	"corbet@lwn.net" <corbet@lwn.net>, "skhan@linuxfoundation.org"
+	<skhan@linuxfoundation.org>, "rdunlap@infradead.org"
+	<rdunlap@infradead.org>, "viro@zeniv.linux.org.uk"
+	<viro@zeniv.linux.org.uk>, "brauner@kernel.org" <brauner@kernel.org>,
+	"jack@suse.cz" <jack@suse.cz>, "io-uring@vger.kernel.org"
+	<io-uring@vger.kernel.org>, "cgroups@vger.kernel.org"
+	<cgroups@vger.kernel.org>, "linux-fsdevel@vger.kernel.org"
+	<linux-fsdevel@vger.kernel.org>, "linux-doc@vger.kernel.org"
+	<linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20261123050708epcms2p2f9404899881a0554cc6417ef7b1d670d@epcms2p2>
+Date: Mon, 23 Nov 2026 14:07:08 +0900
+X-CMS-MailID: 20261123050708epcms2p2f9404899881a0554cc6417ef7b1d670d
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-223,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20261123050708epcms2p2f9404899881a0554cc6417ef7b1d670d
+References: <CGME20261123050708epcms2p2f9404899881a0554cc6417ef7b1d670d@epcms2p2>
 
-Domain isolating CPU 0 can be problematic and may even cause panic in
-some cases. In the near future, we are going to enable dynamic change to
-the nohz_full CPUs to include the CPUs that are in isolated partitions
-via the CPU hotplug mechanism. However, CPU 0 can't be made offline
-for some architectures like x86. IOW, putting CPU 0 in an isolated
-partition may not have the same degree of isolation than other CPUs
-in the isolated partition in the future. For all these reasons, it is
-better to disable its use in an isolated partition.
+Hello,
 
-Add a new partition error code to indicate to the users that CPU 0 cannot
-be used in an isolated partition. The prstate_housekeeping_conflict()
-function is modified to return the partition error code directly as it
-can be either PERR_HKEEPING or PERR_ISOLCPU0.
+This RFC proposes an operator- and application-controlled write stream
+interface on top of the existing write stream plumbing
+(sqe->write_stream, bio->bi_write_stream, and the NVMe FDP placement
+translation, which are unchanged by this series):
 
-Some existing test cases in test_cpuset_prs.sh are modified to remove
-the use of CPU 0 in isolated partition setup and explicit new test cases
-are added to test that. The NOHZ_FULL test cases also modified to run if
-the "nohz_full" parameters includes all the CPUs except CPU 1-7 instead
-of 0-7. Though it is not recommended to put CPU 0 in the nohz_full boot
-parameter, it is the only way we can test that the cpuset code is able to
-correctly disallow isolating the last nohz_full/domain housekeeping CPU.
+  1/3 block: distinguish unspecified and explicit device-default write streams
+  2/3 io_uring: add IORING_WRITE_STREAM_DEFAULT for explicit device-default placement
+  3/3 blk-cgroup: add cgroup-based write stream placement
 
-With CPU 0 likely not allowed in the nohz_full list except for powerpc
-and with CPU 0 also disallowed from being domain isolated and offline,
-we will likely have CPU 0 being an always present online housekeeping
-CPU for most kernels. For those kernels, we will not be able to trigger
-partition invalidation due to using up the last nohz_full/domain
-housekeeping CPU in an isolated partition and the NOHZ_FULL test cases
-in test_cpuset_prs.sh will not be run.
+The series is based on the block tree's for-next branch (see the
+base-commit below).
 
-The cgroup-v2.rst documentation file is also modified to indicate that
-CPU 0 cannot be used in an isolated partition.
+Motivation and background are described in our HotStorage '26 paper:
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- Documentation/admin-guide/cgroup-v2.rst       |  1 +
- kernel/cgroup/cpuset-internal.h               |  1 +
- kernel/cgroup/cpuset.c                        | 90 ++++++++++---------
- .../selftests/cgroup/test_cpuset_prs.sh       | 43 +++++----
- 4 files changed, 80 insertions(+), 55 deletions(-)
+  Link: https://doi.org/10.1145/3837053.3837343
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 9e3c67b02ae2..2f792ff29425 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2771,6 +2771,7 @@ Cpuset Interface Files
- 	and excluded from the unbound workqueues.  Tasks placed in such
- 	a partition with multiple CPUs should be carefully distributed
- 	and bound to each of the individual CPUs for optimal performance.
-+	The boot CPU (CPU 0) cannot be used in an isolated partition.
- 
- 	A partition root ("root" or "isolated") can be in one of the
- 	two possible states - valid or invalid.  An invalid partition
-diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
-index 1ba94ffaff9d..505682493d81 100644
---- a/kernel/cgroup/cpuset-internal.h
-+++ b/kernel/cgroup/cpuset-internal.h
-@@ -36,6 +36,7 @@ enum prs_errcode {
- 	PERR_ACCESS,
- 	PERR_REMOTE,
- 	PERR_ISOPARENT,
-+	PERR_ISOLCPU0,
- };
- 
- /* bits in struct cpuset flags field */
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 30af9531acdd..4b90b4c0fba6 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -61,6 +61,7 @@ static const char * const perr_strings[] = {
- 	[PERR_ACCESS]    = "Enable partition not permitted",
- 	[PERR_REMOTE]    = "Have remote partition underneath",
- 	[PERR_ISOPARENT] = "Root partition is not allowed with isolated parent",
-+	[PERR_ISOLCPU0]  = "Boot CPU (cpu 0) cannot be isolated",
- };
- 
- /*
-@@ -1327,25 +1328,28 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
-  * @parent_prs: Parent partition root state
-  * @new_cpus: the set of new effective xcpus in the current cpuset
-  * @del_cpus: old CPUs going to be removed from current cpuset, can be NULL
-- * Return: true if there is conflict, false otherwise
-+ * Return: PRS error code if there is a conflict, PERR_NONE otherwise
-  *
-- * There are two different housekeeping conflicts to be checked:
-+ * There are three different housekeeping conflicts to be checked:
-  * 1) If new_prs is PRS_ROOT, none of the @new_cpus can be a boot-time isolated
-  *    CPU. IOW, the whole @new_cpus must be a subset of HK_TYPE_DOMAIN_BOOT.
-  * 2) If nohz_full is enabled and we have isolated CPUs, their combination must
-  *    still leave housekeeping CPUs. This check is only needed if new_prs
-  *    differs from parent_prs and one of them is PRS_ISOLATED.
-+ * 3) CPU 0 cannot be used in an isolated partition.
-  */
--static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
--					  struct cpumask *new_cpus,
--					  struct cpumask *del_cpus)
-+static enum prs_errcode prstate_housekeeping_conflict(int new_prs, int parent_prs,
-+				struct cpumask *new_cpus, struct cpumask *del_cpus)
- {
- 	cpumask_var_t full_hk_cpus;
--	int res;
-+	int prs_err = PERR_NONE;
- 
- 	WARN_ON_ONCE(parent_prs <= 0);
- 	if (!new_prs)
--		return false;
-+		return PERR_NONE;
-+
-+	if ((new_prs == PRS_ISOLATED) && cpumask_test_cpu(0, new_cpus))
-+		return PERR_ISOLCPU0;
- 
- 	/*
- 	 * For a currently invalid partition root state, do the check assuming
-@@ -1363,7 +1367,7 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
- 
- 	if (housekeeping_enabled(HK_TYPE_DOMAIN_BOOT) && (new_prs == PRS_ROOT) &&
- 	    !cpumask_subset(new_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT)))
--		return true;
-+		return PERR_HKEEPING;
- 
- 	if (del_cpus && cpumask_empty(del_cpus))
- 		del_cpus = NULL;
-@@ -1377,7 +1381,7 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
- 	 */
- 	if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE) ||
- 	    (new_prs == parent_prs) || (!del_cpus && (new_prs == PRS_ROOT)))
--		return false;
-+		return PERR_NONE;
- 
- 	/*
- 	 * Now make sure that @new_cpus contains new CPUs to be isolated and
-@@ -1388,7 +1392,7 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
- 		swap(new_cpus, del_cpus);
- 
- 	if (!alloc_cpumask_var(&full_hk_cpus, GFP_KERNEL))
--		return true;
-+		return PERR_HKEEPING;
- 
- 	/*
- 	 * Check if del_cpus may contain a CPU that can become an active
-@@ -1398,20 +1402,19 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
- 		cpumask_and(full_hk_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
- 			    housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT));
- 		if (cpumask_first_and_and(del_cpus, full_hk_cpus,
--					  cpu_active_mask) < nr_cpu_ids) {
--			res = false;
-+					  cpu_active_mask) < nr_cpu_ids)
- 			goto out;
--		}
- 	}
- 
- 	cpumask_and(full_hk_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
- 		    housekeeping_cpumask(HK_TYPE_DOMAIN));
- 	cpumask_andnot(full_hk_cpus, full_hk_cpus, isolated_cpus);
- 	cpumask_and(full_hk_cpus, full_hk_cpus, cpu_active_mask);
--	res = !cpumask_weight_andnot(full_hk_cpus, new_cpus);
-+	if (!cpumask_weight_andnot(full_hk_cpus, new_cpus))
-+		prs_err = PERR_HKEEPING;
- out:
- 	free_cpumask_var(full_hk_cpus);
--	return res;
-+	return prs_err;
- }
- 
- /**
-@@ -1446,9 +1449,12 @@ static enum prs_errcode validate_partition(struct cpuset *cs,
- 	if (!parent)
- 		parent = &top_cpuset;
- 	parent_prs = parent->partition_root_state;
--	if (parent_prs > 0 &&
--	    prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
--		return PERR_HKEEPING;
-+	if (parent_prs > 0) {
-+		enum prs_errcode err = prstate_housekeeping_conflict(new_prs, parent_prs,
-+								     new_excpus, del);
-+		if (err)
-+			return err;
-+	}
- 
- 	if (tasks_nocpu_error(parent, cs, new_excpus))
- 		return PERR_NOCPUS;
-@@ -1715,6 +1721,8 @@ static void compute_effective_nodemask(nodemask_t *new_mems,
- static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 				   struct tmpmasks *tmp)
- {
-+	enum prs_errcode err;
-+
- 	/*
- 	 * The user must have sysadmin privilege.
- 	 */
-@@ -1737,8 +1745,9 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 		return PERR_INVCPUS;
- 	if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
- 		return PERR_NOCPUS;
--	if (prstate_housekeeping_conflict(new_prs, PRS_ROOT, tmp->new_cpus, NULL))
--		return PERR_HKEEPING;
-+	err = prstate_housekeeping_conflict(new_prs, PRS_ROOT, tmp->new_cpus, NULL);
-+	if (err)
-+		return err;
- 
- 	spin_lock_irq(&callback_lock);
- 	partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
-@@ -1833,14 +1842,16 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
- 	 * left in the top cpuset.
- 	 */
- 	if (adding) {
-+		enum prs_errcode err = prstate_housekeeping_conflict(prs, PRS_ROOT,
-+							excpus, tmp->delmask);
-+
- 		if (!capable(CAP_SYS_ADMIN))
- 			WRITE_ONCE(cs->prs_err, PERR_ACCESS);
- 		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
- 			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
- 			WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
--		else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
--						       excpus, tmp->delmask))
--			WRITE_ONCE(cs->prs_err, PERR_HKEEPING);
-+		else if (err)
-+			WRITE_ONCE(cs->prs_err, err);
- 		if (cs->prs_err)
- 			goto invalidate;
- 	}
-@@ -2101,16 +2112,16 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 			 * active housekeeping CPUs.
- 			 */
- 			cpumask_andnot(tmp->addmask, cs->effective_xcpus, tmp->delmask);
--			if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED) &&
--			    prstate_housekeeping_conflict(old_prs, parent_prs,
--							  tmp->delmask, tmp->addmask)) {
--				adding = cpumask_and(tmp->addmask, cs->effective_xcpus,
--						     tmp->delmask);
--				part_error = PERR_HKEEPING;
--			} else {
-+			if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED)) {
-+				part_error = prstate_housekeeping_conflict(old_prs, parent_prs,
-+								tmp->delmask, tmp->addmask);
-+				if (part_error)
-+					adding = cpumask_and(tmp->addmask, cs->effective_xcpus,
-+							     tmp->delmask);
-+			}
-+			if (!part_error)
- 				deleting = cpumask_andnot(tmp->delmask, tmp->delmask,
- 							  cs->effective_xcpus);
--			}
- 		} else if (is_partition_invalid(cs)) {
- 			struct cgroup_subsys_state *css;
- 			struct cpuset *child;
-@@ -2121,11 +2132,11 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 			 * cpu exclusivity test when cpuset.cpus.exclusive is
- 			 * empty as well as the housekeeping check.
- 			 */
--			if (prstate_housekeeping_conflict(cs->partition_root_state,
--							  parent_prs, tmp->delmask, NULL)) {
--				part_error = PERR_HKEEPING;
-+			part_error = prstate_housekeeping_conflict(cs->partition_root_state,
-+							parent_prs, tmp->delmask, NULL);
-+			if (part_error)
- 				goto write_error;
--			}
-+
- 			if (cpumask_empty(cs->exclusive_cpus)) {
- 				rcu_read_lock();
- 				cpuset_for_each_child(child, css, parent) {
-@@ -2997,12 +3008,11 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		 * A change in load balance state only, no change in cpumasks.
- 		 * Need to update isolated_cpus.
- 		 */
--		if (prstate_housekeeping_conflict(new_prs, parent_prs,
--						  cs->effective_xcpus, NULL))
--			err = PERR_HKEEPING;
--		else if (parent_prs == PRS_ISOLATED)
-+		if (parent_prs == PRS_ISOLATED)
- 			err = PERR_ISOPARENT;	/* old_prs should be isolated */
--
-+		else
-+			err = prstate_housekeeping_conflict(new_prs, parent_prs,
-+							    cs->effective_xcpus, NULL);
- 		if (err) {
- 			disable_partition = true;
- 		} else {
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 1397ec428c46..f297e59d8f00 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -110,8 +110,8 @@ echo "" > test/cpuset.cpus
- 
- #
- # If nohz_full CPUs have been reserved at boot time, they should not include
--# CPUs 0-7 as that may fail some of the test cases. On the other hand if the
--# set of nohz_full CPUs includes all the CPUs except 0-7 in a single range
-+# CPUs 1-7 as that may fail some of the test cases. On the other hand if the
-+# set of nohz_full CPUs includes all the CPUs except 1-7 in a single range
- # <first>-<last>, we can run a special set of housekeeping CPUs exhaustion
- # tests to see if the cpuset code will reject them.
- #
-@@ -123,14 +123,22 @@ NOHZ_FULL_CPUS=
- 	NOHZ_FULL_CPUS=$(cat /sys/devices/system/cpu/nohz_full)
- LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
- [[ -n "$NOHZ_FULL_CPUS" ]] && {
--	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/[,-].*//")
--	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/,.*//;s/.*[-]//")
-+	if [[ $(expr $NOHZ_FULL_CPUS : "^0,") -gt 0 ]]
-+	then
-+		NOHZ_CPU0=1
-+		NOHZ_CPUS=$(echo $NOHZ_FULL_CPUS | sed -e "s/^0,//")
-+	else
-+		NOHZ_CPUS=$NOHZ_FULL_CPUS
-+	fi
-+	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_CPUS | sed -e "s/[,-].*//")
-+	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_CPUS | sed -e "s/,.*//;s/.*[-]//")
- 	echo "Boot nohz_full CPUs: $NOHZ_FULL_CPUS"
- }
- [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" -le 7 ]] &&
- 	skip_test "Boot NOHZ_FULL CPUs overlap CPUs to be tested!"
- 
- [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" = 8 &&
-+   -n "$NOHZ_CPU0" &&
-    "$LAST_NOHZ_FULL_CPU" = $LAST_PRESENT_CPU ]] && RUN_NOHZ_FULL_TESTS=1
- 
- #
-@@ -394,8 +402,8 @@ TEST_MATRIX=(
- 	# Invalid to valid local partition direct transition tests
- 	" C1-3:P2  X4:P2    .      .      .      .      .      .     0 A1:1-3|XA1:1-3|A2:1-3:XA2: A1:P2|A2:P-2 1-3"
- 	" C1-3:P2  X4:P2    .      .      .    X3:P2    .      .     0 A1:1-2|XA1:1-3|A2:3:XA2:3 A1:P2|A2:P2 1-3"
--	" C0-3:P2    .      .    C4-6   C0-4     .      .      .     0 A1:0-4|B1:5-6 A1:P2|B1:P0"
--	" C0-3:P2    .      .    C4-6 C0-4:C0-3  .      .      .     0 A1:0-3|B1:4-6 A1:P2|B1:P0 0-3"
-+	" C1-3:P2    .      .    C4-6   C1-4     .      .      .     0 A1:1-4|B1:5-6 A1:P2|B1:P0"
-+	" C1-3:P2    .      .    C4-6 C1-4:C1-3  .      .      .     0 A1:1-3|B1:4-6 A1:P2|B1:P0 1-3"
- 
- 	# Local partition invalidation tests
- 	" C0-3:X1-3:P2 C1-3:X2-3:P2 C2-3:X3:P2 \
-@@ -506,6 +514,11 @@ TEST_MATRIX=(
- 	"  CX1-4  CX2-4:P2  .    C5-6      .     .      .   P1:C3-6  0 A1:1|A2:2-4|B1:5-6 \
- 								       A1:P0|A2:P2:B1:P-1 2-4"
- 
-+	# CPU 0 cannot be used in an isolated partition
-+	"  CX0-4     .      .      .       P2    .      .      .     0 A1:0-4 A1:P-2"
-+	"  CX0-4  C0-2:P1   .      .       .     P2     .      .     0 A1:0-4|A2:0-2 A2:P-2"
-+	"  CX0-4  C3-4:P2   .      .       .    C0-2    .      .     0 A1:0-4|A2:0-2 A2:P-2"
-+
- 	# When multiple partitions with conflicting cpuset.cpus are created, the
- 	# latter created ones will only get what are left of the available exclusive
- 	# CPUs.
-@@ -525,8 +538,8 @@ TEST_MATRIX=(
- 
- 	# A middle isolated parent shrunk below coverage: the released CPUs of
- 	# an invalidated child stay isolated as a higher ancestor still covers them.
--	" CX0-4:P2 CX2-4:P2 CX3-4:P2 .     .     X2     .      .     0 A1:0-1,3-4|A2:2|A3:2 \
--								       A1:P2|A2:P2|A3:P-2 0-4"
-+	" CX1-4:P2 CX2-4:P2 CX3-4:P2 .     .     X2     .      .     0 A1:1,3-4|A2:2|A3:2 \
-+								       A1:P2|A2:P2|A3:P-2 1-4"
- 
- 	# When an isolated partition child with root partition parent is invalidated,
- 	# its effective xcpus will be removed from isolated_cpus.
-@@ -618,20 +631,20 @@ ISOLCPUS_TEST_MATRIX=(
- 	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
- )
- 
--# Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
-+# Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 1-7
- # This also means that CPU 8 is available and is a nohz_full CPU.
- NOHZ_FULL_TEST_MATRIX=(
- 	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
- 	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
- 	# Using all the nohz_full HK CPUs 0-7 in isolated partition is not allowed
--	" C0-7       .      .      .      P2     .      .      .     0 A1:0-7 A1:P-2 ."
--	" C2-7:P2    .      .      .     C0-4    .      .      .     0 A1:0-4 A1:P2 0-4"
--	" C1-7:P2 C5-7:P2   .      .       .     .      .    C0:P2   0 A1:1-4|A2:5-7|B1:0
--								       A1:P2|A2:P2|B1:P-2 1-7"
-+	" C1-7       .      .      .      P2     .      .      .     0 A1:1-7 A1:P-2 ."
-+	" C2-7:P2    .      .      .     C1-4    .      .      .     0 A1:1-4 A1:P2 1-4"
-+	" C2-7:P2 C5-7:P2   .      .       .     .      .    C1:P2   0 A1:2-4|A2:5-7|B1:1
-+								       A1:P2|A2:P2|B1:P-2 2-7"
- 	# An isolated child partition cannot grow to take over the last
- 	# housekeeping CPU when its parent expands the exclusive CPUs.
--	" C0-8:X1-8:P1 CX0-8:P2 .  .     X0-7    .      .      .     0 A1:0-7|A2:0-7 A1:P1|A2:P-2 ."
--	" C0-8:X0-6:P1 CX0-8:P2 .  .     X2-8    .      .      .     0 A1:|A2:2-8 A1:P1|A2:P2 2-8"
-+	" C1-8:X1-8:P1 CX1-8:P2 .  .     X1-7    .      .      .     0 A1:1-7|A2:1-7 A1:P1|A2:P-2 ."
-+	" C1-8:X0-6:P1 CX1-8:P2 .  .     X2-8    .      .      .     0 A1:|A2:2-8 A1:P1|A2:P2 2-8"
- )
- 
- #
+Motivation
+
+NVMe Flexible Data Placement reduces write amplification by grouping
+similarly-aged data into per-reclaim-unit placement handles, and the
+kernel already lets a single application tag writes through io_uring.
+Two gaps remain:
+
+  (a) an operator cannot place whole workloads per cgroup without
+      modifying applications, and
+  (b) an application cannot force the device-default placement and be
+      sure that no policy overrides that choice.
+
+The series addresses the root cause shared by both: write stream zero
+currently means both "unspecified" and "device default", so lower-
+precedence producers cannot tell whether a stream was requested.  The
+resulting precedence, most specific first, is:
+
+  explicit io_uring stream (including DEFAULT)
+    > inode write hint
+    > cgroup io.stream
+    > device default (0)
+
+Patch 1 introduces the WRITE_STREAM_NONE sentinel for unspecified
+streams, resolves it centrally before the bio reaches the driver, and
+carries ki_write_stream through kiocb_clone() used by forwarded direct
+I/O.  Patch 2 adds the explicit-default UAPI value, decided at prep
+time so it survives async re-issues.  Patch 3 adds the io.stream cgroup
+v2 interface: per-device upsert entries, "inherit" reset, explicit 0,
+validation against device queue limits, lazy policy activation, and a
+single-word policy state read locklessly under RCU, with writers
+serialized by the queue lock held across blkg_conf_prep().
+
+Runtime verification
+
+We exercised the series, as posted, on an NVMe 2.0 FDP device (8 RUHs)
+with bpftrace observers at blkcg_set_iostream() entry/return,
+__submit_bio() and the nvme_setup_cmd() dsmgmt export:
+
+  - explicit streams 2/5/8 -> placement IDs 1/4/7 (tracepoint-verified)
+  - IORING_WRITE_STREAM_DEFAULT -> concrete 0, no placement exported,
+    not overridable by an io.stream policy
+  - stream > max_write_streams -> -EINVAL, no bio issued
+  - io.stream explicit value observed end-to-end; nested cgroup
+    inherits the parent's entry; explicit io.stream 0 resolves the
+    sentinel to 0
+  - io.stream rejects streams above the device limit and the reserved
+    255 with -EINVAL, and devices without write streams with
+    -EOPNOTSUPP; the root cgroup has no io.stream file
+  - the inode write hint beats the io.stream value, as documented
+  - IOSQE_ASYNC: an explicit stream, IORING_WRITE_STREAM_DEFAULT and
+    the submitting task's cgroup association all survive io-wq
+    deferral
+  - a 512K direct write splits into multiple bios; all keep the stream
+  - 64 concurrent writers with a common stream: 64/64 tagged, stable,
+    no warnings
+  - buffered writeback on a mounted ext4: writeback bios adopt the
+    first-dirtying cgroup via wbc_init_bio() and carry the resulting
+    placement ID to the device; the nested cgroup inherits the
+    parent's entry, explicit 0 and the child's own entry override it,
+    and "inherit" restores the parent's value
+
+Each patch builds without warnings at W=1, with
+CONFIG_BLK_CGROUP_IOSTREAM both enabled and disabled.
+
+Not yet verified (please treat accordingly)
+
+  - WAF improvements on a production multi-tenant workload are not yet
+    measured; device-level fdp status counters moved consistently with
+    the placement IDs, but per-case deltas were below the background
+    noise of the test setup
+
+RFC aspects we would like feedback on
+
+  - the API shape of io.stream (per-device "MAJ:MIN <stream>" string,
+    upsert and inherit semantics, explicit 0 as a real entry)
+  - the WRITE_STREAM_NONE sentinel as a u8 reservation, which caps
+    addressable streams at 254 through the io_uring interface and
+    excludes 255 from io.stream
+  - whether io.stream belongs in io.* under cgroup v2, and its
+    interaction with the existing io controller file hierarchy
+  - buffered writeback semantics: attribution to the writeback owner is
+    arguably what an operator wants, but degenerate share cases deserve
+    a second opinion
+
+No MAINTAINERS update is needed: block/ is covered by the BLOCK LAYER
+entry, and the io_uring paths by the IO_URING entry.
+
+Tool use
+
+This series was developed with substantial help from LLM coding
+assistants, in an interactive session rather than from a single prompt.
+The assistant drafted a large part of the implementation (the
+WRITE_STREAM_NONE sentinel and its central resolution, the fops.c
+precedence rework, the kiocb_clone() propagation, and the io.stream
+single-word policy state and its RCU lifetime), the changelogs, the
+cgroup-v2.rst section and this cover letter.  It also wrote the
+io_uring and bpftrace test harnesses used for the runtime verification
+above, and rebased the series onto the current tree.  I made the design
+decisions, directed and reviewed the testing, and reviewed, revised and
+take responsibility for all of the code and text.
+
+Suho Son (3):
+  block: distinguish unspecified and explicit device-default write
+    streams
+  io_uring: add IORING_WRITE_STREAM_DEFAULT for explicit device-default
+    placement
+  blk-cgroup: add cgroup-based write stream placement
+
+ Documentation/admin-guide/cgroup-v2.rst |  58 ++++-
+ block/Kconfig                           |  16 ++
+ block/Makefile                          |   1 +
+ block/bio.c                             |   3 +-
+ block/blk-core.c                        |  14 ++
+ block/blk-iostream.c                    | 315 ++++++++++++++++++++++++
+ block/blk-iostream.h                    |  18 ++
+ block/fops.c                            |  25 +-
+ include/linux/blk_types.h               |  13 +
+ include/linux/fs.h                      |  11 +-
+ include/linux/io_uring_types.h          |   4 +
+ include/uapi/linux/io_uring.h           |  26 ++
+ io_uring/rw.c                           |  16 ++
+ 13 files changed, 510 insertions(+), 10 deletions(-)
+ create mode 100644 block/blk-iostream.c
+ create mode 100644 block/blk-iostream.h
+
+
+base-commit: d09b6d9d1fcce0770c1824c8b2b8ab153f2672d2
 -- 
-2.56.1
+2.43.0
 
