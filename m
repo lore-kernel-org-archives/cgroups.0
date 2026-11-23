@@ -1,54 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.4
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795437164;
-	b=ScGMLxLAIv0jmZa4oGoli5vKxfOBlB3Z02vsd7B0+uVS3tfjNZBNxQVzmdHwAoL+InvR
-	 K4+RXm2LC4BrJrfZlMTeKg49z2Gqke166JoTuN+UaJFp4Jt4euTergxV5/5kTXoo1wsgo
-	 dgVvtE12DxMy6jAPs/FLWLEF2XcNG3T9u9ojiopHEKInJbcw81RiVpAeMfhShRMMG1hHP
-	 Kdtqg2X4ocplepkRDtKiYdVoMfyh69aowKQdzGo6qEKIbKdj9V+Y0PVHAb25rVEMXWjJr
-	 3Kz8m3aUo+5W9G1SmJ8sPNkJjmSa76gNQMjQhKttXHxMONdMjjTLGU1g8OHxREtIKDg==
+	t=1795441280;
+	b=cwOdmnfDx8cQ4zYMS5Ztb33PKqVs4OAgoaTWn/YEZn4V7TLGo5q58hoirxXnAX/cnISx
+	 Tiy1gtLsY04QxSdufvg5d33dNgQdUmLq14YYVylxaflZL48ist7LUbrPvH15EkIEMsnPT
+	 oGqc9HFrB5l8jcGl3eKPcze0f/Vrdc4BLRH0sIzG3eD62Gt8EiZrObsnZ6VwZnPfnEaXt
+	 pg2JZSpYVM1bSjpay6MNyA13pHUHpbBpmSCUN/f2ZWmrfZs2GJqoN8WClDb+T1K8hRfs+
+	 StH6gakURU2cUd5aEKX/a5jNfor5ix0sNsecywYj4i8XOagSFgIyCXIYi/DJUIg9XXA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795437164;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
-	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
-	 To:X-Mailer;
-	bh=e2RVQ3O8W1C8YW2wJ9aXaBh6gRelyzfxjUCFahQNfPU=;
-	b=MU5RgmWwkPLDM0F80FNfLtrlQl3/rOx0fE+hThfpHwLrkoqzWta2WTzd3CdpAoWI6dHb
-	 QdZM3xCIquvC4xbv3ERZwtR+M+IxK4ckXRYsnE+3Lq4++QwBY4xSqF3vNUxjEyTDTjKDE
-	 NehhG0YdQuqET+Hh849yeBY1LkvBTSQsV+wulTGTGJzf1YwQWYZ9JUMdbuA9Vw8pJEZq/
-	 wG/ylhJ8ZPgUKclr85KMFcwdchePnQH1weFwAalz678OMlsxwyZc/iX9a+vyNMipHfjsw
-	 +7uZ3+Tcxx+VEga5w3FKJu3SmjgrYX/ghjI/9Z5lj7dgeoh6FpZxgG5DCG0LUanFtLQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795441280;
+	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
+	 Message-ID:MIME-Version:Content-Type:X-Change-ID:
+	 Content-Transfer-Encoding;
+	bh=P72trEonM6Y7XOEGHhhXrhsy7lLIVh2meQdrUiqYi4o=;
+	b=1f6+RqZq/P7p6dUeCrXfGPj4DMVF+7LnPiCBhApTtSk0an7ygnDCRD4z4VLmpMM3nEqN
+	 pdtrYV/PVJ/4nSqUfcd7tWa20UR+thWvXCeOwfkT2bkA5mwsfbuFSyKFZ6Q4JuFecDduX
+	 kWaxRDcVMEgsWWZKjgIaL2Yzm6c/63AosGl/MHc+r0vR+XdUkGbgPnfeV2Ktm5lAT0wfH
+	 AUp9Qap4Z+6MXUOeBab0zwkv68a+lay/O2E50mIFlxWFbJeKKqGmqsrePLd+A/0w2d7nu
+	 r/xlP/KBnNCfqATjrWLh1+eLEGt/zrpati2sxHXlqSqKR4iQrwK3r83lTnc6Owa4qaA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=g6yK4vC5;
-	arc=none smtp.remote-ip=95.215.58.4
-Received: from mta1.migadu.com (out-4.mta1.migadu.com [95.215.58.4])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linutronix.de;
+	spf=pass smtp.mailfrom=linutronix.de;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=A+IyIYva;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=udifRIrb;
+	arc=none smtp.remote-ip=193.142.43.55
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E1D606A31E
-	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 12:32:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 59E1D606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33176606A31E;
+	Mon, 23 Nov 2026 13:41:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 33176606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=g6yK4vC5
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=IaXfb5Hi/QpRbuwTQppmoutVL2pV2Zxy6b6NwmIDvTU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795437161; v=1; x=1796041961;
- b=g6yK4vC5n37WbsNdGMf0BkpnaNq+7uKBUXX15GD4SctWed5eePPBRCkJyQwRQZ4z/2o4XLKV
- YjmYuMufUFgSZOOqhTlUeP2HjKWGmRdRX2H20UrtpcOKL+huQpOCQUOCQ19bckPFv9Cpco69Ln0
- n04OISklYq56LohQvRYFpXuk=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 6fa58fd50eb09120;
-	Mon, 23 Nov 2026 12:32:41 +0000
-X-Mizu-Trace-ID: 6fa58fd50eb09120
-X-Migadu-Flow: FLOW_OUT
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=A+IyIYva;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=udifRIrb
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1795441275;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=P72trEonM6Y7XOEGHhhXrhsy7lLIVh2meQdrUiqYi4o=;
+	b=A+IyIYvauqbZDlTuFJrCwiyTiIrTR6vriQFNX+JdYJu4q8savXR4NH/dytBwbZGhjsntJd
+	YnK0tmB62KjWzfNg5gquw/NhJZAWFbbufoDxyJNfowT2pCaT34i9k6sarSM6qSzHbO8jtQ
+	Vx/Fk4WSB4qt6hMfaC7Kmij4NGzA7zbaN97S39RzvS73DNRkxIspmj36KJU6E/BI5qB8s7
+	sbEqy16YoKSmPvKdOFncc6fXrgiwl8qY0x9ICE+tK0leB5FV8vRMsneOGWU1Rfm2pT0F65
+	KwGxi3zY+mWkVgbsTmOQONY2tJDxnopqSVcLBkP9Qbu12tkaz/ypJd1Vj0Z16g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1795441275;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=P72trEonM6Y7XOEGHhhXrhsy7lLIVh2meQdrUiqYi4o=;
+	b=udifRIrbEh/keW0kFfcUyYMsULoybeOen4TtMT0Qo4cawCyDADEASsnztHVzeJQ/M9HIYi
+	/Ay43CgGfEjxNDDQ==
+To: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	rcu@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	luca abeni <luca.abeni@santannapisa.it>,
+	Yuri Andriaccio <yurand2000@gmail.com>,
+	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
+	"Paul E. McKenney" <paulmck@kernel.org>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Boqun Feng <boqun@kernel.org>,
+	Uladzislau Rezki <urezki@gmail.com>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Zqiang <qiang.zhang@linux.dev>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+	Qais Yousef <qyousef@layalina.io>,
+	John Ogness <john.ogness@linutronix.de>
+Subject: [PATCH v4 0/6] sched: RT throttling cleanup and a bit of documentation
+Date: Mon, 23 Nov 2026 14:41:06 +0100
+Message-ID: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,192 +103,122 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.200.71.1.16\))
-Subject: Re: [PATCH v5 04/17] mm/memcg: add folio-based lruvec live helper
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <awMX9W-Ykjw4maRg@KASONG-MC4>
-Date: Mon, 23 Nov 2026 20:32:16 +0800
-Cc: Muchun Song <muchun.song@linux.dev>,
- kasong@tencent.com,
- Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Qi Zheng <qi.zheng@linux.dev>,
- Ying Huang <ying.huang@linux.alibaba.com>,
- Chris Li <chrisl@kernel.org>,
- Baoquan He <baoquan.he@linux.dev>,
- Nico Pache <nico.pache@linux.dev>,
- Usama Arif <usama.arif@linux.dev>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>,
- David Hildenbrand <david@kernel.org>,
- Lorenzo Stoakes <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>,
- Barry Song <baohua@kernel.org>,
- Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>,
- Vlastimil Babka <vbabka@kernel.org>,
- Suren Baghdasaryan <surenb@google.com>,
- linux-mm@kvack.org,
- Nhat Pham <nphamcs@gmail.com>,
- Youngjun Park <youngjun.park@lge.com>,
- Zi Yan <ziy@nvidia.com>,
- Gregory Price <gourry@gourry.net>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Baolin Wang <baolin.wang@linux.alibaba.com>,
- Ryan Roberts <ryan.roberts@arm.com>,
- Dev Jain <dev.jain@arm.com>,
- Lance Yang <lance.yang@linux.dev>,
- Hugh Dickins <hughd@google.com>,
- SJ Park <sj@kernel.org>,
- David Rientjes <rientjes@google.com>,
- Yu Zhao <yuzhao@google.com>,
- Vernon Yang <vernon2gm@gmail.com>,
- Zicheng Wang <wangzicheng@honor.com>,
- Chen Ridong <chenridong@xiaomi.com>,
- Tal Zussman <tz2294@columbia.edu>,
- Xiang Liu <liuxiang.277@bytedance.com>,
- Ehab Ababneh <ehab.ababneh@intel.com>,
- Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>,
- Lian Wang <lianux.mm@gmail.com>,
- Joanne Koong <joannelkoong@gmail.com>,
- Kunwu Chan <kunwu.chan@gmail.com>,
- Hui Zhu <hui.zhu@linux.dev>,
- linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org,
- damon@lists.linux.dev,
- linux-doc@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+X-Change-ID: 20261110-sched_dl-a9727787112f
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <71FD1E6D-6F79-42B7-AED8-FCFACAB541AB@linux.dev>
-References: <20261119-mglru-fg-v5-0-9eee2fe97a2d@tencent.com>
- <20261119-mglru-fg-v5-4-9eee2fe97a2d@tencent.com>
- <42207e26-ba7f-4df5-8c80-71fa1b84d26e@linux.dev>
- <awMX9W-Ykjw4maRg@KASONG-MC4>
-To: Kairui Song <ryncsn@gmail.com>
-X-Mailer: Apple Mail (2.3901.200.71.1.16)
 
+People used to disable the RT throttling mechanism by writing -1 to
+/proc/sys/kernel/sched_rt_runtime_us. Since v6.12 they can still do this
+but they don't disable RT throttling anymore. Instead this throttling
+mechanism has been taken over by the fair_server which can be configured
+via debugfs.
+This is not really documented but a hint appeared a few cycles later in
+Documentation/scheduler/sched-rt-group.rst. This can be found once you
+know what you are looking for because this document describes the RT
+group scheduling (CONFIG_RT_GROUP_SCHED). The fair_server is used even
+without it.
+The then there is global DL resource control which also shares this
+file proc file (which is stuck if CONFIG_RT_GROUP_SCHED is enabled).
 
+This little series:
+- Marks CONFIG_RT_GROUP_SCHED as broken because I was not allowed to
+  remove it.
 
-> On Nov 23, 2026, at 01:03, Kairui Song <ryncsn@gmail.com> wrote:
->=20
-> On Sun, Nov 22, 2026 at 03:53:44PM +0800, Muchun Song wrote:
->>=20
->>=20
->> On 2026/11/19 05:03, Kairui Song via B4 Relay wrote:
->>> From: Kairui Song <kasong@tencent.com>
->>>=20
->>> Add a helper that resolves a live lruvec for a folio under RCU
->>> without taking the lruvec lock.  It takes a folio directly so the
->>> lruvec lookup happens inside the RCU read-side critical section,
->>> which a lruvec-based interface cannot guarantee.  The first user is
->>> the lockless folio_inc_lru_refs() path later in the series.
->>>=20
->>> Factor the ancestor walk out of lruvec_live_lock_irq() into
->>> __lruvec_get_live(), so that both entry points share it, and spell
->>> out why the walk is enough while only the RCU read lock is held:
->>> reparenting of a memcg that starts dying waits for a grace period,
->>> so it cannot race with the caller until the lock is released.
->>>=20
->>> Move memcg_is_dying() up in memcontrol.h, next to the other memcg =
-state
->>> predicates, and use it for the walk rather than repeating the open =
-coded
->>> css_is_dying() test a few definitions away from where it is =
-explained.
->>>=20
->>> No functional change for existing callers.
->>>=20
->>> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
->>> Signed-off-by: Kairui Song <kasong@tencent.com>
->>=20
->> Reviewed-by: Muchun Song (ByteDance) <muchun.song@linux.dev>
->>=20
->> Some nits bellow:
->>=20
->>> ---
->>>  include/linux/memcontrol.h | 71 =
-++++++++++++++++++++++++++++++++++++----------
->>>  1 file changed, 56 insertions(+), 15 deletions(-)
->>>=20
->>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->>> index 980358bc6f49..441a5d57e723 100644
->>> --- a/include/linux/memcontrol.h
->>> +++ b/include/linux/memcontrol.h
->>> @@ -571,6 +571,11 @@ static inline bool mem_cgroup_disabled(void)
->>>   	return !cgroup_subsys_enabled(memory_cgrp_subsys);
->>>  }
->>> +static inline bool memcg_is_dying(struct mem_cgroup *memcg)
->>=20
->> Let's make it const for @memcg along the way.
->=20
-> Good idea, but css_is_dying isn't constified, maybe we can do it later =
-I think.
+- Untangles DL usage of sched_rt_runtime_us and moves it to
+    /sys/kernel/sched/dl_period_us
+    /sys/kernel/sched/dl_runtime_us
 
-Fine.
+  This keeps the _us semantic that we used to have /proc. It _could_ be
+  changed to ns instead.
+  The updates to the proc interface are mirrored to the /sys interface
+  and produce warning on the first write without CONFIG_RT_GROUP_SCHED
+  enabled.
 
->=20
->>> @@ -1510,28 +1520,41 @@ static inline void lruvec_lock_irq(struct =
-lruvec *lruvec)
->>>   spin_lock_irq(&lruvec->lru_lock);
->>>  }
->>> -static inline struct lruvec *lruvec_live_lock_irq(struct lruvec =
-*lruvec)
->>> +/*
->>> + * Reparenting moves a dying memcg's LRU state to its parent at any =
-time,
->>> + * so anything added to that LRU afterwards would be lost.  This =
-helper
->>> + * walks up to the nearest live ancestor while the caller must hold =
-the
->>> + * RCU read lock: reparenting of a memcg that starts dying waits =
-for a
->>> + * grace period, so it cannot race with the caller until the lock =
-is
->>> + * released.
->>> + */
->>> +static inline struct lruvec *__lruvec_get_live(struct lruvec =
-*lruvec)
->>=20
->> Cound @lruvec be const as well?
->=20
-> The argument is fine, but tricky for the return value: when nothing is =
-dying it
-> hands back @lruvec unchanged, so a const argument means a const return =
-(which
-> isn't right) or a cast dropping it again.
+- rcutorture is not touched anymore. Joel Fernandes is working on it.
+  The rcutorture can be fixed independently since the sysctl variables
+  are no longer removed.
 
-A cast is not nice. Let's keep things as they are.
+- Adds sysfs interface under /sys/kernel/sched/cpuX to represent the
+  runqueues. The only knob for now is fair_server_{period|runtime}
+  representing the fair_server parameters. If all goes well, debugfs
+  could be removed. The ext server could be moved, too.
 
-Thanks,
-Muchun
+- I tried to correct/ update documentation while at it. I added the -doc
+  folks on Cc so they are aware. I can drop them in the next posting, I
+  expect that this gets routed via the sched/-tip.
 
->=20
->>> @@ -1561,6 +1584,34 @@ static inline bool folio_matches_lruvec(const =
-struct folio *folio,
->>>          lruvec_memcg(lruvec) =3D=3D folio_memcg(folio);
->>>  }
->>> +/**
->>> + * folio_lruvec_live_get - get a live lruvec for a folio under RCU
->>> + * @folio: the folio
->>> + *
->>> + * Same as folio_lruvec(), except that a folio whose memcg is dying =
-is
->>> + * accounted to the nearest live ancestor, which is where =
-reparenting
->>> + * would put it anyway.
->>> + *
->>> + * Return: the live lruvec, with rcu_read_lock() held.  Pair it =
-with
->>> + * folio_lruvec_live_put().
->>> + */
->>> +static inline struct lruvec *folio_lruvec_live_get(struct folio =
-*folio)
->>=20
->> const folio?
->=20
-> This is doable, will do!
->=20
-> Thanks for the review!
+v3=E2=80=A6v4: https://patch.msgid.link/20261113-sched_dl-v3-0-a76ffa1cdeee=
+@linutronix.de
+  - Drop the cpu_active() verification for DL admission control updates.
+    Mathieu is working on getting it to work so I preserve it and don't
+    touch it.
 
+  - Drop the RCU-torture changes. Joel is reworking it so it no longer
+    needs to disable the RT-throttling (or the fair_server now).
+
+  - The proc/ sysctl knobs are not removed. Update to the sysctl
+    interface are mirror to the sysfs admission control but not the
+    other way around. An update to the sysctl interface without
+    CONFIG_RT_GROUP_SCHED enabled will print a warning.
+    LTP was complaining about the removal. On the other hand it was just
+    complaining that writting -2 to runtime resulted in EBADF instead
+    EINVAL. So=E2=80=A6
+
+v2=E2=80=A6v3: https://patch.msgid.link/20261110-sched_dl-v2-0-cc9399f7aeb1=
+@linutronix.de
+  - Corrected in wording sched-rt-group.rst (Pointed out by Randy)
+  - RCU-torture now disables the fair_server from its boost-thread. The
+    code expects the CPU to be active which is after the CPU-hotplug
+    notifier is run. An alternative would be to not start the
+    fair_server (in the RCU-torture built-in case).
+  - sched_dl_try_boundary() has now a private mutex to perform the
+    update. sashiko complains that the values are read outside of
+    sched_domains_mutex and written back while it is held, making it
+    possible to write stale period/ runtime values back.
+  - proper u64 casting for NSEC_PER_USEC multiplication.
+  - sysfs_dl_runtime is not static and accessed in
+    dl_bandwidth_enabled(). This was missed earlier.
+    The remaining sysctl_sched_rt_{runtime|period} are now also hidden
+    behind CONFIG_RT_GROUP_SCHED.
+
+v1=E2=80=A6v2: https://lore.kernel.org/all/20261105164724.yxONBd03@linutron=
+ix.de/
+  - Tejun and PeterZ asked for marking CONFIG_RT_GROUP_SCHED broken
+    first.
+  - Everything after patch #1 that got queued up.
+
+RFC=E2=80=A6v1: https://lore.kernel.org/all/20261023161348.t3lpPLQZ@linutro=
+nix.de/
+  - Try to remove RT-GROUP-sched after figuring out that it is useless.
+
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+
+---
+Sebastian Andrzej Siewior (6):
+      sched: Mark RT_GROUP_SCHED broken
+      sched: Move DL's admission control to sysfs
+      sched: Add sysfs files for the per-CPU fair_server knobs
+      sched: Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED
+      Documentation/sched: Drop the section enumeration in sched-deadline
+      Documentation/sched: Add fairserver to sched-deadline
+
+ Documentation/arch/arm64/asymmetric-32bit.rst |   2 +-
+ Documentation/scheduler/sched-deadline.rst    | 149 ++++++------
+ Documentation/scheduler/sched-rt-group.rst    |   7 +-
+ init/Kconfig                                  |   2 +-
+ kernel/sched/deadline.c                       | 312 ++++++++++++++++++++++=
++++-
+ kernel/sched/debug.c                          |  56 +----
+ kernel/sched/features.h                       |   2 +
+ kernel/sched/rt.c                             |  27 +--
+ kernel/sched/sched.h                          |  65 +++---
+ 9 files changed, 432 insertions(+), 190 deletions(-)
+---
+base-commit: a4d7daea71be591034445c17d4d81132a1785a12
+change-id: 20261110-sched_dl-a9727787112f
+
+Best regards,
+--=20=20
+Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
