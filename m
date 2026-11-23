@@ -1,86 +1,62 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795444383;
-	b=XZYhfDl9wOXAuhJT8yw7fbLJaJUzslJXN6wXmVqqcuaRkCfhz6w/5AfUsQsgVG4zBILn
-	 FH1L2vT7nk526Vb8HW5rUjmcgQoAcZ6ufdker44a2mheJ+SVW28xf3j5LIN3YV4VkbvJ1
-	 2KczNUi1LQBaC3QRV8tP4pRYAE4wHuA3+MXBMhaI8sBNDzN9NZqVbYjVPj9zhQEhBvJWT
-	 Uk7G+6SPgskAishNyv8hPWhQvl8o+o9qcJCTDjbSfRf+PIledx3JHqYSKTCIultynoWGd
-	 aD1J1//rm8XvY+0kRiC/9gzqd8EmCKqvzEd3Bx76P6Cc4KR8rrsjz2Hosd2+P1d3Llw==
+	t=1795451044;
+	b=3tjP1e33FkHlLvW598prooZRBTge6xEyaFwJxrDaILW3YhPFAnNHS+6wID1B9yFXi+hD
+	 7hLHWiZZppJFr4HAFP86dG3dz/k7jQ0G8uOB6HNS0cwMAELy9RVQ4LLyjphmKsAdg5LSD
+	 DSVkT64KvPbuJ5nFOOLtkq5DRnro7cR7yCn2EZsHGMdEyg/zdIObahMofeerM3BwntrRT
+	 OaGDel8m8MxKUDOxma3E4cFCtXooCjQ/jn02X+1U3hP+ibQjqJNgOdn5EBo7oZxOIQP3g
+	 Bnq0maiDe50ed1zRv8a73CyO5seuGRvQwtnbVNWDMy2BxBgBThlvXSQZ9TQb/8QenWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795444383;
-	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To;
-	bh=k633DNog7kHsc3DkibIR1k/YpXw7SywtAhFVDY+BYIk=;
-	b=zn6WBtR3fbem5HEaknUmbSBw8xRac2aTxmxS1rJLf1PKRM3dZRHuk5LZNO6Kv4GwWW5q
-	 CPC/kYxq4+ONkcXRrbmSfeVgJoWK8N8tmFrhcpgUiFKvJkOKuPvT4UT2mUlMdlKPbqBsW
-	 SN3NdV7QcwrN/XxD+wm0UWK1y0K9mI6WFRTFAUjw+US2AUcXbql4L/uGp6Ce/pXMFWyGY
-	 4mvu1o0qlQxp9Odtef3k8ipo/6Gc01X8J2yJd9T8gAb5tPLNRCDcw6K4nnp666AwWePVg
-	 gzOr9cwf2UdNLzJkhl4yuMezcMw6NS2cgbh2LBHSFy/JwtAQH2YxuqQwfrzCcUEImng==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795451044;
+	h=Received:DKIM-Signature:Subject:From:To:Cc:Date:Message-ID:
+	 In-Reply-To:References:X-sashiko-severity:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version;
+	bh=DXavW4JWzr1Q6W/lcF7e/uXGv4HjAfnzdjNwVnsw0mE=;
+	b=UxQ8cEqj7kW1fjVEOEWDPtOmjDWYZutEwB2OQ+boQUtPr/WkGS1YO9lFEPUFh3eyfN/G
+	 esff7JOz4Wu5U6Xv8P8pCoX4GdxLzqQgxJBCFsSiXscaTafUjz3mXcKxzzdKJZurtLTTy
+	 rACiBo2BCGQ4LJLKfaMjrgjhDQlrIQGBTMh8rjqmGf7iAb1XQ/s9wW2FTBAo1ZPZWQlmK
+	 anrMAeRKFtQ8BRhk06nSkwY45OpKA3+VS0z8y5QvQsIQdYPlG+vX+J5fN83lOO7gqRPw5
+	 hxW5eAnyDoVjVR00zhA/xxHOnX+1/ZqA66PFuclqWbkdEDW6w8ZG/HuSLf6DTkGU8Ew==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linutronix.de;
-	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=ZxtcbYaU;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=9m7Ugj8n;
-	arc=none smtp.remote-ip=193.142.43.55
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="HRTPwa/C";
+	arc=none smtp.remote-ip=100.103.45.18
+Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68A24606A31A;
-	Mon, 23 Nov 2026 14:33:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 68A24606A31A
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CCF5606A31E;
+	Mon, 23 Nov 2026 16:24:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=ZxtcbYaU;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=9m7Ugj8n
-Date: Mon, 23 Nov 2026 15:32:58 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1795444380;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=k633DNog7kHsc3DkibIR1k/YpXw7SywtAhFVDY+BYIk=;
-	b=ZxtcbYaUCdJCiwN819LIpdx/24DZbqjBfdQLHv34aaGA3g6B99AUapDeSMVBiZcLKI3T/3
-	zvh2H+xflYd9shEF1DUmaoB4pE9tq4NHxRLw1TL+3pyq4dAwkQOodC3IJ9pcaVfam/nZ3b
-	0qRLEUc4B/bPPfvHx9jaW4JMKc0izaPU7RPEumvkTfxbIK9k9jscgM/Bjex0Z9Ek5LfhFW
-	454ibkUJW/nJ5A6c7mDBnQmuH7fMxghGAi5sWAAPImLLNK5rzrSGiEKP2/GZjuuX/ryNKS
-	+49/kTIbVt0lPKuGZKVyLVapuH4rqCR+iXqoePOK0d9F8hnQ5Ma/c4nuOtY++Q==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1795444380;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=k633DNog7kHsc3DkibIR1k/YpXw7SywtAhFVDY+BYIk=;
-	b=9m7Ugj8nI5t0iqfjMRoRoinvgwt82fY/F0wRU3yw60HfzxIXFwcVx1R9IMTqDI5BsG8Ath
-	nAsai9NTuok7EuCg==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Karl Mehltretter <kmehltretter@gmail.com>, bpf@vger.kernel.org,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Andrii Nakryiko <andrii@kernel.org>,
-	Martin KaFai Lau <martin.lau@linux.dev>,
-	Eduard Zingerman <eddyz87@gmail.com>,
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>,
-	Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>,
-	Jiri Olsa <jolsa@kernel.org>,
-	Emil Tsalapatis <emil@etsalapatis.com>,
-	Ihor Solodrai <ihor.solodrai@linux.dev>,
-	Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Waiman Long <longman@redhat.com>,
-	Jiayuan Chen <jiayuan.chen@linux.dev>,
-	Puranjay Mohan <puranjay@kernel.org>, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH bpf-next] selftests/bpf: Disable preemption around
- css_rstat_updated()
-Message-ID: <20261123143258.N1ETiMUU@linutronix.de>
-References: <20261121082843.44614-1-kmehltretter@gmail.com>
- <DN26CP5BB6O7.23ALW6CZUBYSD@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=HRTPwa/C
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 026541F000E6;
+	Mon, 23 Nov 2026 16:24:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
+	s=k20260515; t=1795451044;
+	bh=DXavW4JWzr1Q6W/lcF7e/uXGv4HjAfnzdjNwVnsw0mE=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References;
+	b=HRTPwa/CG7GeJX/h6unRrUok3iyt++C87ZisW5dSA1pkNjBFXoKnQGd2R3+99lWbf
+	 tCetkOzw10KfiAfqEDb1zDLFv4dSTB2BpsmYl3iNpebQ7hv/xp3wS7tvtpJJa02uwR
+	 cWfyimQxDjn0P8ABZU7kIiHW3OOa5izFSY2TAj6KjfDZ5K5c4NNBj7+23dHYLhz01P
+	 5G5QuAYWkHHF59D7fxqFV4RmpzUN6f7pMDyC7k4H5a+AAMLrnAgF2jgE6mfDpZnnN3
+	 xFsw8dAcIFFyrXfH5mCymvWuv218H/b5jt86qgLvxzV/SBpK/t0zlUKbz90HWv9EDM
+	 kWUJXsBcJy++A==
+Subject: Re: [PATCH net 1/3] net: multicast: keep source filter state when a
+ source update fails
+From: netdev-bot+sashiko@kernel.org
+To: x-professor@outlook.com
+Cc: netdev@vger.kernel.org, dsahern@kernel.org, idosch@nvidia.com,
+ davem@davemloft.net, edumazet@kernel.org, kuba@kernel.org, pabeni@redhat.com,
+ horms@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org,
+ roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev,
+ akpm@linux-foundation.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Date: Mon, 23 Nov 2026 16:24:02 +0000
+Message-ID: <179545104255.3135.1386420892995095806@kernel.org>
+In-Reply-To: <fcc87bc014e01d9571fa33aaabd22180908e55d1.1795102467.git.x-professor@outlook.com>
+References: <fcc87bc014e01d9571fa33aaabd22180908e55d1.1795102467.git.x-professor@outlook.com>
+X-sashiko-severity: Medium
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -90,32 +66,273 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <DN26CP5BB6O7.23ALW6CZUBYSD@gmail.com>
 
-On 2026-11-23 00:47:15 [+0000], Alexei Starovoitov wrote:
-> On Sat, Nov 21, 2026 at 12:28 AM Karl Mehltretter <kmehltretter@gmail.com> wrote:
-> > trace_cgroup_path_lock. On PREEMPT_RT this leaves preemption and
-> > interrupts enabled. On non-RT it masks interrupts, satisfying the
-> > assertion.
-> 
-> let's fix the kfunc instead
-> 
-> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-> index de816a4..d72fe72 100644
-> --- a/kernel/cgroup/rstat.c
-> +++ b/kernel/cgroup/rstat.c
-> @@ -131,6 +131,7 @@ __bpf_kfunc void css_rstat_updated(struct cgroup_subsys_state *css, int cpu)
->  	if (unlikely(cpu < 0 || cpu >= nr_cpu_ids || !cpu_possible(cpu)))
->  		return;
+Thank you for your contribution! Sashiko AI review found 3 potential
+issue(s) to consider.
+
+Critical: 0 · High: 0 · Medium: 3 · Low: 0
+
+If you believe none of the issues are legitimate, please reply to each
+issue of Medium severity or higher and explain why the AI is wrong.
+If any of them are legitimate and you plan to respin, please let patchwork
+know by including "pw-bot: cr" as a separate line at the end of your reply
+(one such reply per series is enough).
+
+- [Medium] ip_mc_source() (net/ipv4/igmp.c) and ip6_mc_source()
+  (net/ipv6/mcast.c) still switch the mode of an empty filter before…
+- [Medium] The patch now returns every non-zero result of
+  ip_mc_add_src()/ip6_mc_add_src() from the add paths, not only…
+- [Medium] The new `done:` rollback in ip6_mc_source()
+  (net/ipv6/mcast.c:504-508), and its IPv4 twin in ip_mc_source()…
+
+--
+
+net: multicast: keep source filter state when a source update fails
+
+This patch restores the previous socket filter mode when ip_mc_source() or
+ip6_mc_source() fail after switching the mode of an empty filter. It also
+returns device-side errors from ip_mc_add_src()/ip6_mc_add_src() before
+the socket filter is published. When the source update fails, it drops a
+membership that the same MCAST_JOIN_SOURCE_GROUP or
+IP_ADD_SOURCE_MEMBERSHIP call created.
+
+> diff --git a/net/ipv4/igmp.c b/net/ipv4/igmp.c
+> index 52cde8782eebd..bfa448028f8a1 100644
+> --- a/net/ipv4/igmp.c
+> +++ b/net/ipv4/igmp.c
+
+[ ... ]
+
+> @@ -2530,9 +2531,10 @@ int ip_mc_source(int add, int omode, struct sock *sk, struct
+>  		}
+>  	} else if (pmc->sfmode != omode) {
+>  		/* allow mode switches for empty-set filters */
+> +		oldmode = pmc->sfmode;
+>  		ip_mc_add_src(in_dev, &mreqs->imr_multiaddr, omode, 0, NULL, 0);
+> -		ip_mc_del_src(in_dev, &mreqs->imr_multiaddr, pmc->sfmode, 0,
+> -			NULL, 0);
+> +		ip_mc_del_src(in_dev, &mreqs->imr_multiaddr, oldmode, 0,
+> +			      NULL, 0);
+>  		pmc->sfmode = omode;
+>  	}
 >  
-> +	guard(preempt)();
->  	__css_rstat_updated(css, cpu);
 
-This looks like the only call site which did not disable preemption on
-its own (the other are either NMI or have get_cpu()).
+[Severity: Medium]
 
->  }
+The mode switch still happens before the request is validated. It is only
+undone at done: if the request fails. While the switch is in effect, can
+other code see the temporary INCLUDE{} state?
 
-Sebastian
+At the socket level, ip_mc_sf_allow() runs under rcu_read_lock() only and
+does this:
+
+    psl = rcu_dereference(pmc->sflist);
+    ret = (pmc->sfmode == MCAST_EXCLUDE);
+    if (!psl)
+        goto unlock;
+
+inet6_mc_check() follows the same pattern:
+
+    psl = rcu_dereference(mc->sflist);
+    if (!psl) {
+        rv = mc->sfmode == MCAST_EXCLUDE;
+
+So group datagrams that arrive inside the window would be dropped for this
+socket.
+
+At the device level on IPv4, suppose this socket holds the only EXCLUDE
+reference. The forward ip_mc_del_src() then drops sfcount[MCAST_EXCLUDE]
+to 0 and switches im->sfmode to MCAST_INCLUDE. ip_check_mc_rcu() reads
+this without a lock. Would traffic for the group be rejected for every
+socket on the host until the rollback runs?
+
+ip_mc_del_src() also calls igmp_ifc_event(), which arms mr_ifc_timer.
+igmpv3_send_cr() only takes pmc->lock, not RTNL. If the timer fires inside
+the window, it looks like it could send a CHANGE_TO_INCLUDE{} record,
+which is a leave on the wire.
+
+Even if the timer does not fire, the rollback is a second device-level
+mode change. A call that changed nothing would still produce qrv
+CHANGE_TO_EXCLUDE records, or MLD change reports on IPv6.
+
+When !add and sflist == NULL, the call always ends here:
+
+    if (!psl)
+        goto done;	/* err = -EADDRNOTAVAIL */
+
+So that path never needs the switch, and it is always rolled back.
+
+On the add path, the window includes a GFP_KERNEL sock_kmalloc(), which
+can sleep in reclaim. Allocation failure under memory pressure is the
+failure case this commit is fixing.
+
+The commit message says "the EADDRNOTAVAIL case keeps the EXCLUDE filter
+and the group is still received". That does not hold during the window.
+
+Could the code fail early when !add && !sflist? On the add path, could
+the allocation and validation run before the mode switch, so the window
+goes away rather than just getting shorter? The same applies to
+ip6_mc_source().
+
+[ ... ]
+
+> @@ -2585,10 +2596,30 @@ int ip_mc_source(int add, int omode, struct sock *sk, struct
+
+[ ... ]
+
+> +	/* update the interface list */
+> +	err = ip_mc_add_src(in_dev, &mreqs->imr_multiaddr, omode, 1,
+> +			    &mreqs->imr_sourceaddr, 1);
+> +	if (err) {
+> +		if (newpsl)
+> +			sock_kfree_s(sk, newpsl,
+> +				     struct_size(newpsl, sl_addr,
+> +						 newpsl->sl_max));
+> +		goto done;
+> +	}
+
+[Severity: Medium]
+
+This now returns any non-zero result from ip_mc_add_src(). The matching
+change in ip6_mc_source() does the same for ip6_mc_add_src(). Both
+helpers also return -ESRCH when the device has no entry for the group:
+
+    if (!pmc) {
+        /* MCA not found?? bug */
+        rcu_read_unlock();
+        return -ESRCH;
+    }
+
+Can setsockopt() now fail with ESRCH in cases that used to return 0? That
+would affect IP_BLOCK_SOURCE, IP_ADD_SOURCE_MEMBERSHIP, MCAST_BLOCK_SOURCE
+and MCAST_JOIN_SOURCE_GROUP.
+
+This looks reachable in a few ways.
+
+On IPv6, without privilege: a socket joins G on interface A with an
+explicit ifindex. It then calls MCAST_BLOCK_SOURCE with gsr_interface ==
+0. The idev comes from ip6_mc_find_dev()->rt6_lookup() and can be
+interface B. The pmc loop in ip6_mc_source() still matches the A
+membership, because the ifindex check is skipped. ip6_mc_add_src(B, ...)
+then returns -ESRCH.
+
+Before this patch, the socket-level filter in that case was committed and
+still enforced by inet6_mc_check(), which matches by address only. The
+call returned 0. Now the call fails and the filter is not applied.
+
+On IPv4: lowering the MTU below the minimum and raising it again goes
+through inetdev_event()->inetdev_destroy() and a later inetdev_init().
+The socket memberships survive, but the new in_device has no group entry.
+Source operations would then return ESRCH.
+
+Also on IPv4: __ip_mc_join_group() ignores the result of
+____ip_mc_inc_group(). If that allocation fails, the membership has no
+device entry. A new IP_ADD_SOURCE_MEMBERSHIP or MCAST_JOIN_SOURCE_GROUP
+would then drop the membership and return ESRCH, not ENOBUFS.
+
+The commit message says:
+
+    Return device-side allocation errors before publishing the socket filter.
+
+Should only allocation errors (-ENOBUFS) be returned here, with the
+-ESRCH cases handled separately?
+
+[ ... ]
+
+> diff --git a/net/ipv6/mcast.c b/net/ipv6/mcast.c
+> index ecef55f261890..0d982f7d29cda 100644
+> --- a/net/ipv6/mcast.c
+> +++ b/net/ipv6/mcast.c
+
+[ ... ]
+
+> @@ -403,8 +404,9 @@ int ip6_mc_source(int add, int omode, struct sock *sk,
+>  		}
+>  	} else if (pmc->sfmode != omode) {
+>  		/* allow mode switches for empty-set filters */
+> +		oldmode = pmc->sfmode;
+>  		ip6_mc_add_src(idev, group, omode, 0, NULL, 0);
+> -		ip6_mc_del_src(idev, group, pmc->sfmode, 0, NULL, 0);
+> +		ip6_mc_del_src(idev, group, oldmode, 0, NULL, 0);
+>  		pmc->sfmode = omode;
+>  	}
+>  
+
+[ ... ]
+
+> @@ -494,6 +501,11 @@ int ip6_mc_source(int add, int omode, struct sock *sk,
+>  	kfree_rcu(psl, rcu);
+>  	err = 0;
+>  done:
+> +	if (err && oldmode >= 0) {
+> +		ip6_mc_add_src(idev, group, oldmode, 0, NULL, 0);
+> +		ip6_mc_del_src(idev, group, omode, 0, NULL, 0);
+> +		pmc->sfmode = oldmode;
+> +	}
+
+[Severity: Medium]
+
+This rollback undoes the forward mode-switch calls without checking
+whether they succeeded. The forward call
+
+    ip6_mc_del_src(idev, group, oldmode, 0, NULL, 0);
+
+returns -EINVAL and changes nothing when mca_sfcount[oldmode] is 0:
+
+    if (!delta) {
+        if (!pmc->mca_sfcount[sfmode])
+            return -EINVAL;
+
+        pmc->mca_sfcount[sfmode]--;
+    }
+
+The rollback's ip6_mc_add_src(idev, group, oldmode, 0, NULL, 0) still
+increments mca_sfcount[oldmode] every time. Can this leave a phantom
+reference on another socket's device entry?
+
+This looks reachable without privilege, through an existing mismatch in
+ip6_mc_source(). With gsr_interface == 0, the pmc loop matches any
+membership for the group, while idev comes from a route lookup. Nothing
+checks that idev->dev->ifindex == pmc->ifindex. For example:
+
+1. Socket S2 joins G on device B with MCAST_JOIN_SOURCE_GROUP. B now has
+   mca_sfcount[MCAST_INCLUDE] = 1, mca_sfcount[MCAST_EXCLUDE] = 0, and
+   mode INCLUDE.
+
+2. Socket S1 joins G on device A with IPV6_JOIN_GROUP (EXCLUDE{}). The
+   route for G points to B.
+
+3. S1 calls MCAST_LEAVE_SOURCE_GROUP with gsr_interface = 0 for a source
+   it never added.
+
+4. The forward ops run on B. The INCLUDE add raises the INCLUDE count to
+   2. The EXCLUDE del fails with -EINVAL. The call then fails with
+   -EADDRNOTAVAIL.
+
+5. The rollback runs on B. The EXCLUDE add sets the EXCLUDE count to 1 and
+   switches B to EXCLUDE. The INCLUDE del lowers the INCLUDE count to 1.
+
+B would be left in EXCLUDE mode with a phantom EXCLUDE count. MLD would
+report EXCLUDE{} for G on B, and device-level filtering on B would accept
+all sources.
+
+S1's later leave works on device A, because __ipv6_sock_mc_drop() uses
+mc_lst->ifindex. So the phantom count would remain as long as B's group
+entry exists.
+
+Before this patch, the same sequence only left a phantom INCLUDE count
+on B.
+
+The IPv4 rollback in ip_mc_source() has the same unchecked pattern. It can
+be hit when a socket membership has no device entry of its own, for
+example after an MTU drop and restore or a failed ____ip_mc_inc_group().
+Another socket then has to create the entry later.
+
+This also seems to conflict with the commit message's claim that
+failures "preserve the previous filter and membership state".
+
+Could the rollback undo only the forward operations that actually
+succeeded?
+
+-- 
+Sashiko AI review · https://netdev-ai.bots.linux.dev/sashiko/#/patchset/cover.1795102467.git.x-professor%40outlook.com
