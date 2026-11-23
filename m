@@ -1,100 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.221.52
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795434566;
-	b=vKCt97MQ9H7AgHRcxSnph1brXNpMjUqr7WIY+lXuBtlVEXEzwswgV9ntEjKMdZ/FI8Bt
-	 IshT5hJ2qEKa/2Yk/BxIH1k1/MUCbX6xr8yYQNrm7OC5N3HGJsoOAzKgy4HBl0p6bmKL7
-	 HKnuqxnYfyLNSYkb46XZltGdbuSZww4M/2RRle5OpS8zIicdpI+WcnvAhFKJVpyjc4tZo
-	 SdEnPpyqVm2QddmFxCNVstZOtmuyrANuFoFWzfUlHYfa3mvrCCksxhPWz+pVRRCMXGglb
-	 YMGbytrJqg16cRNaIh+xYrZ0hSzI/N4X9sumcldDB1tmLgbLFWQ0K2zs3CjrDwwNnvQ==
+	t=1795434579;
+	b=axp/rURbPShH9sbIN9oaXnb8z38rQ6dEc8niIcAt71z7TPablKipgo59eoIZ1kWVEzOm
+	 0T6dTntZFAmh4fcssKeH2nguPLW23WV94uGHia8lBv7tlFpF9oounabwDk0OIBiB2gzTo
+	 yz73LLIkCKwr4TSuNnDDn77HHEXcBh0SkRWwHTaF2xuRZn52GqIopL0XsmRc9L+7qYYtg
+	 +D033kFYuJOICnY90gqziG89sADEa5B9fA1mDcU+Nx4DLV3bw8sTwftPQyLvNC8LDiBtc
+	 JtqY+phjxvdcyzwj8KFM1Kd6tO7Qf+qmHQYPlQZRvbfRak/jiWVHMHKyMe6q7gpZy9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795434566;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795434579;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=DLWiLwlOa1M+CGXscE3EqyDLFhF6yXj7XzInNLOita0=;
-	b=Ep3tK3BIOATKszDI6gPm5gUGjaB4zKknkrP3aVm5vHftImlsnyhPEmb5toTObXCrkQ+T
-	 OW6BP6CQkcPLMdxauDZ8UVEPo5jH0cHW0R3bKaTnRsorubkyfOWeQUlvwgfB7XtCGhdUH
-	 bcL4ZjratyV2cl06MmSXaLvA7eqBYW8jJ0kz+ZG4MqSGgNZPKh7fUyk5/p7YbcO7HlRTt
-	 xiVM9mGTWIcoI9eFrYewZ8/moegu9DhzSOBx0x207h/jpxAC/Gxw1N1ultdktB18prn0K
-	 N/fGfg6rZvxSedQmjeB9TvON7bo/lVkXRvehN43s0aaozutMknYP8m0jxTgCzuwXnBA==
+	bh=nZFSp0goL8XjmcYoGXv0HxNvOIB0a28cVRyu5V9lYRM=;
+	b=PScVCNFSkXH2aAuD+iAFllBisozCA3hk9hixgtzoVHLtW9vBE9zjUX3NAMizn346uwhg
+	 OOCnJtnP0C5nRzxI3BOS2/RW1G+b1RRfBdl0NXLpvKSfW/4bGYMJNqNKBcN6R31jxbYwh
+	 jGBphOyi8ra81JjMcFH5SPgrXfeBLhoeqtYSdermisKizgzrfma/s+nLzxAtiegwbT5L7
+	 NVq+9A9tmCmpk94zUn5C1aUb07JQVM1czhP0qirtbM1ZHHgrhaE96o7mR/w/MOL4yXCum
+	 aXAhryo8NCRuhKw5lXUy6Zr1gaAqor2KTbN0LK5Ib/uoZmRZcOrFmPOs3Q8IvnB8wfQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=suse.com;
 	spf=pass smtp.mailfrom=suse.com;
-	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=COSYS+dN;
-	arc=none smtp.remote-ip=209.85.128.51
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	dkim=pass header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=CzUJIbk9;
+	arc=none smtp.remote-ip=209.85.221.52
+Received: from mail-wr1-f52.google.com (mail-wr1-f52.google.com [209.85.221.52])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83E58606A31A
-	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 11:49:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 83E58606A31A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67AC2606A31A
+	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 11:49:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 67AC2606A31A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=COSYS+dN
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4bb6adaf0f1so27598375e9.0
-        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 03:49:26 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.a=rsa-sha256 header.s=google header.b=CzUJIbk9
+Received: by mail-wr1-f52.google.com with SMTP id ffacd0b85a97d-4acb44dcd7bso2578147f8f.0
+        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 03:49:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1795434565; x=1796039365; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1795434578; x=1796039378; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=DLWiLwlOa1M+CGXscE3EqyDLFhF6yXj7XzInNLOita0=;
-        b=COSYS+dNefZdqkxEJffuyhbTfHZeKxak1CQ0RmWdfYG/c4CrsOyFDid0VbHd6UUsK6
-         ihEatHsLxMtusANsLiY+BgbJWxgE0PZCPAKSrONc900gvT48RIc8Lt3k0SePhL0EuiLp
-         iCqCg3WaH4eDCOQK8gwwQKfI6QaLrqVWzUSiGeq68HfJUxeW29GpVAZrM841aJlBK3J3
-         VonNZrihmfRFBsNBIllmKxy2dmE0Ibd6NPiXIhAoAP8BLZwH0BERyiIkBynx2L7Is7U8
-         aUrhCKZTr+OpE9Kc3GhxM8evfIqq7RvvojUPrFA6mQOInvzwjBi5bS6SuKvShmskXbMm
-         v9fg==
+        bh=nZFSp0goL8XjmcYoGXv0HxNvOIB0a28cVRyu5V9lYRM=;
+        b=CzUJIbk97RZ2hv1oL8OKSUCjOsRQfOXST05apaPBzb2vINocN92T8ZptDqseWyI2RI
+         8KKSfak1QFhbNmJjX66MObskBf3cv63LbqDdu2APUhvGZv6/l9tP6YyIFPHHRgHIM7Bz
+         L79AO47Tq2dupE75ljLoRerpugPVVwKfyJ0lepNWctiQSAt+ge9mp4tO0pooda/u7IB7
+         EvDpfNbRbgGeTzJiMvSoCZif477XtDiURd7vEb4QJSb48uerbqp2RK1oc2IRPp4FPT7D
+         aFYaWcyagfP73qCY4Q0ZnxekA0gU2rv/InDAtUK7p9kbHXwJoJOS9O/teV7XvW8t6Z+a
+         L1jw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795434565; x=1796039365;
+        d=1e100.net; s=20260707; t=1795434578; x=1796039378;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=DLWiLwlOa1M+CGXscE3EqyDLFhF6yXj7XzInNLOita0=;
-        b=zktAaKbONuh4IgyGLBifLMc1QyxRCUprgH0/JvOw2MKTUEe8wgck0U4nAZoJZhVhjr
-         3vYHV3Ugwj31BWDRQQRJbtySCZ9C5hrq48h426mYPzNJEK/f+wARZl11paBSbXld98m6
-         WAqM/3PB+4ONIeoj1MBnfyS/JmkFeF1uTofLqmyC1NLpTbDT6iJ//fUVYFXkC4Fb5Eri
-         KCMsmDEDs8zCI16bd5GLNLzHIOUR8V9581omskkPYGEFX28+pbVKaOcTs9q68UA6G98m
-         Qk0gWSt8mQIADte8J9Nx41verRna8+oNRczzj6KWsNkZ7YKtiOOvH0a0px6mq7dZx3TF
-         K8yg==
-X-Forwarded-Encrypted: i=1; AL+hErGP40sNcz3lOxJROaEGbXQTHCW10gCKKhSWqrqRHehvxvijlTzmyI/s9LiE6522pJXLo4XWXnnm@vger.kernel.org
-X-Gm-Message-State: APuU4Z8oIDDd3EWRk0ha9OOdwGu4foFemhfMMHnxkFm1BUvymY6O4W8X
-	i4YeY7ahoAYntMexMhUzkqVQpCNutQ8s3mSJZiQ9kLH0qewxof82W3Qp4a4qRjoyYCQ=
-X-Gm-Gg: AZFdTZfiWE8xAlpnc4N8bCwFwWzauReUyEP2oiyZ8t0mfvfBx3soLnRuq0hGlQAW5t8
-	f8Hj4hlcbOh0bgb20i1IfE/MLh91DLh/mxqQquWiL1uChiHyaP/0bTLTq/JFFiI23jRtOyoTbsh
-	UhUo7Xqq0WPAcn0QUZDj//iAboevgyRK2c/SCwhukUtpH6bYCjduSLDWSZTWXR5wdfaIdDufhaY
-	tgkwHiTvCsGRBN1v/hMOf4zzGkLgGhQXV8Kc5eHBrUn6IUAWqt3MoEn8EBHTLw2t3n2IWO4Jo0V
-	kOzcc57xmh+k+GFcel52ly8mXh5HMeffPgLhDt3gqbuH/54OSU8ZF90m9Jzw9LTIMItMe8c/jfX
-	yc2PXPL4h5ewiwMAg0Z3qX9KeX2QSsr2P68DPv710Uwk6go6h8uNX+/eSpd2HVasGc2wroX85N8
-	1/mSR7jjzuWcq/UixSUdLpiwyCWN/ATlwNYPrARd3+gnv+dyWu7WfdgPeU+NiM0AuE9/5jFRv62
-	v6SSlUXcDL3ED+QIAZ/tK0Y+hJBtFyZY0c2o/bwpkxzXzi3KAuaokA9x5XN1WTSM/WjGak3gPDl
-	OTjxY5PpJvMUhrUbbPod+8P9mwC7dVnDC7KU49FAVEE=
-X-Received: by 2002:a05:600c:1911:b0:4ba:38a9:85e3 with SMTP id 5b1f17b1804b1-4bb8880eecbmr256789465e9.12.1795434564856;
-        Mon, 23 Nov 2026 03:49:24 -0800 (PST)
+        bh=nZFSp0goL8XjmcYoGXv0HxNvOIB0a28cVRyu5V9lYRM=;
+        b=gQgm0wLc+DqofEJaxqFnapolkaFrAGHl1y2tfFdIe+VUyMP4AKq1fGAf77OfQKyHaa
+         yltWCJH9fKeGfqbMmv4/wPE+h0Ze4afqNWK+nZJoocGw7N8Uz/Ayz8V2PnmFMn+ag5/2
+         tw6pwCQCW2X9t0/AAOahmVrt2CIX6jyE+sTTp8metPgdmDWIosacq5c1OplrhUZpBWaF
+         y4t/k5C8EGcZanla9dpd6m0iKg8Oz5JD1zh3CEJzO5c7rpE3/iMi5sB9q31MZl6gbqlZ
+         Tc8IRMvU7s6ZWzN1F2S9vhb0QHdvovtFnL2W3IoXvDNyQ/jtMwHvZEe5WxnaOe+QvtIy
+         4LQw==
+X-Forwarded-Encrypted: i=1; AL+hErGTy97v3QBFy9Tq+aLbEotiUQLNZA7en8vsFbYhEa60SlCO/l4zsb0mRTuC0JRSei9vgudrcqkj@vger.kernel.org
+X-Gm-Message-State: APuU4Z8ux6nlY1+dJKlmVh7EHvmHUexU6PnJrnbXJ74BWJV5huhajnux
+	6bBs+SOdOMwTCaAEbYl3UXmq99PporLUC9FnfHOaUf2SgsZekLUiJJKgG6vMmhZQBpY=
+X-Gm-Gg: AZFdTZek35f8AC8T+HFMmrgsRV+KIeubieosHVauXhpfD6GSm8N7ppq+oeaUv9EJFBt
+	9yF3+i5NRiX31jMutYElsd7GXwOZvIMTHkIXQ5EJQNpaChGs4xUgtauVYPGv1yIGwp15KTrR3zD
+	XwWjf7hgZlhnIqY7fulKmmwIUpshsz3lweWH6YWnlGVTwY2qhUiOUT8QHP01d5Iz6TKBsS42JMB
+	L4vE0uXf44e+nmeXOgV4dXlqCR52jdELne+2whWQ0PRBJtakTpIyh8ko/u6hiTSX0XA19/wYPhL
+	K2mbH1CPt1Kn7FN5KJDyFDxlBYuUCYACeCxixUhI+ecj0Yk752/gDtkouwJDctWXa8EkpoGyHkG
+	zLPq6OWdmhr4WwvWmXylzFTqmbszKlHDkrH21n1VyoFJf1VFXSSNQpyMwfiDjj1mg/wbWHFUzNI
+	ZkT3xgPRfSS7vRe1359kr23Kk1RxINrcbYBdGxGH8npJ4bTDcHREclunzu2eycag5dNkob+aSB2
+	XAXbBvTvsD1/q3HLp+lUDVixPhTOWghsMsdeiIOEEJ+iuacWRrnujRaHtTJiS+jxKR6OQtgKAVY
+	tYws8dnixLujPmljvNYZsyX8WRbak+mEUyx5wbIr3Wj5k/SRaKTfKcsri6V+zbqW
+X-Received: by 2002:a05:600c:3b1a:b0:4bb:875b:3d91 with SMTP id 5b1f17b1804b1-4bb88820bfamr238565805e9.30.1795434577759;
+        Mon, 23 Nov 2026 03:49:37 -0800 (PST)
 Received: from localhost (109-81-82-199.rct.o2.cz. [109.81.82.199])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb884865b1sm337727695e9.5.2026.11.23.03.49.24
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4bb884ab091sm495277235e9.11.2026.11.23.03.49.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 03:49:24 -0800 (PST)
-Date: Mon, 23 Nov 2026 12:49:23 +0100
+        Mon, 23 Nov 2026 03:49:37 -0800 (PST)
+Date: Mon, 23 Nov 2026 12:49:36 +0100
 From: Michal Hocko <mhocko@suse.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: Zhan Xusheng <zhanxusheng1024@gmail.com>, akpm@linux-foundation.org,
-	hannes@cmpxchg.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	penguin-kernel@i-love.sakura.ne.jp, mkoutny@suse.com,
-	chris@chrisdown.name, cui.tao@linux.dev, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, zhanxusheng@xiaomi.com
+To: Zhan Xusheng <zhanxusheng1024@gmail.com>
+Cc: tj@kernel.org, akpm@linux-foundation.org, hannes@cmpxchg.org,
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, penguin-kernel@i-love.sakura.ne.jp,
+	mkoutny@suse.com, chris@chrisdown.name, cui.tao@linux.dev,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, zhanxusheng@xiaomi.com
 Subject: Re: [PATCH v3] mm: memcontrol: don't miss processes whose leader has
  exited in OOM scans
-Message-ID: <awQoQ4Ib9nCcK9Z8@tiehlicka>
-References: <20261121073222.834282-1-zhanxusheng1024@gmail.com>
- <awQRT7InNqEF-K8-@tiehlicka>
- <305c5803b904a57c188b505d6ed9e1e4@kernel.org>
+Message-ID: <awQoUGIBitX_uvpP@tiehlicka>
+References: <305c5803b904a57c188b505d6ed9e1e4@kernel.org>
+ <20261123113951.1771223-1-zhanxusheng1024@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -106,50 +104,18 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <305c5803b904a57c188b505d6ed9e1e4@kernel.org>
+In-Reply-To: <20261123113951.1771223-1-zhanxusheng1024@gmail.com>
 
-On Mon 23-11-26 01:13:25, Tejun Heo wrote:
-> Hello, Michal.
+On Mon 23-11-26 19:39:51, Zhan Xusheng wrote:
+> Hi Tejun,
 > 
-> On Mon, Nov 23, 2026 at 11:11:27AM +0100, Michal Hocko wrote:
-> > Tejun, is there any strong reason to keep the exiting thread group
-> > leader in the original cgroup? This makes CSS_TASK_ITER_PROCS iteration
-> > really tricky and error prone as above examples show.
+> On Mon, Nov 23, 2026 at 01:13:25AM -1000, Tejun Heo wrote:
+> > Maybe the leader can pretend to be in the new cgroup instead.
 > 
-> No, and I agree that the leader should follow the rest of the process on
-> cgroup.procs migrations. It's this way because controllers primarily care
-> about resources and exiting and zombie tasks don't matter much in that
-> regard, so migration skips them and controllers don't have to deal with
-> them. I don't want to change that. It doesn't make much sense to teach
-> all controllers about them.
-
-Agreed!
-
-> That rules out the full migration path for the leader, and moving it
-> without one looks fragile. If cgroup core switches its css_set without
-> involving the controllers, ->release() sees a different css from the one
-> the task exited in, which breaks e.g. pids uncharging, and that still
-> doesn't work for a leader which is exiting but not dead yet as it's still
-> running.
-
-I see
-
-> Maybe the leader can pretend to be in the new cgroup instead. On
-> cgroup.procs migrations, record the destination css_set in an exiting or
-> dead leader without touching the css_set it's actually on. When a
-> CSS_TASK_ITER_PROCS iteration finds the first live thread of a process
-> whose leader is exiting or dead, it looks at the leader and visits it
-> there if the recorded css_set agrees.
-> 
-> That leaves the leader's actual css_set and everything that the
-> controllers see as they are now. Only the iteration changes, and exiting
-> and dead leaders are handled the same way.
-
-Makes sense. Thanks a lot Tejun! This would allow to use
-CSS_TASK_ITER_PROCS for the oom path.
+> Thanks, I'll implement that and send it to cgroups.  The memcg scan can
+> then stay on CSS_TASK_ITER_PROCS, so this patch is not needed.
 
 Thanks!
-
 -- 
 Michal Hocko
 SUSE Labs
