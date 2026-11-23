@@ -1,53 +1,105 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.170
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795432407;
-	b=z19Qa4cK+O6Kh2oIOSOMUUde+jPV5rraHgeRsLgD6BkOrrUdTB6oV56898yh1fQob3Eb
-	 1k5JnjqVQ56whjmfrOEM0hqybTcAI3p4WasGKdjOT24k5w8t73ChtLplKG8MRQWNx68g1
-	 ZvKipuc4MXlJ0uzA90+C14FxJx9NQ6qckzi4H4xh/Ruu8gIK0vUb5wfcUxz27zncvykLh
-	 H1Pdjk2Bn0CUXhKJXBoFlrgDTMXFBRur+/Mal538+64Ng1z5IQXKarthrSPrYEYUz5i9v
-	 C979GOxbnX78YJlghUU5MWAnasBu3sXrpGdcY3ZDq+90DXmXDeX7CPaHt6YxWm2txKw==
+	t=1795433999;
+	b=wZWhPZIYDgnRTkvX4gDMDZy+XXYjwmMc8WT7tZuQBQCUNP0Csz0wQj3YSNzxcMVJGCQH
+	 AkAYqnxKI4sDbQ9gQ5i2xMpNkRFAyrfHFvj+QMOBRMt/j0UZtVkLqWoleQ+klSzglR58H
+	 NKUFerIkIE0q10DkYCkBEt4xggmso/krL/BtXC99WyumQxkD0oO4Eh+2YSOkJVcnha357
+	 rw49RXAtq68V5ZNxnl8FUDIrjRMgE8evikSaiD4gKzxFwr5t70c5nUwiNGG71gWgxP98r
+	 Is9YvsZyHseaaykZrpbgwGfjhCLRfUrhRdhDI2gkaQvifeOD52kZOULY0PoFu087Vbg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795432407;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=FSNPqJ2wns2AgHtQuJTveAPlZdwvlJJAYiPAVLO7n6w=;
-	b=HxmG3SS1gRTLGw89Ydyq9y6rTEz6DMXgtYI2yPeNtnXfCsRY6HtH0bB2CcdW/0s1RQNU
-	 rOIynWQAYGQfNtJyuJHp+NjMzngqwuYIzB92bJb1SQdtwOXu4T4CkgHS7sz08YSjyPXxA
-	 vB7LBbWixCW5aXCJCze6zYJ5KALuP/6iAjjVGAZkd25iMZc7jM4LinWtLhE016N06RY7/
-	 9JVrRFTqxu5HwC7v6n2CXWf+wekGeayQXB/VSjOZdzt3aCnGAB2+T0z8nK34LaqO6ok+o
-	 7LPmw3HjJ5evTOMVU27usTOAKHkqc7u9+5OGDQ/it94z7WsWKdwsI06VwAwzR2NNdWg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795433999;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
+	 MIME-Version:Content-Transfer-Encoding;
+	bh=dzG3GXZhvfXV1CjH4z9JC/RUQc8XXCYXZlNff5428CY=;
+	b=ATSyOaO+us4ISqRJoark6m/tq47xIwTENjBdCQidrDqL0Znl2xxi6TAikSVFOE4DBUSZ
+	 fU7uJezIx6Ji5lCkuHd9Gr6fki7uVIF1jfPpJjFfaYGH8Ozz5awQXuJiXYassoPqJm1YQ
+	 yLTgIn1M9oKzf4DDOR5PUNYmrp4d9LCCjSTVyC+jw+WaL/2iEGvgrFCGYHiWQfXGaIpEC
+	 U80c0Q2aZQd9BAv3DmDNEY1NzEDz8j9I2Fj1bogV+INIO+F3Rh+xEyg3y6kg4GV7McnEG
+	 IrpF3hnY9FtiowjxtrSe6uDY3aZWJcHmqijESvMuysoC3MvDJX6K9THIez+wTwqRHjA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IpMah2Ts;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=A2dH5veA;
+	arc=none smtp.remote-ip=209.85.214.170
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A8E7606A31A;
-	Mon, 23 Nov 2026 11:13:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13AA6606A321
+	for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 11:39:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 13AA6606A321
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=IpMah2Ts
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AAFD1F000CA;
-	Mon, 23 Nov 2026 11:13:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795432406;
-	bh=FSNPqJ2wns2AgHtQuJTveAPlZdwvlJJAYiPAVLO7n6w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=IpMah2TsMZXWQGbxBbVtoMVRvzKKgY5TUI+7S5hzuVspiJkOSMgC6069CBNRxbWlf
-	 +FwwxKYKTg+K9NB0e/SLP0XvcwUjk6RhzDdnDxBKwG97bQacxHsYibYeu7aI8AvyA3
-	 ytxRK01EN5fypqN/gzAPM7AnqFH0+ssbzHQlPZ41qmNfNQqV43iFqkzgpycCwNFB21
-	 0+4C0p5w0OTTl3RwCFzL+4sh0DFZs/QI77MMWjvDkZWtigi9ptTNQVIrqw3N2lmbqE
-	 F/nihpuJXymI3GgwxdWoaqv1eiuozJ0J10Tq4RTiXC4aCQLcBL9EoAjrU0btyHc/rD
-	 KVcVR9YIvldEw==
-Date: Mon, 23 Nov 2026 01:13:25 -1000
-Message-ID: <305c5803b904a57c188b505d6ed9e1e4@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Michal Hocko <mhocko@suse.com>
-Cc: Zhan Xusheng <zhanxusheng1024@gmail.com>, akpm@linux-foundation.org, hannes@cmpxchg.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev, penguin-kernel@i-love.sakura.ne.jp, mkoutny@suse.com, chris@chrisdown.name, cui.tao@linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, zhanxusheng@xiaomi.com
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=A2dH5veA
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2f04f61282dso11118325ad.1
+        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 03:39:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795433998; x=1796038798; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=dzG3GXZhvfXV1CjH4z9JC/RUQc8XXCYXZlNff5428CY=;
+        b=A2dH5veAYU9uoMnrxmCkRpQeZ0A/ZwDFNnDLQM4oCIdIkraVq13RcbOIFo5ogYHW34
+         yQEXCsWBQBd5Oi03QRr/O7Ge9qpd4RlbrSFDsGIEDcagzszpXiPvKQC/9tioZWqMapSx
+         CnZjg/qRD3DcZv0suqf0F6vnaXAyYJi2sv2CmvnHSziWmyD1ctOCJX9NM/wYuV8ZcFOD
+         u0QHblU1m6MXTIUlqb2N02flLxsbt1XVqP4Xa3q7GL21gplmPtn2NcmRpbggGx5lpZ2y
+         xkXavM2K+bb/WDFqfj2y+9AN4RRXWZHaaVUSq4ibjQBlOFIxzl/qBmAUY2V9lzOhBrZd
+         fFjQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795433998; x=1796038798;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to:content-type;
+        bh=dzG3GXZhvfXV1CjH4z9JC/RUQc8XXCYXZlNff5428CY=;
+        b=EBYOY/c42OxZ0yQeuo3KhVJZhmL/Y3EREdgBjoVSDwjo5E30nA4jaAqOBC2EAmVqEc
+         kZFjSgrJ0zbZWGcFyeB1R7hpUprydx1G2pMayKz+VFKJndXrc0z/SJSBYuIgD+uDb0Js
+         EubW+O+tQDxyqeQ1i4hldRAuB+qNStAexiBwUA/UBmUILNrSCtyp0wKQdp7v9cyoyjJ8
+         6xFizE14tby/4QT2YE8FDqnUGmx+xbO/6BNu3PrtG9nRlt9VRCMqebYuyeigj49Og/ga
+         KqQ5WdOtDjOwWZQeyDiX49a/jdft2BTDWTY5OFyCvkMTeNbBNJ2S5kCo3bD4CtQ6hkYM
+         +o0g==
+X-Forwarded-Encrypted: i=1; AL+hErH3mGEhrbLQbFAzS14E0y1jmv4+Ymjj1ybuFKAujxJsIla4vSk8MFCXcTXCbq7A79Y+J9iS3Bim@vger.kernel.org
+X-Gm-Message-State: APuU4Z+4RvcBPtUGiQhKIYgqUHB5yi7Tk5ZnfVRS6PpsKTgjbmANz2WO
+	MJ6GwRDu8wk2GZP/aj30ftqFVqlhdTOaTvZ9qnPwV4fuhfyv3E772koR
+X-Gm-Gg: AZFdTZeP3nSNGCVWhCkuI+/BpL8VdagCx7+A/n8e8+rFH7dod6Iob7VOugs/Hs1ahkX
+	iPuQCuIb07aesHiBKPI78GNK59v41gbkS2Azy4U4pUrHHwSseN8QCr39pDYldILla6sItqZ2W64
+	6zy38fl1ij5W4F5Da3dENnUtfcZwi7PcQzo6vfYham3bxFC1/tvM508V9mfVrczeh07/oyPiOfE
+	254erDwMksYI9kLGDrJNnsmE7xOGg3o6FeMrJGZYB9zjEIMFYGtuf+FURjrpry8tyEo5uK6mmwC
+	TjNpNAyhg4YhOq4Ng48yuqTG7S0gxkK02QBPo1fcxn5YAZprMI88mTboE9bLzCyBvr4S+SpYIIM
+	TsEC30oQAZTMoNgYM51/pJdeGBo9p+tnpxuUEqBZE+kwg86knxHqTH7N3NOAKaT0WoITZYFn0oC
+	HprZTgdo5BXHur6xb4VfpCI+ve2yUKklB32tMEzA9I2s8iIfRVS8gA7KzPJieGyD/bHk3PnVuUF
+	Ywpqtd2JyI0X6h6I42+6y5DDESNJ+FNmP92ns+YFmZ4FteqjazaIqDCqkzR5nf7XoBdNIXPssQE
+	LSe2kccdWldfzOKDV/kY3zM15gNnQNh85ef61tF9nhmzCA==
+X-Received: by 2002:a17:902:ebd2:b0:2e9:970c:2c9 with SMTP id d9443c01a7336-2f03f1c75bdmr133283195ad.42.1795433998310;
+        Mon, 23 Nov 2026 03:39:58 -0800 (PST)
+Received: from osman.mioffice.cn ([43.224.245.178])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f0c1f42sm51601475ad.25.2026.11.23.03.39.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Nov 2026 03:39:57 -0800 (PST)
+From: Zhan Xusheng <zhanxusheng1024@gmail.com>
+To: tj@kernel.org,
+	mhocko@suse.com
+Cc: akpm@linux-foundation.org,
+	hannes@cmpxchg.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	penguin-kernel@i-love.sakura.ne.jp,
+	mkoutny@suse.com,
+	chris@chrisdown.name,
+	cui.tao@linux.dev,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	zhanxusheng@xiaomi.com
 Subject: Re: [PATCH v3] mm: memcontrol: don't miss processes whose leader has exited in OOM scans
-In-Reply-To: <awQRT7InNqEF-K8-@tiehlicka>
-References: <20261121073222.834282-1-zhanxusheng1024@gmail.com> <awQRT7InNqEF-K8-@tiehlicka>
+Date: Mon, 23 Nov 2026 19:39:51 +0800
+Message-ID: <20261123113951.1771223-1-zhanxusheng1024@gmail.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <305c5803b904a57c188b505d6ed9e1e4@kernel.org>
+References: <305c5803b904a57c188b505d6ed9e1e4@kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,42 +109,15 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Hello, Michal.
+Hi Tejun,
 
-On Mon, Nov 23, 2026 at 11:11:27AM +0100, Michal Hocko wrote:
-> Tejun, is there any strong reason to keep the exiting thread group
-> leader in the original cgroup? This makes CSS_TASK_ITER_PROCS iteration
-> really tricky and error prone as above examples show.
+On Mon, Nov 23, 2026 at 01:13:25AM -1000, Tejun Heo wrote:
+> Maybe the leader can pretend to be in the new cgroup instead.
 
-No, and I agree that the leader should follow the rest of the process on
-cgroup.procs migrations. It's this way because controllers primarily care
-about resources and exiting and zombie tasks don't matter much in that
-regard, so migration skips them and controllers don't have to deal with
-them. I don't want to change that. It doesn't make much sense to teach
-all controllers about them.
+Thanks, I'll implement that and send it to cgroups.  The memcg scan can
+then stay on CSS_TASK_ITER_PROCS, so this patch is not needed.
 
-That rules out the full migration path for the leader, and moving it
-without one looks fragile. If cgroup core switches its css_set without
-involving the controllers, ->release() sees a different css from the one
-the task exited in, which breaks e.g. pids uncharging, and that still
-doesn't work for a leader which is exiting but not dead yet as it's still
-running.
-
-Maybe the leader can pretend to be in the new cgroup instead. On
-cgroup.procs migrations, record the destination css_set in an exiting or
-dead leader without touching the css_set it's actually on. When a
-CSS_TASK_ITER_PROCS iteration finds the first live thread of a process
-whose leader is exiting or dead, it looks at the leader and visits it
-there if the recorded css_set agrees.
-
-That leaves the leader's actual css_set and everything that the
-controllers see as they are now. Only the iteration changes, and exiting
-and dead leaders are handled the same way.
-
-Thanks.
-
---
-tejun
+Thanks,
+Zhan Xusheng
