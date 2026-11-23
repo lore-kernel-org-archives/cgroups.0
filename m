@@ -1,62 +1,62 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795441288;
-	b=amt9A/wYdt9z60YgzAzcn2QgG/L4nq4NQkL/173+FpDbxDXIVG+SuLpLzLyd+ZASB9ah
-	 lp6xZsS9oE3i01eXx9R7IORdY6T9sA6EIkl8bxalBJT2llXEx+hrKhxc1x5K+dwktR5Wn
-	 ldsN8Bu1SbrmE6KDOgjgnLYvv1g5i+Y7eOFbzsZVViaJfLQIK/w/gJL8fJ5rXc7cm6/Ur
-	 +loJWo3Drn4tkBoXgxr9ToCOT3p5lETcvN/A2bni4ZbRrcFEFjqX68BUoBCQzstlTyXsH
-	 jPzlTfarOL2/aKekjJtxVu5+J4gGerq5UbHhJ+sh/644LdUpAuC4eilwKBsB6xWxaxA==
+	t=1795441281;
+	b=V30NJGEniMWPMfBw70jZmou0jz6kftCvgMjyVIxgolQWtUyPYINh584EtTA+W8zqwn0+
+	 fLExI0FjPpiUfuin5ayBaVkbtQBNwEVIqaPpdlCB9v3GSCZGCEqkYjlBmhHBoSEGWWIYW
+	 UehqNb0HvELcgO8BaSGd1x636xsCPaV8VNl6/XyIKSYASR/UQphLoDUyoiheVpT4jJBMm
+	 vr2gVh5+c1Vg2EvcMkO00VrTcscadjDn8P+oJM2AdaHn3bTOwapDsgIqj3fR+y7UTfzut
+	 XufqL5qB+tgEbkBu4lkivi9PBPGteEHwXLFwyhvYg5/AIaWY6Y26ge4y5+GsUG5Lu2Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795441288;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795441281;
 	h=DMARC-Filter:From:DKIM-Signature:DKIM-Signature:To:Cc:Subject:Date:
 	 Message-ID:In-Reply-To:References:MIME-Version:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=cBBYBLjlAq079X1zPcFLpx+yVcLxS3a0w7IA6kI6vug=;
-	b=OHPrV9oMx0rsS/Ql772gzO2ABmvFX25ZscUtENcknHbqjNwaJ1EW9Po+WYoOLI1Oz5Ig
-	 EEk6qb3K7VCSw2N4Kf6J6s2mGV3tY/mj6/I/mtPskk2vV8TZBXxEghn9bh36szC2gl5Nt
-	 zdZLR9G44Wtm/vtFcgm+ftx0BmvlKkNTGHtTH/+akiB4QEbujWRxffv+Y7ek1mRiazpyN
-	 NxXUvMzbHIyPqhsDQP4iH87FzZnM2KFeTDCEScgQt7EMg6g1xG6aAT8E7lO09amddBGuN
-	 bzr3NVYU3tWOaZbWXcXcJjSFVsQfu3kXjTvUsKVJMdYKZSy6mmtz3wKipPoVM0EdbAw==
+	bh=qXEviCNNm3Wk7uhp6pzpAJzifpuXgS2QBwatR2ePNBM=;
+	b=jb7drLjQtLkjvSkuFK1HtceExEBBY13yw6G9BHBroX+Qdu/7p0PwCGRz5whMH5ncRciP
+	 0H93bsOjh4RNf9Loh++2fnKq8/cB4+lrLfs4WjCvvSWfoinxfVnEy56SLkBEyor2qT6kH
+	 tbUxpSRnqx3DpUzuBfyFZqsHNdLzFLFL3H47iUkZjFE7cRdupQNzsqTM8lWxJ1YmdUAxU
+	 KM2uj9ZRdbcLE2BR+EE+bszzPjtK9cO5Sr5rI6YVbIu3kXHrh8GXaIKM64zxgsalq6yyM
+	 Si3mXNwOeVDLAyIrJ36depjy7xEOjbkmeoyCPVLuI5pFKQjp1k7CUuHI5rOw/5Mz0tg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linutronix.de;
 	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=uuzKinzh;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=UnvrdVCd;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=Ue+I4C8J;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=F3GI4z+V;
 	arc=none smtp.remote-ip=193.142.43.55
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD262606A68C;
-	Mon, 23 Nov 2026 13:41:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD262606A68C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C87606A321;
+	Mon, 23 Nov 2026 13:41:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 85C87606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=uuzKinzh;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=UnvrdVCd
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=Ue+I4C8J;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=F3GI4z+V
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1795441284;
+	s=2020; t=1795441278;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cBBYBLjlAq079X1zPcFLpx+yVcLxS3a0w7IA6kI6vug=;
-	b=uuzKinzhLY6gUggensA9AdKF9HwSQEROiiZC3Bh32tQs10+fQHKM6ASgDTrReUrSMKwfQI
-	fNEs4PRfX6H7x+sDOSzuX3kbQ5zdjwfVHvF3xUM4dwcQUekf2u1Vk4l1O+3veHn5GuMqE1
-	AzCCM1kp+aJiW1Yr4/ClBOE9bOHr/Epj3uT8AB5su3AU9uiSw8XE0Jd2mjRQAkXbRbLoEv
-	OIbvnH1uJomjck9stsO+3Eu2OpvKZkOiLHvhQTSEGaWYEO25HgLcoSxuWS70S1BCi7nw6T
-	jKvnKoSdHirM9xPJqvKbsSFAIbn7XKZCiNt2YoL69ZL8FBxG5x4m3dPM6Btwrw==
+	bh=qXEviCNNm3Wk7uhp6pzpAJzifpuXgS2QBwatR2ePNBM=;
+	b=Ue+I4C8JfKGwdTjbY7G4gRbyD6fBLNcmC+lBI92G/nha7xwpRR+o7VADLoFojO3+Fuahgx
+	433iqHfFL6iMUvItr24a85LsOO8v96hzDQGhKrgYTSIgty8NsLPvPn5df1otgHyY+9GM1F
+	Gxw43lUsPmSBSAEQd68XpK1hVrJPv57hCI2Bjc3HFJO4IIwhvXurl5jXul1ACXVSBeN35z
+	CbkF22uTTGcMhdWGyk3OHakE5G1z+CxzrWMlIeImwKTjp/NxZduUIVwVU4tSNrbXeKSjbj
+	UX0tRoJaEyGCHOLujTYNck91deTA1PoiE4OZIhZXcmWGmCwooIVb3wJ4d9N6+w==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1795441284;
+	s=2020e; t=1795441278;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cBBYBLjlAq079X1zPcFLpx+yVcLxS3a0w7IA6kI6vug=;
-	b=UnvrdVCdTs1oo+Weoqtvnm3XclHC0ucFLW1imkJRcZI/ztNv/HRrjA+lPiUS0VJ9k/ZOq0
-	SJOxN1J6u6apAvBQ==
+	bh=qXEviCNNm3Wk7uhp6pzpAJzifpuXgS2QBwatR2ePNBM=;
+	b=F3GI4z+VPWOU45X1sbVYFH5Pkp9KXn3nd14WsyHQYSZ6HGId24BaGyioQ9ICkg1eR48eCB
+	jA3q1+nhNXldD+AQ==
 To: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	rcu@vger.kernel.org,
@@ -94,9 +94,9 @@ Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	=?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
 	Qais Yousef <qyousef@layalina.io>,
 	John Ogness <john.ogness@linutronix.de>
-Subject: [PATCH v4 6/6] Documentation/sched: Add fairserver to sched-deadline
-Date: Mon, 23 Nov 2026 14:41:12 +0100
-Message-ID: <20261123-sched_dl-v4-6-d523e4d960d3@linutronix.de>
+Subject: [PATCH v4 1/6] sched: Mark RT_GROUP_SCHED broken
+Date: Mon, 23 Nov 2026 14:41:07 +0100
+Message-ID: <20261123-sched_dl-v4-1-d523e4d960d3@linutronix.de>
 In-Reply-To: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
 References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
 X-Mailing-List: cgroups@vger.kernel.org
@@ -111,60 +111,187 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
-The fair_server ensures the fair-class gets CPU run-time and throttles
-even the rt-class if needed. Add this bit of wisdom and the recently
-added sysfs knobs for configutiation.
+The RT_GROUP_SCHED is broken beyond repair and it is best to not enable
+it during compile. If enabled it is recommended to disable it at boot
+time with the rt_group_sched=3D option.
+With it enabled it is not possible to set the policy of a task to
+SCHED_{FIFO|RR} because its cgroup has no runtime assigned. The runtime
+can not be assigned with cgroup v2. The root group has however all the
+runtime assigned meaning the global sysctl runtime parameter
+(sched_rt_runtime_us) can no be reduced because the new bandwidth will
+be less than what is current available.
+It is possible to schedule SCHED_DEADLINE tasks but the admission
+control is stuck can only be disabled via -1 (same sysctl parameter).
 
-Assisted-by: LLM
+As a result all major distors (Debian, Open Suse, Fedora, Archlinux)
+have it disabled.
+
+There is work on Hierarchical constant bandwidth server (HCBS) which aim
+to group multiple real-time tasks within one deadline configuration.
+
+Mark CONFIG_RT_GROUP_SCHED broken. Move code which is not under
+RT_GROUP_SCHED but only used by it within its IFDEF section. This
+includes also RT_RUNTIME_SHARE.
+Update the documentation, to state that it is not related to real-time
+tasks in general but only to RT-group scheduling. While at it, also
+update the current defaults.
+
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- Documentation/scheduler/sched-deadline.rst | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+ Documentation/scheduler/sched-rt-group.rst |  7 ++++++-
+ init/Kconfig                               |  2 +-
+ kernel/sched/features.h                    |  2 ++
+ kernel/sched/rt.c                          |  6 ------
+ kernel/sched/sched.h                       | 19 +++++++++++--------
+ 5 files changed, 20 insertions(+), 16 deletions(-)
 
-diff --git a/Documentation/scheduler/sched-deadline.rst b/Documentation/sch=
-eduler/sched-deadline.rst
-index b76bb61cd48fd..b2c1ae8b7dddf 100644
---- a/Documentation/scheduler/sched-deadline.rst
-+++ b/Documentation/scheduler/sched-deadline.rst
-@@ -552,7 +552,8 @@ Bandwidth management
-  level.
+diff --git a/Documentation/scheduler/sched-rt-group.rst b/Documentation/sch=
+eduler/sched-rt-group.rst
+index ab464335d3204..cd69c93baeb6a 100644
+--- a/Documentation/scheduler/sched-rt-group.rst
++++ b/Documentation/scheduler/sched-rt-group.rst
+@@ -18,6 +18,11 @@ Real-Time group scheduling
+ 0. WARNING
+ =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 =20
-  A main difference between deadline bandwidth management and RT-throttling
-- is that -deadline tasks have bandwidth on their own (while -rt ones don't=
-!),
-+ is that -deadline tasks have bandwidth on their own (while -rt have only
-+ throttling via the fair_server),
-  and thus we don't need a higher level throttling mechanism to enforce the
-  desired bandwidth. In other words, this means that interface parameters a=
-re
-  only used at admission control time (i.e., when the user calls
-@@ -579,6 +580,25 @@ System wide settings
-  be thus free of oversubscribing the system up to any arbitrary level.
-  This is done by writing -1 in /sys/kernel/sched/dl_runtime_us.
++ This document applies to RT group scheduling provided by CONFIG_RT_GROUP_=
+SCHED.
++ If you don't use RT-group scheduling, schedule real-time tasks and experi=
+ence
++ throttling issues please look into Documentation/scheduler/sched-deadline=
+.rst
++ for the fair_server.
++
+  Fiddling with these settings can result in an unstable system, the knobs =
+are
+  root only and assumes root knows what he is doing.
 =20
-+Fair server settings
-+--------------------
-+
-+ The fair server ensures that fair-class tasks (SCHED_OTHER) are not starv=
-ed
-+ and can be scheduled even when tasks in the RT scheduling class
-+ (SCHED_FIFO and SCHED_RR) are consuming all CPU time. It replaces the
-+ legacy RT throttling mechanism, which was configured through the procfs
-+ interface.
-+
-+ The fair server executes fair-class tasks through a deadline-scheduling
-+ server with a runtime budget. It guarantees that the runtime configured by
-+ fair_server_runtime is provided within the interval defined by
-+ fair_server_period.
-+
-+ Both values are specified in nanoseconds and can be configured on a
-+ per-CPU basis through /sys/kernel/sched/cpuX. Setting
-+ fair_server_runtime to 0 disables the fair server on the corresponding
-+ CPU.
-+
- Task interface
- --------------
+@@ -111,7 +116,7 @@ lack an EDF scheduler to make non-uniform periods usabl=
+e.
+ ---------------------
 =20
+ The default values for sched_rt_period_us (1000000 or 1s) and
+-sched_rt_runtime_us (950000 or 0.95s).  This gives 0.05s to be used by
++sched_rt_runtime_us (1000000 or 1s).  This gives 0s to be used by
+ SCHED_OTHER (non-RT tasks). These defaults were chosen so that a run-away
+ real-time tasks will not lock up the machine but leave a little time to re=
+cover
+ it.  By setting runtime to -1 you'd get the old behaviour back.
+diff --git a/init/Kconfig b/init/Kconfig
+index c8a7cfa60a6ea..4c00c02aa1c14 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -981,7 +981,7 @@ config CFS_BANDWIDTH
+=20
+ config RT_GROUP_SCHED
+ 	bool "Group scheduling for SCHED_RR/FIFO"
+-	depends on CGROUP_SCHED
++	depends on CGROUP_SCHED && BROKEN
+ 	default n
+ 	help
+ 	  This feature lets you explicitly allocate real CPU bandwidth
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 8f0dee8fc4755..acc1c3fdfe2a2 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -122,7 +122,9 @@ SCHED_FEAT(RT_PUSH_IPI, false)
+ # endif
+ #endif
+=20
++#ifdef CONFIG_RT_GROUP_SCHED
+ SCHED_FEAT(RT_RUNTIME_SHARE, false)
++#endif
+ SCHED_FEAT(LB_MIN, false)
+ SCHED_FEAT(ATTACH_AGE_LOAD, true)
+=20
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 1535046a23ffa..cdeddd3fc9af2 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -944,12 +944,6 @@ static inline const struct cpumask *sched_rt_period_ma=
+sk(void)
+ 	return cpu_online_mask;
+ }
+=20
+-static inline
+-struct rt_rq *sched_rt_period_rt_rq(struct rt_bandwidth *rt_b, int cpu)
+-{
+-	return &cpu_rq(cpu)->rt;
+-}
+-
+ static void __enable_runtime(struct rq *rq) { }
+ static void __disable_runtime(struct rq *rq) { }
+=20
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index a4e6696e3a516..4d4128d5600f3 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -313,6 +313,7 @@ struct rt_prio_array {
+ 	struct list_head queue[MAX_RT_PRIO];
+ };
+=20
++#ifdef CONFIG_RT_GROUP_SCHED
+ struct rt_bandwidth {
+ 	/* nests inside the rq lock: */
+ 	raw_spinlock_t		rt_runtime_lock;
+@@ -321,6 +322,7 @@ struct rt_bandwidth {
+ 	struct hrtimer		rt_period_timer;
+ 	unsigned int		rt_period_active;
+ };
++#endif
+=20
+ static inline int dl_bandwidth_enabled(void)
+ {
+@@ -581,6 +583,7 @@ extern void start_cfs_bandwidth(struct cfs_bandwidth *c=
+fs_b);
+ extern void unthrottle_cfs_rq(struct cfs_rq *cfs_rq);
+ extern bool cfs_task_bw_constrained(struct task_struct *p);
+=20
++#ifdef CONFIG_RT_GROUP_SCHED
+ extern void init_tg_rt_entry(struct task_group *tg, struct rt_rq *rt_rq,
+ 		struct sched_rt_entity *rt_se, int cpu,
+ 		struct sched_rt_entity *parent);
+@@ -589,6 +592,14 @@ extern int sched_group_set_rt_period(struct task_group=
+ *tg, u64 rt_period_us);
+ extern long sched_group_rt_runtime(struct task_group *tg);
+ extern long sched_group_rt_period(struct task_group *tg);
+ extern int sched_rt_can_attach(struct task_group *tg, struct task_struct *=
+tsk);
++extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 r=
+untime);
++extern bool sched_rt_bandwidth_account(struct rt_rq *rt_rq);
++
++static inline int rt_bandwidth_enabled(void)
++{
++	return sysctl_sched_rt_runtime >=3D 0;
++}
++#endif
+=20
+ extern struct task_group *sched_create_group(struct task_group *parent);
+ extern void sched_online_group(struct task_group *tg,
+@@ -877,11 +888,6 @@ struct scx_rq {
+ };
+ #endif /* CONFIG_SCHED_CLASS_EXT */
+=20
+-static inline int rt_bandwidth_enabled(void)
+-{
+-	return sysctl_sched_rt_runtime >=3D 0;
+-}
+-
+ /* RT IPI pull logic requires IRQ_WORK */
+ #if defined(CONFIG_IRQ_WORK) && defined(CONFIG_SMP)
+ # define HAVE_RT_PUSH_IPI
+@@ -3076,9 +3082,6 @@ extern void resched_curr(struct rq *rq);
+ extern void resched_curr_lazy(struct rq *rq);
+ extern void resched_cpu(int cpu);
+=20
+-extern void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 r=
+untime);
+-extern bool sched_rt_bandwidth_account(struct rt_rq *rt_rq);
+-
+ extern void init_dl_entity(struct sched_dl_entity *dl_se);
+=20
+ extern void init_cfs_throttle_work(struct task_struct *p);
 
 --=20
 2.55.0
