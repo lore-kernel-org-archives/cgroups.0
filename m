@@ -1,83 +1,83 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.181
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795491359;
-	b=4KHRlrWJmBH5zwkEpUChqdndvAjJT/jgJgcJdHzAw+P9LcYTKdE6F39r04V4ypP9rgkz
-	 PZOtHuMamHPfoQe2HEwqqcS47hucEPVi3O38m9Tyod/PpZE91AcZOYYxpLUnqNT41U5DP
-	 w2t04VvUxb6bw6nDcLMw+YSlVk0CWHAT9ZvJ9RawUKZUKO9ov8B/S1kqnh5Z1srPvYTQV
-	 f04zu4EELhhBTXRStJ6bXhRSB0qgo0L4N4qDyZRWn5U+Bjr10RzwjyDHHnJW3pyaenquC
-	 22sW6XyUnrqGDlLTE+b8P2ZC6JLRuln7tYT7TDBMtfeT+JNCiZLbhwLdg6XnF5BBcbQ==
+	t=1795491365;
+	b=kfeTz332uMJ87x5fLUI7r4MBxr00kjB9q1mJ00rHjZMt8ASQskzil5fAYlytZUgW2hO5
+	 TxvR/IYiNJ5XTLNjVjEeR9FKDKDjvaBGjkAuuL6iukCmugGv0lpbWWo70xHw/TYBQbwaE
+	 tW/oc0XP2dUZFaKu25Id1PMZCjhToeIDahEZPT4wIOMFo7CqEPHeX813sIXU0fimCCSUS
+	 zsSBMcxUUeei1h3O6H8Gt7+zXsdpYBc8lJe5MGLCkvGMAWquNP0OgyRyW7TMC0khWkfC4
+	 TQoxLsGfdfpi2sfHjIRpxW6uRw/4uQmxjyjKEkaZAa6foP3uDgGSRDaayvnKZoJ2TXg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795491359;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795491365;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 From:To:Cc:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding;
-	bh=Gjs/pNnX4PrWhE30CjXJcWso+ZUlIS9eqBqYEHwKrqU=;
-	b=LQGuLBmmQHuJI+Z4jJv0UV8bnaX+3F2SGdvx1SLeXk2O4R3d01ROUGQFs9LXTO2jcEZ7
-	 iDGJbsXlSnKHJLhCyQdAxXSBC7etBnh4Dco7MLqR9Rz7bFpsUdZ9WPj3ksY28rlaox1PB
-	 K7eYlLCVbysUdaOg7CuMa0Wh0UySnQvZHIO3gUjp+Qk8NQwDtrFkhrjyyUS/MBIcN7Drn
-	 m/QYVHX0tgJAsVfPyUIZ3n+5jWx7Fr7hcmWKx3ZGLvnHAmwOQqKt444Y12Aq2LFiocnm2
-	 jOhkQttSN+6x6Xr1CgKeavY4DnfELtA+dCcTHruY+QY3X9a0gJn+yA4L4LnVfoq/7/A==
+	bh=tPwzcSn9YCtkUcYX05pvK2PhOcLN5eFatEAbk1VC3Ao=;
+	b=juqyTVDlom8jGVF2g1K9SGAk7wFruV6EDN0FZvdFIukz22w2eryjqVG9j2UEvOBmM1wY
+	 +FwWV0jr3RfBpZfpbnwX39f/WamUpcpBN5PzEA0YkGshETJtn1TQ4BaF6Cgl4oq6Qjkeu
+	 YATEsuWZD4YZ7VaZl7zl/xgUiK1IpTsivGeBBmkPxO/drP2Lwz0jXo3ZUGboWd6KlFGKZ
+	 lqJnGTsFskE+FKx6PACWneOqu8ILUU6NQ7hDvf8vwK2EnY4HiafSkytnpcpeTHvdfiyf3
+	 VUIyNr0BWrxV1M4N8N6pd8HUTcBEpokPFCk9kpYtknuajnwT3i6SnhE49CHHDJ4AyJg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=BAbppxPm;
-	arc=none smtp.remote-ip=209.85.216.45
-Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tds5q10B;
+	arc=none smtp.remote-ip=209.85.214.181
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9DC606A326
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 03:35:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 6B9DC606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B04606A327
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 03:36:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D4B04606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=BAbppxPm
-Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-3b40d23e1adso2829269a91.0
-        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 19:35:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=tds5q10B
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2f04fab527eso29505475ad.0
+        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 19:36:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795491359; x=1796096159; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795491364; x=1796096164; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to:content-type;
-        bh=Gjs/pNnX4PrWhE30CjXJcWso+ZUlIS9eqBqYEHwKrqU=;
-        b=BAbppxPmbgkvuMRJL72o9Hh3xTxFzFmNryRvB8oloSHfARd4zvDBTd4o9V/Ilw/1aQ
-         /3LBAAZZ/gyqT7DV5P/Yg7ZY2M/24jGz0pTlY9QrDXcbOEvJOlEM+KJm5irlLVEV98dv
-         v52AFIzaNDkOO2qqQkTkGFgMhDqvJH4LXtGU3p2Bokn7yvjF3HrY9ezxI79PlM653vQs
-         oH2l97N55966CZkriyyRcV6B1ZLazoBN9KnhoJHlzgjFhFen2ZTcALum58pe7ACEvPtc
-         H3kgaDNi2WeidPeiiCNaSbjsB1uEYmiKtSGAEs+BNaGMftsv/IgdZ8ZpOIRxTBul+dNy
-         qpHA==
+        bh=tPwzcSn9YCtkUcYX05pvK2PhOcLN5eFatEAbk1VC3Ao=;
+        b=tds5q10Bethl0FfyiXZva4IzMwY9rSAd99cHIo9BJ0aalRiX9U199zumfts2SrIOcP
+         M0ElpB8TXNN+39CQJ/83sq3CBLLGn5Ts47U54hAGmtOqpBauy4iNOuJ0zL6BvMJeOOJG
+         mk0BSbVFmNWFvBJjC74WWVmAb0XCaBVDyWMM4pN1EOv/IM1LWFzAVR6v68kxSkdx7RBG
+         Q+ud+KfixiNbOgFhe6FJxy2Bgg3mDDp5+wyH9SOaGfi3gBy0Ev3p1ITaOeDDaLJ1tfa7
+         uWb6+oNWIWG8qgpagiTR2xyzzgFWy3E1JjyaCGNNqzHjt3erllK/GrYLo9qfXfCJaadi
+         F5VA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795491359; x=1796096159;
+        d=1e100.net; s=20260707; t=1795491364; x=1796096164;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to:content-type;
-        bh=Gjs/pNnX4PrWhE30CjXJcWso+ZUlIS9eqBqYEHwKrqU=;
-        b=CU2Dwt6jJBaOMe5OcR4DLMnRUGu0KC/JxMx33gQ0ojOacsjjRrxf0SE1Etnkw4eZ3f
-         DqEvZbDuL+jlYsMKzzWxaN+bD5FMcAKmfLCSsHVq6C9xMJXUuX4dYqcHtSwDlPyliqcR
-         hrJMIWvZ06gDEHfkqJqW+bJj+LQ7qg8ZkX8GqMS+g2q+aTiektpa++ynGPPPT+p2nZsq
-         nUFoNLMr7mlLA/IwusqnJ+PPtOz7h6GU2tEwOttBZdQZbCBTojRihRs6pXzQgQ+PjjWm
-         HMZxyPKkJnH/j/6/QbqkHzW8bUMSYSC29P9aHQocn0HBxjfdUg1NUFWivJJCgsqaD9zL
-         lDsg==
-X-Forwarded-Encrypted: i=1; AL+hErFGt0r215jQK+5gsgdRZXkJxmQFEozCzGarGvBzBEUZ6FReME0ov335qRl3G6+KviR4o4P63e7b@vger.kernel.org
-X-Gm-Message-State: APuU4Z/DGLi16sZTkAkW/IziSryCJN8kW/HFmcCHR6f7BMxRi76clgXp
-	fS4I/7KI03YSz05lJ3c9L8LUHmC1LrgFMF0eTk7JallobE+ztehkPLHm
-X-Gm-Gg: AZFdTZdn3+Vg86adkOuhWGtMlYI1rSLEicG7xN+3HdHWAeg2FrotGuYbCs5AlhCenaX
-	yKiWabkX8xDETAwUME5tetj363c2aP8nFtQbdtrh5z94cO5N5i4HhUV1JwlIin/jpZHdN4YraL0
-	Oen3oHWSzkHypWIvNDrTVIFrgDv7bn4LN/dqXR6Hwjxpflc3Hhkm8cvIny7GbLP/k2VOk29NoaK
-	oXPaPRecohAn0Lm7livlb0uN+Z1nyk5SKWuaQ8nd3msEPyBm5G9JnhFk28SEZkrQ+GVXBmYb+Bx
-	bhAB0rrvwf+fGQ3Apm6ZRuRZgx0LWGTSSq/HVcYS3tFwxQGZ9H4cXdvEv06E/AU1I+gG5Uoh69R
-	bDcB7m9lN12uDnaLx+LEonigUzHL2W/wavG/SdBMCzD4yE4g38q036IXmBkkiXV1FhsjwcM8/uM
-	5jv447mDqaZ4mDQoLXFkvAhgjtBU0XvaP0AmQXh6/TkNC6X1FRShdCxQILahPdvnKzui4w2tido
-	I3vAO14ifqe2gDNX9Uit4SGrLrnMQTGjdAgBNMq9hnR6UTxI8J32U1vxMnJK9ZIUCh1Y/JlL5Md
-	hxkTzGWLZ1njs1dy6RFmNAxzkYH2/Yq9yVwA/2yv6mBX8w==
-X-Received: by 2002:a17:90a:e70c:b0:3ac:9df3:6b07 with SMTP id 98e67ed59e1d1-3b41c9234b2mr13368244a91.24.1795491358812;
-        Mon, 23 Nov 2026 19:35:58 -0800 (PST)
+        bh=tPwzcSn9YCtkUcYX05pvK2PhOcLN5eFatEAbk1VC3Ao=;
+        b=qBhslEYXBGD/FeoszmluLbzJZiOkmZVWKZx38e5YR7i/cWhQeF6peaEW3Blc9ExrhX
+         EQWtld5GhQhh9VbF1KZIQxmb9jBozbwLQ/LBe+ti+nMp2STn2yEUSvHsvJyckx7w9EaE
+         0lkRzPCsFknc7cv+4/Am+rhhdsrDeUGWPwxUSymJR15U96+TuvS3QFjjc8ncWLuj6zZW
+         /si4yASJTwjsYIOj+a9pAoxoEXJUk2QIwioKsOJRFPnS8trgyK9yhbzr6ebVPaCtDoQi
+         TY3SXzy9Sqz+JI86g3esTLDqF8m41e2wLBs5AaHJKonedq43Abpee6XgmE79GPpNGiH6
+         DxFg==
+X-Forwarded-Encrypted: i=1; AL+hErGkY9QKVRjQ+AircQeA2aNfXugAgJerc5vRTaV/xo6QOljWsEi6wJtaptscDE3HfrQNIHe5yjOJ@vger.kernel.org
+X-Gm-Message-State: APuU4Z82m4sR9fK5fgEAM3r8/ySsossrHnRFXD7OC78QjLlVWxv+glOn
+	CRMX8dWPC/9PigqrNqYo+WeINAjbHadGzXxS10a6JQrjUg9MBgLhNjEu
+X-Gm-Gg: AZFdTZe2x/sT+D8eu/eQBhXb6MFTu/1B5G+dUsNJ02vcXoa/v8peu6w9AvIc/avbO5v
+	uVzKDWCvxM8o+aeXCB7H5od8u7Iq06iRvWmFB9mFqixIuyzZ9GWpLcZXS8CJpfXO7unhD5+rKO7
+	COTrRQFCzlCXG7BBBE7mXqDh2yO86WwA0r3TLoNcx3ebtXRsPCvKBAbwmcD5/QK/k96oSxPNzg/
+	7yIXUE49lq8dEMFEaWsR2WiBuXkONY44lKrBH8H8HBWEqHBew2buBv91vSgsX4UtfD5ArADGsBe
+	AZJuM6slsfUrGD+R6iyRkkFZU2BlcxA+zIroMEZxM4rygOVl8SC11amtRb0pVAcFAr06aT48ADI
+	bS/QT+4iaUkfedHhZff901gA+iRHHDR3QaR8bvybAJ8mLPcvV4FTZFK/KqPVMELVIUN5aFdmBms
+	DkmVPO/dVzRZR56aFXBX7Y4D1VhUXckf9/FyHpeeB2qr8fXe/VyRJBx7cBnCJ09xVm62qAU34b+
+	uqM4yv5T/3/KMUL9COQwneS4Ix4trnyL5NzbFUbSlXE1FsvEbNRZHSrcbe4+t7bWA0N2PcIhoCe
+	aQwQ3LjjkoUkW+ueS83MFnT+CSeLE/3gdouDjEHWrYtd9gW3a0MnVGi4pPpXQ/F79KE=
+X-Received: by 2002:a17:90b:4a92:b0:3b3:fd13:683a with SMTP id 98e67ed59e1d1-3b41c995b82mr12834105a91.59.1795491363557;
+        Mon, 23 Nov 2026 19:36:03 -0800 (PST)
 Received: from osman.mioffice.cn ([43.224.245.178])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b405ecb486sm23397939a91.16.2026.11.23.19.35.54
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b405ecb486sm23397939a91.16.2026.11.23.19.35.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 19:35:58 -0800 (PST)
+        Mon, 23 Nov 2026 19:36:03 -0800 (PST)
 From: Zhan Xusheng <zhanxusheng1024@gmail.com>
 To: tj@kernel.org
 Cc: hannes@cmpxchg.org,
@@ -94,9 +94,9 @@ Cc: hannes@cmpxchg.org,
 	linux-kernel@vger.kernel.org,
 	zhanxusheng@xiaomi.com,
 	stable@vger.kernel.org
-Subject: [PATCH 1/2] cgroup: list a process whose leader has exited where its threads are
-Date: Tue, 24 Nov 2026 11:35:46 +0800
-Message-ID: <20261124033547.2373352-2-zhanxusheng1024@gmail.com>
+Subject: [PATCH 2/2] mm: memcontrol: find the OOM group of a process where its threads are
+Date: Tue, 24 Nov 2026 11:35:47 +0800
+Message-ID: <20261124033547.2373352-3-zhanxusheng1024@gmail.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20261124033547.2373352-1-zhanxusheng1024@gmail.com>
 References: <20261124033547.2373352-1-zhanxusheng1024@gmail.com>
@@ -113,191 +113,90 @@ Content-Transfer-Encoding: 8bit
 
 From: Zhan Xusheng <zhanxusheng@xiaomi.com>
 
-A cgroup.procs migration skips exiting tasks.  If the thread group
-leader of a process has exited, writing the ID of one of its threads to
-cgroup.procs moves the live threads and leaves the zombie leader behind.
-CSS_TASK_ITER_PROCS walks only visit leaders, so the process stays in
-the old cgroup's cgroup.procs and is missing from the new one's.
+When a cgroup.procs migration leaves an exited leader behind, a
+CSS_TASK_ITER_PROCS walk visits the leader at the first live thread of
+its process.  A memcg OOM walk of the cgroup the threads were moved to
+can then return that leader as the victim.  mem_cgroup_get_oom_group()
+takes the memcg from the leader, which is still the old one, so
+memory.oom.group of the cgroup the process is in has no effect.  With
+memory.oom.group set in dst and a second process in dst, an OOM in dst
+killed only the moved process.
 
-With a process whose main thread has called pthread_exit() and whose
-other threads allocate memory:
+Add task_procs_css(), which gives the css of the process a PROCS walk
+returned, and use it to look up the memcg.
 
-  # echo $TID > dst/cgroup.procs
-  # cat src/cgroup.procs
-  $PID
-  # cat dst/cgroup.procs
-  #
-
-When dst reaches memory.max, the memcg OOM killer finds no process in
-dst and kills nothing: 5453 oom events and no oom_kill in 10 seconds.
-An OOM in src picks the moved process instead.
-
-Keep the leader on its css_set, and make PROCS walks visit it at the
-first live thread of the process when that thread is on another
-css_set.  Update test_cgkill_exited_leader_migrated, which expected
-dst's cgroup.procs to be empty.
-
-Suggested-by: Tejun Heo <tj@kernel.org>
-Link: https://lore.kernel.org/all/305c5803b904a57c188b505d6ed9e1e4@kernel.org/
 Cc: stable@vger.kernel.org
 Signed-off-by: Zhan Xusheng <zhanxusheng@xiaomi.com>
 ---
- include/linux/sched.h                      |  2 +
- kernel/cgroup/cgroup.c                     | 55 +++++++++++++++++++++-
- tools/testing/selftests/cgroup/test_kill.c | 16 +++++--
- 3 files changed, 66 insertions(+), 7 deletions(-)
+ include/linux/cgroup.h | 18 ++++++++++++++++++
+ kernel/cgroup/cgroup.c | 11 +++++++++++
+ mm/memcontrol.c        |  2 +-
+ 3 files changed, 30 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 8b3d47a325cc..04fe82aea0e1 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1352,6 +1352,8 @@ struct task_struct {
- 	struct css_set __rcu		*cgroups;
- 	/* cg_list protected by css_set_lock and tsk->alloc_lock: */
- 	struct list_head		cg_list;
-+	/* exiting leader left behind by a cgroup.procs migration */
-+	bool				cg_leader_left;
- #ifdef CONFIG_PREEMPT_RT
- 	struct llist_node		cg_dead_lnode;
- #endif	/* CONFIG_PREEMPT_RT */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index b3657e72db99..ab442f94e29d 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3081,6 +3081,9 @@ int cgroup_migrate(struct task_struct *leader, bool threadgroup,
- 		if (!threadgroup)
- 			break;
- 	} while_each_thread(leader, task);
-+	/* see procs_live_thread() */
-+	if (threadgroup && (leader->flags & PF_EXITING))
-+		WRITE_ONCE(leader->cg_leader_left, true);
- 	spin_unlock_irq(&css_set_lock);
- 
- 	return cgroup_migrate_execute(mgctx);
-@@ -5200,6 +5203,40 @@ static void css_task_iter_skip(struct css_task_iter *it,
- 	}
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 5dfa915a630e..cb05808f2172 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -548,6 +548,24 @@ static inline struct cgroup_subsys_state *task_css(struct task_struct *task,
+ 	return task_css_check(task, subsys_id, false);
  }
  
-+/*
-+ * A cgroup.procs migration skips a leader that is already exiting, as the
-+ * controllers don't deal with exiting tasks, so the leader stays on its
-+ * css_set while the rest of its process moves.  CSS_TASK_ITER_PROCS walks
-+ * visit such a leader at the first live thread of the process instead, if
-+ * that thread is on a different css_set.
++struct css_set *task_procs_css_set(struct task_struct *task);
++
++/**
++ * task_procs_css - css of the process a CSS_TASK_ITER_PROCS walk returned
++ * @task: the task returned by the walk
++ * @subsys_id: the subsystem ID of interest
 + *
-+ * PF_EXITING isn't set under css_set_lock, so a walk that races with a
-+ * thread starting to exit may visit the process twice or miss it.
++ * The walk can return an exiting thread group leader that a cgroup.procs
++ * migration left behind for where the rest of its process is.  Use this
++ * instead of task_css() to find the css of the process.  Must be called
++ * under rcu_read_lock().
 + */
-+static struct task_struct *procs_live_thread(struct task_struct *leader)
++static inline struct cgroup_subsys_state *task_procs_css(struct task_struct *task,
++							 int subsys_id)
 +{
-+	struct task_struct *t;
-+
-+	if (!READ_ONCE(leader->cg_leader_left))
-+		return leader;
-+
-+	for_each_thread(leader, t) {
-+		if (!(t->flags & PF_EXITING)) {
-+			if (task_css_set(t) == task_css_set(leader))
-+				return leader;
-+			return t;
-+		}
-+	}
-+	return leader;
++	return task_procs_css_set(task)->subsys[subsys_id];
 +}
 +
-+static bool procs_stand_in(struct task_struct *task)
+ /**
+  * task_get_css - find and get the css for (task, subsys)
+  * @task: the target task
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index ab442f94e29d..0be7f96ce074 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5237,6 +5237,17 @@ static bool procs_stand_in(struct task_struct *task)
+ 	return leader != task && procs_live_thread(leader) == task;
+ }
+ 
++/**
++ * task_procs_css_set - css_set of the process a PROCS walk returned
++ * @task: the task returned by the walk
++ *
++ * See task_procs_css().
++ */
++struct css_set *task_procs_css_set(struct task_struct *task)
 +{
-+	struct task_struct *leader = task->group_leader;
-+
-+	return leader != task && procs_live_thread(leader) == task;
++	return task_css_set(procs_live_thread(task));
 +}
 +
  static void css_task_iter_advance(struct css_task_iter *it)
  {
  	struct task_struct *task;
-@@ -5246,8 +5283,18 @@ static void css_task_iter_advance(struct css_task_iter *it)
- 		goto repeat;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1271d390b617..5704e4415a16 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2003,7 +2003,7 @@ struct mem_cgroup *mem_cgroup_get_oom_group(struct task_struct *victim,
  
- 	if (it->flags & CSS_TASK_ITER_PROCS) {
--		/* if PROCS, skip over tasks which aren't group leaders */
--		if (!thread_group_leader(task))
-+		/*
-+		 * If PROCS, skip over tasks which aren't group leaders, except
-+		 * for the thread a left-behind leader is visited at.
-+		 */
-+		if (!thread_group_leader(task)) {
-+			if (!procs_stand_in(task))
-+				goto repeat;
-+			return;
-+		}
-+
-+		/* and leaders visited at another thread */
-+		if (procs_live_thread(task) != task)
- 			goto repeat;
+ 	rcu_read_lock();
  
- 		/* and dying leaders w/o live member threads */
-@@ -5322,6 +5369,9 @@ struct task_struct *css_task_iter_next(struct css_task_iter *it)
- 	while (it->task_pos && !it->cur_task) {
- 		it->cur_task = list_entry(it->task_pos, struct task_struct,
- 					  cg_list);
-+		/* a left-behind leader is visited at a live thread */
-+		if (it->flags & CSS_TASK_ITER_PROCS)
-+			it->cur_task = it->cur_task->group_leader;
- 		/* a task on dying_tasks with zero refcount is only valid for
- 		 * RCU readers, not even interesting for
- 		 * CSS_TASK_ITER_WITH_DEAD, find another one */
-@@ -6841,6 +6891,7 @@ void cgroup_fork(struct task_struct *child)
- {
- 	RCU_INIT_POINTER(child->cgroups, &init_css_set);
- 	INIT_LIST_HEAD(&child->cg_list);
-+	child->cg_leader_left = false;
- }
+-	memcg = mem_cgroup_from_task(victim);
++	memcg = mem_cgroup_from_css(task_procs_css(victim, memory_cgrp_id));
+ 	if (mem_cgroup_is_root(memcg))
+ 		goto out;
  
- /**
-diff --git a/tools/testing/selftests/cgroup/test_kill.c b/tools/testing/selftests/cgroup/test_kill.c
-index 756bc7193d4b..102255b9559a 100644
---- a/tools/testing/selftests/cgroup/test_kill.c
-+++ b/tools/testing/selftests/cgroup/test_kill.c
-@@ -406,15 +406,16 @@ static int test_cgkill_exited_leader(const char *root)
- }
- 
- /*
-- * Test that cgroup.kill kills the threads of a process that were migrated
-- * to the cgroup after their thread group leader had exited, and so are
-- * not listed in its cgroup.procs.
-+ * Test that a process whose thread group leader has exited is listed in the
-+ * cgroup.procs of the cgroup its threads were migrated to, and that
-+ * cgroup.kill there kills it.
-  */
- static int test_cgkill_exited_leader_migrated(const char *root)
- {
- 	char *parent = NULL, *src = NULL, *dst = NULL;
- 	int ret = KSFT_FAIL;
- 	pid_t pid = -ESRCH;
-+	char buf[32];
- 
- 	parent = cg_name(root, "cg_test_exited_leader_migrated");
- 	if (!parent)
-@@ -438,12 +439,17 @@ static int test_cgkill_exited_leader_migrated(const char *root)
- 	if (wait_for_zombie_leader(pid))
- 		goto cleanup;
- 
--	/* The exiting leader stays behind, only the live thread is moved. */
-+	/*
-+	 * Only the live thread is moved, but the process is listed where the
-+	 * thread is.
-+	 */
- 	if (cg_enter(dst, pid))
- 		goto cleanup;
- 
-+	snprintf(buf, sizeof(buf), "%d\n", pid);
- 	if (cg_read_strcmp(dst, "cgroup.events", "populated 1\n") ||
--	    cg_read_strcmp(dst, "cgroup.procs", ""))
-+	    cg_read_strcmp(dst, "cgroup.procs", buf) ||
-+	    cg_read_strcmp(src, "cgroup.procs", ""))
- 		goto cleanup;
- 
- 	if (cg_write(dst, "cgroup.kill", "1"))
 -- 
 2.43.0
 
