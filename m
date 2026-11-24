@@ -1,143 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795518273;
-	b=rfjKDkdHr9luObM0aZ0WFUcDNYTlTo6NCw07VNdCUs1mM1HzazO/P2i962LVpi9Kx18M
-	 NeBmFd2gy+HpgaitZHWuS+xbB3FWbTv43qfDTNxZCcsaIZoW5+7m9QOrcJhen/Ssj2Pcm
-	 BN3DYDaKl7eKLhARokcAeZC7qUdI4XJJcInw90N8s+U5LPOIrWNXibbUeXvh2UB2H1eoX
-	 fX1F4E1xkqMIhYQn7e1/IWL069YzXedU/e7+KPFy15zRaoOByq0RcFcW1lPz9nR9mFbvQ
-	 928HXZ5WOzJFT5TxiVYtCpe9rKUYMy6nTyIAdfqfdD/Y2+0+Lr2zzXb+siEJycLSwzA==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795518273;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.remote-ip=209.85.218.49
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=fail;
+	t=1795520571;
+	b=VD1VCQqbYhG5WY1uE2W5ff4voVRHrfLb18wglI6zlX2JqkXqCMt2epWOACk3uRgdLNSz
+	 egwL89L6lk4dq0+tSiuu4wDLw7oja2JvXzuIzD7ESawZJn9JWqXiK8rED1A0prU2G1MsL
+	 Z0lO3T8YkiLlV+LRPgKnDqNmvbz258rJsRdSqJm5y9kXi/AQPCaVm2cTMutpLI3opKWyi
+	 QGOw0N97WywUbrhx9bS73ASNs+tliAUyZSq4xRceMO5ZXEU7r2BiQHEMOZmVAxUqZxA8o
+	 htwYYh33NY94CLYW/zpUKtYHFOCVIxnUpIMKQ1iF3z0VTzTFiJjzBy2Ze2Iy86/QslA==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795520571;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=TTlOMlop88MYRf1Y2eOatTSKCEHNu2LBs6PIdGIA3ts=;
-	b=r6G5f+7PQtyglRwJgkOL40/emooTiVVYzvvJFCgmTaV/ojqaGBM6bVgZcsY4tx/QlkzN
-	 7e/1v8Ju45zAKM42nTacn6kYda8kFBI3shkHvpOn9FQ//Q4xy5lbhJS9XscuCB+htD0Zx
-	 bfeUrGwq4lU2CKrf7imyygU6/rzD0GTUmBb+IX+Iu4/4Mr9YYOKXXwFPP+14vYEeU3jfl
-	 JHL3UR53LurnYg5Vccr67HZhYQpwhQKBmqu6/qjGsckZ9byLhMHNpSPibLXMmgfMqu8ul
-	 zlxbseY3dm+e/vh09cN2qeLKSvYg42IT4tEhEHkHIoG2+nWnugB3hapDbXZ+MAkQBOw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Gx0jwKic;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=cI8cddPG;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=/z5ch5pLpPdbk1BmHD/hwwHu03qByQafwYZQeBV/lWk=;
+	b=kcmwREpUqKfAVqFtOcDeRVd6pT3+QBLSF/5qEdwQhCtuVIhQMXFV59ThJj41n41+v0th
+	 jyWyfkZ/qqhADjAVfqEwVV+gB7hZaGGv70w4WkJB5N5O+ZCzBqF06hIcnLbYqwzDzAPA1
+	 7HtFZoRc2OLYwO1Yzj9fMBAjAHkVyly8J2g9xw19ESn5gqIr88xPOw1HuZmKmZ+DUUS7Q
+	 YlR7pRKCTMJQaCoPkjB78F5izG1zPVb/376CGgBhlXVOp8QMB44fI/E8E1YfwcQQntOB6
+	 yi0tID5oU8MpH9KO6IsMhrBM6FF8vJBmtU5zqvviYsvKe6ZnERqbqcSMNJxp4zGPksQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xq2R+zD1;
+	arc=fail smtp.remote-ip=209.85.218.49
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47CFA606A322
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 11:04:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 47CFA606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83AF1606A322
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 11:42:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 83AF1606A322
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Gx0jwKic;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=cI8cddPG
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795518272;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TTlOMlop88MYRf1Y2eOatTSKCEHNu2LBs6PIdGIA3ts=;
-	b=Gx0jwKicO6PYN0KjC0d1hd5uBlP1rWdYMXJMVgWllSqFONNKSmOaPMhq4XAJ8o/lVwllkb
-	K3iiKZ+DB1KLOpGclifctS0oNLhHl4Rg0FACq9N7FMNFyI1W0QSgwFLdP0pD64d/jYHsB8
-	CYitJQprsGT+V5d9qDPt//h4zwf2AnE=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-88-kS_jPORRONOBlJuJhyq8-A-1; Tue, 24 Nov 2026 11:04:30 +0000
-X-MC-Unique: kS_jPORRONOBlJuJhyq8-A-1
-X-Mimecast-MFC-AGG-ID: kS_jPORRONOBlJuJhyq8-A_1795518269
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-4a7c864000eso2527443f8f.0
-        for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 03:04:30 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=xq2R+zD1
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c4cac7a7d3cso634364066b.3
+        for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 03:42:51 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795520570; cv=none;
+        d=google.com; s=arc-20260327;
+        b=Mk2xGw9aJWNti4a3CZOOv0tpqamGlAwZFQ9lvOUJFxEKD/AN8FPYtpZEd5HCqcQ0YC
+         qFIngBlpwdZ5iCRsnC1ZE69ifsTrN6ixJvxv325xDAz/az3BYC1ZzVV1ySmcibPhOV1P
+         INwUNYqSHp4MMW4e0/WY7tjZHY1UI1gUIdzwOchABCc9+7mSHFo244M27wopfcCnbwLb
+         UhuMvqv2E85esThff3PYIBHZszCPAklGuau/BYd6GDO4/b1EGeH3VxgTdwxDKrSV20yQ
+         +zG/iBcsJrAc4zrRH/377hTT7vHlctgkTtjb0bD8B2mTyqIv+QYS6dfM1d9BAsp016uw
+         kImw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=/z5ch5pLpPdbk1BmHD/hwwHu03qByQafwYZQeBV/lWk=;
+        fh=sR3QKMnIlMADbLkJE5zpUEl34zPIVfOsBw3aJas0jes=;
+        b=d07123UmcscMFV6L72DWv/2Dua/nGUlUaHIu5sjp43l4CMTrTEBimlmdGrwCVciPAP
+         7KDFIfZ/70Sf3YJlKu+UF0QwGt3wdHnvqFLhrKk3xzxaDmdhM1bGhDP3sg6dVBGAviZy
+         JCrUQkExyV3r+aIIszBu6dbuna/3OY2L1RBngfbmIPAH0b6pKhakxhbiG2grPYlvF7+F
+         QVm7KDQk4qc6H4oyTp/V3Y5MNisdaALKnCyMsY/l7CweeCST6A18ThEZAb4ansuCZgr1
+         DEadq087/dVpCh7g+4xjoTbPwSfok+F/pQQLu0+QYDZYCSKCP3eVhuSiJ+GJZkL9szIt
+         9C5w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795518269; x=1796123069; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
+        d=gmail.com; s=20260707; t=1795520570; x=1796125370; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=TTlOMlop88MYRf1Y2eOatTSKCEHNu2LBs6PIdGIA3ts=;
-        b=cI8cddPGERKUW1Hg1Xcj05XFux6gB6hsbwlfhHILhMVjH9xrBGWddA61SymLnf3vvk
-         C0tuSKGgbr2dUZIk9Wdpm3CGFt0IFCzHLVS7tkSm8XJz094j24tIY0OEM8H16oIibybs
-         L6S6/HrZ7T+MuXhJ4d1Enx5nvErwS5A+8ZqQVnHiIz0urEhlteHDoVWhk52WZq4mHYdV
-         GTiRFrZmM13sdHQTtcXes5r11rSIVhpxzxG9bY9jXmNft1UFUV2A6zR6lcQaOW1thk1t
-         LLtRL0UMZ/LMPh7F9fE4E3Ou7b8MdKOT/vQ38s4yYnTSNJ8QUmZHPkzC56kf1ber0Vqn
-         EP4g==
+        bh=/z5ch5pLpPdbk1BmHD/hwwHu03qByQafwYZQeBV/lWk=;
+        b=xq2R+zD1p5RXUgEpNuhoK8xg7y7NVsHGKr0JxP3zhBiQsU4buKR1kPpzJ/h+RQqvIc
+         K55ISJpK52O/lqUCD5pfVaavDjp36RTFXuUvgSOG1ZLmbK/9pg9kLToRaik2nhslMcSw
+         f8N0rFjHECKAxVeGwTTUI4YuQcWm+aY7w0dKOqzF8x1QwWuKu5HsvTINBxEXBxWwc95U
+         UT6yrwDt4LNX1XlVFwwn0ahcfAe+N8X0MLHch7P4VkP+5Omm+nrwg3OwKrRdP9DBDa80
+         fnCWgJRXNa0BguDlQChN0Qc1ponkNx6AtmdYdcRuTKZCxjhv3NFRe8n00Nvq4C4MwGs6
+         e/yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795518269; x=1796123069;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
+        d=1e100.net; s=20260707; t=1795520570; x=1796125370;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=TTlOMlop88MYRf1Y2eOatTSKCEHNu2LBs6PIdGIA3ts=;
-        b=OrCm/JwJn0C2WSOeXKlMFR9OEUQ5PxwsPsL5hKyRgYdENNz+pWWqBMg38ktW3vS0/5
-         NGY1xPzI74I9h3eO8YkCsmaHs0JGkN58oNxuWyhlD/sUsnj1nDLnpqOMZcShRHh4IQnt
-         QTzdxhe8H7BNua4uyNGJE2oRBYX5jjWl5n8p85al0xdVfMaIu3dubr11buZRr9TUGp1/
-         4CmKkgymM8pfxDaXrzU1TG+yJ5YTgf0FLFaOLJHCYRm1M6t47hFS299VwGral4gnF8ZK
-         48LLHeMkvvmrBT5VfKmb83yAsEmWpdyJRFS765qZf/74deZDxN155i0QKh7wrcKysUJN
-         2/YA==
-X-Forwarded-Encrypted: i=1; AL+hErGMxspuyRKCgKqjxrlEFVNyS12XEe54SLa7LnXgnnTezgmC6mGb1TcaCfqh5gmPBbVWqtrvf5pb@vger.kernel.org
-X-Gm-Message-State: APuU4Z/88HhbZfBF0QbBwo6sp4ozp7tKgHBGBbMPUulZmCGkn6Zq71/T
-	rILbzt3YkHnkeDfEoxDFiDApSjsKVZHaBTBOmlxMrkyjYPwsHsqjIyuNU3f9CZGA0FK2fS8qw/A
-	n+xoH3pi3uAvnak70kyDG2fhPgJyDnWy3KPZ78uHO5Ywm0fvtR0lE/Mj5fhg=
-X-Gm-Gg: AZFdTZdHyQ6VDN9A+78Q+OlfrG+oDTmqvyanqnBprH8SCG8E3ZOAo6fsgIKaxtSd4Rc
-	f3bUvFtcj1peXdk9q0khO6Q7o3ZsK10b/u0g73qFjzf42RwbyI/r2Tg6LWHxJZmtyc9I2zsZwCf
-	xN3ITK/m75oSePanG3LjftEwinH0ZtVvN2+SY0ih/2h6bkoiixCkaoPCqnWskJB9ANQEHeZwkIv
-	NinaEQFmsZcecZqMkWHXkHyZuzi9giwHKaTiczK8/y+84vQLJbhusnT5fB8UFbS4vmxet0rKin/
-	jGpug7Ahw94+kOlq7ULku4vddlTFDZ641FHVtS+FN755ZOnJmuWPVEtO2JilC4zROCxEVFbuDPg
-	aVRXeftH0+bi1Ro+UQIL/vXvbrEp5HV+7jwZoKGsHvfpV5PDIUkhRM+lTkWtjztdHbmrtFMjjx3
-	NDuZI=
-X-Received: by 2002:a05:6000:184d:b0:48c:7386:af18 with SMTP id ffacd0b85a97d-4abacfea55cmr29663624f8f.8.1795518268980;
-        Tue, 24 Nov 2026 03:04:28 -0800 (PST)
-X-Received: by 2002:a05:6000:184d:b0:48c:7386:af18 with SMTP id ffacd0b85a97d-4abacfea55cmr29663561f8f.8.1795518268563;
-        Tue, 24 Nov 2026 03:04:28 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4b34e9c3ffesm10976795f8f.19.2026.11.24.03.04.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 03:04:27 -0800 (PST)
-Date: Tue, 24 Nov 2026 12:04:24 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>,
-	John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v4 2/6] sched: Move DL's admission control to sysfs
-Message-ID: <awVvOGe-RwmLCqDv@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
- <20261123-sched_dl-v4-2-d523e4d960d3@linutronix.de>
- <awU9KmFsbiyvbcOr@jlelli-thinkpadt14gen4.remote.csb>
- <20261124075332.nZysJRfS@linutronix.de>
- <awVfotZsGc8S_aB0@jlelli-thinkpadt14gen4.remote.csb>
- <20261124103507.4u5Sz_bU@linutronix.de>
+        bh=/z5ch5pLpPdbk1BmHD/hwwHu03qByQafwYZQeBV/lWk=;
+        b=1W3n0QfIwi2aFTemzIc+bT8l0oi9iS9lWZaXqaOnwTBkxsdrRzuT09PDz0Q48rkJpU
+         DgcqyPNgvKMwKvBxHgl9FJDv9zGF0Y0vWmRCSEtNg/i4OOVMy3G0VQm48tHZxtzXfzw9
+         BQZixjyHyEUjJ/GcFBELl9hQdtdPv2R58s+XghesmoYu7SavyaGIuqNG14vLCaV7UEan
+         Xj1L2iGPv9vZFy+0dOn3S+Pc9D1zMxjdqeE9P+MZl4aw7gaZERwaf8nM/Xi8rrXPTKVc
+         Dfy9Qsr8S7QDtnDx/+zDNspTUCOeYflSD+S+tTQbMGMS4dokgDsw/GTVMLW/wOVPbuFo
+         vjyQ==
+X-Forwarded-Encrypted: i=1; AL+hErH0Da3pUsKhGeX1/yZLw8vht+49cPi9020dF7UZGWM3jcTjRt3SD1ifyVoJFI0wIWiG/rttP2o7@vger.kernel.org
+X-Gm-Message-State: APuU4Z/7GVqD2mKpVVtOsQhzXGM6jRYx5xW6wHDUfbG+ofFrczEYgP41
+	4j/lysVADbH9RsDehYFvQXy0jJu5Sr50O6Gm8OkIrzPuj1QC+J1xIz6GOnSJii7UvMEWLyrLc9r
+	lL0RwuZtHcLJl7C02HChm8ihd74d2mWY=
+X-Gm-Gg: AZFdTZcvaMVSAbf+oAzpxoOoV0Qi0jf7F2Kl+Mx3OVbA21szsIfNeDFy5jrbZOj8MOP
+	s4R3cP97c6HB20jFlUcK5bf07sT0JKDowt5QzXxbGpASrXupFdmOt+D7gy3ffzTAVm+B9UFuOo4
+	5fZz/OSh2rhLDwoV+pct41nQmt3yTNUmaTZDTEH9a7KPBR4gv+gQ0Bfjxa0xxxy49/D57JL//7o
+	l/ZD+bK2t8fYr5PksGu9zM91EBwMeGcyF2/cxeKFfybcxAF9HcayLbwaedcKRBHki2UlezbCMW1
+	wSdHhJIxtLDtMkR9+u20xwNQDuztmj9xhHEFnOmcZqowl3RqUn/ACgI2418GmrBWJpXNYLkIhbA
+	5T0UrK38j7t/VuPhVYan2owOQ15XVbrgOvUu5
+X-Received: by 2002:a17:906:1255:b0:c2e:378c:8ceb with SMTP id
+ a640c23a62f3a-c513ab2f292mr893283466b.36.1795520569665; Tue, 24 Nov 2026
+ 03:42:49 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -147,48 +104,75 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261124103507.4u5Sz_bU@linutronix.de>
+References: <20261120095559.429515-1-xavier.qyxia@gmail.com> <awBN9VvV6yM6Cjut@casper.infradead.org>
+In-Reply-To: <awBN9VvV6yM6Cjut@casper.infradead.org>
+From: Xavier Xia <xavier.qyxia@gmail.com>
+Date: Tue, 24 Nov 2026 19:42:38 +0800
+X-Gm-Features: Aa3M54qQ26PffOi-ROWCmcVbedXfEWG_6O8l67P-4AZYWdcQV7atuYSopUWOUaU
+Message-ID: <CAEmg6AVjtaiq9Q8rC_V5TcgAxQ386CsDtiXO7A6UzC+FzNdGTw@mail.gmail.com>
+Subject: Re: [PATCH] mm: batch per-task lruvec stat updates on the writeback path
+To: Matthew Wilcox <willy@infradead.org>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, shakeel.butt@linux.dev, 
+	mhocko@kernel.org, roman.gushchin@linux.dev, muchun.song@linux.dev, 
+	jack@suse.cz, david@kernel.org, brauner@kernel.org, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 24/11/26 11:35, Sebastian Andrzej Siewior wrote:
-> On 2026-11-24 10:57:54 [+0100], Juri Lelli wrote:
+Hi Willy,
 
-...
+Thanks for the feedback. That's a fair concern.
 
-> > > I assumed you use the proc interface because you don't know better. The
-> > > warning makes you aware that the throttling knobs and DL knobs moved to
-> > > sysfs. The DL bits are mirror to the sysfs interface in case you ignore
-> > > the warning and keep using proc.
-> > > If you move to using sysfs then everything is fine. From here, going
-> > > back to proc looks odd.
-> > 
-> > Odd indeed, but I wondered if it might happen that a sysadmin configures
-> > things properly using the new interface and some time later, say, an old
-> > application that hasn't switched yet to the new interface resets/tweaks
-> > using the old interface?
-> 
-> Therefore I wanted to remove the old interface. The legitime users would
-> want to change the default DL attributes. I am more afraid of those that
-> intend to disable RT throttling and are failing to do so.
+The original fio benchmark uses 4K buffered writes with fsync at
+the end of each job, rather than after every write. The improvement
+is reproducible in that setup, but it is a synthetic workload.
 
-Agreed, that's the group to worry about, but they never touch sysfs, so
-an error after sysfs was used wouldn't reach them; the warning and the
-docs do.
+I also tested extracting a tar archive and copying a tree of small
+files on ext4 backed by a ramdisk. Initial runs showed 4.3% and 3.5%
+reductions in wall time, respectively. However, these improvements
+were not consistent across independent boots, so I don't have
+convincing evidence of a real-world benefit that justifies the
+added complexity.
 
-> We could also make the proc interface return -EINVAL on read/ write once
-> the sysfs was used. What about it?
+Further testing also uncovered correctness issues in the patch.
+Deferred NR_WRITEBACK increments can temporarily be missing from
+the counters while completion decrements are applied immediately,
+potentially affecting dirty throttling. I also reproduced 8-12 KiB
+of stale file_dirty accounting after fsync in a non-root memcg with
+periodic writeback disabled.
 
-Hummm, I'm not convinced. Whether old tools work would then depend on whether
-somebody wrote to sysfs since boot, which isn't visible anywhere: LTP's
-proc_sched_rt01 would fail again, just only sometimes?
+I explored a writeback-local alternative without modifying
+task_struct. Although it passed the correctness tests I ran, it
+did not demonstrate a reproducible end-to-end performance
+improvement.
 
-Earlier you actually offered:
+Given these findings, I don't think the current patch is suitable
+for merging. Please consider it withdrawn.
 
-> I could look into making the sysfs values appear in proc, too.
+Thanks,
+Xavier
 
-This might be simpler. For !RT_GROUP_SCHED, procfs could become a view
-of the sysfs_dl_* state, with no second copy. sysctl_sched_rt_* would
-only be needed for RT_GROUP_SCHED (which is marked BROKEN anyway, and
-what we end up with depends on the HCBS discussion).
 
+
+On Fri, Nov 20, 2026 at 9:41=E2=80=AFPM Matthew Wilcox <willy@infradead.org=
+> wrote:
+>
+> On Fri, Nov 20, 2026 at 05:55:58PM +0800, Xavier Xia wrote:
+> > The writeback path updates two lruvec stats per folio through the memcg
+> > rstat machinery: NR_FILE_DIRTY when a folio is dirtied and again when
+> > writeback clears it, and NR_WRITEBACK when writeback starts on it.
+> > Consecutive folios almost always share a lruvec, so the same counters
+> > are updated over and over.  On a 4k buffered write + fsync workload
+> > __mod_memcg_lruvec_state() is about 8% of the profile.
+>
+> Is this a realistic benchmark?  Does it represent some real life workload=
+,
+> or did you just choose it because it shows the best benefit of this patch=
+?
+> This is a fairly significant chunk of extra code, and it'd be nice to
+> know that it benefits a real-world use-case before applying it.
+>
+> If the real world usecase is more "there's some pretty high overhead
+> when flushing accumulated megabytes of dirtied page cache", then there
+> are simpler solutions that don't involve messing with task_struct.
