@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.123
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.247
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795495983;
-	b=DIY+MxFhMm+GV/xNQcIS+bQXBGunNCnHa0A8HhtJHlcn7CddPV2bXb9MAOBupXm+USkK
-	 9cfgqUijYbs5AzDYgODW2M+xEO4CHWTPHGS11v1SOFvjZiEzddPmUdymga4p347m8NYsM
-	 KfQrXO5S2ggnNnmP98k6KofFtiDSiuuZyBFOk+Xme+6TQlVn592c5IL0kb8gjLf6VXOdH
-	 op4btlOwdKVQuD+TguSZMIgLVqaci25tyieN1PtoV5ujhmlJuE8aRoNwROY9O4bBtBqQC
-	 IPZ8a1u8bIaQ6XvAwfUxc5NF5M3STl69cKJcthuSZKvVXrbCKc+mJdOVRqF5evj9JMA==
+	t=1795496601;
+	b=XP6bPtQUxfg3V8eAwrN0Bvr94cbMjUAuH3kZGZeVmq7/G2wCYnbGW7Ik7LjlN4uK8dZW
+	 npq0DWdiz/2EWZUupi0u/IAGHrfcX8XZBjGMPpadVL2r1wXHjKVOoUO0L4tFLLOIuCzuD
+	 FSsVMCOl8240GH4+2oT2oqDRZySaMlPeW6NrLzi6vQT1Vo8pq6STT7rE6SY3W4U0vFGZ9
+	 KwJyihuCKvxybBGdO1staPmViWYGVpaQXiAaiLcdQ3d1L/1A32/FwamvGH5iB6PS44WtQ
+	 H8n0FwZkvWU4iGkuWx+eDfJwp+fj2LaXe8mn6vKeQwkoTHMKyPjX1lT4LqK3o+USvgg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795495983;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795496601;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Content-Type:Mime-Version:Subject:From:
-	 In-Reply-To:Date:Cc:Content-Transfer-Encoding:Message-Id:References:
-	 To:X-Mailer;
-	bh=OiIzwEHdzzAJR7e70QGL0R+/3Yj1cTamKyRrwNi0fyg=;
-	b=Ihv9DfEAIkWj1rdR7moBnMhk0XFO1DbzBz95BPkZWucJNm9KanvH0WXl2ZMVChxiKOsk
-	 NqGKSICzEYYDrU2n67QldQbccJKX5TE/C5vQH7d/GXX8Z8sMuGgASwwIpI48IlqhI7Kcf
-	 DkoyP5MsVeb2VPXF77FX9TR7GSLQ05A36OHBmwVcthYZ5KolTB+WYx0VEdtjuHcKPdcdh
-	 d/LvMeH6QZswR5AJ0tA8B+vJEx+b8MH86n/XPq1S4laAxTrlzuTvn+Vh2XX+OuM5MvKXI
-	 sFtUpFXP6Q7vULJI+/AYAIkH/yHh0WGS6nkT3C0TeYZxMVaa2/sg+iUvFmUvD0CJNqg==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=S2gozbY24olxUageBz+NlIzZXi6x5SrXPb32SM57AJM=;
+	b=QFOdvXW8vrslnylI/hrEUyiOWQWovTpDb52o2bJXHrOZQBTd37xfTURqXvAgfz5qdZSi
+	 QBlt3qRZlqxAGMdd261zw6nRnF12AlmY4j9RtszL9/QrZGZmpeEmEhN3FYs5+W5lWO8op
+	 y2hraVbUAglqWruL0hKNjJIAT9UkaNJT9MvoBG4dnkrnPRqx0LGB+cjKXV12DFpDU9ZQt
+	 ZqrNsR2lq6/GboKcOTuxLOaFT77+j5XwdSk38w2vgcLt916QutuFYV6p8vK1eR3bJ6Xtj
+	 6dAuMy5zQRgohO+AwEZdrrNA6OW9cvJFc0Uvc+o/sTEhOMxO+9VRJ6195jyU4eEklTQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=r1e5CRtK;
-	arc=none smtp.remote-ip=91.218.175.123
-Received: from mta0.migadu.com (out-123.mta0.migadu.com [91.218.175.123])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=EHi93Q8K;
+	arc=none smtp.remote-ip=91.218.175.247
+Received: from mta0.migadu.com (out-247.mta0.migadu.com [91.218.175.247])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D897606A322
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 04:53:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 5D897606A322
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBEF3606A326
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 05:03:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org EBEF3606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=r1e5CRtK
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=EHi93Q8K
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=s/slY6o6wSEczfY7MjDTmcG9POL3RXKg4WQAsPd+j7A=;
+DKIM-Signature: a=rsa-sha256; bh=pZwquf+TOycXJqm5EEWgkMHD8Suyd/T8rx/DR0eESz0=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795495980; v=1; x=1796100780;
- b=r1e5CRtKl/EPAtOKOj3DJ1DMGKukAqhyex1TbxxaiNzdZxxU3HVDvqqoFiclT7D+iEUsqXnj
- EDXH52TtiB9Ee+HL55KmQfuKvW4DRTnbU723G8Gedi++KFVbh1k1XlOcecSs/LLUm+OwiAKqArt
- ny/YDiRvcp1MtYCCbkCYJK60=
+ t=1795496599; v=1; x=1796101399;
+ b=EHi93Q8KppmvlCPPbQHFZbV1arZr9h53O/lUisfvlbqeOPCXVBOJKhrG+sTLx1kMjNa18Wn/
+ F3gqamW6qJPqCWEWVpIeZZYtBmY7SMYJdyhNJkAX5jY+ogb5QhmAUTBS4T7RAzaMJmAbzbhwFHN
+ 1GzW5XZwOULYV1sSkP1YbrO8=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id ca530465533cab93;
-	Tue, 24 Nov 2026 04:53:00 +0000
-X-Mizu-Trace-ID: ca530465533cab93
+Received: by smtp.migadu.com with ESMTPS id 9439c991d20d68e6;
+	Tue, 24 Nov 2026 05:03:18 +0000
+X-Mizu-Trace-ID: 9439c991d20d68e6
 X-Migadu-Flow: FLOW_OUT
-Content-Type: text/plain;
-	charset=us-ascii
+Message-ID: <c665ace5-dfd5-4fb7-abcc-7454f732fb36@linux.dev>
+Date: Tue, 24 Nov 2026 13:03:04 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,74 +57,97 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3901.200.71.1.16\))
-Subject: Re: [PATCH] memcg: free the private ID of a memcg that never comes
- online
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <awUTKy9tx8nWJgXf@linux.dev>
-Date: Tue, 24 Nov 2026 12:52:41 +0800
-Cc: Muchun Song <muchun.song@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Michal Koutny <mkoutny@suse.com>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Meta kernel team <kernel-team@meta.com>,
- cgroups@vger.kernel.org,
- linux-mm@kvack.org,
- linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH bpf-next v2] cgroup/rstat: disable preemption in
+ css_rstat_updated()
+To: Karl Mehltretter <kmehltretter@gmail.com>, bpf@vger.kernel.org,
+ Tejun Heo <tj@kernel.org>
+Cc: Alexei Starovoitov <ast@kernel.org>,
+ Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>,
+ Martin KaFai Lau <martin.lau@linux.dev>, Eduard Zingerman
+ <eddyz87@gmail.com>, Kumar Kartikeya Dwivedi <memxor@gmail.com>,
+ Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>,
+ Jiri Olsa <jolsa@kernel.org>, Emil Tsalapatis <emil@etsalapatis.com>,
+ Ihor Solodrai <ihor.solodrai@linux.dev>, Shuah Khan <shuah@kernel.org>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Waiman Long <longman@redhat.com>,
+ Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ Puranjay Mohan <puranjay@kernel.org>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ linux-rt-devel@lists.linux.dev
+References: <20261124031642.40616-1-kmehltretter@gmail.com>
+From: Jiayuan Chen <jiayuan.chen@linux.dev>
+In-Reply-To: <20261124031642.40616-1-kmehltretter@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <2FE2D209-FB57-4191-A324-F179B2394DB1@linux.dev>
-References: <20261124000439.967403-1-shakeel.butt@linux.dev>
- <F39B4A81-BB17-4C5D-851E-2740EBBBBA8B@linux.dev> <awUTKy9tx8nWJgXf@linux.dev>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-X-Mailer: Apple Mail (2.3901.200.71.1.16)
 
 
 
-> On Nov 24, 2026, at 12:33, Shakeel Butt <shakeel.butt@linux.dev> wrote:
+On 11/24/26 11:16 AM, Karl Mehltretter wrote:
+> BPF programs can call css_rstat_updated() with preemption enabled.
+> The kfunc calls __css_rstat_updated(), which requires preemption to
+> be disabled while it queues an rstat update. A cgroup iterator can
+> hit the lockdep assertion on both RT and non-RT kernels. The
+> cgroup_hierarchical_stats selftest can also hit it on PREEMPT_RT:
+> spin_lock_irqsave() on trace_cgroup_path_lock leaves preemption and
+> interrupts enabled there.
 > 
-> On Tue, Nov 24, 2026 at 10:50:00AM +0800, Muchun Song wrote:
->> 
->> 
->>> On Nov 24, 2026, at 08:04, Shakeel Butt <shakeel.butt@linux.dev> wrote:
->>> 
-> [...]
->> 
->> The leak analysis and the fix look correct to me. However, using
->> CSS_RELEASED here makes the private ID cleanup depend on a generic CSS
->> teardown state, and adds an accessor solely for this failure path.
->> 
->> The private ID is not needed until mem_cgroup_css_online(), so could we
->> instead reserve it at the beginning of that callback? Failures in
->> css_create() before ->css_online() would then never own a private ID,
->> while failures after the reservation would continue to use the existing
->> mem_cgroup_private_id_remove() cleanup.
->> 
->> This would also make the private ID lifecycle more explicit: reserve and
->> publish it during online, then drop the initial reference during offline.
->> It would avoid both the new css_is_released() helper and special handling
->> in mem_cgroup_css_free().
+> Disable preemption in the BPF wrapper after validating the CPU and
+> before calling __css_rstat_updated().
 > 
-> Thanks Muchun. Nothing needs the private ID before ->css_online(), so
-> reserving it there would work. But it moves the out-of-IDs failure from
-> ->css_alloc() to ->css_online(). By then css_create() has linked the
-> css into the parent's children list and css_idr, so mem_cgroup_iter()
-> can css_tryget() it and cache it in iter->position. A css that fails
-> online is freed without ->css_released(), so
-> invalidate_reclaim_iterators() never runs, and the free does not wait
-> for those references. Today memcg's ->css_online() fails only when a
-> small allocation fails. With the move, every mkdir on a system that is
-> out of IDs would take that path. I would rather keep failing in
-> ->css_alloc(), before anything is visible.
+> Fixes: 36df6e3dbd7e ("cgroup: make css_rstat_updated nmi safe")
+> Reported-by: Jiayuan Chen <jiayuan.chen@linux.dev>
+> Closes: https://lore.kernel.org/r/20251119111402.153727-1-jiayuan.chen@linux.dev/
+> Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+> ---
+> Assisted by an LLM.
 > 
-> To drop the CSS_RELEASED dependency, I can test the ID's own state:
-> !memcg->private_id_objcg means the ID was never published and the memcg
-> still owns the reservation. Let me know if that works for you.
+> v2 places the preemption guard in the kfunc as Alexei requested:
+> https://lore.kernel.org/r/DN26CP5BB6O7.23ALW6CZUBYSD@gmail.com/
+> Since 8817005efbdf split out the BPF-only wrapper, v2 does not add
+> preemption operations to the in-kernel callers discussed when Jiayuan
+> proposed the earlier kernel-side version in November 2025:
+> https://lore.kernel.org/r/20251121040655.89584-1-jiayuan.chen@linux.dev/
+> v1: https://lore.kernel.org/r/20261121082843.44614-1-kmehltretter@gmail.com/
+> 
 
-You're right. I missed that the css is visible to mem_cgroup_iter()
-before ->css_online() completes. Using private_id_objcg to track whether
-the reservation was published makes sense to me. Thanks Shakeel!
+I suggest you target cgroup-tree instread of bpf-tree if you need revise, because
+you only modified pure cgroup file.
+
+Since your v2 does the same operation as my previous v1 which was denied
+by cgroup maintainer, I also suggest you wait their replies (
+As time goes by, situation can change).
+
+I still insist on kernel-side modification just like this patch because we should
+prevent 'wrong' bpf code from triggering WARNING.
+
+
+> Tested in x86-64 KVM guests with lockdep on bpf-next 9867c61abbd4
+> (base and v2) and 2bf3351c5f89 (v2). Both tests passed on all 24 boots.
+> 
+>   Boots with an rstat warning               base     v2   rebased v2
+>   PREEMPT_RT, cgroup_hierarchical_stats      2/2    0/2          0/2
+>   PREEMPT_RT, iter/cgroup                    2/2    0/2          0/2
+>   PREEMPT (!RT), cgroup_hierarchical_stats   0/2    0/2          0/2
+>   PREEMPT (!RT), iter/cgroup                 2/2    0/2          0/2
+> 
+>  kernel/cgroup/rstat.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+> index de816a43db9f..d72fe721cea0 100644
+> --- a/kernel/cgroup/rstat.c
+> +++ b/kernel/cgroup/rstat.c
+> @@ -131,6 +131,7 @@ __bpf_kfunc void css_rstat_updated(struct cgroup_subsys_state *css, int cpu)
+>  	if (unlikely(cpu < 0 || cpu >= nr_cpu_ids || !cpu_possible(cpu)))
+>  		return;
+>  
+> +	guard(preempt)();
+>  	__css_rstat_updated(css, cpu);
+>  }
+>  
+> 
+> base-commit: 2bf3351c5f894697e8443eeef5333d4c4ce90cab
 
