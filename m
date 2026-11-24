@@ -1,86 +1,96 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.82.181
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795506711;
-	b=egMINqvzFRgZVeXB+Uh5w007F7MtJ+5PzdANsYjBCoiz+qOYlA0KcbhSar4Td4SbXOsr
-	 gTFV0cOo/OfEDY2aDfQ6y9Dq1bdYvmlqPRv7qW4esgTxlBso02eT1p6ewHsBk+ffqScOU
-	 Pz7Hh2NHElRawyu11Z9ghl6jAY7SsOtTRIeTC7qWI5u+gUopRArjPATRAwa0cgDXOlEJx
-	 XJNuxRU7JIcxlBFFulDeewP9RF9AZ0E6icosDB0Vu15h5wuP2DFCBKjbG79m5G6NFsOdh
-	 h1CRHRClFIaaxPUzFZdzpu+j2Tos/o3M/23RmhAKW9e011QFfvOexGuDHYyT93uX/Qw==
+	t=1795506817;
+	b=tsHzUJxNoOvoeOdDaENWUUT/hHCTm2to6vzv87/i4QTeYLmaoR0Sgu4pyZyjyaW4UVyO
+	 gPkxhe528ZvNyg497iTQX1s0rjcwNAoi58KaKhbBH90z2FU1YYMsGWzJsC8rk55oyrNRv
+	 lbOqjqN6gMp8m+at9htnpdGxBdXdtVvOKKsKjqC3qMgC1BedCbIXteHiwQk9yCRtUCil2
+	 Zc+5T/rdyV8AgtDLWrJXHJfYckJ7lAdVTTZDWcbHFVLEV+W+PzbMSaybaySvgOCJso9SK
+	 G3hvey4Xr2jAvY4lf3RRuqVGS/3I/L7ms4Eyy/d/GTEYpI93sVAqC48epuWATxe71Ow==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795506711;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:Date:Subject:
-	 MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:
-	 X-B4-Tracking:X-Change-ID:To:Cc:X-Mailer;
-	bh=igrsq5xWsPbd0pphtLnGo2EhnP6aWBAghEe3lo+KjZM=;
-	b=Hsy34Eyvit5HPp8P5XrpPGDln+aoetuBG5IU3bUK8QFHK+w8Cy5eA76sNYnZ89rAVb1A
-	 2EOxD+riZ/VGj7Uyaz6Rm8H+7qVIppq5QYbVghi9mwTpUmY6o7Hj04TN07oYvd2/CYNkK
-	 fBFpQfe5eE7U8QSmSj5MAEnjtvwEZ455KrCOlPjC1aQ11OZVLhjLXJAUOJBgGRSTyDqde
-	 03lG74i2QbUdbh5tayweFzve6KjLY9+M0rMcOTemsZeZmBDtSbj41XIkz0unCkKvMsVrI
-	 O3HxMwFw98z8Qbt2otoOvLG4dD5Gww+q49X95lUygIG02vTwFzRPkx6GOJ5ELZH8JXw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795506817;
+	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=jAesKLv4/3xomZvEVrTSXRWApRf79/r+9dEkzyHqbc8=;
+	b=ds314TH9PC4qzljLWJ2SuM52BByJ/AXWH+Zz2FOtP2/QTJW6ZgNw042gXgsyfkGVwfle
+	 pg08I2eca+aAKhPS9Gu/dEsuuHqiUMvCJetIHlrJkC0tNVX4xifaLm9905rUbbRugsUrL
+	 jAAxKLByoBRpkkWonrEoWpc+T1aZoPb5Ox1Ib6+IvQ1NBDT1ZS1MB8gdyT4ykbzWGY7BQ
+	 gceYSFHDDqa1dcswlObOsfMI7w2l4ye5IDGyLIF3LfPY9oWgcRjG0/ZxECcuyQmvSAjNG
+	 BYtlGy36OnwhOlKQ8YUywOeZiMAhHqeBoZKXOZN++geqO/JzRRabPbBnUhtI+J0fi2g==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hmokvp4g;
-	arc=none smtp.remote-ip=74.125.82.181
-Received: from mail-dy1-f181.google.com (mail-dy1-f181.google.com [74.125.82.181])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linutronix.de;
+	spf=pass smtp.mailfrom=linutronix.de;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=s7ROgEgX;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=gqvAJSAA;
+	arc=none smtp.remote-ip=193.142.43.55
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD048606A322
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 07:51:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BD048606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD524606A31E;
+	Tue, 24 Nov 2026 07:53:36 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD524606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=hmokvp4g
-Received: by mail-dy1-f181.google.com with SMTP id 5a478bee46e88-384d59d1ee1so489108eec.2
-        for <cgroups@vger.kernel.org>; Mon, 23 Nov 2026 23:51:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795506710; x=1796111510; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to:content-type;
-        bh=igrsq5xWsPbd0pphtLnGo2EhnP6aWBAghEe3lo+KjZM=;
-        b=hmokvp4g/seCN/ZTeRc0pKsFFQtsv5zJtV/w9ZxOFB9pfkpATJ5wbU0nsTIRWVpB+J
-         TDhMDpDc6zCH/4SqOBim3lf7ruuIUL+eoKUlUyQcbRKLVFZUofni6mDkvQUdSE/ztMJX
-         soYL6IeLAhUuI9K8tbrfKpZHAC1Eb0b82YS7ZfbvulH715wLFPGLZjWX5Br3K7L+LCPR
-         PR068rT5HYS0bkSCsoYbyRrcIPfqGwqZWllK8PSBGbEoyj2IT4sh5Wll7nbhzBsiMFHS
-         w9nEhdctyXGou2ODWauyzVwE991o7NqeHTihePfoHZl4fjDtkHFuGv7dsxbqzMIyE8Pd
-         ijzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795506710; x=1796111510;
-        h=cc:to:message-id:content-transfer-encoding:content-type
-         :mime-version:subject:date:from:x-gm-gg:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to:content-type;
-        bh=igrsq5xWsPbd0pphtLnGo2EhnP6aWBAghEe3lo+KjZM=;
-        b=GlCQnn+wyNVReQz1abSuz1Sv/Mss2szT4EZLFwtDnSd5UiyHip6Wpk3Qvl/OvTp+QM
-         +EGIUtSjOVedgHfBSGdLJo01AspOi04b0QzptE785CsdinaCroGnu0ouf0ugBEERaizt
-         GoM7ZJklrwmN0fbsHjD+nOZqJli4u6dvkGjek3HUo0aUB9BBef8cDOs7a8EyA67D4PDu
-         jjI0ZE2dHYQKdkyUozHchSqrSyur8TeGWnRUEHp2COthpvjs61ktEk18GLl2kE8pDHCK
-         3qw+uw5E7dmTEJkPkE2caCgPJZevSIv4zsjCgojLjU3k5VfH4zcsCoFlw/Ks7IM+S0UU
-         DNaQ==
-X-Gm-Message-State: APuU4Z9AIch/tb+xbBxBYRNoh41pKUedfJIXemnmV/aBeflaYUzm/KCI
-	ETX4FtKZzjv7JENgfB/sFkpHKEYeMyb+Tk1BkkH9t1qO4nQWHOCtntZt
-X-Gm-Gg: AZFdTZd3DATSPy0it9fBwKwRo1amAapn1OKbVjsnwB6tia5VwJXyvx6bgy8dzJoW3rI
-	BSqRlFTJcyvZYx/uFqd3IO7+RO9m4j8OTHj3RO6yhjOV89x4UYGLuMH+0TeQ83Xs1Vj7Xq2Ug2W
-	OgDFW6q/Ki7Dzc0GMyfBTydAQ5iVE/HtiguaOPUMw5lOw1+O5g75Xb7u+blgd++KpB+gLYZCcFy
-	7iXpBSv5pHmUr3bcEHkt4ou9BPX2VLwc1aZkqyW9CX47IBYxcTDvdtQKo1OwaUCve+fOuR/Fv5u
-	KXq72C9y90uBAcR2e9xEhfPG7o7E3JSOYBCdglXb41XYHh2YrhHTIXaYmOryd/PmM6Ih4HxEn9t
-	mdOkUb5e0I4y6SNnty5S5YbZ17+75lAcWps6cdFwxUcFPJz0EcA+ZiZBdXSZqd7hV/xeVLRhxUe
-	w467YpHq4UwXdrziWdCdHLA4aqd6HMDU7V8j+gGR+uDL8L1nrEntV5RzutbUIXfiWMsCcuJprrO
-	iz/fUfksHY0TLAzxtKq9+W1zbp2CzmhnilH6yVd+iai1Gn7TfRrXQdu1uhy3guKHhruuRhq7Jm1
-	ljIjeAT4VE6lBde+OCrH5Fq3h4hQWHcoPK47GZEA6LOL3TPDj2Uz8zf+7vDxM+ebG/k=
-X-Received: by 2002:a05:7301:b8e:b0:377:d6e5:e642 with SMTP id 5a478bee46e88-3856e245b2fmr18869883eec.1.1795506709267;
-        Mon, 23 Nov 2026 23:51:49 -0800 (PST)
-Received: from o6.lan ([2602:fce1:44f:115e::])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-385666e99fdsm53099098eec.5.2026.11.23.23.51.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2026 23:51:48 -0800 (PST)
-From: Xueyuan Chen <xueyuan.chen21@gmail.com>
-Date: Tue, 24 Nov 2026 15:51:27 +0800
-Subject: [PATCH] mm/memcontrol: expose anon and file reclaim statistics in
- memory.stat
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=s7ROgEgX;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=gqvAJSAA
+Date: Tue, 24 Nov 2026 08:53:32 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1795506814;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jAesKLv4/3xomZvEVrTSXRWApRf79/r+9dEkzyHqbc8=;
+	b=s7ROgEgXIPMe9DcgbKO3JL1/Igr6ZFdIKvQ5iv/dhAU91+7NoSBH7ywM+du3vQn5NESEJE
+	Q+c1gG8J7Mtetq8ez5LinVvU6QYmFBu2YwRu5Pks2OwNXmXfh/lsqiZmWDZnzeMNno3pJb
+	/PuWj6X4ccyCq5G+VH8K2Q5Oepc3uONfWxMDo4Y6SqVgwoh10mF0wyMovEYPBE0zeJastj
+	fAkvxJltZsYfOnjAjvZTVS82WRmU76cw/zVn5xwrUdl3BjVjTdSwcC6Q3ygl5FNTwPkdl5
+	gRAOhdQE/BzNajIkZmduN3usLJOS8UOhjpF1P7+FsyHbR+hDGsd5ybeKBfaNIw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1795506814;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=jAesKLv4/3xomZvEVrTSXRWApRf79/r+9dEkzyHqbc8=;
+	b=gqvAJSAAITUd+T/jmFY6dLV3g853e391FpyE8jcBNEAFwChs5tedhkvkTWvm2DYegC9VQa
+	Fkdq2JcGKn6RPWAw==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	luca abeni <luca.abeni@santannapisa.it>,
+	Yuri Andriaccio <yurand2000@gmail.com>,
+	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
+	"Paul E. McKenney" <paulmck@kernel.org>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
+	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
+	Qais Yousef <qyousef@layalina.io>,
+	John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v4 2/6] sched: Move DL's admission control to sysfs
+Message-ID: <20261124075332.nZysJRfS@linutronix.de>
+References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
+ <20261123-sched_dl-v4-2-d523e4d960d3@linutronix.de>
+ <awU9KmFsbiyvbcOr@jlelli-thinkpadt14gen4.remote.csb>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -90,119 +100,48 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261124-memcg-reclain-stat-v1-1-c6cb14b0d917@gmail.com>
-X-B4-Tracking: v=1; b=H4sIAP5BBWsC/yXMQQrCMBBG4auUWTvQhFDQq4iLdPqnjtgomShC6
- d1Ndfkt3lvJUBRGp26lgreaPnKDO3Qk15hnsE7N5Hs/OOcDL1hk5gK5R81sNVZ2CGHy/ZiOSai
- Fz4Kkn9/0fPnbXuMNUvcTbdsXrmg443YAAAA=
-X-Change-ID: 20261124-memcg-reclain-stat-1e44d20bf9fc
-To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>, 
- Randy Dunlap <rdunlap@infradead.org>, Michal Hocko <mhocko@kernel.org>, 
- Roman Gushchin <roman.gushchin@linux.dev>, 
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
- Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, 
- Xueyuan Chen <xueyuan.chen21@gmail.com>
-X-Mailer: b4 0.16.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <awU9KmFsbiyvbcOr@jlelli-thinkpadt14gen4.remote.csb>
 
-The aggregate reclaim counters in memory.stat do not show how reclaim
-is split between the anonymous and file LRUs of a cgroup.
+On 2026-11-24 08:30:50 [+0100], Juri Lelli wrote:
+> Hello,
 
-Expose the existing per-memcg scan and steal counters by LRU type so
-userspace can measure reclaim balance and efficiency when evaluating
-reclaim policy. Report the same counters per node in memory.numa_stat.
-Both files report the counters in base pages.
+Hi,
 
-Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
----
- Documentation/admin-guide/cgroup-v2.rst | 20 ++++++++++++++++++--
- mm/memcontrol.c                         |  8 ++++++++
- 2 files changed, 26 insertions(+), 2 deletions(-)
+> On 23/11/26 14:41, Sebastian Andrzej Siewior wrote:
+> 
+> ...
+> 
+> > @@ -2882,26 +2881,18 @@ static int sched_rt_handler(const struct ctl_table *table, int write, void *buff
+> >  		if (ret)
+> >  			goto undo;
+> >  
+> > -		ret = sched_dl_global_validate();
+> > +		ret = sched_dl_try_boundary(sysctl_sched_rt_runtime,
+> > +					    sysctl_sched_rt_period);
+> >  		if (ret)
+> >  			goto undo;
+> > -
+> > -		sched_dl_do_global();
+> 
+> Nothing updates sysctl_sched_rt_{period,runtime} when the sysfs files
+> are written, but this always passes both, so a procfs write of one knob
+> resets the other to its stale sysctl value? E.g. write 2000000 to
+> dl_period_us, then -1 to sched_rt_runtime_us: admission control is
+> disabled as expected, but sysctl_sched_rt_period is still 1000000 and
+> the period is back to 1s.
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 9e3c67b02ae2..eeeaf635754c 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1726,6 +1726,22 @@ The following nested keys are defined.
- 	  pgsteal_proactive (npn)
- 		Amount of reclaimed pages proactively
- 
-+	  pgscan_anon
-+		Number of base pages scanned for reclaim from the anonymous
-+		LRU. With the multi-gen LRU, counts pages isolated for reclaim.
-+
-+	  pgscan_file
-+		Number of base pages scanned for reclaim from the file LRU.
-+		With the multi-gen LRU, counts pages isolated for reclaim.
-+
-+	  pgsteal_anon
-+		Number of base pages reclaimed from the anonymous LRU,
-+		including pages demoted to another node.
-+
-+	  pgsteal_file
-+		Number of base pages reclaimed from the file LRU,
-+		including pages demoted to another node.
-+
- 	  pgfault (npn)
- 		Total number of page faults incurred
- 
-@@ -1829,11 +1845,11 @@ The following nested keys are defined.
- 	application performance by combining this information with the
- 	application's CPU allocation.
- 
--	All memory amounts are in bytes.
-+	All memory amounts are in bytes. Reclaim counters are in base pages.
- 
- 	The output format of memory.numa_stat is::
- 
--	  type N0=<bytes in node 0> N1=<bytes in node 1> ...
-+	  type N0=<value for node 0> N1=<value for node 1> ...
- 
- 	The entries are ordered to be human readable, and new entries
- 	can show up in the middle. Don't rely on items remaining in a
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1ebc9330aeae..ac12ff69a633 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1647,10 +1647,14 @@ static const struct memory_stat memory_stats[] = {
- 	{ "pgsteal_direct",		PGSTEAL_DIRECT		},
- 	{ "pgsteal_khugepaged",		PGSTEAL_KHUGEPAGED	},
- 	{ "pgsteal_proactive",		PGSTEAL_PROACTIVE	},
-+	{ "pgsteal_anon",		PGSTEAL_ANON		},
-+	{ "pgsteal_file",		PGSTEAL_FILE		},
- 	{ "pgscan_kswapd",		PGSCAN_KSWAPD		},
- 	{ "pgscan_direct",		PGSCAN_DIRECT		},
- 	{ "pgscan_khugepaged",		PGSCAN_KHUGEPAGED	},
- 	{ "pgscan_proactive",		PGSCAN_PROACTIVE	},
-+	{ "pgscan_anon",		PGSCAN_ANON		},
-+	{ "pgscan_file",		PGSCAN_FILE		},
- 	{ "pgrefill",			PGREFILL		},
- #ifdef CONFIG_NUMA_BALANCING
- 	{ "pgpromote_success",		PGPROMOTE_SUCCESS	},
-@@ -1699,10 +1703,14 @@ static int memcg_page_state_output_unit(int item)
- 	case PGSTEAL_DIRECT:
- 	case PGSTEAL_KHUGEPAGED:
- 	case PGSTEAL_PROACTIVE:
-+	case PGSTEAL_ANON:
-+	case PGSTEAL_FILE:
- 	case PGSCAN_KSWAPD:
- 	case PGSCAN_DIRECT:
- 	case PGSCAN_KHUGEPAGED:
- 	case PGSCAN_PROACTIVE:
-+	case PGSCAN_ANON:
-+	case PGSCAN_FILE:
- 	case PGREFILL:
- #ifdef CONFIG_NUMA_BALANCING
- 	case PGPROMOTE_SUCCESS:
+You want this working both ways?
+I assumed you use the proc interface because you don't know better. The
+warning makes you aware that the throttling knobs and DL knobs moved to
+sysfs. The DL bits are mirror to the sysfs interface in case you ignore
+the warning and keep using proc.
+If you move to using sysfs then everything is fine. From here, going
+back to proc looks odd.
+I could look into making the sysfs values appear in proc, too.
 
----
-base-commit: b024a51b0184b1efb6f55b11aaf7b15a490a6307
+> Thanks,
+> Juri
 
---  
-Best regards,
-Xueyuan
-
+Sebastian
