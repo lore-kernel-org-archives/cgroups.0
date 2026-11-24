@@ -1,73 +1,68 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.141
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795469942;
-	b=yq5Ap9kj+4LEq1h7zVii2S3X/1w5U3kU5zWb0k7AFWHgINmFcNKTnGiEkQN1xoWet3an
-	 SCRKcAwOTBU0a4jinx/VsxcKmUvFXjHlfW0187ASp/2BpRYkDSf48RGmOEBOQygYmw7yO
-	 Pa9bBEM99PluumxFNA6jAYj+SuEu65DLwRu22KTpZ32+avR/EdxDRrYAAbjk9BVlbz84R
-	 UEfDZqRDJdelfID1yUePuu3v3OoCwoCrZDvJurddeBfdicLGCcER9T/KPP11ZKaVClgoe
-	 IdaYgt81KpFUN9LawHVHXNQCYSbjsUXik63PT3bZ7NwfdfCCDV1KPN6dgHV6Ub+ceAw==
+	t=1795478692;
+	b=2rV0ba2sNWvq5d/Pr9UB69GsRT7McpKSd0SpmKaQyRmN0TJMchDVLZ18qVfhr+nTjW9s
+	 JUU86HeJbR0kBmHh+JHa4jfiZAHkF9222JhRmyYNs4/4GfkvBOV+ObFW0z8rAJeUnG/TL
+	 RHv5Xb/E0Gc9KdNJog+tE1skGcTgPsd6TbumlUqBY5ChCoiS4T9gsNVlld3vkam6cbHVd
+	 0tdbAz9X7+wG8cKJ1tYdD1S2KdcYdzLyetuuO2XkiG/sNEh+RNMuOIw2MqKkM09Et6VSA
+	 SGBupHRK1323LZeurubPCiK70pRjBlyRl/1cLDhsqNFFMu7b3lNTvJp4WSOnXmfH7Mg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795469942;
-	h=Received:DKIM-Signature:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=nbmQkIvRLVdFOAYiJIL6uBw5exqgidSk3FRXW7G0kUg=;
-	b=O6OmctkTyhgaUTlM9jOZ+9Fo212H7lc/ZHJsFDrHoMs8N0BykKDUZwKTukHw2vYuVxh8
-	 ZNwRFGd0s51Z7Yi/eIMxoPrsVzS68DMrLI6cLpGvTxdskhUIKQqg8fBWBRZVjajz+3+7p
-	 71wgKN2JsHBGs840D9uijn9E8Y/bieDogffH/qCSiMUmx7i4hn1LJOn1aBaE2SPae135m
-	 w7IBjF8DuejDtU73V2WuuuSiYyS51lVj0HbP8GSnPEKQCevTtgYBjb66cF6AXsBp4pWN/
-	 UWvNQ74ZvRBt7i7E71B6rlkB9jNcKpiGuvhega6ZJSxf38FGhISGHZGIdHESlGH6ZAw==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795478692;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:From:To:Cc:Subject:Date:Message-ID:
+	 X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=Vj6rX/08YHl+BRfiOlA4IKO7KmtpRoLD3xe6xszFx3w=;
+	b=afhmuBRAd01MI/Yyor24Ftj2Cz6SZvGkHoUtBLtNTfUZ2WdZZuQiSLXYn0H96vLNgTaS
+	 SubEN983+ujqH+VU5nfgKFZJaXC6Xi9vAXYQz1E4gqfFeaUGms7N+wD03+iXYcUd3g1y6
+	 frkwKoteijPLJx3sbfpsBzjzDqrqAKbmFnvNh9ISN+p4bYj1JLirbAQ0SbsKATUDmss+p
+	 RKzSCCv5Qx0EKirDYiRPLCFi0RV17FTeILeiFd6hyrWQQsHtHun1RsSESXNaQDc0gVoRh
+	 ecEgbxFm5veZlvdvzhe/5Jx+kMMWr+pN4UC06qtUuT1n92XEoKbfBkRZfFbgiomtZBw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="V/uPvUDG";
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=L1AGF+Op;
+	arc=none smtp.remote-ip=91.218.175.141
+Received: from mta0.migadu.com (out-141.mta0.migadu.com [91.218.175.141])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B6D2606A31E;
-	Mon, 23 Nov 2026 21:39:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA945606A338
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 00:04:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org AA945606A338
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=V/uPvUDG
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 175BA1F000C6;
-	Mon, 23 Nov 2026 21:39:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795469941;
-	bh=nbmQkIvRLVdFOAYiJIL6uBw5exqgidSk3FRXW7G0kUg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=V/uPvUDGe3d7Iejc9m7zVVeqthtSO0u3ULTbckgTSDH5hhELZv81g7qzyy5zMiUb3
-	 jP9+HHOCR7T62GV52L+k6xM8rKKEr4qoUEZLIWGKjrHa7M9Yi8YNARSKBhUtQiJqQh
-	 alcdM32Gk9oE32PLLB8iTpIMIK7y+6l39eT54YULqjsltS77gSQP3Kx/YBDmt+NTvG
-	 GdNXVH44v8YYARN5z6CGQ8tDw9CzbfnJGA+3i+Jm9114fbJZw7ZwByZa+B9X6o3F5q
-	 ae7ElLqCV5zy/yU7j6+BI23u770OoOs1WCNwBtnEkMoCYq5yPrxe2HEt5ikTqPZSvc
-	 ZxakFqfeoR7dA==
-Date: Mon, 23 Nov 2026 22:38:59 +0100
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ridong Chen <ridong.chen@linux.dev>, Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	Anna-Maria Behnsen <anna-maria@linutronix.de>,
-	Thomas Gleixner <tglx@kernel.org>, cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Guopeng Zhang <guopeng.zhang@linux.dev>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Subject: Re: [PATCH-next v2 3/3] cgroup/cpuset: Disallow CPU 0 from being
- used in isolated partition
-Message-ID: <awSyc640SLALQvLZ@pavilion.home>
-References: <20261123041209.382726-1-longman@redhat.com>
- <20261123041209.382726-4-longman@redhat.com>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=L1AGF+Op
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=m3O6JogaMnAWcW2J6tqEKYwa71B3rZOaHK/s4y8qPEg=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795478688; v=1; x=1796083488;
+ b=L1AGF+OpgYxYHFwN2ndyQIJnk7W/HiPb7d3D4ikfrBzyNJmILt7Hqw6AIhCODTSDjUbckT3H
+ 8KQd20FS0K2U6ZmbJ+pbr4Xd3bBC57Nbqm1MLIOgijHJBY8AR0NZQ0JKqAQNQ856ow/Po4MY6xg
+ ac064SLCWN3qDLXhVFL8kuls=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id 511bb6528f3e081a;
+	Tue, 24 Nov 2026 00:04:48 +0000
+X-Mizu-Trace-ID: 511bb6528f3e081a
+X-Migadu-Flow: FLOW_OUT
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Meta kernel team <kernel-team@meta.com>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] memcg: free the private ID of a memcg that never comes online
+Date: Mon, 23 Nov 2026 16:04:39 -0800
+Message-ID: <20261124000439.967403-1-shakeel.butt@linux.dev>
+X-Mailer: git-send-email 2.53.1
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -77,49 +72,68 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20261123041209.382726-4-longman@redhat.com>
 
-Le Sun, Nov 22, 2026 at 11:12:09PM -0500, Waiman Long a écrit :
-> Domain isolating CPU 0 can be problematic and may even cause panic in
-> some cases. In the near future, we are going to enable dynamic change to
-> the nohz_full CPUs to include the CPUs that are in isolated partitions
-> via the CPU hotplug mechanism. However, CPU 0 can't be made offline
-> for some architectures like x86. IOW, putting CPU 0 in an isolated
-> partition may not have the same degree of isolation than other CPUs
-> in the isolated partition in the future. For all these reasons, it is
-> better to disable its use in an isolated partition.
-> 
-> Add a new partition error code to indicate to the users that CPU 0 cannot
-> be used in an isolated partition. The prstate_housekeeping_conflict()
-> function is modified to return the partition error code directly as it
-> can be either PERR_HKEEPING or PERR_ISOLCPU0.
-> 
-> Some existing test cases in test_cpuset_prs.sh are modified to remove
-> the use of CPU 0 in isolated partition setup and explicit new test cases
-> are added to test that. The NOHZ_FULL test cases also modified to run if
-> the "nohz_full" parameters includes all the CPUs except CPU 1-7 instead
-> of 0-7. Though it is not recommended to put CPU 0 in the nohz_full boot
-> parameter, it is the only way we can test that the cpuset code is able to
-> correctly disallow isolating the last nohz_full/domain housekeeping CPU.
-> 
-> With CPU 0 likely not allowed in the nohz_full list except for powerpc
-> and with CPU 0 also disallowed from being domain isolated and offline,
-> we will likely have CPU 0 being an always present online housekeeping
-> CPU for most kernels. For those kernels, we will not be able to trigger
-> partition invalidation due to using up the last nohz_full/domain
-> housekeeping CPU in an isolated partition and the NOHZ_FULL test cases
-> in test_cpuset_prs.sh will not be run.
-> 
-> The cgroup-v2.rst documentation file is also modified to indicate that
-> CPU 0 cannot be used in an isolated partition.
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
+mem_cgroup_alloc() reserves the private ID of a memcg when its css is
+allocated. The ID is erased when the last reference to it is put, and
+that reference is first taken in mem_cgroup_css_online(). The failure
+paths of mem_cgroup_alloc() and mem_cgroup_css_online() erase the ID
+themselves.
 
-Acked-by: Frederic Weisbecker <frederic@kernel.org>
+But css_create() can also fail after css_alloc() and before
+online_css(): in percpu_ref_init(), cgroup_idr_alloc() or
+css_rstat_init(). The memcg is then freed through mem_cgroup_css_free()
+without ever coming online, and nothing erases its ID. The reserved
+entry stays in mem_cgroup_private_ids for good, and each such failure
+takes one of the 65,535 IDs away. With failslab failing radix tree node
+allocations during mkdir, 1,500 mkdirs leaked 6 IDs this way.
 
+Erase the ID in mem_cgroup_css_free() if the memcg never came online,
+which is when (memcg->css.flags & CSS_RELEASED) will be false: it is
+only set when an fully onlined memcg is released.
+
+Fixes: 73f576c04b94 ("mm: memcontrol: fix cgroup creation failure after many small jobs")
+Cc: stable@vger.kernel.org
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+ include/linux/cgroup.h | 5 +++++
+ mm/memcontrol.c        | 7 +++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 2afb4cb2bb4f..123c713dcc91 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -449,6 +449,11 @@ static inline bool css_is_online(struct cgroup_subsys_state *css)
+ 	return css->flags & CSS_ONLINE;
+ }
+ 
++static inline bool css_is_released(struct cgroup_subsys_state *css)
++{
++	return css->flags & CSS_RELEASED;
++}
++
+ static inline bool css_is_self(struct cgroup_subsys_state *css)
+ {
+ 	if (css == &css->cgroup->self) {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 091401cecf39..e7dfc96fd1b9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4545,6 +4545,13 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 	irq_work_sync(&memcg->high_irq_work);
+ 	cancel_work_sync(&memcg->high_work);
+ 	free_shrinker_info(memcg);
++
++	/*
++	 * The css_create() error path bypasses normal CSS release, leaving
++	 * CSS_RELEASED clear. Drop any private ID that is still reserved.
++	 */
++	if (!css_is_released(css))
++		mem_cgroup_private_id_remove(memcg);
+ 	mem_cgroup_free(memcg);
+ }
+ 
 -- 
-Frederic Weisbecker
-SUSE Labs
+2.53.1-Meta
+
