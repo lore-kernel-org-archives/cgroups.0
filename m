@@ -1,142 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.61
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795514377;
-	b=X84vyQQ5I8lealRHAomIj+uHWXuxOPWcRcIYq3gHJt1+cTsStMBP8Kp+DHzn49mDCZQi
-	 9icweDCKIei64Tl6tIT763m/4mlzvm8AZqYTxjGS1eq571JzTf0219Jq3ZpOKq7GG8ifv
-	 kchglfqFggzFRL+kaCz7Eukld83yQ2FWCGpdptBckwdFy3La86zcsIaPg6M4VvWgu08lw
-	 XpNsAldljnwhqSkygWKYlar6610c3NXHT7oU4JR5R6B4bjfSo83y+bUH2EP43+thzWX2c
-	 mpiSX6gJe2m2KJd1w8f5xgEnZRNotvM4eOs58L9+o1yT8Kt6J8PS0FrOeT/WrcXJcqA==
+	t=1795514707;
+	b=rycxH0PLUSaM9ykzTaXMpHErId4r3WAF6KUDLSzihW1ZLsxarVNzJXpZqNn73aYhggTg
+	 U3bR+2/b2T9+rhsUW9euZ+8hqxKKjOfUzNkH7q0H07KU4gDL5QMUXSor4WurWsSkz/8Hi
+	 llPJNyD9lDrLTm1O4Mt/EeM0BNII1aaVXEQb+F8xeGLjikiSu3buT0XzUGvD7fHZpZrBC
+	 lamPXqVnNNILUZxUV9WL/j7yC8SSNA9Bo7l0jOxc++dsqRDRiZTbMYzcxx2R4/EzfKP3b
+	 5o6S09tKF9aYGdzuqJe/N+wV1eReQF4bp+eqJx63wIZW7AXDaF0egJltl9LkA5j/4/w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795514377;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=FYuz/K8ZJHw8V19OxffQhxGLJQWBYYcYpwJUkZTtfL8=;
-	b=M4OKCD2iOwdr9d2uy+s2By3IYPwEXqdpy4N3e1ctOzmQKmPVvnh7MIp6ZO4xKEHiIuNk
-	 ieFPt1HIpFfd5ZelzVQoxFiDzyNkSYnDB5Ncxnb5s5kNy75gNOsd4Ol6q9OkFf0H+Solx
-	 Hl2N12drUCZ1+wIATBo+SZhU7mqhzq9594qVTudzO6zTpPzylFdg0rD3VvsyV1PqeOpjH
-	 A/Q8B0Maa1Wl0Qs/odLzdUx8u7qkkqTAL97oLByJGq7U7IeVcfnsel0AwFzB/QGpjpegB
-	 SPTv76H4StcEMb95OeBPP984vPS/Ij3prPAS6Lw0x2wKbbQFnz7LyHiSDhbeiwcbSeQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795514707;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=OG6qTT/kGjM4frI/ljqPoDp5aWeqfiuB7T2I6wCpNMk=;
+	b=ct8cnWipGZq/bu8K7PXbh1wLbwit8NqJQhpvII19n6F7j/moJ0jP9flUAiyWovAinrKT
+	 rruNOVG/4PcKCwapDsIrjOlxxejXRVEYeruWhKbEYd5o1cLj3HkEgLPL6oDCbVMXsOYxT
+	 EokYgEsV6THUg8t3JXShW0SwElC3xOPF88GrDxGrrRsCmiqb6t+x9mbbv3anH3VXa5MYP
+	 7vn3BZ2bAHEqnsQZbjko9+rVg3Aqb23BPbITXUh+mgV4QdwVAMN3Bp4oBpaSEWGAKEes5
+	 2c50sdWWAh22H2KFPMEHSzdLoqVrcVGPG04M9E/kWs44bY5d4D+kP3HLIma1b918Dkg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=b23ugdr7;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=e0n1oN0R;
-	arc=none smtp.remote-ip=170.10.133.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=I6IRo7lR;
+	arc=none smtp.remote-ip=91.218.175.61
+Received: from mta0.migadu.com (out-61.mta0.migadu.com [91.218.175.61])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E5E8606A336
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 09:59:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 8E5E8606A336
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B53A3606A326
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 10:05:05 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B53A3606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=b23ugdr7;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=e0n1oN0R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795514375;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FYuz/K8ZJHw8V19OxffQhxGLJQWBYYcYpwJUkZTtfL8=;
-	b=b23ugdr7IJLEgos7XieA49KYy2MUNYpTd6rNUQrWHZ13scOsWsThhISd58PYGo3C7ykmVU
-	oh7t8WhACKYNr1iwv/YLbPGPleTiHy7lewj80j3/F88b8cNy9jFswHvX9aMw1apyCg6c8z
-	RbPK4HweIUxjxx6iyUrbPc1L1sm3Td8=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-460-mqsCD6JqPsuJso-_RzUoPA-1; Tue, 24 Nov 2026 09:59:33 +0000
-X-MC-Unique: mqsCD6JqPsuJso-_RzUoPA-1
-X-Mimecast-MFC-AGG-ID: mqsCD6JqPsuJso-_RzUoPA_1795514372
-Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-4ab855a8c21so3527437f8f.1
-        for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 01:59:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795514372; x=1796119172; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=FYuz/K8ZJHw8V19OxffQhxGLJQWBYYcYpwJUkZTtfL8=;
-        b=e0n1oN0RmBVJLCI2UlG/FmdCSTssxV+exz7Odw9yPctRTzDBOLz+b2w7bqcsPMtVhY
-         YZsnJlqpYryo6qXAzhI+HVuYKj2kQ6eORj7Y9ra/+xc7/TMDdxWlDbxBQGWNlPWo+pYh
-         P9Yh8ZIEPzKxRF39734uIOFuoBGSrOiagZDcnGRKcPvqCx8+d6iKyBGSdkKsUn7cDzEH
-         Zfq11/qZ89jFO2QeuD57BKgJ0CvhpX40ao4X/57E3cqcucRCuS5KVkPNQoYFzuwAs7nT
-         OgpeiwiGocdpfMzny02EziP9mr4b4+NpyTTgWQUvN5rhKV3uyv69ttF9MXSiOudVL5A5
-         KyaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795514372; x=1796119172;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=FYuz/K8ZJHw8V19OxffQhxGLJQWBYYcYpwJUkZTtfL8=;
-        b=y7LcWreUBFFLCU9haznr0yvXPXzL9vGJCOxa1QzEYLQaxgWrgpkEtzGqqHWgfrZKZp
-         CQmF7AnpF+iRMpnDUC+wDcIazAlsjHOIIeHwwMP0TX5dAPjYZ0rVwD8SBN1TDLv79Rgz
-         bhyrR/rP25ccNZsM5qtT9GE9hGkvOsMGDVLHJSygGQ19YDITKTYiIKt/Spq7uzzjNZTY
-         kmjDIQM/zD+pH2yTZE6woVJtfTZdiRTofqYAdhHpbBZE4y0q+AWQO3o6w1nckLoraQjA
-         jEpYf8iL3I+YaukEGhJ8u6coy9i13DvWAAtoEBMh5riOAKD6hIrBTh4PHKDEN+KNxg3f
-         NYZw==
-X-Forwarded-Encrypted: i=1; AL+hErGQNJWkznQ/iUsX7x1udCQiNPcn2T/gpJFiPkKRs36VSKsnhx/MFthTxm4hyEFyI49Imel+g7CX@vger.kernel.org
-X-Gm-Message-State: APuU4Z8dNbZjD6lv/ggbcviInLrq9umxnXYks6FheIdG8R4yZOKP4Rkj
-	b+076TjCU3a1J9Ngor+W8KRoJEhDp8E/JhnbXUWV09vt+QlhtYwGOAXyp1EhCpH6i0ARHMzRXDI
-	wIyzSQzozsN4E3x7ntFMIJRp4c3kq6T8AoCKCrXtVegBcxruUSo+W97oGYh2hl7shOT1MCA==
-X-Gm-Gg: AZFdTZf0iXYBHSHvF1Aq79HknRdctn1tRgMkyFugeGw5no7CtdLHh0wK2I8+X5YpjC/
-	6FIAb2bx+tVC8Wuj5yU1v7VISZ6YCBzVMfBSwl6cPL0LPoncLlooHWIusbG+wHCR1yye/Duxk8p
-	097OfVZ7HgpLzqTw9Bn+mNUahgFsmLifd50uL4UtqLb6DChtXG1AjYRD2nzpm4jhfKJktzBUsW5
-	NgqZczzsGbeFH7pJjXOxkIfJa/D82/oWTKvPgID4s9/xV2OBUBJoIL6FGPh+fMBiyLX63IrFaTN
-	CRNHTIhZX26SidLqkCeg74Ep2Dc3IE7aClzJ1Qy5VwL/zPXaE1bgtZMxlEF7ob2XVFKAlhETVNi
-	u+ZRt8OG+OasW/3GSLYLjo77Tr0ULNMyc0YoEPQOJhznNf1eSHXf5Ft9vD4m/D+izcmXiAKCZ8v
-	nNzls=
-X-Received: by 2002:a05:6000:4013:b0:4a7:d4c9:ea03 with SMTP id ffacd0b85a97d-4abaac57bb5mr26588486f8f.6.1795514372441;
-        Tue, 24 Nov 2026 01:59:32 -0800 (PST)
-X-Received: by 2002:a05:6000:4013:b0:4a7:d4c9:ea03 with SMTP id ffacd0b85a97d-4abaac57bb5mr26588458f8f.6.1795514372081;
-        Tue, 24 Nov 2026 01:59:32 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab5ffcad11sm26055111f8f.0.2026.11.24.01.59.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 01:59:31 -0800 (PST)
-Date: Tue, 24 Nov 2026 10:59:28 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>,
-	John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v4 3/6] sched: Add sysfs files for the per-CPU
- fair_server knobs
-Message-ID: <awVgALGuilf2FMsT@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
- <20261123-sched_dl-v4-3-d523e4d960d3@linutronix.de>
- <awVDG-ABOvj7zGRg@jlelli-thinkpadt14gen4.remote.csb>
- <20261124080833.0I9HFgtf@linutronix.de>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=I6IRo7lR
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=SpC7ys/5YZaOP6kopCawAkub+K7XYO4A0gFheF4xvT0=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795514703; v=1; x=1796119503;
+ b=I6IRo7lRxEAvCjDtgMpWXfXf7/0/qtoBiToXGB9AWKC/clPM1HjlFCQcgypviTvpa32M022x
+ K2Ma2TgLzDTqrmjF0Qlf5k8fIcRCPR/0YpffAUYbIJWnVIe509DZmOFwCzKChGdwRWpZqUj8abD
+ Z+yJI0rfo41yNCCnLpIab5UA=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id e92aadfd7cc82ec7;
+	Tue, 24 Nov 2026 10:05:02 +0000
+X-Mizu-Trace-ID: e92aadfd7cc82ec7
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <71e4954b-b50f-455f-9f5c-5e053ccd6870@linux.dev>
+Date: Tue, 24 Nov 2026 18:04:47 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -146,52 +58,154 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261124080833.0I9HFgtf@linutronix.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 02/12] cpuset: introduce partition_disable()
+To: Ridong Chen <ridong.chen@linux.dev>, Waiman Long <longman@redhat.com>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
+References: <20261114083124.1340140-1-ridong.chen@linux.dev>
+ <20261114083124.1340140-3-ridong.chen@linux.dev>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261114083124.1340140-3-ridong.chen@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 24/11/26 09:08, Sebastian Andrzej Siewior wrote:
-> On 2026-11-24 08:56:11 [+0100], Juri Lelli wrote:
-> > Hello,
-> > 
-> > On 23/11/26 14:41, Sebastian Andrzej Siewior wrote:
-> > > The fair_server exposes the runtime and period knobs per-CPU in the
-> > > debugfs folder. The debugfs interface is not a stable ABI.
-> > > Make the /sys/kernel/debug/sched/fair_server/cpu*/{period|runtime} knobs
-> > > available as /sys/kernel/sched/cpuX/{fair_server_period|fair_server_runtime}.
-> > > 
-> > > It adds a struct kobject to the rq and exposes only those two. The
-> > > per-runqueue folder is named `cpu' rather than `rq' since it might be
-> > > more intuitive to the user than `rq' or `runqueue'.
-> > > 
-> > > The set logic is pulled from the debugfs folder but it is still shared.
-> > > That debugfs logic could be removed (after providing the same for
-> > > ext-server) or symlinked for a while.
-> > 
-> > ...
-> > 
-> > > +static ssize_t rq_fair_server_runtime_show(struct kobject *kobj, struct kobj_attribute *attr,
-> > > +					   char *buf)
-> > > +{
-> > > +	struct rq *rq = kobj_to_rq(kobj);
-> > > +	struct sched_dl_entity *dl_se;
-> > > +
-> > > +	dl_se = &rq->fair_server;
-> > > +
-> > > +	return sysfs_emit(buf, "%llu\n", dl_se->dl_runtime);
-> > > +}
-> > 
-> > Since these files are new and meant to replace debugfs, how about using
-> > ns everywhere (you partly commented about it in the cover letter), as
-> > sched_attr and the dl_server parameters already do, with the unit in the
-> > name? I.e. fair_server_{runtime,period}_ns here and
-> > dl_{runtime,period}_ns in 2/6, with only the procfs compatibility path
-> > converting from us. Right now /sys/kernel/sched/ has dl_*_us in us next
-> > to cpuX/fair_server_* in ns without a suffix.
+
+
+在 2026/11/14 16:31, Ridong Chen 写道:
+> From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> I can do both in ns (or us depending what is easier/ more useful). Let
-> me update that then.
+> Add partition_disable() to consolidate updates to key cpuset structures
+> during partition disablement, including:
+> 1. remote_partition
+> 2. effective_xcpus
+> 3. partition_root_state
+> 4. prs_err
+> 
+> Key operations performed:
+> 1. Cleaning up remote_partition
+> 2. Removing exclusive CPUs via partition_xcpus_del()
+> 3. Recomputing effective exclusive CPUs mask
+> 4. Updating partition state and error status
+> 5. Triggering required scheduler domain rebuilds
+> 6. Sending partition change notifications
+> 7. Propagating the change of the parent's effective_cpus
+> 
+> Only the CPUs actually granted by the parent are given back, as the
+> parent may have shrunk. An invalid partition, or a partition under an
+> invalid parent, has already given back its exclusive CPUs, so there is
+> nothing to delete. A remote partition gets its CPUs from top_cpuset,
+> which owns all the CPUs.
+> 
+> The parent is derived from @cs, top_cpuset for a remote partition.
+> When a valid partition gives back its CPUs, the change of the parent's
+> effective_cpus is propagated to the tasks of the parent and to its
+> other children. A member or an invalid partition only has its state
+> updated, so that all the callers can call partition_disable()
+> directly.
+> 
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+> ---
+>  kernel/cgroup/cpuset.c | 66 ++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 66 insertions(+)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 860cb7ea3efb..12bdcaeb8ae5 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1758,6 +1758,72 @@ static void __maybe_unused partition_enable(struct cpuset *cs, struct cpuset *pa
+>  	notify_partition_change(cs, old_prs);
+>  }
+>  
+> +/**
+> + * partition_disable - Disable partition root state for a cpuset
+> + * @cs: The cpuset to disable partition for
+> + * @new_prs: New partition root state (should be non-positive)
+> + * @prs_err: Error code to set if disabling due to validation failure
+> + * @tmp: Temporary masks
+> + *
+> + * A valid partition gives its CPUs back to its parent, or to top_cpuset
+> + * for a remote partition, and the change is propagated to the tasks and
+> + * the other children of the parent. A member or an invalid partition only
+> + * has its state updated. A valid partition under an invalid parent has
+> + * already given back its CPUs, so only the propagation is done.
+> + */
+> +static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
+> +					     enum prs_errcode prs_err,
+> +					     struct tmpmasks *tmp)
+> +{
+> +	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
+> +	int old_prs = cs->partition_root_state;
+> +
+> +	lockdep_assert_cpuset_lock_held();
+> +	WARN_ON_ONCE(new_prs > 0);
+> +	WARN_ON_ONCE(!cpuset_v2());
+> +	/*
+> +	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
+> +	 * which should clear subpartitions_cpus. We should not emit a warning for this
+> +	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
+> +	 * may already be cleared when disabling a remote partition.
+> +	 */
+> +	if (!parent)
+> +		WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
+> +			     !cpumask_empty(subpartitions_cpus));
+> +
+> +	spin_lock_irq(&callback_lock);
+> +	cs->remote_partition = false;
+> +	/*
+> +	 * Disabling a partition should only delete exclusive CPUs, and only
+> +	 * those actually granted by the parent as the parent may have shrunk.
+> +	 * An invalid partition or an invalid parent has already given back
+> +	 * its exclusive CPUs, there is nothing to delete. A remote partition
+> +	 * gets its CPUs from top_cpuset which owns all the CPUs.
+> +	 */
+> +	if (is_partition_valid(cs) && (!parent || is_partition_valid(parent))) {
+> +		if (parent)
+> +			cpumask_and(cs->effective_xcpus, cs->effective_xcpus,
+> +				    parent->effective_xcpus);
+> +		partition_xcpus_del(old_prs, parent, cs->effective_xcpus);
+> +	}
+> +	/* effective_xcpus may need to be changed */
+> +	compute_excpus(cs, cs->effective_xcpus);
 
-Mind that it would be nice to hear from others in this thread before I
-make you do changes that others might not agree with. :)
+Hi Ridong,
+
+Nit:
+
+When cs->exclusive_cpus is empty, the current sequence is:
+compute_excpus()-> partition_state_update() -> reset_partition_data()-> effective_xcpus is cleared
+
+In other words, the effective_xcpus just computed by compute_excpus() is immediately cleared by reset_partition_data().
+For this implicit exclusive CPU case, could we simply skip the computation?
+
+if (!cpumask_empty(cs->exclusive_cpus))
+    compute_excpus(cs, cs->effective_xcpus);
+
+If there are many sibling cpusets, the unnecessary scan could increase the time spent holding callback_lock. Of course, I haven't measured the actual overhead in practice.
+
+Thanks!
+Guopeng
+
+> +	partition_state_update(cs, new_prs, prs_err);
+> +	spin_unlock_irq(&callback_lock);
+> +	cpuset_force_rebuild();
+> +	notify_partition_change(cs, old_prs);
+> +
+> +	/* A member or an invalid partition owns no CPU, nothing to propagate */
+> +	if (old_prs <= 0)
+> +		return;
+> +
+> +	/* Propagate changes in the parent's effective_cpus down the hierarchy */
+> +	if (!parent)
+> +		parent = &top_cpuset;
+> +	cpuset_update_tasks_cpumask(parent, tmp->new_cpus);
+> +	update_sibling_cpumasks(parent, cs, tmp);
+> +}
+> +
+>  /*
+>   * remote_partition_enable - Enable current cpuset as a remote partition root
+>   * @cs: the cpuset to update
 
