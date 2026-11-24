@@ -1,54 +1,98 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.238
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795516501;
-	b=YrN9d7PcJ9YgE7eg8G7cBEmBaedTSXUfgA4sBS1BwXexaA3gcaX53NT7K65Bz44Opdxu
-	 YEoVob6ACEwUYHUDQjCBY2rzpxExWQpDlIrfvcg0ENM5F85GsLnNrAcrHVCAxfdD/wvRG
-	 /P7+2A3dMTv1jTl/Ygg5LXPGNgXAhhtQLwFuC73x13xHIL8SsVvqnMxDirrTO9eXwqwwF
-	 cjxPqUDXkEbLlf2aGdeFuqwzJUgCZqljDFPvunCBlsybZpLDHbgMKR1Xb3Ja30Aw4e/d5
-	 Lyfuk+VMPBhKSCrypSS6uQM7dRLw80KEDuM/lO/uvFt8izmpR/9N+NO3JDCq7ZwptBw==
+	t=1795516513;
+	b=F4kQ7gHW4dHQGMdA9eQ6SsPL1Jn6ULOo86FXm/3KnPrC7iMSoMCEAJaHyWqyL20lJTPt
+	 5srVtfD0d9sqRCBpwUAPJghNwuWGHhYSLgZosTt2DYajE8J43gkILFKU6DuJE4yLlh9AN
+	 DG1DVgfV5v6dcXih4ZNsFmi3cL4W+/CBuURNhA6QYzpNkS9uRq6QiEaQ25lOTt0uWJf4e
+	 WoEQdGubhNA/PwtF0tuHLvddd5znu6s1hYg1DuGv9Sf0cjt21Eatse9YZzOMJsEnpEvqN
+	 B09XifxntTohe7hlE/Beoc4NBwTDar9tC5+HIO6wIT99HJD6QaKLRPN5FdMYZt/YF7A==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795516501;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=E8TKtlO/g2Vvau18zRvilWHUXtmHqgRya704gc35gHo=;
-	b=FE67/m/WHt+BP7OW3L8LRNPhS7OGW/TTwJhN/vV+WqI/UkU1iWN2gMRZ2vwLxDEp8C8I
-	 qAI+4fzW9eFMJuIfa7aYWAfmT1Uii9pTx128yFpP1XKzrW+ZkVb+aPCg/CtUWM5VdvPcM
-	 3ekZDTMb1pfqZuIz5ODxIsKE34t8j6CkcHqMAhpl58JtjW3Hoz6qNYZaWccmdv7Ua9iNK
-	 tUKg0PeegiiLNzBRoxZmdFu4/I46vos38HkeC3xhzJJ5p/cpW3cE8btZg4cAn+BbqqYkZ
-	 XGJFiOBguPjd2QLa/xbycSk0phKBbuyjCawPmYkuIisHDhxaQcL4/4SKMclWvGBs0EQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795516513;
+	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
+	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
+	 In-Reply-To;
+	bh=yv05lreakyU5Zw1UHDQ2CzNSi5TT2d/xJeOs5UM7o/w=;
+	b=wtlQwW9HRMb+/DH9ow9exh7bb33wdvT3CAjDHNtKMqGfbvmmyAB6tY7kOGY4grJmnyhA
+	 Jf6NmtWbpEkrb7gnZ9rF2JTgH09y//fL6OveUn7O97BqqKu0J1kzThOoBv4uY4J8zKWQ4
+	 +qEoiwGl7XVREN9fGHTALZ3A2G0a4ETrtlBj/6q7Hp1kbFmMKX/iEOlpAUWenJL2PMTz3
+	 bw3HVRQHxEUrRI7Y6hrcC1x+Rgm7bRvmTLGw+dYicpK3hU5RRUEnfFOIgZkD/Wuqep7vY
+	 KsTMOi6BpljuVgNN2oID2OQIa02CZjGNNhqYTdKyklOVc80kZ5IhmpMyANaFYndNpCQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QHmdxfdT;
-	arc=none smtp.remote-ip=95.215.58.238
-Received: from mta1.migadu.com (out-238.mta1.migadu.com [95.215.58.238])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=pass header.from=linutronix.de;
+	spf=pass smtp.mailfrom=linutronix.de;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=QQNodHch;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=IKRx4wbF;
+	arc=none smtp.remote-ip=193.142.43.55
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6ABE606A31E
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 10:34:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6ABE606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2536A606A31E;
+	Tue, 24 Nov 2026 10:35:12 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2536A606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QHmdxfdT
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=Suno0SlRBQWBmt2uzfjPtzfcYe0F75PFnMbgP8poVtU=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795516497; v=1; x=1796121297;
- b=QHmdxfdTzbRx5MbMytt7YbBkYgKHqvmp7tnmQsqcsOSIjH30id72q51Mo5Dkjq0vM+2dfQ92
- ycb7RbFtsDKIfwyBMwF/2SxKxmXXZ0PVma0ngG/CGTHTNXZjC8NlBunWWN22Q6WGI3A2o6twNY2
- v68dizYA6sIOGl6gj27tV4w8=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id bac6370eabe62822;
-	Tue, 24 Nov 2026 10:34:57 +0000
-X-Mizu-Trace-ID: bac6370eabe62822
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <08e4f7bd-37d7-4752-93f3-23fe6d15b1df@linux.dev>
-Date: Tue, 24 Nov 2026 18:34:49 +0800
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=QQNodHch;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=IKRx4wbF
+Date: Tue, 24 Nov 2026 11:35:07 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1795516510;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yv05lreakyU5Zw1UHDQ2CzNSi5TT2d/xJeOs5UM7o/w=;
+	b=QQNodHchhyX5xW2TbJwMMMneSDT2veM3lVNYotwlk+fOrqDHVnGmQLqNQYXbKpQpHqkWYt
+	hmKDy5yLHJhi5eumhBW27QPPsPRvs1g9r1lI2zSkagge+gSZ71XUCEx2U4/cR6VKsgoYLd
+	N04u5ORDfxciLV9fTUzcqaFfexZA0UIH1eYjroB1Yt9tITz68chKXfPUcRSnTpKbpwGsxW
+	Jx2aeao14PQXET4a9uyYHVYwQC7wJVzAYWJTiiQF0RuOK8yDSmRhBQGIo4M8fnlvXrG+dh
+	fSi06PmyG1a34MYcMHgfYaAxT+oNtqPMAGnGJzWBWeNzYvyK92bKQoXCqGn3og==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1795516510;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=yv05lreakyU5Zw1UHDQ2CzNSi5TT2d/xJeOs5UM7o/w=;
+	b=IKRx4wbFbw6QxGlL5tBNume37ux5OI7Jm46WVa/wkUV9eR+RfCJ61cCY6468pkcM3OGmZg
+	+BN36z6Gp4bWAwAg==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
+	Jonathan Corbet <corbet@lwn.net>,
+	Shuah Khan <skhan@linuxfoundation.org>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	K Prateek Nayak <kprateek.nayak@amd.com>,
+	luca abeni <luca.abeni@santannapisa.it>,
+	Yuri Andriaccio <yurand2000@gmail.com>,
+	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
+	"Paul E. McKenney" <paulmck@kernel.org>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
+	Joel Fernandes <joelagnelf@nvidia.com>,
+	Josh Triplett <josh@joshtriplett.org>,
+	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
+	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
+	Qais Yousef <qyousef@layalina.io>,
+	John Ogness <john.ogness@linutronix.de>
+Subject: Re: [PATCH v4 2/6] sched: Move DL's admission control to sysfs
+Message-ID: <20261124103507.4u5Sz_bU@linutronix.de>
+References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
+ <20261123-sched_dl-v4-2-d523e4d960d3@linutronix.de>
+ <awU9KmFsbiyvbcOr@jlelli-thinkpadt14gen4.remote.csb>
+ <20261124075332.nZysJRfS@linutronix.de>
+ <awVfotZsGc8S_aB0@jlelli-thinkpadt14gen4.remote.csb>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,153 +102,40 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 05/12] cpuset: use partition_disable() for remote
- partition disablement
-To: Ridong Chen <ridong.chen@linux.dev>, Waiman Long <longman@redhat.com>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
-References: <20261114083124.1340140-1-ridong.chen@linux.dev>
- <20261114083124.1340140-6-ridong.chen@linux.dev>
-Content-Language: en-US
-From: Guopeng Zhang <guopeng.zhang@linux.dev>
-In-Reply-To: <20261114083124.1340140-6-ridong.chen@linux.dev>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <awVfotZsGc8S_aB0@jlelli-thinkpadt14gen4.remote.csb>
 
-
-
-在 2026/11/14 16:31, Ridong Chen 写道:
-> From: Ridong Chen <chenridong@xiaomi.com>
+On 2026-11-24 10:57:54 [+0100], Juri Lelli wrote:
+> > > Nothing updates sysctl_sched_rt_{period,runtime} when the sysfs files
+> > > are written, but this always passes both, so a procfs write of one knob
+> > > resets the other to its stale sysctl value? E.g. write 2000000 to
+> > > dl_period_us, then -1 to sched_rt_runtime_us: admission control is
+> > > disabled as expected, but sysctl_sched_rt_period is still 1000000 and
+> > > the period is back to 1s.
+> > 
+> > You want this working both ways?
 > 
-> Now that the partition_disable() helper is available, replace the
-> existing implementation for remote partition disablement with this
-> centralized function to unify the disablement logic.
+> Want is definitely too strong of a word. :)
+:)
+
+> > I assumed you use the proc interface because you don't know better. The
+> > warning makes you aware that the throttling knobs and DL knobs moved to
+> > sysfs. The DL bits are mirror to the sysfs interface in case you ignore
+> > the warning and keep using proc.
+> > If you move to using sysfs then everything is fine. From here, going
+> > back to proc looks odd.
 > 
-> remote_partition_disable() is removed and its callers call
-> partition_disable() directly. The new partition root state is passed
-> in by the caller instead of being derived from cs->prs_err, as only the
-> caller knows which state the partition is going to.
-> 
-> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
-> ---
->  kernel/cgroup/cpuset.c | 57 ++++++------------------------------------
->  1 file changed, 8 insertions(+), 49 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 3702e43e95ef..681adcde10e8 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1771,9 +1771,8 @@ static void partition_enable(struct cpuset *cs, struct cpuset *parent,
->   * has its state updated. A valid partition under an invalid parent has
->   * already given back its CPUs, so only the propagation is done.
->   */
-> -static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
-> -					     enum prs_errcode prs_err,
-> -					     struct tmpmasks *tmp)
-> +static void partition_disable(struct cpuset *cs, int new_prs,
-> +			      enum prs_errcode prs_err, struct tmpmasks *tmp)
->  {
->  	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
->  	int old_prs = cs->partition_root_state;
-> @@ -1923,48 +1922,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
->  	return 0;
->  }
->  
-> -/*
-> - * remote_partition_disable - Remove current cpuset from remote partition list
-> - * @cs: the cpuset to update
-> - * @tmp: temporary masks
-> - *
-> - * The effective_cpus is also updated.
-> - *
-> - * cpuset_mutex must be held by the caller.
-> - */
-> -static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
-> -{
-> -	WARN_ON_ONCE(!is_remote_partition(cs));
-> -	/*
-> -	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
-> -	 * which should clear subpartitions_cpus. We should not emit a warning for this
-> -	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
-> -	 * may already be cleared when disabling the partition.
-> -	 */
-> -	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
-> -		     !cpumask_empty(subpartitions_cpus));
-> -
-> -	spin_lock_irq(&callback_lock);
-> -	cs->remote_partition = false;
-> -	partition_xcpus_del(cs->partition_root_state, NULL, cs->effective_xcpus);
-> -	if (cs->prs_err)
-> -		cs->partition_root_state = -cs->partition_root_state;
-> -	else
-> -		cs->partition_root_state = PRS_MEMBER;
-> -
-> -	/* effective_xcpus may need to be changed */
-> -	compute_excpus(cs, cs->effective_xcpus);
-> -	reset_partition_data(cs);
-> -	spin_unlock_irq(&callback_lock);
-> -	cpuset_force_rebuild();
-> -
-> -	/*
-> -	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
-> -	 */
-> -	cpuset_update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
-> -	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
-> -}
-> -
->  /*
->   * remote_cpus_update - cpus_exclusive change of remote partition
->   * @cs: the cpuset to be updated
-> @@ -2039,7 +1996,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
->  	return;
->  
->  invalidate:
-> -	remote_partition_disable(cs, tmp);
-> +	partition_disable(cs, -prs, cs->prs_err, tmp);
->  }
->  
->  /**
-> @@ -2667,7 +2624,8 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
->  
->  	if (is_remote_partition(cs)) {
->  		if (trialcs->prs_err)
-> -			remote_partition_disable(cs, tmp);
-> +			partition_disable(cs, -cs->partition_root_state,
-> +					  cs->prs_err, tmp);
->  		else
->  			remote_cpus_update(cs, trialcs->exclusive_cpus,
->  					   trialcs->effective_xcpus, tmp);
-> @@ -3215,7 +3173,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->  
->  	if (disable_partition) {
->  		if (is_remote_partition(cs))
-> -			remote_partition_disable(cs, &tmpmask);
-> +			partition_disable(cs, PRS_MEMBER, PERR_NONE, &tmpmask);
->  		else
->  			update_parent_effective_cpumask(cs, partcmd_disable,
->  							NULL, &tmpmask);
-> @@ -4164,7 +4122,8 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
->  				       (cpumask_empty(&new_cpus) &&
->  					partition_is_populated(cs, NULL)))) {
->  		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
-> -		remote_partition_disable(cs, tmp);
-> +		partition_disable(cs, -cs->partition_root_state, cs->prs_err,
-> +				  tmp);
+> Odd indeed, but I wondered if it might happen that a sysadmin configures
+> things properly using the new interface and some time later, say, an old
+> application that hasn't switched yet to the new interface resets/tweaks
+> using the old interface?
 
-Now that partition_disable() takes the error code directly and updates
-prs_err through partition_state_update(), the preceding
-WRITE_ONCE(cs->prs_err, PERR_HOTPLUG) seems unnecessary.
+Therefore I wanted to remove the old interface. The legitime users would
+want to change the default DL attributes. I am more afraid of those that
+intend to disable RT throttling and are failing to do so.
 
-Could we pass PERR_HOTPLUG directly to partition_disable() and remove
-that assignment?
+We could also make the proc interface return -EINVAL on read/ write once
+the sysfs was used. What about it?
 
-Thanks,
-Guopeng
-
->  		compute_effective_cpumask(&new_cpus, cs, parent);
->  	}
->  
-
+Sebastian
