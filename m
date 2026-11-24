@@ -1,69 +1,66 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.139
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.135
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795497646;
-	b=ZjWUDHUpwJEFPy/oY/gJpgc5uFp6ao3Y2AKCd0acCgDbbyOmcEVEA4iFJk80GL4K0KJU
-	 kym8UXJQqHOLSF9ioeLmayz/tkZvh8LCzGYNX+LmenFQ68bsZ8l91RXWA/Th57FMui8q5
-	 D+odF0HvkbNoShXNqnh7PYjo501URd385mcY1R8IhrAwTooRohxuODx5WeXLdMSYxzjna
-	 wPPHhaVHL4Vjnk3O5cvZVuOi06+x94BgVCLkyKOYBkJMmAF8mGfZP/TC/5V7xLXjDe9yG
-	 GzbqRLpfOkA2tLNtaIkhp2kh5e39ulrh3fStEASPjieJXy7kpwKBp30rcysCSPdrPXQ==
+	t=1795497885;
+	b=zF9hmD5uDrXB2b0BxS47f7W4mFSzzhcjlGcTRxk9E2zD0xUEteCdPrkokmGhoV39oXcM
+	 7/2Ok+SqhMSMNLuvf93n2c2VBpnbKsaT87H6NYfRBSmQB/68+kjkHBfkutfnIqlhaIKzq
+	 75czJ9kk42PThkZqoNY+gtlTwJV6LF6U+lxDgCN6n7DovCbt1PDWrOqkbrjD5pTmPyphm
+	 1j05t0NILkQ1wwID7CPSZjsBtGskKCUvGHjoiOlLzxomi4KSRXmUZOKyvAUzsVRkVPlCK
+	 ypOm9LTpNxcw5HLhbgeqYhmPwAXrGZTaSYdLCMI0z//hkCfanW4/XlqUNqxODRbRKZg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795497646;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795497885;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=HHEfeb/HG/M+BRVHRw4kn8MAzbxsATW49wX/1og7PUs=;
-	b=DIuHzn+viq0CLrKBfKxPZpx/Xk4ISRJYOctJyE9ulBUgCXj8gULc/Q7TDK95Go9Q5VTd
-	 W/Y44oMZTt1kzc0VC1bBxXtOTV97eZhnQhbL0GHI/RLW1v8dRSXL06DORxitvvbOn2FUw
-	 EatNCQ52lGJXOOASCl/APDdqPjpVihMfuwuuNaSFH+jJtBL7t/mW1y7fGxSbAy6ZdaWaJ
-	 +LD6ozCk9J85Y8Bkwa12UXIPiDUpa2wz9QRH178fxk422pRTDZPeln60s6o4mc916jKfm
-	 TFhfPN+iWzZ57L4QqakDZvQPoMIMIKjVo4OEiOSeHP3sRT8iT63z2YSqHyxxK3lFiUg==
+	bh=EUbnCTk25H/cREetncbitvhF60S/wmbBZLPLU9DM/r4=;
+	b=lLLkkk4MxWt14QBMkqiKl2day8WhRloKpqZnAozWjK6tDlQK3Iqu4n9drvtd5c8BLebV
+	 DmPWk8oWxiD112QM+ka1nRqfIavOOuS2Wtsteja9YjLeK3xqOr3JsM2ZwkDAjVwgSIHYT
+	 AYiyxRcu44b1JPgAzvwheZSFqJF1h0yX9BI89DcMHq2d4ui2FLp62aNTAg5+rZN8KR6aP
+	 YzvCt5xQtyayQKc2kXZ8uzdzofYuP1bGfFunL+rsp4S4+2Qo2FYT+3HC+nItdakS1D2F5
+	 Bv2akPcVJj41Xwa9F0y9+lI7LieM4tBvlXsETKB8rOau4Wl2ABwIfRe3RqLS/iBa8og==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=PsJkKPTH;
-	arc=none smtp.remote-ip=91.218.175.139
-Received: from mta0.migadu.com (out-139.mta0.migadu.com [91.218.175.139])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="QNX3vM/p";
+	arc=none smtp.remote-ip=95.215.58.135
+Received: from mta1.migadu.com (out-135.mta1.migadu.com [95.215.58.135])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 469DB606A32C
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 05:20:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 469DB606A32C
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EB3606A32A
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 05:24:44 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0EB3606A32A
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=PsJkKPTH
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QNX3vM/p
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=/FLpDUQaN5zSNJauElzR553aGFbKTy0m62Qa9BEG34w=;
+DKIM-Signature: a=rsa-sha256; bh=g2dnbFx4/3WtLU6XELgiDkbskvVUDKsGs2lr4KoV968=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795497644; v=1; x=1796102444;
- b=PsJkKPTH7oTCW1wmCW4uRkE/h5HX+Z/oMjXGD8MlvNB0mB6c3jIxta5gVTrYx6DBfNgP2O0B
- ol8eNLmqWwwHt7GKP19R/6oVm7RHivu7wF1fkuquZO6JuAcqlKsA6p5Z/y4SDRoCBs8NaM/n0xV
- ijJConrDx0Bwu7tHVJm758oU=
+ t=1795497883; v=1; x=1796102683;
+ b=QNX3vM/pO7Ddnq9SZyliltoXQPCTpFiMrafpRJUQJ4ummQ5OZgeZAIyDNhEsecZxu22a4RtG
+ kXED4xYSIWFj6voFqLjhfc/+r6IwPQ0qnKJzwaIHmHDh5wkyWvkmo8dAixpGf+0ECJowReVqcdw
+ 33WtObDgte8okttvGkKsJadA=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 0d2e7a79f004113c;
-	Tue, 24 Nov 2026 05:20:36 +0000
-X-Mizu-Trace-ID: 0d2e7a79f004113c
+Received: by smtp.migadu.com with ESMTPS id 4bed5c34e88d1cd2;
+	Tue, 24 Nov 2026 05:24:42 +0000
+X-Mizu-Trace-ID: 4bed5c34e88d1cd2
 X-Migadu-Flow: FLOW_OUT
-Date: Mon, 23 Nov 2026 21:20:29 -0800
+Date: Mon, 23 Nov 2026 21:24:37 -0800
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Karl Mehltretter <kmehltretter@gmail.com>
-Cc: bpf@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, 
-	Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, 
-	Martin KaFai Lau <martin.lau@linux.dev>, Eduard Zingerman <eddyz87@gmail.com>, 
-	Kumar Kartikeya Dwivedi <memxor@gmail.com>, Song Liu <song@kernel.org>, 
-	Yonghong Song <yonghong.song@linux.dev>, Jiri Olsa <jolsa@kernel.org>, 
-	Emil Tsalapatis <emil@etsalapatis.com>, Ihor Solodrai <ihor.solodrai@linux.dev>, 
-	Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Jiayuan Chen <jiayuan.chen@linux.dev>, 
-	Puranjay Mohan <puranjay@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, linux-rt-devel@lists.linux.dev
-Subject: Re: [PATCH bpf-next v2] cgroup/rstat: disable preemption in
- css_rstat_updated()
-Message-ID: <20261124052001.GB555944@shakeel.butt@linux.dev>
-References: <20261124031642.40616-1-kmehltretter@gmail.com>
+To: Muchun Song <muchun.song@linux.dev>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] memcg: free the private ID of a memcg that never comes
+ online
+Message-ID: <20261124052054.GC555944@shakeel.butt@linux.dev>
+References: <20261124000439.967403-1-shakeel.butt@linux.dev>
+ <F39B4A81-BB17-4C5D-851E-2740EBBBBA8B@linux.dev>
+ <awUTKy9tx8nWJgXf@linux.dev>
+ <2FE2D209-FB57-4191-A324-F179B2394DB1@linux.dev>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -75,23 +72,56 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261124031642.40616-1-kmehltretter@gmail.com>
+In-Reply-To: <2FE2D209-FB57-4191-A324-F179B2394DB1@linux.dev>
 
-On Tue, Nov 24, 2026 at 04:16:42AM +0100, Karl Mehltretter wrote:
-> BPF programs can call css_rstat_updated() with preemption enabled.
-> The kfunc calls __css_rstat_updated(), which requires preemption to
-> be disabled while it queues an rstat update. A cgroup iterator can
-> hit the lockdep assertion on both RT and non-RT kernels. The
-> cgroup_hierarchical_stats selftest can also hit it on PREEMPT_RT:
-> spin_lock_irqsave() on trace_cgroup_path_lock leaves preemption and
-> interrupts enabled there.
+On Tue, Nov 24, 2026 at 12:52:41PM +0800, Muchun Song wrote:
 > 
-> Disable preemption in the BPF wrapper after validating the CPU and
-> before calling __css_rstat_updated().
 > 
-> Fixes: 36df6e3dbd7e ("cgroup: make css_rstat_updated nmi safe")
-> Reported-by: Jiayuan Chen <jiayuan.chen@linux.dev>
-> Closes: https://lore.kernel.org/r/20251119111402.153727-1-jiayuan.chen@linux.dev/
-> Signed-off-by: Karl Mehltretter <kmehltretter@gmail.com>
+> > On Nov 24, 2026, at 12:33, Shakeel Butt <shakeel.butt@linux.dev> wrote:
+> > 
+> > On Tue, Nov 24, 2026 at 10:50:00AM +0800, Muchun Song wrote:
+> >> 
+> >> 
+> >>> On Nov 24, 2026, at 08:04, Shakeel Butt <shakeel.butt@linux.dev> wrote:
+> >>> 
+> > [...]
+> >> 
+> >> The leak analysis and the fix look correct to me. However, using
+> >> CSS_RELEASED here makes the private ID cleanup depend on a generic CSS
+> >> teardown state, and adds an accessor solely for this failure path.
+> >> 
+> >> The private ID is not needed until mem_cgroup_css_online(), so could we
+> >> instead reserve it at the beginning of that callback? Failures in
+> >> css_create() before ->css_online() would then never own a private ID,
+> >> while failures after the reservation would continue to use the existing
+> >> mem_cgroup_private_id_remove() cleanup.
+> >> 
+> >> This would also make the private ID lifecycle more explicit: reserve and
+> >> publish it during online, then drop the initial reference during offline.
+> >> It would avoid both the new css_is_released() helper and special handling
+> >> in mem_cgroup_css_free().
+> > 
+> > Thanks Muchun. Nothing needs the private ID before ->css_online(), so
+> > reserving it there would work. But it moves the out-of-IDs failure from
+> > ->css_alloc() to ->css_online(). By then css_create() has linked the
+> > css into the parent's children list and css_idr, so mem_cgroup_iter()
+> > can css_tryget() it and cache it in iter->position. A css that fails
+> > online is freed without ->css_released(), so
+> > invalidate_reclaim_iterators() never runs, and the free does not wait
+> > for those references. Today memcg's ->css_online() fails only when a
+> > small allocation fails. With the move, every mkdir on a system that is
+> > out of IDs would take that path. I would rather keep failing in
+> > ->css_alloc(), before anything is visible.
+> > 
+> > To drop the CSS_RELEASED dependency, I can test the ID's own state:
+> > !memcg->private_id_objcg means the ID was never published and the memcg
+> > still owns the reservation. Let me know if that works for you.
+> 
+> You're right. I missed that the css is visible to mem_cgroup_iter()
+> before ->css_online() completes. Using private_id_objcg to track whether
+> the reservation was published makes sense to me. Thanks Shakeel!
+> 
 
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Oh I just noticed that private_id_objcg is introduced in 7.4, so to
+backport the fix to previous stable kernels, we will still need to use
+CSS_RELEASED or something else there.
