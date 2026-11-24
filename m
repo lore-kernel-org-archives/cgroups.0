@@ -1,60 +1,60 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=193.142.43.55
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795528789;
-	b=Ly+w5GqdgIaCxE+4Mf02ZgEGMXs88hEh1J7SPjMxbSX1LG3zeMDa6L1wGaZld9vzhNpx
-	 024M940I8nnrGSNAXck0l+2vZgp/hLLWSW9QBPWHHBdr0L0R9ennIGnzvdGDvHkrBUm2N
-	 9qclEGbxzDIAXuAgKugv4RFWeZBE7tfAQFolg5qQZeMOnAur1dESdVFLKr2/8YsFFlvB1
-	 MHuT2wysXpZd1tr7kq7CbppgGS//iE73PoE7NUZxbGD1E89HdHbUhoKkTKgLUEUhe99p2
-	 hGb+Ijf17NhEnKPtCYeG3FGa0Bnc8h3QA5CKREtPQ24H6wM+eNYtDym/HJErBMw6IvQ==
+	t=1795529522;
+	b=sPq3XgIbepaENGXtUH7RcQdm0X4dDppOOlzM8yiAbOR8t/n+GCgN6evNAortwDKDDVDB
+	 N3yOFTHnL9xsaNQYl6nQlCNZQvp4S0MKXYBV3FghS0IV2m3AdapilhDo22deNLB7J9yeO
+	 wwv9k0965MhfY/H43bqXtptCe6rdiubMxn8AP1Z+gi4SfPE5YyD8BH7ktDrjNmbbkBrOr
+	 m4tiX6WY9eAA+ZRYX8CWtt+fqW9Ft5Tyh762lu/pCoBm0HiUCqhqX5GiKT/IRjrHOV/2H
+	 zsImxuWNESnSDcmYEzNHj0agVQv20CHRWFQVg0GhDRSCKSEJA56bivQwJuhZzptD5mA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795528789;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795529522;
 	h=DMARC-Filter:Date:DKIM-Signature:DKIM-Signature:From:To:Cc:Subject:
 	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
 	 In-Reply-To;
-	bh=WqOCSpfhRpfrcDKrgHuNviXW0yZq+NMD1bfim2qiamo=;
-	b=jNJZXqybnwLL2TqXx8TGZDcbWMExKtxhVmPJv3mZNQQiqSIfcF7RD7EcdGe7oPKc56ZJ
-	 /hcpVkWbpm7yk+xlMrQ8ro/ANnNyTFD+txcA/QHgIX4gf0AGvgCsZhc8qWZOPNYZKsaY/
-	 vRdJ8yvSAic7Rf+1Ig6UPH2swUCT+CFBJh2mh3Nf1Gun39j4UQD7ul1H4c1dSD77k0exZ
-	 2Ae688J/2Le2kUHUsvDBaHJZoXs/4MDbz+1sxGOmAUfyndPz8K/lE8CPcfjhUekI3VvfG
-	 qwmd7R1/Z3Yg/Oxp2cTQ9bc9BftRYIRpXlI6rqtYqbAURnimHtilMxZXTxFZug5bjsg==
+	bh=tJJp+wTEESYMnBdhPtsKMyvziahdjErDNrFw491aIX4=;
+	b=1J21ZsyftUotWfVfhnlG++xB2/bDYcqpKp+QL/SxEOM45qDCBScyHbTp+2raCRrC00uF
+	 ib71XrfB9vjAW8+JBHJhLSfPscRwzbvHcYDIJM394GDeJOObG0IpChwIUPkHgopJpUyRE
+	 MEpq5+ut5SvxHBW7faNNKJpE9B/6wbXljX9g8OtPGEAfCL2VBkRFTHVFf0UUZwPKxedMv
+	 18QweqjqgYN+YE5FgtGK4Y5Vd0fUWZVIyc3vfWkq0CdGom3CnJlmYsVzkj1rHamwx66Ng
+	 hz4E2XAUjf6Q+vGJEtPsF2MhN+cnDP8yTQXX7YewNGNPubX0OO1D2zUeQb6npKHRrug==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linutronix.de;
 	spf=pass smtp.mailfrom=linutronix.de;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=OY1QJ+xs;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=uuogxUnW;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=ACsCMCtx;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=U1jh94Lw;
 	arc=none smtp.remote-ip=193.142.43.55
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99FD606A31E;
-	Tue, 24 Nov 2026 13:59:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B99FD606A31E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208A4606A321;
+	Tue, 24 Nov 2026 14:12:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 208A4606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=OY1QJ+xs;
-	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=uuogxUnW
-Date: Tue, 24 Nov 2026 14:59:44 +0100
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.a=rsa-sha256 header.s=2020 header.b=ACsCMCtx;
+	dkim=pass header.d=linutronix.de header.i=@linutronix.de header.a=ed25519-sha256 header.s=2020e header.b=U1jh94Lw
+Date: Tue, 24 Nov 2026 15:11:57 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1795528786;
+	s=2020; t=1795529519;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=WqOCSpfhRpfrcDKrgHuNviXW0yZq+NMD1bfim2qiamo=;
-	b=OY1QJ+xsSMAeWL0nvkyFs5MphIDdK1xPv+lgUVqMIqSesNji9sr4swYSXJF29vQiZIWi7N
-	BTBg+8ndYK7LMybD9He0rfBIvwmcDvWDge65KnIx1sAkZx6/BPK8vojELdoDRTQUiGzAkb
-	UIrDK4P3LRGM/FMK0Qen5I0m6h32YQkXoHFG1m4JwAGpAvmuTe94eBPFDsp+V9RtE/8/Yo
-	/2+vBbc8fNd+A8yT22bSiKbV3/WrftIafDci4BpfvqXIVBiksTU29BSpEjSt97CHA7mOBK
-	fBhMU8t6kQg6R2nK69oddTAnTqYjssq6hzpdGWwusldiGePMMQXtdFSs6sVqvQ==
+	bh=tJJp+wTEESYMnBdhPtsKMyvziahdjErDNrFw491aIX4=;
+	b=ACsCMCtxOydODNn5FZROBsJD1ZDk07LKP9kdzEOaida/QFAuYeng1hDAK7TTcxgiQu/56l
+	eGIkw46XpvPT1O8nQVID3N/cvkpcVK/xz8G76rbcRm6kdmOrmSABbic8dDmWhfyvRsjeCE
+	M973P3vHcvsNPUTSe+++JxP1Sp2O0AesyPo/YpdolYKaWqGBwkutgkaM62eNKEB+xgN79m
+	VFJH14YiTA/BwlFFqiWmTN/J2l1eGxxoeq9cASb2t/xVT3FpU1phy199YXYzW4ghEcyC+A
+	4vxW3sqhce7M/81y1bvjGT/PgV3k4CHYPsd0Wu5guJw1+OEZy0FB4p2rY+ToYg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1795528786;
+	s=2020e; t=1795529519;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=WqOCSpfhRpfrcDKrgHuNviXW0yZq+NMD1bfim2qiamo=;
-	b=uuogxUnWw0+F9dwOGlBmLU11KNq5qd1/+4wQJVCPqbo7cSj+xIq+saL8J+LZRgxMmwV4cY
-	qPVftjI9N2b+iSAg==
+	bh=tJJp+wTEESYMnBdhPtsKMyvziahdjErDNrFw491aIX4=;
+	b=U1jh94Lwb/orErcFqAZZ9OhCeCqf8cjJPw6eJuihJqMtlvt0qDn2Q54hf6chNoF4N3oqP7
+	9cF7fldICb3bqkBw==
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To: Juri Lelli <juri.lelli@redhat.com>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
@@ -86,12 +86,15 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
 	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
 	Qais Yousef <qyousef@layalina.io>,
 	John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v4 4/6] sched: Limit sysctl sched_rt_{period|runtime}_us
- to RT_GROUP_SCHED
-Message-ID: <20261124135944.VIRpdBBG@linutronix.de>
+Subject: Re: [PATCH v4 2/6] sched: Move DL's admission control to sysfs
+Message-ID: <20261124141157.Vf15QS4p@linutronix.de>
 References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
- <20261123-sched_dl-v4-4-d523e4d960d3@linutronix.de>
- <awVi0VQJCBNYc8u9@jlelli-thinkpadt14gen4.remote.csb>
+ <20261123-sched_dl-v4-2-d523e4d960d3@linutronix.de>
+ <awU9KmFsbiyvbcOr@jlelli-thinkpadt14gen4.remote.csb>
+ <20261124075332.nZysJRfS@linutronix.de>
+ <awVfotZsGc8S_aB0@jlelli-thinkpadt14gen4.remote.csb>
+ <20261124103507.4u5Sz_bU@linutronix.de>
+ <awVvOGe-RwmLCqDv@jlelli-thinkpadt14gen4.remote.csb>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -103,58 +106,36 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <awVi0VQJCBNYc8u9@jlelli-thinkpadt14gen4.remote.csb>
+In-Reply-To: <awVvOGe-RwmLCqDv@jlelli-thinkpadt14gen4.remote.csb>
 
-On 2026-11-24 11:11:29 [+0100], Juri Lelli wrote:
-> Hello,
-Hi,
-
-> It looks like subject and changelog still describe the previous version,
-> as we are not removing the interface anymore?
-
-Updated:
-
-|sched: Issue a warning for sysctl sched_rt_{period|runtime}_us on !RT_GROUP_SCHED
-
-|The admission control for SCHED_DL has been moved to sysfs and updates
-|via proc are mirrored to the sysfs interface. The sysctl knob controls
-|RT throttling within a RT group if RT_GROUP_SCHED is enabled. Without
-|RT_GROUP_SCHED it serves no further purpose.
-
-|Add a warning in the !RT_GROUP_SCHED case to encourage people to move to
-|the new interface.
-|Move the declaration of sysctl_sched_rt_{period|runtime} to
-|RT_GROUP_SCHED because it is not accessed outside this define.
-
-> >  kernel/sched/rt.c    | 8 ++++++++
-> >  kernel/sched/sched.h | 5 +++--
-> >  2 files changed, 11 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-> > index bd37dbf2bebbe..258b187459bb9 100644
-> > --- a/kernel/sched/rt.c
-> > +++ b/kernel/sched/rt.c
-> > @@ -2877,6 +2877,14 @@ static int sched_rt_handler(const struct ctl_table *table, int write, void *buff
-> >  	ret = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
-> >  
-> >  	if (!ret && write) {
-> > +		if (!IS_ENABLED(CONFIG_RT_GROUP_SCHED)) {
-> > +			const char *msg =
-> > +			"Please note that DL admission control (via sched_rt_period_us, sched_rt_runtime_us) moved to sysfs.\n"
-> > +			"This update will be mirrored. Controls for RT throttling moved to the fair_server.\n"
-> > +			"This will not be mirrored. The fair_server settings are under /sys/kernel/sched/cpuX/.\n";
+On 2026-11-24 12:04:24 [+0100], Juri Lelli wrote:
+> On 24/11/26 11:35, Sebastian Andrzej Siewior wrote:
+> ...
 > 
-> I am not sure a user who hasn't followed this thread will understand
-> what "mirrored" means in this context. What about something like (names
-> depending on the unit discussion):
+> > We could also make the proc interface return -EINVAL on read/ write once
+> > the sysfs was used. What about it?
 > 
->  sched_rt_{period,runtime}_us only control SCHED_DEADLINE admission control,
->  now also available in /sys/kernel/sched/dl_{period,runtime}_us.
->  RT throttling is done by the fair server, see /sys/kernel/sched/cpuX/fair_server_{period,runtime}.
+> Hummm, I'm not convinced. Whether old tools work would then depend on whether
+> somebody wrote to sysfs since boot, which isn't visible anywhere: LTP's
+> proc_sched_rt01 would fail again, just only sometimes?
 
-Updated.
+LTP's proc_sched_rt01 (should) fail once you touch sysfs. But we would
+have to make sure it is something != EINVAL or else it won't fail.
 
-> Thanks,
-> Juri
+But yes, if you use the new knob, don't fallback to the old habits.
+
+> Earlier you actually offered:
+> 
+> > I could look into making the sysfs values appear in proc, too.
+> 
+> This might be simpler. For !RT_GROUP_SCHED, procfs could become a view
+> of the sysfs_dl_* state, with no second copy. sysctl_sched_rt_* would
+> only be needed for RT_GROUP_SCHED (which is marked BROKEN anyway, and
+> what we end up with depends on the HCBS discussion).
+
+Yes. I would hope that once we have RT_GROUP_SCHED broken for a year, it
+could be removed.
+Anyway, if you think it makes it easier to have it mirrored both way,
+let me look into it.
 
 Sebastian
