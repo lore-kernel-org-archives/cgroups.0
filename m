@@ -1,140 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.238
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795515097;
-	b=AUjnlQziwmMG22gMQnddW9OVrGsLOkMUkYxV1JSD4FpVKkxVCifv3t1J+cw88hDa41YG
-	 A39tdJcSbgG4t3gf8wdd6epJC8PXWB1PwIG+gNfUVdoSsuLzXDHVPT+1S6KR38pPM99ar
-	 Ik6SbuUfkgpkw/a7eRSuigIa5ufVsgnadyJweig+XUwRNI603TBiW3KNczhiDUTbzf7ZH
-	 n0ZVDUXWdKhrnjn+SnX+fbnQDogm8GTJxf1WruHhTkID+ssSEy/mYTt76QItxD2eGYF6r
-	 zfqx8yYnIfP2mo81KAkAm1lH3FcbJiL1hGa64qMEBgstCIdpcCXSGCvHDYxnQlFyanQ==
+	t=1795516501;
+	b=YrN9d7PcJ9YgE7eg8G7cBEmBaedTSXUfgA4sBS1BwXexaA3gcaX53NT7K65Bz44Opdxu
+	 YEoVob6ACEwUYHUDQjCBY2rzpxExWQpDlIrfvcg0ENM5F85GsLnNrAcrHVCAxfdD/wvRG
+	 /P7+2A3dMTv1jTl/Ygg5LXPGNgXAhhtQLwFuC73x13xHIL8SsVvqnMxDirrTO9eXwqwwF
+	 cjxPqUDXkEbLlf2aGdeFuqwzJUgCZqljDFPvunCBlsybZpLDHbgMKR1Xb3Ja30Aw4e/d5
+	 Lyfuk+VMPBhKSCrypSS6uQM7dRLw80KEDuM/lO/uvFt8izmpR/9N+NO3JDCq7ZwptBw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795515097;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=XAjHpOoHzD/5/0Qvp1Ofl3iGJdTZMSnNgw4bsE73GGg=;
-	b=RKv6IN7/FvgTHXgJacY8QhAp/xUE8h+zaCmuwY9TuXER5hc/kusI8yh1XWAm+vgjeowe
-	 6QcIByIfLi7790xzRzBu6FNNHsMzoZwkVQGFE42yhSSk7WkMhH7gfF1TyU47vRbDrpUvK
-	 q9sy99E7xx1weKFmwIRBlYXBUxMXB400zbTG513oNUlHjjbsPefNFBycKdATLS9fsPE11
-	 UMmS22WI7qUMT9K/vVjMCVx61U5rfuxtxyPF4VLmNdDUlTfCVSQMU8YVL3oVTh1m/tUBj
-	 SMAqW6vsRzXYMzMXiPyIpTrOPqRrA04PHTHscYRc+tiyb1cAIO2oTHCxgybnGgNnogQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795516501;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=E8TKtlO/g2Vvau18zRvilWHUXtmHqgRya704gc35gHo=;
+	b=FE67/m/WHt+BP7OW3L8LRNPhS7OGW/TTwJhN/vV+WqI/UkU1iWN2gMRZ2vwLxDEp8C8I
+	 qAI+4fzW9eFMJuIfa7aYWAfmT1Uii9pTx128yFpP1XKzrW+ZkVb+aPCg/CtUWM5VdvPcM
+	 3ekZDTMb1pfqZuIz5ODxIsKE34t8j6CkcHqMAhpl58JtjW3Hoz6qNYZaWccmdv7Ua9iNK
+	 tUKg0PeegiiLNzBRoxZmdFu4/I46vos38HkeC3xhzJJ5p/cpW3cE8btZg4cAn+BbqqYkZ
+	 XGJFiOBguPjd2QLa/xbycSk0phKBbuyjCawPmYkuIisHDhxaQcL4/4SKMclWvGBs0EQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Z0iJ+rco;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=molHwP+0;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QHmdxfdT;
+	arc=none smtp.remote-ip=95.215.58.238
+Received: from mta1.migadu.com (out-238.mta1.migadu.com [95.215.58.238])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9539606A322
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 10:11:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C9539606A322
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6ABE606A31E
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 10:34:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D6ABE606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=Z0iJ+rco;
-	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=molHwP+0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795515096;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=XAjHpOoHzD/5/0Qvp1Ofl3iGJdTZMSnNgw4bsE73GGg=;
-	b=Z0iJ+rco98BjqT3s08NOsRwqQXnAbSjnD1vYA1IifTLvmI78K+ymU14N2/mR6dDjckNY4h
-	SL2eJyrSdePnKOtvXB/ph5B79REPIKK60YNSbP4wPFu7ap6rKHTLFVta+ol1/44svtP5OJ
-	43n6JJv2h7UtRdceAZm4CE4nbzZm990=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-489-9FvRw5cxP1y216ekuWm0eQ-1; Tue, 24 Nov 2026 10:11:34 +0000
-X-MC-Unique: 9FvRw5cxP1y216ekuWm0eQ-1
-X-Mimecast-MFC-AGG-ID: 9FvRw5cxP1y216ekuWm0eQ_1795515093
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4bb6bac1e84so27803135e9.0
-        for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 02:11:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795515093; x=1796119893; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=XAjHpOoHzD/5/0Qvp1Ofl3iGJdTZMSnNgw4bsE73GGg=;
-        b=molHwP+04wNXKuv3ni7ToonnSoQ0DFV0bDuwx81qYQpbgtY8bACebiuyOLf2x2JIvs
-         pDapUo8PI3U6WD5ynAANNbP1V/b9uQ78x8CwH3tuicXj/BhaIv891R5h6MhxbS+d6si5
-         fshQISD8/jomRimOIVvEmK9XqY+2bqVejKGuMGwub179ziijZ92uC0bdFXuhw8wHTeIc
-         dBJTw313q2l8i//Cz1W6LJ7nACvNv1dzZr4lGHmoXuMibxg7pz0PUcTib9+CdOlkdJnB
-         neQpKooG2Nk4fFMDmtQ24kJCps4n8Ph2S/F1IZrliXu4o7a9FqYgSwYZBS4CJq3fnL/6
-         DOZA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795515093; x=1796119893;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=XAjHpOoHzD/5/0Qvp1Ofl3iGJdTZMSnNgw4bsE73GGg=;
-        b=vCcni1ISMvBnCdlUCYj5oJJFyO5xzUfT326I3s7kIz9vn+9LnG/tREy7KYHLTs2oyE
-         7KE1jtdWSualvCimDgaSuocs2GW53vLOv4wLAkrpLq+eBVfjBDN4GIY/lC//gefucynR
-         gnblIrsldoR0j86nXnsya/rACpPSHZnGDAbYVEv69qvaf6B1B09MjMCwJN4oHeEm6iY9
-         M9Xb89NvCqLADXOrBSXY09SCz7H1C/RScMAYlORZp+fIiVUJ7VCISpJWOes3WRTJHbuY
-         0TLm0tyukpn0P90J56IqfVsJXan5x6xibEy85+3xqIyDYRMl9luIXn600O/AJeYY9BrC
-         waJQ==
-X-Forwarded-Encrypted: i=1; AL+hErHGosAksfRv+gUevp/oa4t7Z+NuVznybZXTyYrltAOQ7OgArrQkx1iEKfopNHBW3PwhWrf74RgV@vger.kernel.org
-X-Gm-Message-State: APuU4Z+bW3jrLtQb1t5Ywtaa0IT2phIMSs+mF/nk1llwmjXnuYES02eV
-	mAHWPEEEL9yKAdv8MUx33s+vDWwVpDt+7l62zxC66QeulfNapFYGZg3hgmiv2wPmOYoIMJYF7kx
-	quiU6uX2cqiDR3slrvFzn8scVteGRSB913lshvhRXwIaGxxIKzRUHEOtPHHo=
-X-Gm-Gg: AZFdTZcDMOToDe5/Rrh+Zzp9pmOANEvVf1+QsavjaFYaNvxn5eoJ/W1rEKrC9mc1f46
-	x7q6K4NGfjxbcTvkq2ajH/Ik9t1lrJ4MQo5pwEEMHNpDaPoHRkgKd8JZkPuHJEEPbSQ25GSGmEr
-	hDP4TB8IBuiYvQybeLqx1TZOUZKQ6dpX3XbySZY4v78VDG6VsKCV66vPhBDraXnVeFr68fAcZZg
-	HstXLUPw8xCpqpjQZbY2yP8W6gWWtB4kBMeZOXepSiwbPV/DNhSKdKCoAWAv3r/8cJAtYYSR/TS
-	IsWl2fejcNSS6DAO7HWVWqQV2MJO+WCrbO5MHCQhPTZzKC6LK+xx1ADYR2sLWmp/sSHjvoxSHcs
-	tpfQk4YQ4PSgzWOzNdmwBcCli9LgsvFHeduYi1XmdEU4nOzc4VxybKQWawjSuGkQn7yQ0LqCO2W
-	0OGOI=
-X-Received: by 2002:a05:600c:1d86:b0:4a1:fa27:df7c with SMTP id 5b1f17b1804b1-4bb88922972mr294991715e9.34.1795515092661;
-        Tue, 24 Nov 2026 02:11:32 -0800 (PST)
-X-Received: by 2002:a05:600c:1d86:b0:4a1:fa27:df7c with SMTP id 5b1f17b1804b1-4bb88922972mr294991115e9.34.1795515092291;
-        Tue, 24 Nov 2026 02:11:32 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.158.90])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6c61e53asm28093795f8f.59.2026.11.24.02.11.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 02:11:31 -0800 (PST)
-Date: Tue, 24 Nov 2026 11:11:29 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	rcu@vger.kernel.org, linux-doc@vger.kernel.org,
-	Jonathan Corbet <corbet@lwn.net>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
-	Valentin Schneider <vschneid@redhat.com>,
-	K Prateek Nayak <kprateek.nayak@amd.com>,
-	luca abeni <luca.abeni@santannapisa.it>,
-	Yuri Andriaccio <yurand2000@gmail.com>,
-	Yuri Andriaccio <yuri.andriaccio@santannapisa.it>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
-	Joel Fernandes <joelagnelf@nvidia.com>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun@kernel.org>, Uladzislau Rezki <urezki@gmail.com>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang@linux.dev>, Davidlohr Bueso <dave@stgolabs.net>,
-	Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Qais Yousef <qyousef@layalina.io>,
-	John Ogness <john.ogness@linutronix.de>
-Subject: Re: [PATCH v4 4/6] sched: Limit sysctl sched_rt_{period|runtime}_us
- to RT_GROUP_SCHED
-Message-ID: <awVi0VQJCBNYc8u9@jlelli-thinkpadt14gen4.remote.csb>
-References: <20261123-sched_dl-v4-0-d523e4d960d3@linutronix.de>
- <20261123-sched_dl-v4-4-d523e4d960d3@linutronix.de>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QHmdxfdT
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=Suno0SlRBQWBmt2uzfjPtzfcYe0F75PFnMbgP8poVtU=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795516497; v=1; x=1796121297;
+ b=QHmdxfdTzbRx5MbMytt7YbBkYgKHqvmp7tnmQsqcsOSIjH30id72q51Mo5Dkjq0vM+2dfQ92
+ ycb7RbFtsDKIfwyBMwF/2SxKxmXXZ0PVma0ngG/CGTHTNXZjC8NlBunWWN22Q6WGI3A2o6twNY2
+ v68dizYA6sIOGl6gj27tV4w8=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id bac6370eabe62822;
+	Tue, 24 Nov 2026 10:34:57 +0000
+X-Mizu-Trace-ID: bac6370eabe62822
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <08e4f7bd-37d7-4752-93f3-23fe6d15b1df@linux.dev>
+Date: Tue, 24 Nov 2026 18:34:49 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -144,57 +58,153 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261123-sched_dl-v4-4-d523e4d960d3@linutronix.de>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 05/12] cpuset: use partition_disable() for remote
+ partition disablement
+To: Ridong Chen <ridong.chen@linux.dev>, Waiman Long <longman@redhat.com>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
+References: <20261114083124.1340140-1-ridong.chen@linux.dev>
+ <20261114083124.1340140-6-ridong.chen@linux.dev>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261114083124.1340140-6-ridong.chen@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hello,
 
-On 23/11/26 14:41, Sebastian Andrzej Siewior wrote:
-> The admission control for SCHED_DL has been moved to sysfs and RT
-> throttling has been moved (long ago) to the fair_server and its debugfs
-> interface.
+
+在 2026/11/14 16:31, Ridong Chen 写道:
+> From: Ridong Chen <chenridong@xiaomi.com>
 > 
-> This file remains to have an impact only on RT_GROUP_SCHED. Keeping it
-> for ABI/ compatibility reasons makes no sense because its original
-> purpose (RT throttling) is no longer served. Anyone changing this file
-> and hoping to change the throttling behaviour will be surprised.
+> Now that the partition_disable() helper is available, replace the
+> existing implementation for remote partition disablement with this
+> centralized function to unify the disablement logic.
 > 
-> Limit sysctl sched_rt_{period|runtime}_us to RT_GROUP_SCHED so everyone
-> using this outdated file is aware.
+> remote_partition_disable() is removed and its callers call
+> partition_disable() directly. The new partition root state is passed
+> in by the caller instead of being derived from cs->prs_err, as only the
+> caller knows which state the partition is going to.
 > 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
 > ---
-
-It looks like subject and changelog still describe the previous version,
-as we are not removing the interface anymore?
-
->  kernel/sched/rt.c    | 8 ++++++++
->  kernel/sched/sched.h | 5 +++--
->  2 files changed, 11 insertions(+), 2 deletions(-)
+>  kernel/cgroup/cpuset.c | 57 ++++++------------------------------------
+>  1 file changed, 8 insertions(+), 49 deletions(-)
 > 
-> diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-> index bd37dbf2bebbe..258b187459bb9 100644
-> --- a/kernel/sched/rt.c
-> +++ b/kernel/sched/rt.c
-> @@ -2877,6 +2877,14 @@ static int sched_rt_handler(const struct ctl_table *table, int write, void *buff
->  	ret = proc_dointvec_minmax(table, write, buffer, lenp, ppos);
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 3702e43e95ef..681adcde10e8 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1771,9 +1771,8 @@ static void partition_enable(struct cpuset *cs, struct cpuset *parent,
+>   * has its state updated. A valid partition under an invalid parent has
+>   * already given back its CPUs, so only the propagation is done.
+>   */
+> -static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
+> -					     enum prs_errcode prs_err,
+> -					     struct tmpmasks *tmp)
+> +static void partition_disable(struct cpuset *cs, int new_prs,
+> +			      enum prs_errcode prs_err, struct tmpmasks *tmp)
+>  {
+>  	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
+>  	int old_prs = cs->partition_root_state;
+> @@ -1923,48 +1922,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+>  	return 0;
+>  }
 >  
->  	if (!ret && write) {
-> +		if (!IS_ENABLED(CONFIG_RT_GROUP_SCHED)) {
-> +			const char *msg =
-> +			"Please note that DL admission control (via sched_rt_period_us, sched_rt_runtime_us) moved to sysfs.\n"
-> +			"This update will be mirrored. Controls for RT throttling moved to the fair_server.\n"
-> +			"This will not be mirrored. The fair_server settings are under /sys/kernel/sched/cpuX/.\n";
+> -/*
+> - * remote_partition_disable - Remove current cpuset from remote partition list
+> - * @cs: the cpuset to update
+> - * @tmp: temporary masks
+> - *
+> - * The effective_cpus is also updated.
+> - *
+> - * cpuset_mutex must be held by the caller.
+> - */
+> -static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
+> -{
+> -	WARN_ON_ONCE(!is_remote_partition(cs));
+> -	/*
+> -	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
+> -	 * which should clear subpartitions_cpus. We should not emit a warning for this
+> -	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
+> -	 * may already be cleared when disabling the partition.
+> -	 */
+> -	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
+> -		     !cpumask_empty(subpartitions_cpus));
+> -
+> -	spin_lock_irq(&callback_lock);
+> -	cs->remote_partition = false;
+> -	partition_xcpus_del(cs->partition_root_state, NULL, cs->effective_xcpus);
+> -	if (cs->prs_err)
+> -		cs->partition_root_state = -cs->partition_root_state;
+> -	else
+> -		cs->partition_root_state = PRS_MEMBER;
+> -
+> -	/* effective_xcpus may need to be changed */
+> -	compute_excpus(cs, cs->effective_xcpus);
+> -	reset_partition_data(cs);
+> -	spin_unlock_irq(&callback_lock);
+> -	cpuset_force_rebuild();
+> -
+> -	/*
+> -	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
+> -	 */
+> -	cpuset_update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
+> -	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
+> -}
+> -
+>  /*
+>   * remote_cpus_update - cpus_exclusive change of remote partition
+>   * @cs: the cpuset to be updated
+> @@ -2039,7 +1996,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+>  	return;
+>  
+>  invalidate:
+> -	remote_partition_disable(cs, tmp);
+> +	partition_disable(cs, -prs, cs->prs_err, tmp);
+>  }
+>  
+>  /**
+> @@ -2667,7 +2624,8 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
+>  
+>  	if (is_remote_partition(cs)) {
+>  		if (trialcs->prs_err)
+> -			remote_partition_disable(cs, tmp);
+> +			partition_disable(cs, -cs->partition_root_state,
+> +					  cs->prs_err, tmp);
+>  		else
+>  			remote_cpus_update(cs, trialcs->exclusive_cpus,
+>  					   trialcs->effective_xcpus, tmp);
+> @@ -3215,7 +3173,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>  
+>  	if (disable_partition) {
+>  		if (is_remote_partition(cs))
+> -			remote_partition_disable(cs, &tmpmask);
+> +			partition_disable(cs, PRS_MEMBER, PERR_NONE, &tmpmask);
+>  		else
+>  			update_parent_effective_cpumask(cs, partcmd_disable,
+>  							NULL, &tmpmask);
+> @@ -4164,7 +4122,8 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>  				       (cpumask_empty(&new_cpus) &&
+>  					partition_is_populated(cs, NULL)))) {
+>  		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
+> -		remote_partition_disable(cs, tmp);
+> +		partition_disable(cs, -cs->partition_root_state, cs->prs_err,
+> +				  tmp);
 
-I am not sure a user who hasn't followed this thread will understand
-what "mirrored" means in this context. What about something like (names
-depending on the unit discussion):
+Now that partition_disable() takes the error code directly and updates
+prs_err through partition_state_update(), the preceding
+WRITE_ONCE(cs->prs_err, PERR_HOTPLUG) seems unnecessary.
 
- sched_rt_{period,runtime}_us only control SCHED_DEADLINE admission control,
- now also available in /sys/kernel/sched/dl_{period,runtime}_us.
- RT throttling is done by the fair server, see /sys/kernel/sched/cpuX/fair_server_{period,runtime}.
+Could we pass PERR_HOTPLUG directly to partition_disable() and remove
+that assignment?
 
 Thanks,
-Juri
+Guopeng
+
+>  		compute_effective_cpumask(&new_cpus, cs, parent);
+>  	}
+>  
 
