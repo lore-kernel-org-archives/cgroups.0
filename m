@@ -1,66 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.135
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.249
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795497885;
-	b=zF9hmD5uDrXB2b0BxS47f7W4mFSzzhcjlGcTRxk9E2zD0xUEteCdPrkokmGhoV39oXcM
-	 7/2Ok+SqhMSMNLuvf93n2c2VBpnbKsaT87H6NYfRBSmQB/68+kjkHBfkutfnIqlhaIKzq
-	 75czJ9kk42PThkZqoNY+gtlTwJV6LF6U+lxDgCN6n7DovCbt1PDWrOqkbrjD5pTmPyphm
-	 1j05t0NILkQ1wwID7CPSZjsBtGskKCUvGHjoiOlLzxomi4KSRXmUZOKyvAUzsVRkVPlCK
-	 ypOm9LTpNxcw5HLhbgeqYhmPwAXrGZTaSYdLCMI0z//hkCfanW4/XlqUNqxODRbRKZg==
+	t=1795500263;
+	b=jIRzpUPjFKddUyRfQFzt+O8Ds4FqnRBGwANr1DzVF6WpBkD25fSqVRLW3SIqpUzym56L
+	 xEHwo/1kF3gQn4BepMdCwDAUt3fJA/Pv+uzsUITmSgYjTVQChKBUUbUVevGeBJU8CrArp
+	 nFLLtXlfCYLzu3wOa8H7IXwp1o+bSG0geUNcaxQ9I5/UdmPZCXhIUwlyQaKJi5XQr554e
+	 nC6ZsEypevhQKnDIQZQSzkyKcrbE3GllhJiQYhLSYIuBVcu/2+2BGZUu0JOgnFeVLcYPI
+	 zFo1//Zl/v44ycCh9pS1tE3yalp7nex/DxoyuQaVAOI1RQfdrUMBHOAm15R3Jw/1Jqg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795497885;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795500263;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=EUbnCTk25H/cREetncbitvhF60S/wmbBZLPLU9DM/r4=;
-	b=lLLkkk4MxWt14QBMkqiKl2day8WhRloKpqZnAozWjK6tDlQK3Iqu4n9drvtd5c8BLebV
-	 DmPWk8oWxiD112QM+ka1nRqfIavOOuS2Wtsteja9YjLeK3xqOr3JsM2ZwkDAjVwgSIHYT
-	 AYiyxRcu44b1JPgAzvwheZSFqJF1h0yX9BI89DcMHq2d4ui2FLp62aNTAg5+rZN8KR6aP
-	 YzvCt5xQtyayQKc2kXZ8uzdzofYuP1bGfFunL+rsp4S4+2Qo2FYT+3HC+nItdakS1D2F5
-	 Bv2akPcVJj41Xwa9F0y9+lI7LieM4tBvlXsETKB8rOau4Wl2ABwIfRe3RqLS/iBa8og==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:Content-Language:From:In-Reply-To:
+	 Content-Type:Content-Transfer-Encoding;
+	bh=4Pfo0m9GNxlBQ7p6+B/RIl9ZLx9D0Ok0zfBJpO7aO8c=;
+	b=LU61s3zlmjXCYVJCQLd7YtvquUeDqqpG879MQmKFkvGsaVS3wsf5XJole2YnSYPpQKPS
+	 mCk30R1tPwIGPKN660K5MCvEXv3HCmONpm093VWEF1lW/WwKInh+uzCkEEP9nxeMeVGPg
+	 rxJ8EJBVyZ68pY5lqNyQFrFNI1QTEt/JzwhanoKe+vkwUqilaKgTMmeElcSeDLCcBDWH4
+	 3m6iHUCowJE3TG4Xsf9cmfLETZbjBbKmOK2dy/pRfKir5c+OHCmJVcvFvKWld1ORQDfWu
+	 8ESGxQPvc+BiB2frm0WdxkLFGdG9Iz5arQooCMmOMExaV5KXiofv0kMeGB4CUeM38/Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b="QNX3vM/p";
-	arc=none smtp.remote-ip=95.215.58.135
-Received: from mta1.migadu.com (out-135.mta1.migadu.com [95.215.58.135])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=spU2wE2J;
+	arc=none smtp.remote-ip=95.215.58.249
+Received: from mta1.migadu.com (out-249.mta1.migadu.com [95.215.58.249])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0EB3606A32A
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 05:24:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org D0EB3606A32A
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43064606A326
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 06:04:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 43064606A326
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=QNX3vM/p
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=spU2wE2J
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=g2dnbFx4/3WtLU6XELgiDkbskvVUDKsGs2lr4KoV968=;
+DKIM-Signature: a=rsa-sha256; bh=A97mGnWx6C3ym4QwqXztsiA/uMLXpw7V7sK7PHC8LAE=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795497883; v=1; x=1796102683;
- b=QNX3vM/pO7Ddnq9SZyliltoXQPCTpFiMrafpRJUQJ4ummQ5OZgeZAIyDNhEsecZxu22a4RtG
- kXED4xYSIWFj6voFqLjhfc/+r6IwPQ0qnKJzwaIHmHDh5wkyWvkmo8dAixpGf+0ECJowReVqcdw
- 33WtObDgte8okttvGkKsJadA=
+ t=1795500259; v=1; x=1796105059;
+ b=spU2wE2JCo3RSoWoO0swtuylFVf29jwzWpTs2D6JGmjIX9ja+ZhltosYwma9QgyUgCdv8jax
+ mNJ5nCaBwlIoUDwHstsYovNLdBS1vqcYLQAUvQ8MjIYFezOD5EYup49kIh6pryQD017rPxXNjUh
+ KG8tTA+t9sfKfgzij1ZG6P9E=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 4bed5c34e88d1cd2;
-	Tue, 24 Nov 2026 05:24:42 +0000
-X-Mizu-Trace-ID: 4bed5c34e88d1cd2
+Received: by smtp.migadu.com with ESMTPS id 18db97533973c0da;
+	Tue, 24 Nov 2026 06:04:18 +0000
+X-Mizu-Trace-ID: 18db97533973c0da
 X-Migadu-Flow: FLOW_OUT
-Date: Mon, 23 Nov 2026 21:24:37 -0800
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Muchun Song <muchun.song@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Meta kernel team <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] memcg: free the private ID of a memcg that never comes
- online
-Message-ID: <20261124052054.GC555944@shakeel.butt@linux.dev>
-References: <20261124000439.967403-1-shakeel.butt@linux.dev>
- <F39B4A81-BB17-4C5D-851E-2740EBBBBA8B@linux.dev>
- <awUTKy9tx8nWJgXf@linux.dev>
- <2FE2D209-FB57-4191-A324-F179B2394DB1@linux.dev>
+Message-ID: <192baf9f-6f5c-4afd-a7c6-b9c506ef8044@linux.dev>
+Date: Tue, 24 Nov 2026 14:04:04 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -70,58 +58,426 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2FE2D209-FB57-4191-A324-F179B2394DB1@linux.dev>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH-next v3 3/3] cgroup/cpuset: Disallow CPU 0 from being used
+ in isolated partition
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap
+ <rdunlap@infradead.org>, Ridong Chen <ridong.chen@linux.dev>,
+ Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
+ Juri Lelli <juri.lelli@redhat.com>,
+ Vincent Guittot <vincent.guittot@linaro.org>,
+ Dietmar Eggemann <dietmar.eggemann@arm.com>,
+ Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
+ Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
+ K Prateek Nayak <kprateek.nayak@amd.com>,
+ Anna-Maria Behnsen <anna-maria@linutronix.de>,
+ Frederic Weisbecker <frederic@kernel.org>, Thomas Gleixner <tglx@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+References: <20261124042802.532633-1-longman@redhat.com>
+ <20261124042802.532633-4-longman@redhat.com>
+Content-Language: en-US
+From: Guopeng Zhang <guopeng.zhang@linux.dev>
+In-Reply-To: <20261124042802.532633-4-longman@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Nov 24, 2026 at 12:52:41PM +0800, Muchun Song wrote:
-> 
-> 
-> > On Nov 24, 2026, at 12:33, Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> > 
-> > On Tue, Nov 24, 2026 at 10:50:00AM +0800, Muchun Song wrote:
-> >> 
-> >> 
-> >>> On Nov 24, 2026, at 08:04, Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> >>> 
-> > [...]
-> >> 
-> >> The leak analysis and the fix look correct to me. However, using
-> >> CSS_RELEASED here makes the private ID cleanup depend on a generic CSS
-> >> teardown state, and adds an accessor solely for this failure path.
-> >> 
-> >> The private ID is not needed until mem_cgroup_css_online(), so could we
-> >> instead reserve it at the beginning of that callback? Failures in
-> >> css_create() before ->css_online() would then never own a private ID,
-> >> while failures after the reservation would continue to use the existing
-> >> mem_cgroup_private_id_remove() cleanup.
-> >> 
-> >> This would also make the private ID lifecycle more explicit: reserve and
-> >> publish it during online, then drop the initial reference during offline.
-> >> It would avoid both the new css_is_released() helper and special handling
-> >> in mem_cgroup_css_free().
-> > 
-> > Thanks Muchun. Nothing needs the private ID before ->css_online(), so
-> > reserving it there would work. But it moves the out-of-IDs failure from
-> > ->css_alloc() to ->css_online(). By then css_create() has linked the
-> > css into the parent's children list and css_idr, so mem_cgroup_iter()
-> > can css_tryget() it and cache it in iter->position. A css that fails
-> > online is freed without ->css_released(), so
-> > invalidate_reclaim_iterators() never runs, and the free does not wait
-> > for those references. Today memcg's ->css_online() fails only when a
-> > small allocation fails. With the move, every mkdir on a system that is
-> > out of IDs would take that path. I would rather keep failing in
-> > ->css_alloc(), before anything is visible.
-> > 
-> > To drop the CSS_RELEASED dependency, I can test the ID's own state:
-> > !memcg->private_id_objcg means the ID was never published and the memcg
-> > still owns the reservation. Let me know if that works for you.
-> 
-> You're right. I missed that the css is visible to mem_cgroup_iter()
-> before ->css_online() completes. Using private_id_objcg to track whether
-> the reservation was published makes sense to me. Thanks Shakeel!
-> 
 
-Oh I just noticed that private_id_objcg is introduced in 7.4, so to
-backport the fix to previous stable kernels, we will still need to use
-CSS_RELEASED or something else there.
+
+在 2026/11/24 12:28, Waiman Long 写道:
+> Domain isolating CPU 0 can be problematic and may even cause panic in
+> some cases. In the near future, we are going to enable dynamic change to
+> the nohz_full CPUs to include the CPUs that are in isolated partitions
+> via the CPU hotplug mechanism. However, CPU 0 can't be made offline
+> for some architectures like x86. IOW, putting CPU 0 in an isolated
+> partition may not have the same degree of isolation than other CPUs
+> in the isolated partition in the future. For all these reasons, it is
+> better to disable its use in an isolated partition.
+> 
+> Add a new partition error code to indicate to the users that CPU 0 cannot
+> be used in an isolated partition. The prstate_housekeeping_conflict()
+> function is modified to return the partition error code directly as it
+> can be either PERR_HKEEPING or PERR_ISOLCPU0.
+> 
+> Some existing test cases in test_cpuset_prs.sh are modified to remove
+> the use of CPU 0 in isolated partition setup and explicit new test cases
+> are added to test that. The NOHZ_FULL test cases also modified to run if
+> the "nohz_full" parameters includes all the CPUs except CPU 1-7 instead
+> of 0-7. Though it is not recommended to put CPU 0 in the nohz_full boot
+> parameter, it is the only way we can test that the cpuset code is able to
+> correctly disallow isolating the last nohz_full/domain housekeeping CPU.
+> 
+> With CPU 0 likely not allowed in the nohz_full list except for powerpc
+> and with CPU 0 also disallowed from being domain isolated and offline,
+> we will likely have CPU 0 being an always present online housekeeping
+> CPU for most kernels. For those kernels, we will not be able to trigger
+> partition invalidation due to using up the last nohz_full/domain
+> housekeeping CPU in an isolated partition and the NOHZ_FULL test cases
+> in test_cpuset_prs.sh will not be run.
+> 
+> The cgroup-v2.rst documentation file is also modified to indicate that
+> CPU 0 cannot be used in an isolated partition.
+> 
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> Acked-by: Frederic Weisbecker <frederic@kernel.org>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst       |  1 +
+>  kernel/cgroup/cpuset-internal.h               |  1 +
+>  kernel/cgroup/cpuset.c                        | 90 ++++++++++---------
+>  .../selftests/cgroup/test_cpuset_prs.sh       | 44 +++++----
+>  4 files changed, 81 insertions(+), 55 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 9e3c67b02ae2..2f792ff29425 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -2771,6 +2771,7 @@ Cpuset Interface Files
+>  	and excluded from the unbound workqueues.  Tasks placed in such
+>  	a partition with multiple CPUs should be carefully distributed
+>  	and bound to each of the individual CPUs for optimal performance.
+> +	The boot CPU (CPU 0) cannot be used in an isolated partition.
+>  
+>  	A partition root ("root" or "isolated") can be in one of the
+>  	two possible states - valid or invalid.  An invalid partition
+> diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
+> index 1ba94ffaff9d..505682493d81 100644
+> --- a/kernel/cgroup/cpuset-internal.h
+> +++ b/kernel/cgroup/cpuset-internal.h
+> @@ -36,6 +36,7 @@ enum prs_errcode {
+>  	PERR_ACCESS,
+>  	PERR_REMOTE,
+>  	PERR_ISOPARENT,
+> +	PERR_ISOLCPU0,
+>  };
+>  
+>  /* bits in struct cpuset flags field */
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 30af9531acdd..45c6a2c99f20 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -61,6 +61,7 @@ static const char * const perr_strings[] = {
+>  	[PERR_ACCESS]    = "Enable partition not permitted",
+>  	[PERR_REMOTE]    = "Have remote partition underneath",
+>  	[PERR_ISOPARENT] = "Root partition is not allowed with isolated parent",
+> +	[PERR_ISOLCPU0]  = "Boot CPU (cpu 0) cannot be isolated",
+>  };
+>  
+>  /*
+> @@ -1327,25 +1328,25 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
+>   * @parent_prs: Parent partition root state
+>   * @new_cpus: the set of new effective xcpus in the current cpuset
+>   * @del_cpus: old CPUs going to be removed from current cpuset, can be NULL
+> - * Return: true if there is conflict, false otherwise
+> + * Return: PRS error code if there is a conflict, PERR_NONE otherwise
+>   *
+> - * There are two different housekeeping conflicts to be checked:
+> + * There are three different housekeeping conflicts to be checked:
+>   * 1) If new_prs is PRS_ROOT, none of the @new_cpus can be a boot-time isolated
+>   *    CPU. IOW, the whole @new_cpus must be a subset of HK_TYPE_DOMAIN_BOOT.
+>   * 2) If nohz_full is enabled and we have isolated CPUs, their combination must
+>   *    still leave housekeeping CPUs. This check is only needed if new_prs
+>   *    differs from parent_prs and one of them is PRS_ISOLATED.
+> + * 3) CPU 0 cannot be used in an isolated partition.
+>   */
+> -static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+> -					  struct cpumask *new_cpus,
+> -					  struct cpumask *del_cpus)
+> +static enum prs_errcode prstate_housekeeping_conflict(int new_prs, int parent_prs,
+> +				struct cpumask *new_cpus, struct cpumask *del_cpus)
+>  {
+>  	cpumask_var_t full_hk_cpus;
+> -	int res;
+> +	int prs_err = PERR_NONE;
+>  
+>  	WARN_ON_ONCE(parent_prs <= 0);
+>  	if (!new_prs)
+> -		return false;
+> +		return PERR_NONE;
+>  
+>  	/*
+>  	 * For a currently invalid partition root state, do the check assuming
+> @@ -1361,9 +1362,12 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+>  	if (new_prs < 0)
+>  		new_prs = -new_prs;
+>  
+> +	if ((new_prs == PRS_ISOLATED) && cpumask_test_cpu(0, new_cpus))
+> +		return PERR_ISOLCPU0;
+> +
+>  	if (housekeeping_enabled(HK_TYPE_DOMAIN_BOOT) && (new_prs == PRS_ROOT) &&
+>  	    !cpumask_subset(new_cpus, housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT)))
+> -		return true;
+> +		return PERR_HKEEPING;
+>  
+>  	if (del_cpus && cpumask_empty(del_cpus))
+>  		del_cpus = NULL;
+> @@ -1377,7 +1381,7 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+>  	 */
+>  	if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE) ||
+>  	    (new_prs == parent_prs) || (!del_cpus && (new_prs == PRS_ROOT)))
+> -		return false;
+> +		return PERR_NONE;
+>  
+>  	/*
+>  	 * Now make sure that @new_cpus contains new CPUs to be isolated and
+> @@ -1388,7 +1392,7 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+>  		swap(new_cpus, del_cpus);
+>  
+>  	if (!alloc_cpumask_var(&full_hk_cpus, GFP_KERNEL))
+> -		return true;
+> +		return PERR_HKEEPING;
+>  
+>  	/*
+>  	 * Check if del_cpus may contain a CPU that can become an active
+> @@ -1398,20 +1402,19 @@ static bool prstate_housekeeping_conflict(int new_prs, int parent_prs,
+>  		cpumask_and(full_hk_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
+>  			    housekeeping_cpumask(HK_TYPE_DOMAIN_BOOT));
+>  		if (cpumask_first_and_and(del_cpus, full_hk_cpus,
+> -					  cpu_active_mask) < nr_cpu_ids) {
+> -			res = false;
+> +					  cpu_active_mask) < nr_cpu_ids)
+>  			goto out;
+> -		}
+>  	}
+>  
+>  	cpumask_and(full_hk_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
+>  		    housekeeping_cpumask(HK_TYPE_DOMAIN));
+>  	cpumask_andnot(full_hk_cpus, full_hk_cpus, isolated_cpus);
+>  	cpumask_and(full_hk_cpus, full_hk_cpus, cpu_active_mask);
+> -	res = !cpumask_weight_andnot(full_hk_cpus, new_cpus);
+> +	if (!cpumask_weight_andnot(full_hk_cpus, new_cpus))
+> +		prs_err = PERR_HKEEPING;
+>  out:
+>  	free_cpumask_var(full_hk_cpus);
+> -	return res;
+> +	return prs_err;
+>  }
+>  
+>  /**
+> @@ -1446,9 +1449,12 @@ static enum prs_errcode validate_partition(struct cpuset *cs,
+>  	if (!parent)
+>  		parent = &top_cpuset;
+>  	parent_prs = parent->partition_root_state;
+> -	if (parent_prs > 0 &&
+> -	    prstate_housekeeping_conflict(new_prs, parent_prs, new_excpus, del))
+> -		return PERR_HKEEPING;
+> +	if (parent_prs > 0) {
+> +		enum prs_errcode err = prstate_housekeeping_conflict(new_prs, parent_prs,
+> +								     new_excpus, del);
+> +		if (err)
+> +			return err;
+> +	}
+>  
+>  	if (tasks_nocpu_error(parent, cs, new_excpus))
+>  		return PERR_NOCPUS;
+> @@ -1715,6 +1721,8 @@ static void compute_effective_nodemask(nodemask_t *new_mems,
+>  static int remote_partition_enable(struct cpuset *cs, int new_prs,
+>  				   struct tmpmasks *tmp)
+>  {
+> +	enum prs_errcode err;
+> +
+>  	/*
+>  	 * The user must have sysadmin privilege.
+>  	 */
+> @@ -1737,8 +1745,9 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+>  		return PERR_INVCPUS;
+>  	if (cpumask_intersects(tmp->new_cpus, subpartitions_cpus))
+>  		return PERR_NOCPUS;
+> -	if (prstate_housekeeping_conflict(new_prs, PRS_ROOT, tmp->new_cpus, NULL))
+> -		return PERR_HKEEPING;
+> +	err = prstate_housekeeping_conflict(new_prs, PRS_ROOT, tmp->new_cpus, NULL);
+> +	if (err)
+> +		return err;
+>  
+>  	spin_lock_irq(&callback_lock);
+>  	partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
+> @@ -1833,14 +1842,16 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+>  	 * left in the top cpuset.
+>  	 */
+>  	if (adding) {
+> +		enum prs_errcode err = prstate_housekeeping_conflict(prs, PRS_ROOT,
+> +							excpus, tmp->delmask);
+> +
+>  		if (!capable(CAP_SYS_ADMIN))
+>  			WRITE_ONCE(cs->prs_err, PERR_ACCESS);
+>  		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
+>  			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
+>  			WRITE_ONCE(cs->prs_err, PERR_NOCPUS);
+> -		else if (prstate_housekeeping_conflict(prs, PRS_ROOT,
+> -						       excpus, tmp->delmask))
+> -			WRITE_ONCE(cs->prs_err, PERR_HKEEPING);
+> +		else if (err)
+> +			WRITE_ONCE(cs->prs_err, err);
+>  		if (cs->prs_err)
+>  			goto invalidate;
+>  	}
+> @@ -2101,16 +2112,16 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>  			 * active housekeeping CPUs.
+>  			 */
+>  			cpumask_andnot(tmp->addmask, cs->effective_xcpus, tmp->delmask);
+> -			if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED) &&
+> -			    prstate_housekeeping_conflict(old_prs, parent_prs,
+> -							  tmp->delmask, tmp->addmask)) {
+> -				adding = cpumask_and(tmp->addmask, cs->effective_xcpus,
+> -						     tmp->delmask);
+> -				part_error = PERR_HKEEPING;
+> -			} else {
+> +			if ((parent_prs == PRS_ROOT) && (old_prs == PRS_ISOLATED)) {
+> +				part_error = prstate_housekeeping_conflict(old_prs, parent_prs,
+> +								tmp->delmask, tmp->addmask);
+> +				if (part_error)
+> +					adding = cpumask_and(tmp->addmask, cs->effective_xcpus,
+> +							     tmp->delmask);
+> +			}
+> +			if (!part_error)
+>  				deleting = cpumask_andnot(tmp->delmask, tmp->delmask,
+>  							  cs->effective_xcpus);
+> -			}
+>  		} else if (is_partition_invalid(cs)) {
+>  			struct cgroup_subsys_state *css;
+>  			struct cpuset *child;
+> @@ -2121,11 +2132,11 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>  			 * cpu exclusivity test when cpuset.cpus.exclusive is
+>  			 * empty as well as the housekeeping check.
+>  			 */
+> -			if (prstate_housekeeping_conflict(cs->partition_root_state,
+> -							  parent_prs, tmp->delmask, NULL)) {
+> -				part_error = PERR_HKEEPING;
+> +			part_error = prstate_housekeeping_conflict(cs->partition_root_state,
+> +							parent_prs, tmp->delmask, NULL);
+> +			if (part_error)
+>  				goto write_error;
+> -			}
+> +
+>  			if (cpumask_empty(cs->exclusive_cpus)) {
+>  				rcu_read_lock();
+>  				cpuset_for_each_child(child, css, parent) {
+> @@ -2997,12 +3008,11 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>  		 * A change in load balance state only, no change in cpumasks.
+>  		 * Need to update isolated_cpus.
+>  		 */
+> -		if (prstate_housekeeping_conflict(new_prs, parent_prs,
+> -						  cs->effective_xcpus, NULL))
+> -			err = PERR_HKEEPING;
+> -		else if (parent_prs == PRS_ISOLATED)
+> +		if (parent_prs == PRS_ISOLATED)
+>  			err = PERR_ISOPARENT;	/* old_prs should be isolated */
+> -
+> +		else
+> +			err = prstate_housekeeping_conflict(new_prs, parent_prs,
+> +							    cs->effective_xcpus, NULL);
+>  		if (err) {
+>  			disable_partition = true;
+>  		} else {
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index 1397ec428c46..018993dbc63f 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -110,8 +110,8 @@ echo "" > test/cpuset.cpus
+>  
+>  #
+>  # If nohz_full CPUs have been reserved at boot time, they should not include
+> -# CPUs 0-7 as that may fail some of the test cases. On the other hand if the
+> -# set of nohz_full CPUs includes all the CPUs except 0-7 in a single range
+> +# CPUs 1-7 as that may fail some of the test cases. On the other hand if the
+> +# set of nohz_full CPUs includes all the CPUs except 1-7 in a single range
+>  # <first>-<last>, we can run a special set of housekeeping CPUs exhaustion
+>  # tests to see if the cpuset code will reject them.
+>  #
+> @@ -123,14 +123,22 @@ NOHZ_FULL_CPUS=
+>  	NOHZ_FULL_CPUS=$(cat /sys/devices/system/cpu/nohz_full)
+>  LAST_PRESENT_CPU=$(cat /sys/devices/system/cpu/present | sed -e "s/.*[,-]//")
+>  [[ -n "$NOHZ_FULL_CPUS" ]] && {
+> -	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/[,-].*//")
+> -	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_FULL_CPUS | sed -e "s/,.*//;s/.*[-]//")
+> +	if [[ $(expr $NOHZ_FULL_CPUS : "^0,") -gt 0 ]]
+> +	then
+> +		NOHZ_CPU0=1
+> +		NOHZ_CPUS=$(echo $NOHZ_FULL_CPUS | sed -e "s/^0,//")
+> +	else
+> +		NOHZ_CPUS=$NOHZ_FULL_CPUS
+> +	fi
+> +	FIRST_NOHZ_FULL_CPU=$(echo $NOHZ_CPUS | sed -e "s/[,-].*//")
+> +	LAST_NOHZ_FULL_CPU=$(echo $NOHZ_CPUS | sed -e "s/,.*//;s/.*[-]//")
+>  	echo "Boot nohz_full CPUs: $NOHZ_FULL_CPUS"
+>  }
+>  [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" -le 7 ]] &&
+>  	skip_test "Boot NOHZ_FULL CPUs overlap CPUs to be tested!"
+>  
+>  [[ -n "$FIRST_NOHZ_FULL_CPU" && "$FIRST_NOHZ_FULL_CPU" = 8 &&
+> +   -n "$NOHZ_CPU0" &&
+>     "$LAST_NOHZ_FULL_CPU" = $LAST_PRESENT_CPU ]] && RUN_NOHZ_FULL_TESTS=1
+>  
+>  #
+> @@ -394,8 +402,8 @@ TEST_MATRIX=(
+>  	# Invalid to valid local partition direct transition tests
+>  	" C1-3:P2  X4:P2    .      .      .      .      .      .     0 A1:1-3|XA1:1-3|A2:1-3:XA2: A1:P2|A2:P-2 1-3"
+>  	" C1-3:P2  X4:P2    .      .      .    X3:P2    .      .     0 A1:1-2|XA1:1-3|A2:3:XA2:3 A1:P2|A2:P2 1-3"
+> -	" C0-3:P2    .      .    C4-6   C0-4     .      .      .     0 A1:0-4|B1:5-6 A1:P2|B1:P0"
+> -	" C0-3:P2    .      .    C4-6 C0-4:C0-3  .      .      .     0 A1:0-3|B1:4-6 A1:P2|B1:P0 0-3"
+> +	" C1-3:P2    .      .    C4-6   C1-4     .      .      .     0 A1:1-4|B1:5-6 A1:P2|B1:P0"
+> +	" C1-3:P2    .      .    C4-6 C1-4:C1-3  .      .      .     0 A1:1-3|B1:4-6 A1:P2|B1:P0 1-3"
+>  
+>  	# Local partition invalidation tests
+>  	" C0-3:X1-3:P2 C1-3:X2-3:P2 C2-3:X3:P2 \
+> @@ -506,6 +514,12 @@ TEST_MATRIX=(
+>  	"  CX1-4  CX2-4:P2  .    C5-6      .     .      .   P1:C3-6  0 A1:1|A2:2-4|B1:5-6 \
+>  								       A1:P0|A2:P2:B1:P-1 2-4"
+>  
+> +	# CPU 0 cannot be used in an isolated partition
+> +	"   C0-4     .      .      .       P2    .      .      .     0 A1:0-4 A1:P-2"
+> +	"  C0-4:P2   .      .      .      C0-2   .      .      .     0 A1:0-2 A1:P-2"
+> +	"  CX0-4  C0-2:P1   .      .       .     P2     .      .     0 A1:0-4|A2:0-2 A2:P-2"
+> +	"  CX0-4  C3-4:P2   .      .       .    C0-2    .      .     0 A1:0-4|A2:0-2 A2:P-2"
+> +
+>  	# When multiple partitions with conflicting cpuset.cpus are created, the
+>  	# latter created ones will only get what are left of the available exclusive
+>  	# CPUs.
+> @@ -525,8 +539,8 @@ TEST_MATRIX=(
+>  
+>  	# A middle isolated parent shrunk below coverage: the released CPUs of
+>  	# an invalidated child stay isolated as a higher ancestor still covers them.
+> -	" CX0-4:P2 CX2-4:P2 CX3-4:P2 .     .     X2     .      .     0 A1:0-1,3-4|A2:2|A3:2 \
+> -								       A1:P2|A2:P2|A3:P-2 0-4"
+> +	" CX1-4:P2 CX2-4:P2 CX3-4:P2 .     .     X2     .      .     0 A1:1,3-4|A2:2|A3:2 \
+> +								       A1:P2|A2:P2|A3:P-2 1-4"
+>  
+>  	# When an isolated partition child with root partition parent is invalidated,
+>  	# its effective xcpus will be removed from isolated_cpus.
+> @@ -618,20 +632,20 @@ ISOLCPUS_TEST_MATRIX=(
+>  	" CX1-2,I:X1,I:P1 . .      .     X1,2,I  .      .      .     0 A1:1-2,I|XA1:1-2,I A1:P-1 ."
+>  )
+>  
+> -# Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 0-7
+> +# Test matrix to be run when boot time nohz_full CPUs cover all CPUs except CPUs 1-7
+>  # This also means that CPU 8 is available and is a nohz_full CPU.
+>  NOHZ_FULL_TEST_MATRIX=(
+>  	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
+>  	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
+>  	# Using all the nohz_full HK CPUs 0-7 in isolated partition is not allowed
+> -	" C0-7       .      .      .      P2     .      .      .     0 A1:0-7 A1:P-2 ."
+> -	" C2-7:P2    .      .      .     C0-4    .      .      .     0 A1:0-4 A1:P2 0-4"
+> -	" C1-7:P2 C5-7:P2   .      .       .     .      .    C0:P2   0 A1:1-4|A2:5-7|B1:0
+> -								       A1:P2|A2:P2|B1:P-2 1-7"
+> +	" C1-7       .      .      .      P2     .      .      .     0 A1:1-7 A1:P-2 ."
+> +	" C2-7:P2    .      .      .     C1-4    .      .      .     0 A1:1-4 A1:P2 1-4"
+> +	" C2-7:P2 C5-7:P2   .      .       .     .      .    C1:P2   0 A1:2-4|A2:5-7|B1:1
+> +								       A1:P2|A2:P2|B1:P-2 2-7"
+>  	# An isolated child partition cannot grow to take over the last
+>  	# housekeeping CPU when its parent expands the exclusive CPUs.
+> -	" C0-8:X1-8:P1 CX0-8:P2 .  .     X0-7    .      .      .     0 A1:0-7|A2:0-7 A1:P1|A2:P-2 ."
+> -	" C0-8:X0-6:P1 CX0-8:P2 .  .     X2-8    .      .      .     0 A1:|A2:2-8 A1:P1|A2:P2 2-8"
+> +	" C1-8:X2-8:P1 CX1-8:P2 .  .     X1-7    .      .      .     0 A1:1-7|A2:1-7 A1:P1|A2:P-2 ."
+> +	" C1-8:X0-6:P1 CX1-8:P2 .  .     X2-8    .      .      .     0 A1:|A2:2-8 A1:P1|A2:P2 2-8"
+>  )
+>  
+>  #
+
+Reviewed-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+Tested-by: Guopeng Zhang <zhangguopeng@kylinos.cn>
+
+Thanks,
+Guopeng
