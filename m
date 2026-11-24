@@ -1,85 +1,85 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.215.171
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795541094;
-	b=dC1L3kBW6pouxkOjXc09a/x0A0WKYC9xnuesv4HZ8omg/42L3fZeggFpNvXuEStMbnmU
-	 G6hGSgP1lp1u1a5Qw4M/x64debbpzKVjuyHVlHbCfmQaEj0u9us9l4uZ88defFCavlljh
-	 9W8N9kxepBa18CD5x8G3qcvQbNN01S6ZKpgFEt9Hs7AYl/hdEgQc4EKCXhrClakM3NTQQ
-	 hk3vaEO0sm2bdg6b653WRE89Y1G+9ANPqIHt4/X12LeZPkZ+iBZ75iIul1VAdZrX6hsHS
-	 cfndUt2Umfe1dvopBbYkTG0yDCRdT8SOgB4kHi82zIf/LqML1IwNPp/jUXLDtn0MOiA==
+	t=1795541362;
+	b=aOnEDJNPQzH8D9TCYWxZUFEnyY+/r8jSMYOlDFeYzyVKrADQIKOq7j4Kl/OUyyQ2yZ7a
+	 SZeBFmuypc9hf1AqJN9g75acZllPdZASH8V7RwlvI0z1zQooNltkaRaX/ljMZrNLiNkiZ
+	 TqvbOdMj84e1AnJAfxL+KZWBaSwbAxUi2uakuzWxXzuCPxO2I0oRGq5BItMvIGXRiG8cF
+	 sAahWi7but3Ov+zsKQnt9KKP2v/HIyxYE+4r47+p1OoMEjoKCrjKbqDwgsFmzIhHncBWe
+	 j3jXfhbas850SWhqic8AHCM66vGr3sCP+j+L8JWvti73GUzCuudz9W5N9cvV6vE6TWg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795541094;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795541362;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
 	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
 	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
 	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=ozTidCXqTzSwi9dcCKWD5fJGGI9rCJsLQ/Ov08gLSsk=;
-	b=pXpWBCSSXHSpgrpnh8GUm7gmdbEUAEUcMMTcwuza2lkv4cabZYD03k0FQEIiThWmUFz9
-	 Txl5qDylWNPJOCqH54SUjwzO7iWWhGmGpuvh4gMbTg7mOvEnQPHsiXPBI+MVHHiPBdmm8
-	 EebnP0bF8iYNF2MDHtXYZ8C7Ea3Dtso6MMldKYCp2FuL3ZjjpeNVpShTyj8YqeA/ExBYl
-	 zwhgWvtD+OzQ1BQBcNcXOAytUvSEl7SWLKDPF/IViQ/1omD9cS4gDa6NJEJwMulI7oE2U
-	 WhhoyEiLL4NBJANcTLKZB3XCn3RjpwSrU5i7h8j2MYwalg5nQnNRzhyyV1IujpJOLTw==
+	bh=Gh6CqnsQ+4Kge1Ge1wt7W5gV069TsTISbQWwZdpvMuU=;
+	b=TLAYR60AfwBK69KcjAYjGKjHAzY7uhMdC0ztGDJt+4S/h5usxbld/7xvRIeuCf87uIE8
+	 EYSBl2w2kG8+9zmGE9zsSfRFQUJ4SrYPuROtwYfqPvYb5spGMXrYCOivv6cLyPOOk9PTW
+	 RtI7+arwc0lvxoRLQN4WEp/uW0DK3yXXywRC7b+Fc3UJVrDR4YS+2zz1huqc87gyySVOM
+	 OBeeZN11h0WFn52xzcgTOhvBjXww2KeCSVKRyik05IWRLqMqEVR5JdZ7JhApcVgdywhhl
+	 x3ua3+RlxjUZ9iKSApHd6P+0PBCKE72116/QphP6KvxdpOnk3czoRbwUDBkgb++1caQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UEsvIshR;
-	arc=none smtp.remote-ip=209.85.214.182
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=C3a2BM8n;
+	arc=none smtp.remote-ip=209.85.215.171
+Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06234606A332
-	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 17:24:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 06234606A332
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A221606A327
+	for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 17:29:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 2A221606A327
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=UEsvIshR
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2f0a0d1a1e5so11644245ad.0
-        for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 09:24:53 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=C3a2BM8n
+Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-cdddc79a4afso1889049a12.1
+        for <cgroups@vger.kernel.org>; Tue, 24 Nov 2026 09:29:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795541093; x=1796145893; darn=vger.kernel.org;
+        d=gmail.com; s=20260707; t=1795541361; x=1796146161; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=ozTidCXqTzSwi9dcCKWD5fJGGI9rCJsLQ/Ov08gLSsk=;
-        b=UEsvIshRIY9txsH2W7YuViBjWyb6RCmLJ1dlolrxjjdbyMWW9RSfAuE9mVkyY4ufZF
-         8FqH0V9X71v8mD8MmM0dodRkQVkzFJayU5PbfS5SUlKcQbQNIhmha312AWigEQacHXvz
-         tlnJ+cXXRtr3CeJHvWoUEP1wLuvCJhLY3xGgX5UGoXy34aaRiRbh2mM2C6hREOrMuzd+
-         0HL60opQThWLEOzStOspPHJ508wq8IPVtyTge/TpJczhosNhj0+uO5zfRoaDcTTXL78F
-         qGmrthQRxbkjyyqlkMbgk/kUdP/CkQc8Fsl1Uby5M2xrJzqUzzuCunvvAzUvLaQSbJbY
-         SVJw==
+        bh=Gh6CqnsQ+4Kge1Ge1wt7W5gV069TsTISbQWwZdpvMuU=;
+        b=C3a2BM8n3061p4sMZOMJ8Y1++2AGZZiH9JYuZvbQ1ruA3bG/0EZNMmcDp/Au9lC7ZJ
+         4r92Y+doFslYiemisX5ngldE6XhXw8kw2ZHYv7N9/lc9DmuUWCdbpPLJiO2piXiV+MYW
+         s9RW1RbmdQXh7QSgmJeSTl4QJoQdLiYrVKgk4TGnRMb0WSc3Di8exzY/ym4LeiBAIY4F
+         c7mPMRBA3YPBPOYnXon2OZYof1k1S/oLnI5I8cIQcB5aoJOb1lIOFSoWx1AgOuB2VVlG
+         gWG0KvOOBmeF6PC37XfXGWXqVoTdmP82hw2ertwKDYXQ8z6kid1rNVz9R0dtO3JCDTO8
+         uYzA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795541093; x=1796145893;
+        d=1e100.net; s=20260707; t=1795541361; x=1796146161;
         h=in-reply-to:content-disposition:content-type:mime-version
          :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=ozTidCXqTzSwi9dcCKWD5fJGGI9rCJsLQ/Ov08gLSsk=;
-        b=lGBwfO0XexUNhMvYvzVDrP7BZ6kktuBKNEimkSl/IXmzMNTCKv30QqIcdq2E9TQtZp
-         avBLu636fGxuanuXBeTRnA5SoM2m2KslC1qB3Dp2FkTseJsljqKshGSQBBOfBsbm95ld
-         VpMfmCBPYJoes2t9GYpxN2GbjdIhEdC9EcvjMP6V0DnVgm/dFNgHHrATcx/cr6e7VsWV
-         IGVC3/E009ZiZKzCDkx/6TM5fN0GN+xjcqPKtwso5ueVc5oUNxi7lPGRs0qZAwbScD6E
-         4D+bEaD0LCxLERj5CL0OocYv9Ij/JbfGY4lBXi5RxcbNRrulXUvLJxLxVO/+b+7wURiU
-         dEBw==
-X-Forwarded-Encrypted: i=1; AL+hErF9uSqcmHllEOO1X681djXSFJFYZ9TZRvMU63GnyIrx9idz4ppSBX8FEQkB3Y+vveyy2zdZoutI@vger.kernel.org
-X-Gm-Message-State: APuU4Z8V8K3SDwYD0Nt8fViuxx1Yh+m4YmSHDRdU/YGY8g3bd2nNq7Ol
-	P0eBW9VbfyTIx2FznAcXpuK/g8iE1hSLjIr/t6+6AjPs1rykw3xzgf+C
-X-Gm-Gg: AZFdTZfEq+u2x7Yu67YbZdmfHOde/7VwF6l867pssPo9rkOjjvdf0WCW+JUnRkLlTdY
-	Cv+qbeC66pWeAm5g7Sx2bxKS5P4iqhk233GCPWWp7lm/BTibjjmaJgN/QC7ETj1e0YIX9QVL8EU
-	a+ckuSWddm1Q1AbFMO0OnkS4x7GfShQ73uUuyJ5yiTTQxPQoVmRMcmYv00lhTw7c0I+DVV9PMgy
-	vD1KZoBIWNqUfHOW5Lup1KrHdQDFrlpp5UKBs2u2wqeFXCHFxXIWwVzsjujW/63aBHsbqfGFp5D
-	UtXoHWB3ZtfZNSame3MgrKJN+dy2SgvmrXhCMgg9cMsg5nPtojkNbMPyL+D1gHo0g8mbRXwBU5I
-	XNYeFH2EmgRR/UUllq3J4nEObU+s7tqis7HC+ASTYNghUfCEhTg4qODBU6mhoaFfAePxWSPhx8g
-	9AzKVbXu4zWdIMNXYYR+St5U/+JrYFncTKlKOLcWtC0r7wmQtgZW5C1AGI+6Itf6F0RVdachWD5
-	LvfdLohSzIZsVvSNr+JFITap5ym+WJRP6k8qv3riZpTnvn4eOrtD+q6eyzenQHCtUDFKxEm6MnI
-	+rMNQ8B1x7BKwwqMT4HEuOp2O/hxKQ/e/OHkbezd1LyPlvATB7wh0PMZeHiHj71s0XUhHkc=
-X-Received: by 2002:a17:902:f647:b0:2ef:e130:1505 with SMTP id d9443c01a7336-2f03f17d196mr143597245ad.10.1795541093208;
-        Tue, 24 Nov 2026 09:24:53 -0800 (PST)
+        bh=Gh6CqnsQ+4Kge1Ge1wt7W5gV069TsTISbQWwZdpvMuU=;
+        b=aOP6aiwY7yRqXvgCMGWh3uSwoAaAspOTAKv1Zd9bFWHBHQeC75QfCoox1QPnBpi5/T
+         Wo/H8zEX6FPOMixKuTgce2FJYmQ/ZeMfyX916ODp1lA8MQS2rN4F2Bp3+QjDo1AtfAyX
+         YIp2tqkiyLnVjMIP0u+Nqmzjj1xE/GX7xMnj4oy3O3HbqHnGiuOT56UDFM4e+2yTjeO1
+         XLdGJ3AK1J1LVE8NQaDG0JXkpWNOQ7oOZMeyuKq3ZLm2balArIViB+5CnmeoovVSTn6J
+         TGwED/nhZzlaWZ2bY8e290HreI2uaS409P3y3Kpbx6f3hRfzUWgkfWeEJ/3pOxwbehHk
+         hlLw==
+X-Forwarded-Encrypted: i=1; AL+hErHSCkuTo3Abk/PQr/VRKDWHyPbvWv6YzjtRLmsPUR5kfO1UTeWFzQDB60sWZwekT1WP6tFf3wTp@vger.kernel.org
+X-Gm-Message-State: APuU4Z+VVQ/IIMNQl3gPcxu820HxAGa3V5dOlAgCEDqRYr0QNhyijHbG
+	AUFDFTTVElNwm2ZvMEQ5UTHhfZyrxXKru7RF+H3A0OCsI7jzKvJFckGm
+X-Gm-Gg: AZFdTZc/DW9wdYPuB4eVXIsejf40LUqnR9QfR7ChBagaOX696RHfjQ6JyzZx8NkvSU6
+	XK6ZcUAuRA+R5ZPYTyKgCOPotoQeJI5n7ixYkrqG5bvgRIlqVUW6fA1v1shiezMzwDJAn8XGVLH
+	JEuJCIdeG+XECbyGFu4IV1H4PGEFwqM+nXav9QNhOcmZS1HK+D0099YUi0wSqHX0+Tv6R0dAiHD
+	ywyKYZa6gse0FlmFjj3eBRkhv5KUB4N7TNm84m52H2IJ+i0JTlweyb4TbralkoGh19opWTKAeZT
+	31zNQRP156bqo9pAxi4qBow6Ga62lGusz+q2cMXhfqj6AvuEa1Tl4utyvjvhVmFIQqzRrRBLeb+
+	Kd/WEsmHL4dtvuWei5gc14Dk4mcbnprqbOPoMZTT+cVSkqBg7pYMACVpekctqr2TazuEoLSr/DC
+	ESzmcQpsrZG/uuhecWo6D3Czpo+Qqhb86cANnhqCA1vkcRnhEVTkQIqQL03jI7BwDlclsKdwwY7
+	ITSb3J+YYrYjbwJVaNiRt6asuLuAuasPvZqCM+wZz8qu9hiKgrkbLWK7BGhFGvNpMsTcA6+M1M7
+	IV72H0ZDz01ZqEzu7ZO/duh4iEtwHP8AL0ky6Y4aaonQQHIpIcZLgQlwh15xWxaeAZXHs4U=
+X-Received: by 2002:a05:6300:404c:b0:3fb:35d2:645e with SMTP id adf61e73a8af0-4014a27e70emr13896715637.5.1795541361413;
+        Tue, 24 Nov 2026 09:29:21 -0800 (PST)
 Received: from KASONG-MC4 ([101.32.222.185])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2f03f102fc4sm72406805ad.43.2026.11.24.09.24.41
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-8c872e4aca2sm7432265b3a.32.2026.11.24.09.29.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2026 09:24:52 -0800 (PST)
-Date: Wed, 25 Nov 2026 01:24:38 +0800
+        Tue, 24 Nov 2026 09:29:20 -0800 (PST)
+Date: Wed, 25 Nov 2026 01:29:04 +0800
 From: Kairui Song <ryncsn@gmail.com>
 To: Zi Yan <ziy@nvidia.com>
 Cc: kasong@tencent.com, linux-mm@kvack.org, 
@@ -105,12 +105,12 @@ Cc: kasong@tencent.com, linux-mm@kvack.org,
 	Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
 	damon@lists.linux.dev, linux-doc@vger.kernel.org, Tianyi Chen <hi@tychen.cc>, 
 	Ridong Chen <ridong.chen@linux.dev>
-Subject: Re: [PATCH v6 15/18] mm/huge_memory: mark folio as accessed more
- accurately on split
-Message-ID: <awXABa3dYhEN0YEt@KASONG-MC4>
+Subject: Re: [PATCH v6 11/18] mm/mglru, smaps: convert to LRU refs based
+ operations for MGLRU
+Message-ID: <awXIalgUrVIf5VP9@KASONG-MC4>
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-15-8ffea39934a6@tencent.com>
- <DN2V8E26C4EL.2TU52TEVLUFA@nvidia.com>
+ <20261124-mglru-fg-v6-11-8ffea39934a6@tencent.com>
+ <DN2UPVW6W83J.I1S5XXQ2DPLV@nvidia.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -122,42 +122,93 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <DN2V8E26C4EL.2TU52TEVLUFA@nvidia.com>
+In-Reply-To: <DN2UPVW6W83J.I1S5XXQ2DPLV@nvidia.com>
 
-On Mon, Nov 23, 2026 at 03:17:05PM +0800, Zi Yan wrote:
+On Mon, Nov 23, 2026 at 02:52:55PM +0800, Zi Yan wrote:
 > On Mon Nov 23, 2026 at 1:53 PM EST, Kairui Song via B4 Relay wrote:
 > > From: Kairui Song <kasong@tencent.com>
 > >
-> > The behavior of updating the folio's access info isn't consistent for
-> > huge mapping splitting or ordinary unmapping. The page table's young
-> > flag has to be translated into folio's access info.
+> > PG_referenced is only the lowest bit of the folio LRU refs count
+> > (LRU_REFS_FLAGS) now, and MGLRU never kept it stable: promotion used to
+> > clear it, and now it toggles as the count grows. But with the LRU
+> > referenced count as a stable API now, we can use two helpers to provide
+> > in-kernel users a stable and sane reading of the referenced status of
+> > an LRU managed folio.
 > >
-> > Right now it only checks and sets the folio's referenced flag, which isn't
-> > enough since folio flag updates on access have their own rules. Ordinary
-> > unmapping (zapping) calls folio_mark_accessed(), and it also checks
-> > if the VMA has recency to avoid false updates.
+> > Add folio_check_lru_refs() and folio_clear_lru_refs(), which use the refs
+> > count when MGLRU is enabled and PG_referenced otherwise, and switch the
+> > smaps paths over to them. The lru_gen_enabled() test stays inside the
+> > helpers, so its static key is not splattered over the few call sites.
+> >
+> > Convert smaps as the first user of them. MGLRU now reports every folio
+> > with a nonzero count, so the reading no longer flickers and clearing no
+> > longer results in an ambiguous status.
+> >
+> > The classical LRU case is unchanged.
+> >
+> > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
+> > Tested-by: Andrew Morton <akpm@linux-foundation.org>
+> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > ---
+> >  fs/proc/task_mmu.c        |  6 +++---
+> >  include/linux/mm_inline.h | 31 +++++++++++++++++++++++++++++++
+> >  2 files changed, 34 insertions(+), 3 deletions(-)
+> >
 > 
-> Can you elaborate on why vma_has_recency() should be used? "false updates"
-> might be too vague.
+> <snip>
+> 
+> > +/**
+> > + * folio_check_lru_refs - Test if an LRU managed folio has been referenced.
+> > + * @folio: The folio to test.
+> > + *
+> > + * Returns true if the MGLRU refs count is nonzero, or PG_referenced is set,
+> > + * which is also correct for the non-MGLRU case. Kept as a separate helper,
+> > + * to avoid splattering the lru_gen_enabled() static key.
+> > + */
+> > +static inline bool folio_check_lru_refs(const struct folio *folio)
+> > +{
+> > +	if (lru_gen_enabled())
+> > +		return folio_lru_refs(folio) > 0;
+> > +	return folio_test_referenced(folio);
+> > +}
+> > +
+> > +/**
+> > + * folio_clear_lru_refs - Clear the referenced state of an LRU managed folio.
+> > + * @folio: The folio to clear.
+> > + *
+> > + * Reset the MGLRU refs count to zero, or clear PG_referenced, leaving
+> > + * PG_workingset alone for the non-MGLRU case. Kept as a separate helper
+> > + * just like folio_check_lru_refs().
+> > + */
+> > +static inline void folio_clear_lru_refs(struct folio *folio)
+> > +{
+> > +	if (lru_gen_enabled())
+> > +		folio_set_lru_refs(folio, 0);
+> > +	else
+> > +		folio_clear_referenced(folio);
+> > +}
+> > +
+> >  static __always_inline
+> >  void lruvec_add_folio(struct lruvec *lruvec, struct folio *folio)
+> >  {
+> 
+> I assume this mean people should stop use folio_*_referenced() directly.
+> Are you planning to remove PG_referenced helpers to achieve that?
 
-Thanks for the careful review!
+They are still there for CLRU, but yeah, and actually there is an earlier
+RFC where we can remove PG_referenced and PG_workingset, just like this:
+https://lore.kernel.org/linux-mm/20260502-mglru-fg-v1-31-913619b014d9@tencent.com/
 
-Right, maybe I shouldn't say these are "false updates" indeed. But it
-makes sense to do so, will reword that paragraph.
+And this:
+https://lore.kernel.org/linux-mm/20260502-mglru-fg-v1-32-913619b014d9@tencent.com/
 
-The young PTE becomes folio hotness via the LRU refs to help improve
-LRU accuracy: telling the LRU that the folio is accessed, so it should
-be protected as it is more likely to be reused soon.
+It doesn't really reduce the flags usage but make the code cleaner.
 
-But vma_has_recency() is the app's hint that these accesses are not a
-recency signal: MADV_RANDOM expects "page references in random order",
-POSIX_FADV_NOREUSE sets FMODE_NOREUSE, and MADV_SEQUENTIAL expects
-pages which "may be freed soon after they are accessed", which is the
-opposite of what the refs mean. In all these cases, marking the folio
-referenced from a PTE access hurts instead of helping.
+The co-exist of MGLRU & CLRU makes it looks weird, hopefully we
+can solve that soon, let's do it step by step.
 
-zap_pte_range() and folio_referenced_one() already ignore the accessed
-bit for such VMAs. The split path is the last place translating a young
-PTE into folio hotness without it. So while converting to the more
-useful folio_mark_accessed(), also add the missing recency check to
-avoid wrong promotion.
+> Other than that, LGTM.
+> 
+> Acked-by: Zi Yan <ziy@nvidia.com>
+
+Thanks.
