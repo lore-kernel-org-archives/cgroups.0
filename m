@@ -1,46 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795570338;
-	b=h4lKkEzpwW6zgquEgUJR18oxopvgrQCwsx6ayoc23Gq5tWDuTH+kcODvDKkLeXtB0Bl4
-	 XSYMmQo+9YiuJYU3CJVDfgBbnRZ8N9WRdK+FefYwrFO2oez26/PpPrITjy+FdL5fdjLqm
-	 muZHMl2B5pHnmZBVkc5byIiwYldTDZdFvfPdRU+m5tJsLl7YX88Q1UOnnYFSNjy4ZvS94
-	 /cVkCSwqX7PXFMesduAKQ2GqJ2OWh2lrnSL/cmUlDqEECCx2GgzzBgEbVt3GNjzOSOkKS
-	 Vj3J6/Zwo8ro15grqNqoO6NDYMbb2Tzm45UohkoQXGTIKEQcX/U/klJBv9qHtsVsk2g==
+	t=1795570905;
+	b=Yyg/Hjx6KiIccGBBLUD295mA/XTeE0CivzFX1OatjrWuU2L+4YZXII8iQ2gJhhUNqJc9
+	 xOXixi356Ou4XsYsWszxltIKdciscqrBBkcbeTt83TiMIO3RbPgFDUjupGAEiGKpKnSiV
+	 a7jT0B7EQB9CAOny0NUjMzIlpapyYAk+nWDYvGkDrBd+3584jokV+6d/z6QR2syzJ/Pr/
+	 lGRH6+ZyCBLplZoOFDEWvis5W5QfKrPn56PNSODmef/9rtnK4sNuuv7w3G/EwIfb+ZldH
+	 lT+LY4X1WRiQOKjVyeAOWiHseyIJRua1MV7vZnoCKxKx/3Dqkah4NhdCmr7EvR0cN1g==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795570338;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795570905;
 	h=Received:DKIM-Signature:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
 	 In-Reply-To:References:MIME-Version:Content-Transfer-Encoding;
-	bh=og5FI6XPTPwFhyPH6I0WYk7eOtsOgs0wLbpVaIplXks=;
-	b=a6/mQm9Yds+PjmEtZOC9aQseH1NZaWtkz5z1M9HkWq5lChMcmaa7UWsYWWkSBe9DT3nh
-	 qZXR515xFljzdlIXjEo/tM/SHEU8ecvpQa272N6DJ2giTIMKaszbWiP56nrEYqEtOdJiX
-	 TZN43l3YjIy9eE3IBzYV2jEBQRagEviRZVViYJMW7THtvZ0Iz3X/k0w4BBASGhS7zVWpr
-	 /qXOfPWGoGeE9fL1odO4ayB+MuduRnBekCrRnJcAMQJF1HCNkOYGOdUu5Mh/CoKkfXhx5
-	 pXnb9m4xTj54HEkVcUSWFL2VvljTidr11PPISmkSycV+0IJHE2BNa608k1sRLWAzpRA==
+	bh=0uALuexdmM829eAKCCxuAtcwAcX/KrdDY7PYwPZUEDc=;
+	b=R0sPUV8MCQ02gpc1AcYDCltEEvnAo+fCcPyNd1gCjliL+GdHCkai3smoLntj0Xm85NEy
+	 qjK/Jk09Wpmkg1ajlnIAz/tIsWQ6UKppFOBgI8q6Yowi3HoIUIApCW6iM3b/uthP+YmSi
+	 GND102UaK9nqTeEj7hnMt1hMi+WkjWDwBPpWGUrGg8uB1/M2afQaHOn0SlZy8SDCRM5tD
+	 UVfFTFe1H8KXPToRW277oKx/fpTtoJpCPNArOueBkofTeZj2/nzIJvPsIRrG6rq5M0QE1
+	 9NlZqfmIhwLJPJHhTvtlPIj4an0YnlwU48vgGPZ2n4rm/ExMMo5EGxhnXwvCM+a7isw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AUrEpXVA;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WizpStaM;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 249A6606A31E;
-	Wed, 25 Nov 2026 01:32:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3312606A323;
+	Wed, 25 Nov 2026 01:41:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=AUrEpXVA
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B4D91F000CA;
-	Wed, 25 Nov 2026 01:32:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=WizpStaM
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BD771F000CF;
+	Wed, 25 Nov 2026 01:41:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795570337;
-	bh=og5FI6XPTPwFhyPH6I0WYk7eOtsOgs0wLbpVaIplXks=;
+	s=k20260515; t=1795570905;
+	bh=0uALuexdmM829eAKCCxuAtcwAcX/KrdDY7PYwPZUEDc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=AUrEpXVAjM8bz2I2DWmDW2a2h7J84X+Q58Pkdgk4IdFrP8XGgwZcEnJBoy1LsUTiY
-	 AMz4FUNqo5EpmLOZiikYpnpe6t96aHKMh4sQSuXJZcYPUGhFLTTgXemKdOiLVVDcr2
-	 QmfEORqou1gCEsegiiOo7JrLL3NfHUybgf+bXhhe7T/1xN3HI4vzGa5G5QgFo1G9LH
-	 dR1zjSrZfeY0WAOtxikEDFS8P2pYEK94IDviO9sMC372CSoYrdp9J793W2ByKcrSKq
-	 NyESCGqoPviJQLWp0Yfyy3bdfISde/0fW1yWjKY5bdYnjWeWFG0Z4LKpGMNyG4Qo4s
-	 qssgyk+G1rX+w==
+	b=WizpStaM3pGyZ6aLPTA550frhN/LMtmfDktlk+ZzOz3iB/9QelKkTsH5MLGmLaUyP
+	 itQsUN01OJ9EVXPsKFeHuxpI5NnkAeYhBtSez1PS1p7Z1NX7XTCCaakFGK4NSA08tY
+	 haGL3bYL4fcmhiMEC+HRMV81GPTlCSor6X8StVGmwxfgythZ08KTWin9PirR7hhgiP
+	 B2y6WpUhkadSTyg+rx2gedv/bEQQl+PpRpG7HF5KRmxbSbqUmQV4CliTMBMbZFrU0W
+	 /84p1tYb2cgSHsqFS+vPiDXu+86RBRidyrB1S3LMydHmZdLi/C3eUyycB0ue/bZzEX
+	 cGp0LT/HvtDFA==
 From: SJ Park <sj@kernel.org>
-To: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
+To: Kairui Song <kasong@tencent.com>
 Cc: SJ Park <sj@kernel.org>,
 	linux-mm@kvack.org,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -92,13 +92,12 @@ Cc: SJ Park <sj@kernel.org>,
 	damon@lists.linux.dev,
 	linux-doc@vger.kernel.org,
 	Tianyi Chen <hi@tychen.cc>,
-	Kairui Song <kasong@tencent.com>,
 	Ridong Chen <ridong.chen@linux.dev>
-Subject: Re: [PATCH v6 02/18] mm/memcontrol: allow update of LRU statistic without holding LRU lock
-Date: Tue, 24 Nov 2026 17:32:07 -0800
-Message-ID: <20261125013208.98216-1-sj@kernel.org>
+Subject: Re: [PATCH v6 03/18] mm/memcontrol: avoid potential counter leak when reparenting local stats
+Date: Tue, 24 Nov 2026 17:41:36 -0800
+Message-ID: <20261125014136.98425-1-sj@kernel.org>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20261124-mglru-fg-v6-2-8ffea39934a6@tencent.com>
+In-Reply-To: <20261124-mglru-fg-v6-3-8ffea39934a6@tencent.com>
 References: 
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -111,23 +110,45 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Tue, 24 Nov 2026 02:52:54 +0800 Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org> wrote:
+On Tue, 24 Nov 2026 02:52:55 +0800 Kairui Song <kasong@tencent.com> wrote:
 
-> From: Kairui Song <kasong@tencent.com>
+> lruvec_page_state_local() clamps negative values to zero on SMP.  That
+> is right for readers reporting page counts, but can be wrong for
+> reparenting once MGLRU updates the counters without the lruvec lock.
 > 
-> To enable moving file pages in folio_mark_accessed directly and lazily
-> for MGLRU, allow updating the LRU statistic atomically without holding a
-> lock. It may cause temporary counter underflow, which should be fine as
-> the counter is eventually consistent and only serves as an estimate.
+> Reparenting runs after the forced stats flush, so a negative is a real
+> balance that has to move to the parent, not be discarded. We will
+> introduce lockless MGLRU promotion which may cause following problem:
+> 
+>  1. A refs CAS on a folio on the child's lruvec moves it from
+>     inactive to active, and its active/inactive counter update follows
+>     as a separate step.
+> 
+>  2. A concurrent isolation of the folio reads the folio as active,
+>     debits the child's NR_ACTIVE_* by delta before CSS_DYING is visible
+>     to it.
+> 
+>  3. The child is killed, and the two __update_lru_size() calls from
+>     step 1 land on the parent: NR_INACTIVE_* -delta, then NR_ACTIVE_*
+>     +delta.
+> 
+> The child is left with NR_ACTIVE_* -delta while the parent holds the
+> matching +delta, and reparenting the child's raw value is what cancels
+> the parent's credit.  However, if the child happens to hold few enough
+> folios for that counter to be negative, lruvec_page_state_local() clamps
+> the child's negative to zero, which drops the debit instead, so the
+> parent keeps NR_ACTIVE_* overcounted by delta, and its active + inactive
+> total overcounted as well, permanently: the child's local counters are
+> gone once reparenting is done.
+> 
+> So use a raw signed helper and reparent with that.  Ordinary readers
+> still keep the clamp.
 
 Makes sense to me.
 
 > 
-> Reviewed-by: Barry Song <baohua@kernel.org>
-> Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
-> Tested-by: Andrew Morton <akpm@linux-foundation.org>
-> Acked-by: Muchun Song (ByteDance) <muchun.song@linux.dev>
-> Reviewed-by: Lian Wang <lianux.mm@gmail.com>
+> Reported-by: Kunwu Chan <kunwu.chan@gmail.com>
+> Closes: https://lore.kernel.org/linux-mm/CAN_Opa-+nb0vxQ+HsENCG2fEEMZoxG9Sy_DBC4CLkWjNLzDWKw@mail.gmail.com/
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 
 Reviewed-by: SJ Park <sj@kernel.org>
