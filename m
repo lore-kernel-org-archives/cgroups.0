@@ -1,115 +1,64 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.46
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.21
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795610215;
-	b=aonnNibJfjh+nbo9IueiwyV+z/+IE+/MCOzxWSBQsFDYNyJzfJq5NPA1ZCTf5iDVZh/u
-	 EbfvvADqTspeD1utJeKrOs7/90Z0PcILNR2MsWrvljAWCUubM3J/MfKTV+JnlLF03WrhG
-	 /Woasptauv7C9Xs7tHBr9LnN2T8K7LdsL7SIW6W46XnopyuKfRsJtUdDXUjQvKyR7riHx
-	 CfNa5CiT2LtKMX80uic8Ek3W0faxlJo6PMFfIHHoscsiztfxxeE5ZTed/PGpqLMsQf0hr
-	 Cjm9h3mlyT3mYyfk3q+3WnZOnY1BxRFlcl5D8n2Bd0Rlaa5EFl3NN4NnYFCFSBPM0VA==
+	t=1795611085;
+	b=e71ObMBJYTzBSXnlbvwzVYzYfO3GwDdMwvZL8tYfegCP+58MhnXMu+Rl5CwgvUTlp+Qc
+	 B0j6JSnzcUyFuUtP/GJm3opdP7IVESQArHfY9JoZ27PWO4vkuodMmnVN+UKz9u24k/IWP
+	 pHwyU6MCuuephLLq9rhINTofRfqhHu9xa9Q92TPRZMvbyeahxE6EA6/1yr2Ol5X5wruOr
+	 zt6c2UfPkMaHynnu7WFrp5fKOj1pRXyNX93IcKMKTkHxs1zcbMM8nHbFyhmb52KffwnF6
+	 S+w67lSLtDRapn5qAozqScfwJSNkt29F8V2RjsWbFAGZtsuDSwUuKZnq2o1dgC/JysA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795610215;
-	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
-	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To;
-	bh=C9PVTO+o8vn+uvMZF31e4GKIg2ZTnIwjzGlvqUNqLkI=;
-	b=JBUpSIdTTUeOAfSnrI8m1+ESRtmT7GM6VwkXWm6QIXuPJl7zmtSF7KRK1bzwFowgb3Pd
-	 dBekd2l3y0EjS8Or1B3a4mclNylxrQQVg/woBaL7d1w91w1+rTuSnLz7wHNSIgTKquYvD
-	 v5vcKaIDTV/ZYgQBXxp0k3h0AxQ4dQU6/LGTklLFn+4ESBheeTL1GligTutGH6fF9eYnG
-	 O6fD9yZ1Sf740T5niVoUMmJ33wvQHIMLpAqD6Sq+StxwYq1+TvpnLH4jXI1gCe5uHuBgj
-	 wEY6idznhseq1GKVdzln0hLaM2Jv4QAExfPd4U7B7FnDrZ5MwwKD4AdNIYqCnwiwKfg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795611085;
+	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
+	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
+	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
+	bh=QYt8iWVPhccL/hESgXdi3uZSYohiuC6Q15+q3QaMUCY=;
+	b=BC+3O/aw+/BR0N3XqK078s9V3F7igHqLrKssGriz9SLSLek3vIVJD/Vv+rzL94JwF/6n
+	 hE+/RVK3lQJSgfd4GO/1LGiECLqoK4q9F7EQOjUU6U9ZLXaP/ZQNAd1ySr7Nftl6CjWNB
+	 +GusqmzpJkbnS+QGPN27fBC5J3ed2DOmOffuPq6u/op/dNurkej8AG9UvgtTkqIEuUHkd
+	 qOpY2bydPP2yb+OQ15TzfQYbmc7dQo8bDCPk+c11xwsA+fgo5Lj8ibR6Sqq8nsAytT84S
+	 kKrWXO4Sk+JRgA3oCVks0fbOVGpBTMi0jICMiUhHWDV8Q+OAf5qufD8zCIfd/Z1lC3w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=gmail.com;
-	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cgWye7nm;
-	arc=none smtp.remote-ip=209.85.216.46
-Received: from mail-pj1-f46.google.com (mail-pj1-f46.google.com [209.85.216.46])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	dmarc=none header.from=mails.ucas.ac.cn;
+	spf=pass smtp.mailfrom=mails.ucas.ac.cn;
+	arc=none smtp.remote-ip=159.226.251.21
+Received: from cstnet.cn (smtp21.cstnet.cn [159.226.251.21])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F73B606A327
-	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 12:36:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F73B606A327
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=cgWye7nm
-Received: by mail-pj1-f46.google.com with SMTP id 98e67ed59e1d1-3ae1da332bcso2940754a91.2
-        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 04:36:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795610213; x=1796215013; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=C9PVTO+o8vn+uvMZF31e4GKIg2ZTnIwjzGlvqUNqLkI=;
-        b=cgWye7nmGEeQCJ02htB6NCDHNxrCRPPNwmuW2CvDXqdzOpHNCLquxaWfw3s02W3NFT
-         i5B7w/IMIozfYA+ncOzHwp2wuceY9o6lBQa7Oa/uZQcBJfmdJrx/VHYSTLKNMpB+lpbR
-         oCt1myEhWXESxpfb02tFkYeKEQkHma8tsAkA3avc5Bg5E3/RW4d2DBXuwfqIRZSoL8Le
-         WppVcdJy0b1qKWRFEGMCGv8WInvsuvcY2EZGgWR/o/VCVNmxJ255ecmUvIKKCN+h/hsy
-         BQYZYDrMWAvcgcLw+seXLWv3yWO7orjzo+CwjYM8mNq65DBo/caj6EeBPVNw8z3QZqLc
-         eACg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795610213; x=1796215013;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=C9PVTO+o8vn+uvMZF31e4GKIg2ZTnIwjzGlvqUNqLkI=;
-        b=gkyh8zKt1pSIxrw/Vw8cHq08MrvFdOGuwLga30zyLKcxnea/wbocF7PKAcRahLyIzt
-         NApNyUbS/8N+mPBOEhZ/g+kB17YamJyjOgx3hcNVU0IzYRlDm8edNTnx2DSCt8lQAW1y
-         QZ/N/ZKGzpHuaa4YD555cnA/bY1V8Z/7plR3rc8ZXQW9wK7WRVRI+ri12Jctp/ZRS0x4
-         POVRQOa5pm4p1onwPOE5I219yNy2QtQoMgi6zLjRzn0DHb4Pp8pcz49YiuLdOqbjAh8J
-         mISbGfaUG3HDBMGA00egVi9n8Qt/e6C6YY0pXdNOr1FD7dI/Qd2wTqjey62iAjF/7vaz
-         8Hzg==
-X-Forwarded-Encrypted: i=1; AL+hErGOchr9Bfpb2qeBCtvyM4aR/DIMdrSeb3yNV572k90f6wz2P/Yxxvp+INHJT07g3saTD0RH/ldo@vger.kernel.org
-X-Gm-Message-State: APuU4Z+i/Vftopg4AFBUCGeZbhfmuQVLRuTC/A3Rq9/t8Vn+nskRTjMv
-	eNCgjgBQEiFIEkkEYusC2eZ2/JKJWtFPvvdMyY9TiQRdmnk0+COYoPi5
-X-Gm-Gg: AZFdTZe60q+8et/cajt+IKUxovXPnchYn5LxvhQ2yqeaE0E+i1rUyjNb38ZrO0LDK3h
-	SoOZJBGL+lAMksDrtK2afezVWjqVqkzQfg7/Z07eUgd5xjJiepgxSgYr22GBzHM/CdQYz2glmMO
-	E2GXSyjKiD17oUVZ+fRlyggGxtde7Vgl3dXnnR1+3vdlLPJtlqjpVT9KOXNstvkPUg9q0koPMzk
-	tHqve18RmB9Xc+F2we8RthOuWK8Zo9bVqksPFtJ08/3m4mLci2MJaq+44A+dnJuKcefVwGUjL/q
-	qbixdB75gcJZeJoTepdOR4xJgEjtEFetv+DqPKOj/MfuY3cnb1hdy/7e1pHKjWrHER2r7i44bFa
-	zbxk1P/t5PNrPwIaNDA4SCRlfX7zJwZv1CYPsTZq8B/LqgueZjo724XpLb7el8WgSgd5qoey3ER
-	vXfkm2xu5+P+vpl5/r8664r8wzycCB80a3HdOn3PBRLy8Gp8PXdxF077BMBfn6o60suGsiuGX3a
-	K5pN5Lw0/ob6cOwCwNjVjizgLVySOWMGtY/rGI5kx6nJgtvil0GRYslKUclkt/8evO9z2r5iwZu
-	FESrh+VK8lDRyA28k9NCIY4oDnVJy+IlzXgUot1A3O/dASw6UGEY4fEKzBCej2UiNMQzjHA=
-X-Received: by 2002:a17:90b:4a48:b0:3ab:2d17:51c5 with SMTP id 98e67ed59e1d1-3b41c7b60b5mr15844816a91.6.1795610212712;
-        Wed, 25 Nov 2026 04:36:52 -0800 (PST)
-Received: from KASONG-MC4 ([101.32.222.185])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b405d639fdsm30933094a91.10.2026.11.25.04.36.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 04:36:52 -0800 (PST)
-Date: Wed, 25 Nov 2026 20:36:36 +0800
-From: Kairui Song <ryncsn@gmail.com>
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: kasong@tencent.com, linux-mm@kvack.org, 
-	Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>, 
-	Ying Huang <ying.huang@linux.alibaba.com>, Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, 
-	Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, 
-	Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, SJ Park <sj@kernel.org>, 
-	David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>, 
-	Zicheng Wang <wangzicheng@honor.com>, Tal Zussman <tz2294@columbia.edu>, 
-	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
-	Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
-	Joanne Koong <joannelkoong@gmail.com>, Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>, 
-	Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	damon@lists.linux.dev, linux-doc@vger.kernel.org, Tianyi Chen <hi@tychen.cc>, 
-	Ridong Chen <ridong.chen@linux.dev>
-Subject: Re: [PATCH v6 08/18] mm/mglru: make folio lru referenced times count
- a generic API
-Message-ID: <awa30hwg6x82REoo@KASONG-MC4>
-References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-8-8ffea39934a6@tencent.com>
- <e85a2666-9722-420b-9a60-9d4251fc3d4c@kernel.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C707C606A31E;
+	Wed, 25 Nov 2026 12:51:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C707C606A31E
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mails.ucas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mails.ucas.ac.cn
+Received: from k3-03 (unknown [159.226.43.8])
+	by APP-01 (Coremail) with SMTP id qwCowABXgfuY2QZrsdirAQ--.2368S2;
+	Wed, 25 Nov 2026 20:50:43 +0800 (CST)
+From: Tan Chi <tanchi25@mails.ucas.ac.cn>
+To: anup@brainfault.org
+Cc: atish.patra@linux.dev,
+	pjw@kernel.org,
+	palmer@dabbelt.com,
+	aou@eecs.berkeley.edu,
+	alex@ghiti.fr,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com,
+	corbet@lwn.net,
+	skhan@linuxfoundation.org,
+	rdunlap@infradead.org,
+	yosry@kernel.org,
+	kvm@vger.kernel.org,
+	kvm-riscv@lists.infradead.org,
+	linux-riscv@lists.infradead.org,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tan Chi <tanchi25@mails.ucas.ac.cn>
+Subject: [PATCH] RISC-V: KVM: Account G-stage page table memory
+Date: Wed, 25 Nov 2026 20:50:23 +0800
+Message-ID: <20261125125024.1983082-1-tanchi25@mails.ucas.ac.cn>
+X-Mailer: git-send-email 2.53.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -119,575 +68,151 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e85a2666-9722-420b-9a60-9d4251fc3d4c@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qwCowABXgfuY2QZrsdirAQ--.2368S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxCrW8JrWUCr48Zr17ur4xCrg_yoWrKw47pF
+	1DCryS9r1rtr93Cr13twn2vr17Ga95Wr45Jr9F9a45ZFsxtrySywnYq3sFvF15XFykZayf
+	ZrZIgFy5Zrs2ywUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j
+	6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAac4AC62xK8xCEY4vEwIxC4wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC
+	0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Gr0_Cr
+	1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IE
+	rcIFxwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCY02Avz4vE14
+	v_Xr1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AK
+	xVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MIIYrx
+	kI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v2
+	6r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8Jw
+	CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRWeHgUUUU
+	U
+X-CM-SenderInfo: pwdquxrlsvqzpdlo2hpxfd2hldfou0/
 
-On Wed, Nov 25, 2026 at 11:15:33AM +0800, David Hildenbrand (Arm) wrote:
-> On 11/23/26 19:53, Kairui Song via B4 Relay wrote:
-> > From: Kairui Song <kasong@tencent.com>
-> > 
-> > Pure code shuffle, no behavior change.
-> > 
-> > Make the folio LRU refs helpers available regardless of CONFIG_LRU_GEN.
-> > Without MGLRU the extra bits are never set, so they are inert. Move the
-> > lru_gen_* helpers into the CONFIG_LRU_GEN section.  This prepares for
-> > unifying the API for checking folio referenced and workingset status.
-> > 
-> > folio_migrate_lru_refs() now migrates the complete refs count,
-> > including PG_workingset (bit 1 of the encoding), bitwise identical to
-> > the direct copy dropped from folio_migrate_flags().
-> > 
-> > lru_set_refs_flags() skips the nonexistent mask bits when
-> > LRU_REFS_WIDTH collapses to 0, preserving the two independent flags for
-> > !CONFIG_LRU_GEN builds.
-> > 
-> > Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
-> > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
-> > Tested-by: Andrew Morton <akpm@linux-foundation.org>
-> > Signed-off-by: Kairui Song <kasong@tencent.com>
-> > ---
-> >  include/linux/mm_inline.h | 55 ++++++++++++++++++++++++-----------------------
-> 
-> I'm starting to feel like all of these mglru/reclaim thingies should go into a
-> dedicated helper.
+RISC-V KVM currently does not account G-stage page table memory
+in NR_SECONDARY_PAGETABLE.
 
-Hi David
+Use kvm_account_pgtable_pages() to account for the allocation and
+freeing of the root and lower-level page tables, including those
+allocated when splitting huge page mappings.
 
-I saw your comment on other patches too, about the header mm_inline.h,
-about ~690 / 860 lines of code in it is for MGLRU / CLRU only. The
-rest ~200 are for VMA / TLB / MMU.
+This makes G-stage page table memory usage visible through
+SecPageTables in /proc/meminfo and sec_pagetables in the cgroup
+memory.stat interface.
 
-> 
-> Can you do that as a prio cleanup in this series, so we don't have to mess with
-> mm_inline.h in later patches anymore?
+Update the documentation accordingly.
 
-Perhaps we can instead move the non LRU helpers in it?
-These helpers:
+Tested on a RISC-V KVM host running under QEMU TCG with Sv57x4.
+The observed G-stage page table memory usage was:
 
-  - anon_vma_name_get
-  - anon_vma_name_put
-  - anon_vma_name_reuse
-  - dup_anon_vma_name
-  - free_anon_vma_name
-  - anon_vma_name_eq
-  - pfnmap_track_ctx_release
-  - init_tlb_flush_pending
-  - inc_tlb_flush_pending
-  - dec_tlb_flush_pending
-  - mm_tlb_flush_pending
-  - mm_tlb_flush_nested
-  - copy_pte_marker
-  - num_pages_contiguous
+  100 empty VMs:                         1600 KiB
+  8 GiB sparsely mapped with 4 KiB pages: 16448 KiB
+  256 MiB mapped with 2 MiB pages:          36 KiB
+  After enabling dirty logging:           548 KiB
 
-All other helper in mm_inline.h are for LRU. So we rename mm_inline.h
-to mm_lru.h?
+The accounting in /proc/meminfo, /proc/vmstat and cgroup
+memory.stat matched the expected values and returned to zero
+after destroying the VMs.
 
-Like the patch below, zero behavior change, pure code shuffle:
+This reimplements the work originally proposed by Yosry Ahmed
+in 2022, adapted to the current G-stage MMU code.
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index d8bafcd92791..2eb0e2fc8c2d 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1903,6 +1903,90 @@ static inline bool vma_is_anon_shmem(const struct vm_area_struct *vma) { return
+Link: https://lore.kernel.org/r/20220426053904.3684293-6-yosryahmed@google.com
+
+Signed-off-by: Tan Chi <tanchi25@mails.ucas.ac.cn>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 4 ++--
+ Documentation/filesystems/proc.rst      | 2 +-
+ arch/riscv/kvm/gstage.c                 | 6 +++++-
+ arch/riscv/kvm/mmu.c                    | 7 ++++++-
+ 4 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 9e3c67b02ae2..c79d6432ecc3 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1591,8 +1591,8 @@ The following nested keys are defined.
  
- int vma_is_stack_for_current(const struct vm_area_struct *vma);
+ 	  sec_pagetables
+ 		Amount of memory allocated for secondary page tables,
+-		this currently includes KVM mmu allocations on x86
+-		and arm64 and IOMMU page tables.
++		this currently includes KVM mmu allocations on x86,
++		arm64 and riscv and IOMMU page tables.
  
-+static inline void init_tlb_flush_pending(struct mm_struct *mm)
-+{
-+	atomic_set(&mm->tlb_flush_pending, 0);
-+}
-+
-+static inline void inc_tlb_flush_pending(struct mm_struct *mm)
-+{
-+	atomic_inc(&mm->tlb_flush_pending);
-+	/*
-+	 * The only time this value is relevant is when there are indeed pages
-+	 * to flush. And we'll only flush pages after changing them, which
-+	 * requires the PTL.
-+	 *
-+	 * So the ordering here is:
-+	 *
-+	 *	atomic_inc(&mm->tlb_flush_pending);
-+	 *	spin_lock(&ptl);
-+	 *	...
-+	 *	set_pte_at();
-+	 *	spin_unlock(&ptl);
-+	 *
-+	 *				spin_lock(&ptl)
-+	 *				mm_tlb_flush_pending();
-+	 *				....
-+	 *				spin_unlock(&ptl);
-+	 *
-+	 *	flush_tlb_range();
-+	 *	atomic_dec(&mm->tlb_flush_pending);
-+	 *
-+	 * Where the increment if constrained by the PTL unlock, it thus
-+	 * ensures that the increment is visible if the PTE modification is
-+	 * visible. After all, if there is no PTE modification, nobody cares
-+	 * about TLB flushes either.
-+	 *
-+	 * This very much relies on users (mm_tlb_flush_pending() and
-+	 * mm_tlb_flush_nested()) only caring about _specific_ PTEs (and
-+	 * therefore specific PTLs), because with SPLIT_PTE_PTLOCKS and RCpc
-+	 * locks (PPC) the unlock of one doesn't order against the lock of
-+	 * another PTL.
-+	 *
-+	 * The decrement is ordered by the flush_tlb_range(), such that
-+	 * mm_tlb_flush_pending() will not return false unless all flushes have
-+	 * completed.
-+	 */
-+}
-+
-+static inline void dec_tlb_flush_pending(struct mm_struct *mm)
-+{
-+	/*
-+	 * See inc_tlb_flush_pending().
-+	 *
-+	 * This cannot be smp_mb__before_atomic() because smp_mb() simply does
-+	 * not order against TLB invalidate completion, which is what we need.
-+	 *
-+	 * Therefore we must rely on tlb_flush_*() to guarantee order.
-+	 */
-+	atomic_dec(&mm->tlb_flush_pending);
-+}
-+
-+static inline bool mm_tlb_flush_pending(const struct mm_struct *mm)
-+{
-+	/*
-+	 * Must be called after having acquired the PTL; orders against that
-+	 * PTLs release and therefore ensures that if we observe the modified
-+	 * PTE we must also observe the increment from inc_tlb_flush_pending().
-+	 *
-+	 * That is, it only guarantees to return true if there is a flush
-+	 * pending for _this_ PTL.
-+	 */
-+	return atomic_read(&mm->tlb_flush_pending);
-+}
-+
-+static inline bool mm_tlb_flush_nested(const struct mm_struct *mm)
-+{
-+	/*
-+	 * Similar to mm_tlb_flush_pending(), we must have acquired the PTL
-+	 * for which there is a TLB flush pending in order to guarantee
-+	 * we've seen both that PTE modification and the increment.
-+	 *
-+	 * (no requirement on actually still holding the PTL, that is irrelevant)
-+	 */
-+	return atomic_read(&mm->tlb_flush_pending) > 1;
-+}
-+
- /* flush_tlb_range() takes a vma, not a mm, and can care about flags */
- #define TLB_FLUSH_VMA(mm,flags) { .vm_mm = (mm), .vm_flags = (flags) }
+ 	  percpu (npn)
+ 		Amount of memory used for storing per-cpu kernel
+diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
+index fa7a468e8edf..cd1a74da287c 100644
+--- a/Documentation/filesystems/proc.rst
++++ b/Documentation/filesystems/proc.rst
+@@ -1208,7 +1208,7 @@ PageTables
+               Memory consumed by userspace page tables
+ SecPageTables
+               Memory consumed by secondary page tables, this currently includes
+-              KVM mmu and IOMMU allocations on x86 and arm64.
++              KVM mmu and IOMMU allocations on x86, arm64 and riscv.
+ NFS_Unstable
+               Always zero. Previously counted pages which had been written to
+               the server, but has not been committed to stable storage.
+diff --git a/arch/riscv/kvm/gstage.c b/arch/riscv/kvm/gstage.c
+index 0aace3215d3e..f8841136d852 100644
+--- a/arch/riscv/kvm/gstage.c
++++ b/arch/riscv/kvm/gstage.c
+@@ -162,6 +162,7 @@ int kvm_riscv_gstage_set_pte(struct kvm_gstage *gstage,
+ 				return -ENOMEM;
+ 			set_pte(ptep, pfn_pte(PFN_DOWN(__pa(next_ptep)),
+ 					      __pgprot(_PAGE_TABLE)));
++			kvm_account_pgtable_pages(next_ptep, 1);
+ 		} else {
+ 			if (gstage_pte_leaf(ptep))
+ 				return -EEXIST;
+@@ -357,6 +358,7 @@ bool kvm_riscv_gstage_split_huge(struct kvm_gstage *gstage,
  
-@@ -2887,6 +2971,42 @@ static inline unsigned long memdesc_section(const memdesc_flags_t *mdf)
- }
- #endif /* SECTION_IN_PAGE_FLAGS */
+ 		set_pte(ptep, pfn_pte(PFN_DOWN(__pa(next_ptep)),
+ 				__pgprot(_PAGE_TABLE)));
++		kvm_account_pgtable_pages(next_ptep, 1);
  
-+/**
-+ * num_pages_contiguous() - determine the number of contiguous pages
-+ *			    that represent contiguous PFNs
-+ * @pages: an array of page pointers
-+ * @nr_pages: length of the array, at least 1
-+ *
-+ * Determine the number of contiguous pages that represent contiguous PFNs
-+ * in @pages, starting from the first page.
-+ *
-+ * In some kernel configs contiguous PFNs will not have contiguous struct
-+ * pages. In these configurations num_pages_contiguous() will return a num
-+ * smaller than ideal number. The caller should continue to check for pfn
-+ * contiguity after each call to num_pages_contiguous().
-+ *
-+ * Returns the number of contiguous pages.
-+ */
-+static inline size_t num_pages_contiguous(struct page **pages, size_t nr_pages)
-+{
-+	struct page *cur_page = pages[0];
-+	unsigned long section = memdesc_section(&cur_page->flags);
-+	size_t i;
-+
-+	for (i = 1; i < nr_pages; i++) {
-+		if (++cur_page != pages[i])
-+			break;
-+		/*
-+		 * In unproblematic kernel configs, page_to_section() == 0 and
-+		 * the whole check will get optimized out.
-+		 */
-+		if (memdesc_section(&cur_page->flags) != section)
-+			break;
+ 		if (flush)
+ 			gstage_tlb_flush(gstage, current_level, addr);
+@@ -399,8 +401,10 @@ bool kvm_riscv_gstage_op_pte(struct kvm_gstage *gstage, gpa_t addr,
+ 		for (i = 0; i < PTRS_PER_PTE; i++)
+ 			flush |= kvm_riscv_gstage_op_pte(gstage, addr + i * next_page_size,
+ 							 &next_ptep[i], next_ptep_level, op);
+-		if (op == GSTAGE_OP_CLEAR)
++		if (op == GSTAGE_OP_CLEAR) {
++			kvm_account_pgtable_pages(next_ptep, -1);
+ 			put_page(virt_to_page(next_ptep));
++		}
+ 	} else {
+ 		old_pte = *ptep;
+ 		if (op == GSTAGE_OP_CLEAR)
+diff --git a/arch/riscv/kvm/mmu.c b/arch/riscv/kvm/mmu.c
+index 6861c0e2728d..c7141395b9e3 100644
+--- a/arch/riscv/kvm/mmu.c
++++ b/arch/riscv/kvm/mmu.c
+@@ -816,6 +816,8 @@ int kvm_riscv_mmu_alloc_pgd(struct kvm *kvm)
+ 	if (!pgd_page)
+ 		return -ENOMEM;
+ 	kvm->arch.pgd = page_to_virt(pgd_page);
++	kvm_account_pgtable_pages(kvm->arch.pgd,
++				kvm_riscv_gstage_pgd_size >> PAGE_SHIFT);
+ 	kvm->arch.pgd_phys = page_to_phys(pgd_page);
+ 	kvm->arch.pgd_levels = kvm_riscv_gstage_max_pgd_levels;
+ 	kvm->arch.pgd_split_page_cache.gfp_zero = __GFP_ZERO;
+@@ -843,8 +845,11 @@ void kvm_riscv_mmu_free_pgd(struct kvm *kvm)
+ 	if (flush)
+ 		kvm_flush_remote_tlbs(kvm);
+ 
+-	if (pgd)
++	if (pgd) {
++		kvm_account_pgtable_pages(pgd,
++				-(kvm_riscv_gstage_pgd_size >> PAGE_SHIFT));
+ 		free_pages((unsigned long)pgd, get_order(kvm_riscv_gstage_pgd_size));
 +	}
-+
-+	return i;
-+}
-+
- /**
-  * folio_pfn - Return the Page Frame Number of a folio.
-  * @folio: The folio.
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index f6f4bc9a704f..d7f1d3e4fa4c 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -6,9 +6,6 @@
- #include <linux/huge_mm.h>
- #include <linux/mm_types.h>
- #include <linux/swap.h>
--#include <linux/string.h>
--#include <linux/userfaultfd_k.h>
--#include <linux/leafops.h>
- 
- /**
-  * folio_is_file_lru - Should the folio be on a file LRU or anon LRU?
-@@ -500,181 +497,7 @@ void lruvec_del_folio(struct lruvec *lruvec, struct folio *folio)
- 			-folio_nr_pages(folio));
  }
  
--#ifdef CONFIG_ANON_VMA_NAME
--/* mmap_lock should be read-locked */
--static inline void anon_vma_name_get(struct anon_vma_name *anon_name)
--{
--	if (anon_name)
--		kref_get(&anon_name->kref);
--}
--
--static inline void anon_vma_name_put(struct anon_vma_name *anon_name)
--{
--	if (anon_name)
--		kref_put(&anon_name->kref, anon_vma_name_free);
--}
--
--static inline
--struct anon_vma_name *anon_vma_name_reuse(struct anon_vma_name *anon_name)
--{
--	/* Prevent anon_name refcount saturation early on */
--	if (kref_read(&anon_name->kref) < REFCOUNT_MAX) {
--		anon_vma_name_get(anon_name);
--		return anon_name;
--
--	}
--	return anon_vma_name_alloc(anon_name->name);
--}
--
--static inline void dup_anon_vma_name(struct vm_area_struct *orig_vma,
--				     struct vm_area_struct *new_vma)
--{
--	struct anon_vma_name *anon_name = anon_vma_name(orig_vma);
--
--	if (anon_name)
--		new_vma->anon_name = anon_vma_name_reuse(anon_name);
--}
--
--static inline void free_anon_vma_name(struct vm_area_struct *vma)
--{
--	/*
--	 * Not using anon_vma_name because it generates a warning if mmap_lock
--	 * is not held, which might be the case here.
--	 */
--	anon_vma_name_put(vma->anon_name);
--}
--
--static inline bool anon_vma_name_eq(struct anon_vma_name *anon_name1,
--				    struct anon_vma_name *anon_name2)
--{
--	if (anon_name1 == anon_name2)
--		return true;
--
--	return anon_name1 && anon_name2 &&
--		!strcmp(anon_name1->name, anon_name2->name);
--}
--
--#else /* CONFIG_ANON_VMA_NAME */
--static inline void anon_vma_name_get(struct anon_vma_name *anon_name) {}
--static inline void anon_vma_name_put(struct anon_vma_name *anon_name) {}
--static inline void dup_anon_vma_name(struct vm_area_struct *orig_vma,
--				     struct vm_area_struct *new_vma) {}
--static inline void free_anon_vma_name(struct vm_area_struct *vma) {}
--
--static inline bool anon_vma_name_eq(struct anon_vma_name *anon_name1,
--				    struct anon_vma_name *anon_name2)
--{
--	return true;
--}
--
--#endif  /* CONFIG_ANON_VMA_NAME */
--
--void pfnmap_track_ctx_release(struct kref *ref);
--
--static inline void init_tlb_flush_pending(struct mm_struct *mm)
--{
--	atomic_set(&mm->tlb_flush_pending, 0);
--}
--
--static inline void inc_tlb_flush_pending(struct mm_struct *mm)
--{
--	atomic_inc(&mm->tlb_flush_pending);
--	/*
--	 * The only time this value is relevant is when there are indeed pages
--	 * to flush. And we'll only flush pages after changing them, which
--	 * requires the PTL.
--	 *
--	 * So the ordering here is:
--	 *
--	 *	atomic_inc(&mm->tlb_flush_pending);
--	 *	spin_lock(&ptl);
--	 *	...
--	 *	set_pte_at();
--	 *	spin_unlock(&ptl);
--	 *
--	 *				spin_lock(&ptl)
--	 *				mm_tlb_flush_pending();
--	 *				....
--	 *				spin_unlock(&ptl);
--	 *
--	 *	flush_tlb_range();
--	 *	atomic_dec(&mm->tlb_flush_pending);
--	 *
--	 * Where the increment if constrained by the PTL unlock, it thus
--	 * ensures that the increment is visible if the PTE modification is
--	 * visible. After all, if there is no PTE modification, nobody cares
--	 * about TLB flushes either.
--	 *
--	 * This very much relies on users (mm_tlb_flush_pending() and
--	 * mm_tlb_flush_nested()) only caring about _specific_ PTEs (and
--	 * therefore specific PTLs), because with SPLIT_PTE_PTLOCKS and RCpc
--	 * locks (PPC) the unlock of one doesn't order against the lock of
--	 * another PTL.
--	 *
--	 * The decrement is ordered by the flush_tlb_range(), such that
--	 * mm_tlb_flush_pending() will not return false unless all flushes have
--	 * completed.
--	 */
--}
--
--static inline void dec_tlb_flush_pending(struct mm_struct *mm)
--{
--	/*
--	 * See inc_tlb_flush_pending().
--	 *
--	 * This cannot be smp_mb__before_atomic() because smp_mb() simply does
--	 * not order against TLB invalidate completion, which is what we need.
--	 *
--	 * Therefore we must rely on tlb_flush_*() to guarantee order.
--	 */
--	atomic_dec(&mm->tlb_flush_pending);
--}
--
--static inline bool mm_tlb_flush_pending(const struct mm_struct *mm)
--{
--	/*
--	 * Must be called after having acquired the PTL; orders against that
--	 * PTLs release and therefore ensures that if we observe the modified
--	 * PTE we must also observe the increment from inc_tlb_flush_pending().
--	 *
--	 * That is, it only guarantees to return true if there is a flush
--	 * pending for _this_ PTL.
--	 */
--	return atomic_read(&mm->tlb_flush_pending);
--}
--
--static inline bool mm_tlb_flush_nested(const struct mm_struct *mm)
--{
--	/*
--	 * Similar to mm_tlb_flush_pending(), we must have acquired the PTL
--	 * for which there is a TLB flush pending in order to guarantee
--	 * we've seen both that PTE modification and the increment.
--	 *
--	 * (no requirement on actually still holding the PTL, that is irrelevant)
--	 */
--	return atomic_read(&mm->tlb_flush_pending) > 1;
--}
--
- #ifdef CONFIG_MMU
--/*
-- * Computes the pte marker to copy from the given source entry into dst_vma.
-- * If no marker should be copied, returns 0.
-- * The caller should insert a new pte created with make_pte_marker().
-- */
--static inline pte_marker copy_pte_marker(
--		softleaf_t entry, struct vm_area_struct *dst_vma)
--{
--	const pte_marker srcm = softleaf_to_marker(entry);
--	/* Always copy error entries. */
--	pte_marker dstm = srcm & (PTE_MARKER_POISONED | PTE_MARKER_GUARD);
--
--	/* Only copy PTE markers if UFFD register matches. */
--	if ((srcm & PTE_MARKER_UFFD_WP) && userfaultfd_wp(dst_vma))
--		dstm |= PTE_MARKER_UFFD_WP;
--
--	return dstm;
--}
--
- static inline bool vma_has_recency(const struct vm_area_struct *vma)
- {
- 	if (vma->vm_flags & (VM_SEQ_READ | VM_RAND_READ))
-@@ -687,40 +510,4 @@ static inline bool vma_has_recency(const struct vm_area_struct *vma)
- }
- #endif
- 
--/**
-- * num_pages_contiguous() - determine the number of contiguous pages
-- *			    that represent contiguous PFNs
-- * @pages: an array of page pointers
-- * @nr_pages: length of the array, at least 1
-- *
-- * Determine the number of contiguous pages that represent contiguous PFNs
-- * in @pages, starting from the first page.
-- *
-- * In some kernel configs contiguous PFNs will not have contiguous struct
-- * pages. In these configurations num_pages_contiguous() will return a num
-- * smaller than ideal number. The caller should continue to check for pfn
-- * contiguity after each call to num_pages_contiguous().
-- *
-- * Returns the number of contiguous pages.
-- */
--static inline size_t num_pages_contiguous(struct page **pages, size_t nr_pages)
--{
--	struct page *cur_page = pages[0];
--	unsigned long section = memdesc_section(&cur_page->flags);
--	size_t i;
--
--	for (i = 1; i < nr_pages; i++) {
--		if (++cur_page != pages[i])
--			break;
--		/*
--		 * In unproblematic kernel configs, page_to_section() == 0 and
--		 * the whole check will get optimized out.
--		 */
--		if (memdesc_section(&cur_page->flags) != section)
--			break;
--	}
--
--	return i;
--}
--
- #endif
-diff --git a/mm/internal.h b/mm/internal.h
-index de4593b3e3b6..b52647a2442b 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -16,7 +16,9 @@
- #include <linux/pagemap.h>
- #include <linux/pagewalk.h>
- #include <linux/rmap.h>
-+#include <linux/string.h>
- #include <linux/swap.h>
-+#include <linux/userfaultfd_k.h>
- #include <linux/leafops.h>
- #include <linux/tracepoint-defs.h>
- 
-@@ -281,12 +283,104 @@ static inline int mmap_file(struct file *file, struct vm_area_struct *vma)
- /* unmap_vmas is in mm/memory.c */
- void unmap_vmas(struct mmu_gather *tlb, struct unmap_desc *unmap);
- 
-+#ifdef CONFIG_ANON_VMA_NAME
-+/* mmap_lock should be read-locked */
-+static inline void anon_vma_name_get(struct anon_vma_name *anon_name)
-+{
-+	if (anon_name)
-+		kref_get(&anon_name->kref);
-+}
-+
-+static inline void anon_vma_name_put(struct anon_vma_name *anon_name)
-+{
-+	if (anon_name)
-+		kref_put(&anon_name->kref, anon_vma_name_free);
-+}
-+
-+static inline
-+struct anon_vma_name *anon_vma_name_reuse(struct anon_vma_name *anon_name)
-+{
-+	/* Prevent anon_name refcount saturation early on */
-+	if (kref_read(&anon_name->kref) < REFCOUNT_MAX) {
-+		anon_vma_name_get(anon_name);
-+		return anon_name;
-+
-+	}
-+	return anon_vma_name_alloc(anon_name->name);
-+}
-+
-+static inline void dup_anon_vma_name(struct vm_area_struct *orig_vma,
-+				     struct vm_area_struct *new_vma)
-+{
-+	struct anon_vma_name *anon_name = anon_vma_name(orig_vma);
-+
-+	if (anon_name)
-+		new_vma->anon_name = anon_vma_name_reuse(anon_name);
-+}
-+
-+static inline void free_anon_vma_name(struct vm_area_struct *vma)
-+{
-+	/*
-+	 * Not using anon_vma_name because it generates a warning if mmap_lock
-+	 * is not held, which might be the case here.
-+	 */
-+	anon_vma_name_put(vma->anon_name);
-+}
-+
-+static inline bool anon_vma_name_eq(struct anon_vma_name *anon_name1,
-+				    struct anon_vma_name *anon_name2)
-+{
-+	if (anon_name1 == anon_name2)
-+		return true;
-+
-+	return anon_name1 && anon_name2 &&
-+		!strcmp(anon_name1->name, anon_name2->name);
-+}
-+
-+#else /* CONFIG_ANON_VMA_NAME */
-+static inline void anon_vma_name_get(struct anon_vma_name *anon_name) {}
-+static inline void anon_vma_name_put(struct anon_vma_name *anon_name) {}
-+static inline void dup_anon_vma_name(struct vm_area_struct *orig_vma,
-+				     struct vm_area_struct *new_vma) {}
-+static inline void free_anon_vma_name(struct vm_area_struct *vma) {}
-+
-+static inline bool anon_vma_name_eq(struct anon_vma_name *anon_name1,
-+				    struct anon_vma_name *anon_name2)
-+{
-+	return true;
-+}
-+
-+#endif  /* CONFIG_ANON_VMA_NAME */
-+
-+#ifdef __HAVE_PFNMAP_TRACKING
-+void pfnmap_track_ctx_release(struct kref *ref);
-+#endif
-+
- #ifdef CONFIG_MMU
- 
- bool cond_install_uffd_wp_ptes(struct vm_area_struct *vma,
- 		unsigned long addr, pte_t *ptep, pte_t pte,
- 		unsigned long nr_ptes);
- 
-+/*
-+ * Computes the pte marker to copy from the given source entry into dst_vma.
-+ * If no marker should be copied, returns 0.
-+ * The caller should insert a new pte created with make_pte_marker().
-+ */
-+static inline pte_marker copy_pte_marker(
-+		softleaf_t entry, struct vm_area_struct *dst_vma)
-+{
-+	const pte_marker srcm = softleaf_to_marker(entry);
-+	/* Always copy error entries. */
-+	pte_marker dstm = srcm & (PTE_MARKER_POISONED | PTE_MARKER_GUARD);
-+
-+	/* Only copy PTE markers if UFFD register matches. */
-+	if ((srcm & PTE_MARKER_UFFD_WP) && userfaultfd_wp(dst_vma))
-+		dstm |= PTE_MARKER_UFFD_WP;
-+
-+	return dstm;
-+}
-+
- static inline void get_anon_vma(struct anon_vma *anon_vma)
- {
- 	atomic_inc(&anon_vma->refcount);
-diff --git a/mm/pgtable-generic.c b/mm/pgtable-generic.c
-index 6e83ce3801b8..61a0c0d4b47d 100644
---- a/mm/pgtable-generic.c
-+++ b/mm/pgtable-generic.c
-@@ -7,6 +7,7 @@
-  *  Copyright (C) 2010  Linus Torvalds
-  */
- 
-+#include <linux/mm.h>
- #include <linux/pagemap.h>
- #include <linux/hugetlb.h>
- #include <linux/pgtable.h>
+ void kvm_riscv_mmu_update_hgatp(struct kvm_vcpu *vcpu)
+-- 
+2.53.0
+
