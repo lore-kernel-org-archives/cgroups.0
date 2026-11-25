@@ -1,49 +1,64 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795642797;
-	b=JjuEmCGDAy7Vy7V7PIf5C4U7MmdTl7XJEF0adZ/df9bCZ1EkSk9BSmwmu/wVvf/WidlM
-	 a6RuCObg4lSPXY1KmDfCcVHUVNyvzWyrggklRst9V4Wpue8hZrAdRuvUOPLg4LkGx7ozR
-	 yEUQCe2XXkMfvjOInv+LfvqDNkdDKKTC5o7fifMdC8+bglXuwlcZO4Kj8BtDo7pLI/OpV
-	 9ZVjkDxaBiwhnzNiYnJm9EVC/08AWBB+4UHJnrgezUCuKoFjixhVsEkxGW9/M7bjFrWQV
-	 pcTw+t6PjOhgzJsOxZEUUosE6izLHbpYZOWbVi4xVJB97So4AL04jiWHAfZ0NAXWCjw==
+	t=1795649515;
+	b=bzrAq6DNz6bfYiSCWG6f5JS4A3kKRGHdJ4ZMVpRJfeJMDR3lHV4WeJIMKdtt4GiGN0tV
+	 5H4CAFi5x6XcHkpP/3kuF8JhZyuMFBGqjiLV8ZhRc5Tbnmh79D8TzHxY0GsFhbd2Ld05V
+	 x8VsplnXYdOEAnNXWIkq9xMUQvef6l3KN8JKDTeYc+TP/0VIAJ9Z1spz36fkPO+byzKaP
+	 ETm3GN2psQXPFfPC25Xm9qUJ05f7Fo84cAbU+EDpbh7b8LYGxItYvNiY8LlcKTsdr+hJ6
+	 XhXrexu+/U1KsTQDOhHoCgeW+eWxaqO8GXybTmkLucMF8J+x6aZayELIyie7/HqyM6w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795642797;
-	h=Received:DKIM-Signature:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 X-Mailer;
-	bh=5x95mFtq9SsOz7VWm3eLFqsSut3QNXOjHk0FlS/OEJY=;
-	b=VboMGiZuJ+Pg/3yQx6B80uFccTbW3evBBtr1hWA5ScvXITHEJKl0eh+xOh0+gLZFhnS0
-	 te0stextwEQ1z2pyQ6GiNd26dQ3L4+tdQaVOJQeVzmO4XN3SbAfDYabMqgcnJDkYbf0cf
-	 HlcB3JlFTEANSxPDZC9AJSn3UHuCIsGhATsTcUXndBfHtBZmMGYxL09dCCQWHirCxAiXi
-	 QPONNmUbBwuDYP9oV19dgIitMEzr2fQrtUpn+TzZi2uVgS0OIvAfPvey4kEbNFz34hPnP
-	 M3z2MGyBYDRIoEpiGhXabaKNFVU56ijsWTI621aasWYZIOTl7XWOrym5Lf0eY8RxCGQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795649515;
+	h=Received:DKIM-Signature:Received:Subject:From:In-Reply-To:References:
+	 X-PR-Tracked-List-Id:X-PR-Tracked-Message-Id:X-PR-Tracked-Remote:
+	 X-PR-Tracked-Commit-Id:X-PR-Merge-Tree:X-PR-Merge-Refname:
+	 X-PR-Merge-Commit-Id:Message-Id:Date:To:Cc;
+	bh=udZcNX6hN8ZPSvU4MJ3Hgonwb+lNamdA8FW7RfhuJX8=;
+	b=PMgf72Q4aFTFXHJy7V5if/EJweYzOd0W9yEsSquFDCY0flwB9/OnWLlu7xfYqyaIa9TW
+	 2neumLGtDNINPbPbyDg2OPd5agshyH+D3XftI/WsFiP7yk7e0eCl3ENcjc6O77N9fhGJW
+	 VofePMRDC+dnez4LuwvcAp/72RBSRo5p5GDHO96OmRVtKlenutMWSP6nQB+ACZgNlXkdI
+	 GSwrXvRqJB9+9EYERC1fBXou554bASZ231nKt/+twEkNFpwC2WCcJrhgNNf2S5kav6Pr+
+	 /Y4G3Zi2GTWXNi5UdSBhtEfrzbCX0/mgxuGTE6Y/3JBtFE2NUWJkzE4iVs6JhmK05Vg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gR7IJgfO;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BZcqYgy7;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06FB3606A323;
-	Wed, 25 Nov 2026 21:39:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32EAB606A69B;
+	Wed, 25 Nov 2026 23:31:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=gR7IJgfO
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1478B1F000C6;
-	Wed, 25 Nov 2026 21:39:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=BZcqYgy7
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE4E91F000CA;
+	Wed, 25 Nov 2026 23:31:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795642796;
-	bh=5x95mFtq9SsOz7VWm3eLFqsSut3QNXOjHk0FlS/OEJY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc;
-	b=gR7IJgfOkEVQt+Kjd5Lhv9/b2kVV8yRkGEde2GpliNCOVGS04lYkQSSULOJDv53Px
-	 2Jekw39TzKqHcUDkbuoYJCn4S1gmvYLWPkpuJUCpoFdw3elJJ7zWe1+xTfJHApgEiK
-	 P/qQpkx14FJESeSKPtOdFd17NKyU3J6ilRq5E+0WakHtwQXwFkW8NGI4pXgUznisYD
-	 rHkqysyl38T7vPQqLMCGxrCLYc15vSWMv8Mtbx/OlEhREtZmOooXaG3WLLIMn7ebg7
-	 Sv768LnK5Hpwl/Tk+Rc/AyiB0N22eVUhJz1rai3YDYmpTQusukjx69daAQV6QwFd6R
-	 NEmZ1eWYWrp6w==
-From: "Harry Yoo (Meta)" <harry@kernel.org>
-Date: Wed, 25 Nov 2026 21:37:14 +0000
-Subject: [PATCH slab/for-next v2 13/14] mm/memcontrol: do not allow
- charging objects without SLAB_MAY_ACCOUNT
+	s=k20260515; t=1795649514;
+	bh=udZcNX6hN8ZPSvU4MJ3Hgonwb+lNamdA8FW7RfhuJX8=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc;
+	b=BZcqYgy71fnVlpSP/7O9tcAjKX+GHzGE4TzLUGYlcmMphBK1RQaqmaa+O9EfMHkJx
+	 a22AZY+1uOa+95PZoZe47+Lc2f8X3kI88XHFRCxByawKRXWzyautFv4HJHr+nzaqrG
+	 +fQROc62CBvVDxSpnEkQUA/VSHYde9tD01lnKVNvr2k6J3vrtfLIkMtP/77D08yVJl
+	 uWUBu04WK6PciORwYURWIilnKwu2aH+uWXcEyiQAMi6PkWi9H+pvRfgSX9PmHNihT0
+	 IY6DUNa4Ympn+1Qf4l5IAjudTFlma9VRmqMikyb9kJv9T3VfuxjamV+VY15vhQkwD4
+	 07IOu5jqWGlKA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B36513809A24;
+	Wed, 25 Nov 2026 23:31:54 +0000 (UTC)
+Subject: Re: [GIT PULL] cgroup: Fixes for v7.4-rc4
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <6a805a6f23f76761c1efac4817ea1510@kernel.org>
+References: <6a805a6f23f76761c1efac4817ea1510@kernel.org>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <6a805a6f23f76761c1efac4817ea1510@kernel.org>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.4-rc4-fixes
+X-PR-Tracked-Commit-Id: c99f50e4acf86bfbbe313d79f281d83be1763260
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 9569562af0e0113c91f92e83c7f35adc53e051a6
+Message-Id: <179564951352.1391833.3522237348525896711.pr-tracker-bot@kernel.org>
+Date: Wed, 25 Nov 2026 23:31:53 +0000
+To: Tejun Heo <tj@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -52,83 +67,16 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20261125-memalloc-prof-dont-waste-slabobj-ext-metadata-v2-13-7c680f02a734@kernel.org>
-References: <20261125-memalloc-prof-dont-waste-slabobj-ext-metadata-v2-0-7c680f02a734@kernel.org>
-In-Reply-To: <20261125-memalloc-prof-dont-waste-slabobj-ext-metadata-v2-0-7c680f02a734@kernel.org>
-To: Vlastimil Babka <vbabka@kernel.org>, 
- Andrew Morton <akpm@linux-foundation.org>, 
- Suren Baghdasaryan <surenb@google.com>, 
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
- Shakeel Butt <shakeel.butt@linux.dev>, 
- Roman Gushchin <roman.gushchin@linux.dev>
-Cc: Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
- David Rientjes <rientjes@google.com>, Muchun Song <muchun.song@linux.dev>, 
- Hao Ge <hao.ge@linux.dev>, Pedro Falcato <pfalcato@suse.de>, 
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@meta.com, 
- "Harry Yoo (Meta)" <harry@kernel.org>, 
- "Liam R. Howlett" <liam@infradead.org>, Alice Ryhl <aliceryhl@google.com>, 
- Andrew Ballance <andrewjballance@gmail.com>, 
- Matthew Wilcox <willy@infradead.org>, linux-fsdevel@vger.kernel.org, 
- Alexander Viro <viro@zeniv.linux.org.uk>, 
- Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
- "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
- Jiayuan Chen <jiayuan.chen@linux.dev>, netdev@vger.kernel.org, 
- Kees Cook <kees@kernel.org>, David Hildenbrand <david@kernel.org>, 
- Lorenzo Stoakes <ljs@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
- Will Deacon <will@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
- Madhavan Srinivasan <maddy@linux.ibm.com>, 
- Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
- Robin Murphy <robin.murphy@arm.com>, "Joerg Roedel (AMD)" <joro@8bytes.org>, 
- Amir Goldstein <amir73il@gmail.com>, 
- Casey Schaufler <casey@schaufler-ca.com>, Paul Moore <paul@paul-moore.com>, 
- James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
- linux-security-module@vger.kernel.org, Richard Weinberger <richard@nod.at>, 
- Anton Ivanov <anton.ivanov@cambridgegreys.com>, 
- Johannes Berg <johannes@sipsolutions.net>, 
- Eric Dumazet <edumazet@kernel.org>, cgroups@vger.kernel.org
-X-Mailer: b4 0.16.0
 
-Objects of a cache without SLAB_MAY_ACCOUNT cannot store the objcg
-pointer once slabobj_ext space is no longer reserved for every cache.
-Skip charging when __GFP_ACCOUNT hits such a cache, and warn once under
-CONFIG_DEBUG_VM to catch callers that did not opt in.
+The pull request you sent on Tue, 24 Nov 2026 23:30:59 -1000:
 
-Refusing the charge here is sufficient for correctness: an object that
-is never charged does not access the objcg slot again, and the free
-path already skips such caches via slab_needs_objcg().
+> https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.4-rc4-fixes
 
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Muchun Song <muchun.song@linux.dev>
-Cc: cgroups@vger.kernel.org
-Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
----
- mm/memcontrol.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/9569562af0e0113c91f92e83c7f35adc53e051a6
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a07cc73acfc7..0eddb16173fd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3707,6 +3707,12 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
- 	if (unlikely(*p == NULL))
- 		return true;
- 
-+	/* Do not allow __GFP_ACCOUNT without SLAB_MAY_ACCOUNT */
-+	if (unlikely(!cache_needs_objcg(s))) {
-+		VM_WARN_ON_ONCE(1);
-+		return true;
-+	}
-+
- 	flags &= gfp_allowed_mask;
- 
- 	if (lru) {
+Thank you!
 
 -- 
-2.54.0
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
