@@ -1,47 +1,100 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795601862;
-	b=idwLwmYpPAfphnOHAWsjCS7zfd4UCJCrUATRA2bporFMjpTW3lC9H105KcJzsXvEHkLK
-	 gmoDNVCbo5KSl0LZjK+4PhJhQziQi3BHgen4+u+qKkxbBuwRBE1Lvp3YfCIVEydxkMyKI
-	 V+90CQMDhp4qlOkhlViruJEH//gOubNcxCBkuPFUBvB+4vBHJ0jn2Fhqjj7x/KTW4HJdE
-	 2OJLe4PH9/v+EC3/LiF4R0UsDqnX8s9GqDt4IQBf5mFF3kBgwEb6VEPR+e1G9J+1bYvih
-	 nlyyF6cAJ84+qGfkFI8QRedFm1k6amVb4GuZq+FA212Qt0J0J3gzLEtQFt52+8uVg5Q==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795601862;
-	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
-	 Content-Type:Content-Transfer-Encoding;
-	bh=MVpSybBRP0s0J8L4gfkBHiRSvBKROD3zUxXIUAM8HhA=;
-	b=lKN+EO0TjJJ7Sm3YoRJEV72AAob1rkrN7J6IMEsciShSj9lU7zEv2+Ok/6y7rA7gTYiH
-	 gyX4Kh7Pd+cKoxRrmuLT/lOYjCka/9cVLQBMamB6/CdM5eZxypSMRBlMe2+90wQ1OqPt2
-	 l+8YA+7nVWCxTAghH9ysKpfzrWwOrQRAjCNspkZ/JwddittKyadWO5ZdGvjGDigMtgIS9
-	 PK9YshMH86bcY/yHoZYXEO/RcsdoSIwnDmnfSQzVMYW+yfpi/yLhj3czS4gFbRRdpJNKe
-	 t2fENNOOSIRCGfLaqNGeKQfHg8hfop4UOcPCXNGexhjw0zivyCLouxgGqUSgK9AmWGQ==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kka7V0z3;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.49
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795609974;
+	b=QtqnZyltga2UGXSYamonwP57Y1P1OTJskF984mnEahtFraP7MYhhFiub864xwrPYyKFU
+	 3tmaGyUYRdHh8egUzPye1adLVvjNAyeCcUWU7upfU5k5s2X1NgOipYlmDa+BMh1JjEYV3
+	 k71fcmfUaYexhk84ETUzUOrIgGScaEF0LZuuMDok/GnaRP1q8Z0IIk+Lux4vgOU0nfrJl
+	 kndkwxf7GQ85iRTtYDAppAJTRF0ennUhL6R81NsGmg4ByPx2d6KRJB+mnHZD5YkrB08Uh
+	 CY3LJxcmfewGYhYOKXEVqJ8SVhDe8HrOR2V+oX5xUtX6Dcdywc9JbokoxFR1pedJC5A==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795609974;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
+	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
+	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
+	bh=zRIgVqfWg+QEl68a/JHuBJi2X/pJTjAcVfLhgF2ZyDM=;
+	b=g1bUi45au1VFeOlrxNWrq4N59JvmIArQsp3qANpQIP38uTOB+lU5Y+DrA/S4w84VRYET
+	 hLoqWbOfpSHh7E23viBo1qVDyb8Syl/qxeBCCfWA9BxxKHuWAz7ceTIIJdm55reuKB41S
+	 wkssBMxJ9A3nIOSjgTrciCetzL5+ui7ORozs2K+9gITzEal7p+vMfjxJuqLZwgvA/iapf
+	 PDe2Pie6X6Yls8rqG6ErlEGdvkUdCbVVtnCygr959A62gurQjTEsDr5CPETSl5aYN3tde
+	 U6R4ppVwnZXvJOauQyf9c7LQTIQfQmivf2FcpZ7R4YtcsDfVUtgWMhLwEvVHshnntSg==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fNDojyPo;
+	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.49
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC1F606A31E;
-	Wed, 25 Nov 2026 10:17:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11554606A337
+	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 12:32:53 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 11554606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kka7V0z3
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 521A21F000D0;
-	Wed, 25 Nov 2026 10:17:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795601862;
-	bh=MVpSybBRP0s0J8L4gfkBHiRSvBKROD3zUxXIUAM8HhA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=kka7V0z3rAN2myWRWUJ7Onlql/wheMihA7nbgFyaVm1BMatCAYHP0qX/KUiaqp7xS
-	 wLL8DPzN2vyqWkZbm50OyTrAeRDGS/uWROQbMr04QqVwiXXwaaOSJlP3lIVNxUSBnL
-	 baazwmqsbZ8BoEUyRXPuSgvLJnIQzG5unm3ZB7xa9FZtWATUTvSP3TsZXsAiptJpN/
-	 m7zoI+FonBW6LTpOS8CM55qrkns+g7qwaVuv0/gszNJFEmUskBP8mIgJizSQBKWt+l
-	 JFC2nQ4ayt+sS6gOQ4/ePJkENKDTf8g4TYbEz6EVsh34z6BAmvyc99wucVvbtB5q1H
-	 Z8fpZY/SVzKrg==
-Message-ID: <1b88fc30-a3d9-473c-92b7-701cc563be1c@kernel.org>
-Date: Wed, 25 Nov 2026 11:17:24 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=fNDojyPo
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-c5126505cb3so734061266b.0
+        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 04:32:53 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1795609972; cv=none;
+        d=google.com; s=arc-20260327;
+        b=fi+jdcmtchFrL86MQ+DzFFCfqqC2FkxLv6c9eEUU1xorhIRnmWFELrxk5N617bKXxO
+         AfHdDjPPElvlPjhwuuBZuKwXEajkjHvQ21dGJacVHE8Qn66ohj7Bvl9rWUt6o0MEvDC2
+         gBND3L575DiLuvKmZxoxFYmIKNKLxdCpAM/TfNt4pDsg1u0c2Ge3QynWgE1p/OTtXbYo
+         17xZ3AG3xQo6yQbQFUnb6A5F90hlysimksU7F+Ks0hpL1CsV3qGQUKYZN5w9DTLe1S7i
+         hKl8zk7/iBqtelULz5r5MVfdRLwUjAMezIpULPybUso4A5aLWV4ETzU/2+K9+eW29HY6
+         oJLA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=zRIgVqfWg+QEl68a/JHuBJi2X/pJTjAcVfLhgF2ZyDM=;
+        fh=WKj250RJkJunQwrRL0AnbooaRV6rCvYsLO1pgadsxEI=;
+        b=ntZzQeVOpUqwsIvrLo2NhEGafj9wTIh+V2QbYeD57IgHXoS9JrCxfd0h9GpAsRMQZp
+         VnBFdWC/cDhFggg2N1wPPJLARx5NKsMgzsVtxTNVSTjSg1j39Z5YqYCuQziW375uWDj0
+         rjsCiyCrmzm1DzziL2J5X5PhcbNQXUBVorfjSdzAiE8s+8LM6Kn6MFczo2clyiLs10b4
+         ZXI1uRgX5AOAW87XD5tGrDJT9EIG60EJxjqzYTPgP4NGwMDRBVmgc2gGsBCxZkyDLmFG
+         vM7veHydftx9uTSM5ZY4vXxG6AvwjQUWZpFNHK6A9v3yt38cj5zi1oCzbv5yyiS7E2s+
+         vqcw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795609972; x=1796214772; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+         :date:message-id:reply-to:content-type;
+        bh=zRIgVqfWg+QEl68a/JHuBJi2X/pJTjAcVfLhgF2ZyDM=;
+        b=fNDojyPo/8kFotywY0pBugtFsBtIrL8oBHXEqtShmAqzfwpOvCc2wpHclgkSJGyWut
+         SWlGJQ2S/UbzxhmZXe1s189zxMt0m+PbxqQ0AAx62KWxeitVGXp93dexLN57CLT5/K9o
+         bVlOwpoItRcZOvlcxt8x26dpSiOO07UZPY9epYXfp5w0f7iwBIhlUWkyU9DfKmPosAlL
+         LCK8Mg7zOvNrfd2GEFOhJGWQXPWe993XuRsfhekF+E7w7hT6hCoxJoQUChpZX5AJgFRq
+         W1ffUwTkA7JId3MUa7tnZPxsi04YEuDs2cET87nwtDiNbYK7sJDMcXYMUZqb8zRo4fPG
+         x/ZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795609972; x=1796214772;
+        h=content-transfer-encoding:content-type:cc:to:subject:message-id
+         :date:from:in-reply-to:references:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
+         :content-type;
+        bh=zRIgVqfWg+QEl68a/JHuBJi2X/pJTjAcVfLhgF2ZyDM=;
+        b=cZxpW/d2nOWYCM8u3Ulj2xuOrwPFkzetchJdQh9MlvJz6s2Jzig1+SUDyBuFYa5tEa
+         Y6netxtIuYyth1WotiOx79KEAHsE3tHPPqS0f3dvvBHyO7S/cFzt4aZocpq0B9rm1M1T
+         rzw+3io8vD5OObUwHRq3Y1cKGmDUMg/eXXXQY7aXyV/+lj8zqjMCwWtZxWjkjheZN5RH
+         SbuIUPAQfC2VHfrQeDDj6Chvm8dR2tXF7Cy43NrZfoLLaQFycN96V2mbB7jtD8tFpZef
+         yaGBA5GwYSKYUHZ1QrBViKYJRdXUL8XQdSzwOgtzs2CoNaa89aikNpjA/Sf2ySJbhe72
+         JTwA==
+X-Forwarded-Encrypted: i=1; AL+hErE9ypB0qsZPlK+yOHht+3cYc/VTs8pVAf4hp+ocw+MW4lfagkBAaeKGyWRK4P2ZRjPRlUivLXeC@vger.kernel.org
+X-Gm-Message-State: APuU4Z+Hdi8hbMjSz7/q7kimOWYSjGSoGVNzQE9d9R2Uz2WBz992LDxL
+	6qIfVKdVkv/DcVmfPN8I1fvvkNHDYTnYc5bcX/2E2dBYXFZzVL7YbkivTpjc7KoKzqsRMRFLsZc
+	bMK4l6voGccLez+PDGMZFtroiJgCemJs=
+X-Gm-Gg: AZFdTZca1yJd9gf2HFCbaq2+82R4Q84VRoFhc1Z4c5WJIN7fEGTWa/EHaDfwwSiBe8g
+	+dbeaddPOa+68+LAlhskEu/7so8ABPIbS4xPeHqRa8l+gd3BN2wPmxUlSKknrhRGBcXdQ485Nd2
+	FTOdB2Vqy9qJR9DzbbqbIoDptqV9GvmpYd7+pAcsq3qihepEttuYh664+NJnRs0pgHsVpvYeCc+
+	1YJ6CB1xVBPTKFXhG1E0ZleuW0I2hSu6l4sSy5nXdJeKhVR9p1NglYDeEuI8D+XfP+9McuDedlL
+	TOJuomi2zryXxDTHC0gEosUpHTZTQEkpLUKTe6OgWQDlYDA/ov+OtsmDJ5O+uwcxdqz5cOzEJdX
+	mCKZjPAEij4ELZWD+0IGEfmftARhSbjXxPk3EBNorB1kWeVqSKsWMwk1MmbVpuWVcIFNSVw==
+X-Received: by 2002:a17:907:7f91:b0:c50:c747:a4ce with SMTP id
+ a640c23a62f3a-c513a4b083bmr1510819666b.4.1795609972048; Wed, 25 Nov 2026
+ 04:32:52 -0800 (PST)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -51,141 +104,167 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 17/18] mm/mglru: folio LRU refs based active/inactive
- number accounting
-To: kasong@tencent.com, linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
- Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>,
- Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>,
- Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>,
- Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>,
- "Liam R. Howlett" <liam@infradead.org>, Barry Song <baohua@kernel.org>,
- Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>,
- Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>,
- Suren Baghdasaryan <surenb@google.com>, Nhat Pham <nphamcs@gmail.com>,
- Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>,
- Gregory Price <gourry@gourry.net>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Baolin Wang <baolin.wang@linux.alibaba.com>,
- Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
- Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
- SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
- Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
- Zicheng Wang <wangzicheng@honor.com>, Tal Zussman <tz2294@columbia.edu>,
- Kairui Song <ryncsn@gmail.com>, Xiang Liu <liuxiang.277@bytedance.com>,
- Ehab Ababneh <ehab.ababneh@intel.com>,
- Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang
- <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>,
- Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>,
- Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org,
- Tianyi Chen <hi@tychen.cc>, Ridong Chen <ridong.chen@linux.dev>
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-17-8ffea39934a6@tencent.com>
-From: "David Hildenbrand (Arm)" <david@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=david@kernel.org; keydata=
- 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
- qIws/H2t
-In-Reply-To: <20261124-mglru-fg-v6-17-8ffea39934a6@tencent.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+ <20261124-mglru-fg-v6-10-8ffea39934a6@tencent.com> <ce7c1974-2524-4d49-91f1-508acf2e33d8@kernel.org>
+In-Reply-To: <ce7c1974-2524-4d49-91f1-508acf2e33d8@kernel.org>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Wed, 25 Nov 2026 20:32:15 +0800
+X-Gm-Features: Aa3M54pyChceg9ROmZV659afdcgKNDI5RisCi7hnLxG16VuSebxmazytrDQ-wFs
+Message-ID: <CAMgjq7B7dsT4xOfcpnC8XdXZSPd0OOw1br64M+HA_3E+ZeZ-5A@mail.gmail.com>
+Subject: Re: [PATCH v6 10/18] mm/mglru, gup: mark folios referenced via a fast helper
+To: "David Hildenbrand (Arm)" <david@kernel.org>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
+	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
+	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
+	"Liam R. Howlett" <liam@infradead.org>, Barry Song <baohua@kernel.org>, 
+	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
+	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
+	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
+	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
+	SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
+	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
+	Tal Zussman <tz2294@columbia.edu>, Xiang Liu <liuxiang.277@bytedance.com>, 
+	Ehab Ababneh <ehab.ababneh@intel.com>, Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, 
+	Lian Wang <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>, 
+	Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>, 
+	Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	damon@lists.linux.dev, linux-doc@vger.kernel.org, Tianyi Chen <hi@tychen.cc>, 
+	Ridong Chen <ridong.chen@linux.dev>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 11/23/26 19:53, Kairui Song via B4 Relay wrote:
-> From: Kairui Song <kasong@tencent.com>
-> 
-> Currently the active/inactive LRU sizes exported through /proc/vmstat
-> and memory.stat are derived from the generation window: folios in the
-> two newest generations are accounted as active, the rest as inactive.
-> This causes several problems:
-> 
-> - Unmapped file folios can stay in older gens despite repeated use,
->   so active files can be under-reported, unlike classical LRU.
-> 
-> - The reading is jumpy: on aging, the second-newest gen, previously
->   active, becomes inactive all at once, causing a huge drop of active
->   folios without any change in use.
-> 
-> - The reading is reversed on swapless machines. When swapping is
->   disabled or unavailable, MGLRU ages anon by moving the gens directly
->   without walking or touching any folio, to reduce the overhead. So
->   inactive anon folios can suddenly count as active, or vice versa,
->   despite no change in their hotness.
-> 
-> With frequency guided promotion, hotness is already tracked per folio by
-> its referenced count, so we can do folio level accounting instead: a
-> folio is active once its refs reach LRU_REFS_ACTIVATED (currently
-> LRU_REFS_PROTECTED).
-> 
-> On reaching this threshold, folios are accounted to the active part.
-> On forced per-folio aging or PID protection, refs are capped at
-> LRU_REFS_WORKINGSET, dropping active folios to the inactive part.
-> Note that on swapless machines anon refs are not reset by aging (the
-> shortcut skips the per-folio walk), but the counts no longer oscillate
-> as the generation indices wrap.
-> 
-> The accounting is now per folio and lruvec independent, so no size
-> adjustment is needed when reparenting a dying memcg: the hierarchical
-> stats keep the counts in the parent automatically.
-> 
-> folio_migrate_lru_refs() also gains off-LRU VM_WARN_ON_ONCE checks and
-> __folio_set_lru_refs() leaves a folio that is still on a gen list alone,
-> as its refs are already in the active/inactive counters.
-> 
-> Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
->  Documentation/admin-guide/mm/multigen_lru.rst |   4 +-
->  include/linux/mm_inline.h                     | 100 ++++++-----
+On Wed, Nov 25, 2026 at 6:14=E2=80=AFPM David Hildenbrand (Arm)
+<david@kernel.org> wrote:
+>
+> On 11/23/26 19:53, Kairui Song via B4 Relay wrote:
+> > From: Kairui Song <kasong@tencent.com>
+> >
+> > Introduce folio_inc_lru_refs_fast(): raise refs from 0 to
+> > LRU_REFS_REFERENCED via cmpxchg, or just set PG_referenced for the
+> > classical LRU as before. No counter update or promotion is needed,
+> > nonzero MGLRU refs are left unchanged.
+> >
+> > The classical path is taken for a folio that is off the gen lists while
+> > MGLRU is off, not on lru_gen_enabled() alone: while MGLRU is being
+> > turned off, a folio can still be on a gen list after the static key
+> > flips, and setting PG_referenced there would bump its refs count.
+> >
+> > That check uses lru_get_gen_flags(), so move the helper out of the
+> > CONFIG_LRU_GEN block, it is now built with the option off, where
+> > LRU_GEN_WIDTH is 0 and LRU_GEN_MASK is zero. Keep the decoded value in
+> > an int so the subtraction of the offset-by-one encoding cannot fold to
+> > ULONG_MAX before it happens to avoid -Woverflow error with CONFIG_WERRO=
+R.
+> >
+> > This helper only aims to be fast, it exists so the gup fast path can
+> > stay a fast path. The new helper doesn't account for refs above
+> > LRU_REFS_REFERENCED but that's fine for now as GUP never used that
+> > or anything similar for CLRU either.
+> >
+> > Convert the gup fast-path sites. No behavior change for classical LRU,
+> > no regression for MGLRU either. Just prepare for the following changes
+> > by providing a helper that follows the new convention.
+> >
+> > Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
+> > Signed-off-by: Kairui Song <kasong@tencent.com>
+> > ---
+> >  include/linux/mm_inline.h | 62 +++++++++++++++++++++++++++++++++++----=
+--------
+> >  mm/gup.c                  |  6 ++---
+> >  2 files changed, 49 insertions(+), 19 deletions(-)
+> >
+> > diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> > index b15c3618a1f2..13c8b6bce349 100644
+> > --- a/include/linux/mm_inline.h
+> > +++ b/include/linux/mm_inline.h
+> > @@ -105,6 +105,22 @@ static __always_inline enum lru_list folio_lru_lis=
+t(const struct folio *folio)
+> >       return lru;
+> >  }
+> >
+> > +/**
+> > + * lru_get_gen_flags - Return the LRU generation number from folio fla=
+gs.
+> > + * @flags: folio flags
+> > + *
+> > + * Returns: A number between 0 and (MAX_NR_GENS - 1), inclusive. Retur=
+ns
+> > + * -1 if the flags indicate the folio is off the list (e.g., isolated)=
+.
+> > + */
+> > +static inline int lru_get_gen_flags(unsigned long flags)
+> > +{
+> > +     int gen =3D (int)((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF);
+> > +
+> > +     /* The gen is stored offset by one, so zero means off-list */
+> > +     VM_WARN_ON_ONCE(gen > MAX_NR_GENS);
+> > +     return gen - 1;
+> > +}
+> > +
+> >  #ifdef CONFIG_LRU_GEN
+> >
+> >  static inline bool lru_gen_switching(void)
+> > @@ -168,22 +184,6 @@ static inline void lru_set_gen_flags(unsigned long=
+ *flags, int gen)
+> >       *flags |=3D (gen + 1UL) << LRU_GEN_PGOFF;
+> >  }
+> >
+> > -/**
+> > - * lru_get_gen_flags - Return the LRU generation number from folio fla=
+gs.
+> > - * @flags: folio flags
+> > - *
+> > - * Returns: A number between 0 and (MAX_NR_GENS - 1), inclusive. Retur=
+ns
+> > - * -1 if the flags indicate the folio is off the list (e.g., isolated)=
+.
+> > - */
+> > -static inline int lru_get_gen_flags(unsigned long flags)
+> > -{
+> > -     int gen =3D ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF) - 1;
+> > -
+> > -     /* Exclude the legal -1 from the unsigned MAX_NR_GENS comparison =
+*/
+> > -     VM_WARN_ON_ONCE(gen !=3D -1 && gen >=3D MAX_NR_GENS);
+> > -     return gen;
+> > -}
+> > -
+> >  static inline int folio_lru_gen(const struct folio *folio)
+> >  {
+> >       return lru_get_gen_flags(READ_ONCE(*const_folio_flags(folio, 0)))=
+;
+> > @@ -483,6 +483,36 @@ static inline bool lru_gen_del_folio(struct lruvec=
+ *lruvec, struct folio *folio,
+> >  }
+> >  #endif /* CONFIG_LRU_GEN */
+> >
+> > +/**
+> > + * folio_inc_lru_refs_fast - Bump folio refs count without promotion.
+> > + * @folio: the folio
+>
+> It's unclear when this function should be used and why it should be used.
+>
+> For someone reading/writing GUP code it's completely unclear why this mag=
+ic is
+> required.
 
-Another clear indication that this should go into a separate header. Maybe
-mglru.h or vmscan.h ... or both.
+Right I think I can add the context here in commit message and kdoc,
+MGLRU requires the user to avoid calling folio_set_referenced(), so
+folio_set_referenced() callers should use folio_inc_lru_refs* instead,
+and folio_inc_lru_refs_fast is a variant of that aim to be much
+faster, avoiding RCU / CAS / Memcg Counter update.
 
--- 
-Cheers,
-
-David
+CLRU still uses folio_set_referenced() though. We can get rid of
+PG_referenced and helpers later to make it much cleaner (co-exist of
+two LRU is making this looks ugly indeed, I we can fix this step by
+step):
+https://lore.kernel.org/linux-mm/20260502-mglru-fg-v1-32-913619b014d9@tence=
+nt.com/
