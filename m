@@ -1,100 +1,115 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
-ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
-	t=1795612399;
-	b=pE7x8/6DL5cWxJM3g27cK0MS0NmO+/81wvs1kdURFmMwCYyAHWYnzxBrOWI5LftuEwgs
-	 L2O0Xy5y0tdjTsu5YRAaZPhG6bLAeKqq4Ej3uQlvnKRccVq4n4cIBX/Bfa2DGPTxRFPcl
-	 eApihxq/mM2jVGcvxtVwUrUlig1IxmaeWsciq7xouedgcbY1O7MOKQ3SHUYdNbzCWdz1c
-	 LNEZHW4kGihRYFPo9bVh9icNKS9+k2UWZ5IvIBCCUixHcsgnCNmQ4A6vqHnkBKbBsCyJM
-	 GVF2M1K1vuWWX0dvAqvO7iCCN7jh6/wYrJ0jwPCwtmE1P97maqqciphrMUtOMDwsScg==
-ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795612399;
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.44
+ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
+	t=1795614459;
+	b=DlCXMu159t6FcKeud9Z5U7cshunhgvsHg22zDoHFS9Bd4V8SN/F/04qalvS3DrRse+y2
+	 GK+RmYeFTeXj18nSMMR9RcKL2uu+gqQG6AOTimuZiOHfjHZcMs8h50cVTKeX8n0Pc8Seb
+	 BbseFIYtEi6jeeG3DzjKnjbN6eYxm1FVLSenkvc/GFVPt+VX7S8jM71NcKFEVZ/zJae8y
+	 quuIM0QMV18NnpuIsdeMdlcsug2atXar4+azPiNCIaREvazCQ/YIzt3Rz6QI/a+pK0+fD
+	 c9sIjbtZhKh5tCl5X4I8MOWBxbZdrO4JxjhWRat9k5vpWcc46teDCRKCT+nyjBM8aLA==
+ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795614459;
 	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 MIME-Version:References:In-Reply-To:From:Date:X-Gm-Features:
-	 Message-ID:Subject:To:Cc:Content-Type:Content-Transfer-Encoding;
-	bh=5Yz7JNlPDDcs8XZFhzYAPoSiu941gv9oYg8JZ/90iT4=;
-	b=DCgEplj5opIwgFUE9+oJFhhDZEO2DLPkXu3ozqRMC6b0Yq3rawqHUyEJvzuPkF+LBdp/
-	 vanS6svWC2OnTNGJPZJUl57qwBOL4c+uu9nerkesTvrMw6e+RhqXcEHxyKuNclOSW1cJZ
-	 XHsvGwMgFUy+otLetP1RP56/pU/+GcvS/gLNZ/LHqu+8MT46OF6y1o9n+2uqOGCUE/w56
-	 90lXjmcWBy7oVybW9oaEAAGWgnzSMCagGHDJhH4L+vpZoLb21OrVN1rKHiPm3DNYScn+h
-	 wvSgoF9M2JDFCufDdMLPBdoD1YveZ0S2RMxoymFXJelaD9D95JtbgHVkbNU2L8rKyOA==
-ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:Received:
+	 Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To;
+	bh=tNd0IbaZQFJuxJS+R9ayDKLW68Bcl2zYZx6i5ipU+qg=;
+	b=z7N1Cu0MgvyhEPq19MMBt8ysqz+58a7Ihlfsq0CCc5ok3ETFl8qKqqwhtMs3WXnVR2S5
+	 zmYZWEf8/egnzADfe41TV67LqalHeAzotnfLhelcrh+s/m8WtYlxLntPwM/BDCZpngHPT
+	 PcohvwNgrF0lFDSNnobNe6jeMqHnSgT4AsnlghKP/WxjepdkyekN0i800SD0gn1d283sz
+	 5SkY3loNQbRnNk+kNiUCyn90iGBHIDX2xcMKnMjf6FNYwRjqXs9jCkOYe2LD98CrON1v8
+	 KP5GRQFjjfOyiiQJ+3fWQ2E/P2PcvxSPdBDuGqqNZBfsTZl+tpw858LD5i5MR0EM1VQ==
+ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=gmail.com;
 	spf=pass smtp.mailfrom=gmail.com;
-	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=n0vv5HDD;
-	arc=pass header.oldest-pass=0 smtp.remote-ip=209.85.218.52
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VuYMKNxx;
+	arc=none smtp.remote-ip=209.85.216.44
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ECBA606A326
-	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 13:13:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9ECBA606A326
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23009606A321
+	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 13:47:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 23009606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=n0vv5HDD
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-c5118deebcfso857381166b.1
-        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 05:13:18 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1795612397; cv=none;
-        d=google.com; s=arc-20260327;
-        b=L2D49xhneZFaqfBslpVC1aY677PbtiJAfO+6Elfkcs5vPJsiWzWnxGYnk38OY5me9C
-         M3iRdPsxObixel1ywY+YMJFEbXsXum8yYCnTcdOl14dWauYUf5J25bq1leB46hgs2Jz0
-         zIgYwidXWOefHj4b+TT81KsLZxr7Y8Ii6mvIZGf/xTK4IfnQZ84THFY7K7uUQf9lPDAM
-         c0SfH9nNhUq59I5RRbCEQ4CMWHsPVGaHQGrsIGErHce6iy3opJNvKb3TdVlNWKjRaO3t
-         zyB4sEuPy6uxezW4+qNv0rtY13990FWoyQe/Hu8aleBcseG1gusET51HqWDBU34ApwBo
-         u31A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20260327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=5Yz7JNlPDDcs8XZFhzYAPoSiu941gv9oYg8JZ/90iT4=;
-        fh=h8neeJcBFCKsZTOzkdfBJALMF9kPHUBsgI3QB2KFHIQ=;
-        b=soCAciSivglQ1cp+EidxIxi57fAy4vUtj0pK0vj3/wHX6IkWDK7horIHdZ6mrVX1LG
-         /tmpT2PDb13haA7rzVKqRBnqDW0rj0Tim9hVGXqciXs3X2N1W9/OFbCG2HH7DeiLDqUS
-         PpwoxxeTxhvu8njmKH+EoqsMOHesHkehPOwWr5RcPV1RoKCDhg9896lt8nU0Xfu9nquD
-         4EdMcrez7D4wkhhO287r9s7yBnvtRGmM9QcZfX4CnRL0VioPbPzf0ukgcKjk2rPdbhSf
-         gPSX3MVP3YXFTey5+c6BPAixcaS+vJSF+03u3Mhq7UVdTODJ6f+aRufM4rO3Uk1IbC2t
-         I/cQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=VuYMKNxx
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-3ae6b4c669fso5455209a91.0
+        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 05:47:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20260707; t=1795612397; x=1796217197; darn=vger.kernel.org;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:from:to:cc:subject
+        d=gmail.com; s=20260707; t=1795614458; x=1796219258; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
          :date:message-id:reply-to:content-type;
-        bh=5Yz7JNlPDDcs8XZFhzYAPoSiu941gv9oYg8JZ/90iT4=;
-        b=n0vv5HDDhQGJx2A3SZ9UrU+9j+SJMLmyzK7GRIhTgCeVF3W9mHcsWgDDEOIM+SSb5J
-         d0zlmJEZMWQJbBbMP7QULVebH35itoKoCjJ0eHNerucf5DgJiMaidCg5rvo9SmOde1il
-         E1HZ42khDgyKjqkNbwHk/IYMCc3VvVXmJ24IK1eSUsUsq5Sz+0xxCOasIX+zmAD51LsO
-         21MDtIAT4wQCBGMbhKocFMemYjqSPdS11kFF/qU3oIH7R2e80W1dhPd2uTzfbpJhIIsu
-         6/vX6CPqvL2aDs2Z/rHJe9uhXBRc0EGpUV0CAKNi4D+AQsll6t8CBem4My/QX30ws8qS
-         seuA==
+        bh=tNd0IbaZQFJuxJS+R9ayDKLW68Bcl2zYZx6i5ipU+qg=;
+        b=VuYMKNxxv+Zu001gmt0ClbtMscwdHC0CE2MvHQonG1WroM5WNV3+4ev5P/ikq9yzaN
+         /z3DPQvGaBWTyXrWy/2CiALGqaY+6I4sQzGc6sQd4ciwPTy7HSpE88zRhePRLmfB+gFW
+         URxUqWndcDH9Lnsq2OS1nW/Bju1TMfKWYwQh8UWOmr5+ZWXXPszX0GwG+fV/XiKM2pgX
+         K4zNTgkaAPFBB6NL7Ll5ngyD8IITuEpfDCw3cQvuzjk71Kof+4DP9fciXTONoaiKzwtT
+         36JN6x3tbK3xBpujkfjvg3gME9POl7NyxTuQRiDuzVfveQ1jTgXg/r5lFpzw0R1z+9bl
+         H6QA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795612397; x=1796217197;
-        h=content-transfer-encoding:content-type:cc:to:subject:message-id
-         :date:from:in-reply-to:references:mime-version:x-gm-gg
+        d=1e100.net; s=20260707; t=1795614458; x=1796219258;
+        h=in-reply-to:content-disposition:content-type:mime-version
+         :references:message-id:subject:cc:to:from:date:x-gm-gg
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
          :content-type;
-        bh=5Yz7JNlPDDcs8XZFhzYAPoSiu941gv9oYg8JZ/90iT4=;
-        b=EK/Pga/n9KdrUEze23oJa49p9rmpZpllAhmSNCIyhqkILCgbZnPLikIWHbx+v0kSHJ
-         xTh4hrKTc4d5h3jsczfsKuHFk59DdN/K1oni5lDZXP+ub4wULr7Sl/8hUYtWxgLCNYqn
-         VmNwu/s3+Sq4hhqM9MoRusncCTzsSu2Ha0ns1T+UAOajzw86JlqiL/ZxLlc33vHVBp2b
-         f993bTGAuOkKCPByloIIAIVbxvLUzpL9p/TOIcYpp+opaiA2avBEl7Z/nLT8Cg8WUk6E
-         /X4rslDQYb/Y/Q/+Y7MWu68fgU4p1LDAF0TQgf/02BwW60heiyG+W+nr4xkTSY/Ii1tG
-         N9KA==
-X-Forwarded-Encrypted: i=1; AL+hErFx/p0OU5RBtvRsL1kfjgiStsNmi26TPEEVzqWZx7CSg51rv2kHh5KgJQjd69GJbZsBQnz61E+b@vger.kernel.org
-X-Gm-Message-State: APuU4Z+s87wxfen0rG7rOCcs+tsIbs7myggbx8YvUc/MD+8mY1jVtlX/
-	8EVaNbtY1Jls7FReEk6hmnu8oZV3xBYSby2XtzD5p7GC4KYRf6zWCoHorompiixnmfKaZoyhBOD
-	PyEIa09LuS599NqX6JxEYqLatTSh4Lhc=
-X-Gm-Gg: AZFdTZcRM7LJg8lsob8PLa9pUbqHM7vPbETx5wuvg+0d26T9qYS50shXuDm/8aozvph
-	2CkcUUPo1oWR83ampBCPh9Uc8ouXvNL8sdHBJ1Mz4ZSn9YjwvDgX9jVIVOK7+gJVlBtrcJHt31M
-	fxuaTfhHrsCESIOcKodknHpykCPOQDRQH/74ioyjWPZmdGRyiXcoYeCUWkOOiRad8Cmt9ZBkv2Q
-	dZDAX05k2EGLGBo9Zbz1c9AJC/hHae11H1rTSoy9xZOQolxm91Iop5ETY4+5Kl4m9FPqwarGIzi
-	nKiteElKG5GUe70uPI+/uXQvhpnF/Ow+VV+IZYSsqqU2QKvOGPaTW9GX7FRHhmJC8XxfcxA/PbR
-	MMB1rr5iHofen5x9FS/U3xdknB42s9OQjIXATy6oA6l1FkbelTOJ/CmBCpbOy7a7MKRB5vQ==
-X-Received: by 2002:a17:907:9693:b0:c4c:ddd1:d006 with SMTP id
- a640c23a62f3a-c513ab47f40mr1378964566b.38.1795612396826; Wed, 25 Nov 2026
- 05:13:16 -0800 (PST)
+        bh=tNd0IbaZQFJuxJS+R9ayDKLW68Bcl2zYZx6i5ipU+qg=;
+        b=ZFPofl4hu+zBgzX9whoalyYq+Vy6pstn5NAUt1YAFjwyKJQU4fGxkSfiHkooVNqSHU
+         MrfH5jOS5ZwevlYEInW4UqVjTW6d1QRh5RB4vEeuVUmrRfYooB5itxzGS83LYnJj5h1x
+         bDfCxEL8CEWD/EluGq3aRb07hKDfhM6WKOGobnzvwjBiRIwwtWqrgaUpQ4ijc10WRq2T
+         YzK438wo9djuajoXOxNRl7D23EvBSF0Ubv24GzWFixWaAb/qi7WbGgglrCUeGScz7oDe
+         uIOky7E+zc9moQQqBo9jmY9tpCtXTJWpTbf/wIynDwcZ6FDqSlZJWKEPazsq0awGLK45
+         7XDw==
+X-Forwarded-Encrypted: i=1; AL+hErGwSvKuZ19x/Y2pTRe0XCGkVu/OlPKojHcxdlijFwsl4Dv+Xu7j5ZINFlpKtUpd0OFNay83pco+@vger.kernel.org
+X-Gm-Message-State: APuU4Z/5/+gYbA4HC3oVll9iphHf7YbxsKrtFKdIeL3Uh8YIXAuyryyG
+	1EJkLinbkS7hdoNp4uJ9kcPhmoege+Z7vZ61mHMgOucJI9FPWQZvW0tf
+X-Gm-Gg: AZFdTZcK7dFmGOINQbUlH4XKJRv7odvVtGFn69DqDFYE4eBhxKXDe/8F2UqZOawMlH3
+	pWLavkpkEb3ZnCrlpIJ9JdIJkwKSETr4ids1S8K5kRO79A51gW/hWNmo+bIUMsl+zuJC+jCkIzF
+	BE0KAC9f2F1oCDB9TWHjC3xMf+ThSbYzLGURC0BgiHU4mQQo4VJnLwAavETBrRZLSqJeQHqPOAG
+	wQbQ7KoNh4Rkn9AL++bumD79BBUjj4G1AlMZUVM5XrMsljn1H8SwhJANVzBwsiLEBUYc8+Zv59K
+	VxNLdaFhxllMLRBvQ+l/3UWnln6VjXqkp/QVHPtUy7QI2ZBZDIGV5UofPjh26YzfJE0na41UqkC
+	q9r0NZ0wMnADNjoD3FA3rr/1sCnc2kgogiRmWQ6Ub2vWBUiZXNpFgRr20JZERvv6+YojukhOiFS
+	I1WxpBZ2pljeyPMQ4DQI+JRuB5GdNKXhWEnYhLUNbdH+Dx/zdKxx5+GPyolKiR3BaSVFcb9u/nt
+	E2BlSaeXel0expOQQHs3IfZXf1aa2yZZjIopz0Ll7nTZDYeDg/QcHL9JH6hHgBE4pQPABKI0LpL
+	evMHC+wVP4HkAvaQ/YFtDExRhpV3sGtFCSN4RUFwRrlk
+X-Received: by 2002:a17:90a:d2cf:b0:3a0:e568:ed63 with SMTP id 98e67ed59e1d1-3b41c8e0507mr11255737a91.8.1795614458296;
+        Wed, 25 Nov 2026 05:47:38 -0800 (PST)
+Received: from localhost.localdomain ([240e:b8f:1df9:a600:c693:b19f:ada0:748])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b44b7d36bcsm11786323a91.3.2026.11.25.05.47.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2026 05:47:37 -0800 (PST)
+Date: Wed, 25 Nov 2026 21:47:18 +0800
+From: Vernon Yang <vernon2gm@gmail.com>
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
+	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
+	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>, 
+	Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>, 
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
+	Suren Baghdasaryan <surenb@google.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>, 
+	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, 
+	Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, 
+	Hugh Dickins <hughd@google.com>, SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, 
+	Yu Zhao <yuzhao@google.com>, Zicheng Wang <wangzicheng@honor.com>, 
+	Tal Zussman <tz2294@columbia.edu>, Kairui Song <ryncsn@gmail.com>, 
+	Xiang Liu <liuxiang.277@bytedance.com>, Ehab Ababneh <ehab.ababneh@intel.com>, 
+	Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang <lianux.mm@gmail.com>, 
+	Joanne Koong <joannelkoong@gmail.com>, Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>, 
+	Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	damon@lists.linux.dev, linux-doc@vger.kernel.org, Tianyi Chen <hi@tychen.cc>, 
+	Ridong Chen <ridong.chen@linux.dev>
+Subject: Re: [PATCH v6 10/18] mm/mglru, gup: mark folios referenced via a
+ fast helper
+Message-ID: <6c3d32a9-3004-4a17-b854-7088e69f164a@gmail.com>
+References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
+ <20261124-mglru-fg-v6-10-8ffea39934a6@tencent.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -104,96 +119,143 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-15-8ffea39934a6@tencent.com> <fc51ad85-16f7-41fb-8eb3-2b8ee595e711@kernel.org>
-In-Reply-To: <fc51ad85-16f7-41fb-8eb3-2b8ee595e711@kernel.org>
-From: Kairui Song <ryncsn@gmail.com>
-Date: Wed, 25 Nov 2026 21:12:40 +0800
-X-Gm-Features: Aa3M54rLCFPdJCUVsWAcKF2l0FhpWm6CiFAaLjU-bCfz_TzbQSOhJaNF1aUKI_Q
-Message-ID: <CAMgjq7D-EFYsivqq1Z4c60ZMh0pBU2ofgfqVaqp_vbPG8wbSiA@mail.gmail.com>
-Subject: Re: [PATCH v6 15/18] mm/huge_memory: mark folio as accessed more
- accurately on split
-To: "David Hildenbrand (Arm)" <david@kernel.org>
-Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>, 
-	Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>, 
-	Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>, 
-	Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Liam R. Howlett" <liam@infradead.org>, Barry Song <baohua@kernel.org>, 
-	Axel Rasmussen <axelrasmussen@google.com>, Yuanchu Xie <yuanchu@google.com>, 
-	Wei Xu <weixugc@google.com>, Vlastimil Babka <vbabka@kernel.org>, 
-	Suren Baghdasaryan <surenb@google.com>, Nhat Pham <nphamcs@gmail.com>, 
-	Youngjun Park <youngjun.park@lge.com>, Zi Yan <ziy@nvidia.com>, 
-	Gregory Price <gourry@gourry.net>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, 
-	Baolin Wang <baolin.wang@linux.alibaba.com>, Ryan Roberts <ryan.roberts@arm.com>, 
-	Dev Jain <dev.jain@arm.com>, Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>, 
-	SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>, Yu Zhao <yuzhao@google.com>, 
-	Vernon Yang <vernon2gm@gmail.com>, Zicheng Wang <wangzicheng@honor.com>, 
-	Tal Zussman <tz2294@columbia.edu>, Xiang Liu <liuxiang.277@bytedance.com>, 
-	Ehab Ababneh <ehab.ababneh@intel.com>, Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, 
-	Lian Wang <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>, 
-	Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>, 
-	Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	damon@lists.linux.dev, linux-doc@vger.kernel.org, Tianyi Chen <hi@tychen.cc>, 
-	Ridong Chen <ridong.chen@linux.dev>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20261124-mglru-fg-v6-10-8ffea39934a6@tencent.com>
 
-On Wed, Nov 25, 2026 at 6:09=E2=80=AFPM David Hildenbrand (Arm)
-<david@kernel.org> wrote:
+On Tue, Nov 24, 2026 at 02:53:02AM +0800, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
 >
-> On 11/23/26 19:53, Kairui Song via B4 Relay wrote:
-> > From: Kairui Song <kasong@tencent.com>
-> >
-> > The behavior of updating the folio's access info isn't consistent for
-> > huge mapping splitting or ordinary unmapping. The page table's young
-> > flag has to be translated into folio's access info.
-> >
-> > Right now it only checks and sets the folio's referenced flag, which is=
-n't
-> > enough since folio flag updates on access have their own rules. Ordinar=
-y
-> > unmapping (zapping) calls folio_mark_accessed(), and it also checks
-> > if the VMA has recency to avoid false updates.
-> >
-> > So first just use the right helper here to be more consistent. Keep
-> > accounting the young PTE as a cache access, sticking to the current
-> > behavior.
-> >
-> > Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
-> > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
-> > Tested-by: Andrew Morton <akpm@linux-foundation.org>
-> > Signed-off-by: Kairui Song <kasong@tencent.com>
-> > ---
-> >  mm/huge_memory.c | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> > index 75e8641bf9ff..fa9f6d21e786 100644
-> > --- a/mm/huge_memory.c
-> > +++ b/mm/huge_memory.c
-> > @@ -3122,8 +3122,8 @@ static void __split_huge_pud_locked(struct vm_are=
-a_struct *vma, pud_t *pud,
-> >
-> >       if (!folio_test_dirty(folio) && pud_dirty(old_pud))
-> >               folio_mark_dirty(folio);
-> > -     if (!folio_test_referenced(folio) && pud_young(old_pud))
-> > -             folio_set_referenced(folio);
-> > +     if (pud_young(old_pud) && vma_has_recency(vma))
-> > +             folio_mark_accessed(folio);
+> Introduce folio_inc_lru_refs_fast(): raise refs from 0 to
+> LRU_REFS_REFERENCED via cmpxchg, or just set PG_referenced for the
+> classical LRU as before. No counter update or promotion is needed,
+> nonzero MGLRU refs are left unchanged.
 >
-> Can we just have a helper that abstracts that? We pass in vma, folio and =
-young
-> state and it takes care of things?
+> The classical path is taken for a folio that is off the gen lists while
+> MGLRU is off, not on lru_gen_enabled() alone: while MGLRU is being
+> turned off, a folio can still be on a gen list after the static key
+> flips, and setting PG_referenced there would bump its refs count.
+>
+> That check uses lru_get_gen_flags(), so move the helper out of the
+> CONFIG_LRU_GEN block, it is now built with the option off, where
+> LRU_GEN_WIDTH is 0 and LRU_GEN_MASK is zero. Keep the decoded value in
+> an int so the subtraction of the offset-by-one encoding cannot fold to
+> ULONG_MAX before it happens to avoid -Woverflow error with CONFIG_WERROR.
+>
+> This helper only aims to be fast, it exists so the gup fast path can
+> stay a fast path. The new helper doesn't account for refs above
+> LRU_REFS_REFERENCED but that's fine for now as GUP never used that
+> or anything similar for CLRU either.
+>
+> Convert the gup fast-path sites. No behavior change for classical LRU,
+> no regression for MGLRU either. Just prepare for the following changes
+> by providing a helper that follows the new convention.
+>
+> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>  include/linux/mm_inline.h | 62 +++++++++++++++++++++++++++++++++++------------
+>  mm/gup.c                  |  6 ++---
+>  2 files changed, 49 insertions(+), 19 deletions(-)
+>
+> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> index b15c3618a1f2..13c8b6bce349 100644
+> --- a/include/linux/mm_inline.h
+> +++ b/include/linux/mm_inline.h
+> @@ -105,6 +105,22 @@ static __always_inline enum lru_list folio_lru_list(const struct folio *folio)
+>  	return lru;
+>  }
+>
+> +/**
+> + * lru_get_gen_flags - Return the LRU generation number from folio flags.
+> + * @flags: folio flags
+> + *
+> + * Returns: A number between 0 and (MAX_NR_GENS - 1), inclusive. Returns
+> + * -1 if the flags indicate the folio is off the list (e.g., isolated).
+> + */
+> +static inline int lru_get_gen_flags(unsigned long flags)
+> +{
+> +	int gen = (int)((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF);
+> +
+> +	/* The gen is stored offset by one, so zero means off-list */
+> +	VM_WARN_ON_ONCE(gen > MAX_NR_GENS);
+> +	return gen - 1;
+> +}
+> +
+>  #ifdef CONFIG_LRU_GEN
+>
+>  static inline bool lru_gen_switching(void)
+> @@ -168,22 +184,6 @@ static inline void lru_set_gen_flags(unsigned long *flags, int gen)
+>  	*flags |= (gen + 1UL) << LRU_GEN_PGOFF;
+>  }
+>
+> -/**
+> - * lru_get_gen_flags - Return the LRU generation number from folio flags.
+> - * @flags: folio flags
+> - *
+> - * Returns: A number between 0 and (MAX_NR_GENS - 1), inclusive. Returns
+> - * -1 if the flags indicate the folio is off the list (e.g., isolated).
+> - */
+> -static inline int lru_get_gen_flags(unsigned long flags)
+> -{
+> -	int gen = ((flags & LRU_GEN_MASK) >> LRU_GEN_PGOFF) - 1;
+> -
+> -	/* Exclude the legal -1 from the unsigned MAX_NR_GENS comparison */
+> -	VM_WARN_ON_ONCE(gen != -1 && gen >= MAX_NR_GENS);
+> -	return gen;
+> -}
+> -
+>  static inline int folio_lru_gen(const struct folio *folio)
+>  {
+>  	return lru_get_gen_flags(READ_ONCE(*const_folio_flags(folio, 0)));
+> @@ -483,6 +483,36 @@ static inline bool lru_gen_del_folio(struct lruvec *lruvec, struct folio *folio,
+>  }
+>  #endif /* CONFIG_LRU_GEN */
+>
+> +/**
+> + * folio_inc_lru_refs_fast - Bump folio refs count without promotion.
+> + * @folio: the folio
+> + *
+> + * Raise refs from 0 to LRU_REFS_REFERENCED and leave hotter folios
+> + * untouched. For a folio off the gen lists with MGLRU off, a plain
+> + * PG_referenced set.
+> + */
+> +static __always_inline void folio_inc_lru_refs_fast(struct folio *folio)
+> +{
+> +	unsigned long new_flags, old_flags = READ_ONCE(*folio_flags(folio, 0));
+> +	unsigned int refs;
+> +
+> +	do {
+> +		refs = lru_get_refs_flags(old_flags);
+> +		if (lru_get_gen_flags(old_flags) < 0 && !lru_gen_enabled()) {
+> +			/* For CLRU, just do folio_set_referenced() */
+> +			if (refs & LRU_REFS_REFERENCED)
+> +				break;
+> +			refs |= LRU_REFS_REFERENCED;
+> +		} else {
+> +			if (refs)
+> +				break;
+> +			refs = LRU_REFS_REFERENCED;
+> +		}
+> +		new_flags = old_flags;
+> +		lru_set_refs_flags(&new_flags, refs);
+> +	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+> +}
 
-I think we can have a folio_mark_accessed_vma(), and so it will be:
+The implementation code of this function looks a bit convoluted.
+Would it be better to simplify it into the following code?
 
-+     if (pud_young(old_pud))
-+             folio_mark_accessed_vma(folio, vma);
+	do {
+		bool clru = !lru_gen_enabled() && lru_get_gen_flags(old_flags) < 0;
 
-Also converts a few other callsites too, also avoid touching too many
-other folio_mark_accessed callers, there are a lot of them. We can
-audit and see if folio_mark_accessed can benefit more by passing vma
-from more places later.
+		refs = lru_get_refs_flags(old_flags);
+		if (clru ? (refs & LRU_REFS_REFERENCED) : refs)
+			break;
+		new_flags = old_flags;
+		lru_set_refs_flags(&new_flags, refs | LRU_REFS_REFERENCED);
+	} while (!try_cmpxchg(folio_flags(folio, 0), &old_flags, new_flags));
+
+--
+Cheers,
+Vernon
