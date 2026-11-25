@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795601752;
-	b=JnNCrJO432kZQ42hN1B2mVy0ND9tOIelRTb7OnVkALVOrVyJlA5IGHRMOza8Hei5cFua
-	 yke8SUIeByz2Vygm14omJ1br1nD9kWXljyj0PjRZGGF6svCKVzYVi0wtuCOI/ksSVV7aL
-	 JjqqGs0DM8EyOVYOMN8z8Y5b0sCtlpSpG6fg2ebazp27Gzaol8lxbDYfhjnOIDscmHliF
-	 nt00YU8s6DB27CSMPRcc5sXtnu3Rg92C00ZnwpS81yGuOpgDrK/MDwNKqQkzl373++bj0
-	 kS6ztFORFpzsaULNnLDDaa0BBPQy+iKe1HNYjs2xog3u6ZBXMp8WqUd1esJUAULIAtw==
+	t=1795601817;
+	b=R7Dhyf7gPkajbjt/QccP04ytfwfPfNv2YylN37Z5tw2Dm41b8WN86/p1GqYxrjfveCYB
+	 ak0dYsnnxBOTSLUTpLWvRz9ZiBE2w7tHK7Ys7efeLhThZUND0d1qRskGtZpX6cMKd7pKl
+	 nYi+hZjO6ztHBuxawaK8CGr2lKKpWjsSlPlgyA5S2r51JBePNPa0efNoqZ4tQV5NuuhcS
+	 /lgXS2DIjqusRdqn1QQtHYv+shFo6bEl/ycPocVbZMFS4m2fMZ+al8X5A/lk1TCmjvc22
+	 v933Wv4XwobMNH9H3X3RDmb/r5e4+N8yUktG4Knuv1UN/hPgo/byFcBauQmvU1RMEtA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795601752;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795601817;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=l39RWAIoM0Feov+aApkur4PMWRZaz1boBdpLerg+atQ=;
-	b=3Fyt7Ca2ZpM9Jl0vNlsNqpMeU/spjEAuPBdkT9j+IWkCcatXKfTbd4Qba5x+IwOIj6Id
-	 Z/G3SZTTGFHAR9AWGwlU11HmoMw6XD4LquIgYF4wsDmsLmAfcXKCRMmhjGsXRk2ga1npE
-	 swU7sO25vSzbw/I884FoFIKB3Uy9k1epeoMS9ofP7WRHWo4UhlS+eIntcRYJOm8QzRQON
-	 8402AIXcpDMbiX+oEFjjY0Qvoe+6WTyZRCTsyr+J2W4IYvPkrjr2aWmyT9GDO/pKE+wLM
-	 fJXrPx2MwYf/tQkeuiEzE2mNh3oi+zR1I6QeLOrjH7GDTX4g5f/glTPIdXIK/fsx7DA==
+	bh=6n8ZrqtxlZkHZpLWE48kD5XtJASweu6G+n13pUnSr/c=;
+	b=MaBEEQZ5oURDmzzNs3EfrW5FY0OZGReWxdXyYKgZvPlt4kkTzaqBrrIA4V9quMujvObQ
+	 EmQifHzeEKgudmW8y9c+6NMiI6Fj4xIV2mfA3904Uy2R3l25YsndCfmQGEdmEt+MxES3n
+	 6s6mwSg++wAkAwajcePJ5c5aR2y9cBMTlwhkS9WbkaJUF8NYlbeMeBeKorV4nYXAwG91h
+	 S9rAK190tVKblJltOTDAOuRcICNfr6KJVwf2qPO958JD7W7bp8ey+aL5AYIg5WQWidv7z
+	 w52GfPeFzBMNy1gPUlKDTCyYt+KW0/wME70vLYfwR4+JePMUz9/swqOky3c5OG+a6TQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b="D3YOFm/y";
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PA4vCVY8;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AA3E606A31E;
-	Wed, 25 Nov 2026 10:15:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A726606A32D;
+	Wed, 25 Nov 2026 10:16:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=D3YOFm/y
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BEA71F000C4;
-	Wed, 25 Nov 2026 10:15:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PA4vCVY8
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 123F11F000D1;
+	Wed, 25 Nov 2026 10:16:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795601751;
-	bh=l39RWAIoM0Feov+aApkur4PMWRZaz1boBdpLerg+atQ=;
+	s=k20260515; t=1795601816;
+	bh=6n8ZrqtxlZkHZpLWE48kD5XtJASweu6G+n13pUnSr/c=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=D3YOFm/ySUL4vtdQ93vXOYE4eaJx7lXYk7wbNG02vLTCaSmnKkEJb73/R9UesQF0N
-	 MXWPx9EqWhxYAtjw9V2YaW2IY6bjW+n5Lgh6LCX4p5OwgG6Cgn9nzmmy3+Zt3Kw2jw
-	 vGBJkbKom8dDSMX5DIgrMyYW0hBe3H1iy3nRDuel7EJQ3uX/aF5Ke/epiCj70gdNGy
-	 JGs1h0TBDg/N/Hn4HJ58msXffhmzZoIbXDNipV9FEDk/Jtuk6L2MAusPGJ85VyfqGF
-	 9Mlf7Sl0S07yyXcd8TY6Yl/qy5l7kwOXKhH64/hXTmHQFNRe+Cnv7DJm2N5UHRYUw8
-	 a6gDniprtSkAA==
-Message-ID: <e85a2666-9722-420b-9a60-9d4251fc3d4c@kernel.org>
-Date: Wed, 25 Nov 2026 11:15:33 +0100
+	b=PA4vCVY8BiPA2XPSip0zFHGOhURNTa3VIBRn1zN5/U3irjDoM8OaTqdSiYVbpnbUb
+	 QeTPWdYQGhRHUwDTiIUejzz4jz1QMGhweo5zTYaDfi+WZtqqNjI7KxlbNN2Kw+T1Jv
+	 4hMbreJK9Fb6SIAIikCiaV9sSjRS4VP3E29i4X8YzdG2/smoWGIUG8RPBPTQ1pS+t2
+	 NCk0y2EJWKC6wyQMyR267sll6zwHu/MVVnD2GBPR6x2Z410V0hkMf0wxI3LT9G3lQK
+	 ackPlBbCZTa5PycOASqx4rzcpRZfJ056ZocGTo17KNbNqITDLHM8VSTHeSNsqSIlLd
+	 nwFHnRs4/OJuQ==
+Message-ID: <3d9d914a-4288-467d-8d25-4a47d62d23d8@kernel.org>
+Date: Wed, 25 Nov 2026 11:16:39 +0100
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -52,8 +52,8 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 08/18] mm/mglru: make folio lru referenced times count
- a generic API
+Subject: Re: [PATCH v6 12/18] mm/damon: convert to LRU refs based operations
+ for MGLRU
 To: kasong@tencent.com, linux-mm@kvack.org
 Cc: Andrew Morton <akpm@linux-foundation.org>,
  Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
@@ -84,7 +84,7 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org,
  Tianyi Chen <hi@tychen.cc>, Ridong Chen <ridong.chen@linux.dev>
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-8-8ffea39934a6@tencent.com>
+ <20261124-mglru-fg-v6-12-8ffea39934a6@tencent.com>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -131,42 +131,42 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261124-mglru-fg-v6-8-8ffea39934a6@tencent.com>
+In-Reply-To: <20261124-mglru-fg-v6-12-8ffea39934a6@tencent.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/23/26 19:53, Kairui Song via B4 Relay wrote:
 > From: Kairui Song <kasong@tencent.com>
 > 
-> Pure code shuffle, no behavior change.
+> damon_pa_pageout() cleared PG_referenced directly, which under MGLRU
+> corrupts the folio's refs count. That flag is now
+> bit 0 of the count (LRU_REFS_FLAGS).
 > 
-> Make the folio LRU refs helpers available regardless of CONFIG_LRU_GEN.
-> Without MGLRU the extra bits are never set, so they are inert. Move the
-> lru_gen_* helpers into the CONFIG_LRU_GEN section.  This prepares for
-> unifying the API for checking folio referenced and workingset status.
-> 
-> folio_migrate_lru_refs() now migrates the complete refs count,
-> including PG_workingset (bit 1 of the encoding), bitwise identical to
-> the direct copy dropped from folio_migrate_flags().
-> 
-> lru_set_refs_flags() skips the nonexistent mask bits when
-> LRU_REFS_WIDTH collapses to 0, preserving the two independent flags for
-> !CONFIG_LRU_GEN builds.
+> Reset the count instead under MGLRU.
 > 
 > Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
 > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
 > Tested-by: Andrew Morton <akpm@linux-foundation.org>
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
->  include/linux/mm_inline.h | 55 ++++++++++++++++++++++++-----------------------
+>  mm/damon/paddr.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/damon/paddr.c b/mm/damon/paddr.c
+> index e89cb14ee17b..411e1d557ba3 100644
+> --- a/mm/damon/paddr.c
+> +++ b/mm/damon/paddr.c
+> @@ -279,7 +279,8 @@ static unsigned long damon_pa_pageout(struct damon_region *r,
+>  		else
+>  			*sz_filter_passed += folio_size(folio) / addr_unit;
+>  
+> -		folio_clear_referenced(folio);
+> +		/* The region is cold, better drop the hotness info. */
+> +		folio_clear_lru_refs(folio);
+>  		folio_test_clear_young(folio);
 
-I'm starting to feel like all of these mglru/reclaim thingies should go into a
-dedicated helper.
-
-Can you do that as a prio cleanup in this series, so we don't have to mess with
-mm_inline.h in later patches anymore?
-
-On related notes, can we move mglru stuff into a mglru.c ?
+I also wonder whether both operations here should be abstracted, such that MM
+code doesn't have to worry about the details of reclaim handling.
 
 -- 
 Cheers,
