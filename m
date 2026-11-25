@@ -1,52 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.41
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.221
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795593501;
-	b=QA+pb6wxTlx1ZgbUXSf/FV1e4J6apKgJ85nOzSbGyEszPdtKJuBsdf917Q5bvgkNrHjB
-	 HBWTj4+PUskf1UsCw+EvBFDGdtcdF7ILCvllj/VzxXGfgEHzd4iVWNja424T9Zwbs5t3e
-	 uBNbvTR2k5n0dT3HxZhyA1qOcQB/RxPQnwpwEIzxDEiuuv8qbYcjKZCyHlsEjSgDRB1zm
-	 8GQamuiS3cHCDsj9m8yww0quJT2OOLuqDgOArVMVO7BZa3TE7emLApr+LC7ANZYyrJSQZ
-	 WxlO4sv8lgVndruCXCSjFOheiN1oN0WLElcJnQAc7zgkd0yXcMWE58c7Er8k5+Mqqdw==
+	t=1795593683;
+	b=mNAsa+aR1grbsNiT5PwDcXtfFqtfihzWWznpJFoqzcLTn2TVvIsxYsl6+a43voKmNL1p
+	 iqAmxo5aRqwhQlWasTsqum9rPjMfw04yJmcQ+SudStYi1Vfmbbkd9V9kfRQdmpIMt+gIO
+	 R0i074xP1S4xUTmAZOao44nCf4Yv50guydroPi7/dOhFWT9EqKUTdo5VSWEC8foa1pSlz
+	 j+mZANGP+C9YtZk1YbCbW4Ar9XlpPTzpfFCMqBdWaxrzgSNj5qrgMuiiK3lHgw+patys+
+	 nQe+3fD6SzLADY2gBu6S3rz8WP7CIEd52llMdk5vDdeg8FlQBoAc8IDA3HZJoxvZOhA==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795593501;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795593683;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:MIME-Version:Date:Content-Type:
-	 Content-Transfer-Encoding:From:Message-ID:TLS-Required:Subject:To:Cc:
-	 In-Reply-To:References;
-	bh=ERfJb3qF0+sgEEuK6tJL1bCyE1JjReykvfA28PGir+g=;
-	b=ebcXYAaOcW4UXEOO9r+BS6FBhgyYlN+iJqg3CebVG57VjUec7vuOWGfzK1CDbY4v+3rq
-	 lOTreJ5Ro+OimjIZfUZfBW8g+26Yxl85F0QnosOT5LKZjdtCFPAYhBpEZImWKIeQW3sB6
-	 5zUmzMAV/IZYBt1wjROJlvNhgeIju0m4We0ZFfOe+6E+mthEwjX3JCHDXmmCcC/7Df6Z7
-	 DPdW2mc1wWUqExvHeTIju+pNHPNaDaIUku9aGk8O8mJw62wsLaMDSlIYoqaemhiN2Gny2
-	 1Og+Hf5JtiGwT1GcfHFH2MJsh+XAI32Hwk705B7cLFNk8Wj9ZrsP668gEEb/Xnn4b0A==
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=LP1IAtDHQ50/Gr6AuuC//yWbzp4GHMqhUbSTNkvSPwg=;
+	b=FGWppeStHzb9MJnIOcWPvahwPT25daFFdFmhrH/cX1A97/pnYAyYKQo30RhAYk11uubL
+	 bLFjSi0hdSbP2OTDbDqW/0JZ6C7gkzkm+BY0YYkGYQYITDWbtBzk3ZR50w35gj6Cq/PWK
+	 M6ufy69idXHuEMX0CBITAQr6aQWBrwx9l/YdxFpnmwoxlilHjJiQBtPWiyEuxIneTqkn9
+	 RPfJxTl9HtnkSkL6MkPOQMBMYVg7eS1Vic3C/s/3EGyxpt4MIdWv3hKuDWyLQx4T/DIdH
+	 aUPyO6AW8+Bm9bIe8kH77N6urOuPOxhPb46mqFriz6eUOVWyR8MkC9gjGXMIRZqYoyQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=v+SIytma;
-	arc=none smtp.remote-ip=95.215.58.41
-Received: from mta1.migadu.com (out-41.mta1.migadu.com [95.215.58.41])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=c+sN9FYr;
+	arc=none smtp.remote-ip=91.218.175.221
+Received: from mta0.migadu.com (out-221.mta0.migadu.com [91.218.175.221])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0AA53606A323
-	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 07:58:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 0AA53606A323
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF2AA606A329
+	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 08:01:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DF2AA606A329
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=v+SIytma
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=c+sN9FYr
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=JJb4V3QmzElV+J3+lTvVhXCbEVNDcL1viNTlfeP0Wlc=;
+DKIM-Signature: a=rsa-sha256; bh=YtzcS03QyCHrAEwClfwZE+Y9bJNf/vFcYTDViFBQxp4=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795593498; v=1; x=1796198298;
- b=v+SIytma8dOQHqmZB62ikezj2CXVTIhPAIXBPy77bQ2S6LMV1nCrDFsbY6MWaY+8UYEIeCPK
- BsZg37nSHICyHPmU9JS8RSfP+1PNzNtuD40bmveUrCYfrUArq2UO5YGgjNpqnWN1iXR9biOqA0M
- gKEeOmbrQA/+xTA/2oNcP0BM=
+ t=1795593680; v=1; x=1796198480;
+ b=c+sN9FYrwiW4WYCWkSb/NylduYoC2C5I6iTz8kaL0RKL8GXw3Ad7uWT6XOCqMlUJ3QfoeKRt
+ gxyFQS9eu6vn3gE1FDKl6URNorw3kTSyMI4vsMGV1Z0CUvtvHtWnqjAlNkAoXyHyXGZAw57AhVg
+ 001bH2lTEkdMfjv9GOdex1bk=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id d6c3d85e79e38a6d;
-	Wed, 25 Nov 2026 07:58:18 +0000
-X-Mizu-Trace-ID: d6c3d85e79e38a6d
+Received: by smtp.migadu.com with ESMTPS id 9e5ae19e1785dc42;
+	Wed, 25 Nov 2026 08:01:19 +0000
+X-Mizu-Trace-ID: 9e5ae19e1785dc42
 X-Migadu-Flow: FLOW_OUT
+Message-ID: <e4adf40a-d77f-4ecd-a205-ea5eac1293a7@linux.dev>
+Date: Wed, 25 Nov 2026 16:01:15 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -56,153 +58,167 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Date: Wed, 25 Nov 2026 07:58:18 +0000
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-From: "Hui Zhu" <hui.zhu@linux.dev>
-Message-ID: <8f0abedb57eb51b09fbfca232fcc0f6eb0dedd03@linux.dev>
-TLS-Required: No
-Subject: Re: [PATCH 0/2] mm: memcg: fix memory.high allocator throttling
-To: "zhangjiao2" <zhangjiao2@cmss.chinamobile.com>
-Cc: "Johannes Weiner" <hannes@cmpxchg.org>, "Michal Hocko"
- <mhocko@kernel.org>, "Roman Gushchin" <roman.gushchin@linux.dev>,
- "Shakeel Butt" <shakeel.butt@linux.dev>, "Muchun Song"
- <muchun.song@linux.dev>, "Andrew Morton" <akpm@linux-foundation.org>,
- cgroups@vger.kernel.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, "Hui Zhu" <zhuhui@kylinos.cn>, "Song Hu"
- <husong@kylinos.cn>, "Joshua Hahn" <joshua.hahnjy@gmail.com>, "Chris
- Down" <chris@chrisdown.name>
-In-Reply-To: <6e73ae4b-5400-4f6d-bf5b-2892827ea144@linux.dev>
-References: <cover.1794902513.git.zhuhui@kylinos.cn>
- <avzSkT9-jsCrMoeX@chrisdown.name>
- <6e73ae4b-5400-4f6d-bf5b-2892827ea144@linux.dev>
-
-"Hui Zhu" <hui.zhu@linux.dev mailto:hui.zhu@linux.dev?to=3D%22Hui%20Zhu%2=
-2%20%3Chui.zhu%40linux.dev%3E >:
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 05/12] cpuset: use partition_disable() for remote
+ partition disablement
+To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
+ <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
+ <mkoutny@suse.com>
+Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
+References: <20261114083124.1340140-1-ridong.chen@linux.dev>
+ <20261114083124.1340140-6-ridong.chen@linux.dev>
+ <08e4f7bd-37d7-4752-93f3-23fe6d15b1df@linux.dev>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <08e4f7bd-37d7-4752-93f3-23fe6d15b1df@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
->=20
->=202026/11/18 06:17, Chris Down:
->=20
->=20>=20
->=20> Hi Hui,
-> >=20
->=20>  Thanks for fixing these, I've verified that these fix the issues
-> >  reported.
-> >=20
->=20>  That said, Zhang Jiao sent a fix for the same two problems a few w=
-eeks
-> >  ago, and Johannes thought the overage cap there was a bit of a magic
-> >  value, which we have plenty of in mm already, and I agree we shouldn=
-'t
-> >  add more [1].
-> >=20
->=20>  Could you please coordinate so we don't have two patchsets doing t=
-he
-> >  same thing?
-> >=20
->=20>  Chris
-> >=20
->=20>  [1] https://lore.kernel.org/all/auNrakxaET8qkuAn@cmpxchg.org/
-> >=20
->=20Hi Chris, Joshua, Zhang Jiao,
->=20
->=20Chris: thanks for the pointer, and apologies for the duplicate. I mis=
-sed
-> Zhang Jiao's patch [1], and Song Hu's earlier report of the overflow, w=
-hich
-> already proposed check_mul_overflow() [2]. I've added Zhang Jiao to the
-> thread so we can settle the coordination here rather than off-list.
->=20
->=20You and Johannes are right about the cap. I've dropped
-> MEMCG_MAX_DELAY_OVERAGE and reworked 2/2 into the shape Johannes sugges=
-ted,
-> with calculate_high_delay() and the caller's penalty_jiffies both in u6=
-4 so
-> the value is narrowed only after the caller's clamp. That also removes =
-the
-> in-function min() from 1/2, which was undoing ff144e69f733 ("mm/memcg: =
-move
-> penalty delay clamping out of calculate_high_delay()"). The series shri=
-nks
-> from 19 insertions to 9.
->=20
->=20Joshua: the Fixes tag is the right one, though I can see why the diff
-> suggested otherwise. The division comes from 0e4b01df8659; my patch onl=
-y
-> touched that line to add the clamp. The bug is the reordering in
-> e26733e0d0ec, which replaced
->=20
->=20 =C2=A0 =C2=A0 penalty_jiffies =3D ((u64)overage * overage * HZ)
->  =C2=A0 =C2=A0 =C2=A0 =C2=A0 >> (MEMCG_DELAY_PRECISION_SHIFT + MEMCG_DE=
-LAY_SCALING_SHIFT);
->=20
->=20with
->=20
->=20 =C2=A0 =C2=A0 penalty_jiffies =3D max_overage * max_overage * HZ;
->  =C2=A0 =C2=A0 penalty_jiffies >>=3D MEMCG_DELAY_PRECISION_SHIFT;
->  =C2=A0 =C2=A0 penalty_jiffies >>=3D MEMCG_DELAY_SCALING_SHIFT;
->=20
->=20Before that, the shift ran on the u64 temporary and the narrowing int=
-o
-> unsigned long happened afterwards. After it, the value is narrowed
-> first, so shifting it right by 34 always yields zero. The division play=
-s
-> no part, and in v2 the diff no longer goes near it. Your other point is
-> settled by the same rework: with the clamp gone, the comment goes too.
->=20
->=20How I'd like to proceed:
->=20
->=20 =C2=A0- Zhang Jiao: would it be OK if I send the combined series? Th=
-e overflow
->  =C2=A0 =C2=A0fix stays under your name and keeps your changelog, in th=
-e shape
->  =C2=A0 =C2=A0Johannes suggested, and I'd carry the 32-bit truncation a=
-longside it in
->  =C2=A0 =C2=A0the same series. If you would rather send it yourself, or=
- split it
->  =C2=A0 =C2=A0differently, say so and I'll follow.
->=20
->=20 =C2=A0- Song Hu and I have been in touch off-list, and they are work=
-ing in this
->  =C2=A0 =C2=A0area as well, so the patches under my name will carry the=
-m as
->  =C2=A0 =C2=A0Co-developed-by.
->=20
->=20 =C2=A0- v2 will include what was missing before: a Fixes tag for eac=
-h of the two
->  =C2=A0 =C2=A0regressions (e26733e0d0ec, v5.6, for the 32-bit truncatio=
-n;
->  =C2=A0 =C2=A00e4b01df8659, v5.4, for the overflow), Cc: stable, a chan=
-gelog that says
->  =C2=A0 =C2=A0plainly that throttling was completely inert on 32-bit, a=
-nd the wrap
->  =C2=A0 =C2=A0threshold corrected to about 130x at HZ=3D1000 -- the 409=
-6x figure misses
->  =C2=A0 =C2=A0the HZ factor.
->=20
->=20Two separate patches rather than one, because they are different
-> regressions with different lifetimes, which matters for the stable
-> backports.
->=20
->=20One number that may be worth putting in the changelog: the smallest
-> exact-zero case is memory.high at one page with usage at 2049 pages, wh=
-ere
-> max_overage is exactly 2^31 and the product wraps to zero.
->=20
->=20Thanks,
-> Hui
->=20
->=20[1] https://lore.kernel.org/all/20261029073857.974-1-zhangjiao2@cmss.=
-chinamobile.com/
-> [2] https://lore.kernel.org/all/20260818012115.65838-1-husong@kylinos.c=
-n/
->
 
-Hi Zhang Jiao,
+On 11/24/2026 6:34 PM, Guopeng Zhang wrote:
+> 
+> 
+> 在 2026/11/14 16:31, Ridong Chen 写道:
+>> From: Ridong Chen <chenridong@xiaomi.com>
+>>
+>> Now that the partition_disable() helper is available, replace the
+>> existing implementation for remote partition disablement with this
+>> centralized function to unify the disablement logic.
+>>
+>> remote_partition_disable() is removed and its callers call
+>> partition_disable() directly. The new partition root state is passed
+>> in by the caller instead of being derived from cs->prs_err, as only the
+>> caller knows which state the partition is going to.
+>>
+>> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 57 ++++++------------------------------------
+>>   1 file changed, 8 insertions(+), 49 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 3702e43e95ef..681adcde10e8 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -1771,9 +1771,8 @@ static void partition_enable(struct cpuset *cs, struct cpuset *parent,
+>>    * has its state updated. A valid partition under an invalid parent has
+>>    * already given back its CPUs, so only the propagation is done.
+>>    */
+>> -static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
+>> -					     enum prs_errcode prs_err,
+>> -					     struct tmpmasks *tmp)
+>> +static void partition_disable(struct cpuset *cs, int new_prs,
+>> +			      enum prs_errcode prs_err, struct tmpmasks *tmp)
+>>   {
+>>   	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
+>>   	int old_prs = cs->partition_root_state;
+>> @@ -1923,48 +1922,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+>>   	return 0;
+>>   }
+>>   
+>> -/*
+>> - * remote_partition_disable - Remove current cpuset from remote partition list
+>> - * @cs: the cpuset to update
+>> - * @tmp: temporary masks
+>> - *
+>> - * The effective_cpus is also updated.
+>> - *
+>> - * cpuset_mutex must be held by the caller.
+>> - */
+>> -static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
+>> -{
+>> -	WARN_ON_ONCE(!is_remote_partition(cs));
+>> -	/*
+>> -	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
+>> -	 * which should clear subpartitions_cpus. We should not emit a warning for this
+>> -	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
+>> -	 * may already be cleared when disabling the partition.
+>> -	 */
+>> -	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
+>> -		     !cpumask_empty(subpartitions_cpus));
+>> -
+>> -	spin_lock_irq(&callback_lock);
+>> -	cs->remote_partition = false;
+>> -	partition_xcpus_del(cs->partition_root_state, NULL, cs->effective_xcpus);
+>> -	if (cs->prs_err)
+>> -		cs->partition_root_state = -cs->partition_root_state;
+>> -	else
+>> -		cs->partition_root_state = PRS_MEMBER;
+>> -
+>> -	/* effective_xcpus may need to be changed */
+>> -	compute_excpus(cs, cs->effective_xcpus);
+>> -	reset_partition_data(cs);
+>> -	spin_unlock_irq(&callback_lock);
+>> -	cpuset_force_rebuild();
+>> -
+>> -	/*
+>> -	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
+>> -	 */
+>> -	cpuset_update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
+>> -	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
+>> -}
+>> -
+>>   /*
+>>    * remote_cpus_update - cpus_exclusive change of remote partition
+>>    * @cs: the cpuset to be updated
+>> @@ -2039,7 +1996,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+>>   	return;
+>>   
+>>   invalidate:
+>> -	remote_partition_disable(cs, tmp);
+>> +	partition_disable(cs, -prs, cs->prs_err, tmp);
+>>   }
+>>   
+>>   /**
+>> @@ -2667,7 +2624,8 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
+>>   
+>>   	if (is_remote_partition(cs)) {
+>>   		if (trialcs->prs_err)
+>> -			remote_partition_disable(cs, tmp);
+>> +			partition_disable(cs, -cs->partition_root_state,
+>> +					  cs->prs_err, tmp);
+>>   		else
+>>   			remote_cpus_update(cs, trialcs->exclusive_cpus,
+>>   					   trialcs->effective_xcpus, tmp);
+>> @@ -3215,7 +3173,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>>   
+>>   	if (disable_partition) {
+>>   		if (is_remote_partition(cs))
+>> -			remote_partition_disable(cs, &tmpmask);
+>> +			partition_disable(cs, PRS_MEMBER, PERR_NONE, &tmpmask);
+>>   		else
+>>   			update_parent_effective_cpumask(cs, partcmd_disable,
+>>   							NULL, &tmpmask);
+>> @@ -4164,7 +4122,8 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>>   				       (cpumask_empty(&new_cpus) &&
+>>   					partition_is_populated(cs, NULL)))) {
+>>   		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
+>> -		remote_partition_disable(cs, tmp);
+>> +		partition_disable(cs, -cs->partition_root_state, cs->prs_err,
+>> +				  tmp);
+> 
+> Now that partition_disable() takes the error code directly and updates
+> prs_err through partition_state_update(), the preceding
+> WRITE_ONCE(cs->prs_err, PERR_HOTPLUG) seems unnecessary.
+> 
+> Could we pass PERR_HOTPLUG directly to partition_disable() and remove
+> that assignment?
+> 
 
-Gentle ping: OK if I send the combined series with the overflow fix under
-your name? If you're busy, I can carry it forward and credit you.
+Yes, nothing reads cs->prs_err before partition_state_update() sets it,
+so the assignment is redundant. Passing PERR_HOTPLUG directly also
+matches the local partition case below. I'll change it in v6.
 
-Thanks,
-Hui
+> Thanks,
+> Guopeng
+> 
+>>   		compute_effective_cpumask(&new_cpus, cs, parent);
+>>   	}
+>>   
+> 
+
+-- 
+Best regards
+Ridong
+
