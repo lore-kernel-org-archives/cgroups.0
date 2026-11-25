@@ -1,54 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.221
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.218
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795593683;
-	b=mNAsa+aR1grbsNiT5PwDcXtfFqtfihzWWznpJFoqzcLTn2TVvIsxYsl6+a43voKmNL1p
-	 iqAmxo5aRqwhQlWasTsqum9rPjMfw04yJmcQ+SudStYi1Vfmbbkd9V9kfRQdmpIMt+gIO
-	 R0i074xP1S4xUTmAZOao44nCf4Yv50guydroPi7/dOhFWT9EqKUTdo5VSWEC8foa1pSlz
-	 j+mZANGP+C9YtZk1YbCbW4Ar9XlpPTzpfFCMqBdWaxrzgSNj5qrgMuiiK3lHgw+patys+
-	 nQe+3fD6SzLADY2gBu6S3rz8WP7CIEd52llMdk5vDdeg8FlQBoAc8IDA3HZJoxvZOhA==
+	t=1795594283;
+	b=jq8ilwH/YK+nLxQKG4HhHrWRWIbXZGM6EXr3UVPmhrgYI4eltGMCNs78X3n72SO5tjBI
+	 XNvPCQosnxuquFIWxnDc2NDKTSVIIItjDTD7CmvxfG1RLWEaiBl4236sWtLCHmT1pI4j5
+	 BuxyWzzb99w+D2zD1dIaAcn1wUUzQvMTkTz16NFq6gBGs1whcoLtt/Drkh4a+nJa1zacd
+	 TtTrQgVHEctklKz8t9DmdxPyt/BryI+tmhxiN1nR53beLXpNfHB2RhNbjEEDtfEGEjxJE
+	 re46tgs8NL0D370rNt/bqtiECYBkYuKSWMbvH/Q95UQSFq+yImHfsBXsM+Oc8s3ABBg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795593683;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795594283;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
 	 Content-Transfer-Encoding;
-	bh=LP1IAtDHQ50/Gr6AuuC//yWbzp4GHMqhUbSTNkvSPwg=;
-	b=FGWppeStHzb9MJnIOcWPvahwPT25daFFdFmhrH/cX1A97/pnYAyYKQo30RhAYk11uubL
-	 bLFjSi0hdSbP2OTDbDqW/0JZ6C7gkzkm+BY0YYkGYQYITDWbtBzk3ZR50w35gj6Cq/PWK
-	 M6ufy69idXHuEMX0CBITAQr6aQWBrwx9l/YdxFpnmwoxlilHjJiQBtPWiyEuxIneTqkn9
-	 RPfJxTl9HtnkSkL6MkPOQMBMYVg7eS1Vic3C/s/3EGyxpt4MIdWv3hKuDWyLQx4T/DIdH
-	 aUPyO6AW8+Bm9bIe8kH77N6urOuPOxhPb46mqFriz6eUOVWyR8MkC9gjGXMIRZqYoyQ==
+	bh=2giyVH86fiD0iX5yZJuW6a/h1ndm6zT9fM4WKgXkwXM=;
+	b=5sHZHdcLhxdoJq10v06bKNWEPTN2CNjNOJXIzDiV9oX2nBeARtvfFJR0GTKDY6BfNywx
+	 NIa1SbMLJYSB80GxIiTrFM21+0n3t+lzMjQD+DA8KQRVnWOnSGTrZ2TBL3TqHaV/cYh5u
+	 UzEZMho+Sro9H7AXIsyyXtHJQFwRa/S9iSQ02YcZNDCcU/8lgwQATNrvh24X5U/xHVdoa
+	 +Q26gtPIuvDNSxUtAT1zR+0gTouXiplZbgJLqW6dswzUJ99fnuFKRLps/EcCScXgp81SB
+	 cbrxon+VlqVB4ScToyQT9xnmYR/cTT/YAUH0YtJaanwF5u8K5sLAy7JZwE1fhyOF0iw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=c+sN9FYr;
-	arc=none smtp.remote-ip=91.218.175.221
-Received: from mta0.migadu.com (out-221.mta0.migadu.com [91.218.175.221])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=dQPpRoOs;
+	arc=none smtp.remote-ip=95.215.58.218
+Received: from mta1.migadu.com (out-218.mta1.migadu.com [95.215.58.218])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF2AA606A329
-	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 08:01:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DF2AA606A329
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BCDF606A31E
+	for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 08:11:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 4BCDF606A31E
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=c+sN9FYr
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=dQPpRoOs
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=YtzcS03QyCHrAEwClfwZE+Y9bJNf/vFcYTDViFBQxp4=;
+DKIM-Signature: a=rsa-sha256; bh=XIDuvbDmASzXTaeTkwCkboNpVob5bHBGaZ8fqBcxs1A=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795593680; v=1; x=1796198480;
- b=c+sN9FYrwiW4WYCWkSb/NylduYoC2C5I6iTz8kaL0RKL8GXw3Ad7uWT6XOCqMlUJ3QfoeKRt
- gxyFQS9eu6vn3gE1FDKl6URNorw3kTSyMI4vsMGV1Z0CUvtvHtWnqjAlNkAoXyHyXGZAw57AhVg
- 001bH2lTEkdMfjv9GOdex1bk=
+ t=1795594280; v=1; x=1796199080;
+ b=dQPpRoOsndcFOWCRMeREL5tZjUzaZ8N51udrgxJmMiP7z60H81w/fhc/8gC1Mu+EQHWvFtBF
+ xKOTcC2qrohXsA8LNpT5NG7wWOAQbMRkz9LZU6AokVeQf239sXIWjeepsF+wE/05o5CcKMWa9kU
+ R/zM864Eh3imnGAnQGCzFV4o=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 9e5ae19e1785dc42;
-	Wed, 25 Nov 2026 08:01:19 +0000
-X-Mizu-Trace-ID: 9e5ae19e1785dc42
+Received: by smtp.migadu.com with ESMTPS id 8f26a41e6856e0d2;
+	Wed, 25 Nov 2026 08:11:20 +0000
+X-Mizu-Trace-ID: 8f26a41e6856e0d2
 X-Migadu-Flow: FLOW_OUT
-Message-ID: <e4adf40a-d77f-4ecd-a205-ea5eac1293a7@linux.dev>
-Date: Wed, 25 Nov 2026 16:01:15 +0800
+Message-ID: <5ace7a93-b12e-4f15-a857-eff02ec8cb40@linux.dev>
+Date: Wed, 25 Nov 2026 16:11:13 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -59,164 +59,152 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 05/12] cpuset: use partition_disable() for remote
- partition disablement
-To: Guopeng Zhang <guopeng.zhang@linux.dev>, Waiman Long
- <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>
+Subject: Re: [PATCH v5 00/12] cpuset: rework local partition logic
+To: Waiman Long <longman@redhat.com>
 Cc: Guopeng Zhang <zhangguopeng@kylinos.cn>, cgroups@vger.kernel.org,
- linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>
+ linux-kernel@vger.kernel.org, Ridong Chen <chenridong@xiaomi.com>,
+ Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+ =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
 References: <20261114083124.1340140-1-ridong.chen@linux.dev>
- <20261114083124.1340140-6-ridong.chen@linux.dev>
- <08e4f7bd-37d7-4752-93f3-23fe6d15b1df@linux.dev>
 From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <08e4f7bd-37d7-4752-93f3-23fe6d15b1df@linux.dev>
+In-Reply-To: <20261114083124.1340140-1-ridong.chen@linux.dev>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 
 
-On 11/24/2026 6:34 PM, Guopeng Zhang wrote:
+On 11/14/2026 4:31 PM, Ridong Chen wrote:
+> From: Ridong Chen <chenridong@xiaomi.com>
+> 
+> This is v5 of the cpuset local partition rework [1], which I started
+> while at Huawei and am now continuing at Xiaomi. Since v4, the fixes and
+> preparatory changes at the start of the series have been posted
+> separately, last as [2], and merged into cgroup/for-7.4-fixes. This
+> version is based on it and only has the part that consolidates the
+> partition state changes into common helpers, the remaining parts will
+> follow.
+> 
+> The partition state of a cpuset is currently changed in many places, and
+> local and remote partitions are handled by different code.
+> update_parent_effective_cpumask() alone handles five partcmd_* commands
+> for local partitions, while the remote partition helpers open code the
+> same updates of partition_root_state, prs_err, effective_xcpus,
+> subpartitions_cpus and isolated_cpus.
+> 
+> The idea is to have one set of common helpers to enable, disable and
+> update a partition. Local and remote partitions only do their own
+> validation and then call these helpers, and all partition related
+> state is set or changed only inside them. After this series:
+> 
+>       update_prstate()        update_cpumask()
+>       update_cpumasks_hier()  cpuset_hotplug_update_tasks()
+>                            |
+>            +---------------+---------------+
+>            |                               |
+>            v                               v
+>    +-------------------+         +--------------------+
+>    |  local partition  |         |  remote partition  |
+>    |                   |         |                    |
+>    | validate_local_   |         | remote_partition_  |
+>    |     partition()   |         |     enable()       |
+>    | local_partition_  |         | remote_cpus_       |
+>    |     enable()      |         |     update()       |
+>    |     update()      |         |                    |
+>    +-------------------+         +--------------------+
+>            |                               |
+>            +---------------+---------------+
+>                            |
+>                            v
+>    +------------------------------------------------+
+>    |  partition_enable()                            |
+>    |  partition_disable()                           |
+>    |  partition_update()                            |
+>    +------------------------------------------------+
+>                            |
+>                            |  partition state, only changed here
+>                            v
+>    +------------------------------------------------+
+>    |  cpuset:  partition_root_state, prs_err,       |
+>    |           remote_partition, effective_xcpus,   |
+>    |           exclusive_cpus                       |
+>    |  global:  subpartitions_cpus, isolated_cpus    |
+>    +------------------------------------------------+
+> 
+>    partition_enable()  - make a cpuset a valid partition root, or switch
+>                          a valid partition between root and isolated
+>    partition_disable() - make a partition a member or invalid, give its
+>                          CPUs back to the parent and propagate the change
+>    partition_update()  - update the exclusive CPUs of a valid partition
+> 
+> A partition is disabled with partition_disable() directly, for both
+> local and remote partitions, as giving the CPUs back to the parent needs
+> no partition specific handling.
+> 
+> With this, every caller follows the same pattern (validate, then
+> enable/disable/update), and it is much easier to see where and why a
+> partition state changes.
+> 
+> Patches 1-3 introduce the common helpers and patches 4-6 use them for
+> remote partitions. Patches 7-11 add validate_local_partition(),
+> local_partition_enable() and local_partition_update() and convert the
+> local partition paths, including the hotplug path, to them. Patch 12
+> removes update_parent_effective_cpumask() and the partition_cmd enum.
+> 
+> The series is meant to be functionally equivalent, except that the
+> failure reason of an invalid partition is kept more accurately. For
+> example, PERR_CPUSEMPTY of a partition with empty cpuset.cpus and
+> cpuset.cpus.exclusive is no longer overwritten by PERR_INVCPUS when its
+> parent changes.
+> 
+> The remaining parts of the rework, e.g. validate_remote_partition(),
+> removing the partition field updates left outside the helpers and
+> simplifying update_prstate(), will be posted as a follow-up series.
+> 
+> test_cpuset_prs.sh passes with this series applied, with no boot option,
+> with isolcpus=10-11 and with nohz_full=8-11. Patches 10-12, which change
+> the hotplug path in between, are also tested individually.
+> 
+> Changes in v5:
+>    - Drop the RFC tag and rebase onto cgroup/for-7.4-fixes, which has
+>      patches 1-3 of v4 merged [2]. Only post patches 4-14 of v4.
+>    - Call partition_disable() directly, instead of local_ and
+>      remote_partition_disable().
+>    - Add validate_local_partition() in a separate patch.
+>    - Keep PERR_CPUSEMPTY for empty cpumasks (Sashiko).
+>    - Add __maybe_unused to unused helpers (Guopeng).
+>    - Link to v4: https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+> 
+> [1] https://lore.kernel.org/all/20261101114206.2434398-1-ridong.chen@linux.dev/
+> [2] https://lore.kernel.org/all/20261112031931.2815548-1-ridong.chen@linux.dev/
+> 
+> Ridong Chen (12):
+>    cpuset: introduce partition_enable()
+>    cpuset: introduce partition_disable()
+>    cpuset: introduce partition_update()
+>    cpuset: use partition_enable() for remote partition enablement
+>    cpuset: use partition_disable() for remote partition disablement
+>    cpuset: use partition_update() for remote partition update
+>    cpuset: introduce validate_local_partition()
+>    cpuset: introduce local_partition_enable()
+>    cpuset: use partition_disable() for local partition disablement
+>    cpuset: use partition_disable() to invalidate local partition
+>    cpuset: introduce local_partition_update()
+>    cpuset: remove update_parent_effective_cpumask
+> 
+>   kernel/cgroup/cpuset.c | 856 +++++++++++++++++++----------------------
+>   1 file changed, 398 insertions(+), 458 deletions(-)
 > 
 > 
-> 在 2026/11/14 16:31, Ridong Chen 写道:
->> From: Ridong Chen <chenridong@xiaomi.com>
->>
->> Now that the partition_disable() helper is available, replace the
->> existing implementation for remote partition disablement with this
->> centralized function to unify the disablement logic.
->>
->> remote_partition_disable() is removed and its callers call
->> partition_disable() directly. The new partition root state is passed
->> in by the caller instead of being derived from cs->prs_err, as only the
->> caller knows which state the partition is going to.
->>
->> Signed-off-by: Ridong Chen <chenridong@xiaomi.com>
->> ---
->>   kernel/cgroup/cpuset.c | 57 ++++++------------------------------------
->>   1 file changed, 8 insertions(+), 49 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 3702e43e95ef..681adcde10e8 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1771,9 +1771,8 @@ static void partition_enable(struct cpuset *cs, struct cpuset *parent,
->>    * has its state updated. A valid partition under an invalid parent has
->>    * already given back its CPUs, so only the propagation is done.
->>    */
->> -static void __maybe_unused partition_disable(struct cpuset *cs, int new_prs,
->> -					     enum prs_errcode prs_err,
->> -					     struct tmpmasks *tmp)
->> +static void partition_disable(struct cpuset *cs, int new_prs,
->> +			      enum prs_errcode prs_err, struct tmpmasks *tmp)
->>   {
->>   	struct cpuset *parent = is_remote_partition(cs) ? NULL : parent_cs(cs);
->>   	int old_prs = cs->partition_root_state;
->> @@ -1923,48 +1922,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
->>   	return 0;
->>   }
->>   
->> -/*
->> - * remote_partition_disable - Remove current cpuset from remote partition list
->> - * @cs: the cpuset to update
->> - * @tmp: temporary masks
->> - *
->> - * The effective_cpus is also updated.
->> - *
->> - * cpuset_mutex must be held by the caller.
->> - */
->> -static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
->> -{
->> -	WARN_ON_ONCE(!is_remote_partition(cs));
->> -	/*
->> -	 * When a CPU is offlined, top_cpuset may end up with no available CPUs,
->> -	 * which should clear subpartitions_cpus. We should not emit a warning for this
->> -	 * scenario: the hierarchy is updated from top to bottom, so subpartitions_cpus
->> -	 * may already be cleared when disabling the partition.
->> -	 */
->> -	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
->> -		     !cpumask_empty(subpartitions_cpus));
->> -
->> -	spin_lock_irq(&callback_lock);
->> -	cs->remote_partition = false;
->> -	partition_xcpus_del(cs->partition_root_state, NULL, cs->effective_xcpus);
->> -	if (cs->prs_err)
->> -		cs->partition_root_state = -cs->partition_root_state;
->> -	else
->> -		cs->partition_root_state = PRS_MEMBER;
->> -
->> -	/* effective_xcpus may need to be changed */
->> -	compute_excpus(cs, cs->effective_xcpus);
->> -	reset_partition_data(cs);
->> -	spin_unlock_irq(&callback_lock);
->> -	cpuset_force_rebuild();
->> -
->> -	/*
->> -	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
->> -	 */
->> -	cpuset_update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
->> -	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
->> -}
->> -
->>   /*
->>    * remote_cpus_update - cpus_exclusive change of remote partition
->>    * @cs: the cpuset to be updated
->> @@ -2039,7 +1996,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
->>   	return;
->>   
->>   invalidate:
->> -	remote_partition_disable(cs, tmp);
->> +	partition_disable(cs, -prs, cs->prs_err, tmp);
->>   }
->>   
->>   /**
->> @@ -2667,7 +2624,8 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
->>   
->>   	if (is_remote_partition(cs)) {
->>   		if (trialcs->prs_err)
->> -			remote_partition_disable(cs, tmp);
->> +			partition_disable(cs, -cs->partition_root_state,
->> +					  cs->prs_err, tmp);
->>   		else
->>   			remote_cpus_update(cs, trialcs->exclusive_cpus,
->>   					   trialcs->effective_xcpus, tmp);
->> @@ -3215,7 +3173,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
->>   
->>   	if (disable_partition) {
->>   		if (is_remote_partition(cs))
->> -			remote_partition_disable(cs, &tmpmask);
->> +			partition_disable(cs, PRS_MEMBER, PERR_NONE, &tmpmask);
->>   		else
->>   			update_parent_effective_cpumask(cs, partcmd_disable,
->>   							NULL, &tmpmask);
->> @@ -4164,7 +4122,8 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
->>   				       (cpumask_empty(&new_cpus) &&
->>   					partition_is_populated(cs, NULL)))) {
->>   		WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
->> -		remote_partition_disable(cs, tmp);
->> +		partition_disable(cs, -cs->partition_root_state, cs->prs_err,
->> +				  tmp);
-> 
-> Now that partition_disable() takes the error code directly and updates
-> prs_err through partition_state_update(), the preceding
-> WRITE_ONCE(cs->prs_err, PERR_HOTPLUG) seems unnecessary.
-> 
-> Could we pass PERR_HOTPLUG directly to partition_disable() and remove
-> that assignment?
-> 
+> base-commit: e234ed1bb82c96a5643fd70784f16cf3d72eeed3
 
-Yes, nothing reads cs->prs_err before partition_state_update() sets it,
-so the assignment is redundant. Passing PERR_HOTPLUG directly also
-matches the local partition case below. I'll change it in v6.
+Hi Longman,
 
-> Thanks,
-> Guopeng
-> 
->>   		compute_effective_cpumask(&new_cpus, cs, parent);
->>   	}
->>   
-> 
+The recent cpuset fixes have been merged, so v5 no longer applies
+cleanly and needs a rebase. Before I send v6, would you have time to
+take a look at v5? I'd like to fold your comments into v6, together
+with the ones from Guopeng.
+
+If you'd rather review a rebased version, I can send v6 first instead.
 
 -- 
 Best regards
