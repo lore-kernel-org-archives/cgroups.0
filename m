@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795601817;
-	b=R7Dhyf7gPkajbjt/QccP04ytfwfPfNv2YylN37Z5tw2Dm41b8WN86/p1GqYxrjfveCYB
-	 ak0dYsnnxBOTSLUTpLWvRz9ZiBE2w7tHK7Ys7efeLhThZUND0d1qRskGtZpX6cMKd7pKl
-	 nYi+hZjO6ztHBuxawaK8CGr2lKKpWjsSlPlgyA5S2r51JBePNPa0efNoqZ4tQV5NuuhcS
-	 /lgXS2DIjqusRdqn1QQtHYv+shFo6bEl/ycPocVbZMFS4m2fMZ+al8X5A/lk1TCmjvc22
-	 v933Wv4XwobMNH9H3X3RDmb/r5e4+N8yUktG4Knuv1UN/hPgo/byFcBauQmvU1RMEtA==
+	t=1795601862;
+	b=idwLwmYpPAfphnOHAWsjCS7zfd4UCJCrUATRA2bporFMjpTW3lC9H105KcJzsXvEHkLK
+	 gmoDNVCbo5KSl0LZjK+4PhJhQziQi3BHgen4+u+qKkxbBuwRBE1Lvp3YfCIVEydxkMyKI
+	 V+90CQMDhp4qlOkhlViruJEH//gOubNcxCBkuPFUBvB+4vBHJ0jn2Fhqjj7x/KTW4HJdE
+	 2OJLe4PH9/v+EC3/LiF4R0UsDqnX8s9GqDt4IQBf5mFF3kBgwEb6VEPR+e1G9J+1bYvih
+	 nlyyF6cAJ84+qGfkFI8QRedFm1k6amVb4GuZq+FA212Qt0J0J3gzLEtQFt52+8uVg5Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795601817;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795601862;
 	h=Received:DKIM-Signature:Message-ID:Date:MIME-Version:User-Agent:
 	 Subject:To:Cc:References:From:Content-Language:Autocrypt:In-Reply-To:
 	 Content-Type:Content-Transfer-Encoding;
-	bh=6n8ZrqtxlZkHZpLWE48kD5XtJASweu6G+n13pUnSr/c=;
-	b=MaBEEQZ5oURDmzzNs3EfrW5FY0OZGReWxdXyYKgZvPlt4kkTzaqBrrIA4V9quMujvObQ
-	 EmQifHzeEKgudmW8y9c+6NMiI6Fj4xIV2mfA3904Uy2R3l25YsndCfmQGEdmEt+MxES3n
-	 6s6mwSg++wAkAwajcePJ5c5aR2y9cBMTlwhkS9WbkaJUF8NYlbeMeBeKorV4nYXAwG91h
-	 S9rAK190tVKblJltOTDAOuRcICNfr6KJVwf2qPO958JD7W7bp8ey+aL5AYIg5WQWidv7z
-	 w52GfPeFzBMNy1gPUlKDTCyYt+KW0/wME70vLYfwR4+JePMUz9/swqOky3c5OG+a6TQ==
+	bh=MVpSybBRP0s0J8L4gfkBHiRSvBKROD3zUxXIUAM8HhA=;
+	b=lKN+EO0TjJJ7Sm3YoRJEV72AAob1rkrN7J6IMEsciShSj9lU7zEv2+Ok/6y7rA7gTYiH
+	 gyX4Kh7Pd+cKoxRrmuLT/lOYjCka/9cVLQBMamB6/CdM5eZxypSMRBlMe2+90wQ1OqPt2
+	 l+8YA+7nVWCxTAghH9ysKpfzrWwOrQRAjCNspkZ/JwddittKyadWO5ZdGvjGDigMtgIS9
+	 PK9YshMH86bcY/yHoZYXEO/RcsdoSIwnDmnfSQzVMYW+yfpi/yLhj3czS4gFbRRdpJNKe
+	 t2fENNOOSIRCGfLaqNGeKQfHg8hfop4UOcPCXNGexhjw0zivyCLouxgGqUSgK9AmWGQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PA4vCVY8;
+	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kka7V0z3;
 	arc=none smtp.remote-ip=100.103.45.18
 Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A726606A32D;
-	Wed, 25 Nov 2026 10:16:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC1F606A31E;
+	Wed, 25 Nov 2026 10:17:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=PA4vCVY8
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 123F11F000D1;
-	Wed, 25 Nov 2026 10:16:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=kka7V0z3
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 521A21F000D0;
+	Wed, 25 Nov 2026 10:17:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795601816;
-	bh=6n8ZrqtxlZkHZpLWE48kD5XtJASweu6G+n13pUnSr/c=;
+	s=k20260515; t=1795601862;
+	bh=MVpSybBRP0s0J8L4gfkBHiRSvBKROD3zUxXIUAM8HhA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To;
-	b=PA4vCVY8BiPA2XPSip0zFHGOhURNTa3VIBRn1zN5/U3irjDoM8OaTqdSiYVbpnbUb
-	 QeTPWdYQGhRHUwDTiIUejzz4jz1QMGhweo5zTYaDfi+WZtqqNjI7KxlbNN2Kw+T1Jv
-	 4hMbreJK9Fb6SIAIikCiaV9sSjRS4VP3E29i4X8YzdG2/smoWGIUG8RPBPTQ1pS+t2
-	 NCk0y2EJWKC6wyQMyR267sll6zwHu/MVVnD2GBPR6x2Z410V0hkMf0wxI3LT9G3lQK
-	 ackPlBbCZTa5PycOASqx4rzcpRZfJ056ZocGTo17KNbNqITDLHM8VSTHeSNsqSIlLd
-	 nwFHnRs4/OJuQ==
-Message-ID: <3d9d914a-4288-467d-8d25-4a47d62d23d8@kernel.org>
-Date: Wed, 25 Nov 2026 11:16:39 +0100
+	b=kka7V0z3rAN2myWRWUJ7Onlql/wheMihA7nbgFyaVm1BMatCAYHP0qX/KUiaqp7xS
+	 wLL8DPzN2vyqWkZbm50OyTrAeRDGS/uWROQbMr04QqVwiXXwaaOSJlP3lIVNxUSBnL
+	 baazwmqsbZ8BoEUyRXPuSgvLJnIQzG5unm3ZB7xa9FZtWATUTvSP3TsZXsAiptJpN/
+	 m7zoI+FonBW6LTpOS8CM55qrkns+g7qwaVuv0/gszNJFEmUskBP8mIgJizSQBKWt+l
+	 JFC2nQ4ayt+sS6gOQ4/ePJkENKDTf8g4TYbEz6EVsh34z6BAmvyc99wucVvbtB5q1H
+	 Z8fpZY/SVzKrg==
+Message-ID: <1b88fc30-a3d9-473c-92b7-701cc563be1c@kernel.org>
+Date: Wed, 25 Nov 2026 11:17:24 +0100
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -52,8 +52,8 @@ List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 12/18] mm/damon: convert to LRU refs based operations
- for MGLRU
+Subject: Re: [PATCH v6 17/18] mm/mglru: folio LRU refs based active/inactive
+ number accounting
 To: kasong@tencent.com, linux-mm@kvack.org
 Cc: Andrew Morton <akpm@linux-foundation.org>,
  Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
@@ -84,7 +84,7 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org,
  Tianyi Chen <hi@tychen.cc>, Ridong Chen <ridong.chen@linux.dev>
 References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-12-8ffea39934a6@tencent.com>
+ <20261124-mglru-fg-v6-17-8ffea39934a6@tencent.com>
 From: "David Hildenbrand (Arm)" <david@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=david@kernel.org; keydata=
@@ -131,42 +131,59 @@ Autocrypt: addr=david@kernel.org; keydata=
  3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
  CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
  qIws/H2t
-In-Reply-To: <20261124-mglru-fg-v6-12-8ffea39934a6@tencent.com>
+In-Reply-To: <20261124-mglru-fg-v6-17-8ffea39934a6@tencent.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 11/23/26 19:53, Kairui Song via B4 Relay wrote:
 > From: Kairui Song <kasong@tencent.com>
 > 
-> damon_pa_pageout() cleared PG_referenced directly, which under MGLRU
-> corrupts the folio's refs count. That flag is now
-> bit 0 of the count (LRU_REFS_FLAGS).
+> Currently the active/inactive LRU sizes exported through /proc/vmstat
+> and memory.stat are derived from the generation window: folios in the
+> two newest generations are accounted as active, the rest as inactive.
+> This causes several problems:
 > 
-> Reset the count instead under MGLRU.
+> - Unmapped file folios can stay in older gens despite repeated use,
+>   so active files can be under-reported, unlike classical LRU.
 > 
-> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> - The reading is jumpy: on aging, the second-newest gen, previously
+>   active, becomes inactive all at once, causing a huge drop of active
+>   folios without any change in use.
+> 
+> - The reading is reversed on swapless machines. When swapping is
+>   disabled or unavailable, MGLRU ages anon by moving the gens directly
+>   without walking or touching any folio, to reduce the overhead. So
+>   inactive anon folios can suddenly count as active, or vice versa,
+>   despite no change in their hotness.
+> 
+> With frequency guided promotion, hotness is already tracked per folio by
+> its referenced count, so we can do folio level accounting instead: a
+> folio is active once its refs reach LRU_REFS_ACTIVATED (currently
+> LRU_REFS_PROTECTED).
+> 
+> On reaching this threshold, folios are accounted to the active part.
+> On forced per-folio aging or PID protection, refs are capped at
+> LRU_REFS_WORKINGSET, dropping active folios to the inactive part.
+> Note that on swapless machines anon refs are not reset by aging (the
+> shortcut skips the per-folio walk), but the counts no longer oscillate
+> as the generation indices wrap.
+> 
+> The accounting is now per folio and lruvec independent, so no size
+> adjustment is needed when reparenting a dying memcg: the hierarchical
+> stats keep the counts in the parent automatically.
+> 
+> folio_migrate_lru_refs() also gains off-LRU VM_WARN_ON_ONCE checks and
+> __folio_set_lru_refs() leaves a folio that is still on a gen list alone,
+> as its refs are already in the active/inactive counters.
+> 
 > Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
-> Tested-by: Andrew Morton <akpm@linux-foundation.org>
 > Signed-off-by: Kairui Song <kasong@tencent.com>
 > ---
->  mm/damon/paddr.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/damon/paddr.c b/mm/damon/paddr.c
-> index e89cb14ee17b..411e1d557ba3 100644
-> --- a/mm/damon/paddr.c
-> +++ b/mm/damon/paddr.c
-> @@ -279,7 +279,8 @@ static unsigned long damon_pa_pageout(struct damon_region *r,
->  		else
->  			*sz_filter_passed += folio_size(folio) / addr_unit;
->  
-> -		folio_clear_referenced(folio);
-> +		/* The region is cold, better drop the hotness info. */
-> +		folio_clear_lru_refs(folio);
->  		folio_test_clear_young(folio);
+>  Documentation/admin-guide/mm/multigen_lru.rst |   4 +-
+>  include/linux/mm_inline.h                     | 100 ++++++-----
 
-I also wonder whether both operations here should be abstracted, such that MM
-code doesn't have to worry about the details of reclaim handling.
+Another clear indication that this should go into a separate header. Maybe
+mglru.h or vmscan.h ... or both.
 
 -- 
 Cheers,
