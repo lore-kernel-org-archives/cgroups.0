@@ -1,96 +1,65 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.234
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.20
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795706703;
-	b=taCExQJuShrvEK7jcoFKDw57izkPbEU/PtWm6lhkovNODKyumi9wKH2rNIK3j+wVfQqh
-	 eIHJJNkTP4NYNCc1mp0nRv+ep8IDgzIHu+mJ02FJoFep0oVXAS2eHzViwQfafeq6Ru3S7
-	 4uE9mf4LXL1yfK5ydYtWSeJ/kqh7+z9ufS127mVzGP4pJNlA4y988gm2UvTuseyhLGlmQ
-	 b5g0/fWkLUl28BVWRcFD7bBfIQu93FZOnsrA+GxvDKTHmr2B8DS0YzanHVYXOx8drIFku
-	 wi65UxDJ0N765LDZbIOtw6UURzX44GgQrPfiC15XEtGEc2Lwq1LSUsPkBR6Dq3SCmHg==
+	t=1795706828;
+	b=SEjON0nlVWUhCNx3dqvam4HABlXtvAU+20E022ri2GkA4AHzBCyCUgLJbcs2v3Qcn/W3
+	 kkUUTZU6jQ8rYwnYTsIqOl8RlhV+eNQtj+Ncwo/FIu8QF05DItcFgGAAtZbsNCYoH2vaU
+	 tEl69/5vFvJaYF3q3U5R8TAjqwOgkQCwGNPaQl8BasZVkZ9DwynUmSEcc1moiOT5lXt2B
+	 ITYyrdIWFP5qCJBvJWr5HSAgYeF9F/XfPRkbyLf7gvbYJz1tF3Ppa0XXUGQcKGxMsSJEE
+	 XOVnlGtm5f/tGPv2Gb5HZDoSQ85yTHuqaUxbBs4KyEB1Zlc1HOhv1DB8aSRb1w5KT/Q==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795706703;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795706828;
 	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
 	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
 	 References:MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=WaGhGP18N1e5WQjSL7Kf13XBuOe/Lyl+VKElqyiI+RE=;
-	b=cesJCdBoJlE2o7gzfGlM0P4FIVszt9Uvt9KFNMGvm+qoNyW4/yR/c85bZ6/bIFxe3FY3
-	 4hSr9FsqQxCUKm9foZYC/91CkGngc8gPp6zufzajexW5zc/r1pJlH9/G3GAlkT3+4eAPr
-	 lDFPcZZF7D0IeEDRmwGRYvSEL+x4XN81iVjcehOKGEU6F3rfp6u9ikhuYJnWhcpVmTDdi
-	 oVniYA3VSaXpzItpomMAIe3TYpqhVYK1eC5Fegv6rTEOm5cCyP7qEzZW1lGnxVcV+TwJB
-	 seMwQYOfhNgpvDaArUtlfuJURNLNht7KeKW1Sxzh46+QVPDzekJ2JaRECvLalU7iZOA==
+	bh=yuJqy0NseoGTjiNdlXcAFKErbfQ+Md0iYPLbsmzKFlE=;
+	b=y9rqSQSwgHl/qGJRr9VeGJSZ/dzPi6OIFafsnPLv53Yjl+f3P+bydju31oS6N80NoBIP
+	 EZU1tP+9DQD9NJED/fohbKE2HCRTKUUglA7wluerTdI3gOppAND4Pa9DyNlih2ydY9lgA
+	 eZtx1IBeCxT+CYJptO+EHYTInqKv2r0AQ507iuut8I0r7VINKnM62ihHgsyUAUpznfJ9Y
+	 6W4DqghsWdCWK5BITNJG6CNeeGAzDZLc16EQpZDo0e4RSVs8+3XN8PSHf2JjDrjC8HX/I
+	 mxJ3zg/P7qF3bt4DC+69Yfp/BeifCp1buhfLuNUNSdcReOeTiQcAj9Fgsj/hme14IAg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=linux.dev;
 	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=bqk6Pahh;
-	arc=none smtp.remote-ip=91.218.175.234
-Received: from mta0.migadu.com (out-234.mta0.migadu.com [91.218.175.234])
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=F4BGsX4w;
+	arc=none smtp.remote-ip=91.218.175.20
+Received: from mta0.migadu.com (out-20.mta0.migadu.com [91.218.175.20])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB5EE606A683
-	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 15:25:02 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org BB5EE606A683
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD493606A321
+	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 15:27:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org DD493606A321
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=bqk6Pahh
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=F4BGsX4w
 X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=e8n4p5I4AJEqksbOANyj0Uvx8iI2baqGaT4jyvFlF3s=;
+DKIM-Signature: a=rsa-sha256; bh=KbVedbyeDFEeAK/XvGiJ+Oc2ogwQltzRQPHWkSa26XU=;
  c=simple/simple; d=linux.dev;
  h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795706701; v=1; x=1796311501;
- b=bqk6PahhLIbLwoy+Kig/L65xEqAmIY01ayTgnFrDflwxomXHD5KQIQ5PirieCe9iNjt1eZ8c
- Ubdus2glbKHWYkORYn7snFrtjRCdrNbc4kKZOVeJfRz7zYwQER1EfbmaYrh1d8PHZh5iuGQHlst
- +Pe24lYqA9gTf6Nw3wYamyMs=
+ t=1795706825; v=1; x=1796311625;
+ b=F4BGsX4wltLX19n0RQ8e8Lt6Xa7f1+aUnz+D6fm9t8CzdvEHQAYwU+IaId0QNmsBQAtY6/2P
+ u0mi9Zje/Mxd2bT8bJP8x4XrSBVRCtPhYixoPR9WsY19bI+h7mhdfQbTumZkt06dDUk+TSDh4Ge
+ Y9/YgJmw2wdECDMDiCLOEwX0=
 X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id e28c61dcd929e842;
-	Thu, 26 Nov 2026 15:24:58 +0000
-X-Mizu-Trace-ID: e28c61dcd929e842
+Received: by smtp.migadu.com with ESMTPS id a9864cef7e22ac7f;
+	Thu, 26 Nov 2026 15:27:05 +0000
+X-Mizu-Trace-ID: a9864cef7e22ac7f
 X-Migadu-Flow: FLOW_OUT
-Date: Thu, 26 Nov 2026 07:24:42 -0800
+Date: Thu, 26 Nov 2026 07:26:59 -0800
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: "Harry Yoo (Meta)" <harry@kernel.org>
-Cc: Vlastimil Babka <vbabka@kernel.org>, 
-	Andrew Morton <akpm@linux-foundation.org>, Suren Baghdasaryan <surenb@google.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Hao Li <hao.li@linux.dev>, Christoph Lameter <cl@gentwo.org>, 
-	David Rientjes <rientjes@google.com>, Muchun Song <muchun.song@linux.dev>, Hao Ge <hao.ge@linux.dev>, 
-	Pedro Falcato <pfalcato@suse.de>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	kernel-team@meta.com, "Liam R. Howlett" <liam@infradead.org>, 
-	Alice Ryhl <aliceryhl@google.com>, Andrew Ballance <andrewjballance@gmail.com>, 
-	Matthew Wilcox <willy@infradead.org>, linux-fsdevel@vger.kernel.org, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, 
-	"David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Jiayuan Chen <jiayuan.chen@linux.dev>, netdev@vger.kernel.org, 
-	Kees Cook <kees@kernel.org>, David Hildenbrand <david@kernel.org>, 
-	Lorenzo Stoakes <ljs@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Will Deacon <will@kernel.org>, Mark Rutland <mark.rutland@arm.com>, 
-	Madhavan Srinivasan <maddy@linux.ibm.com>, Michael Ellerman <mpe@ellerman.id.au>, 
-	Nicholas Piggin <npiggin@gmail.com>, Robin Murphy <robin.murphy@arm.com>, 
-	"Joerg Roedel (AMD)" <joro@8bytes.org>, Amir Goldstein <amir73il@gmail.com>, 
-	Casey Schaufler <casey@schaufler-ca.com>, Paul Moore <paul@paul-moore.com>, 
-	James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, 
-	linux-security-module@vger.kernel.org, Richard Weinberger <richard@nod.at>, 
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>, Johannes Berg <johannes@sipsolutions.net>, 
-	Eric Dumazet <edumazet@kernel.org>, maple-tree@lists.infradead.org, Paolo Abeni <pabeni@redhat.com>, 
-	Simon Horman <horms@kernel.org>, Jason Xing <kerneljasonxing@gmail.com>, 
-	Willem de Bruijn <willemb@google.com>, Mina Almasry <almasrymina@google.com>, 
-	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>, Mike Rapoport <rppt@kernel.org>, Michal Hocko <mhocko@suse.com>, 
-	Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
-	Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, 
-	Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, 
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, 
-	Valentin Schneider <vschneid@redhat.com>, K Prateek Nayak <kprateek.nayak@amd.com>, 
-	Anshuman Khandual <anshuman.khandual@arm.com>, linux-arm-kernel@lists.infradead.org, 
-	"Christophe Leroy (CS GROUP)" <chleroy@kernel.org>, linuxppc-dev@lists.ozlabs.org, 
-	Niklas Schnelle <schnelle@linux.ibm.com>, Matthew Rosato <mjrosato@linux.ibm.com>, 
-	Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Chen-Yu Tsai <wens@kernel.org>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Samuel Holland <samuel@sholland.org>, iommu@lists.linux.dev, 
-	linux-s390@vger.kernel.org, linux-sunxi@lists.linux.dev, linux-um@lists.infradead.org, 
-	cgroups@vger.kernel.org
-Subject: Re: [PATCH slab/for-next v2 00/14] mm/slab: mandate SLAB_MAY_ACCOUNT
- for __GFP_ACCOUNT allocations to avoid wasting memory for slab metadata
-Message-ID: <20261126152250.GB738059@shakeel.butt@linux.dev>
-References: <20261125-memalloc-prof-dont-waste-slabobj-ext-metadata-v2-0-7c680f02a734@kernel.org>
+To: Xueyuan Chen <xueyuan.chen21@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>, 
+	Shuah Khan <skhan@linuxfoundation.org>, Randy Dunlap <rdunlap@infradead.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mm@kvack.org
+Subject: Re: [PATCH] mm/memcontrol: expose anon and file reclaim statistics
+ in memory.stat
+Message-ID: <20261126152615.GC738059@shakeel.butt@linux.dev>
+References: <20261124-memcg-reclain-stat-v1-1-c6cb14b0d917@gmail.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -102,22 +71,17 @@ Precedence: list
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20261125-memalloc-prof-dont-waste-slabobj-ext-metadata-v2-0-7c680f02a734@kernel.org>
+In-Reply-To: <20261124-memcg-reclain-stat-v1-1-c6cb14b0d917@gmail.com>
 
-On Wed, Nov 25, 2026 at 09:37:01PM +0000, Harry Yoo (Meta) wrote:
-> TL;DR
-> -----
+On Tue, Nov 24, 2026 at 03:51:27PM +0800, Xueyuan Chen wrote:
+> The aggregate reclaim counters in memory.stat do not show how reclaim
+> is split between the anonymous and file LRUs of a cgroup.
 > 
-> The purpose of this series is to convert existing slab users that
-> specify __GFP_ACCOUNT on allocations to specify SLAB_MAY_ACCOUNT on
-> cache creation, to reduce memory waste for slab metadata with
-> CONFIG_MEMCG=y && CONFIG_MEM_ALLOC_PROFILING=y.
+> Expose the existing per-memcg scan and steal counters by LRU type so
+> userspace can measure reclaim balance and efficiency when evaluating
+> reclaim policy. Report the same counters per node in memory.numa_stat.
+> Both files report the counters in base pages.
 > 
-[...]
-> 
-> Signed-off-by: Harry Yoo (Meta) <harry@kernel.org>
-
-For the series:
+> Signed-off-by: Xueyuan Chen <xueyuan.chen21@gmail.com>
 
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-
