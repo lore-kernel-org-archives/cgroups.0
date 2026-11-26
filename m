@@ -1,116 +1,107 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=195.135.223.131
-ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795699786;
-	b=fDdzkfoeH0EOUkIYceXpQsx3+3/C08xrllkO1SGkGNWyoxfQtpTk3pC8YUEHW1mrvgND
-	 V9fftdcIeQPMx88tu95DhhFbu3anfN+Hww78Xjm6ys8oHQ7iajdE4BminwryeYsiurWEx
-	 Dw8Qxv/Epz1WunNwQH+o61nIwV0zNe1Zq7h+BV4S3qEIP3n2vDLJZ40JVFSuiHwVnJy4j
-	 /tsFLafcMTsmZI1o+oPcrF8nCisc+OAl7HJ7xdeLtfur35HhCca/Rn6WwJkmFP422a3KO
-	 AzlrDMechIsbBfw4yhwuv0Cp5kItIvDmPYZN6eAmIvyFVZ3XHH3iFK3P6MoLjWAZiVQ==
-ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795699786;
-	h=DMARC-Filter:Received:DKIM-Signature:DKIM-Signature:DKIM-Signature:
-	 DKIM-Signature:Received:Received:Received:Date:From:To:Cc:Subject:
-	 Message-ID:References:MIME-Version:Content-Type:Content-Disposition:
-	 In-Reply-To:X-Rspamd-Queue-Id:X-Spam-Level:X-Rspamd-Server:
-	 X-Rspamd-Action:X-Spam-Flag:X-Spamd-Result:X-Spam-Score;
-	bh=3ETYE+9jLVYhPwhx8oW4f7yzkUUYn0BFPEg3N+uQXDg=;
-	b=hoBGNgGY6uRhBVWeqNuBk7nBPhzw5E3ehiFZAtqafLON52h2s1g06kGeIRs8j0NyvMtM
-	 0mNYzVIMbDHwNzfResQtawl4j5VYU/VuE6HXcaQ9/aqOFSJsNWts8zQXsn2mo2m+JNCBe
-	 AUt5Zy6HZANsFGYmiAw2Z4P72057Gw/M4I6BNeOwSmIN+oegAuL9Z184UirtHcAyPo7b2
-	 dSurXDsYZ1Yy2ZWLukgCl6JnBqidX+MpCVviU7G1F2z6224vuq7iK8cgq8FiSAl/Qbaem
-	 J5ghyA7r3UrXBgbwhCKdDHs2q0HBqyOhjJWj9ZTc4U2Z7kGhm43iEqzKwVv3Y0DALPw==
-ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=suse.cz;
-	spf=pass smtp.mailfrom=suse.cz;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=CHmbyS7r;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=STsQXCyy;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=CHmbyS7r;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=STsQXCyy;
-	arc=none smtp.remote-ip=195.135.223.131
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Authentication-Results: smtp.subspace.kernel.org; arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.72.105
+ARC-Seal: i=2; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=pass;
+	t=1795705066;
+	b=KQjiklOs7p7ChhJF3NoMQ+oEY2wJ4wcDf6WuN9+nfPy1nCEd8zKl/ekqtFgSYnvAmIwT
+	 c/NZSvDHhUYJrsRTmFouJ/FexcNQ9h8gevSK25tl0hz63kg4rPtcyjLWR8EPBb9xlDp7D
+	 178gd8gMpCQuIEuylAxg+rTicxcVHDAMsXV4NXX7yoFCur+ojz7wYrkIvfuwmEVQfSgL/
+	 ILoXE/jDNRMwqfkcgQfeMu6AR79vUbBCuq9Aq1EMAuewcJv1sNKxBLLQ04P73dUaHmtXv
+	 Rw9zBiqkHPBcZTTYGG4tiJEm9wS7eQNXFKFsvemE1QQ9JydnxUlcDl9jOvxhyqhoXUg==
+ARC-Message-Signature: i=2; d=subspace.kernel.org; s=arc20261015;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795705066;
+	h=DMARC-Filter:DKIM-Signature:Received:Received:Date:From:To:Cc:
+	 Subject:Message-ID:In-Reply-To:References:X-Mailer:Content-Type:
+	 Content-Transfer-Encoding:X-ClientProxiedBy:MIME-Version:
+	 X-MS-PublicTrafficType:X-MS-TrafficTypeDiagnostic:
+	 X-MS-Office365-Filtering-Correlation-Id:X-MS-Exchange-SenderADCheck:
+	 X-MS-Exchange-AntiSpam-Relay:X-Microsoft-Antispam:
+	 X-Microsoft-Antispam-Message-Info:X-Forefront-Antispam-Report:
+	 X-MS-Exchange-AntiSpam-MessageData-ChunkCount:
+	 X-MS-Exchange-AntiSpam-MessageData-0:
+	 X-MS-Exchange-AntiSpam-MessageData-1:X-OriginatorOrg:
+	 X-MS-Exchange-CrossTenant-Network-Message-Id:
+	 X-MS-Exchange-CrossTenant-AuthSource:X-MS-Exchange-CrossTenant-AuthAs:
+	 X-MS-Exchange-CrossTenant-OriginalArrivalTime:
+	 X-MS-Exchange-CrossTenant-FromEntityHeader:
+	 X-MS-Exchange-CrossTenant-Id:X-MS-Exchange-CrossTenant-MailboxType:
+	 X-MS-Exchange-CrossTenant-UserPrincipalName:
+	 X-MS-Exchange-Transport-CrossTenantHeadersStamped;
+	bh=NjwBLSXU0HqOuz6Uu/uLZYLJ+DX3ExXcgo6XFMAGuNQ=;
+	b=2IifoGRF5othaljUCE6iJneSSoklKyqYhLf9bSYhJ73117PRehjAZex8wiys8+wgxNkx
+	 iHh7LCxqBdaNiV+RH2Q7MwcY7cHiCxzi9ubmcKH2Km0Vmw8tmJYpbLjYzidJIP3DpJbhV
+	 POkUNZU8oQnUPfG8ivNs4xF4UAptzKvrQuFB734anEhXFweK+bSMaUhzRivgz/BHDibHD
+	 5o2xlFCDhX0RRC/jWkPtk5YJLSxryNQo35e43I3+KHTFknVe0DZ67JGtENJkFtPOjgqv1
+	 7yxNGNVztjxhjmrt3G5+yoTi2N5ZfzvUlBMDkl6RPTjocJ34CCIEDEtexN9yDxSKoVQ==
+ARC-Authentication-Results: i=2; smtp.subspace.kernel.org; 
+	dmarc=pass header.from=santannapisa.it;
+	spf=pass smtp.mailfrom=santannapisa.it;
+	dkim=pass header.d=santannapisa.it header.i=@santannapisa.it header.a=rsa-sha256 header.s=selector1 header.b="A8HUOA/m";
+	arc=pass header.oldest-pass=0 smtp.remote-ip=52.101.72.105
+Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11023105.outbound.protection.outlook.com [52.101.72.105])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange ECDHE (secp384r1) server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8B30606A31E;
-	Thu, 26 Nov 2026 13:29:45 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B8B30606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF8EC606A6A3;
+	Thu, 26 Nov 2026 14:57:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CF8EC606A6A3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=santannapisa.it
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=santannapisa.it
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=CHmbyS7r;
-	dkim=pass header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=STsQXCyy;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.a=rsa-sha256 header.s=susede2_rsa header.b=CHmbyS7r;
-	dkim=neutral header.d=suse.cz header.i=@suse.cz header.a=ed25519-sha256 header.s=susede2_ed25519 header.b=STsQXCyy
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 832841F82D;
-	Thu, 26 Nov 2026 13:29:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1795699783; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3ETYE+9jLVYhPwhx8oW4f7yzkUUYn0BFPEg3N+uQXDg=;
-	b=CHmbyS7rE8D9y6HmMS/dNYUQ9+I6L1l9cZmrUzcYKiQU3JHWp8M0wGxqDzydGfXj0Mldst
-	IZMUi3/aW9s/JCTj8X6oe+vV8fowpoJDqdS8FUGCfl9q93wIG0IH6AQiCR+8i8ZdjEp8v4
-	CqUk0KbJSMxBtcwg5vLnv863Y/aHZN0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1795699783;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3ETYE+9jLVYhPwhx8oW4f7yzkUUYn0BFPEg3N+uQXDg=;
-	b=STsQXCyyhppnt+hXynu1+B4O5f6wcSuPJvxY2UcOXafOnKrfh7fE/y4P2qGwyEj4Mt3957
-	XP6KkhAVY6ulBaAg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=CHmbyS7r;
-	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=STsQXCyy
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1795699783; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3ETYE+9jLVYhPwhx8oW4f7yzkUUYn0BFPEg3N+uQXDg=;
-	b=CHmbyS7rE8D9y6HmMS/dNYUQ9+I6L1l9cZmrUzcYKiQU3JHWp8M0wGxqDzydGfXj0Mldst
-	IZMUi3/aW9s/JCTj8X6oe+vV8fowpoJDqdS8FUGCfl9q93wIG0IH6AQiCR+8i8ZdjEp8v4
-	CqUk0KbJSMxBtcwg5vLnv863Y/aHZN0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1795699783;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3ETYE+9jLVYhPwhx8oW4f7yzkUUYn0BFPEg3N+uQXDg=;
-	b=STsQXCyyhppnt+hXynu1+B4O5f6wcSuPJvxY2UcOXafOnKrfh7fE/y4P2qGwyEj4Mt3957
-	XP6KkhAVY6ulBaAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 578E3134C3;
-	Thu, 26 Nov 2026 13:29:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id YVL2DEc0CGuWZAAAD6G6ig
-	(envelope-from <jack@suse.cz>); Thu, 26 Nov 2026 13:29:43 +0000
-Received: by quack.suse.cz (Postfix, from userid 1000)
-	id DB69D27E29; Thu, 26 Nov 2026 14:29:38 +0100 (CET)
-Date: Thu, 26 Nov 2026 14:29:38 +0100
-From: Jan Kara <jack@suse.cz>
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Muchun Song <muchun.song@linux.dev>, David Hildenbrand <david@kernel.org>, 
-	Qi Zheng <qi.zheng@linux.dev>, Lorenzo Stoakes <ljs@kernel.org>, 
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>, Jan Kara <jack@suse.cz>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Greg Thelen <gthelen@google.com>, 
-	Greg KH <greg@kroah.com>, Ming Lei <tom.leiming@gmail.com>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RESEND] mm/vmscan: Fix legacy memcg reclaim deadlock
- against filesystem freeze
-Message-ID: <chxughsxznjexjhb5sjy7dtzkemkarwt5gogkphhjsggis6mtf@uol26i75zbal>
-References: <17d0d1395c0237d201a1abb2473d51f5@kernel.org>
+	dkim=pass (1024-bit key, unprotected) header.d=santannapisa.it header.i=@santannapisa.it header.a=rsa-sha256 header.s=selector1 header.b=A8HUOA/m
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Y7MX4aspdgtdPDfaS7njvWOusD/WLri8qUKoF0F+tXDdFVS9u35x9Cka8ReqeZAgv1qa/mRVxV9oO1s0u3TZ3uy86t83KvbrdgutZuvf3QcOWhgjAAInJl6Ut+Ff1JCEz9BDp+c4cJviyN+z1TJvDz+tCpYf49brtCYEYDvOGKOK8QHOXNaMmIUGwwoLziebwTITokEql6hAVAt02Reew3lmPylLtP76ZJmd8bMFWT0P3/JZ6k1+qQlMq1IQ3Jrwp5HQRvfixcT7uODTAusp5yhnrnK60TGM84iALUDdfbckQq9ODj/6z9zGRg2RxWy2Ll8xpwCEVx9cXioIapBg3w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=NjwBLSXU0HqOuz6Uu/uLZYLJ+DX3ExXcgo6XFMAGuNQ=;
+ b=FU5wg0oQiKTn1rjLpd6imoya4mYevMVF2Hxdctzp+Q9Qm3FzWaT+pUbPS7FlBXUYAzcqKxtx2+Z163+y1kUZkepLei8TU577wF30DxGmJA2tg8kMjbWV1m+fdei7mZe92QLKHup5UQvMOSIopHNiRjPB3w/7qU4j4hwdFwc1DwBr90wZ8NIsUVsFbjB7nVC8aGEfuBg863RMXMAKEF+nSdoFXDBVLG8cnhR0VKHFqOgeSxZQIch1GPqXkNOyfwy6MIboiFtocVTB4edyX2+zmc18jruxzOuYHlC5gFLhbZSBrbRutYb3+qjQOOzja8Ab9yfFLCH+8siUg/rthBZG4A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=santannapisa.it; dmarc=pass action=none
+ header.from=santannapisa.it; dkim=pass header.d=santannapisa.it; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=santannapisa.it;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NjwBLSXU0HqOuz6Uu/uLZYLJ+DX3ExXcgo6XFMAGuNQ=;
+ b=A8HUOA/msQMR8AM5O0QAuCzEEa1gf1R7wlsuM9juxV6mRm+SCwn6KOViHl81nnzOC2N1oGX+p+IyL4/NkjIHrxUNHQ5XsLn3buvzS9DD88/KmxEzX6ojthKg2F15soJSFELnp29WaFApJlYdyTpSw+bnLFgHml+iqmODZbKSCuM=
+Authentication-Results: mx.microsoft.com 1; dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=santannapisa.it;
+Received: from PAVPR03MB8969.eurprd03.prod.outlook.com (2603:10a6:102:32e::7)
+ by VI1PR03MB6367.eurprd03.prod.outlook.com (2603:10a6:800:19c::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.21.662.5; Thu, 26 Nov
+ 2026 14:57:39 +0000
+Received: from PAVPR03MB8969.eurprd03.prod.outlook.com
+ ([fe80::26c1:111c:f60d:f9b9]) by PAVPR03MB8969.eurprd03.prod.outlook.com
+ ([fe80::26c1:111c:f60d:f9b9%7]) with mapi id 15.21.0662.004; Thu, 26 Nov 2026
+ 14:57:39 +0000
+Date: Thu, 26 Nov 2026 15:57:36 +0100
+From: luca abeni <luca.abeni@santannapisa.it>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Yuri Andriaccio <yurand2000@gmail.com>,
+ bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com,
+ hannes@cmpxchg.org, kprateek.nayak@amd.com, linux-kernel@vger.kernel.org,
+ mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com, peterz@infradead.org,
+ rostedt@goodmis.org, vincent.guittot@linaro.org, vschneid@redhat.com,
+ yuri.andriaccio@santannapisa.it
+Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
+Message-ID: <20261126155736.20e64e65@linux.fritz.box>
+In-Reply-To: <awfe_r5McCTzr84x@jlelli-thinkpadt14gen4.remote.csb>
+References: <58cb2cbaf82c0f671213eaca46465cd5@kernel.org>
+	<20261119151416.33f90a64@linux.fritz.box>
+	<471bf8d446becabfca00041fb2a78067@kernel.org>
+	<20261120120659.2e902463@linux.fritz.box>
+	<6fef47e08a37079c08806b3c57994778@kernel.org>
+	<20261120212418.10221f2e@linux.fritz.box>
+	<06f4c157677f99fc5386dba4c9d68cd2@kernel.org>
+	<20261123084345.4e24e3ca@luca64>
+	<awQTy09VbrDn9RpA@jlelli-thinkpadt14gen4.remote.csb>
+	<20261123151846.3fdcbf4e@linux.fritz.box>
+	<awfe_r5McCTzr84x@jlelli-thinkpadt14gen4.remote.csb>
+X-Mailer: Claws Mail 4.4.0 (GTK 3.24.53; x86_64-suse-linux-gnu)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: FR4P281CA0393.DEUP281.PROD.OUTLOOK.COM
+ (2603:10a6:d10:cf::18) To PAVPR03MB8969.eurprd03.prod.outlook.com
+ (2603:10a6:102:32e::7)
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -120,315 +111,99 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <17d0d1395c0237d201a1abb2473d51f5@kernel.org>
-X-Rspamd-Queue-Id: 832841F82D
-X-Spam-Level: 
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-11.51 / 50.00];
-	SUSE_INTERNAL_BYPASS(-9.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	MID_RHS_NOT_FQDN(0.50)[];
-	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_TLS_LAST(0.00)[];
-	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
-	RCVD_COUNT_THREE(0.00)[3];
-	RCPT_COUNT_TWELVE(0.00)[23];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	FREEMAIL_CC(0.00)[linux-foundation.org,cmpxchg.org,kernel.org,linux.dev,infradead.org,suse.cz,zeniv.linux.org.uk,kernel.dk,lst.de,google.com,kroah.com,gmail.com,kvack.org,vger.kernel.org];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	DKIM_TRACE(0.00)[suse.cz:+];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.cz:dkim,suse.cz:email,suse.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -11.51
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAVPR03MB8969:EE_|VI1PR03MB6367:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6f0e84fd-0b52-4885-280d-08df4bcd9d2f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|786006|23010399003|7416014|376014|1800799024|366016|10070799003|18002099003|22082099003|56012099006|4143699003|5023799004|11063799006|261026121527099003|261102123227099003|261021123027099003|10067099003|261026140227099003|261022105027099003|261021121427099003|261028144727099003;
+X-Microsoft-Antispam-Message-Info:
+	kWnN/mjbz2Zf28MjdT7OIqlakG28NejkgktdSclHy54iynLw2KhMx+kxYl/sY7N3KL4D2DdlNMawb1xwgi5PNKvPIYOGJkyPXmQRhREMGBR/fSmXYnTlLcOrzJjRYZnH3fQTMIcFhHKBl7sGfhXSn8c4UoRl8bOXHNrbmOXWVttjd/UczWjqDMFjk06GPBS/Ssyqm/cFmqHg/LpjW3oydf25dV1oA8bfWGf/Cw3D+A85sUeMXrRXZELFag2tJfBLTNbvdbL4c+5aPhOuYJ/ijshzIrXbTfOgRn1pMemymKJGfMejYMp/4hCrpjq71iquqKZEJqjc5stsDu/UUuBTlEBi//plbIIMXAgFbXniK3mhCzz6KmcxM70l+aB0nxdaF1IJnsvIpIITZIMzTKrVwiN8OODshkWuPB/sXksp5QWfaeS2dbDd/Y4Dbn8vGPxEUVksUwsu7+igcobRx7SEk0x6+wNkOaMBzo1HwPViPBOgR7GCLeSqtF2WmL1gy7yNaGoPVCERjs9/fKX7/vtQF1hN0RMIrlvShaCk3uHEQbGYSIG5nCuevUF5Q5M7qThs7RQe7kgS2kEQ+7owihT8Y15t00rdKs989mhGEos5+j6W0ypWmkqb9NXVCMcIWQz24QxRLgglq+P9XQnz4uxOiHr2LDIcj67QKtM7JvkGgJc=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAVPR03MB8969.eurprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(786006)(23010399003)(7416014)(376014)(1800799024)(366016)(10070799003)(18002099003)(22082099003)(56012099006)(4143699003)(5023799004)(11063799006)(261026121527099003)(261102123227099003)(261021123027099003)(10067099003)(261026140227099003)(261022105027099003)(261021121427099003)(261028144727099003);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 2
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?8dcKRA/iNvKevtgVJAtO5pDybe1hiW4cuIBrkD/eTNyd1dtg/DsXcT90IXgZ?=
+ =?us-ascii?Q?vMP9cWgkObUBtxJuy4oTiWfBgkyES9eh6EoGLNxzz4enZ89HBx2R6ydHtd2t?=
+ =?us-ascii?Q?RjQTshq+x6R9Nb7Cj/1a2GASYbmPUcbEI5jk2DFQUZQxf/PI5zIGMRo1pj5n?=
+ =?us-ascii?Q?vE60ly2yHcQd6s/Yd5YS6FlZmov7zI4TW2QSHPPq5ubJzyfE4ATJYUHsyKyT?=
+ =?us-ascii?Q?fmdlpOTIGu7KSX1dFjGXh6fIVdZXxdyCC4kHv4EKu5d+SSGcQo+TBkFH6nPy?=
+ =?us-ascii?Q?aiypyZk0n3pkJbRWoqr1F2MaDsQGOHNHxf0eQlZpDl0M57qOVHM6mgycN0mI?=
+ =?us-ascii?Q?VirE++m51g9aojhnckHCwYrVi2vN64qD9QZkSwfUTITHdYE03xuhsO1Qy2zm?=
+ =?us-ascii?Q?IvnIEQ4CRLz5dW8na7aLcWDUrfP0hEgx8Zekj8ws071FdXz5wqxEMO5crxiU?=
+ =?us-ascii?Q?6WCmpCDZbTJOmCXbwl7eXicEWL9qShGHfZeghZ4fyVcrWupA0k8ZkLtQPYok?=
+ =?us-ascii?Q?kcd3wSeN9fhvTNukrb91jRl1MAe3f9cboblxcOAq8fz4T+RNduGeukyzFtEO?=
+ =?us-ascii?Q?Ics+pG/Ev/WGIt4qa+//EvcORPE0naJ7xLF394epR3/9HZgg4nRaOBIpr65B?=
+ =?us-ascii?Q?20LDMVIGDhxAKQ3R9xBhYhMy7ftY7DKcA7R10nmrZ5m9io7FJN2HEG1wOFoA?=
+ =?us-ascii?Q?b1+BpJWjwTHSgjnImQS0iJ1wEy7RLsPgF/FVV8ylCUA7M36KaxsN8Ylkf1VZ?=
+ =?us-ascii?Q?3HmWCHrDfnd6AjrqPmJ11jm81vUnH9bkaIGlpGMZh9Rl+48rbQQ46wYglHHd?=
+ =?us-ascii?Q?+bIXY57cJQoMy4XUXkJlQgGGAFVUxMkeY7SgZwAlAAtT9w7gnxGpzP69m2/M?=
+ =?us-ascii?Q?qwkZoKVfBABYPJBRz1aHRiisAij8VnWBJx1dLTsNDlqfNeAwSCu3FIsJYWfd?=
+ =?us-ascii?Q?julrVsysEz0nneEy4KS3jAjflwMYq2O/5k+hqgcJ4ez8C3j1U8ndfLQasxIp?=
+ =?us-ascii?Q?FMxh9QZpbI0KQPGnMWDn43GOXL1jnUAY940+fXXNd1/sepnSGowD6KgRNU+V?=
+ =?us-ascii?Q?0SWLjRhm0RIfKUyp6jHozVLpJ1m/C8Tyl581Ln6EHfD7YQ75mf25OPD1UVWb?=
+ =?us-ascii?Q?OT5iVWepWXhSo9FaAlGyIuBS2vGVlGIKjqWMn5haTWnCvvVXhvbdl0FN4D7E?=
+ =?us-ascii?Q?GxFIOwyuPNifObTV11NQgzd/H2xAEgF6N9pzwNtfhDik3eUctyonW+hwLs11?=
+ =?us-ascii?Q?Y704k+/1lfHw/weueUJeDqdXaKtQ/wrZE+LJGBPUBRlKekHZUJNx5CGQfGCt?=
+ =?us-ascii?Q?vkWzBwNIU61v0lLl4zlY5RJ++X9Wkd0azmVdTpf1mwNE1XOGCs5QVLgb1DRl?=
+ =?us-ascii?Q?q5BSUFoiQ78LoOWyGm7jN/vejDH5J4PZuDHrIamNhOCR0gpf7KOl+oQkXymh?=
+ =?us-ascii?Q?EBPqfdRszqw9t9nGvxCfKYTeQOy8VuEQ6HTUM3MORXWFk3ZgirQi3Ui3mp0I?=
+ =?us-ascii?Q?sIwm+kpDwEkWP25lPKanVSYwR2W0Q3hF2VGC2Brw9L0CZNX/AwWQTatdARyj?=
+ =?us-ascii?Q?U81BHHzaZcbvqXMbaDX1cn9De8U3yknPnKHMfIZQ+HW23ZxImkrCE6mz0OY9?=
+ =?us-ascii?Q?Is75j0740yJfQgB42oYu+Mbzg/9jpW2u3UIIeUI04ANxaIGkzFGyXIrawdeJ?=
+ =?us-ascii?Q?/TG5MJquTgwmjuIeLCrkM66wTjkyrkq/uwqRtwBfnzWlgE7dUiaroR4GX+jj?=
+ =?us-ascii?Q?e+avYyenFZE4Y1NJPJYhQjjdT+nOPJwPcTQdQ9dcZyBUMfYnuQz4PmHx2pbl?=
+X-MS-Exchange-AntiSpam-MessageData-1: D8FMj4XBe/c+7w==
+X-OriginatorOrg: santannapisa.it
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6f0e84fd-0b52-4885-280d-08df4bcd9d2f
+X-MS-Exchange-CrossTenant-AuthSource: PAVPR03MB8969.eurprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Nov 2026 14:57:38.9047
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: d97360e3-138d-4b5f-956f-a646c364a01e
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: O9xM61fjQdv1XDAAnfb6b1vODxTQE6Bmwu/pCW4eM5FxGFRQiXHsJw7qnT4KnRDZJLKC4Zmh7gjXg6QgJprZmBy9RZ2SiSmjvjxldlIhyZI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR03MB6367
 
-On Thu 26-11-26 02:08:56, Tejun Heo wrote:
-> Legacy memcg reclaim has no dirty throttling, and shrink_folio_list() waits
-> for a folio that is under writeback and already marked for reclaim (case 3
-> in its comment). That wait can deadlock against a filesystem freeze:
-> 
-> 1. A task in write() to filesystem B holds freeze protection on B, enters
->    memcg reclaim and waits for writeback of a folio of a filesystem on a
->    loop device backed by a file on B.
-> 
-> 2. A freeze of B waits for the task to drop its freeze protection.
-> 
-> 3. The loop worker has to take freeze protection on B to write the folio out
->    and blocks behind the freeze.
-> 
-> The same applies to any driver that writes to a file on a local filesystem
-> to serve block I/O and takes freeze protection for it.
-> 
-> Reclaim can't tell which filesystem a writeback depends on. Count the
-> superblocks that are being frozen and make the wait time out after 15
-> seconds. If one is being frozen at that point, warn and give up. Until none
-> is, treat such folios like case 2 and skip the legacy writeback throttle, so
-> that the task a freeze may be waiting for isn't held up.
-> 
-> This trades the deadlock for premature memcg OOM kills during such a freeze.
-> The wait also no longer hits the folio_wait_writeback tracepoint, and the
-> hung task detector no longer reports a task stuck in it for another reason
-> as the task wakes up every 15 seconds.
-> 
-> Fixes: e62e384e9da8 ("memcg: prevent OOM with too many dirty pages")
-> Reported-by: Christian Brauner <brauner@kernel.org>
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reviewed-by: Johannes Weiner <hannes@cmpxchg.org>
-> Reviewed-by: Christian Brauner (Amutable) <brauner@kernel.org>
+Hi all again,
 
-Yeah, it's ugly but it should fix the deadlock. Feel free to add:
+sorry about sending the n^th message, I just have an additional
+question to check if my understanding is correct.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
 
-								Honza
+On Thu, 26 Nov 2026 08:25:50 +0100
+Juri Lelli <juri.lelli@redhat.com> wrote:
+[...]
+>   P/          cpuset.cpus=0-10
+>               cpu.rt.max: 4-10 runtime=400 period=1000
+>   P/noncrit   cpuset.cpus=0-3   (threaded, no cpu.rt.max entries)
+>   P/crit      cpuset.cpus=4-10  (threaded, no cpu.rt.max entries)
+> 
+> Threads in P/crit are served by P's servers on CPUs 4-10. Threads in
+> P/noncrit find no entry up to the root on CPUs 0-3 and run as plain
+> FIFO, as they do today. cpuset keeps the two sets apart, so no task
+> ever moves between a server and the root runqueue, which I think
+> addresses Luca's concern about tasks changing reservation on
+> migration, at least for setups that care about the analysis.
+> 
+> The mixed config ends up on P because of _delegation_. P's cpu.rt.max
+> belongs to whoever delegated P, and it's what bounds how much the
+> container can reserve. The application only arranges its threads below
+> it. If a cgroup had to be "all or nothing", the admin would have to
+> give P either zero on CPUs 0-3 (no RT threads there at all, not very
+> flexible) or a budget there (reserving DL bandwidth for threads that
+> don't need it).
 
-> ---
-> This was first posted in a private thread and is resent here for the lists,
-> rebased onto the current mainline. The only other change is the added
-> Reviewed-by tags.
-> 
-> This is on top of v7.4-rc4-388 (25faec9ce61c). In a test with a filesystem
-> on a loop device backed by a file on another filesystem, writers to both in
-> a v1 memcg and the backing filesystem frozen and thawed in a loop, the
-> unpatched kernel deadlocks within seconds. With the patch, a stuck freeze
-> gets through in 15 to 18 seconds.
-> 
->  fs/super.c               |    7 +++++
->  include/linux/fs/super.h |    1 
->  mm/filemap.c             |   22 +++++++++++++++--
->  mm/internal.h            |    1 
->  mm/vmscan.c              |   58 ++++++++++++++++++++++++++++++++++++++++++++---
->  5 files changed, 83 insertions(+), 6 deletions(-)
-> 
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -48,6 +48,9 @@ static int thaw_super_locked(struct supe
->  static LIST_HEAD(super_blocks);
->  static DEFINE_SPINLOCK(sb_lock);
->  
-> +/* nr of superblocks that freeze_super() is in the middle of freezing */
-> +atomic_t sb_nr_freezing;
-> +
->  static char *sb_writers_name[SB_FREEZE_LEVELS] = {
->  	"sb_writers",
->  	"sb_pagefaults",
-> @@ -2235,6 +2238,7 @@ retry:
->  		return 0;
->  	}
->  
-> +	atomic_inc(&sb_nr_freezing);
->  	sb->s_writers.frozen = SB_FREEZE_WRITE;
->  	/* Release s_umount to preserve sb_start_write -> s_umount ordering */
->  	super_unlock_excl(sb);
-> @@ -2249,6 +2253,7 @@ retry:
->  	ret = sync_filesystem(sb);
->  	if (ret) {
->  		sb->s_writers.frozen = SB_UNFROZEN;
-> +		atomic_dec(&sb_nr_freezing);
->  		sb_freeze_unlock(sb, SB_FREEZE_PAGEFAULT);
->  		wake_up_var(&sb->s_writers.frozen);
->  		deactivate_locked_super(sb);
-> @@ -2265,6 +2270,7 @@ retry:
->  			printk(KERN_ERR
->  				"VFS:Filesystem freeze failed\n");
->  			sb->s_writers.frozen = SB_UNFROZEN;
-> +			atomic_dec(&sb_nr_freezing);
->  			sb_freeze_unlock(sb, SB_FREEZE_FS);
->  			wake_up_var(&sb->s_writers.frozen);
->  			deactivate_locked_super(sb);
-> @@ -2278,6 +2284,7 @@ retry:
->  	WARN_ON_ONCE(freeze_inc(sb, who) > 1);
->  	sb->s_writers.freeze_owner = freeze_owner;
->  	sb->s_writers.frozen = SB_FREEZE_COMPLETE;
-> +	atomic_dec(&sb_nr_freezing);
->  	wake_up_var(&sb->s_writers.frozen);
->  	lockdep_sb_freeze_release(sb);
->  	super_unlock_excl(sb);
-> --- a/include/linux/fs/super.h
-> +++ b/include/linux/fs/super.h
-> @@ -234,6 +234,7 @@ int freeze_super(struct super_block *sup
->  		 const void *freeze_owner);
->  int thaw_super(struct super_block *super, enum freeze_holder who,
->  	       const void *freeze_owner);
-> +extern atomic_t sb_nr_freezing;
->  
->  int sb_init_dio_done_wq(struct super_block *sb);
->  
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -1245,8 +1245,8 @@ static inline bool folio_trylock_flag(st
->  	return true;
->  }
->  
-> -static inline int folio_wait_bit_common(struct folio *folio, int bit_nr,
-> -		int state, enum behavior behavior)
-> +static inline int folio_wait_bit_common_timeout(struct folio *folio, int bit_nr, int state,
-> +		enum behavior behavior, long timeout)
->  {
->  	wait_queue_head_t *q = folio_waitqueue(folio);
->  	int unfairness = sysctl_page_lock_unfairness;
-> @@ -1324,7 +1324,9 @@ repeat:
->  			if (signal_pending_state(state, current))
->  				break;
->  
-> -			io_schedule();
-> +			timeout = io_schedule_timeout(timeout);
-> +			if (!timeout)
-> +				break;
->  			continue;
->  		}
->  
-> @@ -1393,6 +1395,13 @@ repeat:
->  	return wait->flags & WQ_FLAG_WOKEN ? 0 : -EINTR;
->  }
->  
-> +static inline int folio_wait_bit_common(struct folio *folio, int bit_nr, int state,
-> +		enum behavior behavior)
-> +{
-> +	return folio_wait_bit_common_timeout(folio, bit_nr, state, behavior,
-> +					     MAX_SCHEDULE_TIMEOUT);
-> +}
-> +
->  #ifdef CONFIG_MIGRATION
->  /**
->   * softleaf_entry_wait_on_locked - Wait for a migration entry or
-> @@ -1490,6 +1499,13 @@ int folio_wait_bit_killable(struct folio
->  }
->  EXPORT_SYMBOL(folio_wait_bit_killable);
->  
-> +/* wait up to @timeout jiffies for @bit_nr to clear, true if it cleared */
-> +bool folio_wait_bit_timeout(struct folio *folio, int bit_nr, long timeout)
-> +{
-> +	return !folio_wait_bit_common_timeout(folio, bit_nr, TASK_UNINTERRUPTIBLE, SHARED,
-> +					      timeout);
-> +}
-> +
->  /**
->   * folio_put_wait_locked - Drop a reference and wait for it to be unlocked
->   * @folio: The folio to wait for.
-> --- a/mm/internal.h
-> +++ b/mm/internal.h
-> @@ -1276,6 +1276,7 @@ struct migration_target_control {
->   */
->  ssize_t splice_folio_into_pipe(struct pipe_inode_info *pipe,
->  			       struct folio *folio, loff_t fpos, size_t size);
-> +bool folio_wait_bit_timeout(struct folio *folio, int bit_nr, long timeout);
->  
->  static inline bool vma_is_single_threaded_private(struct vm_area_struct *vma)
->  {
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1157,6 +1157,55 @@ static bool may_enter_fs(struct folio *f
->  }
->  
->  /*
-> + * Legacy memcg reclaim has no dirty throttling and waits for writeback in
-> + * shrink_folio_list() instead. That wait can deadlock against a filesystem
-> + * freeze:
-> + *
-> + * 1. A task holds freeze protection on filesystem B, e.g. in write(), enters
-> + *    reclaim and waits for writeback of a folio whose I/O ends up as a write to
-> + *    B, e.g. through a loop device backed by a file on B.
-> + *
-> + * 2. A freeze of B waits for the task to drop its freeze protection.
-> + *
-> + * 3. The write to B waits for the freeze.
-> + *
-> + * Reclaim can't tell which filesystem a writeback depends on. As a crude
-> + * workaround, memcg_wait_writeback() times out and, if any filesystem is being
-> + * frozen at that point, sets memcg_wb_wait_skip. While it is set, legacy memcg
-> + * reclaim neither waits for nor throttles on writeback, so that the task a
-> + * freeze may be waiting for isn't held up in reclaim and can drop its freeze
-> + * protection. This can cause premature memcg OOM kills.
-> + */
-> +static bool memcg_wb_wait_skip;
-> +
-> +/*
-> + * Test memcg_wb_wait_skip. It takes effect only while a filesystem is being
-> + * frozen and is cleared here once none is. A freeze that starts before it is
-> + * cleared inherits the skip.
-> + */
-> +static bool memcg_skip_wb_wait(void)
-> +{
-> +	if (!READ_ONCE(memcg_wb_wait_skip))
-> +		return false;
-> +	if (atomic_read(&sb_nr_freezing))
-> +		return true;
-> +	WRITE_ONCE(memcg_wb_wait_skip, false);
-> +	return false;
-> +}
-> +
-> +/* wait for writeback of @folio, see memcg_wb_wait_skip for the timeout */
-> +static void memcg_wait_writeback(struct folio *folio)
-> +{
-> +	while (!folio_wait_bit_timeout(folio, PG_writeback, 15 * HZ)) {
-> +		if (atomic_read(&sb_nr_freezing)) {
-> +			WRITE_ONCE(memcg_wb_wait_skip, true);
-> +			pr_warn("memcg1 writeback wait timed out during fs freeze, skipping waits, may OOM early\n");
-> +			return;
-> +		}
-> +	}
-> +}
-> +
-> +/*
->   * shrink_folio_list() returns the number of reclaimed pages
->   */
->  static unsigned int shrink_folio_list(struct list_head *folio_list,
-> @@ -1277,7 +1326,9 @@ retry:
->  		 *    reclaim flag set. memcg does not have any dirty folio
->  		 *    throttling so we could easily OOM just because too many
->  		 *    folios are in writeback and there is nothing else to
-> -		 *    reclaim. Wait for the writeback to complete.
-> +		 *    reclaim. Wait for the writeback to complete. If
-> +		 *    memcg_wait_writeback() gives up, such folios are treated
-> +		 *    as in case 2 until no filesystem is being frozen.
->  		 *
->  		 * In cases 1) and 2) we activate the folios to get them out of
->  		 * the way while we continue scanning for clean folios on the
-> @@ -1300,6 +1351,7 @@ retry:
->  
->  			/* Case 2 above */
->  			} else if (writeback_throttling_sane(sc) ||
-> +			    memcg_skip_wb_wait() ||
->  			    !folio_test_reclaim(folio) ||
->  			    !may_enter_fs(folio, sc->gfp_mask) ||
->  			    (mapping &&
-> @@ -1325,7 +1377,7 @@ retry:
->  			/* Case 3 above */
->  			} else {
->  				folio_unlock(folio);
-> -				folio_wait_writeback(folio);
-> +				memcg_wait_writeback(folio);
->  				/* then go back and try same folio again */
->  				list_add_tail(&folio->lru, folio_list);
->  				continue;
-> @@ -2086,7 +2138,7 @@ static void handle_reclaim_writeback(uns
->  		 * enough for cgroupv1 writeback throttling to work
->  		 * on a large system.
->  		 */
-> -		if (!writeback_throttling_sane(sc))
-> +		if (!writeback_throttling_sane(sc) && !memcg_skip_wb_wait())
->  			reclaim_throttle(pgdat, VMSCAN_THROTTLE_WRITEBACK);
->  	}
->  
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Uhm... In my original "all of nothing" idea, my plan was not to set
+cpu.rt.max in P, and to set it only in P/crit. In this way, the RT
+threads in P/nocrit should be served by P's parent (up to the root),
+while the RT threads in P/crit are directly served by the dl servers
+configured in P/crit/cpu.rt.max.
+
+Would this solution address the requirements of this use-case?
+
+
+			Thanks,
+				Luca
