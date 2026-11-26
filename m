@@ -1,92 +1,92 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.14
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=209.85.216.54
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795673008;
-	b=5Vcz1fcn39JoRzFa/K/cdG6LfjX2WJKmt6p1/TTYYW0dSS5jNsh2vI+dQmmyBZpaQf7n
-	 jrL4exvtLlJbzKGHX5Vu5ZkuGKRNHPxnfaIPdjh+DgkSagCW6UEkcknwNmzPPhlD9C+vw
-	 vlBF9u9hGu6iUn9HnifzQo2qFbKHgmOI25b3Xb/colE9+Oj5xJp+RIh8ViCmbmCdLhRnc
-	 Q489u2+VTuF22gkg2btakBPEb5lNcwpV5fTK+fbTjbfzsFHt9XRTlkMo2APBfow7SaqT3
-	 QlJPrQwj72cJTuj45tsW+PaMYwbwxcAx3x5H6zWjKEpWOesvZjsAlyt30RNuyVBsR5Q==
+	t=1795676414;
+	b=pyki/Nljcy+xdUkPVfrCASEtN9B2lKUaa3AXLNHxP2qlwaBohdRf7krl6dqhfaEWe76r
+	 ajures4fuAavKwcFKPCRpxQIdBCWRVeV5S9Kr4kKcIksrvnbQv/4chYX3nu9flSTeyoWS
+	 ofdJ/pad76UFag20GJzIQLFNMot99OXJ4u98an+/E8l5A/T+1qavr7hF4sVyODutxT6tR
+	 mWKxF3lGwFi7sNErhDUt1ukGPr4akELtZArA7ZAnvmc8Rqc6VBe6FK9lvMd2U1G0mxb3K
+	 Y58tmzCdPYu6MtQw7l9y3npy2LbuosVuhL3PlVN7y1dx1731Tmh+T3E7bcpVg7+LOyw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795673008;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Date:From:To:Cc:Subject:Message-ID:
-	 References:MIME-Version:Content-Type:Content-Disposition:
-	 Content-Transfer-Encoding:In-Reply-To;
-	bh=0PzfTGtQNoeXf6Gjoec1s/Tw8QgiWIeiBg+XwjQcs8o=;
-	b=1KsB/mjbxnOgmnT/hGgYdU2K7++1dcUIdtDPGfV+DAy/8G0yrtMNTu+SDsrncTYMhKIE
-	 pwvj1i5RMimaqKjc7pBr75nMi3KgVtDf7JRZVVobliF0bqQGHNLPy413p1GF1zVdnMQ3k
-	 5NjOXCj4uUeJz3D6RMp/vbyrVf1zu/2fgWFBvT4HBGyVifTVNp6zhD4zCZjyhSA7mpK8g
-	 HMB0H/rpuyetgPWwNw3/jReN/fP9t7HIR5M6FujwlssmaU1eur4X4YSQICDAgpKyQ9hQJ
-	 kRYKmbA/bQ7/u4E+vwppQlOMCoQf/D/jvtUVbBDNWTpU10pA8/6Q2KatXPToT4RFZsQ==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795676414;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:From:To:Cc:Subject:
+	 Date:Message-ID:X-Mailer:MIME-Version:Content-Transfer-Encoding;
+	bh=wy2ZfDuxZ+L0rGiTO2Hr2gxsNqdlmXKGnqLfSzRtbhg=;
+	b=cMe5/vtV13QA9WMBT1gDf+Xzz5bL6TUc3M+IeuyrpY3pvy5BwphG6k340GpfgOLVtUbq
+	 semvemXOv6P8A0IHCdT049jp7LXQkbT8YJQpmAADiNe2rTItUQx5p01MH2/sB2ynNXJOU
+	 OVFH1jn1rU1wmrH2kJpYrs9Ao2W4qAPs/5XRCYZqwyP4gOQaOSCn930IvwP4h9dMgGnbc
+	 6RYcDFn8I3BnXgBbLmP1nyeYQK+JbTxyZeApUZzLfiR4+k/Y1Y5JKzQK+Xm3VdFw0nAM8
+	 nITPAvnddT9yND0ziZNlOhsiYjTR2NV8fref1ksXb5rI0hlqYH8gAfC317jjh0PoI1w==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=orQsZTUp;
-	arc=none smtp.remote-ip=91.218.175.14
-Received: from mta0.migadu.com (out-14.mta0.migadu.com [91.218.175.14])
+	dmarc=pass header.from=gmail.com;
+	spf=pass smtp.mailfrom=gmail.com;
+	dkim=pass header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eIqBQMhu;
+	arc=none smtp.remote-ip=209.85.216.54
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD229606A31E
-	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 06:03:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org CD229606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25D4606A326
+	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 07:00:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org C25D4606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=orQsZTUp
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=748+ddCbsTP/XIDjke/+TROSx5c7dPfXbczUrGruMHY=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795673005; v=1; x=1796277805;
- b=orQsZTUppfMHaenXYMAuC6fgaFhIJ8I2sIqlnrUlmWRJmaBgrone90Ei8FYK5hiRn9+KB0fx
- s1KYh08T/FBsUCyn5YuPbPE/4r6A5TlNSunVVHVc3mHMoxG2VB/378K8bB3DeeT9iTFBPUCaauZ
- iyZ991Wg8d1sMoBHJQBbY8wk=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by mta12.migadu.com with ESMTPS id c47457697a4402af;
-	Thu, 26 Nov 2026 06:03:24 +0000
-X-Mizu-Trace-ID: c47457697a4402af
-X-Migadu-Flow: FLOW_OUT
-Date: Thu, 26 Nov 2026 14:03:19 +0800
-From: Baoquan He <baoquan.he@linux.dev>
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: "David Hildenbrand (Arm)" <david@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>, Chris Li <chrisl@kernel.org>,
-	Kairui Song <ryncsn@gmail.com>, Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Kemeng Shi <shikemeng@huaweicloud.com>,
-	Barry Song <baohua@kernel.org>,
-	YoungJun Park <youngjun.park@lge.com>,
-	Chengming Zhou <chengming.zhou@linux.dev>,
-	"Lorenzo Stoakes (Oracle)" <ljs@kernel.org>,
-	"Liam R. Howlett" <liam@infradead.org>,
-	"Vlastimil Babka (SUSE)" <vbabka@kernel.org>,
-	Mike Rapoport <rppt@kernel.org>,
-	Suren =?utf-8?B?QmFnaGRhc2FyeWFu77+8?= <surenb@google.com>,
-	Qi Zheng <qi.zheng@linux.dev>,
-	Axel Rasmussen <axelrasmussen@google.com>,
-	Yuanchu Xie <yuanchu@google.com>, Gregory Price <gourry@gourry.net>,
-	Wenchao Hao <haowenchao22@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>, Hugh Dickins <hughd@google.com>,
-	Baolin Wang <baolin.wang@linux.alibaba.com>,
-	Tejun Heo <tj@kernel.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Shuah Khan <skhan@linuxfoundation.org>,
-	Kunwu Chan <kunwu.chan@linux.dev>,
-	Meta kernel team <kernel-team@meta.com>,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Joshua Hahn <joshua.hahnjy@gmail.com>,
-	Rik van Riel <riel@surriel.com>, Wei Xu <weixugc@google.com>,
-	Yosry Ahmed <yosry@kernel.org>
-Subject: Re: Virtual Swap Sync
-Message-ID: <awfLp4H_pyefSM5v@fedora>
-References: <CAKEwX=NXSwSiuY65EV5nqFocMLd6-afsiJfgy_ahB2v_MDmcng@mail.gmail.com>
- <CAKEwX=O2McF-gyqJT2a8R5q79+QABCPjULrcjC2CC0v8TnXxJw@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.a=rsa-sha256 header.s=20260707 header.b=eIqBQMhu
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-3b41e627cadso4185981a91.1
+        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 23:00:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20260707; t=1795676404; x=1796281204; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to:content-type;
+        bh=wy2ZfDuxZ+L0rGiTO2Hr2gxsNqdlmXKGnqLfSzRtbhg=;
+        b=eIqBQMhupYMGiKV/6qlv4Cq7NXKn1OMb9eHtz72hxZv8xTGGeTQAZLp1YqYfVcvhlb
+         GL1wxi88tFxuG/VdUhYm87woHu8EwSvU5wLvQTSezbb/Qzp9Hxb/YXGxdYQh4D159BzV
+         AaCGZEwGJfzhz7Wx602e8f1lpTSRboxCYR+rwyogwv0JbuZVaHEqwhL73EkEUlqEVdU5
+         iyXeDmfYWcDcdsIzUifNY0G46DEA2cYbmsa2Bvxd7MEN7q0G8KTWcHH0/c2mJtr0lCNV
+         XHcNx2vRV9mL+f7UjHLAovSDZZx/UHcoVoBPvTEk93YdNSawrymTVWCKXQmvGoAzxqtt
+         OwTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795676404; x=1796281204;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to:content-type;
+        bh=wy2ZfDuxZ+L0rGiTO2Hr2gxsNqdlmXKGnqLfSzRtbhg=;
+        b=Idqyw8+nUL8WDgRAlxPqJlxrgsbHODfLaR5sXVGsG6BBx0DPdN0zXrhe702CvP4EWx
+         XbLYGQg5LJej/tKtSgoyAWqiDW6TSEXD8dks8G/tiAGq5egbeNjtht7W3H2Lv13zk5qq
+         /BE1wfCWlh4Kvvvu2AaKOXW/iVXqRrqtuvhgV4vgxEuM7nOnGXKcJ54hUs/cKeep2fjy
+         kaGpPBw1wWxiXfvGJmPKoeIX2Mdl3N9RMUiv+OWSEWjhezMZVLQSLI/u3h6JcEtzt8N3
+         z3KTMFwMWt8xqbJqoheLoO5wRObTL1SlGOKJHLA7r0lyp//fUIC1ouvI1iYjVWuFcknJ
+         oDCw==
+X-Gm-Message-State: APuU4Z/Gt6ViH0SoNy/3uBqLifVYUKJJP9ga2tNiwDZ0iXIPUbzuJ8CJ
+	NuedDqzygLVp72mY8J5+CL8nD0LS6t6ZeDD3dKvmhY94LefzDLYgorSn
+X-Gm-Gg: AZFdTZdRrSSIUXJpmwsOfNJEAhwsRgrxga1MeWpw2AysbaAD1UMsa9r837D3FkbNc9+
+	jcSbDUIHU7+IBc6V7HceU1maoKhBdpn22m5gB9LjP3IwukVc0kp2IT5oHmchZ4YykT4UtHmyZQI
+	fbk+bZAOl75kYiJv6qQR1CPJYzwT/BrGXkcA1o2vHvcncXZShr2+zSZjzDpL+ERb305dtmbgy7i
+	ruXZZRmbEEif1e2urzImLtL/ZEZHby6wEw/zRB+BfOkgXENsXDawGrAw6ykNOA05FxNgDGqO3B7
+	a0TM0plfx/AtWOIOVWH24ONQX43FV+7CNDFZhzvM+oVsWhW7kfpEV96oA5dH8hqrPdbyfN5fQCZ
+	BF77ibKa74jNesuCEnE/YqSE2Fh02BZnVfQsuUcrWkBHxXpIWGh5KQyikZeC9FYNrdBGqvOKmAw
+	kBECGFsCtYE9iACZGyBSFdZJyhUSzKF+Eyfl3WGA0Lg+XYdgyr3lIEzmzQHLv+OdeILoldh/T4b
+	lOBKBojcEPH/XbBAYZRolAzcAfTcDKcFe7LaVEMXjJbAVjHYkZyWcxUvcZGhirGPjInyDOKMQgQ
+	ntB6nIxW70MFwM08Bovahb1Vd4xK3R2qAg2NzgLvRQv7d3Z3Nubxmj16SxXoTHwgK0TGrEi1pk0
+	Bc7cr3AFUpARqGWEIEMqb
+X-Received: by 2002:a17:90b:4ec5:b0:3b3:adea:4b04 with SMTP id 98e67ed59e1d1-3b41c948521mr18210202a91.36.1795676403878;
+        Wed, 25 Nov 2026 23:00:03 -0800 (PST)
+Received: from LDYT9Q2G2M.pvgl.sap.corp ([2a09:bac5:cad0:1caa::2db:4c])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3b405ecbd0bsm34150819a91.15.2026.11.25.23.00.01
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Wed, 25 Nov 2026 23:00:03 -0800 (PST)
+From: Zhiqi Zhang <zhiqizhangg@gmail.com>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Zhiqi Zhang <zhiqizhangg@gmail.com>
+Subject: [PATCH] cgroup: Preserve sign for fractional input
+Date: Thu, 26 Nov 2026 14:59:58 +0800
+Message-ID: <20261126065958.89207-1-zhiqizhangg@gmail.com>
+X-Mailer: git-send-email 2.54.0
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -96,120 +96,67 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKEwX=O2McF-gyqJT2a8R5q79+QABCPjULrcjC2CC0v8TnXxJw@mail.gmail.com>
 
-On 11/22/26 at 08:31am, Nhat Pham wrote:
-> On Thu, Nov 5, 2026 at 2:06 PM Nhat Pham <nphamcs@gmail.com> wrote:
-> >
-> > Hi folks,
-> >
-> 
-> Hi folks - thanks everyone for attending. :)
-> 
-> I summarized the points we discussed below - please let me know if I
-> missed anything or misunderstood a point.
-> 
-> * Control interface: Google is interested in a knob to cease zswapping
-> (which already exists and will still work in vswap world). Kairui has
-> a use case for remapping all swapped-out pages.
-> 
-> Vswap currently bypassed when zswap is off; per-cgroup selection could
-> be added as concrete use case arises (for e.g migration/compaction).
-> 
-> David objected that a virtual swap abstraction should not carry a
-> swapoff interface per se. Folks also asked whether making vswap a
-> mandatory layer would make the implementation cleaner (Nhat will
-> explore this direction and follow up on this).
-> 
-> * Virtual space sizing: We discussed using vm.overcommit_ratio and
-> vm.overcommit_memory to limit the host's logical memory footprint. The
-> exact sizing formula is still unclear - Nhat will follow up with
-> Kairui on whether it is acceptable.
-> 
-> (Kairui, if possible, can you respond here for your exact use case? Do
-> you want to limit physical memory usage, or virtual? My understanding
-> is you want to gate physical + swap, which would be closer to the
-> latter).
-> 
-> * Priority and multiple swapfiles: should not be added for now.
->   No good use case for swap priority was identified.
->   Multiple swapfiles were used in the past to work around swapfile
-> lock contention, but it is unclear whether they are still needed with
-> Kairui's new cluster-based allocator. If contention remains a problem,
-> we should fix it in the kernel before putting that burden on
-> userspace.
-> 
-> * Proposed phase split and charging (from Nhat):
-> 
->   - Phase 1 - initial foundation:
->     - Decoupled zswap: Let zswap operate without reserving disk swap
-> for every virtual entry.
->     - Physical backing and writeback: Keep disk swap available as a
-> backend, including when zswap cannot store a page or an entry needs
-> writeback.
->     - Charging: Retain memsw charging for virtual entries; keep
-> virtual-slot usage out of memory.swap.max. Actual physical swap usage
-> keeps its resource charging.
->     - Usage counter: Expose vswap usage so users can monitor
-> virtual-space consumption separately from physical swap usage.
-> Essentially this gives you a method to estimate the logical footprint
-> (memory.current - swapcached + vswap).
-> 
->   - Subsequent phase(s) - further support and controls:
->     - VM_SPARSE: Add VM_SPARSE as an optimization after the
-> first-phase foundation.
->     - Runtime controls (added as use cases arise):
->       - Host-wide runtime disablement knob (and remapping of swapped out data).
->       - Per-cgroup vswap control (for e.g, if some cgroups want
-> migrations/physical swapfile compaction).
-> 
->   - Orthogonal use cases and concerns:
->     - Cgroup-level logical memory limits in cgroupv2 (memsw?) - swap
-> developers will follow up with memcg maintainers.
->     - Static sizing: Define the host-sizing formula and decide whether
-> another interface is needed.
->     - Swap tiering for cgroups: Explore backend selection when a
-> concrete workload needs it.
+cgroup_parse_float() parses the whole and fractional parts separately with
+sscanf(). The sign is only carried by the whole part, so inputs whose
+whole part is zero, such as "-0.5", are composed as positive values.
+Inputs such as "-1.5" are also composed as -0.5.
 
-Youngjun's swap tier comes from concrete use case of his company, it's
-been v11, he presented this in LSF and LPC. 
+Callers such as cpu.uclamp.* and blk-iocost reject negative values
+after parsing. With this behavior, negative fractional input can bypass
+those checks and be accepted as a positive value.
 
-[RFC PATCH v11 0/4] mm/swap: priority-based swap tiers with per-cgroup selection
-https://lore.kernel.org/all/20260916183437.2946306-1-youngjun.park@lge.com/T/#u
+Remember whether the input has a leading minus sign and subtract the
+fractional part when composing a negative value.
 
-This is xswap road map I shared with you when we discussed about working
-together. I also mentioned swap tier in road map because Swap tier is a
-very important feature we swap developers plan to add. 
+Fixes: a5e112e6424a ("cgroup: add cgroup_parse_float()")
+Signed-off-by: Zhiqi Zhang <zhiqizhangg@gmail.com>
+---
+AI contribution disclosure:
+I found this bug. Codex modified the code, and I reviewed the change.
 
-https://lore.kernel.org/all/al8ohWshSSZ64AtT@MiWiFi-R3L-srv/
+Validation:
+- Built in a Linux container after applying the patch to a fresh shallow
+  clone from https://github.com/torvalds/linux.git:
+  make O=/tmp/kbuild ARCH=arm64 defconfig
+  make O=/tmp/kbuild ARCH=arm64 W=1 kernel/cgroup/cgroup.o
+- scripts/checkpatch.pl --strict: clean
 
-I thought you had read them.
+Duplicate checks:
+- Checked torvalds/linux commit, PR, and code search for cgroup_parse_float
+  negative, -0.5, and sign-preservation fixes.
+- Checked linux-next master and tj/cgroup master; both still compose the
+  fractional part as positive.
 
-I don't know why I couldn't join meeting last time, I tried at 8:05am at
-my side, kept waiting for people to approve me until 8:30am I was
-added. Not sure if you guys also talked about this.
+ kernel/cgroup/cgroup.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Thanks
-Baoquan
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index b3657e72db..bf7c3267db 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -7540,6 +7540,7 @@ static u64 power_of_ten(int power)
+  */
+ int cgroup_parse_float(const char *input, unsigned dec_shift, s64 *v)
+ {
++	bool negative = *skip_spaces(input) == '-';
+ 	s64 whole, frac = 0;
+ 	int fstart = 0, fend = 0, flen;
+ 
+@@ -7554,7 +7555,11 @@ int cgroup_parse_float(const char *input, unsigned dec_shift, s64 *v)
+ 	else
+ 		frac = DIV_ROUND_CLOSEST_ULL(frac, power_of_ten(flen - dec_shift));
+ 
+-	*v = whole * power_of_ten(dec_shift) + frac;
++	if (whole < 0 || negative)
++		*v = whole * power_of_ten(dec_shift) - frac;
++	else
++		*v = whole * power_of_ten(dec_shift) + frac;
++
+ 	return 0;
+ }
+ 
+-- 
+2.54.0 (Apple Git-157)
 
-> 
-> Folks, please comment on the summary and proposal.
-> 
-> Let us keep the communication line open and coordinate on the next
-> steps. I will schedule something again.
-> 
-> Also taking a step back - once we reach a consensus on vswap, maybe we
-> can repurpose this series of meeting for general swap alignment? There
-> are other swap/compressed swap developments right now (looking at the
-> orthogonal use cases list above for e.g), so maybe we can do this once
-> or twice a month. My experience in the past year or so has shown that
-> we clearly need better alignment :)
-> 
-> I will reach out to set up another round of meeting. I'm hoping we can
-> do it one more time in December, but I understand that holiday season
-> is coming :)
-> 
-> For folks in the U.S, I wish you all a merry and festive Thanksgiving.
