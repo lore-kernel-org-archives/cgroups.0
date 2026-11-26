@@ -1,54 +1,93 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.194
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=74.125.224.51
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795664346;
-	b=4r6lmJNqNJeOC1LVaitaCa+0mFOYC/EGV7HCxIhFmtIwJtXVwVWe8js2dsiglx59hQJ3
-	 4BTzEk/vKUhoOyfuSTZP8oVEWUjjrEYwJJW3koqDuPYicWvj3HSXFSVv9wLMg1+bYKUAT
-	 GW3qecQLAs/ETgbcSxGN+emYl/Fml4jwdAP9QaF4ZtOcBDlur+ufhOIB/nFuXHNYIJRCN
-	 LV3zzlxYXb1WqVwSXzqfJPtCjXMlTzaTnlYgq75uIYc8pSxcV4ymWhGRpPAJWxsNgar6E
-	 xQ8SRjS1Uk2ODkCFtBlQrXpRC71RY0WAl78no+1vr7gFlcsgRx8ZzDfW7iT3qlWCZhA==
+	t=1795671677;
+	b=HPXPRCujHyMlBZRjrXA+iKiCNIAZdZGRULDhqeUloTNIoq8qQ1cMMg7aIpFhZXaEcq3h
+	 np5fTU6V+2eto1nDcqv8Z7VeZ76YcjnRHk17INlrc6r+x8KNRIB2vUrY68J/Jq/68DL6A
+	 kRnABG7sFBZz6HJrlLXS4/nVYvuTluDdhVyChTk4SPYY2fHikcXygVDlUYFYFJ3Qw6cPI
+	 OIUwc/kaprTpC3sLrNMs4WbOZOukXLVYfrxr4fS3O/HkSObdM+FmfJTrV6zQAI+fejMDJ
+	 eCM/Ot1o+bf6omehHSzbpqn0JeITqibG2scN4OubSFOaqf7GkA2XZuKwVHqYMC+JlKg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795664346;
-	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
-	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
-	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=WZXhqqMJtGtQSFqs9mp5EiyQrG4t9fKkEiiJJfk1V94=;
-	b=PYdJXE9YQdHqspl8q30Yx9F5Gob64rHY1KNBEruzh0Hs8qM9Fha2w9e+XIWFSl2xByZt
-	 mW16Db33PbRuT60CBMEl4Z469NFX42pMgZSNQq4jvs5rNqB2Fx8LTWIAxB5zb0Q3e4uqx
-	 Vxo07JxvSpyUQ2hO84MXJHJI4bn+kRxUz6q+kuWKJgOhwh/lRTJMhmfQz9uF7Gq4M40RF
-	 4NGuuKlVIMs26i0TeQXISzElyN+BAonbOfFQgWuzYm0IzoHyGMVyTGDGSpqmbw3NJexL3
-	 XoZhXcbBsn/eaTcSGdTmdztRESK9suIYKxbc34IcmtI2NEvDWQZBRudiGo1vFZzCL6w==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795671677;
+	h=DMARC-Filter:Received:DKIM-Signature:X-Google-DKIM-Signature:
+	 X-Gm-Message-State:X-Gm-Gg:X-Received:Received:Date:Message-ID:From:
+	 Subject:To:Cc:MIME-Version:Content-Type:Content-Disposition:
+	 User-Agent;
+	bh=p6WOCXUDLo3XBYvEGFmnbV8ReWfG0+FRoMB0FwCq/pM=;
+	b=kbQuFTpA6jbVe5vNTlrBq9OgEWWD8KJHSXxU83RD4AzsC3+S4DX1wh+PA/5RirUA9rsl
+	 5mh9dAFq0hOOiCXJObN6HDGcoWg7Lxdq98Qt7xFtpDQS3VVNuTiX+LZ682fo/VPRP3a6y
+	 taQlUDdau2ip1oNqN4r6wA6qylbYZNX0zFn9+9ZWzTKI+kc85GTjRmJE/GJubV+h2WxCj
+	 cHpU1aCW932tBUhUoWmfHR1OfDR0YyWt3JeG6HCDkSShD996VAXaH3EKRUadQZHzpx0zy
+	 FkltXZubU+mX7iXcnMmXtKNCJ2BS5JBYagDD1ecdTRppwx3ijwW3gUpdm/MAQgU+2yg==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=linux.dev;
-	spf=pass smtp.mailfrom=linux.dev;
-	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LSdyAs8J;
-	arc=none smtp.remote-ip=95.215.58.194
-Received: from mta1.migadu.com (out-194.mta1.migadu.com [95.215.58.194])
+	dmarc=pass header.from=chrisdown.name;
+	spf=pass smtp.mailfrom=chrisdown.name;
+	dkim=pass header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=DqvtMQS1;
+	arc=none smtp.remote-ip=74.125.224.51
+Received: from mail-yx1-f51.google.com (mail-yx1-f51.google.com [74.125.224.51])
 	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96236606A326
-	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 03:39:04 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 96236606A326
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2C87606A337
+	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 05:41:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B2C87606A337
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=chrisdown.name
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chrisdown.name
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=LSdyAs8J
-X-Envelope-To: cgroups@vger.kernel.org
-DKIM-Signature: a=rsa-sha256; bh=3UV2O3vp01qJF08PlpVk7+NJu2+NXqvyVZ3Kr2qDcy8=;
- c=simple/simple; d=linux.dev;
- h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
- t=1795664342; v=1; x=1796269142;
- b=LSdyAs8J7bC0cwji/tGdQecq8Tb/rUDxBvCZ8eA2i2W2wcoPx32DxmBSqPsZUXpyVC/jASZp
- W5Q5gHCmigHcxUkWUsIUEaW4tZX8X/02c4qBdNrJInCsJGoAobC5G7g7oXcnSlYNUKq0omgJe+s
- 93KKvNA1mcwtd7Dgk23bKn94=
-X-Envelope-To: cgroups@vger.kernel.org
-Received: by smtp.migadu.com with ESMTPS id 5700fc680564a234;
-	Thu, 26 Nov 2026 03:39:02 +0000
-X-Mizu-Trace-ID: 5700fc680564a234
-X-Migadu-Flow: FLOW_OUT
-Message-ID: <8685acd8-4546-4414-9b92-217048766321@linux.dev>
-Date: Thu, 26 Nov 2026 11:38:48 +0800
+	dkim=pass (1024-bit key) header.d=chrisdown.name header.i=@chrisdown.name header.a=rsa-sha256 header.s=google header.b=DqvtMQS1
+Received: by mail-yx1-f51.google.com with SMTP id 956f58d0204a3-67db3a48dc6so7931329d50.3
+        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 21:41:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google; t=1795671676; x=1796276476; darn=vger.kernel.org;
+        h=user-agent:content-disposition:content-type:mime-version:cc:to
+         :subject:from:message-id:date:from:to:cc:subject:date:message-id
+         :reply-to:content-type;
+        bh=p6WOCXUDLo3XBYvEGFmnbV8ReWfG0+FRoMB0FwCq/pM=;
+        b=DqvtMQS1VJm9HtcHJWTl6VFydhYSaZ/9Fxag7OAtZOi6zmABNA8kM6LeZL8F8lQLXP
+         r+AcCfhEiLAkPlQLHL/LwkhfztaY+mOaR7qbvRABrgPQS+lLHJ1L7bEKZgfNHmZsB0vq
+         Hz3fAFR6TBK6HIMqsU7h7RNrXSKgImEGp8cWM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20260707; t=1795671676; x=1796276476;
+        h=user-agent:content-disposition:content-type:mime-version:cc:to
+         :subject:from:message-id:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to:content-type;
+        bh=p6WOCXUDLo3XBYvEGFmnbV8ReWfG0+FRoMB0FwCq/pM=;
+        b=p14KBCncwI4/GL5Ehq3UK0rYcEDVt8CfBLfgPpj7CHKFKQ75WdTyHvp+wrQsX8IMh9
+         lO5vMmiXZ39HF3ZyPIjFdVtNak1ooqkf/1whqe9OIpUIb2wxM84L57tQfFRUtEEOv6Qa
+         bFrHB4sIw/mfkT2uR62FWdv3+XwGoTW7pEsPPv1aXxD9tuBjpvHsud//qbajEWCer6Op
+         o5Nk/RoPaStdcmCW46u4asvrAYNpmcV8zy1My/fxG03kc7DwA9tEV5UXmEo0QZiDWFEf
+         3ozce5dJ4+XxuJDLsqUSHQYtgZ8Pi42v5pNMWxdw1f+alZNvTVPvr9/expiJnW2XWwTH
+         0ZqA==
+X-Gm-Message-State: APuU4Z9UwdJpX9WMGHtn8tDU8pJ2cBQxscFB2QUOQiaHtlou//Lp0aCi
+	wDnVqA/be9S8j3/EkytBRZplDhiQ0WE/05CxbQZYyWAXiWe03pBKB4i01j1NAjxihgc=
+X-Gm-Gg: AZFdTZdu5qIM5F0CghCiTJOrTJKBgmE3gYMk3bwtcsah2NDbFAmT4bBngLvJ+l3EnKr
+	xuEvSf1xqb3pFA5376tzubmiZnvOwJ6eS3EiMZiVD7yYipXKJMGHR79a94xQY43e2M1Q5b6s63K
+	U4K4Bi5fEFrQZnltabd87gyxSu7oJmHJ961V9jlP1bojd0nt/iNPPfMs1q2grgktb112QOrEsdh
+	Qk1xeJw1lnWxA5H8SueQFQju4e1tU63PcrWovL3Xt8kyBvdroLGVqeHL16Qb5GiqPZH5gnJNMGh
+	4/0T4yfcycFt9JwMX+tEnRb8QFgfknN3eaWb2wfycWw+0Yux9idQ17ZmtaZzCNJUNUTGIuLErEo
+	vYwLyob51ulA3Zl28gY5WMnfZhko0EDvpS4Lw9rRHP/KTDtvGLxryVX2IjGFKC1tD7EbJD315tw
+	MU2DPnFfRUqnRAgAszbjoJyAG0GtKp/LOIrnrHG7K0EudolIuS/9sC7DW+QiQfT2ki2pIP3ZbrE
+	iiq/zr8mW8rtzukAVT7trZy/UZ4vvN7cGPmNoSFQfFacFdAyj4JOnF9IVY08IRQPWy88+FtZKvc
+	Yix9RWD7RvCAzpnRxHKrhAT/iyRe+KibPvivwSuMUdi7gwDSGuK2v8rbJl0tjx+SsEdMfdC/bN9
+	OrVsuGIFjOvh2RIIsj27p2yB4wnWiTzuoJ708tJnCYjVGEC+76mbCR3op0iWo+krLs4Sdq611j+
+	ffxqFqBKxHjQjMApFrYQrgrjizOotCj/xe+xDO3yPejBw13pX4CgF0bLOTKces6eHzFwMpClgl6
+	RGCKAIqoMVwgID8sfXmZQ4=
+X-Received: by 2002:a05:690e:1c1e:b0:67c:642:8f7b with SMTP id 956f58d0204a3-67df43f3278mr6352760d50.37.1795671675787;
+        Wed, 25 Nov 2026 21:41:15 -0800 (PST)
+Received: from [172.20.0.2] (c-73-207-185-9.hsd1.ga.comcast.net. [73.207.185.9])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-67df3378f59sm9198592d50.14.2026.11.25.21.41.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Nov 2026 21:41:14 -0800 (PST)
+Date: Wed, 25 Nov 2026 21:41:12 -0800
+Message-ID: <cover.1795671629.git.chris@chrisdown.name>
+From: Chris Down <chris@chrisdown.name>
+Subject: [PATCH v3 0/2] cgroup: Fix cgroup_mutex deadlock through
+	cgroup_parse_float() oops
+To: tj@kernel.org,
+    hannes@cmpxchg.org,
+    mkoutny@suse.com,
+    shakeel.butt@linux.dev
+Cc: cgroups@vger.kernel.org,
+    linux-kernel@vger.kernel.org
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -58,140 +97,42 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 03/18] mm/memcontrol: avoid potential counter leak when
- reparenting local stats
-To: kasong@tencent.com, linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>,
- Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
- Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>,
- Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>,
- Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>,
- Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>,
- Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>,
- Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
- Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
- Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
- Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>,
- Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>,
- "Matthew Wilcox (Oracle)" <willy@infradead.org>,
- Baolin Wang <baolin.wang@linux.alibaba.com>,
- Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
- Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
- SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
- Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
- Zicheng Wang <wangzicheng@honor.com>, Tal Zussman <tz2294@columbia.edu>,
- Kairui Song <ryncsn@gmail.com>, Xiang Liu <liuxiang.277@bytedance.com>,
- Ehab Ababneh <ehab.ababneh@intel.com>,
- Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang
- <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>,
- Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>,
- Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org,
- Tianyi Chen <hi@tychen.cc>
-References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
- <20261124-mglru-fg-v6-3-8ffea39934a6@tencent.com>
-From: Ridong Chen <ridong.chen@linux.dev>
-In-Reply-To: <20261124-mglru-fg-v6-3-8ffea39934a6@tencent.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/2.4.3 (cc9e3943) (2026-10-09)
+
+With CONFIG_UCLAMP_TASK_GROUP=y on x86_64 it is possible to get
+cgroup_parse_float() to oops by writing 0.00... to cpu.uclamp.min.
+
+This alone is not great, but it's even worse because the dead writer
+leaves the kernfs active reference held, so cgroup_mutex gets stuck
+completely. It's also triggerable by unprivileged users on delegated
+subtrees.
+
+v3:
+
+- First public version
+- Rebase onto current cgroup/for-7.4-fixes, no code changes
+
+v2:
+
+- Only parse the digits after the dot (Tejun)
+- Drop the selftest cases for whitespace and signs
+- Rebase onto cgroup/for-7.4-fixes
+
+v1 and v2 were sent off-list, so they are not on lore.
+
+Chris Down (2):
+  cgroup: Fix divide error on long fractions in cgroup_parse_float()
+  selftests/cgroup: Test parsing of long fractions in cpu.uclamp.min
+
+ kernel/cgroup/cgroup.c                    | 29 ++++++---
+ tools/testing/selftests/cgroup/config     |  4 ++
+ tools/testing/selftests/cgroup/test_cpu.c | 71 +++++++++++++++++++++++
+ 3 files changed, 95 insertions(+), 9 deletions(-)
 
 
-
-On 11/24/2026 2:52 AM, Kairui Song via B4 Relay wrote:
-> From: Kairui Song <kasong@tencent.com>
-> 
-> lruvec_page_state_local() clamps negative values to zero on SMP.  That
-> is right for readers reporting page counts, but can be wrong for
-> reparenting once MGLRU updates the counters without the lruvec lock.
-> 
-> Reparenting runs after the forced stats flush, so a negative is a real
-> balance that has to move to the parent, not be discarded. We will
-> introduce lockless MGLRU promotion which may cause following problem:
-> 
->   1. A refs CAS on a folio on the child's lruvec moves it from
->      inactive to active, and its active/inactive counter update follows
->      as a separate step.
-> 
->   2. A concurrent isolation of the folio reads the folio as active,
->      debits the child's NR_ACTIVE_* by delta before CSS_DYING is visible
->      to it.
-> 
->   3. The child is killed, and the two __update_lru_size() calls from
->      step 1 land on the parent: NR_INACTIVE_* -delta, then NR_ACTIVE_*
->      +delta.
-> 
-> The child is left with NR_ACTIVE_* -delta while the parent holds the
-> matching +delta, and reparenting the child's raw value is what cancels
-> the parent's credit.  However, if the child happens to hold few enough
-> folios for that counter to be negative, lruvec_page_state_local() clamps
-> the child's negative to zero, which drops the debit instead, so the
-> parent keeps NR_ACTIVE_* overcounted by delta, and its active + inactive
-> total overcounted as well, permanently: the child's local counters are
-> gone once reparenting is done.
-> 
-> So use a raw signed helper and reparent with that.  Ordinary readers
-> still keep the clamp.
-> 
-> Reported-by: Kunwu Chan <kunwu.chan@gmail.com>
-> Closes: https://lore.kernel.org/linux-mm/CAN_Opa-+nb0vxQ+HsENCG2fEEMZoxG9Sy_DBC4CLkWjNLzDWKw@mail.gmail.com/
-> Signed-off-by: Kairui Song <kasong@tencent.com>
-> ---
->   mm/memcontrol.c | 15 +++++++++++----
->   1 file changed, 11 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 091401cecf39..3f551e2e3206 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -562,11 +562,10 @@ unsigned long lruvec_page_state_monotonic(const struct lruvec *lruvec,
->   	return (unsigned long)READ_ONCE(pn->lruvec_stats->state[i]);
->   }
->   
-> -unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
-> +static long __lruvec_page_state_local(const struct lruvec *lruvec,
->   				      enum node_stat_item idx)
->   {
->   	const struct mem_cgroup_per_node *pn;
-> -	long x;
->   	int i;
->   
->   	if (mem_cgroup_disabled())
-> @@ -577,7 +576,14 @@ unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
->   		return 0;
->   
->   	pn = container_of_const(lruvec, struct mem_cgroup_per_node, lruvec);
-> -	x = READ_ONCE(pn->lruvec_stats->state_local[i]);
-> +	return READ_ONCE(pn->lruvec_stats->state_local[i]);
-> +}
-> +
-> +unsigned long lruvec_page_state_local(const struct lruvec *lruvec,
-> +				      enum node_stat_item idx)
-> +{
-> +	long x = __lruvec_page_state_local(lruvec, idx);
-> +
->   #ifdef CONFIG_SMP
->   	if (x < 0)
->   		x = 0;
-> @@ -595,7 +601,8 @@ void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
->   
->   	for_each_node(nid) {
->   		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
-> -		unsigned long value = lruvec_page_state_local(lruvec, idx);
-> +		/* Reparent the raw value: the clamp drops the child's debit. */
-> +		long value = __lruvec_page_state_local(lruvec, idx);
->   
->   		__mod_memcg_lruvec_state(memcg, nid, idx, -value);
->   		__mod_memcg_lruvec_state(parent, nid, idx, value);
-> 
-
-LGTM.
-
-Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
-Thanks.
-
+base-commit: c99f50e4acf86bfbbe313d79f281d83be1763260
 -- 
-Best regards
-Ridong
+2.56.1
 
