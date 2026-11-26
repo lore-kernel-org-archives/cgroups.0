@@ -1,65 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=159.226.251.25
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=91.218.175.210
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795657110;
-	b=mjyeBIVP9k8KGXV3Dck97Nh8xdDyPLQHjNgvp/hLVIRSrBl4kl51bim5U0JdOq00eORx
-	 VWE+UhLhZGFc3jYJMg02CaMflXupTzy8mt+IvlgLq0hWIhd0916w5lF7YBFRRCWbY3Jdq
-	 sq5wNFHAFvNiQL1LJyEnQTd8CqA1Kic2LtyeMpGh/611lZZm8nxr8w0WoEwkFaPxYn+T6
-	 bXEmb0+7hO2MejrZ9CbVDOnf23GnU8TevTQCBI+uvMH5TvClGVp6rZs2IP2lMMZTcgcyP
-	 rikSsg6cQ4qXtI2vddzobIAKFdo9Jwlxc55pr/s0aztitSiqXFCfXQnXA7swGKBlkYQ==
+	t=1795662689;
+	b=oo3dWt7iwBsXjNCNxk3uQcIAtmsk4ruuNYwRV+WSWXuC7p+XwwWrxT35LtUmMrPKP7dp
+	 EDsd189RHq5s56LWlNo9Cryg0XFpEGiSGUtsOwf2ipvtxlDOh2hLoRKNA1CE0osKcTa04
+	 ghvqLvsPGyKkt8WPYz+Gh0g/nUD1X9GUijw6JuWc5EDuFote77nM/8X4Yqxfo2MyFa5W1
+	 qTq3byF/mY1Zm5UAMGUtJ5cymw2BrPmpmQ10ilYRX8BgrcAQPe0HgOiU3IzPi+LU2oshO
+	 23HaPseI+XaLQPhDIvhPahndOBqZbiXMhg0LRvybXfW0PK0sv1xeJmKuKlpsZyCt5Cw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795657110;
-	h=DMARC-Filter:Received:From:To:Cc:Subject:Date:Message-ID:X-Mailer:
-	 MIME-Version:Content-Transfer-Encoding:X-CM-TRANSID:
-	 X-Coremail-Antispam:X-Originating-IP:X-CM-SenderInfo;
-	bh=GxW/rflHfiQTyXh6SuOErrXibGTX0Pbxp+1B3z4FF3k=;
-	b=AeWzs/InQfZAHBE3Og/n24h15p7iQuWauLm69dG38KYf4asnQLzngmWViaPw5CDx8NYK
-	 gz0d66EqKq9DC/bG0w2AZWjNBztiI7ehF9e/r4I625aBlF9z4KZwhgND3kRbY0/p9GXOi
-	 o5dC/Nq0wL1x4tLil3Ic7Vo0npMQA9mB21oCzc1PFGCl4XxYM9912MTq9zvCH3qcaw3XX
-	 Qq6OQsjzvCCnpYG5TXaP5b5V0ZLCXxgIXJ9lv4ZmVV4XV4YTswYv8ASeCVPksh7VbLuDT
-	 NmcA3LHZizFOOdK7Vr439KeVboAGTwzcMAJc16leiNwTQ1Rq+PCEodKTY5CqSEvDW6Q==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795662689;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=WYSs5d5Lp36V/22Iomfy0//nynBZd0fYykzrM/pot3A=;
+	b=L345J6i45rhUDU3GA9MZ4m+YYKpJsQouKTwdqnmvCDRsiFZkwtKh7YktFRGgG8IKR1uz
+	 gFv+1c2NIUvp0r3aU6JTppudrxQyXTL14Cu1BTSQPCbfg5ML9BS22llDivaJbllXkyaBc
+	 /DqXpJ2pkPFHbi+xKPBdUEHWjXMX4nyknTJWCNKsWQ68zMBI+CzYZsQsLEzk18bLhaeUm
+	 lOCLj7EoDLl9oRELGjImOg4YeW//H/A1QZOMvEpdeKz2h7P2PaFkwgLrJosqt4yjCe8fn
+	 SZP1fjHlkgCrajDdyH295IAiKGggf1jy9hitNN30kzjRywF8aZyQMAgISWHfhsTCmww==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=none header.from=mails.ucas.ac.cn;
-	spf=pass smtp.mailfrom=mails.ucas.ac.cn;
-	arc=none smtp.remote-ip=159.226.251.25
-Received: from cstnet.cn (smtp25.cstnet.cn [159.226.251.25])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XvQ+r2RM;
+	arc=none smtp.remote-ip=91.218.175.210
+Received: from mta0.migadu.com (out-210.mta0.migadu.com [91.218.175.210])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E98D7606A31E;
-	Thu, 26 Nov 2026 01:38:25 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org E98D7606A31E
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=mails.ucas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mails.ucas.ac.cn
-Received: from k3-03 (unknown [159.226.43.8])
-	by APP-05 (Coremail) with SMTP id zQCowACXLrRqjQdrOdr2AQ--.256S2;
-	Thu, 26 Nov 2026 09:37:50 +0800 (CST)
-From: Tan Chi <tanchi25@mails.ucas.ac.cn>
-To: anup@brainfault.org
-Cc: atish.patra@linux.dev,
-	pjw@kernel.org,
-	palmer@dabbelt.com,
-	aou@eecs.berkeley.edu,
-	alex@ghiti.fr,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com,
-	corbet@lwn.net,
-	skhan@linuxfoundation.org,
-	rdunlap@infradead.org,
-	yosry@kernel.org,
-	kvm@vger.kernel.org,
-	kvm-riscv@lists.infradead.org,
-	linux-riscv@lists.infradead.org,
-	cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	tanchi25@mails.ucas.ac.cn,
-	lkp@intel.com
-Subject: [PATCH v2] RISC-V: KVM: Account G-stage page table memory
-Date: Thu, 26 Nov 2026 09:37:23 +0800
-Message-ID: <20261126013724.2533363-1-tanchi25@mails.ucas.ac.cn>
-X-Mailer: git-send-email 2.53.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03DF1606A326
+	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 03:11:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 03DF1606A326
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=XvQ+r2RM
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=vvqUdZiid5uV0/NNKfcYRq6aGGte+Ajub0kcJ88W1xw=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795662685; v=1; x=1796267485;
+ b=XvQ+r2RMwGUGG5NBKscjbd1IEWuCTdDQIo98L1SjnbjCjJMgWoAL8FtytLaBy0CWLY2+jxXS
+ hdTmfApQPa0Z895vccKpW6ltMPzR86wOfdNzdome4YHjY1oUi+qMCfdssS3I22jaFLPBS91D5ts
+ dpF6fN1TnG+4+T5QhV2e4WU4=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id c118c9884fa7c50c;
+	Thu, 26 Nov 2026 03:11:24 +0000
+X-Mizu-Trace-ID: c118c9884fa7c50c
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <82a7b4da-a67a-4e53-bdad-8c0551585cec@linux.dev>
+Date: Thu, 26 Nov 2026 11:11:10 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -69,179 +58,183 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowACXLrRqjQdrOdr2AQ--.256S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxuFW5Xry7Kw13Cw4fJF4Utwb_yoW7uw13pF
-	WkC34S9w1rtr93Cr13JwnF9r13Ga95Gr45Ary29a45ZFsxtr9aywnYq342vF15Xr95Zayf
-	XrZIgFyYvr4vywUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxV
-	WxJr0_GcWlnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-	64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
-	1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAq
-	YI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wrylc2xSY4
-	AK67AK6w4l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
-	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
-	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
-	14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjTRK38n
-	DUUUU
-X-CM-SenderInfo: pwdquxrlsvqzpdlo2hpxfd2hldfou0/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 04/18] mm/mglru: make generation page counters atomic
+To: kasong@tencent.com, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
+ Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>,
+ Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>,
+ Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>,
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>,
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
+ Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>,
+ Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>,
+ Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+ Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
+ SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
+ Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
+ Zicheng Wang <wangzicheng@honor.com>, Tal Zussman <tz2294@columbia.edu>,
+ Kairui Song <ryncsn@gmail.com>, Xiang Liu <liuxiang.277@bytedance.com>,
+ Ehab Ababneh <ehab.ababneh@intel.com>,
+ Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang
+ <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>,
+ Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>,
+ Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org,
+ Tianyi Chen <hi@tychen.cc>
+References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
+ <20261124-mglru-fg-v6-4-8ffea39934a6@tencent.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20261124-mglru-fg-v6-4-8ffea39934a6@tencent.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-RISC-V KVM currently does not account G-stage page table memory
-in NR_SECONDARY_PAGETABLE.
 
-Use kvm_account_pgtable_pages() to account for the allocation and
-freeing of the root and lower-level page tables, including those
-allocated when splitting huge page mappings.
 
-This makes G-stage page table memory usage visible through
-SecPageTables in /proc/meminfo and sec_pagetables in the cgroup
-memory.stat interface.
+On 11/24/2026 2:52 AM, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> No feature change, convert them to atomic so we can update them without
+> holding the LRU lock. A temporary underflow is fine: readers clamp a
+> negative value to zero, and the counters only need to be eventually
+> consistent.
+> 
+> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> Reviewed-by: Barry Song <baohua@kernel.org>
+> Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
+> Tested-by: Andrew Morton <akpm@linux-foundation.org>
+> Reviewed-by: Lian Wang <lianux.mm@gmail.com>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>   include/linux/mm_inline.h |  6 ++----
+>   include/linux/mmzone.h    |  2 +-
+>   mm/vmscan.c               | 26 +++++++++++++-------------
+>   mm/vmscan.h               |  2 +-
+>   4 files changed, 17 insertions(+), 19 deletions(-)
+> 
+> diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
+> index 2edb9beef6d3..46beded51c7d 100644
+> --- a/include/linux/mm_inline.h
+> +++ b/include/linux/mm_inline.h
+> @@ -265,11 +265,9 @@ static inline void lru_gen_update_size(struct lruvec *lruvec, struct folio *foli
+>   	VM_WARN_ON_ONCE(old_gen == -1 && new_gen == -1);
+>   
+>   	if (old_gen >= 0)
+> -		WRITE_ONCE(lrugen->nr_pages[old_gen][type][zone],
+> -			   lrugen->nr_pages[old_gen][type][zone] - delta);
+> +		atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][zone]);
+>   	if (new_gen >= 0)
+> -		WRITE_ONCE(lrugen->nr_pages[new_gen][type][zone],
+> -			   lrugen->nr_pages[new_gen][type][zone] + delta);
+> +		atomic_long_add(delta, &lrugen->nr_pages[new_gen][type][zone]);
+>   
+>   	/* addition */
+>   	if (old_gen < 0) {
+> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> index 6a2ad0cff795..4e85bb520f76 100644
+> --- a/include/linux/mmzone.h
+> +++ b/include/linux/mmzone.h
+> @@ -554,7 +554,7 @@ struct lru_gen_folio {
+>   	/* the multi-gen LRU lists, lazily sorted on eviction */
+>   	struct list_head folios[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+>   	/* the multi-gen LRU sizes, eventually consistent */
+> -	long nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+> +	atomic_long_t nr_pages[MAX_NR_GENS][ANON_AND_FILE][MAX_NR_ZONES];
+>   	/* the exponential moving average of refaulted */
+>   	unsigned long avg_refaulted[ANON_AND_FILE][MAX_NR_TIERS];
+>   	/* the exponential moving average of evicted+protected */
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index bc7579d47f9b..202e0f874b23 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3350,8 +3350,7 @@ static void reset_batch_size(struct lru_gen_mm_walk *walk)
+>   			continue;
+>   
+>   		walk->nr_pages[gen][type][zone] = 0;
+> -		WRITE_ONCE(lrugen->nr_pages[gen][type][zone],
+> -			   lrugen->nr_pages[gen][type][zone] + delta);
+> +		atomic_long_add(delta, &lrugen->nr_pages[gen][type][zone]);
+>   
+>   		if (lru_gen_is_active(lruvec, gen))
+>   			lru += LRU_ACTIVE;
+> @@ -3971,11 +3970,8 @@ static bool inc_min_seq(struct lruvec *lruvec, int type, int swappiness)
+>   				break;
+>   		}
+>   		flush_lru_batch(head, &batch_end, target_list);
+> -
+> -		WRITE_ONCE(lrugen->nr_pages[old_gen][type][zone],
+> -			   lrugen->nr_pages[old_gen][type][zone] - delta);
+> -		WRITE_ONCE(lrugen->nr_pages[target_gen][type][zone],
+> -			   lrugen->nr_pages[target_gen][type][zone] + delta);
+> +		atomic_long_sub(delta, &lrugen->nr_pages[old_gen][type][zone]);
+> +		atomic_long_add(delta, &lrugen->nr_pages[target_gen][type][zone]);
+>   		if (!remaining)
+>   			return false;
+>   	}
+> @@ -4093,8 +4089,8 @@ static bool inc_max_seq(struct lruvec *lruvec, unsigned long seq, int swappiness
+>   	for (type = 0; type < ANON_AND_FILE; type++) {
+>   		for (zone = 0; zone < MAX_NR_ZONES; zone++) {
+>   			enum lru_list lru = type * LRU_INACTIVE_FILE;
+> -			long delta = lrugen->nr_pages[prev][type][zone] -
+> -				     lrugen->nr_pages[next][type][zone];
+> +			long delta = atomic_long_read(&lrugen->nr_pages[prev][type][zone]) -
+> +				     atomic_long_read(&lrugen->nr_pages[next][type][zone]);
+>   
+>   			if (!delta)
+>   				continue;
+> @@ -4625,8 +4621,13 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+>   	child_lrugen = &child_lruvec->lrugen;
+>   	parent_lrugen = &parent_lruvec->lrugen;
+>   
+> +	/*
+> +	 * The child is offline and the lockless updaters, which hold
+> +	 * rcu_read_lock() over the update, avoid racing with reparenting,
+> +	 * so the read/set/add operations below are safe.
+> +	 */
+>   	for (gen = 0; gen < MAX_NR_GENS; gen++) {
+> -		long nr_pages = child_lrugen->nr_pages[gen][type][zone];
+> +		long nr_pages = atomic_long_read(&child_lrugen->nr_pages[gen][type][zone]);
+>   		int child_lru_active = lru_gen_is_active(child_lruvec, gen) ? LRU_ACTIVE : 0;
+>   		int parent_lru_active = lru_gen_is_active(parent_lruvec, gen) ? LRU_ACTIVE : 0;
+>   
+> @@ -4634,9 +4635,8 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+>   		list_splice_tail_init(&child_lrugen->folios[gen][type][zone],
+>   				      &parent_lrugen->folios[gen][type][zone]);
+>   
+> -		WRITE_ONCE(child_lrugen->nr_pages[gen][type][zone], 0);
+> -		WRITE_ONCE(parent_lrugen->nr_pages[gen][type][zone],
+> -			   parent_lrugen->nr_pages[gen][type][zone] + nr_pages);
+> +		atomic_long_set(&child_lrugen->nr_pages[gen][type][zone], 0);
+> +		atomic_long_add(nr_pages, &parent_lrugen->nr_pages[gen][type][zone]);
+>   
+>   		if (lru_gen_is_active(child_lruvec, gen) != lru_gen_is_active(parent_lruvec, gen)) {
+>   			__update_lru_size(child_lruvec, lru + child_lru_active, zone, -nr_pages);
+> diff --git a/mm/vmscan.h b/mm/vmscan.h
+> index c2cea36289f3..6551f0a6691a 100644
+> --- a/mm/vmscan.h
+> +++ b/mm/vmscan.h
+> @@ -126,7 +126,7 @@ static inline unsigned long lruvec_gen_size(struct lru_gen_folio *lrugen,
+>   	unsigned long size = 0;
+>   
+>   	for (int zone = 0; zone < max_zone; zone++)
+> -		size += max(READ_ONCE(lrugen->nr_pages[gen][type][zone]), 0L);
+> +		size += max(atomic_long_read(&lrugen->nr_pages[gen][type][zone]), 0L);
+>   
+>   	return size;
+>   }
+> 
 
-Update the documentation accordingly.
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Thanks.
 
-Tested on a RISC-V KVM host running under QEMU TCG with Sv57x4.
-The observed G-stage page table memory usage was:
-
-  100 empty VMs:                         1600 KiB
-  8 GiB sparsely mapped with 4 KiB pages: 16448 KiB
-  256 MiB mapped with 2 MiB pages:          36 KiB
-  After enabling dirty logging:           548 KiB
-
-The accounting in /proc/meminfo, /proc/vmstat and cgroup
-memory.stat matched the expected values and returned to zero
-after destroying the VMs.
-
-This reimplements the work originally proposed by Yosry Ahmed
-in 2022, adapted to the current G-stage MMU code.
-
-Link: https://lore.kernel.org/r/20220426053904.3684293-6-yosryahmed@google.com
-
-Signed-off-by: Tan Chi <tanchi25@mails.ucas.ac.cn>
----
-Changes in v2:
-- Use the allocation order to calculate the number of root page
-  table pages, fixing a Clang warning reported by the kernel test
-  robot.
-  https://lore.kernel.org/oe-kbuild-all/20261126015340.s7bzBtEB-lkp@intel.com/
-
- Documentation/admin-guide/cgroup-v2.rst |  4 ++--
- Documentation/filesystems/proc.rst      |  2 +-
- arch/riscv/kvm/gstage.c                 |  6 +++++-
- arch/riscv/kvm/mmu.c                    | 12 ++++++++----
- 4 files changed, 16 insertions(+), 8 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 9e3c67b02ae2..c79d6432ecc3 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1591,8 +1591,8 @@ The following nested keys are defined.
- 
- 	  sec_pagetables
- 		Amount of memory allocated for secondary page tables,
--		this currently includes KVM mmu allocations on x86
--		and arm64 and IOMMU page tables.
-+		this currently includes KVM mmu allocations on x86,
-+		arm64 and riscv and IOMMU page tables.
- 
- 	  percpu (npn)
- 		Amount of memory used for storing per-cpu kernel
-diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
-index fa7a468e8edf..cd1a74da287c 100644
---- a/Documentation/filesystems/proc.rst
-+++ b/Documentation/filesystems/proc.rst
-@@ -1208,7 +1208,7 @@ PageTables
-               Memory consumed by userspace page tables
- SecPageTables
-               Memory consumed by secondary page tables, this currently includes
--              KVM mmu and IOMMU allocations on x86 and arm64.
-+              KVM mmu and IOMMU allocations on x86, arm64 and riscv.
- NFS_Unstable
-               Always zero. Previously counted pages which had been written to
-               the server, but has not been committed to stable storage.
-diff --git a/arch/riscv/kvm/gstage.c b/arch/riscv/kvm/gstage.c
-index 0aace3215d3e..f8841136d852 100644
---- a/arch/riscv/kvm/gstage.c
-+++ b/arch/riscv/kvm/gstage.c
-@@ -162,6 +162,7 @@ int kvm_riscv_gstage_set_pte(struct kvm_gstage *gstage,
- 				return -ENOMEM;
- 			set_pte(ptep, pfn_pte(PFN_DOWN(__pa(next_ptep)),
- 					      __pgprot(_PAGE_TABLE)));
-+			kvm_account_pgtable_pages(next_ptep, 1);
- 		} else {
- 			if (gstage_pte_leaf(ptep))
- 				return -EEXIST;
-@@ -357,6 +358,7 @@ bool kvm_riscv_gstage_split_huge(struct kvm_gstage *gstage,
- 
- 		set_pte(ptep, pfn_pte(PFN_DOWN(__pa(next_ptep)),
- 				__pgprot(_PAGE_TABLE)));
-+		kvm_account_pgtable_pages(next_ptep, 1);
- 
- 		if (flush)
- 			gstage_tlb_flush(gstage, current_level, addr);
-@@ -399,8 +401,10 @@ bool kvm_riscv_gstage_op_pte(struct kvm_gstage *gstage, gpa_t addr,
- 		for (i = 0; i < PTRS_PER_PTE; i++)
- 			flush |= kvm_riscv_gstage_op_pte(gstage, addr + i * next_page_size,
- 							 &next_ptep[i], next_ptep_level, op);
--		if (op == GSTAGE_OP_CLEAR)
-+		if (op == GSTAGE_OP_CLEAR) {
-+			kvm_account_pgtable_pages(next_ptep, -1);
- 			put_page(virt_to_page(next_ptep));
-+		}
- 	} else {
- 		old_pte = *ptep;
- 		if (op == GSTAGE_OP_CLEAR)
-diff --git a/arch/riscv/kvm/mmu.c b/arch/riscv/kvm/mmu.c
-index 6861c0e2728d..ab8d8c94a866 100644
---- a/arch/riscv/kvm/mmu.c
-+++ b/arch/riscv/kvm/mmu.c
-@@ -805,17 +805,18 @@ long kvm_arch_vcpu_pre_fault_memory(struct kvm_vcpu *vcpu,
- int kvm_riscv_mmu_alloc_pgd(struct kvm *kvm)
- {
- 	struct page *pgd_page;
-+	int order = get_order(kvm_riscv_gstage_pgd_size);
- 
- 	if (kvm->arch.pgd != NULL) {
- 		kvm_err("kvm_arch already initialized?\n");
- 		return -EINVAL;
- 	}
- 
--	pgd_page = alloc_pages(GFP_KERNEL_ACCOUNT | __GFP_ZERO,
--			       get_order(kvm_riscv_gstage_pgd_size));
-+	pgd_page = alloc_pages(GFP_KERNEL_ACCOUNT | __GFP_ZERO, order);
- 	if (!pgd_page)
- 		return -ENOMEM;
- 	kvm->arch.pgd = page_to_virt(pgd_page);
-+	kvm_account_pgtable_pages(kvm->arch.pgd, 1 << order);
- 	kvm->arch.pgd_phys = page_to_phys(pgd_page);
- 	kvm->arch.pgd_levels = kvm_riscv_gstage_max_pgd_levels;
- 	kvm->arch.pgd_split_page_cache.gfp_zero = __GFP_ZERO;
-@@ -828,6 +829,7 @@ void kvm_riscv_mmu_free_pgd(struct kvm *kvm)
- 	struct kvm_gstage gstage;
- 	void *pgd = NULL;
- 	bool flush = false;
-+	int order = get_order(kvm_riscv_gstage_pgd_size);
- 
- 	write_lock(&kvm->mmu_lock);
- 	if (kvm->arch.pgd) {
-@@ -843,8 +845,10 @@ void kvm_riscv_mmu_free_pgd(struct kvm *kvm)
- 	if (flush)
- 		kvm_flush_remote_tlbs(kvm);
- 
--	if (pgd)
--		free_pages((unsigned long)pgd, get_order(kvm_riscv_gstage_pgd_size));
-+	if (pgd) {
-+		kvm_account_pgtable_pages(pgd, -(1 << order));
-+		free_pages((unsigned long)pgd, order);
-+	}
- }
- 
- void kvm_riscv_mmu_update_hgatp(struct kvm_vcpu *vcpu)
-
-base-commit: 4dce97c6c265544342e716e62fd24bbb232590c5
 -- 
-2.53.0
+Best regards
+Ridong
 
