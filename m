@@ -1,126 +1,54 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=95.215.58.245
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795679355;
-	b=2AIQhiqIOmohBnJ0aTvVMzBUR442YKqi4JQf9IMOUx1pTw3hNnjha3hzi0vWebI8Zfm6
-	 9WyuxUjzIpYzZItGHR3r4R1gKSR4E3cehBGHmG9/FXIZvt4uhq4Nwe2ACZfx0Tv0lkN7n
-	 LmBrLCf+lY36zrwkNs0M04d8gEkPKjI4LRELI7TZxiOwk741QMLdTtP01IOkGQcKA3vah
-	 b1smyyJ9B8n6e5TSz53bFsL5NkvB8eSCkFQsBtZTBNty2JY7XDo5gK1x10udkTqY2zRS4
-	 FeTWcXlfrUsVOKwFSm7JBGY9CCxdH72n7Gslrt2WZNaBLGFiQVitnKoWhdGhO1Re8RQ==
+	t=1795679884;
+	b=A5e3BTu+LF0ediDwrTw4lLTFAklM8nArpAqXKuSBg4C6nn0yJlXYych39nSxieGhyGRB
+	 WUYikJKL+C28fdZA9TKZi+LRDZ+JPFLP5KYvxvOXVoclwyep4Hgt438SMoesKU4lEFNi6
+	 y0vWDd3QpbaDM/vK5lWFgbVisFswQ7MLJQoCPj0rULhJc5ADr4gOxAa5A36CieVNJfBDA
+	 LTIOa1r0A/4q/bO9a7+s58t+XpnS7IHTRhtGtZGXiyhXZtsMWMwLxwpbtHA2e7DQy/zbK
+	 cw/P0MW545Ng2QGeJFiLZ7rQECisgyTnlnoaTEvjCAlrLohBM5qX78ZmiimqByu40Aw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795679355;
-	h=DMARC-Filter:DKIM-Signature:Received:X-MC-Unique:
-	 X-Mimecast-MFC-AGG-ID:Received:DKIM-Signature:X-Google-DKIM-Signature:
-	 X-Forwarded-Encrypted:X-Gm-Message-State:X-Gm-Gg:X-Received:
-	 X-Received:Received:Date:From:To:Cc:Subject:Message-ID:References:
-	 MIME-Version:Content-Type:Content-Disposition:In-Reply-To;
-	bh=B21i4+ZUhaISno42DnRuHLIvnKFoII5gbyv4BOzzN34=;
-	b=0iYB9ZXZSdLdyeMKehUHL52vSav/+sB1734MtZ+vajRDsF0SrME0akw50ZpUXAR5PfQn
-	 HOnLPMEg8wVdAGnyBtt2v3wbrm5Sa0hgMP+mCOvr67f71vxmxuU6ekWdq1HqsmUtMvz72
-	 b9Uc7pqP6zHr4L7/+OZzGh5Fuua9xlXbT0lSuzZNAz5061K9O/I1PkaT46vmX06DWf58Z
-	 lAme4LQbOJMMoh3/ilsEFNLvo5YCNxYrO5rgEDe3iXNxZ4V7lZhIOFjaYwLTOV5S11Ws6
-	 N8SeZnTarTXSVA5RXUwPcy4nxm2Pj+lNW/mwLzv6SQF3eBUuxDj1fFwMnfBqsUJNW0A==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795679884;
+	h=DMARC-Filter:X-Envelope-To:DKIM-Signature:X-Envelope-To:Received:
+	 X-Mizu-Trace-ID:X-Migadu-Flow:Message-ID:Date:MIME-Version:User-Agent:
+	 Subject:To:Cc:References:From:In-Reply-To:Content-Type:
+	 Content-Transfer-Encoding;
+	bh=LvwFbBDWNBefR0kvXHQjNB1xk2tLuKkLL0ZTvCS0RKo=;
+	b=GoCq5Gw4i5BaYaOTvsGieIBWuig6OH6E4i9DC9MhY6mBds7VOKoBlRcZRrf/HfskxYK9
+	 qbC4UFi/xaMT+pCmEzQIUMG2kQjxRHQYv6XQRa7Zh963hhGlj1Jgjl3B+rvqLuESxTAog
+	 assGIYLwHMWCFOgmQ74OdXmXIYmWZQj2tI06Pqn9VxN6MJ30Ma+XEX7U91pEE/E0NOWxg
+	 Q/K8TBV68wE6TKvgVfxyRE9FViLjCkdeVD7A9+akVPApOoBTCJ7VaqO7WxH3ZsQoPX8Wm
+	 Qh27gqQN1Lh1q/bh9G95En+ekE2sKkXvJJf7BUz7HkAimCwCztgXa13dvfzif6Gcb2A==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dmarc=pass header.from=redhat.com;
-	spf=pass smtp.mailfrom=redhat.com;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ae7KBciL;
-	dkim=pass header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=OXuiVUf6;
-	arc=none smtp.remote-ip=170.10.129.124
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	dmarc=pass header.from=linux.dev;
+	spf=pass smtp.mailfrom=linux.dev;
+	dkim=pass header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=o6bjUeAs;
+	arc=none smtp.remote-ip=95.215.58.245
+Received: from mta1.migadu.com (out-245.mta1.migadu.com [95.215.58.245])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08E97606A31C
-	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 07:49:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 08E97606A31C
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 442B4606A330
+	for <cgroups@vger.kernel.org>; Thu, 26 Nov 2026 07:58:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 442B4606A330
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=mimecast20190719 header.b=ae7KBciL;
-	dkim=pass (2048-bit key, unprotected) header.d=redhat.com header.i=@redhat.com header.a=rsa-sha256 header.s=google header.b=OXuiVUf6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1795679354;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=B21i4+ZUhaISno42DnRuHLIvnKFoII5gbyv4BOzzN34=;
-	b=ae7KBciL6UDgPkzyLqoo5lhIMMllQTeC5jjIK2HwoW1V+uQqT2l5DoUZ4OOlEnkH2f/WNv
-	nPzNYxc3YkI686R/Jh15PJCn6/uBo0nDVH9Y/1+EmoGYKbVuJ5Vc8tKQb429y07OESzLOu
-	n1L432J8IR0eMdj/fEDW3ss1uWQYX10=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-133-0lwWxerSNsKTqpoKSdPSgQ-1; Thu, 26 Nov 2026 07:49:11 +0000
-X-MC-Unique: 0lwWxerSNsKTqpoKSdPSgQ-1
-X-Mimecast-MFC-AGG-ID: 0lwWxerSNsKTqpoKSdPSgQ_1795679351
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-48e0389d6f9so4183553f8f.1
-        for <cgroups@vger.kernel.org>; Wed, 25 Nov 2026 23:49:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=redhat.com; s=google; t=1795679351; x=1796284151; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to:content-type;
-        bh=B21i4+ZUhaISno42DnRuHLIvnKFoII5gbyv4BOzzN34=;
-        b=OXuiVUf68jlCB9alV8RL/oHewEdwKlN8yDpux1JMhlwJCFiS8BRWPtjpVqiT7JOwVu
-         qvwbzPiURwqoTw7AYSYNtprqytRhYVtYS3JNveJQ87KhDAEKb3WkZ+JQ0acx8f8oAXDE
-         lgGEJseW4R6/DdQtFfUgCumyyBy4zDtBI12IQWbMlXm5WXhxA0N/42bKh8QNg7KzbM+I
-         1Hl8EFZNPDwvbK4pfUdwvIpOM/v8F+obrtmPrlcl0d8DFcfV+i/hzkvvmvS26eNqXB9d
-         jm+HfGfE0IUi1MkH1rcRJ7BK3oRooeo7AKINVuPDP46Z+ppkxVlX/6jXxLmp1K4v/P4Z
-         yhQQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20260707; t=1795679351; x=1796284151;
-        h=in-reply-to:content-disposition:content-type:mime-version
-         :references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to
-         :content-type;
-        bh=B21i4+ZUhaISno42DnRuHLIvnKFoII5gbyv4BOzzN34=;
-        b=gwJWzVPx38riBDUd7KIfKhZHSc2M8+se7wq5AkC5bo2x1fRNQGe7txo5MJ9PFfiTx3
-         QiVqts3wJLxlGhxEjXJtr91rKQOFZh3/CiQYSMke+7IFD13U1edKj5RD5PEqYEDrApYN
-         DUcA+0ItgWmp2MD1rscs+hw/6eYxMZXTP9/ZZNNOYJNvejrgJu4jY5SfA2UnVhwfx334
-         OI0O4GG+eerkGDBAeL16bfY6hT3NgffXaPR7UbpcfSd0X3md7mPu1jVCeK6uZJcAR2Qs
-         eVT0Su1dhQhC3azeYJBe5Nl6yTQ3cZF5XpHzkFXVyOKZVSEG4orERq1Za+D1wsVogJQ2
-         NzmA==
-X-Forwarded-Encrypted: i=1; AL+hErHl17SFCOOQOH0gavmsIOWIiRTgP+afqj7FBIZjImIcnkpOyZOBMBAbmVS8+fflfhXe5ryPtW9h@vger.kernel.org
-X-Gm-Message-State: APuU4Z9DC+WLnrZvmTMKo/NERrju9R5sSWVmap6bzC3Gv9yBEKamNkl2
-	80oxgpDZZufj61S+oHyxzJjdMo0jaD6ikJGal8Pu+OUkEPm8FCktwNy9KtaXklytSIhcXc1Madv
-	m4t7ZtD6igdVFIU+uq9agx5bfsRieMgvAxtJ1TWYA8KsgS4mlXwhRtcQPT+I=
-X-Gm-Gg: AZFdTZeu4crO25phkyWtaEHZW2DSjSSV6aKJep4sKTOe0HG6mRm6X/Q9dSL8maMySyJ
-	S8iJw9QRLBbaOPeN+0mt/wFFbYlyvHIqvxCibJlte9Sc0FLjd/Thy7fADOAYAwUnB0puSv7+xto
-	DcOu5aTsZqF+CP6i7Fkoo2GwzlL5FH4Jix4MGWPQJmkNEbRbrt1vDwwaTc1aJcmFoO8nH0HXvnP
-	Iwhv2i4kcGzCWnS9n2EcCoQXGykMIF1oqn9mleEGsaeueeyJLdOOhzYb3M5hElmd9EK7M1IcYJ3
-	goFv2Jxtzozxlq2n3xfJjr0BqnWdACw6v8CbaS/lxP9by/uAGYy/I99PqtegP7r5u730Bhu3p5Z
-	y7V2THsvhf5tdYVzeZu4x2AJILJRy8WMKnH9df0zlgOyLya4Ql5UvWp+m9nzFJ25s2fCJkuH/un
-	jkYPHB
-X-Received: by 2002:a05:6000:2913:b0:4a8:7115:fa08 with SMTP id ffacd0b85a97d-4abb0f3c202mr41157244f8f.13.1795679350681;
-        Wed, 25 Nov 2026 23:49:10 -0800 (PST)
-X-Received: by 2002:a05:6000:2913:b0:4a8:7115:fa08 with SMTP id ffacd0b85a97d-4abb0f3c202mr41157225f8f.13.1795679350388;
-        Wed, 25 Nov 2026 23:49:10 -0800 (PST)
-Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.146.153])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-4ab6b8b7888sm38587132f8f.42.2026.11.25.23.49.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Nov 2026 23:49:09 -0800 (PST)
-Date: Thu, 26 Nov 2026 08:49:07 +0100
-From: Juri Lelli <juri.lelli@redhat.com>
-To: luca abeni <luca.abeni@santannapisa.it>
-Cc: Tejun Heo <tj@kernel.org>, Yuri Andriaccio <yurand2000@gmail.com>,
-	bsegall@google.com, cgroups@vger.kernel.org,
-	dietmar.eggemann@arm.com, hannes@cmpxchg.org,
-	kprateek.nayak@amd.com, linux-kernel@vger.kernel.org,
-	mgorman@suse.de, mingo@redhat.com, mkoutny@suse.com,
-	peterz@infradead.org, rostedt@goodmis.org,
-	vincent.guittot@linaro.org, vschneid@redhat.com,
-	yuri.andriaccio@santannapisa.it
-Subject: Re: [RFC PATCH v7 00/29] Hierarchical Constant Bandwidth Server
-Message-ID: <awfkczwhkLkXVEVz@jlelli-thinkpadt14gen4.remote.csb>
-References: <471bf8d446becabfca00041fb2a78067@kernel.org>
- <20261120120659.2e902463@linux.fritz.box>
- <6fef47e08a37079c08806b3c57994778@kernel.org>
- <20261120212418.10221f2e@linux.fritz.box>
- <06f4c157677f99fc5386dba4c9d68cd2@kernel.org>
- <20261123084345.4e24e3ca@luca64>
- <awQTy09VbrDn9RpA@jlelli-thinkpadt14gen4.remote.csb>
- <20261123151846.3fdcbf4e@linux.fritz.box>
- <awfe_r5McCTzr84x@jlelli-thinkpadt14gen4.remote.csb>
- <20261126084322.4abc6744@linux.fritz.box>
+	dkim=pass (1024-bit key, unprotected) header.d=linux.dev header.i=@linux.dev header.a=rsa-sha256 header.s=key1 header.b=o6bjUeAs
+X-Envelope-To: cgroups@vger.kernel.org
+DKIM-Signature: a=rsa-sha256; bh=FjE3HtgmKFq8WFEo5xKnHSon1s4J/tMgqoWdmhdBcjc=;
+ c=simple/simple; d=linux.dev;
+ h=from:to:subject:date:message-id:mime-version:content-type; s=key1;
+ t=1795679882; v=1; x=1796284682;
+ b=o6bjUeAscT1Lwh6QHVgwf2bJ1f75R+7XJvrz13QiJ08OF1Wvc9srPIbjDCJWT656QujjEIKP
+ C45RqbYJStESB/bkq3kguAp8+hhqQh35vGPP3sYNU5Hnvdp3VEuqWvW1n0n4ZDr7tBB1bRGoaUZ
+ /eWlpySvzH0QeYAOBQCoxV/w=
+X-Envelope-To: cgroups@vger.kernel.org
+Received: by smtp.migadu.com with ESMTPS id c5246ef4abf9f853;
+	Thu, 26 Nov 2026 07:58:01 +0000
+X-Mizu-Trace-ID: c5246ef4abf9f853
+X-Migadu-Flow: FLOW_OUT
+Message-ID: <b771065b-392d-4bf6-ab63-682179f6ed1f@linux.dev>
+Date: Thu, 26 Nov 2026 15:57:41 +0800
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -130,29 +58,218 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20261126084322.4abc6744@linux.fritz.box>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 05/18] mm/memcg: add folio-based lruvec live helper
+To: kasong@tencent.com, linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <muchun.song@linux.dev>,
+ Qi Zheng <qi.zheng@linux.dev>, Ying Huang <ying.huang@linux.alibaba.com>,
+ Chris Li <chrisl@kernel.org>, Baoquan He <baoquan.he@linux.dev>,
+ Nico Pache <nico.pache@linux.dev>, Usama Arif <usama.arif@linux.dev>,
+ Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, David Hildenbrand <david@kernel.org>,
+ Lorenzo Stoakes <ljs@kernel.org>, "Liam R. Howlett" <liam@infradead.org>,
+ Barry Song <baohua@kernel.org>, Axel Rasmussen <axelrasmussen@google.com>,
+ Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+ Vlastimil Babka <vbabka@kernel.org>, Suren Baghdasaryan <surenb@google.com>,
+ Nhat Pham <nphamcs@gmail.com>, Youngjun Park <youngjun.park@lge.com>,
+ Zi Yan <ziy@nvidia.com>, Gregory Price <gourry@gourry.net>,
+ "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+ Baolin Wang <baolin.wang@linux.alibaba.com>,
+ Ryan Roberts <ryan.roberts@arm.com>, Dev Jain <dev.jain@arm.com>,
+ Lance Yang <lance.yang@linux.dev>, Hugh Dickins <hughd@google.com>,
+ SJ Park <sj@kernel.org>, David Rientjes <rientjes@google.com>,
+ Yu Zhao <yuzhao@google.com>, Vernon Yang <vernon2gm@gmail.com>,
+ Zicheng Wang <wangzicheng@honor.com>, Tal Zussman <tz2294@columbia.edu>,
+ Kairui Song <ryncsn@gmail.com>, Xiang Liu <liuxiang.277@bytedance.com>,
+ Ehab Ababneh <ehab.ababneh@intel.com>,
+ Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>, Lian Wang
+ <lianux.mm@gmail.com>, Joanne Koong <joannelkoong@gmail.com>,
+ Kunwu Chan <kunwu.chan@gmail.com>, Hui Zhu <hui.zhu@linux.dev>,
+ Maxim Muzafarov <maxmuzaf@gmail.com>, linux-kernel@vger.kernel.org,
+ cgroups@vger.kernel.org, damon@lists.linux.dev, linux-doc@vger.kernel.org,
+ Tianyi Chen <hi@tychen.cc>
+References: <20261124-mglru-fg-v6-0-8ffea39934a6@tencent.com>
+ <20261124-mglru-fg-v6-5-8ffea39934a6@tencent.com>
+From: Ridong Chen <ridong.chen@linux.dev>
+In-Reply-To: <20261124-mglru-fg-v6-5-8ffea39934a6@tencent.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 26/11/26 08:43, luca abeni wrote:
-> Hi Juri,
-> 
-> On Thu, 26 Nov 2026 08:25:50 +0100
-> Juri Lelli <juri.lelli@redhat.com> wrote:
-> [...]
-> > Just for my own (hopefully) better understanding, I tried to come up
-> > with a setup that uses a cgroup with entries on some CPUs and "max" on
-> > others, to reason about it more concretely. This is an illustration,
-> > not a deployment I actually know of:
-> [...]
-> 
-> Thanks for the example, it really clarifies things a lot for me!
-> I am going to look at it in more details, but, just to check if I
-> understand correctly: the "trick" here is that "P" does not contain any
-> RT thread, and all the RT threads are either in "P/noncrit" or
-> "P/crit", right?
 
-It would make sense to me. Also, I seem to remember we said it was
-actually a requirement at some point (threads only allowed in leaf
-nodes), but I might be wrong.
+
+On 11/24/2026 2:52 AM, Kairui Song via B4 Relay wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> Add a helper that resolves a live lruvec for a folio under RCU
+> without taking the lruvec lock.  It takes a folio directly so the
+> lruvec lookup happens inside the RCU read-side critical section,
+> which a lruvec-based interface cannot guarantee.  The first user is
+> the lockless folio_inc_lru_refs() path later in the series.
+> 
+> Factor the ancestor walk out of lruvec_live_lock_irq() into
+> __lruvec_get_live(), so that both entry points share it, and spell
+> out why the walk is enough while only the RCU read lock is held:
+> reparenting of a memcg that starts dying waits for a grace period,
+> so it cannot race with the caller until the lock is released.
+> 
+> Move memcg_is_dying() up in memcontrol.h, next to the other memcg state
+> predicates, and use it for the walk rather than repeating the open coded
+> css_is_dying() test a few definitions away from where it is explained.
+> 
+> No functional change for existing callers.
+> 
+> Tested-by: Zhao Zhenzhuo <zhaozhengzhuo@uniontech.com>
+> Reviewed-by: Kunwu Chan <kunwu.chan@gmail.com>
+> Tested-by: Andrew Morton <akpm@linux-foundation.org>
+> Reviewed-by: Qi Zheng <qi.zheng@linux.dev>
+> Reviewed-by: Muchun Song (ByteDance) <muchun.song@linux.dev>
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>   include/linux/memcontrol.h | 71 ++++++++++++++++++++++++++++++++++++----------
+>   1 file changed, 56 insertions(+), 15 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 980358bc6f49..a03f9711522e 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -571,6 +571,11 @@ static inline bool mem_cgroup_disabled(void)
+>   	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+>   }
+>   
+> +static inline bool memcg_is_dying(struct mem_cgroup *memcg)
+> +{
+> +	return memcg ? css_is_dying(&memcg->css) : false;
+> +}
+> +
+>   static inline void mem_cgroup_protection(const struct mem_cgroup *root,
+>   					 const struct mem_cgroup *memcg,
+>   					 unsigned long *min,
+> @@ -1349,6 +1354,11 @@ static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
+>   	return true;
+>   }
+>   
+> +static inline bool memcg_is_dying(struct mem_cgroup *memcg)
+> +{
+> +	return false;
+> +}
+> +
+>   static inline
+>   unsigned long mem_cgroup_get_zone_lru_size(const struct lruvec *lruvec,
+>   		enum lru_list lru, int zone_idx)
+> @@ -1510,28 +1520,41 @@ static inline void lruvec_lock_irq(struct lruvec *lruvec)
+>   	spin_lock_irq(&lruvec->lru_lock);
+>   }
+>   
+> -static inline struct lruvec *lruvec_live_lock_irq(struct lruvec *lruvec)
+> +/*
+> + * Reparenting moves a dying memcg's LRU state to its parent at any time,
+> + * so anything added to that LRU afterwards would be lost.  This helper
+> + * walks up to the nearest live ancestor while the caller must hold the
+> + * RCU read lock: reparenting of a memcg that starts dying waits for a
+> + * grace period, so it cannot race with the caller until the lock is
+> + * released.
+> + */
+> +static inline struct lruvec *__lruvec_get_live(struct lruvec *lruvec)
+>   {
+>   #ifdef CONFIG_MEMCG
+>   	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+>   	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+>   
+> -	rcu_read_lock();
+> -
+>   	/*
+>   	 * The memcg can be NULL when the memory controller is disabled.
+>   	 * Otherwise, the caller keeps the memcg owning @lruvec alive.
+>   	 */
+> -	while (unlikely(memcg && css_is_dying(&memcg->css))) {
+> +	while (unlikely(memcg_is_dying(memcg))) {
+>   		memcg = parent_mem_cgroup(memcg);
+>   		lruvec = mem_cgroup_lruvec(memcg, pgdat);
+>   	}
+> +#endif
+> +	return lruvec;
+> +}
+>   
+> +static inline struct lruvec *lruvec_live_lock_irq(struct lruvec *lruvec)
+> +{
+> +#ifdef CONFIG_MEMCG
+> +	rcu_read_lock();
+> +	lruvec = __lruvec_get_live(lruvec);
+>   	spin_lock_irq(&lruvec->lru_lock);
+>   #else
+>   	lruvec_lock_irq(lruvec);
+>   #endif
+> -
+>   	return lruvec;
+>   }
+>   
+> @@ -1561,6 +1584,34 @@ static inline bool folio_matches_lruvec(const struct folio *folio,
+>   	       lruvec_memcg(lruvec) == folio_memcg(folio);
+>   }
+>   
+> +/**
+> + * folio_lruvec_live_get - get a live lruvec for a folio under RCU
+> + * @folio: the folio
+> + *
+> + * Same as folio_lruvec(), except that a folio whose memcg is dying is
+> + * accounted to the nearest live ancestor, which is where reparenting
+> + * would put it anyway.
+> + *
+> + * Return: the live lruvec, with rcu_read_lock() held.  Pair it with
+> + * folio_lruvec_live_put().
+> + */
+> +static inline struct lruvec *folio_lruvec_live_get(const struct folio *folio)
+> +{
+> +#ifdef CONFIG_MEMCG
+> +	rcu_read_lock();
+> +	return __lruvec_get_live(folio_lruvec(folio));
+> +#else
+> +	return folio_lruvec(folio);
+> +#endif
+> +}
+> +
+> +static inline void folio_lruvec_live_put(const struct lruvec *lruvec)
+> +{
+> +#ifdef CONFIG_MEMCG
+> +	rcu_read_unlock();
+> +#endif
+> +}
+> +
+>   /* Don't lock again iff page's lruvec locked */
+>   static inline struct lruvec *folio_lruvec_relock_irq(const struct folio *folio,
+>   		struct lruvec *locked_lruvec)
+> @@ -1826,11 +1877,6 @@ void mem_cgroup_node_filter_allowed(struct mem_cgroup *memcg, nodemask_t *mask);
+>   
+>   void mem_cgroup_show_protected_memory(struct mem_cgroup *memcg);
+>   
+> -static inline bool memcg_is_dying(struct mem_cgroup *memcg)
+> -{
+> -	return memcg ? css_is_dying(&memcg->css) : false;
+> -}
+> -
+>   #else
+>   static inline bool mem_cgroup_kmem_disabled(void)
+>   {
+> @@ -1901,11 +1947,6 @@ static inline void mem_cgroup_node_filter_allowed(struct mem_cgroup *memcg,
+>   static inline void mem_cgroup_show_protected_memory(struct mem_cgroup *memcg)
+>   {
+>   }
+> -
+> -static inline bool memcg_is_dying(struct mem_cgroup *memcg)
+> -{
+> -	return false;
+> -}
+>   #endif /* CONFIG_MEMCG */
+>   
+>   #if defined(CONFIG_MEMCG) && defined(CONFIG_LRU_GEN)
+> 
+
+LGTM.
+Reviewed-by: Ridong Chen <ridong.chen@linux.dev>
+Thanks.
+
+-- 
+Best regards
+Ridong
 
