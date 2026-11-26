@@ -1,50 +1,50 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795655339;
-	b=PdflBpIqB1MzgVHcoGFSGRJKXkYLvIDboExrZsGKE1+brR1YP0bGEE3mBqe2i9qTIAPf
-	 IL4bxlJ3kJgEB9mcRqy6jsGFx2SFZ/MfJ6rQvYfOAgWIIk3mw6Ceos3LE+Mz1EdH15XSa
-	 bFcSxD6DC/uI4IfUk8vrboxor0Tk6cjS+UJd97OGEvoi+IjOjH+LUuoHm4oD1vDIX5Uw2
-	 sIx2sPgR/mozT3JJBPspIS1Kv5Lx4a7MbraAOSdPa1Ga8azDClXbxBOln5QBSwZsjxQnC
-	 gAnZ0ZJ4tt4ozZgcZ9d5IfuQEUd4inDxabJMvt4gwJE9fxc+WFcR8wVyqND2LtHM9cA==
+	b=yJjRhwlP8H8mZ9YAV73GzSI86lngB297785RLMNpPkzPOYJspeif3coh0LoOgIiz4Pgk
+	 do6KrimYwleX0HR0sJFLdXpognXkn0CMjoWplXq9G6Fgfz5qKMkFDat0TSP3h8xbOcDDt
+	 6w7z8CweV8LpMJNYcNEToF1WCQYkdt0hUVjms6lDOMYhUj9eOqR/l5+XuVcXgxGc9mctc
+	 YiZmpgevKkkBJDeahqs7UPQpJvjAY8UnPLsd7cl4L7zk+tBy0zcMKz1oaoYKn4pizjc0k
+	 pzvwMdBNoMZrExzr023cex/9P3x8ZWWHOF6MXr9O4wCZMD1cGwcvt6l38MZxos1yuEg==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795655339;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=csC8kvPhCwqk0u2UdyIiBtu7MTM9URUw4O258WOktjI=;
-	b=dpnIGrhGn3CcwxmY2EuGBzesCriBEX4zCbfDaRAATWMY9BLPbHkrLOzWnufiowU5a1GP
-	 cq58IEVLmqIW98LnZaZuHq2PfSSq6esG7ihN71g3vcsAvRRcxmWNwAR46fnRVZH5WYNvK
-	 Kt3/UCdzuansSTRFohKtVY4nnybBLCf8SdWinTOpIKv72W8jlMIf8YxvzxfAf1Agg5vA0
-	 kzogLK7gbO62BSPfe1NDQNavZB/oXF3SRxSkY8vu00NmhXMXEXs2GG6jPOhtxxX7xGGrZ
-	 ObvJ9lVFmUxcj9BylDewx6D5ZHDFNaa2o1aTlooW6VN+7APmAU/e5/22zWz48vpCMOw==
+	bh=zdp6sqR7deXNuVcXmAI75BuqzTUQDAEmKAZwqOOtlcA=;
+	b=LdKdMbyD2MmRADZigCIgBOxNJN3uyPlyH+vN5eip+F8kiMM3hDt3kio7tai1b74ONNm5
+	 HPXOCY+s0GF0qyVqlCyjTpAQ+Pn5fxrgjgCYbLC1TIrly6JmV0TAczNtgB42N6JFDjLZp
+	 HZi9ivopgPMKxy8lru1D2yy9IrSjjxKLgJMPnAanT3yjFjgZ6SDcPwHQkO3/CokzvMXLl
+	 3aFW5bXTPGIq8BY41ffMgOHJclvI7Ip1KmfHvtAjU07KcHJ2v3SgiJHF5II1S60am6zdI
+	 k1CzXLHY7QI7A0o7rTvknBiC7ONu+vFZ+3k45H1NSmIYABlZ/U1jzNM6NPWx0QlT/0Q==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=eUlf42cB;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=C+FnX6Zd;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A1F8606A336;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F830606A339;
 	Thu, 26 Nov 2026 01:08:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9A1F8606A336
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 9F830606A339
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=eUlf42cB
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=C+FnX6Zd
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795655332;
-	bh=csC8kvPhCwqk0u2UdyIiBtu7MTM9URUw4O258WOktjI=;
+	s=smtpout1; t=1795655333;
+	bh=zdp6sqR7deXNuVcXmAI75BuqzTUQDAEmKAZwqOOtlcA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=eUlf42cBZ6CQBzuKe1gniTELNaqr4hdSH3gWusPPOGaercIgUUBEVbExHCYAuZXDE
-	 qVlnhDn4Ixv7cpWhSA3MWX2ZI2U963CDl2mF7c0NzeBQj6MUqynZiXnQ55RraD6o1T
-	 9ZODmt6eiT3HUTYCgQCUtGPJr5Nx3MnyBfMVcPIW+kr8gK3nkulvSRpbVfSo+hUitH
-	 GW/tUrovS8Vaou5rzXwa2B2eyendKC90u/EiYdpApriLCXksDivRi+KjbmduEU2SMJ
-	 qAPDA9cjFn9/Z/TSkIWHGisap1LaajAJjIAWdh7oY9OOPUq6AdP3lKfsyeXoX7gLR3
-	 B0dcof6so81Ww==
+	b=C+FnX6ZdRPZMcdZo4ppX25wDNJ55mWDYc09TDrkuHb2YUxMsWHVJj4fJdWFh2COUR
+	 03jt52n5UaBZ6Rr0B0qX82cKgIj+t4RS+PC/nQdVULIF/UaIJPWC5VMoCWaxkEI26t
+	 T4DoDpyUAtRBvvhEgZX7Gd/an2YdZqMW6uI0PNqErVZXNAQOOh7fj5ecv248pSQiRk
+	 acoLL8I/xVW3KNx7PVNutvXYCHcTz58JDaWdz/YssymmR2Cz8F7VieJUwKOQ8OS9NS
+	 Q5DyAtwoN6bEcpDMKee3C9KZ6ehd1pGcKx9cdzTmKflr/gIGilQEprb5ml6sB8TROu
+	 UfGFIGpgy8wBg==
 Received: from thinkos.internal.efficios.com (unknown [IPv6:2606:6d00:100:4000:cacb:9855:de1f:ded2])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jZdjJ0nRrzW9s;
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jZdjJ5Q6xzW9t;
 	Wed, 25 Nov 2026 20:08:52 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
@@ -80,9 +80,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v11 05/43] selftests/sched: Test SCHED_DEADLINE bandwidth across a root domain rebuild
-Date: Wed, 25 Nov 2026 20:08:04 -0500
-Message-ID: <9da289721a288519b45703f0f23fe09cbf6d2dac.1795646914.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v11 06/43] selftests/sched: Test the root domain rebuild in deadline_bw_test
+Date: Wed, 25 Nov 2026 20:08:05 -0500
+Message-ID: <e5128b9363c0c81c222b944200d4d2b8119a500b.1795646914.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.1795646914.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795646914.git.mathieu.desnoyers@efficios.com>
@@ -97,659 +97,772 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A task that leaves SCHED_DEADLINE, or dies, keeps its bandwidth until
-its 0-lag time. No selftest checks what happens to this bandwidth
-meanwhile.
+Add seven cases to deadline_bw_test. Most test the rebuild of the root
+domains' accounting, earlier in this series. They cover:
+- CPU hotplug with sleeping deadline tasks, and with tasks that left the
+  class before their 0-lag time
+- a zombie deadline task during a CPU hotplug (death_zombie_hotplug)
+- a priority inheritance owner that left the class, then moves
+  (pi_departed_moved)
+- sched_setaffinity() racing with sched_setattr() (affinity_vs_setattr)
 
-Add deadline_rebuild_test, with three cases. In each case, a task of
-400ms every second runs 380ms, then leaves SCHED_DEADLINE. Its 0-lag
-time is then about 570ms ahead. P is a partition root of one CPU.
-Before the 0-lag time:
-- dies_before_rebuild: the task exits in P. Then a second partition
-  root is made, which rebuilds the accounting of every root domain.
-- switched_out_before_rebuild: the same, but the task switches to
-  SCHED_OTHER and sleeps in P.
-- moved_after_switch_out: the task switches to SCHED_OTHER outside P.
-  Then it moves into P and dies there.
+The comment above each case gives its scenario. Two cases follow
+reproducers of Juri Lelli's sched-deadline-tests:
+hotplug_sleeper_switched and hotplug_no_admission_pinned.
 
-After the 0-lag time, P must admit one task of 600ms every second, and
-refuse a second one with EBUSY. A kernel with the bug removes the
-bandwidth from P's root domain at the 0-lag time. But the rebuild
-dropped it already, or P never had it. total_bw then wraps around, and
-P admits both tasks.
+The message of each fix names the cases that test it. These cases are
+not named there:
+- hotplug_departed and hotplug_no_admission_pinned: "sched/deadline: Keep
+  departing bandwidth across a root domain rebuild"
+- affinity_vs_setattr tests "sched/deadline: Check SCHED_DEADLINE
+  affinity under the rq lock", of the first series. It comes here
+  because it fails without CONFIG_CPUSETS before these fixes.
 
-P and Q take the two highest online CPUs that are not isolated. The test
-skips without root, 3 such CPUs, the cgroup v2 cpuset controller or
-deadline admission control. Admission control is off when
-sched_rt_runtime_us is -1. The test sets its affinity to the online CPUs
-that are not isolated. Otherwise, a change of partitions would let its
-deadline tasks run on an isolated CPU.
+On v7.4-rc2, in 8 VMs of 8 CPUs, six of these cases fail in every VM:
+- affinity_vs_setattr
+- death_zombie_hotplug
+- hotplug_departed
+- hotplug_no_admission_pinned
+- hotplug_sleeper_switched
+- pi_departed_moved
 
-On v7.4-rc2, in 8-CPU VMs, the three cases fail. "sched/deadline: Keep
-departing bandwidth across a root domain rebuild" fixes them. With the
-whole series, the three cases pass, with and without PREEMPT_RT.
+hotplug_sleepers passes there. It fails on v7.4-rc2 and with the first
+series without CONFIG_CPUSETS. It also fails there when
+isolcpus=domain,0,1 isolates the boot CPU. The rebuild fixes make it
+pass.
+
+With the fixes up to here, every case passes wherever it runs.
 
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Link: https://github.com/jlelli/sched-deadline-tests
 ---
- .../selftests/sched/deadline/.gitignore       |   1 +
- .../testing/selftests/sched/deadline/Makefile |   2 +-
- .../sched/deadline/deadline_rebuild_test.c    | 587 ++++++++++++++++++
- 3 files changed, 589 insertions(+), 1 deletion(-)
- create mode 100644 tools/testing/selftests/sched/deadline/deadline_rebuild_test.c
+ .../sched/deadline/deadline_bw_test.c         | 654 +++++++++++++++++-
+ 1 file changed, 650 insertions(+), 4 deletions(-)
 
-diff --git a/tools/testing/selftests/sched/deadline/.gitignore b/tools/testing/selftests/sched/deadline/.gitignore
-index 5a572318e1ba..42f6b2945e96 100644
---- a/tools/testing/selftests/sched/deadline/.gitignore
-+++ b/tools/testing/selftests/sched/deadline/.gitignore
-@@ -1,2 +1,3 @@
- deadline_switch_test
-+deadline_rebuild_test
- deadline_bw_test
-diff --git a/tools/testing/selftests/sched/deadline/Makefile b/tools/testing/selftests/sched/deadline/Makefile
-index c3156059bdcf..15f1e96a21e6 100644
---- a/tools/testing/selftests/sched/deadline/Makefile
-+++ b/tools/testing/selftests/sched/deadline/Makefile
-@@ -3,6 +3,6 @@
- CFLAGS += -O2 -Wall -g -I./ $(KHDR_INCLUDES)
- LDLIBS += -lpthread
+diff --git a/tools/testing/selftests/sched/deadline/deadline_bw_test.c b/tools/testing/selftests/sched/deadline/deadline_bw_test.c
+index 6ff9da964403..ba2a18f354d4 100644
+--- a/tools/testing/selftests/sched/deadline/deadline_bw_test.c
++++ b/tools/testing/selftests/sched/deadline/deadline_bw_test.c
+@@ -31,8 +31,11 @@
+  * housekeeping CPU. P is made anew for each case. Making it rebuilds the
+  * accounting, which clears what an earlier case left.
+  *
+- * The cases of hp_cases[] run after them, without P. They take CPUs
+- * offline. The test skips them if no CPU can go offline.
++ * The cases of hp_cases[] run after them, without P. These are the
++ * hotplug cases, and affinity_vs_setattr. The test skips the hotplug
++ * cases if no CPU can go offline. It still runs affinity_vs_setattr.
++ * death_zombie_hotplug takes CPUs offline too, but it is in p_cases[]: it
++ * needs the cpuset setup of those cases.
+  *
+  * The server cases change the fair server of a CPU through debugfs, and
+  * the test then puts it back.
+@@ -4554,7 +4557,10 @@ static int params_waking(void)
+ 	return ret;
+ }
  
--TEST_GEN_PROGS := deadline_switch_test deadline_bw_test
-+TEST_GEN_PROGS := deadline_switch_test deadline_rebuild_test deadline_bw_test
+-/* CPU hotplug, from the main process, with no P */
++/*
++ * CPU hotplug, from the main process, with no P. Two cases below run with
++ * P instead: death_zombie_hotplug and pi_departed_moved.
++ */
  
- include ../../lib.mk
-diff --git a/tools/testing/selftests/sched/deadline/deadline_rebuild_test.c b/tools/testing/selftests/sched/deadline/deadline_rebuild_test.c
-new file mode 100644
-index 000000000000..735c3c65e156
---- /dev/null
-+++ b/tools/testing/selftests/sched/deadline/deadline_rebuild_test.c
-@@ -0,0 +1,587 @@
-+// SPDX-License-Identifier: GPL-2.0
+ static int hp_cpu = -1;
+ 
+@@ -4584,6 +4590,213 @@ static void cpu_up(int cpu)
+ 		ksft_print_msg("CPU %d cannot come back online: %s\n", cpu, strerror(-err));
+ }
+ 
 +/*
-+ * Test the bandwidth of a SCHED_DEADLINE task that leaves the policy, or
-+ * dies, before its 0-lag time. The bandwidth stays in the task's root
-+ * domain until the inactive timer removes it. It must be removed once,
-+ * from the root domain that holds it.
-+ *
-+ * P is a partition root of one CPU. In each case the task is a deadline
-+ * task of 400ms every second, which first runs 380ms. The cases are:
-+ * - dies_before_rebuild: the task is in P and exits. Before its 0-lag
-+ *   time, the test makes a second partition root, Q. This rebuilds the
-+ *   accounting of every root domain.
-+ * - switched_out_before_rebuild: the same, but the task switches to
-+ *   SCHED_OTHER and sleeps instead of exiting.
-+ * - moved_after_switch_out: the task is outside P. It switches to
-+ *   SCHED_OTHER and sleeps. Before its 0-lag time, the test moves it into
-+ *   P and kills it there.
-+ *
-+ * Once the inactive timer has fired, P must admit one task of 600ms
-+ * every second, and refuse a second one with EBUSY. A kernel with the
-+ * bug removes the bandwidth from P's root domain after the rebuild
-+ * dropped it, or when P never had it. total_bw of that root domain then
-+ * wraps around, and P admits both tasks.
-+ *
-+ * P and Q take the two highest online CPUs that are not isolated. The
-+ * test needs root, 3 such CPUs, the cgroup v2 cpuset controller and
-+ * deadline admission control.
++ * Four deadline tasks of 30% sleep. Take hp_cpu offline and back. Once
++ * the sleepers are gone, the housekeeping root domain must admit what it
++ * did before. Skip unless 22 probe tasks fit: the sleepers take the room
++ * of 12, and the offline CPU that of about 10.
 + */
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <limits.h>
-+#include <sched.h>
-+#include <signal.h>
-+#include <stdint.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/prctl.h>
-+#include <sys/stat.h>
-+#include <sys/syscall.h>
-+#include <sys/wait.h>
-+#include <time.h>
-+#include <unistd.h>
-+
-+#include "../../kselftest.h"
-+
-+#ifndef SCHED_DEADLINE
-+#define SCHED_DEADLINE	6
-+#endif
-+
-+#define NSEC_PER_MSEC	1000000ULL
-+#define NSEC_PER_SEC	1000000000ULL
-+
-+struct dl_attr {
-+	uint32_t size;
-+	uint32_t sched_policy;
-+	uint64_t sched_flags;
-+	int32_t sched_nice;
-+	uint32_t sched_priority;
-+	uint64_t sched_runtime;
-+	uint64_t sched_deadline;
-+	uint64_t sched_period;
-+};
-+
-+static char root[PATH_MAX], cg_p[PATH_MAX], cg_q[PATH_MAX];
-+static int cpu_p, cpu_q;
-+static pid_t test_pid;
-+
-+static int set_deadline(pid_t pid, uint64_t runtime)
++static int hotplug_sleepers(void)
 +{
-+	struct dl_attr attr = {
-+		.size = sizeof(attr),
-+		.sched_policy = SCHED_DEADLINE,
-+		.sched_runtime = runtime,
-+		.sched_deadline = NSEC_PER_SEC,
-+		.sched_period = NSEC_PER_SEC,
-+	};
++	int base = probe(NULL), after, i, ret = KSFT_PASS;
++	pid_t pid[4];
 +
-+	return syscall(__NR_sched_setattr, pid, &attr, 0) ? -errno : 0;
-+}
-+
-+static int set_other(pid_t pid)
-+{
-+	struct sched_param sp = { .sched_priority = 0 };
-+
-+	return sched_setscheduler(pid, SCHED_OTHER, &sp) ? -errno : 0;
-+}
-+
-+/*
-+ * Return the CLOCK_MONOTONIC time in ns. clock_gettime() cannot fail: the
-+ * clock is always supported, and the pointer is valid.
-+ */
-+static uint64_t now_ns(void)
-+{
-+	struct timespec ts;
-+
-+	clock_gettime(CLOCK_MONOTONIC, &ts);
-+	return ts.tv_sec * NSEC_PER_SEC + ts.tv_nsec;
-+}
-+
-+static void sleep_ns(uint64_t ns)
-+{
-+	struct timespec ts = { .tv_sec = ns / NSEC_PER_SEC, .tv_nsec = ns % NSEC_PER_SEC };
-+
-+	while (nanosleep(&ts, &ts) && errno == EINTR)
-+		;
-+}
-+
-+static void reap(pid_t pid)
-+{
-+	int status;
-+
-+	if (pid <= 0)
-+		return;
-+	if (kill(pid, SIGKILL) && errno != ESRCH)
-+		ksft_print_msg("kill %d: %s\n", pid, strerror(errno));
-+	/* Ignore the result: the task may be dead already. */
-+	set_other(pid);
-+	while (waitpid(pid, &status, 0) != pid) {
-+		if (errno == EINTR)
-+			continue;
-+		ksft_print_msg("waitpid %d: %s\n", pid, strerror(errno));
-+		break;
++	if (base < 22) {
++		ksft_print_msg("needs room for 22 probe tasks\n");
++		return KSFT_SKIP;
 +	}
-+}
-+
-+static int write_file(const char *dir, const char *name, const char *val)
-+{
-+	char path[PATH_MAX];
-+	int fd, err = 0;
-+	ssize_t n;
-+
-+	if (snprintf(path, sizeof(path), "%s/%s", dir, name) >= (int)sizeof(path))
-+		return -ENAMETOOLONG;
-+	fd = open(path, O_WRONLY);
-+	if (fd < 0)
-+		return -errno;
-+	n = write(fd, val, strlen(val));
-+	if (n < 0)
-+		err = -errno;
-+	else if (n != (ssize_t)strlen(val))
-+		err = -EIO;
-+	if (close(fd) && !err)
-+		err = -errno;
-+	return err;
-+}
-+
-+static int read_file(const char *path, char *buf, size_t len)
-+{
-+	int fd = open(path, O_RDONLY);
-+	ssize_t n;
-+
-+	if (fd < 0)
-+		return -1;
-+	do {
-+		n = read(fd, buf, len - 1);
-+	} while (n < 0 && errno == EINTR);
-+	close(fd);
-+	if (n < 0)
-+		return -1;
-+	buf[n] = 0;
-+	return 0;
-+}
-+
-+static int enter(const char *cg, pid_t pid)
-+{
-+	char buf[16];
-+
-+	snprintf(buf, sizeof(buf), "%d", pid);
-+	return write_file(cg, "cgroup.procs", buf);
-+}
-+
-+/* Make @cg a partition root of CPU @cpu alone. Return 0, or -1 on error. */
-+static int make_partition(const char *cg, int cpu)
-+{
-+	char path[PATH_MAX + 32], buf[32];
-+
-+	if (mkdir(cg, 0755) && errno != EEXIST)
-+		return -1;
-+	snprintf(buf, sizeof(buf), "%d", cpu);
-+	if (write_file(cg, "cpuset.cpus", buf) || write_file(cg, "cpuset.cpus.partition", "root"))
-+		return -1;
-+	snprintf(path, sizeof(path), "%s/cpuset.cpus.partition", cg);
-+	if (read_file(path, buf, sizeof(buf)) || strcmp(buf, "root\n"))
-+		return -1;
-+	return 0;
-+}
-+
-+static void remove_partition(const char *cg)
-+{
-+	int err = write_file(cg, "cpuset.cpus.partition", "member");
-+	uint64_t end;
-+
-+	if (err && err != -ENOENT)
-+		ksft_print_msg("%s back to a member: %s\n", cg, strerror(-err));
-+	/* A cgroup whose last task just died takes a moment to empty. */
-+	end = now_ns() + NSEC_PER_SEC;
-+	while (rmdir(cg)) {
-+		if (errno == ENOENT)
-+			return;
-+		if (errno != EBUSY || now_ns() > end) {
-+			ksft_print_msg("rmdir %s: %s\n", cg, strerror(errno));
-+			return;
++	for (i = 0; i < 4; i++) {
++		mv_state[0] = 0;
++		pid[i] = mover(MV_ASLEEP, 30 * NSEC_PER_MSEC);
++		if (pid[i] < 0 || child_up("a deadline sleeper", 0)) {
++			while (i >= 0)
++				reap(pid[i--]);
++			return KSFT_FAIL;
 +		}
-+		sleep_ns(10 * NSEC_PER_MSEC);
 +	}
++	if (cpu_online(hp_cpu, 0) || cpu_online(hp_cpu, 1)) {
++		ksft_print_msg("offline and online of CPU %d with deadline sleepers failed\n",
++			       hp_cpu);
++		ret = KSFT_FAIL;
++		cpu_up(hp_cpu);
++	}
++	for (i = 0; i < 4; i++)
++		reap(pid[i]);
++	sleep_ns(3 * PERIOD);
++	after = probe(NULL);
++	if (ret == KSFT_PASS && after != base) {
++		ksft_print_msg("hotplug with sleepers: %d probe tasks admitted before, %d after\n",
++			       base, after);
++		ret = KSFT_FAIL;
++	}
++	return ret;
 +}
 +
 +/*
-+ * Return the CPU time of the calling thread in ns. clock_gettime() cannot
-+ * fail: the clock is always supported, and the pointer is valid.
++ * Fork a task that runs on @cpu, then restores its affinity, becomes a
++ * deadline task of 30% and sleeps. A deadline task cannot have an
++ * affinity of one CPU, so the task goes to @cpu first. It sets
++ * mv_state[0] as mover() does. Return its pid, or -1.
 + */
-+static uint64_t cpu_time_ns(void)
++static pid_t sleeper_on(int cpu)
 +{
-+	struct timespec ts;
++	pid_t pid = fork_child("a deadline sleeper");
 +
-+	clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
-+	return ts.tv_sec * NSEC_PER_SEC + ts.tv_nsec;
-+}
-+
-+enum depart { DIES, SWITCHED_OUT };
-+
-+/* Kill the calling child if the test exits, so that no deadline task stays. */
-+static void die_with_parent(void)
-+{
-+	if (prctl(PR_SET_PDEATHSIG, SIGKILL) || getppid() != test_pid)
-+		_exit(1);
-+}
-+
-+/*
-+ * Fork a child that enters @cg, if given, then SCHED_DEADLINE at 400ms
-+ * every second. The child runs 380ms of its runtime. Then it dies if @how
-+ * is DIES. Otherwise it switches to SCHED_OTHER, writes a byte to @fd and
-+ * sleeps. Its 0-lag time is then about 570ms ahead. Return the pid of the
-+ * child, or -1. Only the read end of @fd stays open in the caller.
-+ */
-+static pid_t departing(const char *cg, enum depart how, int fd[2])
-+{
-+	pid_t pid = fork();
-+
-+	if (pid < 0)
-+		ksft_print_msg("fork: %s\n", strerror(errno));
 +	if (!pid) {
-+		uint64_t t0;
++		cpu_set_t all, one;
 +
-+		die_with_parent();
-+		close(fd[0]);
-+		if (cg && enter(cg, getpid()))
-+			_exit(2);
-+		if (set_deadline(0, 400 * NSEC_PER_MSEC))
-+			_exit(3);
-+		t0 = cpu_time_ns();
-+		while (cpu_time_ns() - t0 < 380 * NSEC_PER_MSEC)
-+			;
-+		if (how == DIES)
-+			_exit(0);
-+		if (set_other(0) || write(fd[1], "x", 1) != 1)
-+			_exit(4);
-+		for (;;)
-+			pause();
-+	}
-+	close(fd[1]);
-+	fd[1] = -1;
-+	return pid;
-+}
-+
-+/*
-+ * Wait until the child is out of SCHED_DEADLINE: dead or switched out.
-+ * Return 0 on success. If the child failed, return its exit status, or
-+ * -1. Set *@pid to -1 once the child is reaped.
-+ */
-+static int departed(pid_t *pid, enum depart how, int fd)
-+{
-+	int status;
-+	char c;
-+
-+	if (*pid < 0)
-+		return -1;
-+	/*
-+	 * A child that switches out sends a byte. Without the byte, the
-+	 * child died or failed, and its exit status tells which.
-+	 */
-+	if (how == SWITCHED_OUT) {
-+		ssize_t n;
-+
-+		do {
-+			n = read(fd, &c, 1);
-+		} while (n < 0 && errno == EINTR);
-+		if (n == 1)
-+			return 0;
-+	}
-+	if (waitpid(*pid, &status, 0) != *pid)
-+		return -1;
-+	*pid = -1;
-+	return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
-+}
-+
-+/*
-+ * Fork a child that enters @cg and sleeps there. The child moves itself,
-+ * so that it last ran on a CPU of @cg. Wait until it is there. Return its
-+ * pid, or -1.
-+ */
-+static pid_t sleeper(const char *cg)
-+{
-+	int fd[2];
-+	pid_t pid;
-+	char c;
-+
-+	if (pipe(fd))
-+		return -1;
-+	pid = fork();
-+	if (pid < 0)
-+		ksft_print_msg("fork: %s\n", strerror(errno));
-+	if (!pid) {
-+		die_with_parent();
-+		close(fd[0]);
-+		if (enter(cg, getpid()) || write(fd[1], "x", 1) != 1)
++		CPU_ZERO(&one);
++		CPU_SET(cpu, &one);
++		if (sched_getaffinity(0, sizeof(all), &all) ||
++		    sched_setaffinity(0, sizeof(one), &one))
 +			_exit(1);
++		spin_ns(NSEC_PER_MSEC);
++		if (sched_setaffinity(0, sizeof(all), &all) ||
++		    set_deadline(0, 30 * NSEC_PER_MSEC, PERIOD)) {
++			mv_state[0] = -1;
++			_exit(1);
++		}
++		mv_state[0] = 1;
 +		for (;;)
 +			pause();
 +	}
-+	close(fd[1]);
-+	if (pid > 0 && read(fd[0], &c, 1) != 1) {
-+		reap(pid);
-+		pid = -1;
-+	}
-+	close(fd[0]);
 +	return pid;
 +}
 +
 +/*
-+ * Check that P admits one task of 600ms every second, but not two. The
-+ * caller must wait until every inactive timer has fired.
++ * A deadline task of 30% sleeps on hp_cpu. Take hp_cpu offline, then
++ * switch the task to SCHED_OTHER. hp_cpu has left the housekeeping root
++ * domain by then, but that root domain still counts the task. The switch
++ * must release the bandwidth there.
++ *
++ * Check this with hp_cpu still offline: bringing it back rebuilds the
++ * accounting, which would hide a bandwidth left behind. The reference is
++ * what the housekeeping root domain admits with hp_cpu offline and no
++ * task. Once the CPU is back and the task is gone, that root domain must
++ * also admit what it did at first.
 + */
-+static int check_p(void)
++static int hotplug_sleeper_switched(void)
 +{
-+	pid_t a = sleeper(cg_p), b = sleeper(cg_p);
-+	int ret = KSFT_FAIL, e1, e2;
++	int base = probe(NULL), base_off, after, cpu, ret = KSFT_PASS;
++	pid_t pid;
 +
-+	if (a < 0 || b < 0) {
-+		ksft_print_msg("no task could enter P\n");
-+		goto out;
++	if (cpu_online(hp_cpu, 0)) {
++		ksft_print_msg("CPU %d cannot go offline\n", hp_cpu);
++		cpu_up(hp_cpu);
++		return KSFT_SKIP;
 +	}
-+	e1 = set_deadline(a, 600 * NSEC_PER_MSEC);
-+	e2 = set_deadline(b, 600 * NSEC_PER_MSEC);
-+	if (e1)
-+		ksft_print_msg("a first task refused in P: %s\n", strerror(-e1));
-+	else if (!e2)
-+		ksft_print_msg("1.2 CPUs of deadline tasks admitted in a partition of one CPU\n");
-+	else if (e2 != -EBUSY)
-+		ksft_print_msg("the second task refused with %s, not EBUSY\n", strerror(-e2));
-+	else
-+		ret = KSFT_PASS;
-+out:
-+	reap(a);
-+	reap(b);
++	base_off = probe(NULL);
++	cpu_up(hp_cpu);
++	mv_state[0] = 0;
++	pid = sleeper_on(hp_cpu);
++	if (pid < 0 || child_up("a deadline sleeper", 0)) {
++		reap(pid);
++		return KSFT_FAIL;
++	}
++	sleep_ns(PERIOD);
++	cpu = task_cpu_of(pid);
++	if (cpu != hp_cpu) {
++		ksft_print_msg("the sleeper is on CPU %d, not on CPU %d\n", cpu, hp_cpu);
++		reap(pid);
++		return KSFT_SKIP;
++	}
++	if (cpu_online(hp_cpu, 0)) {
++		ksft_print_msg("CPU %d cannot go offline under a deadline sleeper\n", hp_cpu);
++		ret = KSFT_FAIL;
++	} else if (set_other(pid)) {
++		ksft_print_msg("the sleeper cannot leave SCHED_DEADLINE\n");
++		ret = KSFT_FAIL;
++	} else {
++		sleep_ns(3 * PERIOD);
++		after = probe(NULL);
++		if (after != base_off) {
++			ksft_print_msg("a sleeper switched out, its CPU still offline: %d probe tasks admitted, %d expected\n",
++				       after, base_off);
++			ret = KSFT_FAIL;
++		}
++	}
++	cpu_up(hp_cpu);
++	reap(pid);
++	sleep_ns(3 * PERIOD);
++	after = probe(NULL);
++	if (ret == KSFT_PASS && after != base) {
++		ksft_print_msg("a sleeper switched out on an offline CPU: %d probe tasks admitted before, %d after\n",
++			       base, after);
++		ret = KSFT_FAIL;
++	}
 +	return ret;
 +}
 +
 +/*
-+ * Have a task of P die or switch out, as @how says. Make Q before its
-+ * 0-lag time, then check P.
++ * Turn admission control off (sched_rt_runtime_us = -1). A task pins
++ * itself to hp_cpu, becomes a deadline task of 50% and spins. Without
++ * admission control, a deadline task can have an affinity of one CPU.
++ * Take hp_cpu offline: the mask of the task holds no active CPU. The
++ * task must go on running on another CPU. Once the CPU is back, the task
++ * is gone and admission control is on again, the housekeeping root domain
++ * must admit what it did before.
 + */
-+static int test_rebuild(enum depart how)
++static int hotplug_no_admission_pinned(void)
 +{
-+	int ret = KSFT_FAIL, fd[2], err, ran = 0;
-+	pid_t pid = -1;
++	int base = probe(NULL), after, ret = KSFT_PASS, last;
++	char saved[64];
++	pid_t pid;
 +
-+	if (pipe(fd))
-+		return KSFT_FAIL;
-+	if (make_partition(cg_p, cpu_p)) {
-+		ksft_print_msg("no partition root on CPU %d\n", cpu_p);
-+		ret = KSFT_SKIP;
++	if (read_file("/proc/sys/kernel/sched_rt_runtime_us", saved, sizeof(saved)) ||
++	    write_file("/proc/sys/kernel", "sched_rt_runtime_us", "-1")) {
++		ksft_print_msg("admission control cannot be turned off\n");
++		return KSFT_SKIP;
++	}
++	mv_state[0] = 0;
++	mv_state[1] = 0;
++	pid = fork_child("a pinned deadline task");
++	if (!pid) {
++		cpu_set_t one;
++
++		CPU_ZERO(&one);
++		CPU_SET(hp_cpu, &one);
++		if (sched_setaffinity(0, sizeof(one), &one) ||
++		    set_deadline(0, 50 * NSEC_PER_MSEC, PERIOD)) {
++			mv_state[0] = -1;
++			_exit(1);
++		}
++		mv_state[0] = 1;
++		for (;;)
++			mv_state[1]++;
++	}
++	if (pid < 0 || child_up("a pinned deadline task", 0)) {
++		ret = KSFT_FAIL;
 +		goto out;
 +	}
-+	pid = departing(cg_p, how, fd);
-+	err = departed(&pid, how, fd[0]);
-+	if (err) {
-+		ksft_print_msg("the deadline task failed (%d)\n", err);
++	sleep_ns(PERIOD);
++	if (cpu_online(hp_cpu, 0)) {
++		ksft_print_msg("CPU %d cannot go offline under a pinned deadline task\n", hp_cpu);
++		ret = KSFT_FAIL;
 +		goto out;
 +	}
-+	ran = 1;
-+	if (make_partition(cg_q, cpu_q)) {
-+		ksft_print_msg("no partition root on CPU %d\n", cpu_q);
-+		ret = KSFT_SKIP;
-+		goto out;
++	last = mv_state[1];
++	sleep_ns(3 * PERIOD);
++	if (mv_state[1] == last) {
++		ksft_print_msg("the pinned task does not run after its CPU went offline\n");
++		ret = KSFT_FAIL;
 +	}
-+	/*
-+	 * Wait past the 0-lag time. In the SWITCHED_OUT case the task is still
-+	 * alive then: it sleeps in P as a SCHED_OTHER task.
-+	 */
-+	sleep_ns(1500 * NSEC_PER_MSEC);
-+	ran = 0;
-+	ret = check_p();
 +out:
++	cpu_up(hp_cpu);
 +	reap(pid);
-+	/* Let the next case start after the 0-lag time of the task. */
-+	if (ran)
-+		sleep_ns(1500 * NSEC_PER_MSEC);
++	if (write_file("/proc/sys/kernel", "sched_rt_runtime_us", saved)) {
++		ksft_print_msg("admission control cannot be turned on again\n");
++		return KSFT_FAIL;
++	}
++	sleep_ns(3 * PERIOD);
++	after = probe(NULL);
++	if (ret == KSFT_PASS && after != base) {
++		ksft_print_msg("a pinned task without admission control: %d probe tasks admitted before, %d after\n",
++			       base, after);
++		ret = KSFT_FAIL;
++	}
++	return ret;
++}
++
+ /*
+  * Deadline sleepers take most of the free bandwidth. Taking hp_cpu
+  * offline must then fail with EBUSY. Once the sleepers are gone, the
+@@ -4638,6 +4851,303 @@ static int hotplug_refused(void)
+ 	return ret;
+ }
+ 
++/*
++ * A deadline task of 40% spins. The case switches it to SCHED_OTHER
++ * before its 0-lag time. Then it takes the CPU that the task is on
++ * offline, before that time too. Past the 0-lag time, with the CPU still
++ * offline, the housekeeping root domain must admit what it admits with a
++ * CPU offline and no task. Once the CPU is back and the task is gone, it
++ * must admit what it did at the start.
++ */
++static int hotplug_departed(void)
++{
++	int base = probe(NULL), base_off, after, cpu, ret = KSFT_PASS;
++	pid_t pid;
++
++	/*
++	 * Take the reference with hp_cpu offline and no task of ours. The
++	 * task may be on another CPU: the case assumes that any one CPU
++	 * offline leaves the same room. The case compares while that CPU
++	 * is still offline. Bringing it back rebuilds the accounting,
++	 * which would hide an error.
++	 */
++	if (cpu_online(hp_cpu, 0)) {
++		ksft_print_msg("offline of CPU %d refused\n", hp_cpu);
++		return KSFT_FAIL;
++	}
++	base_off = probe(NULL);
++	cpu_up(hp_cpu);
++	if (base <= 0 || base_off <= 0) {
++		ksft_print_msg("no room to probe with the CPU online or offline\n");
++		return KSFT_SKIP;
++	}
++	mv_state[0] = 0;
++	mv_state[1] = 0;
++	pid = mover(MV_THROTTLED, 40 * NSEC_PER_MSEC);
++	if (pid < 0 || child_up("a departing deadline task", 0)) {
++		reap(pid);
++		return KSFT_FAIL;
++	}
++	sleep_ns(PERIOD / 2);
++	/* Not asleep: its bandwidth stays until its 0-lag time. */
++	if (set_other(pid))
++		ret = KSFT_FAIL;
++	cpu = task_cpu_of(pid);
++	if (cpu < 0 || !cpu_hotpluggable(cpu)) {
++		cpu_set_t set;
++
++		/* Out of the class now, it may be pinned to hp_cpu. */
++		cpu = hp_cpu;
++		CPU_ZERO(&set);
++		CPU_SET(cpu, &set);
++		if (sched_setaffinity(pid, sizeof(set), &set))
++			ret = KSFT_FAIL;
++	}
++	if (ret == KSFT_PASS && cpu_online(cpu, 0)) {
++		ksft_print_msg("offline of CPU %d refused\n", cpu);
++		ret = KSFT_FAIL;
++	}
++	sleep_ns(3 * PERIOD);		/* its 0-lag time, the CPU offline */
++	if (ret == KSFT_PASS) {
++		after = probe(NULL);
++		if (after != base_off) {
++			ksft_print_msg("departed, CPU %d offline: %d admitted, %d expected\n",
++				       cpu, after, base_off);
++			ret = KSFT_FAIL;
++		}
++	}
++	cpu_up(cpu);
++	reap(pid);
++	sleep_ns(3 * PERIOD);
++	after = probe(NULL);
++	if (ret == KSFT_PASS && after != base) {
++		ksft_print_msg("departed, CPU back online: %d admitted before, %d after\n",
++			       base, after);
++		ret = KSFT_FAIL;
++	}
++	return ret;
++}
++
++#define ZOMBIE_RUNTIME	(200 * NSEC_PER_MSEC)
++#define ZOMBIE_PERIOD	(2 * NSEC_PER_SEC)
++
++/*
++ * Q is a partition root of two CPUs. The kernel records, with the
++ * bandwidth of a task, a CPU of the root domain that counts it. The steps:
++ * 1. A task enters Q and becomes a deadline task of 200ms every 2s.
++ * 2. It runs 190ms and exits, its 0-lag time about 1.7s ahead. The case
++ *    does not reap it yet. A rebuild of the accounting still finds a
++ *    zombie in the task list.
++ * 3. total_bw of Q must count the zombie.
++ * 4. The case takes each CPU of Q offline and back, one after the other.
++ *    One of them is the CPU recorded with the bandwidth of the zombie.
++ *    The rebuild at its offline drops that bandwidth.
++ * 5. Before the 0-lag time, total_bw of Q must be what it was without
++ *    the task. No later rebuild may count the zombie again: the release
++ *    at the 0-lag time removes nothing by then.
++ * 6. The case reaps the zombie. Past the 0-lag time, total_bw of Q must
++ *    still be that value.
++ *
++ * The case runs with the cases in P, from the main process: Q needs the
++ * cpuset controller. Q has two CPUs because the last CPU of a root domain
++ * that holds deadline bandwidth cannot go offline.
++ */
++static int death_zombie_hotplug(void)
++{
++	int cpu[2] = { top_cpu(3), top_cpu(2) }, i, ret = KSFT_PASS;
++	long long base, bw, held, after;
++	char cpus[32];
++	uint64_t t;
++	pid_t pid;
++
++	if (ncpus < 4 || !cpu_hotpluggable(cpu[0]) || !cpu_hotpluggable(cpu[1])) {
++		ksft_print_msg("needs 4 non-isolated CPUs, 2 hotpluggable beside P\n");
++		return KSFT_SKIP;
++	}
++	snprintf(cpus, sizeof(cpus), "%d,%d", cpu[0], cpu[1]);
++	if (make_partition_cpus(cg_q, cpus)) {
++		ksft_print_msg("no partition root Q of CPUs %s\n", cpus);
++		remove_partition(cg_q);
++		return KSFT_SKIP;
++	}
++	base = total_bw_of(cpu[0]);
++	if (base < 0) {
++		ksft_print_msg("no total_bw in /sys/kernel/debug/sched/debug\n");
++		remove_partition(cg_q);
++		return KSFT_SKIP;
++	}
++	bw = (ZOMBIE_RUNTIME << 20) / ZOMBIE_PERIOD;	/* as to_ratio() */
++	mv_state[0] = 0;
++	pid = fork_child("a deadline task that exits");
++	if (!pid) {
++		if (enter(cg_q, getpid()) || set_deadline(0, ZOMBIE_RUNTIME, ZOMBIE_PERIOD))
++			_exit(1);
++		/* 10ms left: the 0-lag time is 100ms before the deadline. */
++		spin_ns(ZOMBIE_RUNTIME - 10 * NSEC_PER_MSEC);
++		mv_state[0] = 1;
++		_exit(0);
++	}
++	if (pid < 0 || child_up("a task of Q that exits", 0) ||
++	    wait_for(1000, proc_state_of(pid) == 'Z')) {
++		ksft_print_msg("no zombie deadline task\n");
++		reap(pid);
++		remove_partition(cg_q);
++		return KSFT_FAIL;
++	}
++	/* Its 0-lag time is about 1.7s ahead. Check total_bw within 1s. */
++	t = now_ns();
++	held = total_bw_of(cpu[0]);
++	if (held != base + bw) {
++		ksft_print_msg("total_bw of Q: %lld with the zombie, %lld expected\n",
++			       held, base + bw);
++		ret = KSFT_FAIL;
++	}
++	for (i = 0; i < 2 && ret == KSFT_PASS; i++) {
++		if (cpu_online(cpu[i], 0) || cpu_online(cpu[i], 1)) {
++			ksft_print_msg("offline and online of CPU %d failed\n", cpu[i]);
++			cpu_up(cpu[i]);
++			ret = KSFT_FAIL;
++		}
++	}
++	after = total_bw_of(cpu[0]);
++	if (ret == KSFT_PASS && now_ns() - t > NSEC_PER_SEC) {
++		ksft_print_msg("the hotplugs took over 1s: the 0-lag time may be past\n");
++		ret = KSFT_SKIP;
++	} else if (ret == KSFT_PASS && after != base) {
++		ksft_print_msg("total_bw of Q after the hotplugs: %lld, %lld expected%s\n",
++			       after, base,
++			       after == base + bw ? ": the zombie counted again" : "");
++		ret = KSFT_FAIL;
++	}
++	reap(pid);
++	sleep_ns(ZOMBIE_PERIOD);		/* past its 0-lag time */
++	after = total_bw_of(cpu[0]);
++	if (ret == KSFT_PASS && after != base) {
++		ksft_print_msg("total_bw of Q past the 0-lag time: %lld, %lld expected\n",
++			       after, base);
++		ret = KSFT_FAIL;
++	}
 +	remove_partition(cg_q);
-+	remove_partition(cg_p);
-+	close(fd[0]);
-+	if (fd[1] >= 0)
-+		close(fd[1]);
 +	return ret;
 +}
 +
 +/*
-+ * Have a task outside P switch to SCHED_OTHER and sleep. Before its 0-lag
-+ * time, move it into P and kill it. Then check P.
++ * Fork the owner of pi_departed_moved(). It takes shm_lock, becomes a
++ * deadline task and runs most of its runtime. It sets mv_state[0] to 1
++ * and sleeps 300ms. Then it sets mv_state[1] to 1 and sleeps with the
++ * lock. Return its pid, or -1.
 + */
-+static int test_move(void)
++static pid_t departed_owner(void)
 +{
-+	int ret = KSFT_FAIL, fd[2], err, ran = 0;
-+	pid_t pid = -1;
++	pid_t pid = fork_child("the owner of the lock");
 +
-+	if (pipe(fd))
++	if (!pid) {
++		if (pthread_mutex_lock(shm_lock) ||
++		    set_deadline(0, ZOMBIE_RUNTIME, ZOMBIE_PERIOD)) {
++			mv_state[0] = -1;
++			_exit(1);
++		}
++		/* 20ms left: the 0-lag time is 200ms before the deadline. */
++		spin_ns(ZOMBIE_RUNTIME - 20 * NSEC_PER_MSEC);
++		mv_state[0] = 1;
++		sleep_ns(300 * NSEC_PER_MSEC);
++		mv_state[1] = 1;
++		for (;;)
++			pause();
++	}
++	return pid;
++}
++
++/*
++ * The owner is a deadline task of 200ms every 2s, outside P. It holds
++ * shm_lock, runs 180ms and sleeps, its 0-lag time about 1.6s ahead. The
++ * steps:
++ * 1. The case switches the sleeping owner to SCHED_OTHER. The
++ *    housekeeping root domain keeps its bandwidth until the 0-lag time.
++ * 2. The case moves the owner into P. The owner wakes up and runs there.
++ * 3. A deadline waiter of 5ms every 50ms, outside P, blocks on shm_lock
++ *    and boosts the owner.
++ * 4. The case kills the waiter, which ends the boost.
++ *
++ * After step 4, total_bw of the housekeeping root domain must still count
++ * the bandwidth of the owner. total_bw of P never counted it and must be
++ * unchanged: the end of the boost must not subtract it there. Past the
++ * 0-lag time, both must be what they were at the start.
++ */
++static int pi_departed_moved(void)
++{
++	int p_cpu = top_cpu(1), r_cpu = online[0], ret = KSFT_PASS;
++	long long base_p, base_r, bw, in_p, in_r;
++	pid_t owner, waiter = -1;
++
++	base_p = total_bw_of(p_cpu);
++	base_r = total_bw_of(r_cpu);
++	if (base_p < 0 || base_r < 0) {
++		ksft_print_msg("no total_bw in /sys/kernel/debug/sched/debug\n");
++		return KSFT_SKIP;
++	}
++	if (shm_lock_init())
++		return KSFT_SKIP;
++	bw = (ZOMBIE_RUNTIME << 20) / ZOMBIE_PERIOD;	/* as to_ratio() */
++	mv_state[1] = 0;
++	owner = departed_owner();
++	if (owner < 0)
 +		return KSFT_FAIL;
-+	if (make_partition(cg_p, cpu_p)) {
-+		ksft_print_msg("no partition root on CPU %d\n", cpu_p);
-+		ret = KSFT_SKIP;
++	if (child_up("the owner of the lock", 0)) {
++		reap(owner);
++		return KSFT_FAIL;
++	}
++	/* The owner is asleep, about 1.6s before its 0-lag time. */
++	sleep_ns(20 * NSEC_PER_MSEC);
++	if (set_other(owner) || enter(cg_p, owner)) {
++		ksft_print_msg("the owner cannot leave the class and enter P\n");
++		ret = KSFT_FAIL;
 +		goto out;
 +	}
-+	pid = departing(NULL, SWITCHED_OUT, fd);
-+	err = departed(&pid, SWITCHED_OUT, fd[0]);
-+	if (err) {
-+		ksft_print_msg("the deadline task failed (%d)\n", err);
++	if (wait_state(&mv_state[1], 1) || task_cpu_of(owner) != p_cpu) {
++		ksft_print_msg("the owner did not run in P\n");
++		ret = KSFT_FAIL;
 +		goto out;
 +	}
-+	ran = 1;
-+	if (enter(cg_p, pid)) {
-+		ksft_print_msg("the task cannot move into P\n");
++	waiter = lock_waiter();
++	if (waiter < 0) {
++		ret = KSFT_FAIL;
 +		goto out;
 +	}
-+	/* The task wakes up and dies on P's CPU, before its 0-lag time. */
-+	reap(pid);
-+	pid = -1;
-+	sleep_ns(1500 * NSEC_PER_MSEC);
-+	ran = 0;
-+	ret = check_p();
++	if (wait_state(&mv_state[2], 1)) {
++		ksft_print_msg("no waiter\n");
++		ret = KSFT_FAIL;
++		goto out;
++	}
++	sleep_ns(50 * NSEC_PER_MSEC);	/* blocked, boosting the owner */
++	reap(waiter);
++	waiter = -1;
++	sleep_ns(150 * NSEC_PER_MSEC);	/* the waiter is past its 0-lag time */
++	in_p = total_bw_of(p_cpu);
++	in_r = total_bw_of(r_cpu);
++	if (in_p != base_p || in_r != base_r + bw) {
++		ksft_print_msg("after the boost: total_bw of P %lld, %lld expected\n",
++			       in_p, base_p);
++		ksft_print_msg("after the boost: total_bw outside %lld, %lld expected\n",
++			       in_r, base_r + bw);
++		ret = KSFT_FAIL;
++	}
 +out:
-+	reap(pid);
-+	/* Let the next case start after the 0-lag time of the task. */
-+	if (ran)
-+		sleep_ns(1500 * NSEC_PER_MSEC);
-+	remove_partition(cg_p);
-+	close(fd[0]);
-+	if (fd[1] >= 0)
-+		close(fd[1]);
++	reap(waiter);
++	reap(owner);
++	sleep_ns(ZOMBIE_PERIOD);	/* past the owner's 0-lag time */
++	in_p = total_bw_of(p_cpu);
++	in_r = total_bw_of(r_cpu);
++	if (ret == KSFT_PASS && (in_p != base_p || in_r != base_r)) {
++		ksft_print_msg("past the 0-lag time: total_bw of P %lld, %lld expected\n",
++			       in_p, base_p);
++		ksft_print_msg("past the 0-lag time: total_bw outside %lld, %lld expected\n",
++			       in_r, base_r);
++		ret = KSFT_FAIL;
++	}
 +	return ret;
 +}
 +
-+/*
-+ * Mark in @set the CPUs of @list. The list has the sysfs form "0-2,5".
-+ * @set has room for @n CPUs.
-+ */
-+static void parse_cpulist(const char *list, char *set, int n)
-+{
-+	const char *s = list;
-+	char *end;
-+	long a, b;
-+
-+	while (*s && *s != '\n') {
-+		a = strtol(s, &end, 10);
-+		if (end == s)
-+			return;
-+		b = a;
-+		s = end;
-+		if (*s == '-') {
-+			b = strtol(s + 1, &end, 10);
-+			s = end;
-+		}
-+		for (; a <= b && a < n; a++)
-+			if (a >= 0)
-+				set[a] = 1;
-+		if (*s == ',')
-+			s++;
-+	}
-+}
-+
-+/* The online CPUs that are not isolated */
-+static cpu_set_t hk_set;
+ /*
+  * The bandwidth of a fair server must leave the root domain with its CPU
+  * and come back with it, whatever its size. Probe the housekeeping root
+@@ -4743,6 +5253,134 @@ static void report(const char *name, int ret)
+ 		ksft_test_result_fail("%s\n", name);
+ }
+ 
++/* sched_setaffinity() against sched_setattr(), with no P */
 +
 +/*
-+ * Pick the two highest online CPUs that are not isolated, for P and Q.
-+ * Put every online CPU that is not isolated in hk_set. Return the
-+ * number of such CPUs.
++ * The state that affinity_racer() shares with the case. pid and one are
++ * its target and its mask. go and done count the rounds. ret is the
++ * result of its last call.
 + */
-+static int pick_cpus(void)
-+{
-+	static char online[CPU_SETSIZE], isol[CPU_SETSIZE];
-+	char buf[4096];
-+	int cpu, n = 0;
++static struct {
++	pid_t pid;
++	cpu_set_t one;
++	atomic_int go;
++	atomic_int done;
++	atomic_int stop;
++	int ret;
++} aff;
 +
-+	if (read_file("/sys/devices/system/cpu/online", buf, sizeof(buf)))
-+		return 0;
-+	parse_cpulist(buf, online, CPU_SETSIZE);
-+	if (!read_file("/sys/devices/system/cpu/isolated", buf, sizeof(buf)))
-+		parse_cpulist(buf, isol, CPU_SETSIZE);
-+	cpu_p = cpu_q = -1;
-+	CPU_ZERO(&hk_set);
-+	for (cpu = CPU_SETSIZE - 1; cpu >= 0; cpu--) {
-+		if (!online[cpu] || isol[cpu])
-+			continue;
-+		CPU_SET(cpu, &hk_set);
-+		if (cpu_p < 0)
-+			cpu_p = cpu;
-+		else if (cpu_q < 0)
-+			cpu_q = cpu;
-+		n++;
++/*
++ * Give aff.pid the affinity aff.one, once for each new value of aff.go.
++ * Return when aff.stop is set.
++ */
++static void *affinity_racer(void *arg)
++{
++	int round;
++
++	for (round = 1; ; round++) {
++		while (aff.go < round && !aff.stop)
++			;
++		if (aff.stop)
++			break;
++		aff.ret = sched_setaffinity(aff.pid, sizeof(aff.one), &aff.one) ? -errno : 0;
++		aff.done = round;
 +	}
-+	return n;
++	return arg;
 +}
 +
-+static int find_cgroup2(void)
++/*
++ * Race sched_setaffinity() against sched_setattr() on a sleeping task.
++ * One thread gives the task an affinity of one CPU. Another one makes it
++ * a deadline task. A deadline task must be allowed on its whole root
++ * domain, so at most one of the two calls may succeed:
++ * - sched_setattr() fails with EPERM if the affinity came first;
++ * - sched_setaffinity() fails with EBUSY if the policy came first.
++ *
++ * Do it 1000 times. Each round starts with the task back in SCHED_OTHER
++ * with its full affinity. Once the task is gone, the free bandwidth must
++ * be what it was. The case needs no cpuset: it runs without P, with the
++ * hotplug cases.
++ */
++static int affinity_vs_setattr(void)
 +{
-+	char line[PATH_MAX + 64], dev[64], dir[PATH_MAX], type[64];
-+	FILE *f = fopen("/proc/self/mounts", "r");
-+	int found = 0;
++	const char *name = "affinity_vs_setattr";
++	int base, i, cpu, both = 0, ret = KSFT_PASS;
++	cpu_set_t all;
++	pthread_t t;
++	pid_t pid;
 +
-+	while (f && !found && fgets(line, sizeof(line), f)) {
-+		if (sscanf(line, "%63s %4095s %63s", dev, dir, type) == 3 &&
-+		    !strcmp(type, "cgroup2")) {
-+			snprintf(root, sizeof(root), "%s", dir);
-+			found = 1;
++	base = probe(NULL);
++	pid = fork_child(name);
++	if (!pid) {
++		for (;;)
++			pause();
++	}
++	if (pid < 0)
++		return KSFT_FAIL;
++	/*
++	 * Wait until the task sleeps in pause(). A task that still runs
++	 * when it becomes a deadline task can overrun its 2us. Its
++	 * bandwidth then stays counted until its 0-lag time, seconds after
++	 * it is gone, and the next cases would see it.
++	 */
++	if (wait_for(1000, proc_state_of(pid) == 'S') ||
++	    sched_getaffinity(pid, sizeof(all), &all)) {
++		reap(pid);
++		return KSFT_FAIL;
++	}
++	CPU_ZERO(&aff.one);
++	for (cpu = 0; cpu < CPU_SETSIZE; cpu++) {
++		if (CPU_ISSET(cpu, &all)) {
++			CPU_SET(cpu, &aff.one);
++			break;
 +		}
 +	}
-+	if (f)
-+		fclose(f);
-+	return found ? 0 : -1;
++	aff.pid = pid;
++	aff.go = 0;
++	aff.done = 0;
++	aff.stop = 0;
++	if (pthread_create(&t, NULL, affinity_racer, NULL)) {
++		reap(pid);
++		return KSFT_FAIL;
++	}
++
++	for (i = 1; i <= 1000 && ret == KSFT_PASS; i++) {
++		int err;
++
++		if (set_other(pid) || sched_setaffinity(pid, sizeof(all), &all)) {
++			ksft_print_msg("%s: the task cannot be reset: %s\n", name, strerror(errno));
++			ret = KSFT_FAIL;
++			break;
++		}
++		aff.go = i;
++		err = set_deadline(pid, 2 * NSEC_PER_USEC, PERIOD);
++		while (aff.done < i)
++			;
++		if (!err && !aff.ret) {
++			both++;
++		} else if ((err && err != -EPERM) || (aff.ret && aff.ret != -EBUSY)) {
++			ksft_print_msg("%s: round %d: sched_setattr: %s, sched_setaffinity: %s\n",
++				       name, i, strerror(-err), strerror(-aff.ret));
++			ret = KSFT_FAIL;
++		}
++	}
++	aff.stop = 1;
++	join(t);
++	if (both) {
++		ksft_print_msg("%s: %d rounds of %d: a deadline task with an affinity of one CPU\n",
++			       name, both, i - 1);
++		ret = KSFT_FAIL;
++	}
++	/* A deadline task of 2us every 100ms would take seconds to exit. */
++	if (set_other(pid))
++		ksft_print_msg("%s: the task stays a deadline task\n", name);
++	reap(pid);
++	sleep_ns(3 * PERIOD);
++	if (ret == KSFT_PASS && admits(base, "after the task is gone"))
++		ret = KSFT_FAIL;
++	return ret;
 +}
 +
-+static void report(const char *name, int ret)
-+{
-+	if (ret == KSFT_PASS)
-+		ksft_test_result_pass("%s\n", name);
-+	else if (ret == KSFT_SKIP)
-+		ksft_test_result_skip("%s\n", name);
-+	else
-+		ksft_test_result_fail("%s\n", name);
-+}
-+
-+int main(void)
-+{
-+	char buf[256], path[PATH_MAX + 32];
-+	int added;
-+
-+	ksft_print_header();
-+	test_pid = getpid();
-+	if (geteuid())
-+		ksft_exit_skip("needs root\n");
-+	if (pick_cpus() < 3)
-+		ksft_exit_skip("needs 3 online CPUs that are not isolated\n");
-+	/*
-+	 * A change of partitions lets a task of the root cgroup run on any
-+	 * CPU outside the partitions, an isolated one too. It keeps an
-+	 * affinity set by sched_setaffinity(), so set one.
-+	 */
-+	if (sched_setaffinity(0, sizeof(hk_set), &hk_set))
-+		ksft_exit_skip("cannot run on the CPUs that are not isolated\n");
-+	if (read_file("/proc/sys/kernel/sched_rt_runtime_us", buf, sizeof(buf)) || atol(buf) < 0)
-+		ksft_exit_skip("no deadline admission control\n");
-+	if (find_cgroup2())
-+		ksft_exit_skip("cgroup v2 is not mounted\n");
-+	if (snprintf(cg_p, sizeof(cg_p), "%s/deadline_rebuild_p", root) >= (int)sizeof(cg_p) ||
-+	    snprintf(cg_q, sizeof(cg_q), "%s/deadline_rebuild_q", root) >= (int)sizeof(cg_q))
-+		ksft_exit_skip("cgroup v2 mount path too long\n");
-+	/*
-+	 * Enable the cpuset controller for the root's children, if it is
-+	 * off. It is turned off again at the end.
-+	 */
-+	snprintf(path, sizeof(path), "%s/cgroup.subtree_control", root);
-+	if (read_file(path, buf, sizeof(buf)))
-+		ksft_exit_skip("no cgroup.subtree_control\n");
-+	added = !strstr(buf, "cpuset");
-+	if (added && write_file(root, "cgroup.subtree_control", "+cpuset"))
-+		ksft_exit_skip("no cpuset controller\n");
-+
-+	ksft_set_plan(3);
-+	report("dies_before_rebuild", test_rebuild(DIES));
-+	report("switched_out_before_rebuild", test_rebuild(SWITCHED_OUT));
-+	report("moved_after_switch_out", test_move());
-+	if (added && write_file(root, "cgroup.subtree_control", "-cpuset"))
-+		ksft_print_msg("the cpuset controller stays enabled\n");
-+	ksft_finished();
-+}
+ /* The tables of the cases, and main() */
+ 
+ enum where {
+@@ -4760,6 +5398,7 @@ static const struct p_case {
+ 	{ "pi_other_owner_asleep", pi_other_owner_asleep, MEASURED_IN_P },
+ 	{ "pi_unlock_running", pi_unlock_running, MEASURED_IN_P },
+ 	{ "pi_chain_two_owners", pi_chain_two_owners, MEASURED_IN_P },
++	{ "pi_departed_moved", pi_departed_moved, FROM_OUTSIDE },
+ 	{ "params_asleep", params_asleep, IN_P },
+ 	{ "params_non_contending", params_non_contending, MEASURED_IN_P },
+ 	{ "params_switched_asleep", params_switched_asleep, MEASURED_IN_P },
+@@ -4790,6 +5429,7 @@ static const struct p_case {
+ 	{ "death_pi_deadline_owner", death_pi_deadline_owner, MEASURED_IN_P },
+ 	{ "death_group", death_group, MEASURED_IN_P },
+ 	{ "death_zombie_switched", death_zombie_switched, FROM_OUTSIDE },
++	{ "death_zombie_hotplug", death_zombie_hotplug, FROM_OUTSIDE },
+ 	{ "yield_switched_out", yield_switched_out, IN_P },
+ 	{ "yield_killed", yield_killed, MEASURED_IN_P },
+ 	{ "overrun_caught", overrun_caught, IN_P },
+@@ -4808,9 +5448,15 @@ static const struct p_case {
+ static const struct hp_case {
+ 	const char *name;
+ 	int (*fn)(void);
++	int no_hp;		/* takes no CPU offline */
+ } hp_cases[] = {
++	{ "hotplug_sleepers", hotplug_sleepers },
++	{ "hotplug_sleeper_switched", hotplug_sleeper_switched },
++	{ "hotplug_no_admission_pinned", hotplug_no_admission_pinned },
+ 	{ "hotplug_refused", hotplug_refused },
++	{ "hotplug_departed", hotplug_departed },
+ 	{ "hotplug_server", hotplug_server },
++	{ "affinity_vs_setattr", affinity_vs_setattr, 1 },
+ };
+ 
+ #define N_HP_CASES	((int)ARRAY_SIZE(hp_cases))
+@@ -4949,7 +5595,7 @@ int main(void)
+ 	if (hp_cpu < 0)
+ 		ksft_print_msg("no CPU hotplug: hotplug cases skipped\n");
+ 	for (i = 0; i < N_HP_CASES; i++) {
+-		if (hp_cpu < 0) {
++		if (hp_cpu < 0 && !hp_cases[i].no_hp) {
+ 			ksft_test_result_skip("%s\n", hp_cases[i].name);
+ 			continue;
+ 		}
 -- 
 2.47.3
 
