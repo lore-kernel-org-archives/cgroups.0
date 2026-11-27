@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
 	t=1795790181;
-	b=cH+xm1imMoEP+Ti5L4nGKmJjKna97DSsXt4P6vWjSIoIpoSm/X8qyb/SI+HW6gToddXq
-	 D2I7P1cD4E/KLeabg2Q21PzjedIU+c/In43qsXq1lxs54zRBRlsUVzVf2PgM0zUSBqguT
-	 a7xOrSGi/WyumO768ECDik1eBdg5ryFAYPbZ+tus722w89/kmuvPzlKPJa5Xd934JTEUs
-	 9gF1kU1Art6CVCZpdU1U0qUEQ5ugzMtq9NXk0N4lUKMzBy1fhs1lkpHTpp+UM56F4q90n
-	 veOvknswa9JP7DDBaHKBbIeIHf320YVIqPUPF4+Jm33IqUY/fpwZQ8IbDL/ZFxGw4tw==
+	b=AFkRQXGCmOCSM3CiYAiKkya8Ii0Vrqi4eXsiC0TLZ7GaQjaewiDyDswBtFgqcRX1oYCl
+	 vpoSqxuzGdLriIoD7C080yjYeYcuwxjNujmotjURl7NesjU7L5pkkiRUU96HlPsVMFWzH
+	 rv/Qqr1uNlx0xl7ztDDqEaFieSuuTbD8TkSALzD4/nwRW0eNJbbRDRhWioE3xx58oA+1b
+	 ulF8DWCk/ic3VDCjJz48PPQG47e5wIrg1svIDPs2llV1AXdzmlSuRy2VFePRDpTHwX5zT
+	 U7GpyuGTPJMEJO8us480mHeqByFSN5lQ7wZRHA4DSu5Gjx9OaXRT3Ld7Id/sFPaUECw==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
 	a=rsa-sha256; c=relaxed/relaxed; t=1795790181;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=W/HUcRyGs0GZWi7BvHmivXGxJq9IWwmNRdxpeU4bEQk=;
-	b=PLQY0/DfZC18dSas0vjSknUHXShQTpzr+WCYRcoNbv1loh4LXAL8EYY25P2yeO0j5El4
-	 NezAU2XQG5F5hKLzBFOV9TVD+uTLUN3ub6pdeDqiMgConljZ/QvXoVEFevl/qHjo3W7SX
-	 VUZ4kpqN6CjGq1hateGZTZR+wt4DB6hzp/088BOQ9d5fIJdh060e+RTUAlEYuIJM/+RAK
-	 0AustvdlvRLLHQTAB7oxEN+7RznYQST6TWMfh/xC1dIPwJVs/twPfrgNhr+4wYlABbZ8G
-	 NTpZId+f/DETqCBl7R76D3AiyhQfoYOL+Tc58eeA++kxYfG7Y9nMXbnxt1FpHBWNg2g==
+	bh=nV+8nJCVCkwKQM93407IXbRq7/HtWRuqNm/z94RNMUY=;
+	b=5fKh2srqS2GNbNDYxnBVEGCtJmBRUi67VzbrInk6U9cbkf3nIPHb2vhZ8Alj0xyg7G5u
+	 dpU2yoLYu8+VlxnrOXHwt5WPBlhIo/aujeI+k6qIc/TpskfmV6id1SgDpLji6H2h3iH1X
+	 48OX8AHax+SbZKG+wFuREo7hsuSMOstpfqUePV3PUw9P22LBxYRJyXtMP40gvRYZ3Qjsk
+	 k0nVSUtFjr/DIf8B4Ump5LGG3TKmZwqyaupwW9wDEqyirEK85NiXczTgk9aRO/I7oTYwv
+	 DS2K8jWReaDSshHfCykdw+BBS9LE3TnC8oN9ZxxYvUFmUqgMItiYH9GxDLTa7n5e0PA==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=WnVBhCsC;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=FqXkhIt6;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B809860A6F7B;
-	Fri, 27 Nov 2026 14:36:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org B809860A6F7B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51A6860746E3;
+	Fri, 27 Nov 2026 14:36:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 51A6860746E3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=WnVBhCsC
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=FqXkhIt6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795790177;
-	bh=W/HUcRyGs0GZWi7BvHmivXGxJq9IWwmNRdxpeU4bEQk=;
+	s=smtpout1; t=1795790178;
+	bh=nV+8nJCVCkwKQM93407IXbRq7/HtWRuqNm/z94RNMUY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=WnVBhCsCipQq3JjU4a/dzcJcPFxmpw7zbjvZ1hr/aIBbvsk2iTMY8kYo3n2SWCg+j
-	 gvzhVgDUOC78Svf1AvWc7YjrVbM2OyEyLUAemTqfMgFAPPVf6X9xsfvk9VRC+DTdtz
-	 6u8prV2TQzS0+74sK3qUbv+eM8f954iz8Ar8xhuC/rhe1pu49L4/SiEgIYv+NS4/A2
-	 GPT1yT0/y4NT9irZY1JWj+Z5te2ldPkmqgMq0ki459g4KF8PYHibRQpROqZSkj1sdd
-	 7HNSIu/rVAZmnkXnTXDco7Cy+RMdegSuyYRSWn26dzi1jskQ4JeG18UPkgWqNXwVhP
-	 G2JtJvi/TVX5w==
+	b=FqXkhIt6yixLUpcvbchLYvWqEO2Pe95W1dijr3gMnXhYEwKvOlKsB15ha4iUFPJcW
+	 qOEzLT0n0L6M9Ixd3afKqnXHID+7cPjlYGCI8lGWJgH8pEuFSYAgJm4hGnghnnWYsM
+	 ctgumFkvQhJmUvBWw8iJps1rXEPZ94qc0k4a5CDfAx8N1lKGrn62OjAWaWyLmQWu+q
+	 khgHtdRiHHMnw/s4X5vj3AOa+A3c0NLxELVWF7O24rS3g518ZKnri+Rv5q8BDaaoZv
+	 yHI3slHTDMe8EFuurR6ePY6MaDVjKEqvC9YpuswlApKuHJkhJXq1DgaRobw42FGTsp
+	 S8vz0VraH0TQQ==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jbbZT51gbzXZQ;
-	Fri, 27 Nov 2026 09:36:17 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jbbZV0PQbzXZS;
+	Fri, 27 Nov 2026 09:36:18 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -79,10 +79,11 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
-	linux-rt-devel@lists.linux.dev
-Subject: [PATCH v12 24/43] selftests/sched: Test the rtmutex chain walk in deadline_bw_test
-Date: Fri, 27 Nov 2026 09:35:51 -0500
-Message-ID: <f3d2e2e38c316d204af63f46b06861cf12eb6b5d.1795771148.git.mathieu.desnoyers@efficios.com>
+	linux-rt-devel@lists.linux.dev,
+	stable@vger.kernel.org
+Subject: [PATCH v12 26/43] sched/deadline: Keep a departing constrained task until its next period
+Date: Fri, 27 Nov 2026 09:35:53 -0500
+Message-ID: <54e41332aec6ddeb1d060c892cbac401c936df86.1795771148.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.1795771147.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795771147.git.mathieu.desnoyers@efficios.com>
@@ -97,347 +98,153 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add pi_chain_top_moves and pi_chain_top_moves_rt to deadline_bw_test.
-They test the two rtmutex fixes earlier in this series. In both, a
-chain walk changes the top waiter of an owner to a waiter of another
-lock it holds. The walk must go on to the next owner. That owner must
-then get the new donor, or the new priority. The first case uses
-deadline tasks, the second RT tasks. The comment above each
-case gives its scenario.
+A task that leaves SCHED_DEADLINE keeps its bandwidth until its 0-lag
+time, so that leaving and coming back gains nothing. Until the series
+this one builds on, it also kept its deadline. For an implicit
+deadline, losing it after the 0-lag time changes nothing: a wakeup in
+the class then starts a new period anyway. A constrained task in the
+class keeps its deadline until its next period. Past its deadline, its
+wakeup throttles it until then.
 
-On v7.4-rc2, in 8 VMs of 8 CPUs, pi_chain_top_moves_rt fails in every
-VM.
-pi_chain_top_moves passes there. It fails with the first series, until
-"rtmutex: Continue the chain walk when a waiter's deadline donor
-changes" and "rtmutex: Do not stop the chain walk at an owner whose top
-waiter changed". It needs both.
+That series clears the deadline of a task when it releases its
+bandwidth:
+- "sched/deadline: Reset the deadline and the runtime with the
+  parameters" resets the deadline in __dl_clear_params().
+- "sched/deadline: Release the bandwidth of a task that leaves the class
+  asleep" adds this release for a task that leaves the class asleep
+  with no timer pending.
 
-The cases run in P, a cpuset partition root. With CONFIG_RT_GROUP_SCHED,
-P can have no RT runtime. sched_setscheduler() then refuses SCHED_FIFO
-with EPERM, and pi_chain_top_moves_rt skips.
+So a constrained task that leaves the class between its 0-lag time and
+its next period now loses its deadline. If it comes back before its
+next period, it gets a new period at once. Repeated, this gives the
+task more than its bandwidth. Other deadline tasks could then miss
+their deadlines.
 
-With the fixes up to here, both cases pass wherever they run.
+For example, take a task with a runtime of 10ms, a deadline of 20ms and
+a period of 500ms. Its period starts at 0ms.
+ 1. It runs 2ms, then sleeps with 8ms left. Its 0-lag time is
+    500 - 8 * 500 / 10 = 100ms.
+ 2. At 200ms, it is past its 0-lag time and before its next period.
+    Another thread calls sched_setattr() to make it SCHED_OTHER, then
+    SCHED_DEADLINE again. Leaving the class releases its bandwidth and
+    clears its deadline.
+ 3. At 205ms, it wakes up. Its wakeup starts a new period at once, not
+    at 500ms. Between 0ms and 500ms, it can run 12ms, not 10ms.
+
+Fix this by keeping the bandwidth and the deadline of a constrained
+task that leaves the class until its next period. task_non_contending()
+and inactive_task_timer() wait for the later of the 0-lag time and the
+next period. In the example, the task keeps its deadline at 200ms. Its
+wakeup throttles it until 500ms.
+
+inactive_task_timer() restarts itself until the next period.
+switched_to_dl() cannot cancel it while its handler runs. So the timer
+can stay queued after the task comes back to the class. The next
+task_non_contending() would then take the 0-lag time as passed. It now
+cancels such a timer first.
+
+The proof of Lemma 5.1 in [1] uses the same rule for its H-CBSD-W
+server. A server that used up its budget while idle stays throttled
+until the end of its period, as a sporadic task would.
+
+The cost: a constrained task that leaves the class keeps its bandwidth
+in total_bw up to one period longer. Until then, sched_setattr() can
+fail with EBUSY for a new deadline task.
+
+A backport of the two patches above needs this one, and
+"sched/deadline: Count the 0-lag time from the next period" before it.
+
+"selftests/sched: Test parameter changes in deadline_bw_test", later in
+this series, adds the reenter_asleep_late_in_gap case. It runs the
+example above, with the round trip at 150ms. The case fails without
+this patch, and passes with it.
+
+[1] D. Casini, L. Abeni, A. Biondi, T. Cucinotta, G. Buttazzo,
+    "Constant Bandwidth Servers with Constrained Deadlines", RTNS 2017,
+    https://retis.santannapisa.it/~a.biondi/papers/CBS_CD_RTNS17.pdf
 
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: stable@vger.kernel.org
 ---
- .../sched/deadline/deadline_bw_test.c         | 297 ++++++++++++++++++
- 1 file changed, 297 insertions(+)
+ kernel/sched/deadline.c | 49 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/sched/deadline/deadline_bw_test.c b/tools/testing/selftests/sched/deadline/deadline_bw_test.c
-index 87fa1a7d420f..a403122191b8 100644
---- a/tools/testing/selftests/sched/deadline/deadline_bw_test.c
-+++ b/tools/testing/selftests/sched/deadline/deadline_bw_test.c
-@@ -2522,6 +2522,301 @@ static int pi_chain_donor_leaves(void)
- 	return ret;
- }
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 7dc0b71e7cce..adcd9c9f8a9d 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -761,8 +761,35 @@ static void task_non_contending(struct sched_dl_entity *dl_se, bool dl_task)
  
-+/*
-+ * The threads of top_moves(): O, M, W, Z and Y. top_tid[] holds their
-+ * tids. top_lock is L1'. top_y_ns is the CPU time Y gets in O's window,
-+ * or -1.
-+ */
-+enum { TM_O, TM_M, TM_W, TM_Z, TM_Y, TM_N };
-+static _Atomic pid_t top_tid[TM_N];
-+static pthread_mutex_t top_lock;
-+static atomic_int top_err, top_rt, top_m_locking, top_w_locking, top_y_stop;
-+static _Atomic long long top_y_ns;
-+static sem_t top_o_go, top_m_go;
+ 	WARN_ON(dl_se->dl_non_contending);
+ 
++	/*
++	 * inactive_task_timer() restarts itself for a constrained task that
++	 * has left the class. If the task came back while the handler ran,
++	 * switched_to_dl() could not cancel the timer, and it is still
++	 * queued. Cancel it here, so that the test below sees only a handler
++	 * that is running.
++	 */
++	if (!dl_server(dl_se) && hrtimer_try_to_cancel(timer) == 1)
++		put_task_struct(dl_task_of(dl_se));
 +
-+/* The priority /proc shows for a SCHED_FIFO task of priority @p. */
-+#define FIFO_TASK_PRIO(p)	(-1 - (p))
+ 	zerolag_time = dl_time_to_zerolag(dl_se, rq);
+ 
++	/*
++	 * A constrained task that leaves the class keeps its bandwidth and its
++	 * deadline until its next period, if that comes after its 0-lag time.
++	 * Back in the class before then, it goes on with its current period,
++	 * as if it had stayed. A new period at once would give it more than
++	 * its runtime in this period. A dying task does not come back, so it
++	 * releases its bandwidth at its 0-lag time.
++	 */
++	if (!dl_task && !dl_server(dl_se) && !dl_is_implicit(dl_se) &&
++	    dl_se->deadline &&
++	    READ_ONCE(dl_task_of(dl_se)->__state) != TASK_DEAD) {
++		s64 next = dl_next_period(dl_se) - rq_clock(rq);
 +
-+/*
-+ * O: take pi_lock2 (L2), and sleep until top_o_go. With Y (@arg), spin
-+ * 200ms and measure the CPU time Y gets meanwhile. Then unlock L2.
-+ */
-+static void *top_o(void *arg)
-+{
-+	uint64_t t0, y0;
++		if (next > zerolag_time)
++			zerolag_time = next;
++	}
 +
-+	if (pthread_mutex_lock(&pi_lock2)) {
-+		top_err = 1;
-+		return arg;
-+	}
-+	top_tid[TM_O] = gettid_();	/* O holds L2 */
-+	sem_wait_sig(&top_o_go);
-+	if (arg) {
-+		y0 = cpu_time_of(*(pthread_t *)arg);
-+		t0 = now_ns();
-+		while (now_ns() - t0 < 2 * PERIOD)
-+			;
-+		top_y_ns = cpu_time_of(*(pthread_t *)arg) - y0;
-+	}
-+	pthread_mutex_unlock(&pi_lock2);
-+	return NULL;
-+}
+ 	/*
+ 	 * If the "0-lag time" already passed, decrease the active
+ 	 * utilization now, instead of starting a timer
+@@ -2602,6 +2629,25 @@ static enum hrtimer_restart inactive_task_timer(struct hrtimer *timer)
+ 	if (dl_server(dl_se))
+ 		goto no_task;
+ 
++	/*
++	 * A constrained task which has left the class keeps its bandwidth
++	 * and its deadline until its next period, as in
++	 * task_non_contending(). This timer may have been armed for the
++	 * 0-lag time while the task was still in the class.
++	 */
++	if (!dl_task(p) && READ_ONCE(p->__state) != TASK_DEAD &&
++	    !dl_is_implicit(dl_se)) {
++		s64 left = dl_next_period(dl_se) - rq_clock(rq);
 +
-+/*
-+ * M: take pi_lock (L1) and top_lock (L1'). At top_m_go, block on L2,
-+ * which O holds. Unlock L2, L1 and L1' once it gets L2.
-+ */
-+static void *top_m(void *arg)
-+{
-+	if (pthread_mutex_lock(&pi_lock)) {
-+		top_err = 1;
-+		return arg;
-+	}
-+	if (pthread_mutex_lock(&top_lock)) {
-+		pthread_mutex_unlock(&pi_lock);
-+		top_err = 1;
-+		return arg;
-+	}
-+	top_tid[TM_M] = gettid_();	/* M holds L1 and L1' */
-+	sem_wait_sig(&top_m_go);
-+	top_m_locking = 1;
-+	if (pthread_mutex_lock(&pi_lock2))
-+		top_err = 1;
-+	else
-+		pthread_mutex_unlock(&pi_lock2);
-+	pthread_mutex_unlock(&pi_lock);
-+	pthread_mutex_unlock(&top_lock);
-+	return arg;
-+}
++		if (left > 0) {
++			ktime_t at = ktime_add_ns(hrtimer_cb_get_time(timer), left);
 +
-+/*
-+ * W and Z: W blocks on L1', Z on L1. @arg is 1 for W. With top_rt, W
-+ * becomes SCHED_FIFO 50 and Z SCHED_FIFO 20. Otherwise W becomes a
-+ * deadline task of 2ms every 80ms and Z one of 5ms every 200ms. The main
-+ * thread switches W to SCHED_OTHER while it waits.
-+ */
-+static void *top_waiter(void *arg)
-+{
-+	int w = (long)arg;
-+	struct sched_param sp = { .sched_priority = w ? 50 : 20 };
-+	uint64_t runtime = (w ? 2 : 5) * NSEC_PER_MSEC;
-+	pthread_mutex_t *l = w ? &top_lock : &pi_lock;
-+
-+	if (top_rt ? sched_setscheduler(0, SCHED_FIFO, &sp) :
-+		     set_deadline(0, runtime, 40 * runtime)) {
-+		/* With RT group scheduling, P can have no RT runtime. */
-+		top_err = top_rt && errno == EPERM ? 2 : 1;
-+		return arg;
-+	}
-+	top_tid[w ? TM_W : TM_Z] = gettid_();
-+	if (w)
-+		top_w_locking = 1;
-+	if (pthread_mutex_lock(l))
-+		top_err = 1;
-+	else
-+		pthread_mutex_unlock(l);
-+	if (set_other(0))
-+		top_err = 1;
-+	return arg;
-+}
-+
-+/* Y: become a deadline task of 30ms every 100ms, and spin. */
-+static void *top_y(void *arg)
-+{
-+	if (set_deadline(0, 30 * NSEC_PER_MSEC, PERIOD)) {
-+		top_err = 1;
-+		return arg;
-+	}
-+	top_tid[TM_Y] = gettid_();
-+	while (!top_y_stop)
-+		;
-+	return arg;
-+}
-+
-+/*
-+ * A chain walk must go on past a task whose top waiter moves to another
-+ * lock. The priority of that task changes, and the next owner must
-+ * follow.
-+ *
-+ * L1 is pi_lock, L1' is top_lock and L2 is pi_lock2. All threads run on
-+ * the CPU of P. W and Z set their own policy when they start. With @rt,
-+ * W is SCHED_FIFO 50 and Z SCHED_FIFO 20. Without @rt, W is a deadline
-+ * task of 2ms every 80ms and Z one of 5ms every 200ms. W has the earlier
-+ * deadline. O and M are SCHED_OTHER. Without @rt, Y is a deadline task
-+ * of 30ms every 100ms. It spins all along.
-+ *
-+ * 1. O takes L2, and sleeps.
-+ * 2. M takes L1 and L1', and sleeps.
-+ * 3. W blocks on L1'. W boosts M.
-+ * 4. M blocks on L2. M passes W on to O.
-+ * 5. Z blocks on L1. W stays the top waiter of M.
-+ * 6. The main thread switches W to SCHED_OTHER. The chain walk requeues
-+ *    W on L1'. Z on L1 becomes the top waiter of M, and Z boosts M. The
-+ *    walk must go on to O. Z must boost O too.
-+ *
-+ * With @rt, the case reads O's priority. It must be the one of Z. With
-+ * the walk stopped at M, O keeps the priority of W.
-+ *
-+ * Without @rt, W sleeps and has run almost nothing. So its parameters
-+ * are cleared at once. 250ms later, the main thread wakes O up. O
-+ * measures the CPU time Y gets over the next 200ms, and unlocks L2.
-+ *
-+ * With Z as its donor, O gets 5ms every 200ms. Y runs at the start of
-+ * each of its periods, and gets its 60ms. With W as its donor, O runs on
-+ * cleared parameters. Each refill gives it no runtime and a deadline of
-+ * about now. O then runs before Y until Y's deadline is past. Y runs
-+ * only then, one period late, and gets about 30ms. The case fails if Y
-+ * gets less than 45ms.
-+ *
-+ * W does not exit before O unlocks L2. It waits for L1', which M
-+ * releases after it gets L2.
-+ */
-+static int top_moves(int rt)
-+{
-+	int ret = KSFT_FAIL, i, have[TM_N] = { 0 };
-+	int boost = rt ? FIFO_TASK_PRIO(50) : DL_TASK_PRIO;
-+	pthread_mutexattr_t a;
-+	pthread_t t[TM_N];
-+	long long y_ns;
-+	int err, o_prio = 0;
-+
-+	if (pi_init())
-+		return KSFT_SKIP;
-+	if (pi_init_lock2()) {
-+		pi_fini();
-+		return KSFT_SKIP;
-+	}
-+	err = pthread_mutexattr_init(&a);
-+	if (!err) {
-+		err = pthread_mutexattr_setprotocol(&a, PTHREAD_PRIO_INHERIT);
-+		if (!err)
-+			err = pthread_mutex_init(&top_lock, &a);
-+		pthread_mutexattr_destroy(&a);
-+	}
-+	if (err) {
-+		ksft_print_msg("no third priority inheritance mutex: %s\n",
-+			       strerror(err));
-+		ret = KSFT_SKIP;
-+		goto out_lock2;
-+	}
-+	if (sem_init(&top_o_go, 0, 0) || sem_init(&top_m_go, 0, 0)) {
-+		ksft_print_msg("sem_init: %s\n", strerror(errno));
-+		goto out_lock3;
-+	}
-+	for (i = 0; i < TM_N; i++)
-+		top_tid[i] = 0;
-+	top_err = 0;
-+	top_rt = rt;
-+	top_m_locking = 0;
-+	top_w_locking = 0;
-+	top_y_stop = 0;
-+	top_y_ns = -1;
-+	if (!rt) {
-+		have[TM_Y] = !pthread_create(&t[TM_Y], NULL, top_y, NULL);
-+		if (!have[TM_Y] || wait_for(1000, top_tid[TM_Y] || top_err)) {
-+			ksft_print_msg("Y never became a deadline task\n");
-+			goto out;
++			hrtimer_set_expires(timer, at);
++			task_rq_unlock(rq, p, &rf);
++			return HRTIMER_RESTART;
 +		}
 +	}
-+	have[TM_O] = !pthread_create(&t[TM_O], NULL, top_o,
-+				     rt ? NULL : &t[TM_Y]);
-+	if (!have[TM_O] || wait_for(1000, top_tid[TM_O] || top_err)) {
-+		ksft_print_msg("O never took L2\n");
-+		goto out;
-+	}
-+	have[TM_M] = !pthread_create(&t[TM_M], NULL, top_m, NULL);
-+	if (!have[TM_M] || wait_for(1000, top_tid[TM_M] || top_err)) {
-+		ksft_print_msg("M never took L1 and L1'\n");
-+		goto out;
-+	}
-+	have[TM_W] = !pthread_create(&t[TM_W], NULL, top_waiter, (void *)1L);
-+	if (!have[TM_W] ||
-+	    wait_for(1000, (top_w_locking &&
-+			    proc_state_of(top_tid[TM_W]) == 'S') || top_err)) {
-+		ksft_print_msg("W never blocked on L1'\n");
-+		goto out;
-+	}
-+	sem_post(&top_m_go);
-+	if (wait_for(1000, (top_m_locking && prio_of(top_tid[TM_O]) == boost) ||
-+			   top_err)) {
-+		ksft_print_msg("O was not boosted through M\n");
-+		goto out;
-+	}
-+	have[TM_Z] = !pthread_create(&t[TM_Z], NULL, top_waiter, (void *)0L);
-+	if (!have[TM_Z] ||
-+	    wait_for(1000, (top_tid[TM_Z] &&
-+			    proc_state_of(top_tid[TM_Z]) == 'S') || top_err)) {
-+		ksft_print_msg("Z never blocked on L1\n");
-+		goto out;
-+	}
-+	sleep_ns(10 * NSEC_PER_MSEC);	/* the chain walk of Z is done */
-+	err = top_err ? -EINVAL : set_other(top_tid[TM_W]);
-+	if (err) {
-+		ksft_print_msg("W cannot leave its class: %s\n",
-+			       strerror(-err));
-+		goto out;
-+	}
-+	if (rt) {
-+		sleep_ns(10 * NSEC_PER_MSEC);
-+		if (prio_of(top_tid[TM_M]) != FIFO_TASK_PRIO(20)) {
-+			ksft_print_msg("Z does not boost M\n");
-+			goto out;
-+		}
-+		o_prio = prio_of(top_tid[TM_O]);
-+	} else {
-+		sleep_ns(250 * NSEC_PER_MSEC);
-+	}
-+	ret = KSFT_PASS;
-+out:
-+	/* Let every thread end: O unlocks L2, then M unlocks L1 and L1'. */
-+	sem_post(&top_m_go);
-+	sem_post(&top_o_go);
-+	for (i = TM_O; i < TM_Y; i++)
-+		if (have[i])
-+			join(t[i]);
-+	top_y_stop = 1;
-+	if (have[TM_Y])
-+		join(t[TM_Y]);
-+	y_ns = top_y_ns;
-+	if (top_err == 2) {
-+		ksft_print_msg("SCHED_FIFO refused in P\n");
-+		ret = KSFT_SKIP;
-+	} else if (top_err) {
-+		ksft_print_msg("a thread of the chain failed\n");
-+		ret = KSFT_FAIL;
-+	} else if (ret == KSFT_PASS && rt && o_prio != FIFO_TASK_PRIO(20)) {
-+		ksft_print_msg("O runs at priority %d, not %d: W still boosts it\n",
-+			       o_prio, FIFO_TASK_PRIO(20));
-+		ret = KSFT_FAIL;
-+	} else if (ret == KSFT_PASS && !rt &&
-+		   y_ns < 45 * (long long)NSEC_PER_MSEC) {
-+		ksft_print_msg("Y ran %lld ms of 200: W is still the donor of O\n",
-+			       y_ns / (long long)NSEC_PER_MSEC);
-+		ret = KSFT_FAIL;
-+	}
-+	sem_destroy(&top_o_go);
-+	sem_destroy(&top_m_go);
-+out_lock3:
-+	pthread_mutex_destroy(&top_lock);
-+out_lock2:
-+	pthread_mutex_destroy(&pi_lock2);
-+	sem_destroy(&holder_go);
-+	pi_fini();
-+	return ret;
-+}
 +
-+/* W and Z are deadline tasks. */
-+static int pi_chain_top_moves(void)
-+{
-+	return top_moves(0);
-+}
-+
-+/* W and Z are SCHED_FIFO tasks. */
-+static int pi_chain_top_moves_rt(void)
-+{
-+	return top_moves(1);
-+}
-+
- /* cpuset moves, from the main process, outside P */
- 
- /* Shared with the processes of a case: atomic in shared memory. */
-@@ -10219,6 +10514,8 @@ static const struct p_case {
- 	{ "return_asleep_new_params", return_asleep_new_params, MEASURED_IN_P },
- 	{ "deboost_blocked_keeps_order", deboost_blocked_keeps_order, MEASURED_IN_P },
- 	{ "pi_chain_donor_leaves", pi_chain_donor_leaves, MEASURED_IN_P },
-+	{ "pi_chain_top_moves", pi_chain_top_moves, MEASURED_IN_P },
-+	{ "pi_chain_top_moves_rt", pi_chain_top_moves_rt, MEASURED_IN_P },
- 	{ "move_asleep", move_asleep, FROM_OUTSIDE },
- 	{ "move_throttled", move_throttled, FROM_OUTSIDE },
- 	{ "move_non_contending", move_non_contending, FROM_OUTSIDE },
+ 	if (!dl_task(p) || READ_ONCE(p->__state) == TASK_DEAD) {
+ 		if (READ_ONCE(p->__state) == TASK_DEAD && dl_se->dl_non_contending) {
+ 			sub_running_bw(&p->dl, dl_rq_of_se(&p->dl));
+@@ -4576,7 +4622,8 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+ 	 * the "inactive timer" fires, it can continue to consume its current
+ 	 * runtime using its current deadline. If it stays outside of
+ 	 * SCHED_DEADLINE until the 0-lag time passes, inactive_task_timer()
+-	 * will reset the task parameters.
++	 * will reset the task parameters. For a constrained task, the reset
++	 * waits for its next period, if that is later.
+ 	 */
+ 	if (task_on_rq_queued(p) && p->dl.dl_runtime)
+ 		task_non_contending(&p->dl, false);
 -- 
 2.47.3
 
