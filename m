@@ -1,51 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=158.69.130.18
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795790184;
-	b=AZaAnoDhLuNhYs0P+S6l9vwv92wWTeqWw2ZxQgp+uZgLCG+c677GwQQkSSdpIRqZheHf
-	 hbdNGQMJv5jJBMQj5/GskmQDZuPJG8EBG912XyjD6F8qe1py0yUxnNvGY6sckRi7jB5aQ
-	 EL2D/c3KA2txLU4QI1D2sRi2IWfF93nyx3i/RqePfFenNfSSOsEz73CoaJBP8sVk9d5p4
-	 NhqRWSHlHp4rKxPU6vNsN6XDBOLpXd37iVM51xZvbs5uhmnO8JK4GWEgYXHjRV2IIWsiV
-	 qSOJGcdK71xtvPMx64ap4dK0uO2+VHomeYv1tbAZY2dgwBQxbZ/InFzknSq3KO8TTZQ==
+	t=1795790180;
+	b=IQXRLQHt8hHazJZTB6f9yLeRn8n43Pc7zjQ4natDWsAnCZOHI4ARfCjxEMxEQj8WdKVV
+	 wgR/QCVu5RLonh2tyYAajt7BIkX5NS/QofV88T8UqIMBqvlbFkL176Md8qHX6KcgKXORJ
+	 TZxWIyUXN8rjXD04n0ruoGA4km/JMBZQl1PpO+5j0NL/112GAZqheYNu13WpbZeUcxh1L
+	 DMh1OK10HaG78Rg+0z57oG406jd/mXeZIpNHPXgelm4TBcPssDcgUeARW2sE3dKlXX4hp
+	 rPSSrBI8XolLZ0Ig9Q/GvaSMz4/nFee2TBs9HPv/6iidDvwtbcN0ptcw6gB0gOtZA9w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795790184;
+	a=rsa-sha256; c=relaxed/relaxed; t=1795790180;
 	h=DMARC-Filter:DKIM-Signature:Received:From:To:Cc:Subject:Date:
 	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
 	 Content-Transfer-Encoding;
-	bh=366yT3iPmRePI8urwseNRrcT+qiVkjzfQ+7FESfhOXk=;
-	b=KSlcPKzdbwYGQ2h1tG4uTj9mQpQEX5kHSB+NLtTzw2WOhQr/GqzYDwZrEsEd0cbLVDgS
-	 WI3DZVnCLwK+65JT8WMNBj137+iqaDSdfJ+LtNGYHQCJpT+Gf+diN5l6CmPSP5ELqiWG5
-	 dDJdAmBeRnWL5tmoirR7Bl1BbA2zupfSopsxuMBCWtrUuYw7rag3MXVPoeoLFH5vuvP+r
-	 wOkW1iVqf/WTmFc0gEgsE6ALb2whMT//nYKR3OvyofDldjID2mRi58hcDrA4vXfBmvbBm
-	 8+GLTbP9KXBYKnYU1spWhYaW29w+C4fi0FAQbcOZU2JSFzVfC3D4lDj4vCxYBfW/kxQ==
+	bh=xlit8UDlMgjmL1LAqwBre9uYWNjfJ8TZHFuYyxZD4Po=;
+	b=jYQVaxqYXOFffSKsG6JQp+M1Soe+vA00j3zh2h1xBj76hq8bw32sCsfW2o3LRx+5+xBc
+	 YKDcxzj/IE4sJVSIhgmP1NNGQ/H6OTqcGjKCpxFIRjW9Doo2Gv/ZK980jjd5Heat1wajt
+	 GNir/SesnGNmXeFXdavH6ZZjdb9CAvtS4vgvlr8EYP9UFcGVrhNkx8Es7AKcYUyf983/L
+	 YxalUsR9r3Rq/Nz6+kvHCZKoMBsX8Z4MYaaRBipgA1IyrwLhlY390bi1TTCblbSDi0h0m
+	 k0aeX1Wk1RSS/X56uZB8gJoY7svVIqIGo4xMGxExzOaYMa7gIZoCCaumOVoRK5hL+Jw==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
 	dmarc=pass header.from=efficios.com;
 	spf=pass smtp.mailfrom=efficios.com;
-	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=fnTX0ezH;
+	dkim=pass header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=FnZvydeN;
 	arc=none smtp.remote-ip=158.69.130.18
 Received: from smtpout.efficios.com (smtpout.efficios.com [158.69.130.18])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (prime256v1))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646F2606A6E3;
-	Fri, 27 Nov 2026 14:36:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 646F2606A6E3
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97EB360A5BD4;
+	Fri, 27 Nov 2026 14:36:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 97EB360A5BD4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=efficios.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=efficios.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=fnTX0ezH
+	dkim=pass (2048-bit key) header.d=efficios.com header.i=@efficios.com header.a=rsa-sha256 header.s=smtpout1 header.b=FnZvydeN
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-	s=smtpout1; t=1795790179;
-	bh=366yT3iPmRePI8urwseNRrcT+qiVkjzfQ+7FESfhOXk=;
+	s=smtpout1; t=1795790177;
+	bh=xlit8UDlMgjmL1LAqwBre9uYWNjfJ8TZHFuYyxZD4Po=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fnTX0ezHykWE89mQh1g2buC+Ho+bSum3QvFNDhk8c+APr5Z41lIIvkcyvu+dxdRsl
-	 E+XY85WdJIRFRdgam8nm/oixQ5YIxPZbxWdGceNXmVCz5bEKsIE1f/WiWhUOmjC507
-	 v6gA0PFbvxYk7gENKflgtwqMrwb3pzs0mjPSQJ/H7wiAwvnzcG2bnETyxP8vtixRQm
-	 sc/t2kDPhQ9TEBLTFJv7Teixe+LG7C5UsWX/5miyYAvg8vXm/SSPpwhJnO3v/gAOwV
-	 +rJ3nf+59dA1biK/BOuKf3qM5v4zX7YSdzXFaFDDwJ9ut4m5TsAocjU2DGC8YIHN0q
-	 LO5JnMNptbgGw==
+	b=FnZvydeNbOp/s4qJEjcZHaiNxr8GXCHNhCzAHyioMVElvRA0zqOeJ2bePfHA7Z6a/
+	 EqHxHuWDSu2Zi4vwGp5jjiZl3mmX1vyXrXm9HYHpkrsPyRitgD6lKdoSJUKj6MQorE
+	 6Kv7wT5HciYSs9znRUpr328giGu4xxAEcX5b7mueuJg4qraThmcn/RMN0z8LvufEBx
+	 ECU3cghNAyZ/N/KpiCPaZ5FVOiwCpn2bL3vTmIfhKNpS3lj/xvU6cZxWyoOoiMawhD
+	 REwxJWdzdPZijOoIhxKG14uTFRoYrkgYJuhA+Q4r9wmPnNF8SsZg4Q5FEyUuje/J6r
+	 PJ+kQDqrrWoag==
 Received: from thinkos.internal.efficios.com (mtl.efficios.com [216.120.195.104])
-	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jbbZW5vMYzXCS;
-	Fri, 27 Nov 2026 09:36:19 -0500 (EST)
+	by smtpout.efficios.com (Postfix) with ESMTPSA id 4jbbZT0FTyzXFY;
+	Fri, 27 Nov 2026 09:36:17 -0500 (EST)
 From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 To: juri.lelli@redhat.com,
 	peterz@infradead.org,
@@ -81,9 +81,9 @@ Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	linux-kselftest@vger.kernel.org,
 	linux-rt-devel@lists.linux.dev,
 	stable@vger.kernel.org
-Subject: [PATCH v12 36/43] sched/deadline: Check the runtime of a task that comes back runnable
-Date: Fri, 27 Nov 2026 09:36:03 -0500
-Message-ID: <0175b68963df6a2658049220183a8f3f797502db.1795771148.git.mathieu.desnoyers@efficios.com>
+Subject: [PATCH v12 20/43] sched/deadline: Do not truncate a bandwidth to 32 bits in __dl_add/sub()
+Date: Fri, 27 Nov 2026 09:35:47 -0500
+Message-ID: <3300daac81b2483e451bca006dfaa2da5b21fced.1795771148.git.mathieu.desnoyers@efficios.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.1795771147.git.mathieu.desnoyers@efficios.com>
 References: <cover.1795771147.git.mathieu.desnoyers@efficios.com>
@@ -98,59 +98,53 @@ Precedence: list
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Commit a649f237db18 ("sched,dl: Fix sched class hopping CBS hole")
-keeps the runtime and the deadline of a task that leaves
-SCHED_DEADLINE. A task that comes back before its deadline goes on with
-them. So leaving the class and coming back gives no new runtime.
+__dl_add() and __dl_sub() spread a change of total_bw over the extra_bw
+of the active CPUs of the root domain. Commit daec57983670
+("sched/deadline: Reclaim bandwidth not used by dl tasks") added this,
+for the bandwidth of one task. That is at most 1 << 20, the bandwidth
+of one CPU.
 
-But the task can come back with new parameters. If it is asleep, its
-wakeup checks the runtime left against them, with dl_entity_overflow().
-If it is runnable, enqueue_dl_entity() starts a new period only if the
-deadline has passed. The runtime left is not checked.
+But cpuset_can_attach() reserves the sum of the bandwidths of all the
+deadline tasks it moves, with dl_bw_alloc(). __dl_add() and __dl_sub()
+cast the bandwidth to s32 before the division. Past S32_MAX, more than
+2048 CPUs of deadline bandwidth, the cast flips its sign. The extra_bw
+of each CPU then moves the wrong way. GRUB lets reclaiming tasks run
+more than the free bandwidth, or less. This was found by reading. It
+needs a machine with more than 2048 CPUs, so no case tests it.
 
-So a task can come back with a smaller runtime, and still run on the
-old one. Admission control counts only the new one. Juri Lelli found
-this case. On v7.4-rc2, a task of 50ms every 100ms came back through
-SCHED_OTHER with 10ms every 100ms. It ran 39ms of the next 100ms.
+Fix this by dividing on 64 bits, with div_u64().
 
-Fix this by applying the wakeup rule to a task that enters the class
-runnable, with update_dl_entity(). It starts a new period, or reduces
-the runtime of a constrained task, if the runtime left does not fit the
-new parameters. The task gets no more than a wakeup would give it.
+The Sashiko AI review of the first series found this.
 
-The return_running_new_params case, added to deadline_bw_test later in
-this series, tests this. It fails on v7.4-rc2 and passes with this
-patch. The return_asleep_new_params case tests the wakeup, and passes on
-both.
-
-Fixes: a649f237db18 ("sched,dl: Fix sched class hopping CBS hole")
-Reported-by: Juri Lelli <juri.lelli@redhat.com>
-Closes: https://lore.kernel.org/all/avHvPjz4dL0zNyGb@jlelli-thinkpadt14gen4.remote.csb/
+Fixes: daec57983670 ("sched/deadline: Reclaim bandwidth not used by dl tasks")
 Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
 Cc: stable@vger.kernel.org
 ---
- kernel/sched/deadline.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ kernel/sched/deadline.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index 8babc3e2ac51..884fe83538ab 100644
+index 3f02d150e15d..7a6057326611 100644
 --- a/kernel/sched/deadline.c
 +++ b/kernel/sched/deadline.c
-@@ -3196,6 +3196,14 @@ enqueue_dl_entity(struct sched_dl_entity *dl_se, int flags)
- 		update_dl_entity(dl_se);
- 	} else if (flags & ENQUEUE_REPLENISH) {
- 		replenish_dl_entity(dl_se);
-+	} else if ((flags & ENQUEUE_CLASS) && !is_dl_boosted(dl_se)) {
-+		/*
-+		 * The task enters the class runnable. It may come back before
-+		 * its deadline, with the runtime left from older parameters.
-+		 * Check that runtime against the new parameters, as a wakeup
-+		 * does.
-+		 */
-+		update_dl_entity(dl_se);
- 	} else if ((flags & ENQUEUE_MOVE) &&
- 		   !is_dl_boosted(dl_se) &&
- 		   dl_time_before(dl_se->deadline, rq_clock(rq_of_dl_se(dl_se)))) {
+@@ -205,7 +205,7 @@ void __dl_sub(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
+ {
+ 	dl_b->total_bw -= tsk_bw;
+ 	if (cpus)
+-		__dl_update(dl_b, (s32)tsk_bw / cpus);
++		__dl_update(dl_b, div_u64(tsk_bw, cpus));
+ }
+ 
+ static inline
+@@ -213,7 +213,7 @@ void __dl_add(struct dl_bw *dl_b, u64 tsk_bw, int cpus)
+ {
+ 	dl_b->total_bw += tsk_bw;
+ 	if (cpus)
+-		__dl_update(dl_b, -((s32)tsk_bw / cpus));
++		__dl_update(dl_b, -(s64)div_u64(tsk_bw, cpus));
+ }
+ 
+ static inline bool
 -- 
 2.47.3
 
