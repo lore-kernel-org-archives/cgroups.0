@@ -1,53 +1,75 @@
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=100.103.45.18
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.remote-ip=198.177.127.220
 ARC-Seal: i=1; d=subspace.kernel.org; s=arc20261015; a=rsa-sha256; cv=none;
-	t=1795850713;
-	b=QqyQ4s3B6+7CIfrLjwzNnS5V2nNhm/y0ZDKA3Gm8N4C6VXioEvfCPVnlanv8t8gXd8m0
-	 O/22z2YJVgddzMDsGFON6KUIz/VOJJT/vXhaX+A7tL6PBRA4JDLC4UfAm/AQXNadYPlVd
-	 sigj2YJ3tRgyJLT4cQGLzR9UYVsV618hdmbfI5wVdNo1H9garYBbDNDeWsAcvzT5mvRS+
-	 sKoEcRAfPJ2d3AC7YFMlNfr/36xMJ+t7guIl2MIQLNCcLi4mcb1HOyitk73laMQ5rZXaj
-	 BiglhysBk0m1EGizrj5VG21okGAGS+uP1/fOB2D8l5jUpZ882QsF5rM7SgqzuDuYgjA==
+	t=1795856135;
+	b=0rhLpK/w/qm8hXLfLBtJjhx30rr0zmutelEO4AnfS7iJSpViY3eti+xiHo+Uf/Si/C1w
+	 FysUPXdpae+oRuEVX+G1nNThBUHSQFKSOJKo9ayM/CyeUEGQt3xjCDqJlx6PpSSD/bETe
+	 vcj7p5Wc/z7G0IggQgtExOopkBhwI9/nFTqu/pHoAyAm3Xx2oYr+j1jest/bIBIUDp7Jl
+	 iRRl5kyYdZn4mKOJ7lye6yjymlMbSNDaFBG1ePiN9L+dxNkm+b4lR9qI8WOAmziZmROIA
+	 Z1hOlwRIW1PsCWwe5pn4/kCdb/AFPkdcYZLrrEKxGwB6ZRp9p7XJxrpq1bRIi0nUB4w==
 ARC-Message-Signature: i=1; d=subspace.kernel.org; s=arc20261015;
-	a=rsa-sha256; c=relaxed/relaxed; t=1795850713;
-	h=Received:DKIM-Signature:Date:Message-ID:From:To:Cc:Subject:
-	 In-Reply-To:References:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding;
-	bh=kAle+7NZBTIl79CF3givLyoKSv2EiRPgCMErVUFxeRk=;
-	b=epXF6KwkQHLCG4AP5E06Bi5RWB7F3Glt0fTJwGfUoyhwncaFZydQqDiv7Ier6GW7PQ0D
-	 8QK9RqKcLm5R6uDmXmp76lLvOrXYSv4RJAr2OKp6dOjo3JTpx171fiFFDK5VwG0zzWiBi
-	 DEtC2LNT37+/PkGrYaGpOGRrumBCi4mdVSXjxXRMd7H3bA/Ysb31Evl4rJxy6dSPUKw+B
-	 pjmOffJC8LC29vlfh+616YnMifFhLBCMHrbgrcaN/m33zTx+V2gnFh4HJtYGOFcoY5G7o
-	 dO/KY6ViSDFB1IlD8zaq3iCrQ2T0o7u++uMsum0iMeCOk7IaPKJKw+2I9joGEmxtlEg==
+	a=rsa-sha256; c=relaxed/relaxed; t=1795856135;
+	h=DMARC-Filter:Received:DKIM-Signature:From:To:Cc:Subject:Date:
+	 Message-ID:X-Mailer:In-Reply-To:References:MIME-Version:
+	 Content-Transfer-Encoding:X-Envelope-From;
+	bh=65UtGJ7fSwzMVurIhv/cFm1+CfEydmPsrjASwnr1vJ8=;
+	b=idyoaZCI2aOlLScLowu2lVu18+hWoZEZXfXgO2M70T0L2ogkg4Rg0dqKlZEu8qkdsoKj
+	 6yuI4HLhXLm87tMtDKJXgvAwSG3AZwZWiWJadJic3oct1mDjdA+RDGk2RaGI9vBgC++xT
+	 4AS9Unof30UQA+moqJ4zJ5aLuAAKbHcFzMJ31z/Y90hrbfAbABUuj2Z6O5SsyKLLGCwwT
+	 AkE7to5KqST0bPgPhTmZWLLsyTc9VWwIlr2uJzM3mhjA8tqbjQ9TPFZ33mvVrcVJn0JcI
+	 HSMNH6uuZoaedBeY8oqNkgRy25G7rPRoDgLOoHgGcSAgHQZKV4R+Ev6I0CAx3h71hXQ==
 ARC-Authentication-Results: i=1; smtp.subspace.kernel.org; 
-	dkim=pass header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iGw5XaVh;
-	arc=none smtp.remote-ip=100.103.45.18
-Received: from smtp.kernel.org (quasi.space.kernel.org [100.103.45.18])
+	dmarc=pass header.from=tychen.cc;
+	spf=pass smtp.mailfrom=tychen.cc;
+	dkim=pass header.d=tychen.cc header.i=@tychen.cc header.a=rsa-sha256 header.s=spacemail header.b=mkoxgApY;
+	arc=none smtp.remote-ip=198.177.127.220
+Received: from out-utut-a220.jellyfish.systems (out-utut-a220.jellyfish.systems [198.177.127.220])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature ECDSA (prime256v1))
+	 key-exchange X25519 server-signature ECDSA (prime256v1) server-digest SHA256)
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02501606A324;
-	Sat, 28 Nov 2026 07:25:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01E5F606A324
+	for <cgroups@vger.kernel.org>; Sat, 28 Nov 2026 08:55:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.2 smtp.subspace.kernel.org 01E5F606A324
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=tychen.cc
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tychen.cc
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.a=rsa-sha256 header.s=k20260515 header.b=iGw5XaVh
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53F421F00923;
-	Sat, 28 Nov 2026 07:25:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kernel.org;
-	s=k20260515; t=1795850712;
-	bh=kAle+7NZBTIl79CF3givLyoKSv2EiRPgCMErVUFxeRk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References;
-	b=iGw5XaVhKz9ntYOCqIAMvaUzExvkI1RJWgHIordOo9CHeHNHgaoMRmX+l3/agVMGg
-	 cbUxmQnRtPGdJUjskvfzDexfh4A/+z1wIOFnTGgBVJJkdITW+CqmDFrfJbCpUb1TwY
-	 7n/xqQip6i/j+VOV0mcTK/4ipmK9MvTMAoE1q9gmE7qazCzIAZFbAUHZ2m9YrOh9x5
-	 Hdtg/pxv8AejP3FWagb5ujxjuEDpESft3TWfcXZUi/5ZTcjo3JfcZ15z9VAzJlzZUL
-	 FTOke0cR22mB0lEvz5MqT/LIJ5qUkuzEv2KZV6RPM72zewYlAEeGskLUnMYwSR9LuS
-	 XZcxDmazIdBFg==
-Date: Fri, 27 Nov 2026 21:25:11 -1000
-Message-ID: <87513dc16e601c1b980a25934b3dd35a@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Ridong Chen <ridong.chen@linux.dev>
-Cc: Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>, K Prateek Nayak <kprateek.nayak@amd.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Frederic Weisbecker <frederic@kernel.org>, Ridong Chen <chenridong@xiaomi.com>
-Subject: Re: [PATCH v2 cgroup/for-7.4-fixes] sched/isolation: Publish new HK_TYPE_DOMAIN cpumask under cpuset_mutex
-In-Reply-To: <20261128010535.1831141-1-ridong.chen@linux.dev>
-References: <20261128010535.1831141-1-ridong.chen@linux.dev>
+	dkim=pass (2048-bit key) header.d=tychen.cc header.i=@tychen.cc header.a=rsa-sha256 header.s=spacemail header.b=mkoxgApY
+Received: from fedora (ec2-52-197-241-54.ap-northeast-1.compute.amazonaws.com [52.197.241.54])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.spacemail.com (Postfix) with ESMTPSA id 4jc3yZ1Yt4z8sWP;
+	Sat, 28 Nov 2026 08:55:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tychen.cc;
+	s=spacemail; t=1795856122;
+	bh=65UtGJ7fSwzMVurIhv/cFm1+CfEydmPsrjASwnr1vJ8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=mkoxgApYS+ZL4enwNdAbQMK6dYarH0tdwlh2dGq+pccuYgjo1YPaHiyymVV3+Ikuo
+	 8s8leiu5BJ0wXTNjUR3vwdKu4j/tVjRqoKh1Nvvg+5hO27J/rdyBuNlDN1Q53ZhD/r
+	 qEtkGtYYQ0iRC+1db2+X+Pe0lTM7SHf53x9rI2mDIZaSk/i6X7RD1sKXzBOScEklJU
+	 i0nm3mK7g4Ij1YNAbWyhBw+S5S3K7e5ULs4+O5NFsN5vTXyL04ljfOU5f2WunUUzSz
+	 E0LdyDzLilk3IEP7LoD2GSmTrt8ZUIIz8VG5NqGmluZMOzYVUY1uYJMu3uEGQGC2ne
+	 3kwefu17eNm3A==
+From: Tianyi Chen <hi@tychen.cc>
+To: Qu Wenruo <quwenruo.btrfs@gmx.com>,
+	David Sterba <dsterba@suse.com>,
+	Qu Wenruo <wqu@suse.com>,
+	Tejun Heo <tj@kernel.org>,
+	Josef Bacik <josef@toxicpanda.com>
+Cc: Chris Mason <mason@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Ming Lei <tom.leiming@gmail.com>,
+	Yu Kuai <yukuai@fygo.io>,
+	Mark Korenberg <socketpair@gmail.com>,
+	linux-btrfs@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	hi@tychen.cc
+Subject: Re: btrfs, blk-throttle: cross-subvolume fsync stalls behind throttled write_dev_flush()
+Date: Sat, 28 Nov 2026 17:55:08 +0900
+Message-ID: <20261128085508.2227850-1-hi@tychen.cc>
+X-Mailer: git-send-email 2.56.1
+In-Reply-To: <a0ae6351-2eb1-41b9-b085-db924442c685@gmx.com>
+References: <20261127121458.2090454-1-hi@tychen.cc> <a0ae6351-2eb1-41b9-b085-db924442c685@gmx.com>
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Post: <mailto:cgroups@vger.kernel.org>
@@ -57,12 +79,35 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 List-Owner: <mailto:cgroups+owner@vger.kernel.org>
 Precedence: list
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Envelope-From: hi@tychen.cc
 
-Applied to cgroup/for-7.4-fixes with a stable tag for v7.0+ added.
+On 2026/11/28 07:37, Qu Wenruo wrote:
+> What's the point here? The series (older or merged version) has never
+> touched the barrier part, nor my comment.
+>
+> This looks like some unrelated LLM word salad.
+>
+> And again, make LLM generated reports shorter for human readers.
 
-Thanks.
+Sorry, you're right. Neither the series nor your comment is about the
+flush, and that paragraph should not have been in the report.
 
---
-tejun
+[...]
+
+> I'd prefer more advice from block layer on such separate flush and sb
+> writes.
+> Is it recommended to use the same flags for such cases?
+
+One result that matters for this question: with the super block flags
+on the flush, a cgroup can escape io.max. One process under wiops=32
+doing create + 64-byte write + fsync in a loop (the files stay inline)
+ran at 2542 io.stat wios/s over 60s, 79x the cap; under wbps=512KiB/s
+it ran at 55x in io.stat wbytes. Stock stays within the cap (0.94x and
+1.00x). One run per kernel. The flush flags are the only difference
+between the two kernels, so on this path the untagged flush is what
+keeps the group at its cap. This is the unpaced fsync loop my first
+mail listed as not tested.
+
+Thanks,
+Tianyi
